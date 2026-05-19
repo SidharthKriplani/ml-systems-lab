@@ -6,7 +6,7 @@ const POSTS = [
     slug: 'training-serving-skew',
     title: 'Why Training-Serving Skew Silently Kills Production Models',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(34,211,238,0.1)', text: '#22d3ee', border: 'rgba(34,211,238,0.2)' },
+    catColor: { bg: 'rgba(34,211,238,0.1)', text: 'var(--sky)', border: 'rgba(34,211,238,0.2)' },
     readMin: 8,
     featured: true,
     excerpt: 'Your model has 0.92 AUC in the notebook. It degrades to baseline within two weeks in production. Nobody\'s alarmed because the metrics move slowly. Then one day someone checks the actual conversion rate and it\'s half of what it was at launch. The culprit is almost always the same thing: a gap between how you compute features at training time and how you compute them at serving time.',
@@ -38,7 +38,7 @@ The engineering cost of a feature store is front-loaded. The cost of not having 
     slug: 'spark-shuffle-mental-model',
     title: 'PySpark Shuffle: The Complete Mental Model',
     category: 'PySpark',
-    catColor: { bg: 'rgba(245,158,11,0.1)', text: '#f59e0b', border: 'rgba(245,158,11,0.2)' },
+    catColor: { bg: 'rgba(245,158,11,0.1)', text: 'var(--gold)', border: 'rgba(245,158,11,0.2)' },
     readMin: 12,
     featured: false,
     excerpt: 'Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the sort. Without that model, you\'re guessing when you tune. With it, you can look at a Spark UI and immediately know what\'s wrong.',
@@ -70,7 +70,7 @@ The engineering cost of a feature store is front-loaded. The cost of not having 
     slug: 'auc-is-not-your-friend',
     title: 'AUC Is Not Your Friend: A Guide to ML Metric Selection',
     category: 'Model Evaluation',
-    catColor: { bg: 'rgba(16,185,129,0.1)', text: '#10b981', border: 'rgba(16,185,129,0.2)' },
+    catColor: { bg: 'rgba(16,185,129,0.1)', text: 'var(--mint)', border: 'rgba(16,185,129,0.2)' },
     readMin: 10,
     featured: false,
     excerpt: 'ROC-AUC is the default metric for classification problems. It\'s in every sklearn tutorial and every Kaggle competition leaderboard. It\'s also the wrong metric for most real production ML problems. Here\'s why — and what to use instead.',
@@ -103,7 +103,7 @@ A model can have 0.92 AUC and be completely uncalibrated. Uncalibrated means: wh
     slug: 'rec-system-design-framework',
     title: 'How to Design a Recommendation System (The MLE Interview Framework)',
     category: 'ML System Design',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: '#818cf8', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
     readMin: 15,
     featured: true,
     excerpt: 'Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monitoring, cold start, exploration. Here\'s the framework that works.',
@@ -163,7 +163,7 @@ Model performance: prediction score distribution drift, AUC on logged feedback.`
     slug: 'concept-drift-detection',
     title: 'Concept Drift: How to Detect It Before It Destroys Your Model',
     category: 'Monitoring',
-    catColor: { bg: 'rgba(244,63,94,0.1)', text: '#f43f5e', border: 'rgba(244,63,94,0.2)' },
+    catColor: { bg: 'rgba(244,63,94,0.1)', text: 'var(--rose)', border: 'rgba(244,63,94,0.2)' },
     readMin: 9,
     featured: false,
     excerpt: 'PSI > 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It\'s also frequently wrong for your specific use case. Here\'s a framework for actually understanding drift, choosing the right test, and setting thresholds that don\'t page you at 3am for seasonal fluctuations.',
@@ -229,7 +229,7 @@ Plot eigenvalues in descending order. The "elbow" — where the curve flattens �
     slug: 'feature-store-architecture',
     title: 'Feature Store Architecture: What the Tutorials Skip',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(34,211,238,0.1)', text: '#22d3ee', border: 'rgba(34,211,238,0.2)' },
+    catColor: { bg: 'rgba(34,211,238,0.1)', text: 'var(--sky)', border: 'rgba(34,211,238,0.2)' },
     readMin: 13,
     featured: false,
     excerpt: 'Every feature store has an offline layer and an online layer. The tutorial stops there. What it doesn\'t cover: how to keep them in sync, how to handle late-arriving data, how to version features across training runs, and what happens when the online store falls over at 2am.',
@@ -267,7 +267,7 @@ Training run 42 used features_v3. Training run 57 used features_v5. When you inv
     slug: 'mle-interview-system-design-prep',
     title: 'The MLE Interview Framework: What Top Companies Actually Ask',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: '#818cf8', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
     readMin: 7,
     featured: false,
     excerpt: 'After 200+ MLE interviews (as both candidate and interviewer), here\'s what I\'ve learned about what separates strong candidates from weak ones in the ML system design round. It\'s not about knowing more frameworks. It\'s about a specific sequence of reasoning that signals production ML experience.',
@@ -344,7 +344,7 @@ Not checking that training loss is actually decreasing in the first 100 steps. U
     slug: 'shap-feature-importance',
     title: 'SHAP Values: Feature Importance That Actually Makes Sense',
     category: 'Model Evaluation',
-    catColor: { bg: 'rgba(16,185,129,0.1)', text: '#10b981', border: 'rgba(16,185,129,0.2)' },
+    catColor: { bg: 'rgba(16,185,129,0.1)', text: 'var(--mint)', border: 'rgba(16,185,129,0.2)' },
     readMin: 9,
     featured: false,
     excerpt: 'Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first correctly — and they\'re game-theoretic, not heuristic. Here\'s what that actually means.',
@@ -378,7 +378,7 @@ Using global SHAP importance (mean |SHAP|) as the only ranking — misses local 
     slug: 'cold-start-problem',
     title: 'The Cold Start Problem: Beyond Popularity Heuristics',
     category: 'ML System Design',
-    catColor: { bg: 'rgba(244,63,94,0.1)', text: '#f43f5e', border: 'rgba(244,63,94,0.2)' },
+    catColor: { bg: 'rgba(244,63,94,0.1)', text: 'var(--rose)', border: 'rgba(244,63,94,0.2)' },
     readMin: 10,
     featured: false,
     excerpt: 'Every recommendation system has a cold start problem. Most teams solve it by falling back to popularity rankings. This works for items. It doesn\'t work for users. And it leaves a lot of personalisation quality on the table from the very first session.',
@@ -458,7 +458,7 @@ Start with DDP. Add ZeRO stages if you need memory relief. Only add model parall
     slug: 'ml-interview-mistakes',
     title: '10 ML Interview Mistakes Even Senior Engineers Make',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: '#818cf8', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
     readMin: 8,
     featured: false,
     excerpt: 'These aren\'t mistakes made by junior candidates who don\'t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they\'re talking about — but don\'t know how to show it in 45 minutes.',
@@ -953,13 +953,13 @@ function PostReader({ post, onBack }) {
   function renderBody(text) {
     return text.split('\n\n').map((para, i) => {
       if (para.startsWith('**') && para.endsWith('**') && para.split('**').length === 3) {
-        return <h3 key={i} style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: '#eaecff', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{para.slice(2, -2)}</h3>
+        return <h3 key={i} style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{para.slice(2, -2)}</h3>
       }
       // Inline bold
       const parts = para.split(/\*\*(.*?)\*\*/g)
       return (
-        <p key={i} style={{ fontSize: '15px', color: '#8891b8', lineHeight: 1.85, marginBottom: '18px' }}>
-          {parts.map((part, j) => j % 2 === 1 ? <strong key={j} style={{ color: '#eaecff', fontWeight: 600 }}>{part}</strong> : part)}
+        <p key={i} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.85, marginBottom: '18px' }}>
+          {parts.map((part, j) => j % 2 === 1 ? <strong key={j} style={{ color: 'var(--ink-hi)', fontWeight: 600 }}>{part}</strong> : part)}
         </p>
       )
     })
@@ -968,7 +968,7 @@ function PostReader({ post, onBack }) {
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0' }}>
       {/* Reading progress bar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '2px', background: '#1c2040', zIndex: 100 }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '2px', background: 'var(--rim)', zIndex: 100 }}>
         <div style={{ height: '100%', background: 'linear-gradient(90deg,#6366f1,#22d3ee)', width: `${scrollPct}%`, transition: 'width 0.1s', borderRadius: '1px' }} />
       </div>
 
@@ -981,20 +981,20 @@ function PostReader({ post, onBack }) {
         {/* Meta */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', alignItems: 'center' }}>
           <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
-          <span style={{ fontSize: '12px', color: '#525a82' }}>{post.readMin} min read</span>
+          <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{post.readMin} min read</span>
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 38px)', fontWeight: 700, color: '#eaecff', lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '20px' }}>
+        <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 38px)', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '20px' }}>
           {post.title}
         </h1>
 
         {/* Excerpt */}
-        <p style={{ fontSize: '16px', color: '#8891b8', lineHeight: 1.7, marginBottom: '36px', borderLeft: `3px solid ${post.catColor.text}`, paddingLeft: '16px', fontStyle: 'italic' }}>
+        <p style={{ fontSize: '16px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '36px', borderLeft: `3px solid ${post.catColor.text}`, paddingLeft: '16px', fontStyle: 'italic' }}>
           {post.excerpt}
         </p>
 
-        <div style={{ height: '1px', background: '#1c2040', marginBottom: '36px' }} />
+        <div style={{ height: '1px', background: 'var(--rim)', marginBottom: '36px' }} />
 
         {/* Body */}
         <div>{renderBody(post.body)}</div>
@@ -1002,7 +1002,7 @@ function PostReader({ post, onBack }) {
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid #1c2040' }}>
           {post.tags.map(t => (
-            <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid #1c2040', color: '#525a82', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
+            <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid #1c2040', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
           ))}
         </div>
       </article>
@@ -1022,13 +1022,13 @@ function PostCard({ post, featured, onClick }) {
             <span className="badge badge-indigo" style={{ fontSize: '10px' }}>Featured</span>
             <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
           </div>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '22px', fontWeight: 700, color: '#eaecff', lineHeight: 1.25, marginBottom: '14px', letterSpacing: '-0.01em' }}>{post.title}</h2>
-          <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.7, marginBottom: '16px' }}>{post.excerpt.slice(0, 180)}…</p>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.25, marginBottom: '14px', letterSpacing: '-0.01em' }}>{post.title}</h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, marginBottom: '16px' }}>{post.excerpt.slice(0, 180)}…</p>
           <span style={{ fontSize: '13px', color: post.catColor.text, fontWeight: 600 }}>Read {post.readMin} min →</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {post.tags.slice(0, 4).map(t => (
-            <div key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", color: '#525a82', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '5px', padding: '6px 12px' }}>{t}</div>
+            <div key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '5px', padding: '6px 12px' }}>{t}</div>
           ))}
         </div>
       </button>
@@ -1038,13 +1038,13 @@ function PostCard({ post, featured, onClick }) {
   return (
     <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: '20px 22px', transition: 'transform 0.15s, border-color 0.15s', }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = post.catColor.border }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = '#1c2040' }}>
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--rim)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
         <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
-        <span style={{ fontSize: '11px', color: '#2d3260' }}>{post.readMin} min</span>
+        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{post.readMin} min</span>
       </div>
-      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: '#eaecff', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
-      <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.65 }}>{post.excerpt.slice(0, 130)}…</p>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{post.excerpt.slice(0, 130)}…</p>
     </button>
   )
 }
@@ -1069,12 +1069,12 @@ export default function GradientTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '8px' }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
             Gradient
           </h1>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: '#525a82' }}>∇ long-form ML writing</span>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '560px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Feature engineering, PySpark optimisation, ML system design, model evaluation, and paper breakdowns.
           Written for engineers who ship — not engineers who read papers.
         </p>
@@ -1098,7 +1098,7 @@ export default function GradientTab() {
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#525a82', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--ink-low)', fontSize: '14px' }}>
           No posts in this category yet.
         </div>
       )}

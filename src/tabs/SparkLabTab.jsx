@@ -55,12 +55,12 @@ function DagVis({ result, partitions }) {
         {durations.map((d, i) => {
           const pct = (d / max) * 100
           const isStraggler = i === 0 && result.straggler > 0
-          const bg = isStraggler ? '#f43f5e' : result.spillRisk ? '#f59e0b' : '#6366f1'
+          const bg = isStraggler ? 'var(--rose)' : result.spillRisk ? 'var(--gold)' : 'var(--prime)'
           return <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: bg, height: `${pct}%`, opacity: 0.8, transition: 'height 0.3s', minHeight: '4px' }} />
         })}
-        {partitions > 24 && <div style={{ fontSize: '10px', color: '#525a82', alignSelf: 'flex-end', paddingLeft: '4px' }}>+{partitions - 24}</div>}
+        {partitions > 24 && <div style={{ fontSize: '10px', color: 'var(--ink-low)', alignSelf: 'flex-end', paddingLeft: '4px' }}>+{partitions - 24}</div>}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2d3260' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)' }}>
         <span>Task 1</span><span>Task distribution ({partitions} partitions)</span>
       </div>
     </div>
@@ -85,14 +85,14 @@ function ShuffleHell() {
   }
 
   const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.08)'    : result?.spillRisk ? 'rgba(245,158,11,0.08)'  : result?.healthy ? 'rgba(16,185,129,0.08)'    : 'rgba(255,255,255,0.03)'
-  const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : '#1c2040'
+  const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : 'var(--rim)'
   const statusMsg    = result?.oomRisk ? '💥 JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '⚠ Significant spill to disk' : result?.healthy ? '✅ Job looks healthy' : '🟡 Suboptimal — will run'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           You're joining a {dataGB}GB fact table to a 512MB dimension table. Configure the job — then run it.
         </p>
       </div>
@@ -113,8 +113,8 @@ function ShuffleHell() {
           { label: 'Skew factor', value: skewFactor, set: setSkewFactor, min: 1, max: 20, step: 0.5, unit: '×', warn: skewFactor > 5 },
         ].map(c => (
           <div key={c.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-              {c.label}: <span style={{ color: c.warn ? '#f43f5e' : '#818cf8', fontWeight: 600 }}>{c.value}{c.unit}</span>
+            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+              {c.label}: <span style={{ color: c.warn ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{c.value}{c.unit}</span>
             </label>
             <input type="range" min={c.min} max={c.max} step={c.step} value={c.value} onChange={e => { c.set(+e.target.value); setResult(null) }} />
           </div>
@@ -123,16 +123,16 @@ function ShuffleHell() {
 
       {/* Join strategy */}
       <div className="card" style={{ padding: '16px' }}>
-        <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '12px' }}>Join strategy hint</label>
+        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '12px' }}>Join strategy hint</label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {[
             { val: 'sort_merge', label: 'Sort-Merge', desc: 'Default. Always works. Full shuffle.' },
             { val: 'broadcast',  label: 'Broadcast Hash', desc: 'No shuffle. Right table must fit in memory.' },
           ].map(opt => (
             <button key={opt.val} onClick={() => { setJoinStrategy(opt.val); setResult(null) }}
-              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(99,102,241,0.4)' : '#1c2040'}`, background: joinStrategy === opt.val ? 'rgba(99,102,241,0.08)' : '#0b0d1a', transition: 'all 0.15s' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: '#eaecff', marginBottom: '4px' }}>{opt.label}</div>
-              <div style={{ fontSize: '12px', color: '#525a82' }}>{opt.desc}</div>
+              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(99,102,241,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(99,102,241,0.08)' : 'var(--void)', transition: 'all 0.15s' }}>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{opt.label}</div>
+              <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{opt.desc}</div>
             </button>
           ))}
         </div>
@@ -145,12 +145,12 @@ function ShuffleHell() {
       {ran && result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', animation: 'slideUp 0.3s ease-out' }}>
           <div className="card" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '11px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", marginBottom: '12px' }}>Execution DAG — task duration distribution</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '12px' }}>Execution DAG — task duration distribution</div>
             <DagVis result={result} partitions={partitions} />
           </div>
 
           <div style={{ background: statusBg, border: `1px solid ${statusBorder}`, borderRadius: '12px', padding: '18px' }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, fontSize: '13px', marginBottom: '14px', color: '#eaecff' }}>{statusMsg}</div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, fontSize: '13px', marginBottom: '14px', color: 'var(--ink-hi)' }}>{statusMsg}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px', marginBottom: '14px' }}>
               {[
                 { label: 'Strategy', value: result.actualStrategy.replace('_', ' '), warn: result.actualStrategy === 'sort_merge_fallback' },
@@ -161,16 +161,16 @@ function ShuffleHell() {
                 { label: 'Disk spill', value: result.spillRisk ? 'Yes' : 'No', warn: result.spillRisk },
               ].map(m => (
                 <div key={m.label} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '10px 12px' }}>
-                  <div style={{ fontSize: '11px', color: '#525a82', marginBottom: '4px' }}>{m.label}</div>
-                  <div style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: m.warn ? '#f43f5e' : m.good ? '#10b981' : '#eaecff' }}>{m.value}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '4px' }}>{m.label}</div>
+                  <div style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: m.warn ? 'var(--rose)' : m.good ? 'var(--mint)' : 'var(--ink-hi)' }}>{m.value}</div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '13px', color: '#8891b8', lineHeight: 1.7 }}>
-              {result.oomRisk && <p style={{ color: '#f43f5e', margin: '0 0 6px' }}>OOM: Skewed partition ({result.skewedPartitionMB} MB) exceeds executor heap. Fix: salting, AQE (spark.sql.adaptive.enabled=true), or increase partitions.</p>}
-              {result.spillRisk && <p style={{ color: '#f59e0b', margin: '0 0 6px' }}>Spill: Largest partition exceeds 60% of executor heap. Expect 1.5–3× slowdown. Reduce skew factor or increase shuffle.partitions.</p>}
-              {result.actualStrategy === 'sort_merge_fallback' && <p style={{ color: '#f59e0b', margin: '0 0 6px' }}>Broadcast fallback: threshold ({broadcastMB} MB) &lt; dim table (512 MB). Raise autoBroadcastJoinThreshold or accept shuffle cost.</p>}
-              {result.healthy && <p style={{ color: '#10b981', margin: 0 }}>Partition size in sweet spot, no spill, skew manageable. Nice.</p>}
+            <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>
+              {result.oomRisk && <p style={{ color: 'var(--rose)', margin: '0 0 6px' }}>OOM: Skewed partition ({result.skewedPartitionMB} MB) exceeds executor heap. Fix: salting, AQE (spark.sql.adaptive.enabled=true), or increase partitions.</p>}
+              {result.spillRisk && <p style={{ color: 'var(--gold)', margin: '0 0 6px' }}>Spill: Largest partition exceeds 60% of executor heap. Expect 1.5–3× slowdown. Reduce skew factor or increase shuffle.partitions.</p>}
+              {result.actualStrategy === 'sort_merge_fallback' && <p style={{ color: 'var(--gold)', margin: '0 0 6px' }}>Broadcast fallback: threshold ({broadcastMB} MB) &lt; dim table (512 MB). Raise autoBroadcastJoinThreshold or accept shuffle cost.</p>}
+              {result.healthy && <p style={{ color: 'var(--mint)', margin: 0 }}>Partition size in sweet spot, no spill, skew manageable. Nice.</p>}
             </div>
           </div>
         </div>
@@ -222,8 +222,8 @@ function SkewDoctor() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Select a skew scenario. Diagnose it via the task duration chart. Then apply a fix and see the result.
         </p>
       </div>
@@ -241,8 +241,8 @@ function SkewDoctor() {
       {/* Task chart */}
       <div className="card" style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace" }}>Task duration (Stage: shuffle read → aggregate)</span>
-          <span style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace', fontWeight: 600, color: +skewRatio > 10 ? '#f43f5e' : +skewRatio > 3 ? '#f59e0b' : '#10b981'" }}>
+          <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Task duration (Stage: shuffle read → aggregate)</span>
+          <span style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace', fontWeight: 600, color: +skewRatio > 10 ? 'var(--rose)' : +skewRatio > 3 ? 'var(--gold)' : 'var(--mint)'" }}>
             max/median: {skewRatio}×
           </span>
         </div>
@@ -250,10 +250,10 @@ function SkewDoctor() {
           {dist.tasks.map((t, i) => {
             const pct = (t / maxTask) * 100
             const isStraggler = t > medianTask * 4
-            return <div key={i} style={{ flex: 1, background: isStraggler ? '#f43f5e' : '#6366f1', opacity: 0.8, height: `${pct}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
+            return <div key={i} style={{ flex: 1, background: isStraggler ? 'var(--rose)' : 'var(--prime)', opacity: 0.8, height: `${pct}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
           })}
         </div>
-        <p style={{ fontSize: '12px', color: '#525a82', margin: 0 }}>{dist.desc}</p>
+        <p style={{ fontSize: '12px', color: 'var(--ink-low)', margin: 0 }}>{dist.desc}</p>
       </div>
 
       {/* Fix picker */}
@@ -263,8 +263,8 @@ function SkewDoctor() {
           {Object.entries(FIXES).map(([k, v]) => (
             <button key={k} onClick={() => { setFix(k); setRevealed(true) }}
               className="card"
-              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(99,102,241,0.4)' : '#1c2040'}`, background: fix === k ? 'rgba(99,102,241,0.08)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '14px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: '#eaecff', marginBottom: '8px' }}>{v.label}</div>
+              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(99,102,241,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(99,102,241,0.08)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '14px' }}>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{v.label}</div>
               <div className="code-block" style={{ fontSize: '11px', padding: '8px', whiteSpace: 'pre-wrap' }}>{v.code}</div>
             </button>
           ))}
@@ -273,14 +273,14 @@ function SkewDoctor() {
 
       {revealed && fix && fixedDist && (
         <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: '#10b981', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--mint)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '60px', marginBottom: '8px' }}>
             {fixedDist.tasks.map((t, i) => {
               const max2 = Math.max(...fixedDist.tasks)
-              return <div key={i} style={{ flex: 1, background: '#10b981', opacity: 0.7, height: `${(t/max2)*100}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
+              return <div key={i} style={{ flex: 1, background: 'var(--mint)', opacity: 0.7, height: `${(t/max2)*100}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
             })}
           </div>
-          <p style={{ fontSize: '13px', color: '#8891b8', lineHeight: 1.7, margin: 0 }}>{FIXES[fix].desc}</p>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{FIXES[fix].desc}</p>
         </div>
       )}
     </div>
@@ -422,8 +422,7 @@ export default function SparkLabTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>🔥</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>Spark Lab</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Spark Lab</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.

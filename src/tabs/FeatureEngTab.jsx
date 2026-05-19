@@ -47,8 +47,8 @@ function SkewSimulator() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Four real skew bugs. Pick the one you think will hurt model performance the most. Then see the impact.
         </p>
       </div>
@@ -59,20 +59,20 @@ function SkewSimulator() {
             className="card"
             style={{
               textAlign: 'left', cursor: 'pointer',
-              border: `1px solid ${bug === b.id ? 'rgba(244,63,94,0.4)' : '#1c2040'}`,
-              background: bug === b.id ? 'rgba(244,63,94,0.05)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)',
+              border: `1px solid ${bug === b.id ? 'rgba(244,63,94,0.4)' : 'var(--rim)'}`,
+              background: bug === b.id ? 'rgba(244,63,94,0.05)' : 'var(--depth)',
               transition: 'all 0.15s',
             }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: '#eaecff', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '10px' }}>
               ⚠ {b.label}
             </div>
             <div style={{ marginBottom: '6px' }}>
-              <div style={{ fontSize: '10px', color: '#525a82', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Training</div>
-              <code style={{ fontSize: '11px', color: '#10b981', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.training}</code>
+              <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Training</div>
+              <code style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.training}</code>
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: '#525a82', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Serving</div>
-              <code style={{ fontSize: '11px', color: '#f43f5e', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.serving}</code>
+              <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Serving</div>
+              <code style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.serving}</code>
             </div>
           </button>
         ))}
@@ -88,15 +88,15 @@ function SkewSimulator() {
         const b = BUGS.find(x => x.id === bug)
         return (
           <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.25)' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: '#eaecff', marginBottom: '12px' }}>⚠ {b.label}</div>
-            <p style={{ fontSize: '13px', color: '#8891b8', lineHeight: 1.7, marginBottom: '12px' }}>{b.desc}</p>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>⚠ {b.label}</div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '12px' }}>{b.desc}</p>
             <div style={{ marginBottom: '10px' }}>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#f43f5e', fontWeight: 600 }}>Impact: </span>
-              <span style={{ fontSize: '13px', color: '#f43f5e' }}>{b.impact}</span>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--rose)', fontWeight: 600 }}>Impact: </span>
+              <span style={{ fontSize: '13px', color: 'var(--rose)' }}>{b.impact}</span>
             </div>
             <div>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#10b981', fontWeight: 600 }}>Fix: </span>
-              <span style={{ fontSize: '13px', color: '#10b981' }}>{b.fix}</span>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--mint)', fontWeight: 600 }}>Fix: </span>
+              <span style={{ fontSize: '13px', color: 'var(--mint)' }}>{b.fix}</span>
             </div>
           </div>
         )
@@ -112,9 +112,9 @@ function FeatureStoreDesigner() {
   const [storage, setStorage]         = useState('redis')
 
   const scenarios = {
-    user: { icon: '👤', label: 'User profile features', examples: ['age', 'account_age_days', 'lifetime_value', 'country'], frequency: 'Low-medium (hours-days)' },
-    session: { icon: '⚡', label: 'Session features', examples: ['page_views_last_30m', 'cart_value', 'device_type', 'referrer'], frequency: 'High (seconds-minutes)' },
-    item: { icon: '📦', label: 'Item/product features', examples: ['price', 'stock_level', 'avg_rating', 'purchase_count_7d'], frequency: 'Medium (minutes-hours)' },
+    user: { icon: '[U]', label: 'User profile features', examples: ['age', 'account_age_days', 'lifetime_value', 'country'], frequency: 'Low-medium (hours-days)' },
+    session: { icon: '[S]', label: 'Session features', examples: ['page_views_last_30m', 'cart_value', 'device_type', 'referrer'], frequency: 'High (seconds-minutes)' },
+    item: { icon: '[I]', label: 'Item/product features', examples: ['price', 'stock_level', 'avg_rating', 'purchase_count_7d'], frequency: 'Medium (minutes-hours)' },
   }
 
   const storageOptions = {
@@ -130,8 +130,8 @@ function FeatureStoreDesigner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Design an online feature store for a real-time recommendation system. Choose feature type, freshness SLA, and storage backend.
         </p>
       </div>
@@ -139,10 +139,10 @@ function FeatureStoreDesigner() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {Object.entries(scenarios).map(([k, v]) => (
           <button key={k} onClick={() => setFeatureType(k)} className="card"
-            style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${featureType === k ? 'rgba(99,102,241,0.4)' : '#1c2040'}`, background: featureType === k ? 'rgba(99,102,241,0.08)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '14px' }}>
-            <div style={{ fontSize: '20px', marginBottom: '6px' }}>{v.icon}</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: '#eaecff', marginBottom: '4px' }}>{v.label}</div>
-            <div style={{ fontSize: '11px', color: '#525a82' }}>{v.frequency}</div>
+            style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${featureType === k ? 'rgba(124,106,247,0.4)' : 'var(--rim)'}`, background: featureType === k ? 'var(--prime-faint)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: featureType === k ? 'var(--prime-hi)' : 'var(--ink-low)', background: featureType === k ? 'rgba(124,106,247,0.12)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '4px', padding: '2px 7px', display: 'inline-block', marginBottom: '10px' }}>{v.icon}</div>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{v.frequency}</div>
           </button>
         ))}
       </div>
@@ -151,7 +151,7 @@ function FeatureStoreDesigner() {
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Example features for this type</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {s.examples.map(ex => (
-            <code key={ex} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
+            <code key={ex} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
           ))}
         </div>
       </div>
@@ -161,24 +161,24 @@ function FeatureStoreDesigner() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
           {Object.entries(storageOptions).map(([k, v]) => (
             <button key={k} onClick={() => setStorage(k)} className="card"
-              style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : '#1c2040'}`, background: storage === k ? 'rgba(34,211,238,0.06)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '12px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: storage === k ? '#22d3ee' : '#eaecff', marginBottom: '4px' }}>{v.label}</div>
-              <div style={{ fontSize: '11px', color: '#525a82' }}>P50: {v.latency}</div>
+              style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : 'var(--rim)'}`, background: storage === k ? 'rgba(34,211,238,0.06)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '12px' }}>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--sky)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>P50: {v.latency}</div>
             </button>
           ))}
         </div>
       </div>
 
       <div className="card" style={{ padding: '18px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: '#22d3ee', marginBottom: '10px' }}>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--sky)', marginBottom: '10px' }}>
           {st.label} for {s.label}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-          <div><div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, marginBottom: '4px' }}>✓ PROS</div><div style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>{st.pros}</div></div>
-          <div><div style={{ fontSize: '11px', color: '#f43f5e', fontWeight: 600, marginBottom: '4px' }}>✗ CONS</div><div style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>{st.cons}</div></div>
+          <div><div style={{ fontSize: '11px', color: 'var(--mint)', fontWeight: 600, marginBottom: '4px' }}>✓ PROS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.pros}</div></div>
+          <div><div style={{ fontSize: '11px', color: 'var(--rose)', fontWeight: 600, marginBottom: '4px' }}>✗ CONS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.cons}</div></div>
         </div>
         {featureType === 'session' && storage !== 'redis' && (
-          <p style={{ fontSize: '13px', color: '#f59e0b', margin: 0 }}>⚠ For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
+          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>⚠ For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
         )}
       </div>
     </div>
@@ -195,9 +195,9 @@ function WindowAggregationBuilder() {
   const [codeTab, setCodeTab]       = useState('sql')
 
   const ENTITIES = {
-    user:    { label: 'User',    icon: '👤', metrics: ['purchase_amount', 'page_views', 'session_duration', 'items_clicked', 'search_queries'] },
-    item:    { label: 'Item',    icon: '📦', metrics: ['view_count', 'add_to_cart_count', 'purchase_count', 'rating_sum', 'return_count'] },
-    session: { label: 'Session', icon: '⚡', metrics: ['events', 'duration_seconds', 'pages_visited', 'cart_value', 'scroll_depth'] },
+    user:    { label: 'User',    icon: '[U]', metrics: ['purchase_amount', 'page_views', 'session_duration', 'items_clicked', 'search_queries'] },
+    item:    { label: 'Item',    icon: '[I]', metrics: ['view_count', 'add_to_cart_count', 'purchase_count', 'rating_sum', 'return_count'] },
+    session: { label: 'Session', icon: '[S]', metrics: ['events', 'duration_seconds', 'pages_visited', 'cart_value', 'scroll_depth'] },
   }
 
   const AGGS = {
@@ -433,7 +433,7 @@ result = (df
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'skew',     label: 'Skew Simulator',        icon: '⚡', component: SkewSimulator },
+  { id: 'skew',     label: 'Skew Simulator',        icon: '[S]', component: SkewSimulator },
   { id: 'store',    label: 'Feature Store Designer', icon: '🏪', component: FeatureStoreDesigner },
   { id: 'window',   label: 'Window Aggregation',     icon: '⏱', component: WindowAggregationBuilder },
 ]
@@ -446,10 +446,9 @@ export default function FeatureEngTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>🧩</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.04em' }}>Feature Engineering</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Feature Engineering</h1>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '580px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           The gap between a model that works in a notebook and one that works in production is almost always a feature engineering problem.
         </p>
       </div>

@@ -67,26 +67,26 @@ function MetricSelector() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Configure your dataset and pick a metric. Then see if you chose correctly — and why.
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            Positive class: <span style={{ color: imbalance < 10 ? '#f43f5e' : '#818cf8', fontWeight: 600 }}>{imbalance}%</span>
-            {imbalance < 10 && <span style={{ color: '#f43f5e', marginLeft: '6px' }}>⚠ imbalanced</span>}
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{imbalance}%</span>
+            {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}>⚠ imbalanced</span>}
           </label>
           <input type="range" min={1} max={50} value={imbalance} onChange={e => { setImbalance(+e.target.value); setRevealed(false); setPicked(null) }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2d3260', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
             <span>1% (severe skew)</span><span>50% (balanced)</span>
           </div>
         </div>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            Decision threshold: <span style={{ color: '#818cf8', fontWeight: 600 }}>{threshold}</span>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            Decision threshold: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{threshold}</span>
           </label>
           <input type="range" min={0.1} max={0.9} step={0.05} value={threshold} onChange={e => { setThreshold(+e.target.value); setRevealed(false); setPicked(null) }} />
         </div>
@@ -97,14 +97,14 @@ function MetricSelector() {
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Confusion matrix (1,000 samples)</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', maxWidth: '360px' }}>
           {[
-            { label: 'TP', val: metrics.tp, color: '#10b981' },
-            { label: 'FP', val: metrics.fp, color: '#f43f5e' },
-            { label: 'FN', val: metrics.fn, color: '#f59e0b' },
-            { label: 'TN', val: metrics.tn, color: '#525a82' },
+            { label: 'TP', val: metrics.tp, color: 'var(--mint)' },
+            { label: 'FP', val: metrics.fp, color: 'var(--rose)' },
+            { label: 'FN', val: metrics.fn, color: 'var(--gold)' },
+            { label: 'TN', val: metrics.tn, color: 'var(--ink-low)' },
           ].map(c => (
-            <div key={c.label} style={{ background: '#0b0d1a', border: `1px solid ${c.color}30`, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+            <div key={c.label} style={{ background: 'var(--void)', border: `1px solid ${c.color}30`, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
               <div style={{ fontSize: '20px', fontWeight: 700, color: c.color, fontFamily: "'Space Grotesk',sans-serif" }}>{c.val}</div>
-              <div style={{ fontSize: '11px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace" }}>{c.label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -112,7 +112,7 @@ function MetricSelector() {
 
       {/* Metric choice */}
       <div>
-        <p style={{ fontSize: '13px', color: '#8891b8', marginBottom: '12px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', marginBottom: '12px' }}>
           Which metric best reflects model quality for this dataset?
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
@@ -121,12 +121,12 @@ function MetricSelector() {
               style={{
                 padding: '14px',
                 borderRadius: '10px',
-                border: `1px solid ${picked === m.id ? (m.good ? '#10b981' : '#f43f5e') : '#1c2040'}`,
-                background: picked === m.id ? (m.good ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)') : '#0b0d1a',
+                border: `1px solid ${picked === m.id ? (m.good ? 'var(--mint)' : 'var(--rose)') : 'var(--rim)'}`,
+                background: picked === m.id ? (m.good ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)') : 'var(--void)',
                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
               }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: '#eaecff', marginBottom: '4px' }}>{m.name}</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '16px', color: m.good ? '#10b981' : '#f43f5e', fontWeight: 700 }}>{m.value}</div>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{m.name}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '16px', color: m.good ? 'var(--mint)' : 'var(--rose)', fontWeight: 700 }}>{m.value}</div>
             </button>
           ))}
         </div>
@@ -134,10 +134,10 @@ function MetricSelector() {
 
       {revealed && picked && (
         <div className="card animate-slide-up" style={{ padding: '18px', background: METRICS.find(m=>m.id===picked)?.good ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)', border: `1px solid ${METRICS.find(m=>m.id===picked)?.good ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}` }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: METRICS.find(m=>m.id===picked)?.good ? '#10b981' : '#f43f5e', marginBottom: '8px' }}>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: METRICS.find(m=>m.id===picked)?.good ? 'var(--mint)' : 'var(--rose)', marginBottom: '8px' }}>
             {METRICS.find(m=>m.id===picked)?.good ? '✓ Good choice' : '⚠ Think again'}
           </div>
-          <p style={{ fontSize: '13px', color: '#8891b8', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
             {METRICS.find(m=>m.id===picked)?.note}
           </p>
         </div>
@@ -178,8 +178,8 @@ function ABTestDesigner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>A/B Test Designer</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>A/B Test Designer</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Configure your experiment parameters. See how sample size and experiment duration change with each lever.
         </p>
       </div>
@@ -193,8 +193,8 @@ function ABTestDesigner() {
           { label: 'Daily users (both groups)', value: dailyUsers, set: setDailyUsers, min: 100, max: 100000, step: 100, suffix: '' },
         ].map(c => (
           <div key={c.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '11px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-              {c.label}: <span style={{ color: '#818cf8', fontWeight: 600 }}>{c.value}{c.suffix}</span>
+            <label style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+              {c.label}: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{c.value}{c.suffix}</span>
             </label>
             <input type="range" min={c.min} max={c.max} step={c.step} value={c.value} onChange={e => c.set(+e.target.value)} />
           </div>
@@ -203,21 +203,21 @@ function ABTestDesigner() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
         {[
-          { label: 'Sample per group', value: result.nPerGroup.toLocaleString(), color: '#818cf8' },
-          { label: 'Total sample needed', value: result.totalN.toLocaleString(), color: '#22d3ee' },
-          { label: 'Target conversion', value: result.p2 + '%', color: '#10b981' },
-          { label: 'Days to run', value: result.daysNeeded + ' days', color: result.daysNeeded > 30 ? '#f43f5e' : '#10b981' },
+          { label: 'Sample per group', value: result.nPerGroup.toLocaleString(), color: 'var(--violet)' },
+          { label: 'Total sample needed', value: result.totalN.toLocaleString(), color: 'var(--sky)' },
+          { label: 'Target conversion', value: result.p2 + '%', color: 'var(--mint)' },
+          { label: 'Days to run', value: result.daysNeeded + ' days', color: result.daysNeeded > 30 ? 'var(--rose)' : 'var(--mint)' },
         ].map(r => (
           <div key={r.label} className="card" style={{ padding: '18px', textAlign: 'center' }}>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 700, color: r.color, marginBottom: '4px' }}>{r.value}</div>
-            <div style={{ fontSize: '11px', color: '#525a82', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.label}</div>
           </div>
         ))}
       </div>
 
       {result.daysNeeded > 30 && (
         <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <p style={{ fontSize: '13px', color: '#f59e0b', margin: 0, lineHeight: 1.7 }}>
+          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0, lineHeight: 1.7 }}>
             ⚠ {result.daysNeeded} days is too long. Consider: increasing MDE (detect larger effects), raising significance level (accept more FP risk),
             or increasing daily traffic allocation. Long experiments risk novelty effects and external validity issues.
           </p>
@@ -255,8 +255,8 @@ function ShadowModeSim() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           A challenger model runs in shadow alongside the champion — serving no real traffic, just logging predictions.
           After 14 days, compare offline metrics and decide on promotion.
         </p>
@@ -264,15 +264,15 @@ function ShadowModeSim() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         {[
-          { label: '🏆 Champion (v1)', metrics: championMetrics, color: '#10b981' },
-          { label: '🥊 Challenger (v2)', metrics: challengerMetrics, color: '#6366f1' },
+          { label: '🏆 Champion (v1)', metrics: championMetrics, color: 'var(--mint)' },
+          { label: '🥊 Challenger (v2)', metrics: challengerMetrics, color: 'var(--prime)' },
         ].map(m => (
           <div key={m.label} className="card" style={{ padding: '18px', border: `1px solid ${m.color}30` }}>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: m.color, marginBottom: '14px' }}>{m.label}</div>
             {Object.entries(m.metrics).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace" }}>{k}</span>
-                <span style={{ fontSize: '13px', color: '#eaecff', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>
+                <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{k}</span>
+                <span style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>
                   {typeof v === 'number' && v < 2 ? v.toFixed(2) : v}{k === 'p99Latency' ? 'ms' : k === 'errorRate' ? '%' : ''}
                 </span>
               </div>
@@ -288,10 +288,10 @@ function ShadowModeSim() {
       {(phase === 'running' || phase === 'complete') && (
         <div className="card animate-fade-in" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: '#525a82' }}>Shadow run progress</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '18px', color: '#818cf8' }}>Day {days} / 14</span>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-low)' }}>Shadow run progress</span>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '18px', color: 'var(--violet)' }}>Day {days} / 14</span>
           </div>
-          <div style={{ height: '8px', background: '#1c2040', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ height: '8px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${(days / 14) * 100}%`, background: 'linear-gradient(90deg,#6366f1,#22d3ee)', transition: 'width 0.1s', borderRadius: '4px' }} />
           </div>
         </div>
@@ -299,15 +299,15 @@ function ShadowModeSim() {
 
       {phase === 'complete' && (
         <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.25)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: '#eaecff', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-            <p style={{ fontSize: '13px', color: '#10b981', margin: 0 }}>✓ Precision: +11pp ({championMetrics.precision.toFixed(2)} → {challengerMetrics.precision.toFixed(2)})</p>
-            <p style={{ fontSize: '13px', color: '#10b981', margin: 0 }}>✓ Recall: +9pp</p>
-            <p style={{ fontSize: '13px', color: '#f59e0b', margin: 0 }}>⚠ P99 latency: +{challengerMetrics.p99Latency - championMetrics.p99Latency}ms ({challengerMetrics.p99Latency}ms vs {championMetrics.p99Latency}ms)</p>
-            <p style={{ fontSize: '13px', color: '#10b981', margin: 0 }}>✓ Error rate: lower ({challengerMetrics.errorRate}% vs {championMetrics.errorRate}%)</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp ({championMetrics.precision.toFixed(2)} → {challengerMetrics.precision.toFixed(2)})</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Recall: +9pp</p>
+            <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>⚠ P99 latency: +{challengerMetrics.p99Latency - championMetrics.p99Latency}ms ({challengerMetrics.p99Latency}ms vs {championMetrics.p99Latency}ms)</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Error rate: lower ({challengerMetrics.errorRate}% vs {championMetrics.errorRate}%)</p>
           </div>
-          <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.7, margin: 0 }}>
-            Recommendation: <strong style={{ color: '#eaecff' }}>Promote</strong> — quality gains outweigh latency increase.
+          <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
+            Recommendation: <strong style={{ color: 'var(--ink-hi)' }}>Promote</strong> — quality gains outweigh latency increase.
             But gate on SLA: if P99 &gt; 100ms violates your SLA, investigate model quantization first.
           </p>
         </div>
@@ -331,10 +331,9 @@ export default function ModelEvalTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>📊</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.04em' }}>Model Evaluation</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Evaluation</h1>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '580px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Offline metrics lie. Pick the wrong metric and you'll ship a model that looks great on paper while failing in production.
         </p>
       </div>

@@ -31,10 +31,10 @@ fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 cumvar = np.cumsum(pca.explained_variance_ratio_) * 100
 axes[0].bar(range(1, len(pca.explained_variance_ratio_)+1),
             pca.explained_variance_ratio_ * 100,
-            color='#6366f1', alpha=0.7, label='Per component')
+            color='var(--prime)', alpha=0.7, label='Per component')
 axes[0].plot(range(1, len(cumvar)+1), cumvar,
-             color='#22d3ee', linewidth=2, marker='o', markersize=4, label='Cumulative')
-axes[0].axhline(y=90, color='#f59e0b', linestyle='--', alpha=0.7, label='90% threshold')
+             color='var(--sky)', linewidth=2, marker='o', markersize=4, label='Cumulative')
+axes[0].axhline(y=90, color='var(--gold)', linestyle='--', alpha=0.7, label='90% threshold')
 axes[0].set_xlabel('Component', fontsize=10)
 axes[0].set_ylabel('Explained variance (%)', fontsize=10)
 axes[0].set_title('Scree Plot', fontsize=12, fontweight='bold')
@@ -44,7 +44,7 @@ axes[0].grid(True, alpha=0.3)
 # Right: 2D projection (first 2 PCs)
 pca2 = PCA(n_components=2)
 X_2d = pca2.fit_transform(X_scaled)
-colors = ['#818cf8', '#22d3ee']
+colors = ['var(--violet)', 'var(--sky)']
 for cls in [0, 1]:
     mask = y == cls
     axes[1].scatter(X_2d[mask, 0], X_2d[mask, 1],
@@ -77,8 +77,8 @@ function PCAExplorer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>PCA Explorer</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PCA Explorer</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Adjust the dataset parameters, then hit Run to execute real sklearn PCA in your browser.
           Watch the scree plot change as you add noise or dimensions.
         </p>
@@ -92,12 +92,12 @@ function PCAExplorer() {
           { label: 'Noise level', value: noise, set: setNoise, min: 0, max: 3, step: 0.1 },
         ].map(ctrl => (
           <div key={ctrl.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-              {ctrl.label}: <span style={{ color: '#818cf8', fontWeight: 600 }}>{ctrl.value}</span>
+            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+              {ctrl.label}: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{ctrl.value}</span>
             </label>
             <input type="range" min={ctrl.min} max={ctrl.max} step={ctrl.step}
               value={ctrl.value} onChange={e => ctrl.set(+e.target.value)} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2d3260', marginTop: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
               <span>{ctrl.min}</span><span>{ctrl.max}</span>
             </div>
           </div>
@@ -107,8 +107,8 @@ function PCAExplorer() {
       <PythonCell key={key} initialCode={code} withPlot height={260} label="PCA · sklearn + matplotlib" />
 
       <div className="card" style={{ padding: '16px', background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.15)' }}>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: '#818cf8' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
+          <strong style={{ color: 'var(--violet)' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
           Add more features with the same info → most variance concentrates in early PCs.
           The scree "elbow" is where you should cut.
         </p>
@@ -175,19 +175,19 @@ function SVDDecomposer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>SVD Decomposer</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>SVD Decomposer</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Visualise truncated SVD on a synthetic matrix. Slide rank k and see how reconstruction quality degrades.
           This is the math behind collaborative filtering, LSA, and image compression.
         </p>
       </div>
 
       <div className="card" style={{ padding: '16px', maxWidth: '320px' }}>
-        <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-          Rank k: <span style={{ color: '#818cf8', fontWeight: 600 }}>{rank}</span>
+        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          Rank k: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{rank}</span>
         </label>
         <input type="range" min={1} max={15} step={1} value={rank} onChange={e => setRank(+e.target.value)} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2d3260', marginTop: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
           <span>1 (worst)</span><span>15 (best)</span>
         </div>
       </div>
@@ -195,8 +195,8 @@ function SVDDecomposer() {
       <PythonCell key={rank} initialCode={SVD_CODE(rank)} withPlot height={200} label="SVD · numpy" />
 
       <div className="card" style={{ padding: '16px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)' }}>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: '#a855f7' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
+          <strong style={{ color: 'var(--violet)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
           A rank-4 approximation of a 20×25 matrix needs only {20*rank + rank + rank*25} numbers instead of {20*25}.
           That's the compression ratio that makes Netflix recommendations possible at scale.
         </p>
@@ -282,8 +282,8 @@ function PreprocessingLab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Preprocessing Pipeline Lab</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Preprocessing Pipeline Lab</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Two pipelines, same data. One has a data leakage bug. Run both — see if you can spot the difference in metrics,
           and understand why it matters at production scale.
         </p>
@@ -293,25 +293,25 @@ function PreprocessingLab() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span style={{ fontSize: '16px' }}>✅</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: '#10b981', fontSize: '14px' }}>Correct pipeline</span>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--mint)', fontSize: '14px' }}>Correct pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_CORRECT} height={280} label="sklearn Pipeline (correct)" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span style={{ fontSize: '16px' }}>❌</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: '#f43f5e', fontSize: '14px' }}>Leaky pipeline</span>
+            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--rose)', fontSize: '14px' }}>Leaky pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_LEAKY} height={280} label="sklearn (data leakage bug)" />
         </div>
       </div>
 
       <div className="card" style={{ padding: '16px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.15)' }}>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: '#f43f5e' }}>The bug:</strong> When you <code style={{ color: '#f43f5e' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
+          <strong style={{ color: 'var(--rose)' }}>The bug:</strong> When you <code style={{ color: 'var(--rose)' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
           test-set statistics leak into the transforms. Your reported metrics will be optimistically biased —
           and you won't know until you hit production.
-          Always use <code style={{ color: '#10b981' }}>sklearn.Pipeline</code>: it <code>fit</code>s only on train, <code>transform</code>s test without leaking.
+          Always use <code style={{ color: 'var(--mint)' }}>sklearn.Pipeline</code>: it <code>fit</code>s only on train, <code>transform</code>s test without leaking.
         </p>
       </div>
     </div>
@@ -351,12 +351,12 @@ test_acc  = clf.score(X_test, y_test)
 
 fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
-colors = ['#f43f5e' if abs(c) < 1e-4 else '#6366f1' for c in coefs]
+colors = ['var(--rose)' if abs(c) < 1e-4 else 'var(--prime)' for c in coefs]
 axes[0].bar(range(len(coefs)), np.abs(coefs), color=colors, alpha=0.8, edgecolor='none')
 axes[0].set_title(f'{penalty.upper()}  α={${alpha}}  — coefficient magnitudes', fontsize=11, fontweight='bold')
 axes[0].set_xlabel('Feature index')
 axes[0].set_ylabel('|coefficient|')
-axes[0].axhline(y=1e-4, color='#f43f5e', linestyle='--', alpha=0.5, label='≈ zero threshold')
+axes[0].axhline(y=1e-4, color='var(--rose)', linestyle='--', alpha=0.5, label='≈ zero threshold')
 axes[0].legend(fontsize=9)
 
 alphas_range = np.logspace(-3, 2, 50)
@@ -367,9 +367,9 @@ for a in alphas_range:
     train_scores.append(m.score(X_train, y_train))
     test_scores.append(m.score(X_test, y_test))
 
-axes[1].semilogx(alphas_range, train_scores, color='#818cf8', label='Train', linewidth=2)
-axes[1].semilogx(alphas_range, test_scores,  color='#22d3ee', label='Test',  linewidth=2)
-axes[1].axvline(x=${alpha}, color='#f59e0b', linestyle='--', label=f'Current α={${alpha}}')
+axes[1].semilogx(alphas_range, train_scores, color='var(--violet)', label='Train', linewidth=2)
+axes[1].semilogx(alphas_range, test_scores,  color='var(--sky)', label='Test',  linewidth=2)
+axes[1].axvline(x=${alpha}, color='var(--gold)', linestyle='--', label=f'Current α={${alpha}}')
 axes[1].set_xlabel('Regularisation strength (α)')
 axes[1].set_ylabel('Accuracy')
 axes[1].set_title('Bias-variance tradeoff', fontsize=11, fontweight='bold')
@@ -394,8 +394,8 @@ function RegularizationLab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Lab</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Lab</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           L1 vs L2 on a dataset with 20 features (only 5 informative). See the geometric difference:
           L1 drives coefficients to zero (feature selection), L2 shrinks them smoothly.
         </p>
@@ -403,7 +403,7 @@ function RegularizationLab() {
 
       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
         <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
             Penalty type
           </label>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -418,8 +418,8 @@ function RegularizationLab() {
         </div>
 
         <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            α (strength): <span style={{ color: '#818cf8', fontWeight: 600 }}>{alpha}</span>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            α (strength): <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{alpha}</span>
           </label>
           <input type="range" min={0.001} max={10} step={0.001} value={alpha}
             onChange={e => setAlpha(+e.target.value)} />
@@ -446,7 +446,7 @@ kmeans = KMeans(n_clusters=4, random_state=42, n_init='auto')
 kmeans.fit(X)
 
 plt.figure(figsize=(7, 5))
-colors = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981']
+colors = ['var(--prime)', 'var(--sky)', 'var(--gold)', 'var(--mint)']
 for i in range(4):
     mask = kmeans.labels_ == i
     plt.scatter(X[mask, 0], X[mask, 1], c=colors[i], s=20, alpha=0.7, label=f'Cluster {i}')
@@ -462,8 +462,8 @@ print(f"Converged in {kmeans.n_iter_} iterations")
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Python Sandbox</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Python Sandbox</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Full Python environment. Edit and run anything — numpy, sklearn, matplotlib, scipy.
           Your compute. Your browser. No server.
         </p>
@@ -703,8 +703,7 @@ export default function ModelsMathTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>∑</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>Models & Math</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Models & Math</h1>
           <span className="badge badge-mint">Python</span>
           <span className="badge badge-sky">Pyodide</span>
         </div>

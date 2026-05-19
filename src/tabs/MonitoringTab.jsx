@@ -32,8 +32,8 @@ function MiniChart({ data, field, color, threshold, height = 60 }) {
         <div style={{
           position: 'absolute', left: 0, right: 0,
           top: `${((max - threshold) / range) * height}px`,
-          height: '1px', background: '#f59e0b', opacity: 0.6,
-          borderTop: '1px dashed #f59e0b', zIndex: 2,
+          height: '1px', background: 'var(--gold)', opacity: 0.6,
+          borderTop: '1px dashed var(--gold)', zIndex: 2,
         }} />
       )}
       <svg width="100%" height={height} style={{ display: 'block' }}>
@@ -61,7 +61,7 @@ function MiniChart({ data, field, color, threshold, height = 60 }) {
         />
         {/* Drift mark */}
         {data.map((d, i) => d.hasDrift && !data[i - 1]?.hasDrift
-          ? <line key={i} x1={`${(i + 0.5) * w}%`} x2={`${(i + 0.5) * w}%`} y1="0" y2={height} stroke="#f43f5e" strokeWidth="1" strokeDasharray="3,3" opacity="0.7" />
+          ? <line key={i} x1={`${(i + 0.5) * w}%`} x2={`${(i + 0.5) * w}%`} y1="0" y2={height} stroke="var(--rose)" strokeWidth="1" strokeDasharray="3,3" opacity="0.7" />
           : null
         )}
       </svg>
@@ -86,28 +86,28 @@ function DriftDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>Drift Dashboard</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Drift Dashboard</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           A model is running in production. Concept drift is injected at a hidden day (slide to reveal). Configure your PSI alert threshold — too tight means alert fatigue, too loose means silent degradation.
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            PSI alert threshold: <span style={{ color: psiThreshold < 0.1 ? '#f43f5e' : psiThreshold > 0.3 ? '#f59e0b' : '#10b981', fontWeight: 600 }}>{psiThreshold}</span>
-            {psiThreshold < 0.1 && <span style={{ color: '#f43f5e', fontSize: '10px', marginLeft: '6px' }}>⚠ alert fatigue</span>}
-            {psiThreshold > 0.3 && <span style={{ color: '#f59e0b', fontSize: '10px', marginLeft: '6px' }}>⚠ too loose</span>}
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            PSI alert threshold: <span style={{ color: psiThreshold < 0.1 ? 'var(--rose)' : psiThreshold > 0.3 ? 'var(--gold)' : 'var(--mint)', fontWeight: 600 }}>{psiThreshold}</span>
+            {psiThreshold < 0.1 && <span style={{ color: 'var(--rose)', fontSize: '10px', marginLeft: '6px' }}>⚠ alert fatigue</span>}
+            {psiThreshold > 0.3 && <span style={{ color: 'var(--gold)', fontSize: '10px', marginLeft: '6px' }}>⚠ too loose</span>}
           </label>
           <input type="range" min={0.05} max={0.5} step={0.01} value={psiThreshold} onChange={e => setPsiThreshold(+e.target.value)} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2d3260', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
             <span>0.05 (tight)</span><span>0.5 (loose)</span>
           </div>
-          <p style={{ fontSize: '11px', color: '#2d3260', marginTop: '8px', margin: '8px 0 0' }}>Standard: PSI &gt; 0.2 = significant shift. PSI &gt; 0.1 = monitor closely.</p>
+          <p style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '8px', margin: '8px 0 0' }}>Standard: PSI &gt; 0.2 = significant shift. PSI &gt; 0.1 = monitor closely.</p>
         </div>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            Drift onset: {revealed ? <span style={{ color: '#f43f5e', fontWeight: 600 }}>Day {driftDay}</span> : <span style={{ color: '#525a82' }}>hidden</span>}
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            Drift onset: {revealed ? <span style={{ color: 'var(--rose)', fontWeight: 600 }}>Day {driftDay}</span> : <span style={{ color: 'var(--ink-low)' }}>hidden</span>}
           </label>
           <input type="range" min={10} max={50} step={1} value={driftDay} onChange={e => setDriftDay(+e.target.value)} disabled={!revealed} style={{ opacity: revealed ? 1 : 0.3 }} />
           {!revealed && (
@@ -121,19 +121,19 @@ function DriftDashboard() {
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         {[
-          { label: 'Model accuracy', field: 'accuracy', color: '#6366f1', fmt: v => (v * 100).toFixed(1) + '%' },
-          { label: 'PSI (input drift)', field: 'psi', color: '#f59e0b', threshold: psiThreshold, fmt: v => v.toFixed(3) },
-          { label: 'KS statistic', field: 'ksStatistic', color: '#22d3ee', threshold: 0.1, fmt: v => v.toFixed(3) },
+          { label: 'Model accuracy', field: 'accuracy', color: 'var(--prime)', fmt: v => (v * 100).toFixed(1) + '%' },
+          { label: 'PSI (input drift)', field: 'psi', color: 'var(--gold)', threshold: psiThreshold, fmt: v => v.toFixed(3) },
+          { label: 'KS statistic', field: 'ksStatistic', color: 'var(--sky)', threshold: 0.1, fmt: v => v.toFixed(3) },
         ].map(c => {
           const current = data[data.length - 1]
           return (
             <div key={c.field} className="card" style={{ padding: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace" }}>{c.label}</span>
+                <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{c.label}</span>
                 <span style={{ fontSize: '13px', color: c.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{c.fmt(current[c.field])}</span>
               </div>
               <MiniChart data={data} field={c.field} color={c.color} threshold={c.threshold} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#2d3260', marginTop: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
                 <span>Day 1</span><span>Day 60</span>
               </div>
             </div>
@@ -142,17 +142,17 @@ function DriftDashboard() {
 
         {/* Alert timeline */}
         <div className="card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Alert fired (PSI &gt; {psiThreshold})</div>
+          <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Alert fired (PSI &gt; {psiThreshold})</div>
           <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
             {data.map((d, i) => (
               <div key={i} title={`Day ${d.day}`} style={{
                 width: '9px', height: '24px', borderRadius: '2px',
-                background: d.alertFired ? '#f43f5e' : (d.hasDrift && revealed) ? 'rgba(244,63,94,0.2)' : '#1c2040',
+                background: d.alertFired ? 'var(--rose)' : (d.hasDrift && revealed) ? 'rgba(244,63,94,0.2)' : 'var(--rim)',
                 transition: 'background 0.1s',
               }} />
             ))}
           </div>
-          <div style={{ marginTop: '10px', fontSize: '12px', color: missed ? '#f43f5e' : alertDelay !== null && alertDelay > 7 ? '#f59e0b' : '#10b981' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: missed ? 'var(--rose)' : alertDelay !== null && alertDelay > 7 ? 'var(--gold)' : 'var(--mint)' }}>
             {missed ? '🔕 No alert fired — drift undetected' :
              alertDelay === 0 ? '✓ Alert fired same day as drift onset' :
              `⚠ Alert fired ${alertDelay} day${alertDelay !== 1 ? 's' : ''} after drift onset`}
@@ -162,9 +162,9 @@ function DriftDashboard() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.2)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: '#eaecff', marginBottom: '10px' }}>📊 Post-mortem</div>
-          <p style={{ fontSize: '13px', color: '#8891b8', lineHeight: 1.7, margin: 0 }}>
-            Drift started on <strong style={{ color: '#f43f5e' }}>Day {driftDay}</strong>.
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '10px' }}>📊 Post-mortem</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+            Drift started on <strong style={{ color: 'var(--rose)' }}>Day {driftDay}</strong>.
             {missed
               ? ` Your PSI threshold (${psiThreshold}) was too loose — the alert never fired. Model silently degraded to ${(finalAccuracy * 100).toFixed(1)}% accuracy.`
               : alertDelay > 7
@@ -204,14 +204,14 @@ function PSILab() {
     return { bins, totalPSI }
   }, [shiftAmount, nBins])
 
-  const psiColor = result.totalPSI < 0.1 ? '#10b981' : result.totalPSI < 0.2 ? '#f59e0b' : '#f43f5e'
+  const psiColor = result.totalPSI < 0.1 ? 'var(--mint)' : result.totalPSI < 0.2 ? 'var(--gold)' : 'var(--rose)'
   const psiLabel = result.totalPSI < 0.1 ? 'Stable' : result.totalPSI < 0.2 ? 'Some shift — monitor' : 'Significant shift — alert'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: '#eaecff', marginBottom: '6px', letterSpacing: '-0.02em' }}>PSI Lab</h3>
-        <p style={{ fontSize: '13px', color: '#525a82', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PSI Lab</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Population Stability Index from scratch. Slide the distribution shift and watch PSI change in real time.
           Understand why 0.2 is the standard threshold — and when it's wrong.
         </p>
@@ -219,14 +219,14 @@ function PSILab() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            Distribution shift (σ): <span style={{ color: '#818cf8', fontWeight: 600 }}>{shiftAmount.toFixed(1)}</span>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            Distribution shift (σ): <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{shiftAmount.toFixed(1)}</span>
           </label>
           <input type="range" min={0} max={3} step={0.1} value={shiftAmount} onChange={e => setShiftAmount(+e.target.value)} />
         </div>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: '#525a82', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-            Bins: <span style={{ color: '#818cf8', fontWeight: 600 }}>{nBins}</span>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            Bins: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{nBins}</span>
           </label>
           <input type="range" min={5} max={20} step={1} value={nBins} onChange={e => setNBins(+e.target.value)} />
         </div>
@@ -239,7 +239,7 @@ function PSILab() {
         </div>
         <div>
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: psiColor, fontSize: '15px' }}>{psiLabel}</div>
-          <div style={{ fontSize: '12px', color: '#525a82' }}>PSI = Σ (Actual% − Expected%) × ln(Actual% / Expected%)</div>
+          <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>PSI = Σ (Actual% − Expected%) × ln(Actual% / Expected%)</div>
         </div>
       </div>
 
@@ -251,18 +251,18 @@ function PSILab() {
             const maxRef = Math.max(...result.bins.map(x => Math.max(x.ref, x.cur)))
             return (
               <div key={b.bin} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', height: '100%', justifyContent: 'flex-end' }}>
-                <div style={{ width: '100%', background: '#6366f1', height: `${(b.ref / maxRef) * 60}px`, opacity: 0.7, borderRadius: '2px 2px 0 0' }} />
-                <div style={{ width: '100%', background: '#22d3ee', height: `${(b.cur / maxRef) * 60}px`, opacity: 0.8, borderRadius: '2px 2px 0 0' }} />
+                <div style={{ width: '100%', background: 'var(--prime)', height: `${(b.ref / maxRef) * 60}px`, opacity: 0.7, borderRadius: '2px 2px 0 0' }} />
+                <div style={{ width: '100%', background: 'var(--sky)', height: `${(b.cur / maxRef) * 60}px`, opacity: 0.8, borderRadius: '2px 2px 0 0' }} />
               </div>
             )
           })}
         </div>
         <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#525a82' }}>
-            <div style={{ width: '10px', height: '10px', background: '#6366f1', borderRadius: '2px', opacity: 0.7 }} /> Reference
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--ink-low)' }}>
+            <div style={{ width: '10px', height: '10px', background: 'var(--prime)', borderRadius: '2px', opacity: 0.7 }} /> Reference
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#525a82' }}>
-            <div style={{ width: '10px', height: '10px', background: '#22d3ee', borderRadius: '2px', opacity: 0.8 }} /> Current
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--ink-low)' }}>
+            <div style={{ width: '10px', height: '10px', background: 'var(--sky)', borderRadius: '2px', opacity: 0.8 }} /> Current
           </div>
         </div>
       </div>
@@ -652,10 +652,9 @@ export default function MonitoringTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>📡</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.04em' }}>Monitoring & Drift</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Monitor</h1>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '580px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Models don't break on deploy day. They degrade silently. Configure thresholds, watch drift develop, build alerts that actually work.
         </p>
       </div>
