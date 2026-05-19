@@ -104,15 +104,30 @@ const BOTTOM_LINKS = [
 ]
 
 // ── Sidebar component ─────────────────────────────────────────────────────────
-function Sidebar({ activeTab, onNavigate }) {
+function Sidebar({ activeTab, onNavigate, onSearch }) {
   return (
     <div style={{
       width: '220px', flexShrink: 0,
       display: 'flex', flexDirection: 'column',
-      padding: '16px 0 24px',
+      padding: '0 0 24px',
       overflowY: 'auto', scrollbarWidth: 'none',
       height: '100%',
     }}>
+      {/* Logo + Search */}
+      <div style={{ padding: '14px 12px 12px', borderBottom: '1px solid var(--rim)', marginBottom: '10px' }}>
+        <button onClick={() => onNavigate('home')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px', width: '100%' }}>
+          <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'linear-gradient(135deg, var(--prime), var(--violet))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff', flexShrink: 0 }}>ML</div>
+          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
+        </button>
+        <button onClick={onSearch} style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif", transition: 'border-color 0.12s' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--rim-hi)'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}>
+          <span style={{ fontSize: '13px' }}>⌕</span>
+          <span style={{ flex: 1, textAlign: 'left' }}>Search</span>
+          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-low)' }}>⌘K</kbd>
+        </button>
+      </div>
+
       {/* Home + Gradient */}
       <div style={{ padding: '0 10px', marginBottom: '12px' }}>
         <SidebarItem label="Home" isActive={activeTab === 'home'} accent="var(--prime)" onClick={() => onNavigate('home')} />
@@ -265,50 +280,27 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--void)' }}>
 
-      {/* ── Topbar ── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 50, height: '48px',
-        display: 'flex', alignItems: 'center',
-        background: 'rgba(12,10,8,0.95)', backdropFilter: 'blur(16px)',
+      {/* ── Mobile-only topbar ── */}
+      <header className="topbar-mobile" style={{
+        height: '48px', flexShrink: 0,
+        alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
         borderBottom: '1px solid var(--rim)',
-        padding: '0 20px',
-        justifyContent: 'space-between',
+        background: 'rgba(12,10,8,0.95)', backdropFilter: 'blur(16px)',
+        zIndex: 50,
       }}>
-        {/* Logo */}
-        <button onClick={() => goTo('home')} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <div style={{
-            width: '26px', height: '26px', borderRadius: '6px',
-            background: 'linear-gradient(135deg, var(--prime), var(--violet))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '9px', color: '#fff',
-          }}>ML</div>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>
-            Systems Lab
-          </span>
+        <button onClick={() => goTo('home')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <div style={{ width: '24px', height: '24px', borderRadius: '5px', background: 'linear-gradient(135deg, var(--prime), var(--violet))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff' }}>ML</div>
+          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
         </button>
-
-        {/* Right controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Search button */}
-          <button onClick={() => setSearchOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--prime-faint)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', transition: 'all 0.15s', fontFamily: "'Space Grotesk',sans-serif" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,106,247,0.35)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}>
-            <span>⌕</span>
-            <span>Search</span>
-            <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-low)' }}>⌘K</kbd>
-          </button>
-
-          {/* Hamburger — mobile only */}
-          <button className="hamburger-btn"
-            onClick={() => setMenuOpen(o => !o)}
-            style={{ alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: menuOpen ? 'rgba(255,255,255,0.08)' : 'none', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-mid)' }}>
-            {menuOpen
-              ? <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-              : <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            }
-          </button>
-        </div>
+        <button className="hamburger-btn"
+          onClick={() => setMenuOpen(o => !o)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: menuOpen ? 'rgba(255,255,255,0.08)' : 'none', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-mid)' }}>
+          {menuOpen
+            ? <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            : <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          }
+        </button>
       </header>
 
       {/* ── Body: sidebar + content ── */}
@@ -317,23 +309,23 @@ export default function App() {
         {/* Desktop sidebar */}
         <aside className="sidebar-desktop" style={{
           width: '220px', flexShrink: 0,
-          position: 'sticky', top: '48px',
-          height: 'calc(100vh - 48px)',
+          position: 'sticky', top: 0,
+          height: '100vh',
           borderRight: '1px solid var(--rim)',
           background: 'rgba(0,0,0,0.18)',
         }}>
-          <Sidebar activeTab={activeTab} onNavigate={goTo} />
+          <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} />
         </aside>
 
         {/* Mobile sidebar overlay */}
         {menuOpen && (
           <div className="sidebar-overlay">
-            <Sidebar activeTab={activeTab} onNavigate={goTo} />
+            <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} />
           </div>
         )}
 
         {/* Main content */}
-        <main className="content-area fade-in" style={{ flex: 1, minWidth: 0, padding: '40px 48px', maxWidth: '960px' }}>
+        <main className="content-area fade-in" style={{ flex: 1, minWidth: 0, padding: '40px 48px' }}>
           <ActiveComponent onNavigate={goTo} />
         </main>
       </div>

@@ -361,11 +361,13 @@
 
 /* ─── Sidebar layout ─────────────────────────────────────────────────────── */
 .sidebar-desktop { display: flex; flex-direction: column; }
+.topbar-mobile   { display: none; }
 .hamburger-btn   { display: none !important; }
 .sidebar-overlay { display: none; }
 
 @media (max-width: 768px) {
   .sidebar-desktop { display: none !important; }
+  .topbar-mobile   { display: flex !important; }
   .hamburger-btn   { display: flex !important; }
   .sidebar-overlay {
     display: flex;
