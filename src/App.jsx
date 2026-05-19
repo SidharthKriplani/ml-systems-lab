@@ -18,8 +18,10 @@ import MLOpsPipelinesTab from './tabs/MLOpsPipelinesTab.jsx'
 import DeepLearningTab  from './tabs/DeepLearningTab.jsx'
 import DLFineTuningTab  from './tabs/DLFineTuningTab.jsx'
 import DLServingTab     from './tabs/DLServingTab.jsx'
-import DataScienceTab   from './tabs/DataScienceTab.jsx'
-import AirflowTab       from './tabs/AirflowTab.jsx'
+import DataScienceTab    from './tabs/DataScienceTab.jsx'
+import CausalInferenceTab from './tabs/CausalInferenceTab.jsx'
+import TimeSeriesTab     from './tabs/TimeSeriesTab.jsx'
+import AirflowTab        from './tabs/AirflowTab.jsx'
 import DbtTab           from './tabs/dbtTab.jsx'
 import DataModelingTab  from './tabs/DataModelingTab.jsx'
 
@@ -87,7 +89,9 @@ const DOMAINS = [
     color: 'var(--sky)',
     bg: 'rgba(34,211,238,0.08)',
     tabs: [
-      { id: 'ds', label: 'Data Science', component: DataScienceTab },
+      { id: 'ds',       label: 'DS Fundamentals',     component: DataScienceTab },
+      { id: 'causal',   label: 'Causal Inference',    component: CausalInferenceTab },
+      { id: 'ts',       label: 'Time Series',         component: TimeSeriesTab },
     ],
   },
   {

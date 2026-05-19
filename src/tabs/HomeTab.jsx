@@ -139,29 +139,31 @@ const LEARNING_PATHS = [
 // ── Track grid ────────────────────────────────────────────────────────────────
 const TRACKS = [
   // ML Engineering
-  { id: 'models',     icon: '∑',  label: 'Models & Math',       accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'Real Python in the browser. PCA, SVD, calibration, preprocessing pipelines.', python: true },
-  { id: 'features',   icon: '🧩', label: 'Feature Engineering', accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['Skew Simulator', 'Feature Store Designer', 'Point-in-Time Joins'], description: 'Training-serving skew, feature stores, window aggregations. The bugs that silently corrupt production models.' },
-  { id: 'eval',       icon: '📊', label: 'Model Evaluation',    accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
-  { id: 'design',     icon: '🏗', label: 'System Design',       accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production ML architecture. Rec systems, fraud, search ranking. Plus the ML Incident Room.' },
-  { id: 'classical',  icon: '💀', label: 'Classical ML',        accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
+  { id: 'models',       label: 'Math Foundations',    type: 'sandbox',  accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'The math behind the decisions — PCA, SVD, calibration, regularization. Python cells for hands-on exploration.' },
+  { id: 'features',     label: 'Feature Engineering', type: 'judgment', accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['Skew Simulator', 'Feature Store Designer', 'Leakage Zoo', 'Online/Offline Decider'], description: 'Training-serving skew, feature stores, leakage patterns. The bugs that silently corrupt production models.' },
+  { id: 'eval',         label: 'Model Evaluation',    type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
+  { id: 'design',       label: 'System Design',       type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production incident diagnosis, ML platform design, two-tower retrieval, serving architecture decisions.' },
+  { id: 'classical',    label: 'Classical ML',         type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
   // Data Engineering
-  { id: 'spark',      icon: '🔥', label: 'Spark Lab',           accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Configure shuffles, diagnose skew, read DAGs, watch jobs die.' },
-  { id: 'airflow',    icon: '🌊', label: 'Airflow',             accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
-  { id: 'dbt',        icon: '🔧', label: 'dbt',                 accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
-  { id: 'modeling',   icon: '🗂', label: 'Data Modeling',       accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
+  { id: 'spark',        label: 'Spark Lab',            type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Diagnose shuffle bottlenecks, fix data skew, read execution DAGs.' },
+  { id: 'airflow',      label: 'Airflow',              type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
+  { id: 'dbt',          label: 'dbt',                  type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
+  { id: 'modeling',     label: 'Data Modeling',        type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
   // Deep Learning
-  { id: 'dl',         icon: '🔴', label: 'Training Lab',        accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
-  { id: 'dl_finetune',icon: '🧊', label: 'Fine-tuning',         accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
-  { id: 'dl_serving', icon: '⚡', label: 'DL Serving',          accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
+  { id: 'dl',           label: 'Training Lab',         type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
+  { id: 'dl_finetune',  label: 'Fine-tuning',          type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
+  { id: 'dl_serving',   label: 'DL Serving',           type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
   // MLOps
-  { id: 'monitor',      icon: '📡', label: 'Monitoring',        accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Drift Dashboard', 'PSI Lab'], description: 'Configure PSI/KS thresholds. Watch a model silently degrade. Build alerts before it costs you.' },
-  { id: 'mlops_deploy', icon: '🚀', label: 'Deployment',        accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
-  { id: 'mlops_pipes',  icon: '⚙️', label: 'CI/CD & Infra',    accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
+  { id: 'monitor',      label: 'Monitoring',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Drift Dashboard', 'PSI Lab', 'Incident Triage', 'Coverage Audit'], description: 'Drift detection, PSI/KS thresholds, incident triage, monitoring blind spots.' },
+  { id: 'mlops_deploy', label: 'Deployment',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
+  { id: 'mlops_pipes',  label: 'CI/CD & Infra',        type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
   // Data Science
-  { id: 'ds',         icon: '🎯', label: 'Data Science',        accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Model Selection Oracle', 'Statistical Testing', 'Calibration', 'Experiment Design'], description: 'Model selection, statistical testing pitfalls, calibration decisions, experiment design.' },
+  { id: 'ds',           label: 'DS Fundamentals',      type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Model Selection Oracle', 'Analysis Mistakes', 'Calibration', 'Metric Design Pitfalls'], description: 'Model selection, statistical testing pitfalls, calibration, and metric design under Goodhart\'s Law.' },
+  { id: 'causal',       label: 'Causal Inference',     type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Causal vs Predictive', 'Identification Strategies', 'Confounder or Collider'], description: 'When prediction isn\'t enough. Identification strategies, confounders vs colliders, uplift modeling.' },
+  { id: 'ts',           label: 'Time Series',          type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Forecast Failure Zoo', 'Stationarity & Transforms', 'Anomaly Detection Tiers'], description: 'Why forecasts fail in production. Stationarity decisions, anomaly detection tier selection.' },
   // Resources
-  { id: 'interview',  icon: '🎯', label: 'Interview Prep',      accent: 'var(--gold)',   border: 'rgba(251,191,36,0.2)', bg: 'rgba(251,191,36,0.04)', modules: ['77 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
-  { id: 'gradient',   icon: '∇', label: 'Gradient',             accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
+  { id: 'interview',    label: 'Interview Prep',       type: 'reference', accent: 'var(--gold)',  border: 'rgba(251,191,36,0.2)', bg: 'rgba(251,191,36,0.04)', modules: ['52 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
+  { id: 'gradient',     label: 'Gradient',             type: 'reading',  accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
 ]
 
 const TAB_ACCENT = {
@@ -170,7 +172,8 @@ const TAB_ACCENT = {
   spark: 'var(--ember)', airflow: 'var(--ember)', dbt: 'var(--ember)', modeling: 'var(--ember)',
   dl: 'var(--violet)', dl_finetune: 'var(--violet)', dl_serving: 'var(--violet)',
   monitor: 'var(--rose)', mlops_deploy: 'var(--rose)', mlops_pipes: 'var(--rose)',
-  ds: 'var(--sky)', interview: 'var(--gold)', gradient: 'var(--sky)', landscape: 'var(--gold)',
+  ds: 'var(--sky)', causal: 'var(--sky)', ts: 'var(--sky)',
+  interview: 'var(--gold)', gradient: 'var(--sky)', landscape: 'var(--gold)',
 }
 
 // ── Progress ring ─────────────────────────────────────────────────────────────
@@ -194,9 +197,16 @@ const DOMAIN_LABELS = [
   { key: 'de',        label: 'Data Engineering',  tracks: ['spark','airflow','dbt','modeling'] },
   { key: 'dl',        label: 'Deep Learning',     tracks: ['dl','dl_finetune','dl_serving'] },
   { key: 'mlops',     label: 'MLOps',             tracks: ['monitor','mlops_deploy','mlops_pipes'] },
-  { key: 'ds',        label: 'Data Science',      tracks: ['ds'] },
+  { key: 'ds',        label: 'Data Science',      tracks: ['ds','causal','ts'] },
   { key: 'resources', label: 'Resources',         tracks: ['interview','gradient'] },
 ]
+
+const TYPE_BADGE = {
+  judgment:  { label: 'judgment',  color: 'var(--sky)',    bg: 'rgba(34,211,238,0.1)',  border: 'rgba(34,211,238,0.25)' },
+  sandbox:   { label: 'sandbox',   color: 'var(--violet)', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
+  reference: { label: 'reference', color: 'var(--gold)',   bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' },
+  reading:   { label: 'reading',   color: 'var(--ink-low)',bg: 'rgba(255,255,255,0.04)',border: 'var(--rim)' },
+}
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function HomeTab({ onNavigate }) {
@@ -406,12 +416,9 @@ export default function HomeTab({ onNavigate }) {
                       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 32px ${t.border}` }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '18px' }}>{t.icon}</span>
-                          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: '14px', color: t.accent }}>{t.label}</span>
-                        </div>
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: '14px', color: t.accent }}>{t.label}</span>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          {t.python && <span className="badge badge-mint" style={{ fontSize: '9px' }}>Python</span>}
+                          {t.type && (() => { const tb = TYPE_BADGE[t.type]; return <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: tb.bg, color: tb.color, border: `1px solid ${tb.border}`, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{tb.label}</span> })()}
                           {mastery && <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: MASTERY_COLORS[mastery], padding: '1px 6px', border: `1px solid ${MASTERY_COLORS[mastery]}30`, borderRadius: '999px' }}>{MASTERY_LABELS[mastery]}</span>}
                           {pct > 0 && !mastery && <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)' }}>{pct}%</span>}
                         </div>
@@ -433,18 +440,15 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Python callout ── */}
       <section className="card-border-gradient" style={{ padding: '28px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap' }}>
-          <div style={{ fontSize: '36px', lineHeight: 1 }}>⌁</div>
-          <div style={{ flex: 1, minWidth: '260px' }}>
-            <div className="eyebrow" style={{ marginBottom: '6px' }}>Python in the browser</div>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px', letterSpacing: '-0.03em' }}>
-              Run sklearn, numpy, matplotlib — no server, no install.
-            </h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '520px', marginBottom: '16px' }}>
-              The Models & Math track uses Pyodide to execute real Python directly in your browser. PCA, SVD, calibration, preprocessing — configure, run, see output instantly.
-            </p>
-            <button className="btn-primary" onClick={() => onNavigate('models')}>Open Models & Math →</button>
-          </div>
+        <div style={{ flex: 1 }}>
+          <div className="eyebrow" style={{ marginBottom: '6px' }}>Python sandbox</div>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px', letterSpacing: '-0.03em' }}>
+            Run sklearn, numpy, matplotlib — no server, no install.
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '520px', marginBottom: '16px' }}>
+            Math Foundations runs real Python via Pyodide. PCA, SVD, calibration, preprocessing — not interactive slides, actual executable code. Use it to build intuition, not to skip reading.
+          </p>
+          <button className="btn-primary" onClick={() => onNavigate('models')}>Open Math Foundations →</button>
         </div>
       </section>
 

@@ -1182,8 +1182,25 @@ function CaseLibrary() {
   )
 }
 
+// ─── Post → practice tab map ─────────────────────────────────────────────────
+const POST_PRACTICE = {
+  1:  { tab: 'features',     label: 'Feature Engineering — Skew Simulator' },
+  2:  { tab: 'spark',        label: 'Spark Lab — Shuffle Hell' },
+  3:  { tab: 'eval',         label: 'Model Evaluation — Metric Selector' },
+  4:  { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
+  5:  { tab: 'monitor',      label: 'Monitoring — Drift Dashboard' },
+  6:  { tab: 'models',       label: 'Math Foundations — PCA Explorer' },
+  7:  { tab: 'features',     label: 'Feature Engineering — Feature Store Designer' },
+  8:  { tab: 'interview',    label: 'Interview Prep — System Design Questions' },
+  9:  { tab: 'dl',           label: 'Training Lab — Backprop Debugging' },
+  10: { tab: 'eval',         label: 'Model Evaluation — Metric Selector' },
+  11: { tab: 'design',       label: 'System Design — Design Canvas' },
+  12: { tab: 'dl',           label: 'Training Lab — Training Failure Diagnosis' },
+  13: { tab: 'interview',    label: 'Interview Prep — System Design Questions' },
+}
+
 // ─── Post reader ─────────────────────────────────────────────────────────────
-function PostReader({ post, onBack }) {
+function PostReader({ post, onBack, onNavigate }) {
   const [scrollPct, setScrollPct] = useState(0)
 
   function handleScroll(e) {
@@ -1339,6 +1356,19 @@ function PostReader({ post, onBack }) {
             <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
           ))}
         </div>
+
+        {/* Practice CTA */}
+        {POST_PRACTICE[post.id] && onNavigate && (
+          <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', color: 'var(--ink-mid)' }}>{POST_PRACTICE[post.id].label}</div>
+            </div>
+            <button onClick={() => onNavigate(POST_PRACTICE[post.id].tab)} className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px', whiteSpace: 'nowrap' }}>
+              Practice this →
+            </button>
+          </div>
+        )}
       </article>
     </div>
   )
@@ -1384,7 +1414,7 @@ function PostCard({ post, featured, onClick }) {
 }
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
-export default function GradientTab() {
+export default function GradientTab({ onNavigate }) {
   const [activeCat, setActiveCat] = useState('All')
   const [reading,   setReading]   = useState(null)
   const [mode,      setMode]      = useState('posts')  // 'posts' | 'cases'
@@ -1395,7 +1425,7 @@ export default function GradientTab() {
 
   if (reading) {
     const post = POSTS.find(p => p.id === reading)
-    if (post) return <PostReader post={post} onBack={() => setReading(null)} />
+    if (post) return <PostReader post={post} onBack={() => setReading(null)} onNavigate={onNavigate} />
   }
 
   if (mode === 'cases') return (
@@ -1406,7 +1436,7 @@ export default function GradientTab() {
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: '💀 Cases' }].map(m => (
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
@@ -1436,7 +1466,7 @@ export default function GradientTab() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: '💀 Cases' }].map(m => (
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
