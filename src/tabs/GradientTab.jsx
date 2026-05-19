@@ -939,6 +939,249 @@ Waiting to be asked. The move from L5 to L6, in particular, requires a shift fro
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers']
 
+// ─── Production Failure Case Library ─────────────────────────────────────────
+const CASES = [
+  {
+    id: 'c1', sector: 'Recommendations', severity: 'P1', duration: '4 days undetected',
+    title: 'Stale Item Embeddings',
+    what: 'A two-tower recommendation system silently degraded — CTR fell 18% over four days with no alert firing.',
+    rootCause: 'The item embedding refresh pipeline failed on day 1 due to a missing S3 path. Serving fell back to cached embeddings silently. By day 4, 27% of the item catalogue had no embedding and was falling back to a popularity-based heuristic for all users.',
+    timeline: 'Day 1: pipeline fails silently. Day 2–3: CTR begins falling. Day 4: on-call pages at 2am for first time. Day 5: root cause identified, backfill run.',
+    fix: 'Configured pipeline failure alerts. Added a feature freshness SLA monitor (alert if item embeddings > 26h stale). Added a serving-side health check comparing embedding coverage against catalogue size.',
+    lesson: 'Silent fallbacks are silent failures. A serving layer that degrades gracefully without alerting is worse than one that crashes loudly — you lose days of recovery time.',
+    tags: ['Feature Freshness', 'Monitoring', 'Embeddings', 'Silent Failure'],
+  },
+  {
+    id: 'c2', sector: 'Fraud Detection', severity: 'P0', duration: '6 hours in production',
+    title: 'Label Leakage from Dispute Outcomes',
+    what: 'A retrained fraud model had offline AUC 0.97, precision 0.91. In production, precision collapsed to 0.43 within hours.',
+    rootCause: 'A refactor removed a timestamp guard from the dispute outcome join. Features like `is_disputed_resolved` and `chargeback_filed_within_7d` — only observable after fraud is confirmed — were being used as training features. The model learned to predict fraud from its consequences, not its causes.',
+    timeline: 'Morning: model promoted. Noon: fraud ops overwhelmed with false positives. 14:00: rollback to previous champion. 16:00: label leakage confirmed via feature importance audit.',
+    fix: 'Rolled back immediately. Re-added timestamp filtering to all dispute joins. Added an automated leakage check: any feature with > 0.3 correlation with the label in a causality-excluded window blocks training.',
+    lesson: 'Suspiciously good offline metrics are a red flag, not a green light. If your top features include dispute outcomes, returns, or resolutions, run a temporal validity check before training.',
+    tags: ['Label Leakage', 'Point-in-Time', 'Fraud', 'Post-Event Features'],
+  },
+  {
+    id: 'c3', sector: 'Search Ranking', severity: 'P1', duration: '12 hours after deployment',
+    title: 'Padding-Induced Latency Cliff at P99',
+    what: 'P99 latency hit 8 seconds after deploying BERT-large as a reranker. P50 was unaffected at 120ms.',
+    rootCause: 'BERT-large with max_len=512 and dynamic batching padded all sequences to max length — including one-word queries. A query with 1 token processed the same 51,200 tokens as a 50-word query (100 candidates × 512). Long queries created massive tensors that saturated the GPU and queued all subsequent requests.',
+    timeline: 'Deployment at 14:00. P99 climbs through the evening as long-query traffic increases. Alert fires at 02:00 when user-facing timeout rate crosses 1%.',
+    fix: 'Rolled back to BERT-base. Implemented sequence-length bucketing: batch queries of similar length, pad only to the longest in the bucket. Added per-query latency budget with a reranker bypass.',
+    lesson: 'P99 issues are distribution problems, not mean problems. Always segment latency by input characteristics — query length, candidate count, user tier — before deploying a model with quadratic compute.',
+    tags: ['Serving Latency', 'BERT', 'Batching', 'P99', 'Quadratic Compute'],
+  },
+  {
+    id: 'c4', sector: 'Pricing', severity: 'P2', duration: 'Several weeks before detection',
+    title: 'Training-Serving Scaler Divergence',
+    what: 'A pricing model\'s production scores drifted systematically over three weeks — high-value users were being underpriced and low-value users overpriced.',
+    rootCause: 'The serving code re-fit the StandardScaler on each individual prediction request (`scaler.fit_transform([single_row])`). A single row has mean = its own value and std ≈ 0. Every scaled feature was being zeroed out. The model was effectively receiving all-zero inputs for scaled features.',
+    timeline: 'Model deployed. Business metrics slightly off but attributed to seasonality. PSI monitoring not configured on serving features. Three weeks later, an engineer notices serving features logged in production have all scaled features at ~0.',
+    fix: 'Serialised and versioned the trained scaler artifact alongside the model. Added a serving-feature distribution check that runs hourly against training baseline.',
+    lesson: 'Never fit preprocessing at serving time. Fit once during training, serialise the artifact, load at serving. The sklearn Pipeline pattern enforces this correctly.',
+    tags: ['Training-Serving Skew', 'Preprocessing', 'Scaler', 'Feature Store'],
+  },
+  {
+    id: 'c5', sector: 'Recommendations', severity: 'P2', duration: '6 weeks undetected',
+    title: 'Feedback Loop in Feed Ranking',
+    what: 'A feed ranking model\'s click diversity decreased by 40% over six weeks. Users complained of a "filter bubble." Business metrics looked neutral.',
+    rootCause: 'The ranking model recommended content. Users clicked recommended content. Clicks became training labels. The next model reinforced what the previous model had already recommended. A self-reinforcing loop progressively narrowed recommendation diversity without any single change triggering an alert.',
+    timeline: 'No single incident. Gradual decline detected by a data scientist during a quarterly review of content diversity metrics.',
+    fix: 'Implemented a permanent 5% long-term holdout group that received a diversity-boosted ranker. Used holdout group performance as the feedback loop detection signal. Added content diversity as a monitoring metric alongside CTR.',
+    lesson: 'Feedback loops are invisible to standard offline evaluation and A/B tests of short duration. Long-term holdout groups — not held out from traffic, but held out from model influence — are the only reliable detection mechanism.',
+    tags: ['Feedback Loop', 'Recommendations', 'Diversity', 'Self-Reinforcing'],
+  },
+  {
+    id: 'c6', sector: 'Experimentation', severity: 'P2', duration: '14-day experiment invalidated',
+    title: 'SRM from Automated Bot Traffic',
+    what: 'A two-week A/B test showed +2.1% CTR with p=0.002. The PM wanted to ship. The SRM check showed 52:48 assignment instead of 50:50.',
+    rootCause: 'Automated bot traffic from a third-party monitoring service was not being filtered from experiment assignment. Bots were disproportionately assigned to the control group (they were first observed on control URLs). The asymmetric bot presence inflated control group session counts and created the assignment imbalance.',
+    timeline: 'Experiment runs 14 days. SRM noticed during post-analysis. Investigation takes 3 days. Experiment rerun with bot filtering: lift reduces to +0.4%, p=0.21.',
+    fix: 'Added bot detection to experiment assignment gate. Required SRM check as a mandatory pass/fail gate before any experiment results are readable in the dashboard.',
+    lesson: 'An SRM p-value < 0.01 means the experiment is invalid regardless of primary metric significance. The +2.1% CTR lift was noise from a biased sample — rerunning found no real effect.',
+    tags: ['SRM', 'A/B Testing', 'Bots', 'Experimentation Validity'],
+  },
+  {
+    id: 'c7', sector: 'Content Ranking', severity: 'P1', duration: 'Months of slow degradation',
+    title: 'Concept Drift After Macro Event',
+    what: 'An engagement ranking model\'s performance degraded slowly but persistently over three months following a major global event. By the time it was flagged, engagement metrics were down 22% from the model\'s launch performance.',
+    rootCause: 'User behaviour shifted substantially after a major news event — users sought news and information content, while the model was trained on a pre-event engagement distribution that over-weighted entertainment and social content. The model\'s P(y|X) mapping became stale: the same features now predicted different engagement levels.',
+    timeline: 'Event occurs. Gradual performance decline begins. PSI monitors don\'t fire (features shift slowly). 3 months later, an engineer runs a slice analysis and finds the model performs poorly on news/information queries.',
+    fix: 'Immediate retrain on post-event data. Added concept drift monitoring using a holdout set with daily label resolution. Implemented a trigger: if rolling model performance on holdout set drops > 5% vs peak, initiate retraining review.',
+    lesson: 'PSI monitors data distribution (covariate shift). They don\'t detect concept drift — when P(y|X) changes without X changing. You need performance monitoring with labeled holdout data to catch concept drift.',
+    tags: ['Concept Drift', 'Retraining', 'Monitoring', 'Covariate Shift'],
+  },
+  {
+    id: 'c8', sector: 'Feature Engineering', severity: 'P2', duration: 'Present from model launch',
+    title: 'Timezone Mismatch in Window Aggregation',
+    what: 'A churn prediction model had a persistent 3–4% precision gap between offline validation and production that engineering could never fully explain.',
+    rootCause: 'Training computed a "last 7 days activity" window using calendar days in UTC. Serving computed a rolling 168-hour window based on wall-clock time. At 11pm UTC, serving could include the next calendar day\'s data. For users in UTC+5, the training window included their previous day\'s activity; serving did not. The disagreement was small per user but consistent.',
+    timeline: 'Model ships. Offline-online gap noticed but dismissed as "normal generalisation loss." Present from launch. Discovered two years later during a feature store migration that standardised window definitions.',
+    fix: 'Standardised all time window definitions to use the same epoch-based rolling approach in both training and serving. Added a training-serving parity test that runs on a held-out set comparing training feature values to simulated serving feature values.',
+    lesson: 'Small, systematic training-serving divergences are the hardest to find because they don\'t cause catastrophic failure — just persistent underperformance that\'s easy to rationalise away.',
+    tags: ['Training-Serving Skew', 'Feature Engineering', 'Timezones', 'Silent Bug'],
+  },
+  {
+    id: 'c9', sector: 'Classification', severity: 'P2', duration: '3 weeks after retrain',
+    title: 'Threshold Not Recalibrated After Retrain',
+    what: 'After a model retrain, precision dropped from 0.78 to 0.51 in production. The model itself was better — it was the operating threshold that was wrong.',
+    rootCause: 'The retrained model had a different score distribution than the previous model (better calibrated, scores more spread). The old threshold of 0.45 was carried over without recalibration. At 0.45, the new model was flagging far more borderline cases because its scores were better separated.',
+    timeline: 'Retrain completes with better AUC and offline precision. Promoted to production with old threshold. Precision drops immediately. Three weeks of investigation before an engineer checks the score distribution and notices the shift.',
+    fix: 'Added threshold recalibration as a mandatory step in the promotion checklist. Threshold is computed on a validation set using the business FP/FN cost ratio — not carried over from the previous model version.',
+    lesson: 'A model\'s optimal threshold is specific to its score distribution. Every retrain produces a new distribution. Threshold must be recalibrated on the new model\'s outputs, not inherited.',
+    tags: ['Threshold', 'Calibration', 'Model Promotion', 'Precision'],
+  },
+  {
+    id: 'c10', sector: 'Classification', severity: 'P2', duration: 'Present from model training',
+    title: 'Data Grain Error: Order vs. Item Level',
+    what: 'A product recommendation model had unexpectedly high recall but very low precision. Items were being recommended without meaningful personalisation.',
+    rootCause: 'Training data was supposed to be at item level (one row per user-item interaction). Due to a join error, the training set was at order level (one row per order), and items within the same order were implicitly treated as interchangeable. The model learned that "if a user bought item A, they\'ll buy everything in the same order" — which is tautologically true but not predictive.',
+    timeline: 'Model trains with good offline AUC. Ships. Recommendation diversity is low. Business team notices users are being recommended clearly irrelevant items. Investigation takes 2 weeks to trace to the grain error.',
+    fix: 'Rewrote the training data generation query with an explicit grain assertion: deduplicate to one row per (user, item, session_start_ts) before joining. Added a grain validation check to the training pipeline.',
+    lesson: 'The grain is the contract. An accidental fan-out join is one of the easiest silent errors in SQL-based training pipelines. Always assert the expected grain before and after every join.',
+    tags: ['Data Grain', 'Join Error', 'Training Data', 'SQL'],
+  },
+  {
+    id: 'c11', sector: 'NLP', severity: 'P2', duration: '2 weeks before detection',
+    title: 'Null Handling Divergence (NaN → 0 vs NaN → mean)',
+    what: 'A text classification model had a 12% precision drop for new users in production compared to the validation set.',
+    rootCause: 'Training imputed missing `account_age_days` with the column mean (127 days). The serving code, written by a different team, defaulted to 0. For new users with no account age, the model was receiving 0 at serving time (new/unknown user) but had been trained to associate a mean value (established user pattern) with missing account age.',
+    timeline: 'Model launches. New user precision is off. Initially attributed to cold-start. Slice analysis confirms it\'s specifically users where `account_age_days` is null. Serving code reviewed, divergence found.',
+    fix: 'Serialised the imputation value (127) alongside the model artifact. Added a serving-feature audit that compares null handling logic for every feature between training and serving.',
+    lesson: 'Imputation strategies must be explicitly serialised and versioned with the model. "Mean" is not a constant — it\'s a value computed from your training data that must be reused at serving time.',
+    tags: ['Training-Serving Skew', 'Null Handling', 'Imputation', 'New Users'],
+  },
+  {
+    id: 'c12', sector: 'Delivery Logistics', severity: 'P2', duration: '6 months after expansion',
+    title: 'Geographic Distribution Shift After Market Expansion',
+    what: 'A delivery time prediction model was trained on dense urban markets. After expanding to suburban markets, its RMSE increased from 4.2 to 11.8 minutes.',
+    rootCause: 'Training data was 90% urban market. Features like `restaurant_density_1km`, `traffic_index`, and `driver_availability` had completely different value ranges in suburban markets. The model had never seen the suburban distribution — it was extrapolating far outside its training domain.',
+    timeline: 'Expansion launches. Delivery time estimates are widely off in new markets. Customer complaints spike. Root cause identified immediately — but model had no mechanism to detect or flag out-of-distribution inputs.',
+    fix: 'Collected 8 weeks of suburban data before retraining. Added an OOD detection layer: if a prediction request has > 2 features outside the training distribution range, apply a confidence penalty to the output. Implemented geo-stratified training.',
+    lesson: 'A model trained on one geographic distribution will fail silently on another. When expanding to new markets, collect labelled data first — even 4–6 weeks — before deploying the existing model without modification.',
+    tags: ['Distribution Shift', 'Geographic Bias', 'OOD Detection', 'Expansion'],
+  },
+  {
+    id: 'c13', sector: 'Fraud Detection', severity: 'P1', duration: '90 minutes to rollback',
+    title: 'Point-in-Time Join Bug in Retrain',
+    what: 'A fraud model retrain produced AUC 0.96 offline. Online: precision dropped from 0.84 to 0.29 in 2 hours.',
+    rootCause: 'A refactored training pipeline switched from a Feast get_historical_features() call (which enforces point-in-time correctness) to a raw SQL join on user_id. This silently joined features at their current values rather than their values at the time of the transaction. Every user\'s feature row reflected their current state — not their state at the time of fraud.',
+    timeline: 'Retrain completes. Offline metrics look excellent. Promoted to production. Within 2 hours, fraud ops flags precision collapse. Champion model still in shadow — rollback in 90 minutes.',
+    fix: 'Re-implemented all training joins using Feast. Added a mandatory point-in-time correctness test: for 1000 historical events, compare features from the raw join vs the asof join. Any feature with > 0.05 mean difference blocks training.',
+    lesson: 'Point-in-time correctness is not a nice-to-have — it is the difference between a model that predicts fraud and one that predicts whether a user was later identified as a fraudster. These are different targets.',
+    tags: ['Label Leakage', 'Point-in-Time', 'Feature Store', 'Fraud'],
+  },
+  {
+    id: 'c14', sector: 'Ranking', severity: 'P2', duration: 'Experiment ran to completion incorrectly',
+    title: 'Peeking and Early Stopping',
+    what: 'A ranking experiment was called at day 8 of a planned 14-day run when the primary metric hit p=0.04. The effect did not hold — a rerun found no significant effect.',
+    rootCause: 'An engineer checked the experiment dashboard daily and stopped the test when the p-value crossed 0.05. This is the "peeking problem": under repeated testing, the probability of seeing p < 0.05 at some point in a 14-day run is ~30% even with no real effect. The experiment was stopped at a local fluctuation.',
+    timeline: 'Experiment starts. Engineer peeks daily. Day 8: p=0.04, experiment stopped and declared positive. Feature ships. 6 weeks later: rerun of the same experiment finds p=0.67.',
+    fix: 'Implemented sequential testing (mSPRT) for experiments that may need early stopping. All other experiments: dashboard is locked for interim results. P-value visible only after the pre-registered duration.',
+    lesson: 'A p-value is only valid if you commit to checking it once. Every additional peek is a new test — and family-wise error accumulates. If you need to stop early, use sequential testing from the start.',
+    tags: ['Peeking', 'A/B Testing', 'Sequential Testing', 'Experimentation'],
+  },
+  {
+    id: 'c15', sector: 'Model Operations', severity: 'P1', duration: '4 hours to restore',
+    title: 'Delayed Rollback Due to Missing Runbook',
+    what: 'A production model with a clear degradation signal took 4 hours to roll back because the rollback procedure was undocumented and the on-call engineer had never done it.',
+    rootCause: 'No rollback runbook existed. The model artifact was stored in a custom registry. The serving infrastructure required a specific deployment flag format. The on-call rotation had recently changed and the new on-call engineer had no institutional knowledge. Four hours were spent escalating to find someone who knew the procedure.',
+    timeline: '02:00: Alert fires. 02:15: Engineer identifies model as root cause. 02:15–06:00: Engineer attempts rollback, escalates twice, waits for senior engineer. 06:00: Rollback complete. SLA breach: 4 hours of degraded service.',
+    fix: 'Wrote a rollback runbook (< 5 steps) and added it to the on-call handbook. Required every on-call rotation to verify they could execute a rollback before going live. Defined a rollback SLA: intent within 15 minutes, execution within 30 minutes.',
+    lesson: 'A rollback procedure that exists but is undocumented does not exist for practical purposes. Runbooks must be written, tested, and accessible before an incident — not during one.',
+    tags: ['Rollback', 'Incident Response', 'On-Call', 'MLOps', 'Runbook'],
+  },
+]
+
+// ─── Case Library component ───────────────────────────────────────────────────
+const CASE_SECTORS = ['All', 'Recommendations', 'Fraud Detection', 'Search Ranking', 'Pricing', 'Content Ranking', 'Feature Engineering', 'Classification', 'NLP', 'Delivery Logistics', 'Ranking', 'Model Operations', 'Experimentation']
+const SEVERITY_COLORS = { P0: '#ff3b3b', P1: 'var(--rose)', P2: 'var(--ember)' }
+
+function CaseDetail({ c, onBack }) {
+  return (
+    <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0' }}>
+      <button onClick={onBack} className="btn-ghost" style={{ alignSelf: 'flex-start', marginBottom: '28px', fontSize: '13px' }}>← Back to Case Library</button>
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: '#fff', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{c.severity}</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{c.sector}</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>·</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{c.duration}</span>
+      </div>
+
+      <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '32px', lineHeight: 1.2 }}>{c.title}</h1>
+
+      {[
+        { label: 'What happened',  color: 'var(--rose)',  content: c.what },
+        { label: 'Root cause',     color: 'var(--ember)', content: c.rootCause },
+        { label: 'Timeline',       color: 'var(--sky)',   content: c.timeline },
+        { label: 'Fix applied',    color: 'var(--mint)',  content: c.fix },
+        { label: 'Key lesson',     color: 'var(--prime)', content: c.lesson },
+      ].map(section => (
+        <div key={section.label} style={{ marginBottom: '28px', paddingLeft: '16px', borderLeft: `3px solid ${section.color}40` }}>
+          <div style={{ fontSize: '11px', color: section.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px', fontWeight: 700 }}>{section.label}</div>
+          <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{section.content}</p>
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', paddingTop: '20px', borderTop: '1px solid var(--rim)' }}>
+        {c.tags.map(tag => (
+          <span key={tag} style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '2px 8px' }}>{tag}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CaseLibrary() {
+  const [activeSector, setActiveSector] = useState('All')
+  const [openCase,     setOpenCase]     = useState(null)
+
+  const filtered = activeSector === 'All' ? CASES : CASES.filter(c => c.sector === activeSector)
+
+  if (openCase) return <CaseDetail c={openCase} onBack={() => setOpenCase(null)} />
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.6, maxWidth: '540px' }}>
+        {CASES.length} real production failure post-mortems. Root cause, timeline, fix, and the lesson that prevents the next one.
+      </p>
+
+      {/* Sector filter */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        {['All', 'Recommendations', 'Fraud Detection', 'Search Ranking', 'Experimentation', 'Feature Engineering', 'Model Operations'].map(s => (
+          <button key={s} onClick={() => setActiveSector(s)}
+            className={`sub-tab ${activeSector === s ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{s}</button>
+        ))}
+      </div>
+
+      <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{filtered.length} case{filtered.length !== 1 ? 's' : ''}</div>
+
+      {/* Case grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
+        {filtered.map(c => (
+          <button key={c.id} onClick={() => setOpenCase(c)}
+            className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: '18px 20px', transition: 'transform 0.12s, box-shadow 0.12s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: '#fff', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{c.severity}</span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace' "}}>{c.sector}</span>
+            </div>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px', lineHeight: 1.3 }}>{c.title}</div>
+            <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0, marginBottom: '12px' }}>{c.what.slice(0, 110)}…</p>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+              {c.tags.slice(0, 3).map(tag => (
+                <span key={tag} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '4px', padding: '1px 6px' }}>{tag}</span>
+              ))}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Post reader ─────────────────────────────────────────────────────────────
 function PostReader({ post, onBack }) {
   const [scrollPct, setScrollPct] = useState(0)
@@ -949,17 +1192,108 @@ function PostReader({ post, onBack }) {
     setScrollPct(Math.min(100, pct))
   }
 
-  // Simple markdown-ish renderer
+  // Block-based renderer — supports code blocks, callouts, lists, inline bold
+  function renderInline(text) {
+    const parts = text.split(/\*\*(.*?)\*\*/g)
+    return parts.map((part, j) => j % 2 === 1
+      ? <strong key={j} style={{ color: 'var(--ink-hi)', fontWeight: 600 }}>{part}</strong>
+      : part)
+  }
+
   function renderBody(text) {
-    return text.split('\n\n').map((para, i) => {
-      if (para.startsWith('**') && para.endsWith('**') && para.split('**').length === 3) {
-        return <h3 key={i} style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{para.slice(2, -2)}</h3>
+    const lines = text.split('\n')
+    const blocks = []
+    let i = 0
+
+    while (i < lines.length) {
+      const line = lines[i]
+
+      // Code block
+      if (line.trimStart().startsWith('```')) {
+        const lang = line.trimStart().slice(3).trim()
+        const codeLines = []
+        i++
+        while (i < lines.length && !lines[i].trimStart().startsWith('```')) {
+          codeLines.push(lines[i]); i++
+        }
+        blocks.push({ type: 'code', lang, content: codeLines.join('\n') })
+        i++; continue
       }
-      // Inline bold
-      const parts = para.split(/\*\*(.*?)\*\*/g)
+
+      // Callout: > TIP / > WARNING / > LESSON
+      if (line.startsWith('> ')) {
+        const calloutLines = []
+        while (i < lines.length && lines[i].startsWith('> ')) {
+          calloutLines.push(lines[i].slice(2)); i++
+        }
+        const raw = calloutLines.join(' ')
+        const upper = raw.toUpperCase()
+        const calloutType = upper.startsWith('WARNING') ? 'warning' : upper.startsWith('LESSON') ? 'lesson' : 'tip'
+        blocks.push({ type: 'callout', calloutType, content: raw })
+        continue
+      }
+
+      // List
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        const items = []
+        while (i < lines.length && (lines[i].startsWith('- ') || lines[i].startsWith('* '))) {
+          items.push(lines[i].slice(2)); i++
+        }
+        blocks.push({ type: 'list', items }); continue
+      }
+
+      // Empty line
+      if (line.trim() === '') { i++; continue }
+
+      // Paragraph (accumulate until empty line or special)
+      const paraLines = []
+      while (i < lines.length && lines[i].trim() !== '' &&
+             !lines[i].trimStart().startsWith('```') &&
+             !lines[i].startsWith('> ') &&
+             !lines[i].startsWith('- ') &&
+             !lines[i].startsWith('* ')) {
+        paraLines.push(lines[i]); i++
+      }
+      if (paraLines.length) blocks.push({ type: 'para', content: paraLines.join(' ') })
+    }
+
+    const CALLOUT_STYLES = {
+      tip:     { bg: 'rgba(240,165,0,0.07)',  border: 'rgba(240,165,0,0.25)',  text: 'var(--prime)', label: 'TIP' },
+      warning: { bg: 'rgba(244,63,94,0.07)',  border: 'rgba(244,63,94,0.25)', text: 'var(--rose)',  label: 'WARNING' },
+      lesson:  { bg: 'rgba(34,211,238,0.07)', border: 'rgba(34,211,238,0.25)',text: 'var(--sky)',   label: 'LESSON' },
+    }
+
+    return blocks.map((block, idx) => {
+      if (block.type === 'code') return (
+        <pre key={idx} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12.5px', color: '#c0b8ae', lineHeight: 1.8, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '16px 20px', margin: '20px 0', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+          {block.lang && <div style={{ fontSize: '10px', color: 'var(--sky)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.lang}</div>}
+          <code>{block.content}</code>
+        </pre>
+      )
+      if (block.type === 'callout') {
+        const c = CALLOUT_STYLES[block.calloutType]
+        return (
+          <div key={idx} style={{ padding: '14px 18px', background: c.bg, border: `1px solid ${c.border}`, borderRadius: '10px', margin: '20px 0' }}>
+            <div style={{ fontSize: '10px', color: c.text, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontWeight: 700 }}>{c.label}</div>
+            <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{renderInline(block.content)}</p>
+          </div>
+        )
+      }
+      if (block.type === 'list') return (
+        <ul key={idx} style={{ margin: '0 0 18px', paddingLeft: '22px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {block.items.map((item, j) => (
+            <li key={j} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.75 }}>{renderInline(item)}</li>
+          ))}
+        </ul>
+      )
+      // Paragraph or heading
+      const content = block.content.trim()
+      if (/^\*\*[^*]+\*\*$/.test(content)) {
+        return <h3 key={idx} style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{content.slice(2,-2)}</h3>
+      }
       return (
-        <p key={i} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.85, marginBottom: '18px' }}>
-          {parts.map((part, j) => j % 2 === 1 ? <strong key={j} style={{ color: 'var(--ink-hi)', fontWeight: 600 }}>{part}</strong> : part)}
+        <p key={idx} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.85, marginBottom: '18px' }}>
+          {renderInline(content)}
         </p>
       )
     })
@@ -1053,6 +1387,7 @@ function PostCard({ post, featured, onClick }) {
 export default function GradientTab() {
   const [activeCat, setActiveCat] = useState('All')
   const [reading,   setReading]   = useState(null)
+  const [mode,      setMode]      = useState('posts')  // 'posts' | 'cases'
 
   const filtered = POSTS.filter(p => activeCat === 'All' || p.category === activeCat)
   const featured = filtered.filter(p => p.featured)
@@ -1063,21 +1398,51 @@ export default function GradientTab() {
     if (post) return <PostReader post={post} onBack={() => setReading(null)} />
   }
 
+  if (mode === 'cases') return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '4px' }}>Case Library</h1>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: '💀 Cases' }].map(m => (
+            <button key={m.k} onClick={() => setMode(m.k)}
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              {m.l}
+            </button>
+          ))}
+        </div>
+      </div>
+      <CaseLibrary />
+    </div>
+  )
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
       {/* Header */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '8px' }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Gradient
-          </h1>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '8px' }}>
+            <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Gradient
+            </h1>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
+          </div>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
+            Feature engineering, PySpark optimisation, ML system design, model evaluation, and paper breakdowns.
+            Written for engineers who ship — not engineers who read papers.
+          </p>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
-          Feature engineering, PySpark optimisation, ML system design, model evaluation, and paper breakdowns.
-          Written for engineers who ship — not engineers who read papers.
-        </p>
+        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: '💀 Cases' }].map(m => (
+            <button key={m.k} onClick={() => setMode(m.k)}
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              {m.l}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Category filter */}
