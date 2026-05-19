@@ -1005,8 +1005,7 @@ export default function MonitoringTab() {
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>
-            <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
+          <button key={m.id} onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
           </button>
         ))}
       </div>

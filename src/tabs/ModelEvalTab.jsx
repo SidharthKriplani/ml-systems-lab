@@ -183,8 +183,8 @@ function ShadowModeSim() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         {[
-          { label: '🏆 Champion (v1)', metrics: championMetrics, color: 'var(--mint)' },
-          { label: '🥊 Challenger (v2)', metrics: challengerMetrics, color: 'var(--prime)' },
+          { label: 'Champion (v1)', metrics: championMetrics, color: 'var(--mint)' },
+          { label: 'Challenger (v2)', metrics: challengerMetrics, color: 'var(--prime)' },
         ].map(m => (
           <div key={m.label} className="card" style={{ padding: '18px', border: `1px solid ${m.color}30` }}>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: m.color, marginBottom: '14px' }}>{m.label}</div>
@@ -259,8 +259,7 @@ export default function ModelEvalTab() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>
-            <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
+            className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
           </button>
         ))}
       </div>

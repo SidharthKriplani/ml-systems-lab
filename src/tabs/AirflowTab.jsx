@@ -170,7 +170,7 @@ function DAGFailureRoom() {
 
       <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--ember)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <span style={{ fontSize: '18px' }}>🔴</span>
+          
           <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -559,7 +559,7 @@ function LateDataHandler() {
       {/* Recommendation */}
       <div className="card animate-fade-in" style={{ padding: '24px', borderLeft: `3px solid ${strat.color}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '22px' }}>{strat.icon}</span>
+          
           <div>
             <div style={{ fontSize: '10px', color: strat.color, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '2px' }}>Recommended strategy</div>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>{strat.name}</div>
@@ -622,7 +622,7 @@ export default function AirflowTab() {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(249,115,22,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -637,7 +637,7 @@ export default function AirflowTab() {
           {ROADMAP.map(m => (
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '16px' }}>{m.icon}</span>
+                
                 <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
                 {m.status === 'soon' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>soon</span>}

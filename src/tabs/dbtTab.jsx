@@ -478,7 +478,7 @@ function SchemaDriftClinic() {
         </div>
         <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--ember)' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>
-            {score >= 7 ? '🏆' : score >= 5 ? '🎯' : '📚'}
+            {score >= 7 ? 'Excellent' : score >= 5 ? 'Good' : 'Review'}
           </div>
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px' }}>
             {score} / {DRIFT_SCENARIOS.length}
@@ -835,7 +835,7 @@ export default function DbtTab() {
         {DBT_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(255,160,50,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -850,7 +850,7 @@ export default function DbtTab() {
           {ROADMAP.map(m => (
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '16px' }}>{m.icon}</span>
+                
                 <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
               </div>

@@ -281,9 +281,9 @@ function ModelFailureZoo() {
               width: '36px', height: '36px', borderRadius: '8px',
               background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '18px',
+              fontSize: '11px', fontWeight: 700, color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace",
             }}>
-              💀
+              ML
             </div>
             <div>
               <h3 style={{ margin: 0, fontFamily: "'Space Grotesk', sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>
@@ -759,7 +759,6 @@ export default function ClassicalMLTab() {
               transition: 'all 0.15s',
             }}
           >
-            <span style={{ fontSize: '15px' }}>{mod.icon}</span>
             {mod.label}
           </button>
         ))}

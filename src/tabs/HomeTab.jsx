@@ -3,21 +3,21 @@ import { getAllProgress, getNextRecommendation, getTrackMastery, inferMastery } 
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 const ROLES = [
-  { key: 'mle_interview',  label: 'MLE Interview',    desc: 'Preparing for system design and ML rounds at Spotify, Meta, Google, or Airbnb.',         cta1: { label: 'Interview Prep →',   tab: 'interview' },   cta2: { label: '🏗 System Design',   tab: 'design' } },
-  { key: 'production_ml',  label: 'Production MLE',   desc: 'Deepening production skills — features, Spark, monitoring, system design.',               cta1: { label: 'Spark Lab →',        tab: 'spark' },       cta2: { label: '📡 Monitoring',      tab: 'monitor' } },
-  { key: 'data_engineer',  label: 'Data Engineer',    desc: 'Pipeline orchestration, dbt transformations, data modeling, OLAP storage decisions.',     cta1: { label: 'Spark Lab →',        tab: 'spark' },       cta2: { label: '🌊 Airflow',         tab: 'airflow' } },
-  { key: 'deep_learning',  label: 'Deep Learning',    desc: 'Training failures, fine-tuning decisions, and serving a model at p99 in production.',     cta1: { label: 'Training Lab →',     tab: 'dl' },          cta2: { label: '⚡ DL Serving',      tab: 'dl_serving' } },
-  { key: 'data_scientist', label: 'Data Scientist',   desc: 'Classical ML failure modes, model selection, statistical testing pitfalls, calibration.',  cta1: { label: 'Classical ML →',     tab: 'classical' },   cta2: { label: '🎯 Data Science',    tab: 'ds' } },
-  { key: 'mlops',          label: 'MLOps / Platform', desc: 'Deployment patterns, champion-challenger decisions, CI/CD for models, drift monitoring.',  cta1: { label: 'Deployment →',       tab: 'mlops_deploy' }, cta2: { label: '📦 CI/CD & Infra',  tab: 'mlops_pipes' } },
-  { key: 'staff',          label: 'Staff / Principal',desc: 'ML platform design, cross-domain trade-offs, and engineering judgment at scale.',          cta1: { label: 'ML System Design →', tab: 'design' },      cta2: { label: '∇ Gradient Posts',  tab: 'gradient' } },
+  { key: 'mle_interview',  label: 'MLE Interview',    desc: 'Preparing for system design and ML rounds at Spotify, Meta, Google, or Airbnb.',         cta1: { label: 'Interview Prep →',   tab: 'interview' },   cta2: { label: 'System Design',   tab: 'design' } },
+  { key: 'production_ml',  label: 'Production MLE',   desc: 'Deepening production skills — features, Spark, monitoring, system design.',               cta1: { label: 'Spark Lab →',        tab: 'spark' },       cta2: { label: 'Monitoring',      tab: 'monitor' } },
+  { key: 'data_engineer',  label: 'Data Engineer',    desc: 'Pipeline orchestration, dbt transformations, data modeling, OLAP storage decisions.',     cta1: { label: 'Spark Lab →',        tab: 'spark' },       cta2: { label: 'Airflow',         tab: 'airflow' } },
+  { key: 'deep_learning',  label: 'Deep Learning',    desc: 'Training failures, fine-tuning decisions, and serving a model at p99 in production.',     cta1: { label: 'Training Lab →',     tab: 'dl' },          cta2: { label: 'DL Serving',      tab: 'dl_serving' } },
+  { key: 'data_scientist', label: 'Data Scientist',   desc: 'Classical ML failure modes, model selection, statistical testing pitfalls, calibration.',  cta1: { label: 'Classical ML →',     tab: 'classical' },   cta2: { label: 'Data Science',    tab: 'ds' } },
+  { key: 'mlops',          label: 'MLOps / Platform', desc: 'Deployment patterns, champion-challenger decisions, CI/CD for models, drift monitoring.',  cta1: { label: 'Deployment →',       tab: 'mlops_deploy' }, cta2: { label: 'CI/CD & Infra',  tab: 'mlops_pipes' } },
+  { key: 'staff',          label: 'Staff / Principal',desc: 'ML platform design, cross-domain trade-offs, and engineering judgment at scale.',          cta1: { label: 'ML System Design →', tab: 'design' },      cta2: { label: 'Gradient Posts',  tab: 'gradient' } },
 ]
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 const STATS = [
-  { n: '7',   label: 'Learning domains' },
-  { n: '60+', label: 'Interactive modules' },
-  { n: 'Real', label: 'Python in browser' },
-  { n: '0',   label: 'Logins required' },
+  { n: '7',   label: 'Domains' },
+  { n: '60+', label: 'Production scenarios' },
+  { n: '4',   label: 'Career levels' },
+  { n: 'Free', label: 'No account needed' },
 ]
 
 // ── Changelog ─────────────────────────────────────────────────────────────────

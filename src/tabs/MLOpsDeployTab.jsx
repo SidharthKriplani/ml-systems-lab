@@ -658,8 +658,7 @@ export default function MLOpsDeployTab() {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>
-            <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
+            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>{m.label}
           </button>
         ))}
       </div>

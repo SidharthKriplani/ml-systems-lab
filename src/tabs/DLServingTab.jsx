@@ -859,7 +859,7 @@ export default function DLServingTab() {
               padding: '8px 16px',
             }}
           >
-            <span>{m.icon}</span>
+            
             <span>{m.label}</span>
           </button>
         ))}

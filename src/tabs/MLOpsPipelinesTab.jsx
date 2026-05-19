@@ -138,7 +138,7 @@ function CiCdGates() {
                   <div style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)' }}>{g.desc}</div>
                   {revealed && (
                     <div style={{ ...mono, fontSize: '11px', color: mismatch ? 'var(--rose)' : 'var(--mint)', marginTop: '6px', lineHeight: 1.5 }}>
-                      Expert: {g.expertInclude ? (g.expertSeverity === 'block' ? '🔴 Include, block' : '🟡 Include, warn') : '— Exclude'} — {g.reason}
+                      Expert: {g.expertInclude ? (g.expertSeverity === 'block' ? 'Include — block' : 'Include — warn') : '— Exclude'} — {g.reason}
                     </div>
                   )}
                 </div>
@@ -160,7 +160,7 @@ function CiCdGates() {
                         background: u.severity === 'block' ? 'rgba(244,63,94,0.1)' : 'rgba(240,165,0,0.1)',
                         color: u.severity === 'block' ? 'var(--rose)' : 'var(--gold)',
                       }}>
-                      {u.severity === 'block' ? '🔴 Block' : '🟡 Warn'}
+                      {u.severity === 'block' ? 'Block' : 'Warn'}
                     </button>
                   )}
                 </div>
@@ -604,8 +604,7 @@ export default function MLOpsPipelinesTab() {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>
-            <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
+            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>{m.label}
           </button>
         ))}
       </div>

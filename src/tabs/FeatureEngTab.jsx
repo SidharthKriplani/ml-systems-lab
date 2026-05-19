@@ -64,7 +64,7 @@ function SkewSimulator() {
               transition: 'all 0.15s',
             }}>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '10px' }}>
-              ⚠ {b.label}
+              {b.label}
             </div>
             <div style={{ marginBottom: '6px' }}>
               <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Training</div>
@@ -88,7 +88,7 @@ function SkewSimulator() {
         const b = BUGS.find(x => x.id === bug)
         return (
           <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.25)' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>⚠ {b.label}</div>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>{b.label}</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '12px' }}>{b.desc}</p>
             <div style={{ marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--rose)', fontWeight: 600 }}>Impact: </span>
@@ -178,7 +178,7 @@ function FeatureStoreDesigner() {
           <div><div style={{ fontSize: '11px', color: 'var(--rose)', fontWeight: 600, marginBottom: '4px' }}>✗ CONS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.cons}</div></div>
         </div>
         {featureType === 'session' && storage !== 'redis' && (
-          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>⚠ For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
+          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>Note: For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
         )}
       </div>
     </div>
@@ -385,7 +385,7 @@ result = (df
       {/* Agg warning */}
       {a.warn && (
         <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <span style={{ fontSize: '12px', color: 'var(--ember)', fontWeight: 600 }}>⚠ {a.label}: </span>
+          <span style={{ fontSize: '12px', color: 'var(--ember)', fontWeight: 600 }}>{a.label}: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{a.warn}</span>
         </div>
       )}
@@ -753,8 +753,7 @@ export default function FeatureEngTab() {
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>
-            <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
+          <button key={m.id} onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
           </button>
         ))}
       </div>

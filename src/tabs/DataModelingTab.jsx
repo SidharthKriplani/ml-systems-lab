@@ -725,7 +725,7 @@ export default function DataModelingTab() {
               background: active === m.id ? 'rgba(249,115,22,0.10)' : 'transparent',
               color: active === m.id ? 'var(--ember)' : 'var(--ink-low)',
             }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -740,7 +740,7 @@ export default function DataModelingTab() {
           {ROADMAP.map(m => (
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '16px' }}>{m.icon}</span>
+                
                 <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
               </div>

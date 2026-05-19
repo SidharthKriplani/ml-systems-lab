@@ -722,7 +722,7 @@ export default function DLFineTuningTab() {
               color: active === m.id ? 'var(--violet)' : 'var(--ink-low)',
               fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500,
             }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>

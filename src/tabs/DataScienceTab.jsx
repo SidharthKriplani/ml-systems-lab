@@ -186,7 +186,7 @@ function ModelSelectionOracle() {
   )
 }
 
-// ── Statistical Testing Pitfalls ──────────────────────────────────────────────
+// ── Analysis Mistakes ──────────────────────────────────────────────
 const STATS_SCENARIOS = [
   {
     id: 1,
@@ -348,7 +348,7 @@ function StatisticalTestingPitfalls() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Statistical Testing Pitfalls</h3>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real scenarios. Identify the statistical mistake. Understand why it matters in production.
         </p>
@@ -427,7 +427,7 @@ function StatisticalTestingPitfalls() {
 
       {allDone && revealed && current === STATS_SCENARIOS.length - 1 && (
         <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
-          <div style={{ fontSize: '22px', marginBottom: '8px' }}>📐</div>
+          
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{STATS_SCENARIOS.length} correct
           </div>
@@ -667,7 +667,7 @@ function CalibrationInPractice() {
   )
 }
 
-// ── Experiment Design Framework ───────────────────────────────────────────────
+// ── Metric Design Pitfalls ────────────────────────────────────────────────────
 function computeRecommendation({ goal, effectSize, dailyUsers, fpr, varianceReduction }) {
   const alpha = fpr === '5pct' ? 0.05 : fpr === '1pct' ? 0.01 : 0.10
   const power = 0.80
@@ -756,133 +756,213 @@ const CALLOUTS = [
   },
 ]
 
-function ExperimentDesignFramework() {
-  const [goal, setGoal] = useState('conversion')
-  const [effectSize, setEffectSize] = useState('medium')
-  const [dailyUsers, setDailyUsers] = useState('10k100k')
-  const [fpr, setFpr] = useState('5pct')
-  const [varianceReduction, setVarianceReduction] = useState('no')
+const METRIC_SCENARIOS = [
+  {
+    id: 'goodhart',
+    scenario: 'A support team optimizes their ML model for CSAT (customer satisfaction score). Engineers route easy, auto-resolvable tickets to the ML system and hard tickets to humans. CSAT for ML-handled tickets jumps from 3.2 to 4.6. The team celebrates.',
+    question: 'What is the metric design failure?',
+    options: ['Goodhart\'s Law — the metric became the target, not the outcome', 'Sample size too small for statistical significance', 'CSAT is the wrong metric — should use NPS', 'The model needs recalibration'],
+    correct: 0,
+    explanation: 'Goodhart\'s Law: when a measure becomes a target, it ceases to be a good measure. The team didn\'t improve customer experience — they gamed the routing to inflate the score. The true metric (resolution quality on hard tickets) got worse. Fix: track CSAT stratified by ticket difficulty, and monitor deflection rate as a counter-metric.',
+    color: 'var(--rose)',
+  },
+  {
+    id: 'aggregate_hides',
+    scenario: 'A recommendation model achieves overall NDCG@10 of 0.72, up from 0.68. The team ships. Two weeks later, mobile product managers report that mobile user engagement dropped 18%. Desktop engagement improved.',
+    question: 'What metric design mistake caused this?',
+    options: ['Aggregate metric masked a segment failure', 'NDCG is the wrong metric for recommendations', 'The model was undertrained', 'Mobile users need a different model architecture'],
+    correct: 0,
+    explanation: 'Aggregate metrics hide segment-level failures. Desktop volume (80% of traffic) dominated the NDCG improvement, masking a significant degradation for mobile users. Fix: always track segment metrics (device, user cohort, geography) alongside aggregate. A top-line improvement that harms a minority segment is not a win.',
+    color: 'var(--ember)',
+  },
+  {
+    id: 'proxy_decoupled',
+    scenario: 'A fraud model achieves AUC-PR of 0.91, up from 0.84. Offline metrics look great. After deployment, finance reports that fraud losses increased 12% month-over-month.',
+    question: 'What is the most likely cause?',
+    options: ['The offline metric has decoupled from the true business outcome', 'AUC-PR calculation is wrong', 'The model needs more training data', 'Feature pipeline has a bug'],
+    correct: 0,
+    explanation: 'AUC-PR measures ranking quality over all thresholds. In production, the model runs at a specific threshold — if that threshold is miscalibrated, high AUC-PR doesn\'t prevent fraud losses. The true metric (fraud dollar loss) and the proxy metric (AUC-PR) have decoupled. Fix: track precision and recall at your operating threshold, not just aggregate AUC. Add dollar-weighted false negative rate as a primary metric.',
+    color: 'var(--ember)',
+  },
+  {
+    id: 'rate_vs_count',
+    scenario: 'An email spam filter improves precision from 82% to 91%. The team ships. Users complain that important emails are being blocked more frequently than before.',
+    question: 'What metric captures what actually went wrong?',
+    options: ['Recall dropped — more legitimate emails are being blocked as spam', 'Precision measures the wrong thing here', 'The training set was too small', 'Email features have shifted distribution'],
+    correct: 0,
+    explanation: 'Higher precision means fewer false positives (spam reaching inbox). But if recall dropped, more legitimate emails are falsely classified as spam. The team optimized one side of the precision-recall tradeoff without tracking the other. Fix: in asymmetric cost scenarios (blocking real email is worse than missing spam), recall is the primary metric. Always define cost asymmetry before choosing which metric to optimize.',
+    color: 'var(--gold)',
+  },
+  {
+    id: 'time_horizon',
+    scenario: 'A recommendation feature increases 1-week retention from 34% to 38%. The team ships. Six months later, 6-month retention has dropped from 61% to 54%.',
+    question: 'What metric design mistake caused this?',
+    options: ['Wrong time horizon — optimizing short-term at the expense of long-term', 'Sample size was too small for the 6-month metric', '6-month retention is not a valid ML metric', 'The model degraded due to concept drift'],
+    correct: 0,
+    explanation: 'The model learned to optimize short-term engagement at the cost of long-term quality. This is a classic metric time horizon mismatch — the recommendation system shows engaging but lower-quality content that spikes 1-week retention but causes burnout. Fix: track both short-term and long-term metrics. If they diverge in opposite directions post-ship, you\'re trading long-term health for short-term gains.',
+    color: 'var(--gold)',
+  },
+  {
+    id: 'counter_metric',
+    scenario: 'A search ranking model improves CTR from 3.2% to 3.8%. The team ships. SRE reports p99 latency increased from 180ms to 340ms. The team says "that\'s an infra problem, not a model problem."',
+    question: 'What was missing from the model\'s success criteria?',
+    options: ['A latency counter-metric was never defined as a release gate', 'CTR is the wrong metric for search ranking', 'The model needs to be quantized', 'Infra team should have scaled before the launch'],
+    correct: 0,
+    explanation: 'CTR-only optimization ignores the cost of getting that CTR. The model likely became more complex or uses more features, increasing inference time. A counter-metric (max latency budget, or latency regression threshold) should be a hard gate on any model ship. Fix: define counter-metrics before shipping: latency, cost per inference, coverage rate. A lift in the primary metric that exceeds counter-metric thresholds is a no-ship.',
+    color: 'var(--sky)',
+  },
+  {
+    id: 'leading_lagging',
+    scenario: 'A churn prediction model is evaluated on 30-day churn rate (whether a user churned within 30 days of scoring). AUC is high. After deployment, the team notices the model scores correctly but interventions (discount emails) are sent too late to prevent churn.',
+    question: 'What is the metric design failure?',
+    options: ['The label is a lagging indicator — the event has already started by scoring time', 'AUC is not appropriate for churn prediction', 'The model needs a lower decision threshold', 'Email interventions are the wrong strategy'],
+    correct: 0,
+    explanation: 'A 30-day churn label is a lagging indicator. By the time a user shows the behavioral signals that predict churn, they may be 25 days into the churn process. Intervening at day 27 is too late. Fix: identify leading indicators (support ticket opens, usage frequency drop, feature disengagement) and predict from those signals 60-90 days out. Evaluate on whether interventions at high-score users reduce churn, not whether the model correctly identifies users who already churned.',
+    color: 'var(--sky)',
+  },
+  {
+    id: 'denominator_shift',
+    scenario: 'Conversion rate improves from 4.2% to 4.9% after a new recommendation model ships. The business reports overall conversions dropped 8% in the same period.',
+    question: 'What happened?',
+    options: ['The denominator (eligible traffic) shrank — fewer users were exposed to the model', 'Seasonality caused absolute conversion drop', 'The model has coverage gaps', 'Revenue attribution is miscounted'],
+    correct: 0,
+    explanation: 'Rate metrics can improve while absolute counts fall if the denominator shrinks. The model may be more conservative — it only recommends when confident, reducing coverage. Fewer recommendations but higher conversion rate = lower total conversions. Fix: track both rate and absolute count. Coverage rate (% of sessions where model fires) is a critical counter-metric for any recommendation or ranking system.',
+    color: 'var(--violet)',
+  },
+]
 
-  const result = useMemo(() =>
-    computeRecommendation({ goal, effectSize, dailyUsers, fpr, varianceReduction }),
-    [goal, effectSize, dailyUsers, fpr, varianceReduction]
-  )
+function MetricDesign() {
+  const [idx, setIdx] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const [score, setScore] = useState(0)
+  const [answered, setAnswered] = useState([])
 
-  const groups = [
-    { label: 'Goal', items: GOAL_OPTS, val: goal, set: setGoal, color: 'var(--sky)' },
-    { label: 'Expected effect size', items: EFFECT_OPTS, val: effectSize, set: setEffectSize, color: 'var(--mint)' },
-    { label: 'Daily eligible users', items: USERS_OPTS, val: dailyUsers, set: setDailyUsers, color: 'var(--ember)' },
-    { label: 'Acceptable false positive rate', items: FPR_OPTS, val: fpr, set: setFpr, color: 'var(--violet)' },
-    { label: 'Variance reduction available', items: VAR_OPTS, val: varianceReduction, set: setVarianceReduction, color: 'var(--prime)' },
-  ]
+  const s = METRIC_SCENARIOS[idx]
+  const isAnswered = answered.includes(idx)
+  const isCorrect = selected === s.correct
+
+  function handleAnswer(i) {
+    if (isAnswered) return
+    setSelected(i)
+    setRevealed(true)
+    setAnswered(prev => [...prev, idx])
+    if (i === s.correct) setScore(sc => sc + 1)
+  }
+
+  function next() {
+    setIdx(i => Math.min(i + 1, METRIC_SCENARIOS.length - 1))
+    setSelected(null)
+    setRevealed(false)
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Experiment Design Framework</h3>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
-          Define your experiment constraints. Get a sample size estimate, runtime, and design recommendation.
+          8 production cases where the metric looked right but led teams wrong. Goodhart's Law, proxy decoupling, time horizons, counter-metrics.
         </p>
       </div>
 
-      {/* Parameter selectors */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-        {groups.map(g => (
-          <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
-            </div>
-          </div>
-        ))}
+      {/* Progress */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {METRIC_SCENARIOS.map((_, i) => (
+            <div key={i} style={{
+              width: '28px', height: '4px', borderRadius: '2px',
+              background: answered.includes(i)
+                ? (i === idx && !isCorrect ? 'var(--rose)' : answered.includes(i) && METRIC_SCENARIOS[i].correct === (i === idx ? selected : null) ? 'var(--mint)' : answered.includes(i) ? 'var(--mint)' : 'var(--rim)')
+                : i === idx ? 'var(--prime)' : 'var(--rim)',
+            }} />
+          ))}
+        </div>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+          {answered.length}/{METRIC_SCENARIOS.length} correct
+        </span>
       </div>
 
-      {/* Output */}
-      {result.impossible ? (
-        <div className="card animate-slide-up" style={{ padding: '20px', borderLeft: '3px solid var(--rose)' }}>
-          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Underpowered by design</div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{result.impossibleReason}</p>
+      {/* Scenario */}
+      <div className="card" style={{ borderLeft: `3px solid ${s.color}`, padding: '18px 20px' }}>
+        <div style={{ fontSize: '10px', color: s.color, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+          Scenario {idx + 1} of {METRIC_SCENARIOS.length}
         </div>
-      ) : goal === 'mlquality' ? (
-        <div className="card animate-slide-up" style={{ padding: '20px', borderLeft: '3px solid var(--sky)' }}>
-          <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Recommended: Shadow Mode + Offline Metrics</div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>
-            ML model quality validation does not start with an A/B test. First: define offline metrics (AUC, F1, NDCG). Run the new model in shadow mode alongside the existing model — log both outputs without exposing users to the new model. Only run an A/B test once offline metrics show clear improvement and shadow mode shows no regressions in latency or coverage.
-          </p>
-        </div>
-      ) : (
-        <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Output cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-            <div className="card" style={{ padding: '16px', borderLeft: '2px solid var(--sky)' }}>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Sample size per group</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)' }}>{result.n.toLocaleString()}</div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>users per variant</div>
-            </div>
-            <div className="card" style={{ padding: '16px', borderLeft: '2px solid var(--violet)' }}>
-              <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Estimated runtime</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)' }}>{result.daysNeeded}</div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>days to reach significance</div>
-            </div>
-            <div className="card" style={{ padding: '16px', borderLeft: '2px solid var(--mint)' }}>
-              <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Recommended design</div>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3 }}>{result.design}</div>
-            </div>
-          </div>
+        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: '0 0 12px' }}>{s.scenario}</p>
+        <div style={{ fontSize: '13px', color: 'var(--ink-low)', fontStyle: 'italic' }}>{s.question}</div>
+      </div>
 
-          {/* Contextual notes */}
-          <div className="card" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Key considerations for your setup</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {goal === 'revenue' && (
-                <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>⚠ Revenue metrics have high variance due to power users. Your required sample size is ~4x larger than conversion tests. Consider capping revenue per user or using a trimmed mean to reduce variance.</div>
-              )}
-              {varianceReduction === 'yes' && (
-                <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>✓ CUPED applied — sample size reduced by ~30%. CUPED uses pre-experiment covariate data to remove noise. Requires clean historical data for the same users over the same time window.</div>
-              )}
-              {effectSize === 'small' && (
-                <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>⚠ Small effect sizes are expensive. At less than 2% relative lift, consider whether the lift is large enough to justify the engineering cost even if it is statistically real.</div>
-              )}
-              {result.daysNeeded > 28 && (
-                <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>⚠ Runtime over 28 days. Long experiments are at risk from: seasonal effects, novelty effects, or external events changing the baseline. Consider breaking into shorter sequential experiments or increasing traffic allocation.</div>
-              )}
-              {result.daysNeeded <= 7 && (
-                <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>✓ Short runtime. Run for at least one full week to capture weekly seasonality even if you hit significance earlier. Never stop early because p crossed 0.05.</div>
-              )}
-            </div>
+      {/* Options */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {s.options.map((opt, i) => {
+          const isSelected = selected === i
+          const isRight = i === s.correct
+          let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-hi)'
+          if (revealed) {
+            if (isRight) { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.4)'; color = 'var(--mint)' }
+            else if (isSelected && !isRight) { bg = 'rgba(244,63,94,0.08)'; border = 'rgba(244,63,94,0.4)'; color = 'var(--rose)' }
+          } else if (isSelected) { bg = 'rgba(240,165,0,0.08)'; border = 'rgba(240,165,0,0.4)' }
+          return (
+            <button key={i} onClick={() => handleAnswer(i)}
+              style={{
+                textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: isAnswered ? 'default' : 'pointer',
+                border: `1px solid ${border}`, background: bg, color,
+                display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.15s',
+              }}>
+              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, flexShrink: 0, marginTop: '2px', opacity: 0.6 }}>
+                {String.fromCharCode(65 + i)}
+              </span>
+              <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Explanation */}
+      {revealed && (
+        <div className="card animate-slide-up" style={{ background: `color-mix(in srgb, ${s.color} 5%, var(--depth))`, border: `1px solid color-mix(in srgb, ${s.color} 30%, transparent)` }}>
+          <div style={{ fontSize: '11px', color: s.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 700 }}>
+            {isCorrect ? 'Correct.' : 'Not quite.'} {METRIC_SCENARIOS[idx].options[s.correct]}
           </div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: 0 }}>{s.explanation}</p>
         </div>
       )}
 
-      {/* Callout cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
-        {CALLOUTS.map(c => (
-          <div key={c.title} className="card" style={{ padding: '16px', borderTop: `2px solid ${c.color}` }}>
-            <div style={{ fontSize: '11px', color: c.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{c.title}</div>
-            <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{c.text}</p>
+      {/* Navigation */}
+      {revealed && idx < METRIC_SCENARIOS.length - 1 && (
+        <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>
+          Next scenario →
+        </button>
+      )}
+      {revealed && idx === METRIC_SCENARIOS.length - 1 && (
+        <div className="card" style={{ textAlign: 'center', padding: '20px', border: '1px solid var(--prime)' }}>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--prime)', marginBottom: '4px' }}>
+            {score}/{METRIC_SCENARIOS.length} correct
           </div>
-        ))}
-      </div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-low)' }}>
+            {score >= 7 ? 'Strong metric judgment.' : score >= 5 ? 'Good instincts — review the ones you missed.' : 'Metric design is a senior skill. Re-read the explanations.'}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
 const ROADMAP = [
-  { icon: '🎯', label: 'Model Selection Oracle',         desc: 'Given constraints, get ranked model recommendations with production tradeoffs.',              status: 'live' },
-  { icon: '📊', label: 'Statistical Testing Pitfalls',   desc: 'p-hacking, multiple comparisons, base rate neglect — the tests your team is running wrong.',  status: 'live' },
-  { icon: '🌿', label: 'Feature Importance vs Causation', desc: 'When SHAP values lie. Spurious correlations in production. Causal inference basics.',         status: 'soon' },
-  { icon: '🎛', label: 'Calibration in Practice',        desc: 'When Platt scaling helps, when it doesn\'t, and why your model\'s 80% confidence means 60%.',  status: 'live' },
-  { icon: '🧪', label: 'Experiment Design Framework',    desc: 'Sample size, power, variance reduction (CUPED), avoiding SRM — without a calculator.',        status: 'live' },
-  { icon: '💀', label: 'Classical ML Failure Modes',     desc: '15 ways gradient boosting, random forests, and SVMs silently fail in production.',            status: 'soon' },
+  { label: 'Model Selection Oracle',       desc: 'Given constraints, get ranked model recommendations with production tradeoffs.',                    status: 'live' },
+  { label: 'Analysis Mistakes',            desc: 'p-hacking, practical vs statistical significance, multiple comparisons, violated assumptions.',     status: 'live' },
+  { label: 'Calibration in Practice',      desc: 'When Platt scaling helps, when it doesn\'t, and why your model\'s 80% confidence means 60%.',      status: 'live' },
+  { label: 'Metric Design Pitfalls',       desc: 'Goodhart\'s Law, proxy decoupling, time horizons, counter-metrics — 8 production cases.',          status: 'live' },
+  { label: 'Feature Importance vs Causation', desc: 'When SHAP values lie. Spurious correlations in production. Causal inference basics.',           status: 'soon' },
+  { label: 'Classical ML Failure Modes',   desc: '15 ways gradient boosting, random forests, and SVMs silently fail in production.',                 status: 'soon' },
 ]
 
 // ── Modules ───────────────────────────────────────────────────────────────────
 const DS_MODULES = [
-  { id: 'oracle',      label: 'Model Selection Oracle',        icon: '🎯', component: ModelSelectionOracle },
-  { id: 'stats',       label: 'Statistical Testing Pitfalls',  icon: '📐', component: StatisticalTestingPitfalls },
-  { id: 'calibration', label: 'Calibration in Practice',       icon: '🎛', component: CalibrationInPractice },
-  { id: 'expdesign',   label: 'Experiment Design Framework',   icon: '🧪', component: ExperimentDesignFramework },
+  { id: 'oracle',      label: 'Model Selection Oracle', component: ModelSelectionOracle },
+  { id: 'stats',       label: 'Analysis Mistakes', component: StatisticalTestingPitfalls },
+  { id: 'calibration', label: 'Calibration in Practice', component: CalibrationInPractice },
+  { id: 'expdesign',   label: 'Metric Design Pitfalls', component: MetricDesign },
 ]
 
 export default function DataScienceTab() {
@@ -907,7 +987,7 @@ export default function DataScienceTab() {
         {DS_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--sky)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(34,211,238,0.10)' : 'transparent', color: active === m.id ? 'var(--sky)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -922,7 +1002,7 @@ export default function DataScienceTab() {
           {ROADMAP.map(m => (
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--sky)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '16px' }}>{m.icon}</span>
+                
                 <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
               </div>

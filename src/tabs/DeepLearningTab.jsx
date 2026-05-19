@@ -138,7 +138,7 @@ function TrainingFailureDiagnosis() {
       {/* Scenario card */}
       <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--rose)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <span style={{ fontSize: '18px' }}>🔴</span>
+          
           <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
           <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{scenario.tier}</span>
         </div>
@@ -489,7 +489,7 @@ export default function DeepLearningTab() {
         {DL_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent', color: active === m.id ? 'var(--violet)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-            {m.icon} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -504,7 +504,7 @@ export default function DeepLearningTab() {
           {ROADMAP.map(m => (
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--violet)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '16px' }}>{m.icon}</span>
+                
                 <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
               </div>
