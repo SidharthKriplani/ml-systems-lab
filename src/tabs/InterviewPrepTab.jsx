@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { recordInterviewSessionMastery } from '../utils/progress.js'
 
 const QUESTIONS = [
   // ─── ML System Design ────────────────────────────────────────────────────
@@ -259,6 +260,7 @@ function TimedPractice({ questions, onExit }) {
 
   // Summary screen
   if (isLast && tierSelected) {
+    recordInterviewSessionMastery(tierHistory)
     const counts = TIER_LEVELS.map(t => ({ ...t, n: tierHistory.filter(h => h.tier === t.key).length }))
     const topTier = [...tierHistory].reverse().find(h => h.tier)
     const topTierObj = TIER_LEVELS.slice().reverse().find(t => tierHistory.some(h => h.tier === t.key))

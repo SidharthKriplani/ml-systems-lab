@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAllProgress, getNextRecommendation, TRACK_MODULES } from '../utils/progress.js'
+import { getAllProgress, getNextRecommendation, TRACK_MODULES, getTrackMastery, inferMastery } from '../utils/progress.js'
 
 const ROLES = [
   { key: 'interview',   label: 'MLE Interview Prep',         desc: 'Preparing for system design & ML rounds at top companies',    cta1: { label: 'Go to Interview Prep →', tab: 'interview' }, cta2: { label: '⏱ Timed Practice', tab: 'interview' } },
@@ -20,6 +20,72 @@ const CHANGELOG = [
 const ECOSYSTEM = [
   { name: 'GenAI Systems Lab', desc: 'Prompt engineering, RAG pipelines, LLM evaluation, hallucination measurement. The production GenAI counterpart.', accent: 'var(--violet)', border: 'rgba(167,139,250,0.25)', url: '#' },
   { name: 'Experimentation Lab', desc: 'A/B testing mechanics, SRM detection, CUPED, power analysis. Experiment design for product and ML teams.', accent: 'var(--sky)', border: 'rgba(34,211,238,0.25)', url: '#' },
+]
+
+const MASTERY_COLORS = { exploring: 'var(--sky)', practicing: 'var(--ember)', mastered: 'var(--mint)' }
+const MASTERY_LABELS = { exploring: 'Exploring', practicing: 'Practicing', mastered: 'Mastered' }
+
+const LEARNING_PATHS = [
+  {
+    id: 'interview_ready',
+    name: 'MLE Interview Ready',
+    duration: '2 weeks',
+    outcome: 'Confident across system design, evaluation, and Spark rounds at Meta, Spotify, or Google.',
+    accent: 'var(--gold)', border: 'rgba(251,191,36,0.22)', bg: 'rgba(251,191,36,0.04)',
+    steps: [
+      { tab: 'interview', label: 'Question Bank — System Design',   desc: 'Work through all System Design questions. Build a reusable 6-step framework.' },
+      { tab: 'interview', label: 'Fluency Drills',                  desc: '30 weak→strong vocabulary pairs. Replace vague phrases with production-grade ones.' },
+      { tab: 'eval',      label: 'Metric Selector',                  desc: 'Know exactly when to use PR-AUC vs ROC-AUC vs calibration.' },
+      { tab: 'eval',      label: 'A/B Test Designer',                desc: 'Power, MDE, SRM — design an experiment interactively.' },
+      { tab: 'design',    label: 'ML Incident Room',                 desc: 'Diagnose production incidents under pressure. Senior/Staff expected output.' },
+      { tab: 'interview', label: 'Timed Practice — full mock',       desc: '45-minute session. Use 4-tier self-assessment. Aim for Analyst on every question.' },
+    ],
+  },
+  {
+    id: 'production_ml',
+    name: 'Production ML Fundamentals',
+    duration: '3 weeks',
+    outcome: 'Able to build, debug, and monitor an ML pipeline end-to-end without hand-holding.',
+    accent: 'var(--ember)', border: 'rgba(249,115,22,0.22)', bg: 'rgba(249,115,22,0.04)',
+    steps: [
+      { tab: 'spark',    label: 'Shuffle Hell',           desc: 'Understand the full cost anatomy of a Spark shuffle.' },
+      { tab: 'spark',    label: 'Skew Doctor',            desc: 'Diagnose and fix data skew. Apply salting and broadcast strategies.' },
+      { tab: 'features', label: 'Skew Simulator',         desc: 'Build intuition for training-serving skew by breaking features intentionally.' },
+      { tab: 'features', label: 'Feature Store Designer', desc: 'Design a dual-layer feature store with point-in-time correct joins.' },
+      { tab: 'eval',     label: 'Shadow Mode Sim',        desc: 'Run a challenger model in shadow mode before any traffic.' },
+      { tab: 'monitor',  label: 'Drift Dashboard',        desc: 'Configure PSI/KS thresholds and build model health alerts.' },
+    ],
+  },
+  {
+    id: 'staff_design',
+    name: 'Staff-Level System Design',
+    duration: '4 weeks',
+    outcome: 'Design and defend end-to-end ML platforms with trade-off reasoning at the Staff level.',
+    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.04)',
+    steps: [
+      { tab: 'design',    label: 'Design Canvas',                    desc: 'Full ML system design: rec systems, fraud, search ranking.' },
+      { tab: 'design',    label: 'Two-Tower Explorer',               desc: 'Understand the architecture powering YouTube/Spotify/TikTok retrieval.' },
+      { tab: 'design',    label: 'ML Incident Room',                 desc: 'Handle production incidents. Staff answer = root cause + systemic fix.' },
+      { tab: 'models',    label: 'PCA Explorer + SVD Decomposer',    desc: 'Deep math behind the dimensionality reduction used in every major system.' },
+      { tab: 'gradient',  label: 'Read all Gradient posts',          desc: 'Long-form architecture reasoning. How real systems are built and why.' },
+      { tab: 'interview', label: 'System Design + Architecture Qs',  desc: 'Practice Staff-level questions. Target: Staff tier on every answer.' },
+    ],
+  },
+  {
+    id: 'eval_depth',
+    name: 'Evaluation & Experiment Depth',
+    duration: '1 week',
+    outcome: 'Go beyond accuracy — choose metrics, design experiments, and explain calibration to any interviewer.',
+    accent: 'var(--mint)', border: 'rgba(52,211,153,0.22)', bg: 'rgba(52,211,153,0.04)',
+    steps: [
+      { tab: 'eval',      label: 'Metric Selector',               desc: 'AUC vs F1 vs PR-AUC — in which scenarios does each fail you?' },
+      { tab: 'eval',      label: 'A/B Test Designer',             desc: 'Design with proper power, MDE, and stratification.' },
+      { tab: 'eval',      label: 'Shadow Mode Sim',               desc: 'Shadow → canary → rollout. Do it in the right order.' },
+      { tab: 'models',    label: 'Calibration Curves',            desc: 'Platt scaling vs isotonic regression. When do probabilities lie?' },
+      { tab: 'interview', label: 'Statistics + Evaluation Qs',   desc: 'SRM, MDE, guardrails, type I/II errors under interview pressure.' },
+      { tab: 'interview', label: 'Fluency Drills — eval focus',  desc: 'Practice vocab for A/B test, calibration, PR-AUC, threshold selection.' },
+    ],
+  },
 ]
 
 const TRACKS = [
@@ -97,9 +163,10 @@ function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
 }
 
 export default function HomeTab({ onNavigate }) {
-  const [progress, setProgress] = useState([])
-  const [nextUp,   setNextUp]   = useState(null)
-  const [role,     setRole]     = useState(() => localStorage.getItem('msl_role') || null)
+  const [progress, setProgress]   = useState([])
+  const [nextUp,   setNextUp]     = useState(null)
+  const [role,     setRole]       = useState(() => localStorage.getItem('msl_role') || null)
+  const [openPath, setOpenPath]   = useState(null)
 
   function refresh() {
     setProgress(getAllProgress())
@@ -244,6 +311,61 @@ export default function HomeTab({ onNavigate }) {
         </section>
       )}
 
+      {/* ── Learning Paths ── */}
+      <section>
+        <div className="eyebrow">Learning paths</div>
+        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
+          Guided sequences. Clear outcomes.
+        </h2>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '24px', maxWidth: '500px', lineHeight: 1.65 }}>
+          Pick a path based on your goal. Each step links directly to the right module.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {LEARNING_PATHS.map(path => {
+            const isOpen = openPath === path.id
+            return (
+              <div key={path.id} style={{ border: `1px solid ${isOpen ? path.border : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', background: isOpen ? path.bg : 'transparent', transition: 'all 0.15s' }}>
+                {/* Path header */}
+                <button onClick={() => setOpenPath(isOpen ? null : path.id)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', gap: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: isOpen ? path.accent : 'var(--ink-hi)' }}>{path.name}</span>
+                    <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', padding: '2px 8px', border: '1px solid var(--rim)', borderRadius: '999px' }}>{path.duration}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{path.steps.length} steps</span>
+                  </div>
+                  <span style={{ color: 'var(--ink-low)', fontSize: '13px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
+                </button>
+
+                {/* Path content */}
+                {isOpen && (
+                  <div style={{ padding: '0 20px 20px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: '16px', marginTop: 0, paddingTop: '0', borderTop: `1px solid ${path.border}`, paddingTop: '14px' }}>
+                      <span style={{ fontSize: '10px', color: path.accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '4px' }}>Outcome</span>
+                      {path.outcome}
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {path.steps.map((step, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: path.accent, minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>{String(i+1).padStart(2,'0')}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '3px', fontFamily: "'Space Grotesk',sans-serif" }}>{step.label}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55 }}>{step.desc}</div>
+                          </div>
+                          <button onClick={() => onNavigate(step.tab)}
+                            style={{ fontSize: '11px', padding: '4px 10px', background: `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, whiteSpace: 'nowrap' }}>
+                            Go →
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
       {/* ── Python callout ── */}
       <section className="card-border-gradient" style={{ padding: '28px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap' }}>
@@ -274,7 +396,8 @@ export default function HomeTab({ onNavigate }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
           {TRACKS.map(t => {
-            const pct = getTrackPct(t.id)
+            const pct      = getTrackPct(t.id)
+            const mastery  = getTrackMastery(t.id) || inferMastery(pct)
             return (
               <button key={t.id} onClick={() => onNavigate(t.id)} className="card"
                 style={{ textAlign: 'left', background: `linear-gradient(135deg, var(--depth) 0%, ${t.bg} 100%)`, border: `1px solid ${t.border}`, cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
@@ -288,7 +411,12 @@ export default function HomeTab({ onNavigate }) {
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {t.python && <span className="badge badge-mint" style={{ fontSize: '10px' }}>Python</span>}
-                    {pct > 0 && (
+                    {mastery && (
+                      <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: MASTERY_COLORS[mastery], padding: '2px 7px', border: `1px solid ${MASTERY_COLORS[mastery]}30`, borderRadius: '999px' }}>
+                        {MASTERY_LABELS[mastery]}
+                      </span>
+                    )}
+                    {pct > 0 && !mastery && (
                       <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)' }}>{pct}%</span>
                     )}
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--ink-low)' }}>

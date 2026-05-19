@@ -1,7 +1,52 @@
 // ── Progress tracker (localStorage-backed, zero backend) ─────────────────
 // Key format: msl_done_<tabId>_<moduleKey>
+// Mastery key: msl_mastery_<tabId>_<moduleKey>  → 'exploring'|'practicing'|'mastered'
 
-const PREFIX = 'msl_done_'
+const PREFIX   = 'msl_done_'
+const M_PREFIX = 'msl_mastery_'
+
+// Mastery tiers in ascending order
+export const MASTERY_TIERS = ['exploring', 'practicing', 'mastered']
+
+export function setMastery(tabId, moduleKey, tier) {
+  if (!MASTERY_TIERS.includes(tier)) return
+  localStorage.setItem(`${M_PREFIX}${tabId}_${moduleKey}`, tier)
+  window.dispatchEvent(new CustomEvent('msl_progress'))
+}
+
+export function getMastery(tabId, moduleKey) {
+  return localStorage.getItem(`${M_PREFIX}${tabId}_${moduleKey}`) || null
+}
+
+// Infer mastery from % progress when no explicit tier is set
+export function inferMastery(pct) {
+  if (pct === 100) return 'mastered'
+  if (pct >= 50)  return 'practicing'
+  if (pct > 0)    return 'exploring'
+  return null
+}
+
+// Record interview session mastery from tier history (array of {id, tier})
+// Aggregates to track-level mastery based on best tier achieved
+export function recordInterviewSessionMastery(tierHistory) {
+  if (!tierHistory?.length) return
+  const tierRank = { junior: 0, analyst: 1, senior: 2, staff: 3 }
+  const best = tierHistory.reduce((top, h) => (tierRank[h.tier] ?? 0) > (tierRank[top] ?? 0) ? h.tier : top, 'junior')
+  const tierToMastery = { junior: 'exploring', analyst: 'practicing', senior: 'mastered', staff: 'mastered' }
+  setMastery('interview', 'timed_practice', tierToMastery[best] || 'exploring')
+}
+
+// Get highest mastery across all modules in a track
+export function getTrackMastery(tabId) {
+  const keys = TRACK_MODULES[tabId] || []
+  let best = null
+  for (const k of keys) {
+    const m = getMastery(tabId, k)
+    if (!m) continue
+    if (!best || MASTERY_TIERS.indexOf(m) > MASTERY_TIERS.indexOf(best)) best = m
+  }
+  return best
+}
 
 export function markDone(tabId, moduleKey) {
   localStorage.setItem(`${PREFIX}${tabId}_${moduleKey}`, '1')
