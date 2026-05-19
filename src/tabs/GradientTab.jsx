@@ -32,6 +32,8 @@ Use a feature store. A real one. The same Python code that computes features for
 
 The engineering cost of a feature store is front-loaded. The cost of not having one compounds indefinitely.`,
     tags: ['Feature Engineering', 'Production ML', 'Debugging', 'Feature Store'],
+    domain: 'features',
+    youtube: [],
   },
   {
     id: 2,
@@ -64,6 +66,8 @@ The engineering cost of a feature store is front-loaded. The cost of not having 
 
 **AQE is not magic.** It can't save a job with a 5000:1 key skew if you haven't enabled AQE skew join (\`spark.sql.adaptive.skewJoin.enabled=true\`). And even with skew join enabled, extremely hot keys (> 20× median) may require explicit salting.`,
     tags: ['PySpark', 'Performance', 'Internals', 'Spark UI'],
+    domain: 'spark',
+    youtube: [],
   },
   {
     id: 3,
@@ -97,6 +101,8 @@ F1, precision, recall — all computed at a fixed threshold. Move the threshold 
 
 A model can have 0.92 AUC and be completely uncalibrated. Uncalibrated means: when the model says P(fraud) = 0.8, the actual frequency of fraud in those predictions might be 0.3. This matters every time you use the score as a probability — risk scoring, expected value calculations, multi-model ensembles. Check with reliability diagrams. Fix with Platt scaling or isotonic regression.`,
     tags: ['Metrics', 'ROC-AUC', 'PR-AUC', 'Classification', 'Calibration'],
+    domain: 'eval',
+    youtube: [{ id: '4jRBRDbJemM', title: 'ROC and AUC, Clearly Explained — StatQuest' }],
   },
   {
     id: 4,
@@ -157,6 +163,8 @@ Diversity metrics (ILD, coverage, long-tail ratio) — prevents filter bubbles.
 Data quality: feature freshness, null rates, embedding staleness.
 Model performance: prediction score distribution drift, AUC on logged feedback.`,
     tags: ['System Design', 'Recommendations', 'Two-Tower', 'Interview Prep', 'Retrieval'],
+    domain: 'design',
+    youtube: [],
   },
   {
     id: 5,
@@ -189,6 +197,8 @@ The 0.2 PSI threshold assumes your reference distribution is stable. If your dat
 
 You can observe data drift immediately (compare feature distributions). Concept drift requires labels, which often come with a lag. Bridge: use proxy metrics. For a revenue model, track predicted vs actual revenue. For a ranking model, track predicted CTR vs observed CTR on the same items. Divergence = concept drift signal, no labels required.`,
     tags: ['Monitoring', 'Drift', 'PSI', 'KS Test', 'Production ML'],
+    domain: 'monitor',
+    youtube: [],
   },
   {
     id: 6,
@@ -223,6 +233,8 @@ When your data is sparse. PCA is dense by construction. For text (TF-IDF matrice
 
 Plot eigenvalues in descending order. The "elbow" — where the curve flattens — is typically a good cutoff. But rules of thumb vary by domain: "keep 90% of variance" is common but arbitrary. Better: keep enough components that cross-validation performance on your downstream task doesn\'t degrade significantly when you add more.`,
     tags: ['PCA', 'Dimensionality Reduction', 'SVD', 'Math', 'sklearn'],
+    domain: 'math',
+    youtube: [{ id: 'FgakZw6K1QQ', title: 'Principal Component Analysis (PCA) — StatQuest' }],
   },
   {
     id: 7,
@@ -261,6 +273,8 @@ Event timestamps and processing timestamps differ. A purchase that happened at 1
 
 Training run 42 used features_v3. Training run 57 used features_v5. When you investigate why run 57 underperformed in production, you need to reproduce the exact features that run 42 used. This requires: (1) Store feature definitions with immutable versioning. (2) Log which feature version was used in each training run. (3) Keep old feature computation code runnable.`,
     tags: ['Feature Store', 'Architecture', 'Online Features', 'Data Engineering'],
+    domain: 'features',
+    youtube: [],
   },
   {
     id: 8,
@@ -295,6 +309,8 @@ Weak: Jumps to neural network architecture before understanding the problem. Use
 
 "If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."`,
     tags: ['Interview Prep', 'System Design', 'MLE', 'Career'],
+    domain: 'interview',
+    youtube: [],
   },
   {
     id: 9,
@@ -338,6 +354,8 @@ Larger batch → more accurate gradient estimate → can use larger learning rat
 
 Not checking that training loss is actually decreasing in the first 100 steps. Using Adam's default parameters (lr=0.001) for fine-tuning LLMs without adjusting. Using the same learning rate for all parameter groups. Not visualising the gradient norms over training — norm collapse or explosion is diagnostic. Not logging the loss curve at all.`,
     tags: ['Optimisation', 'Gradient Descent', 'Adam', 'SGD', 'Deep Learning'],
+    domain: 'math',
+    youtube: [{ id: 'IHZwWFHWa-w', title: 'Gradient descent — 3Blue1Brown' }],
   },
   {
     id: 10,
@@ -372,6 +390,8 @@ Useful applications: explaining individual predictions to fraud analysts, auditi
 
 Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
     tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
+    domain: 'eval',
+    youtube: [],
   },
   {
     id: 11,
@@ -412,6 +432,8 @@ Sequence of phases: (1) Popularity-based serving. Log everything. (2) Content-ba
 
 The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.`,
     tags: ['Cold Start', 'Recommendation Systems', 'ML System Design', 'Exploration'],
+    domain: 'design',
+    youtube: [],
   },
   {
     id: 12,
@@ -452,6 +474,8 @@ Simulates a larger batch size by computing gradients over multiple micro-batches
 
 Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.`,
     tags: ['Distributed Training', 'Data Parallel', 'Model Parallel', 'ZeRO', 'Deep Learning'],
+    domain: 'dl',
+    youtube: [],
   },
   {
     id: 13,
@@ -504,6 +528,8 @@ Saying "and then we'd monitor it" at minute 42 of a 45-minute interview. Strong 
 
 Spending 20 minutes designing a batch inference system when the interviewer had real-time in mind. Or vice versa. Clarifying questions aren't a sign of weakness — they're a sign you understand that requirements matter. Ask once, confirm your understanding, then proceed.`,
     tags: ['Interview Prep', 'MLE', 'Senior Engineer', 'Career', 'System Design'],
+    domain: 'interview',
+    youtube: [],
   },
   {
     id: 14,
@@ -576,6 +602,8 @@ If you're senior: location flexibility is compensation. Working remotely for a S
 
 The map is not the territory. These are medians and ranges. The engineer who deploys the model that increases Amazon's recommendation CTR by 0.3% earns considerably more than the median. Compensation in ML is power-law distributed in the same way ML system impact is. The leverage is real, in both directions.`,
     tags: ['Salary', 'Career', 'ML Jobs', 'Total Compensation', 'Global', 'FAANG'],
+    domain: 'career',
+    youtube: [],
   },
   {
     id: 15,
@@ -642,6 +670,8 @@ The entire Netflix ML enterprise, which now employs several hundred ML and data 
 
 This is the third and most important lesson from Netflix: find the one number, instrument it perfectly, and align everything — engineering, product, content, design — around moving it. The ML follows naturally.`,
     tags: ['Netflix', 'Case Study', 'Recommendation Systems', 'ML Industry', 'Feature Stores'],
+    domain: 'design',
+    youtube: [],
   },
   {
     id: 16,
@@ -708,6 +738,8 @@ Before adding any tool to your ML stack, ask: what specific failure mode does th
 
 Stack complexity is technical debt that compounds. Build for the problems you have today, with one quarter of headroom for where you'll be in six months. That's it.`,
     tags: ['ML Stack', 'MLOps', 'Career', 'Startup', 'Infrastructure', 'SageMaker', 'MLflow'],
+    domain: 'career',
+    youtube: [],
   },
   {
     id: 17,
@@ -784,6 +816,8 @@ In 2025, ML engineering encompasses distributed training systems managing thousa
 
 The field that was a niche within data science in 2012 is now a primary driver of engineering investment at every company above a certain scale. The skills that matter have changed four times in twelve years. They will change again.`,
     tags: ['ML History', 'AlexNet', 'Transformer', 'GPT', 'Deep Learning', 'Timeline'],
+    domain: 'dl',
+    youtube: [],
   },
   {
     id: 18,
@@ -864,6 +898,8 @@ Choose where you want to live first. Then optimise your career for that location
 
 Geography is not destiny. But it is the context in which everything else happens, and context shapes outcomes more than most people want to admit.`,
     tags: ['Global', 'ML Jobs', 'Salary', 'London', 'Berlin', 'Bangalore', 'San Francisco', 'Career'],
+    domain: 'career',
+    youtube: [],
   },
   {
     id: 19,
@@ -934,10 +970,50 @@ Being technically brilliant in isolation. Every ML career ladder has a "collabor
 
 Waiting to be asked. The move from L5 to L6, in particular, requires a shift from "I do what I'm asked, very well" to "I identify what needs to be done and do it." The second mode is not optional at Staff level. It cannot be learned after promotion; it must be demonstrated before it.`,
     tags: ['Career Ladder', 'Levelling', 'Staff Engineer', 'MLE', 'Promotions', 'Senior Engineer'],
+    domain: 'career',
+    youtube: [],
   },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers']
+
+const GRADIENT_DOMAINS = [
+  { id: 'all',       label: 'All Posts' },
+  { id: 'features',  label: 'Feature Eng',   color: 'var(--violet)' },
+  { id: 'spark',     label: 'Spark / DE',    color: 'var(--ember)' },
+  { id: 'eval',      label: 'Evaluation',    color: 'var(--mint)' },
+  { id: 'design',    label: 'System Design', color: 'var(--sky)' },
+  { id: 'monitor',   label: 'Monitoring',    color: 'var(--rose)' },
+  { id: 'math',      label: 'Math & DS',     color: 'var(--sky)' },
+  { id: 'dl',        label: 'Deep Learning', color: 'var(--violet)' },
+  { id: 'interview', label: 'Interview',     color: 'var(--gold)' },
+  { id: 'career',    label: 'Career',        color: 'var(--gold)' },
+]
+
+const DOMAIN_COLOR = {
+  features: 'var(--violet)', spark: 'var(--ember)', eval: 'var(--mint)',
+  design: 'var(--sky)', monitor: 'var(--rose)', math: 'var(--sky)',
+  dl: 'var(--violet)', interview: 'var(--gold)', career: 'var(--gold)',
+}
+
+function YouTubeEmbed({ videoId, title }) {
+  return (
+    <div style={{ margin: '28px 0' }}>
+      <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Watch</div>
+      <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', border: '1px solid var(--rim)' }}>
+        <iframe
+          src={'https://www.youtube-nocookie.com/embed/' + videoId}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '10px' }}
+        />
+      </div>
+      {title && <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginTop: '6px', fontStyle: 'italic' }}>{title}</div>}
+    </div>
+  )
+}
 
 // ─── Production Failure Case Library ─────────────────────────────────────────
 const CASES = [
@@ -1332,6 +1408,7 @@ function PostReader({ post, onBack, onNavigate }) {
         {/* Meta */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', alignItems: 'center' }}>
           <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
+          {post.domain && <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{post.readMin} min read</span>
         </div>
 
@@ -1346,6 +1423,13 @@ function PostReader({ post, onBack, onNavigate }) {
         </p>
 
         <div style={{ height: '1px', background: 'var(--rim)', marginBottom: '36px' }} />
+
+        {/* YouTube embeds */}
+        {post.youtube && post.youtube.length > 0 && (
+          <div style={{ marginBottom: '36px' }}>
+            {post.youtube.map(v => <YouTubeEmbed key={v.id} videoId={v.id} title={v.title} />)}
+          </div>
+        )}
 
         {/* Body */}
         <div>{renderBody(post.body)}</div>
@@ -1403,8 +1487,10 @@ function PostCard({ post, featured, onClick }) {
     <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: '20px 22px', transition: 'transform 0.15s, border-color 0.15s', }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = post.catColor.border }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--rim)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
+        {post.domain && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
+        {post.youtube && post.youtube.length > 0 && <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace" }}>▶ video</span>}
         <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{post.readMin} min</span>
       </div>
       <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
@@ -1415,11 +1501,11 @@ function PostCard({ post, featured, onClick }) {
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function GradientTab({ onNavigate }) {
-  const [activeCat, setActiveCat] = useState('All')
-  const [reading,   setReading]   = useState(null)
-  const [mode,      setMode]      = useState('posts')  // 'posts' | 'cases'
+  const [activeDomain, setActiveDomain] = useState('all')
+  const [reading,      setReading]      = useState(null)
+  const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
 
-  const filtered = POSTS.filter(p => activeCat === 'All' || p.category === activeCat)
+  const filtered = POSTS.filter(p => activeDomain === 'all' || p.domain === activeDomain)
   const featured = filtered.filter(p => p.featured)
   const rest      = filtered.filter(p => !p.featured)
 
@@ -1461,8 +1547,7 @@ export default function GradientTab({ onNavigate }) {
             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
           </div>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
-            Feature engineering, PySpark optimisation, ML system design, model evaluation, and paper breakdowns.
-            Written for engineers who ship — not engineers who read papers.
+            Start here. Read a post, understand the concept, then hit Practice to apply it in the interactive modules. Each post links directly to its practice module.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -1475,13 +1560,18 @@ export default function GradientTab({ onNavigate }) {
         </div>
       </div>
 
-      {/* Category filter */}
+      {/* Domain filter */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => setActiveCat(c)}
-            className={`sub-tab ${activeCat === c ? 'active' : 'inactive'}`}
-            style={{ fontSize: '12px' }}>
-            {c}
+        {GRADIENT_DOMAINS.map(d => (
+          <button key={d.id} onClick={() => setActiveDomain(d.id)}
+            style={{
+              padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
+              fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, transition: 'all 0.12s',
+              background: activeDomain === d.id ? (d.color ? `${d.color}20` : 'rgba(255,255,255,0.08)') : 'rgba(0,0,0,0.25)',
+              color: activeDomain === d.id ? (d.color ?? 'var(--ink-hi)') : 'var(--ink-low)',
+              border: activeDomain === d.id ? `1px solid ${d.color ?? 'var(--rim)'}40` : '1px solid var(--rim)',
+            }}>
+            {d.label}
           </button>
         ))}
       </div>

@@ -100,7 +100,6 @@ const SIDEBAR_GROUPS = [
 
 const BOTTOM_LINKS = [
   { id: 'interview', label: 'Interview Prep' },
-  { id: 'gradient',  label: '∇ Gradient' },
   { id: 'landscape', label: 'Landscape' },
 ]
 
@@ -114,14 +113,10 @@ function Sidebar({ activeTab, onNavigate }) {
       overflowY: 'auto', scrollbarWidth: 'none',
       height: '100%',
     }}>
-      {/* Home */}
+      {/* Home + Gradient */}
       <div style={{ padding: '0 10px', marginBottom: '12px' }}>
-        <SidebarItem
-          label="Home"
-          isActive={activeTab === 'home'}
-          accent="var(--prime)"
-          onClick={() => onNavigate('home')}
-        />
+        <SidebarItem label="Home" isActive={activeTab === 'home'} accent="var(--prime)" onClick={() => onNavigate('home')} />
+        <SidebarItem label="∇ Gradient" isActive={activeTab === 'gradient'} accent="var(--prime)" onClick={() => onNavigate('gradient')} />
       </div>
 
       {/* Domain groups */}
