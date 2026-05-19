@@ -190,10 +190,269 @@ function TrainingFailureDiagnosis() {
   )
 }
 
+// ── Gradient Debugger ─────────────────────────────────────────────────────────
+const GRAD_SCENARIOS = [
+  {
+    id: 'vanishing_sigmoid',
+    title: 'Layers 1–6 gradient norms all < 1e-6, layers 7–12 normal',
+    symptoms: [
+      'Layer 12 grad_norm: 0.42',
+      'Layer 8  grad_norm: 0.31',
+      'Layer 6  grad_norm: 0.000003',
+      'Layer 1  grad_norm: 0.0000001',
+      'Activation: Sigmoid, 12-layer network',
+    ],
+    options: [
+      'Exploding gradients in early layers',
+      'Vanishing gradients (sigmoid saturation)',
+      'Gradient checkpoint bug',
+      'Wrong loss function',
+    ],
+    answer: 1,
+    diagnosis: 'Vanishing gradients (sigmoid saturation)',
+    explanation: 'Sigmoid saturates at extremes, derivative max 0.25. Through 12 layers, 0.25^12 ≈ 6e-8. The sharp cutoff at layer 6 shows where saturation becomes total.',
+    fix: 'Replace sigmoid with GELU/SiLU. Add LayerNorm between blocks. Consider residual connections to provide gradient highways.',
+  },
+  {
+    id: 'unfrozen_embedding',
+    title: 'All layers normal except embedding layer is frozen but updating',
+    symptoms: [
+      'Embedding layer requires_grad: True',
+      'Embedding grad_norm: 847.3',
+      'Loss: decreasing normally',
+      'Training: fine-tune, frozen backbone expected',
+    ],
+    options: [
+      'Expected behavior',
+      'Accidentally unfroze embedding layer',
+      'Learning rate too high for embeddings',
+      'Weight decay conflict',
+    ],
+    answer: 1,
+    diagnosis: 'Accidentally unfroze embedding layer',
+    explanation: 'Embedding grad_norm of 847 while backbone is "frozen" means the freeze didn\'t apply to embeddings. Common when freeze loop uses `model.encoder.parameters()` but embeddings are at `model.embeddings`.',
+    fix: '`for name, param in model.named_parameters(): param.requires_grad = \'head\' in name` — always verify with `[n for n,p in model.named_parameters() if p.requires_grad]`.',
+  },
+  {
+    id: 'nan_forward',
+    title: 'Loss NaN after gradient clipping — norms were fine',
+    symptoms: [
+      'grad_norm before clip: 0.87 (normal)',
+      'After clip: grad_norm still 0.87',
+      'Loss step 312: 0.43 → NaN',
+      'Learning rate: 3e-3',
+    ],
+    options: [
+      'Exploding gradients (clipping missed it)',
+      'NaN in forward pass (not gradients)',
+      'Batch norm instability',
+      'Wrong gradient clipping API',
+    ],
+    answer: 1,
+    diagnosis: 'NaN in forward pass (not gradients)',
+    explanation: 'If gradient norms are normal but loss is NaN, the NaN originates in the forward pass — e.g., log(0), division by zero, softmax overflow. Gradient clipping can\'t fix what was already NaN in the output.',
+    fix: 'Add `torch.autograd.set_detect_anomaly(True)` temporarily. Check for log(x+1e-8) guards, safe_softmax, and input normalization. Common culprits: log loss with 0 predictions, unlucky batch with all-zero inputs to BN.',
+  },
+  {
+    id: 'periodic_spikes',
+    title: 'Gradient norms spike every 100 steps periodically',
+    symptoms: [
+      'Step 100: grad_norm 14.2',
+      'Step 200: grad_norm 11.8',
+      'Step 300: grad_norm 15.1',
+      'Steps 1-99: grad_norm ~0.5',
+      'Dataset: shuffled but seeded',
+    ],
+    options: [
+      'Periodic data corruption (bad batch every N steps)',
+      'Cyclical LR causing periodic instability',
+      'Gradient accumulation misconfiguration',
+      'Model architecture resonance',
+    ],
+    answer: 0,
+    diagnosis: 'Periodic data corruption (bad batch every N steps)',
+    explanation: 'Perfectly periodic spikes at fixed step intervals with a seeded dataset = same corrupted samples being loaded. The seeded shuffle means every epoch hits the same bad rows at the same position.',
+    fix: 'Check dataset for NaN/inf rows (`df.isnull().any()`). Add input validation in `__getitem__`. Use different seed per epoch (`sampler = torch.utils.data.RandomSampler(dataset, generator=torch.Generator().manual_seed(epoch))`).',
+  },
+  {
+    id: 'frozen_layernorm',
+    title: 'Layer norms in transformer show all-zero gradients after step 500',
+    symptoms: [
+      'layernorm.weight grad: tensor([0., 0., 0., ...]',
+      'layernorm.bias  grad: tensor([0., 0., 0., ...]',
+      'Attention layers: normal grads',
+      'Training: continued from checkpoint',
+    ],
+    options: [
+      'LayerNorm frozen in checkpoint',
+      'Learning rate decayed to zero',
+      'Gradient checkpoint interaction',
+      'LayerNorm already converged (expected)',
+    ],
+    answer: 0,
+    diagnosis: 'LayerNorm frozen in checkpoint',
+    explanation: 'When loading from checkpoint with `strict=False` or selective loading, norm layers can accidentally have `requires_grad=False` retained from a differently-trained checkpoint.',
+    fix: 'After `load_state_dict`, verify: `assert all(p.requires_grad for n,p in model.named_parameters() if \'norm\' in n)`. Re-enable with `model.layernorm.weight.requires_grad_(True)`.',
+  },
+  {
+    id: 'numpy_break',
+    title: 'Gradient flow stops at a custom layer — no grad_fn',
+    symptoms: [
+      'Custom layer output: tensor([...], grad_fn=None)',
+      'All layers after: zero gradients',
+      'Custom op: uses numpy internally',
+    ],
+    options: [
+      'Missing backward pass implementation',
+      'Numpy breaks autograd graph',
+      'Wrong loss reduction',
+      'Detached tensor passed as input',
+    ],
+    answer: 1,
+    diagnosis: 'Numpy breaks autograd graph',
+    explanation: 'Numpy operations break the PyTorch autograd graph. `tensor.numpy()` detaches from computation graph. Any custom layer that converts to numpy and back silently kills gradient flow.',
+    fix: 'Replace all numpy operations with PyTorch equivalents. If numpy is required, implement a custom `torch.autograd.Function` with explicit `forward` and `backward`. Check: `output.requires_grad` should be True throughout.',
+  },
+  {
+    id: 'shared_embedding_grad',
+    title: 'Shared embedding gradients accumulate unexpectedly across tasks',
+    symptoms: [
+      'Embedding grad accumulation: 3x expected magnitude',
+      'Training: multi-task, 3 tasks sharing embedding layer',
+      'optimizer.zero_grad() called once per global step',
+    ],
+    options: [
+      'Gradient accumulation bug',
+      'Correct behavior — shared layers receive summed gradients',
+      'Weight decay amplifying shared layer updates',
+      'Missing gradient clipping',
+    ],
+    answer: 1,
+    diagnosis: 'Correct behavior — shared layers receive summed gradients',
+    explanation: 'Shared layers receive gradients from ALL tasks that use them, summed. A 3-task setup with equal loss weight naturally produces 3x gradient magnitude on shared layers. This is mathematically correct, not a bug — but you probably want per-task gradient normalization.',
+    fix: 'Scale each task loss by `1/n_tasks` before summing, or use gradient surgery (project conflicting gradients). The naive fix of reducing LR globally also works but is less principled.',
+  },
+  {
+    id: 'amp_underflow',
+    title: 'Gradients collapse to zero after mixed precision training enabled',
+    symptoms: [
+      'Before AMP: grad_norm ~0.5 (normal)',
+      'After AMP: grad_norm 0.0 (all steps)',
+      'Using torch.cuda.amp.autocast()',
+      'GradScaler not used',
+    ],
+    options: [
+      'FP16 underflow — gradients too small to represent',
+      'GradScaler required with AMP',
+      'Wrong dtype in loss computation',
+      'Autocast scope too narrow',
+    ],
+    answer: 0,
+    diagnosis: 'FP16 underflow — GradScaler missing',
+    explanation: 'FP16 minimum positive value is ~6e-8. Small gradients underflow to exactly 0 in FP16. GradScaler multiplies loss before backward (scaling gradients up into FP16 representable range), then unscales before optimizer step. Without it, all small gradients vanish.',
+    fix: '`scaler = torch.cuda.amp.GradScaler()` → `scaler.scale(loss).backward()` → `scaler.step(optimizer)` → `scaler.update()`. Always use GradScaler with AMP training.',
+  },
+]
+
+function GradientDebugger() {
+  const [idx,      setIdx]      = useState(0)
+  const [picked,   setPicked]   = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const [score,    setScore]    = useState({ correct: 0, total: 0 })
+
+  const scenario = GRAD_SCENARIOS[idx]
+
+  function choose(i) {
+    if (revealed) return
+    setPicked(i)
+    setRevealed(true)
+    setScore(s => ({ correct: s.correct + (i === scenario.answer ? 1 : 0), total: s.total + 1 }))
+  }
+
+  function next() {
+    setIdx(i => (i + 1) % GRAD_SCENARIOS.length)
+    setPicked(null)
+    setRevealed(false)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div>
+          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
+          <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
+            Read the gradient telemetry. Diagnose the gradient flow problem before you reveal.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {GRAD_SCENARIOS.length}</span>
+          {score.total > 0 && (
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
+              {score.correct}/{score.total} correct
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Scenario card */}
+      <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--sky)` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+          <span style={{ fontSize: '18px' }}>📉</span>
+          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          {scenario.symptoms.map((s, i) => (
+            <div key={i} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+              {s}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Options */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+        {scenario.options.map((opt, i) => {
+          let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
+          if (revealed) {
+            if (i === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (i === picked) { bg = 'rgba(244,63,94,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
+          } else if (i === picked) {
+            bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)'
+          }
+          return (
+            <button key={i} onClick={() => choose(i)} disabled={revealed}
+              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              {revealed && i === scenario.answer && '✓ '}
+              {revealed && i === picked && i !== scenario.answer && '✗ '}
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Reveal */}
+      {revealed && (
+        <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+            {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
+          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
+          </div>
+          <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Roadmap cards ─────────────────────────────────────────────────────────────
 const ROADMAP = [
   { icon: '🔴', label: 'Training Failure Diagnosis',    desc: 'Loss spikes, vanishing gradients, dead ReLUs, data leakage — diagnose from telemetry.',  status: 'live',   color: 'var(--mint)' },
-  { icon: '📉', label: 'Backprop & Gradient Debugging', desc: 'Gradient flow visualisation, which layers are actually learning, per-layer norm analysis.', status: 'soon',   color: 'var(--ink-low)' },
+  { icon: '📉', label: 'Backprop & Gradient Debugging', desc: 'Gradient flow visualisation, which layers are actually learning, per-layer norm analysis.', status: 'live',   color: 'var(--mint)' },
   { icon: '🧊', label: 'Fine-tuning Decision Framework', desc: 'Freeze vs full fine-tune vs LoRA. When each makes sense based on data size and task delta.', status: 'soon',   color: 'var(--ink-low)' },
   { icon: '⚡', label: 'Model Serving & Quantization',  desc: 'INT8/FP16 tradeoffs, batch size vs latency, GPU memory math, KV cache sizing.',             status: 'soon',   color: 'var(--ink-low)' },
   { icon: '🔁', label: 'PyTorch Production Patterns',   desc: 'torch.compile, mixed precision, DDP vs FSDP, memory-efficient training.',                    status: 'soon',   color: 'var(--ink-low)' },
@@ -205,6 +464,7 @@ const ROADMAP = [
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const DL_MODULES = [
   { id: 'diagnosis', label: 'Training Failure Diagnosis', icon: '🔴', component: TrainingFailureDiagnosis },
+  { id: 'gradient',  label: 'Backprop Debugging',         icon: '📉', component: GradientDebugger },
 ]
 
 export default function DeepLearningTab() {

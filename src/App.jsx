@@ -13,6 +13,8 @@ import InterviewPrepTab from './tabs/InterviewPrepTab.jsx'
 import GradientTab      from './tabs/GradientTab.jsx'
 import LandscapeTab     from './tabs/LandscapeTab.jsx'
 import DeepLearningTab  from './tabs/DeepLearningTab.jsx'
+import DLFineTuningTab  from './tabs/DLFineTuningTab.jsx'
+import DLServingTab     from './tabs/DLServingTab.jsx'
 import DataScienceTab   from './tabs/DataScienceTab.jsx'
 import AirflowTab       from './tabs/AirflowTab.jsx'
 import DbtTab           from './tabs/dbtTab.jsx'
@@ -59,7 +61,9 @@ const DOMAINS = [
     color: 'var(--violet)',
     bg: 'rgba(99,102,241,0.08)',
     tabs: [
-      { id: 'dl', label: 'Deep Learning', component: DeepLearningTab },
+      { id: 'dl',         label: 'Training Lab',    component: DeepLearningTab },
+      { id: 'dl_finetune',label: 'Fine-tuning',     component: DLFineTuningTab },
+      { id: 'dl_serving', label: 'Serving',         component: DLServingTab },
     ],
   },
   {
