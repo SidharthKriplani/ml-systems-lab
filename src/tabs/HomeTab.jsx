@@ -15,13 +15,15 @@ const ROLES = [
 // ── Stats ─────────────────────────────────────────────────────────────────────
 const STATS = [
   { n: '7',   label: 'Domains' },
-  { n: '60+', label: 'Production scenarios' },
+  { n: '100+', label: 'Production scenarios' },
   { n: '4',   label: 'Career levels' },
   { n: 'Free', label: 'No account needed' },
 ]
 
 // ── Changelog ─────────────────────────────────────────────────────────────────
 const CHANGELOG = [
+  { date: 'May 2026', text: 'Causal Inference tab: causal vs predictive, identification strategies (RCT/DiD/PSM/IV/RDD/SC), DAG confounder/collider/mediator.' },
+  { date: 'May 2026', text: 'Time Series tab: forecast failure zoo, stationarity selector, anomaly detection tiers.' },
   { date: 'May 2026', text: 'MLOps domain: Deployment strategies, Champion-Challenger, CI/CD & Infra (9 modules).' },
   { date: 'May 2026', text: 'Data Science domain expanded: Analysis Mistakes, Calibration, Metric Design Pitfalls.' },
   { date: 'May 2026', text: 'Deep Learning domain: Training Lab, Fine-tuning, Serving — 8 production judgment modules.' },
@@ -53,6 +55,7 @@ const LEARNING_PATHS = [
     steps: [
       { tab: 'interview',  label: 'Question Bank — System Design',  desc: 'Work through all system design questions. Build a reusable 6-step framework.' },
       { tab: 'interview',  label: 'Fluency Drills',                 desc: '30 weak→strong vocabulary pairs. Replace vague phrases with production-grade ones.' },
+      { tab: 'causal',     label: 'Causal vs Predictive',           desc: 'A DS interview trap. Know when prediction isn\'t the right tool before the interviewer asks.' },
       { tab: 'design',     label: 'ML Incident Room',               desc: 'Diagnose production incidents under pressure. Senior/Staff expected output.' },
       { tab: 'design',     label: 'Two-Tower Explorer',             desc: 'The architecture powering YouTube, Spotify, TikTok retrieval. Know it cold.' },
       { tab: 'eval',       label: 'Metric Selector',                desc: 'When to use PR-AUC vs ROC-AUC vs calibration. Interviewers will ask.' },
@@ -100,6 +103,7 @@ const LEARNING_PATHS = [
       { tab: 'features',    label: 'Feature Store Designer',         desc: 'Point-in-time correct joins. Dual-layer feature store design.' },
       { tab: 'classical',   label: 'Model Failure Zoo',              desc: 'Silent failure modes for 8 classical models. War stories + diagnostic signals.' },
       { tab: 'eval',        label: 'Metric Selector + Shadow Mode',  desc: 'Pick the right metric. Run shadow before canary. Always.' },
+      { tab: 'causal',      label: 'Causal vs Predictive',           desc: 'Before running your next A/B test — know what you\'re actually trying to estimate.' },
       { tab: 'monitor',     label: 'Drift Dashboard',                desc: 'PSI/KS thresholds. Model health alerts before degradation compounds.' },
       { tab: 'mlops_deploy',label: 'Champion-Challenger',            desc: 'Walk through a real promotion decision: metrics, latency SLA, rollback trigger.' },
     ],
@@ -116,7 +120,23 @@ const LEARNING_PATHS = [
       { tab: 'design',     label: 'DS Ownership Chain',             desc: '17-node production ML lifecycle. Where each role owns the decision.' },
       { tab: 'modeling',   label: 'OLAP Format Showdown',           desc: 'Iceberg vs Delta vs Hive. Storage layer decisions at Staff level.' },
       { tab: 'mlops_deploy',label: 'Deployment Strategy + Rollback', desc: 'Blue-green vs canary vs shadow. When to rollback immediately vs investigate.' },
+      { tab: 'ts',         label: 'Forecast Failure Zoo',            desc: 'Staff-level sign-off: know the 8 ways forecasting pipelines silently break.' },
       { tab: 'gradient',   label: 'Read all Gradient posts',        desc: 'Long-form architecture reasoning. How real systems are built and why.' },
+    ],
+  },
+  {
+    id: 'ds_track',
+    name: 'Data Scientist Track',
+    duration: '2 weeks',
+    outcome: 'Model selection, causal identification, and time series judgment — the three areas that separate good DS from great DS.',
+    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.04)',
+    steps: [
+      { tab: 'ds',     label: 'Model Selection Oracle',    desc: 'When linear vs tree vs neural — the defaults that get you 80% of the way.' },
+      { tab: 'ds',     label: 'Analysis Mistakes',         desc: '8 antipatterns: p-hacking, Simpson\'s paradox, survivorship bias, Goodhart\'s Law.' },
+      { tab: 'ds',     label: 'Calibration',               desc: 'When your probabilities are lying to you. Platt scaling vs isotonic regression.' },
+      { tab: 'causal', label: 'Causal vs Predictive',      desc: 'The framing question before every analysis. Prediction and causation need different tools.' },
+      { tab: 'causal', label: 'Identification Strategies', desc: 'RCT, DiD, PSM, IV, RDD, Synthetic Control — match strategy to constraint.' },
+      { tab: 'ts',     label: 'Forecast Failure Zoo',      desc: 'Why forecasts fail: leakage, nonstationarity, structural breaks, sparse series.' },
     ],
   },
   {

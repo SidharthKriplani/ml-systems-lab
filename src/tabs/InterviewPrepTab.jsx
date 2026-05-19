@@ -370,9 +370,170 @@ function TimedPractice({ questions, onExit }) {
   )
 }
 
+// ─── System Design Judgment ──────────────────────────────────────────────────
+const STEP_LABELS = [
+  'Step 1 — Clarify objective',
+  'Step 2 — Define ML task type',
+  'Step 3 — Data pipeline & labels',
+  'Step 4 — Feature engineering',
+  'Step 5 — Model selection & training',
+  'Step 6 — Evaluation & deployment',
+]
+
+const DESIGN_SCENARIOS = [
+  {
+    id: 1,
+    brief: 'PM: "Build a model that predicts which users will churn next month."',
+    context: 'The team has 2 years of event logs. A gradient boosting model on engagement features is already in training.',
+    correct: 2,
+    answer: 'The churn label is undefined. Cancellation, 30-day inactivity, and non-renewal produce different label distributions, model behavior, and intervention logic. Training started on an undefined target — everything built on the wrong label is wasted.',
+    trap: 'Most people jump to feature engineering — behavioral sequences are clearly valuable. But if the label definition is wrong, the best features in the world produce the wrong model.',
+    method: 'Write: "a user is churned if ___ on day ___." Validate the definition with PM and business stakeholders before a single row of training data is touched.',
+  },
+  {
+    id: 2,
+    brief: 'PM: "Improve our home feed. Engagement is down 8% QoQ."',
+    context: 'The current model optimizes for 7-day click-through rate. The team is planning to add more user features.',
+    correct: 0,
+    answer: 'Engagement is down but the objective is undefined. CTR, session time, content diversity, and user satisfaction are all "engagement" but require different models with different tradeoffs. Adding features to the wrong objective makes things worse faster.',
+    trap: 'Adding more features (Step 4) is the instinctive response. But enriching a model optimizing the wrong objective deepens the problem — possibly optimizing for clickbait or doom-scrolling.',
+    method: 'Run a north-star alignment session. Is the goal retention, revenue, or wellbeing? Each implies a different proxy metric and model objective. Then add features.',
+  },
+  {
+    id: 3,
+    brief: 'PM: "Our fraud detection model has too many false negatives. It\'s costing $2M/month."',
+    context: 'The team has labeled transaction data (0.1% fraud rate). They\'re debating XGBoost vs a neural network.',
+    correct: 5,
+    answer: 'At 0.1% prevalence, even a 99% accurate model is useless. The critical decision is the operating point on the precision-recall curve — driven by the cost matrix (cost of missed fraud vs cost of blocking legit transactions). Model architecture is a distant second concern.',
+    trap: 'Choosing between XGBoost and neural network (Step 5) is debated endlessly here. But both can hit any point on the PR curve — what matters is defining the cost matrix that sets the right threshold.',
+    method: 'Define C_FN (cost of missed fraud) and C_FP (cost of blocking a legit transaction). The optimal threshold follows directly from the ratio. Build this into evaluation before touching architecture.',
+  },
+  {
+    id: 4,
+    brief: 'PM: "We need a recommendation system. Users aren\'t discovering new items."',
+    context: 'The team is planning collaborative filtering on purchase history.',
+    correct: 1,
+    answer: 'Collaborative filtering on purchases is a pointwise relevance task — it predicts P(purchase | user, item). But discovery requires novelty, not just relevance. CF will surface popular items the user already knows. The task framing is wrong before a line of code is written.',
+    trap: 'Jumping straight to collaborative filtering (Step 5) before defining what discovery means. CF optimizes for relevance — it will make the discovery problem worse by surfacing popular items.',
+    method: 'Separate recall (candidate generation) from ranking (scoring by a composite of relevance + novelty). Add an explicit diversity term or a re-ranker that penalizes popularity bias.',
+  },
+  {
+    id: 5,
+    brief: 'PM: "Flag harmful content before it goes viral. Human moderation is too slow."',
+    context: 'The team has 500K labeled examples from human moderators and is ready to train a BERT classifier.',
+    correct: 2,
+    answer: 'Human moderation labels carry annotation bias — moderators disagree on edge cases across regions, shifts, and cultures. 500K noisy labels produce a model that learns annotator disagreement as signal. A label quality audit before training is the highest-leverage action available.',
+    trap: 'Training a BERT classifier (Step 5) seems ready — you have data and a proven architecture. But label noise in content moderation is well-documented. A label audit often reveals 15–20% disagreement on borderline classes.',
+    method: 'Run an inter-annotator agreement check (Cohen\'s kappa). For low-agreement classes, create an escalation tier rather than forcing a binary label. Clean 200K labels beat noisy 500K.',
+  },
+  {
+    id: 6,
+    brief: 'PM: "Our delivery ETA estimates are too optimistic. Customers complain about late orders."',
+    context: 'The team has GPS pings, historical delivery times, and weather data. They\'re deciding between gradient boosting and a sequence model.',
+    correct: 0,
+    answer: 'The objective metric is undefined. MAE treats a 10-minute overestimate and underestimate identically — but customers hate late arrivals far more than early ones. P90 lateness, asymmetric loss, or a business SLA each lead to different models. Architecture choice is downstream of this decision.',
+    trap: 'Gradient boosting vs sequence model (Step 5) is the exciting debate. But both can be trained with symmetric or asymmetric loss — define the loss function first, then pick the architecture that fits it.',
+    method: 'Propose an asymmetric loss penalizing underestimates (late arrivals) more heavily. Get PM alignment on an acceptable P90 lateness threshold before touching model architecture.',
+  },
+  {
+    id: 7,
+    brief: 'PM: "Our new search ranking model has 15% better NDCG@10 on offline eval. Ready to launch."',
+    context: 'The team ran offline evaluation on 3 months of click logs. Conversion is the business metric.',
+    correct: 5,
+    answer: 'NDCG@10 improved offline but conversion hasn\'t been measured online. Offline-online metric gaps are the most common failure mode in search ranking — position bias in click logs inflates NDCG gains that don\'t transfer to revenue. "Ready to launch" based on offline eval alone is premature.',
+    trap: 'A 15% offline improvement looks like a clear win. But search is notorious for offline-online gaps. Shipping without an A/B test burns engineering credibility when conversion doesn\'t move.',
+    method: 'Run the new model in shadow mode for one week. Compare predicted ranking vs live ranking on a held-out query set. Canary at 1% traffic before full rollout.',
+  },
+  {
+    id: 8,
+    brief: 'PM: "Personalize push notifications to improve re-engagement."',
+    context: 'The team has a model predicting P(open | user, notification). They plan to send to the top 20% of users by score.',
+    correct: 5,
+    answer: 'The deployment strategy ignores notification fatigue and causal effect. P(open) is highest for engaged users who would re-engage anyway — the model is selecting users who don\'t need a push. Without a holdout group, you can\'t measure whether notifications cause engagement or merely correlate with it.',
+    trap: 'The model seems technically sound (Step 5 is fine). The mistake is in deployment — top-20% selection maximizes opens but not uplift. This is a deployment and evaluation problem, not a modeling one.',
+    method: 'Estimate notification uplift with a PSM or RCT holdout. Target users where P(engage | notification) - P(engage | no notification) is highest — not users with the highest absolute P(open).',
+  },
+]
+
+function SystemDesignJudgment() {
+  const [idx,      setIdx]      = useState(0)
+  const [chosen,   setChosen]   = useState(null)
+  const [revealed, setRevealed] = useState(false)
+
+  const sc = DESIGN_SCENARIOS[idx]
+
+  function next() {
+    setIdx(i => (i + 1) % DESIGN_SCENARIOS.length)
+    setChosen(null)
+    setRevealed(false)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{idx + 1} / {DESIGN_SCENARIOS.length}</span>
+        <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+          <div style={{ width: `${((idx + 1) / DESIGN_SCENARIOS.length) * 100}%`, height: '100%', background: 'var(--gold)', borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '12px', padding: '20px 24px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>System Brief</div>
+        <div style={{ fontSize: '15px', color: 'var(--ink-hi)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '12px' }}>{sc.brief}</div>
+        <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{sc.context}</div>
+      </div>
+
+      <div style={{ fontSize: '14px', color: 'var(--ink-hi)', fontWeight: 600 }}>Which step of the 6-step framework has the most critical unresolved gap?</div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {STEP_LABELS.map((label, i) => {
+          const isChosen  = chosen === i
+          const isCorrect = i === sc.correct
+          let bg = 'rgba(0,0,0,0.2)', border = 'var(--rim)', color = 'var(--ink-mid)'
+          if (isChosen && !revealed)              { bg = 'rgba(251,191,36,0.08)'; border = 'rgba(251,191,36,0.4)';  color = 'var(--ink-hi)' }
+          if (revealed && isCorrect)              { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.4)';  color = 'var(--ink-hi)' }
+          if (revealed && isChosen && !isCorrect) { bg = 'rgba(244,63,94,0.08)';  border = 'rgba(244,63,94,0.4)';   color = 'var(--ink-hi)' }
+          return (
+            <button key={i} disabled={revealed} onClick={() => setChosen(i)}
+              style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', fontFamily: "'Space Grotesk',sans-serif", fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
+              {label}
+              {revealed && isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--mint)' }}>correct</span>}
+              {revealed && isChosen && !isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--rose)' }}>your pick</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      {!revealed && chosen !== null && (
+        <button className="btn-primary" onClick={() => setRevealed(true)} style={{ alignSelf: 'flex-start', padding: '10px 20px' }}>Reveal answer</button>
+      )}
+
+      {revealed && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Why this step</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.answer}</div>
+          </div>
+          <div style={{ background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Common trap</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.trap}</div>
+          </div>
+          <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Framework move</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.method}</div>
+          </div>
+          <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start', padding: '10px 20px' }}>
+            {idx < DESIGN_SCENARIOS.length - 1 ? 'Next scenario →' : 'Restart →'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function InterviewPrepTab() {
-  const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency'
+  const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency' | 'design'
   const [cat,     setCat]     = useState('All')
   const [company, setCompany] = useState('All')
   const [level,   setLevel]   = useState('All')
@@ -394,9 +555,10 @@ export default function InterviewPrepTab() {
   if (mode === 'practice') return <TimedPractice questions={shuffle(filtered.length > 0 ? filtered : QUESTIONS)} onExit={() => setMode('bank')} />
 
   const MODES = [
-    { key: 'bank',     label: '📋 Question Bank' },
-    { key: 'practice', label: '⏱ Timed Practice' },
-    { key: 'fluency',  label: '💬 Fluency Drills' },
+    { key: 'bank',    label: 'Question Bank' },
+    { key: 'practice',label: 'Timed Practice' },
+    { key: 'fluency', label: 'Fluency Drills' },
+    { key: 'design',  label: 'Design Judgment' },
   ]
 
   return (
@@ -423,6 +585,9 @@ export default function InterviewPrepTab() {
 
       {/* Fluency mode */}
       {mode === 'fluency' && <FluencyDrills />}
+
+      {/* Design Judgment mode */}
+      {mode === 'design' && <SystemDesignJudgment />}
 
       {/* Bank mode */}
       {mode === 'bank' && (
