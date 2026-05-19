@@ -16,8 +16,8 @@
 :root {
   /* ── Surfaces — warm near-black ──────────────────── */
   --void:    #090806;   /* page bg — faintest warm undertone  */
-  --depth:   #110f0c;   /* card / panel background            */
-  --surface: #191612;   /* elevated cards, code blocks        */
+  --depth:   #141210;   /* card / panel background            */
+  --surface: #1c1915;   /* elevated cards, code blocks        */
   --rim:     #282420;   /* default border                     */
   --rim-hi:  #3a3530;   /* hovered / active border            */
 
@@ -44,9 +44,9 @@
 
   /* ── Typography — warm neutrals ─────────────────── */
   --ink-hi:    #f0ece4;   /* primary — warm off-white           */
-  --ink-mid:   #80786c;   /* secondary — warm mid-tone          */
-  --ink-low:   #48403a;   /* tertiary — dark warm gray          */
-  --ink-ghost: #201c18;   /* disabled / ghost                   */
+  --ink-mid:   #a09488;   /* secondary — readable body text     */
+  --ink-low:   #685e56;   /* tertiary — labels, meta, captions  */
+  --ink-ghost: #302824;   /* disabled / ghost                   */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -256,7 +256,7 @@
     border-radius: 10px; padding: 16px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12.5px; line-height: 1.75;
-    overflow-x: auto; color: var(--ink-mid);
+    overflow-x: auto; color: #c0b8ae;
   }
   .code-block .kw  { color: var(--prime-hi); }
   .code-block .str { color: var(--mint); }
@@ -317,7 +317,7 @@
     font-size: 22px; font-weight: 700; color: var(--ink-hi);
     letter-spacing: -0.03em; margin-bottom: 6px;
   }
-  .section-sub { font-size: 14px; color: var(--ink-low); line-height: 1.6; margin-bottom: 24px; }
+  .section-sub { font-size: 14px; color: var(--ink-mid); line-height: 1.65; margin-bottom: 24px; }
 
   /* ── Status indicators ── */
   .dot-live   { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 6px var(--mint); display: inline-block; }
