@@ -1,6 +1,27 @@
 import { useState, useEffect } from 'react'
 import { getAllProgress, getNextRecommendation, TRACK_MODULES } from '../utils/progress.js'
 
+const ROLES = [
+  { key: 'interview',   label: 'MLE Interview Prep',         desc: 'Preparing for system design & ML rounds at top companies',    cta1: { label: 'Go to Interview Prep →', tab: 'interview' }, cta2: { label: '⏱ Timed Practice', tab: 'interview' } },
+  { key: 'production',  label: 'Production ML Skills',       desc: 'Deepening Spark, feature pipelines, monitoring in prod',       cta1: { label: 'Start with Spark Lab →', tab: 'spark' },    cta2: { label: '📡 Monitoring & Drift', tab: 'monitor' } },
+  { key: 'staff',       label: 'Staff-Level System Design',  desc: 'ML platform design, trade-offs, and cross-team thinking',     cta1: { label: 'ML System Design →', tab: 'design' },       cta2: { label: '∇ Gradient Posts', tab: 'gradient' } },
+  { key: 'new',         label: 'New to Production ML',       desc: 'Coming from notebooks, learning how real systems work',        cta1: { label: 'Start with Spark Lab →', tab: 'spark' },    cta2: { label: '⌁ Run Python in Browser', tab: 'models' } },
+]
+
+const CHANGELOG = [
+  { date: 'May 2026',  text: '77 interview questions added — Statistics, Trees, SQL, Regression.' },
+  { date: 'May 2026',  text: 'Fluency Drills: 30 weak→strong vocabulary pairs for ML vocabulary.' },
+  { date: 'May 2026',  text: '4-tier self-assessment added to Timed Practice sessions.' },
+  { date: 'Apr 2026',  text: 'Timed Practice mode with 45-min countdown timer.' },
+  { date: 'Apr 2026',  text: 'Gradient tab: long-form posts on feature engineering and Spark.' },
+  { date: 'Mar 2026',  text: 'Python in browser via Pyodide — sklearn, numpy, matplotlib.' },
+]
+
+const ECOSYSTEM = [
+  { name: 'GenAI Systems Lab', desc: 'Prompt engineering, RAG pipelines, LLM evaluation, hallucination measurement. The production GenAI counterpart.', accent: 'var(--violet)', border: 'rgba(167,139,250,0.25)', url: '#' },
+  { name: 'Experimentation Lab', desc: 'A/B testing mechanics, SRM detection, CUPED, power analysis. Experiment design for product and ML teams.', accent: 'var(--sky)', border: 'rgba(34,211,238,0.25)', url: '#' },
+]
+
 const TRACKS = [
   {
     id: 'spark',     icon: '🔥', label: 'Spark Lab',
@@ -78,6 +99,7 @@ function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
 export default function HomeTab({ onNavigate }) {
   const [progress, setProgress] = useState([])
   const [nextUp,   setNextUp]   = useState(null)
+  const [role,     setRole]     = useState(() => localStorage.getItem('msl_role') || null)
 
   function refresh() {
     setProgress(getAllProgress())
@@ -90,7 +112,13 @@ export default function HomeTab({ onNavigate }) {
     return () => window.removeEventListener('msl_progress', refresh)
   }, [])
 
+  function pickRole(key) {
+    setRole(key)
+    localStorage.setItem('msl_role', key)
+  }
+
   const getTrackPct = id => progress.find(p => p.tab === id)?.pct ?? 0
+  const activeRole = ROLES.find(r => r.key === role)
 
   const TAB_ACCENT = {
     spark: 'var(--ember)', features: 'var(--violet)', eval: 'var(--mint)',
@@ -117,22 +145,40 @@ export default function HomeTab({ onNavigate }) {
           <span className="text-gradient">production ML engineers.</span>
         </h1>
 
-        <p style={{ fontSize: '16px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '32px' }}>
-          Most ML courses tell you what to do. This lab makes you configure the system
-          and watch it break — then fix it. PySpark, feature pipelines, sklearn, model
-          evaluation, drift detection, system design. Run real Python in the browser.
+        {/* Role selector */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>
+            I'm here to →
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {ROLES.map(r => (
+              <button key={r.key} onClick={() => pickRole(r.key)}
+                title={r.desc}
+                style={{ padding: '7px 14px', borderRadius: '8px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.10)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p style={{ fontSize: '16px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '32px' }}>
+          {activeRole?.desc ?? 'Most ML courses tell you what to do. This lab makes you configure the system and watch it break — then fix it. PySpark, feature pipelines, model evaluation, system design. Real Python in the browser.'}
         </p>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button className="btn-primary" onClick={() => onNavigate('spark')}>
-            Start with Spark Lab →
-          </button>
-          <button className="btn-secondary" onClick={() => onNavigate('models')}>
-            ⌁ Run Python in browser
-          </button>
-          <button className="btn-ghost" onClick={() => onNavigate('gradient')}>
-            ∇ Gradient posts
-          </button>
+          {activeRole ? (
+            <>
+              <button className="btn-primary" onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
+              <button className="btn-secondary" onClick={() => onNavigate(activeRole.cta2.tab)}>{activeRole.cta2.label}</button>
+              <button className="btn-ghost" onClick={() => onNavigate('gradient')}>∇ Gradient posts</button>
+            </>
+          ) : (
+            <>
+              <button className="btn-primary" onClick={() => onNavigate('spark')}>Start with Spark Lab →</button>
+              <button className="btn-secondary" onClick={() => onNavigate('models')}>⌁ Run Python in browser</button>
+              <button className="btn-ghost" onClick={() => onNavigate('gradient')}>∇ Gradient posts</button>
+            </>
+          )}
         </div>
       </section>
 
@@ -281,6 +327,35 @@ export default function HomeTab({ onNavigate }) {
               <div style={{ fontSize: '28px', marginBottom: '12px' }}>{item.icon}</div>
               <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{item.who}</div>
               <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7 }}>{item.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Ecosystem bridge ── */}
+      <section>
+        <div className="eyebrow">Part of an ecosystem</div>
+        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '6px' }}>Three labs. One production mindset.</h2>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px', maxWidth: '520px', lineHeight: 1.65 }}>ML Systems Lab covers core ML engineering. The companion labs handle GenAI and experimentation — same depth, same format.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
+          {ECOSYSTEM.map(lab => (
+            <div key={lab.name} className="card" style={{ padding: '22px', border: `1px solid ${lab.border}`, background: 'var(--depth)' }}>
+              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: lab.accent, marginBottom: '8px' }}>{lab.name}</div>
+              <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0, marginBottom: '14px' }}>{lab.desc}</p>
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace" }}>Coming soon</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Changelog ── */}
+      <section>
+        <div className="eyebrow">Changelog</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+          {CHANGELOG.map((entry, i) => (
+            <div key={i} style={{ display: 'flex', gap: '16px', padding: '12px 0', borderBottom: i < CHANGELOG.length - 1 ? '1px solid var(--rim)' : 'none', alignItems: 'baseline' }}>
+              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '72px', flexShrink: 0 }}>{entry.date}</span>
+              <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{entry.text}</span>
             </div>
           ))}
         </div>

@@ -130,12 +130,112 @@ const CAT_COLORS = {
   'Architecture':       { bg: 'rgba(244,63,94,0.07)',   text: 'var(--rose)',      border: 'rgba(244,63,94,0.20)' },
 }
 
-// ─── Timed Practice Mode ─────────────────────────────────────────────────────
-function TimedPractice({ questions, onExit }) {
-  const DURATION = 45 * 60  // 45 minutes
+// ─── Fluency Drills ──────────────────────────────────────────────────────────
+const FLUENCY_DRILLS = [
+  { weak: 'the model memorised the data', strong: 'high-variance overfitting: train loss << val loss; reduce model complexity or add regularisation', why: 'Naming the mechanism directs the fix: variance → simplify or regularise, bias → increase model capacity.' },
+  { weak: 'missing values were imputed with the mean', strong: 'MCAR → mean imputation is unbiased; MAR → conditional imputation; MNAR → encode a binary missingness indicator feature', why: 'The imputation strategy must match the missing mechanism or you introduce systematic bias.' },
+  { weak: 'feature importance from the model', strong: 'split-count importance is unreliable on correlated features; use SHAP values for game-theoretically fair attribution across all feature subsets', why: 'Split importance arbitrarily credits one correlated feature; SHAP distributes contribution fairly by construction.' },
+  { weak: 'handled class imbalance with oversampling', strong: 'tune the decision threshold on validation set using business cost ratio of FP vs FN; SMOTE changes the data manifold without theoretical justification', why: 'Threshold tuning directly optimises the operating point without making distributional assumptions.' },
+  { weak: 'deployed the model to production', strong: 'progressive rollout: shadow mode → 1% canary → phased traffic ramp; automated rollback triggered on health metric breach', why: 'Phased rollout with automated rollback is how production-grade orgs manage model risk and blast radius.' },
+  { weak: 'the A/B test was significant at p < 0.05', strong: 'pre-registered MDE and power (≥80%), no peeking without sequential correction, SRM check before interpreting any results', why: 'A post-hoc p-value alone is meaningless; validity requires pre-registration, power, and randomisation integrity.' },
+  { weak: 'added regularisation to prevent overfitting', strong: 'L2 (Ridge) shrinks all coefficients toward zero; L1 (Lasso) induces exact zeros for feature selection; ElasticNet handles correlated feature groups', why: 'The penalty type determines the solution geometry and whether you get a sparse or dense coefficient vector.' },
+  { weak: 'there was data leakage', strong: 'feature leakage (future data in training features, fix with point-in-time joins) vs label leakage (label definition includes post-outcome information)', why: 'Distinguishing the type of leakage leads directly to the correct fix.' },
+  { weak: 'the model degraded over time', strong: 'covariate shift (input distribution change, PSI > 0.2) vs concept drift (P(y|X) change); monitor both with different cadences', why: 'Covariate shift is detectable without labels; concept drift requires labels and has higher detection latency.' },
+  { weak: 'gradient boosting is an ensemble of trees', strong: 'sequential additive model: each tree fits the negative gradient (residuals) of the loss w.r.t. the current ensemble prediction', why: 'The sequential residual-fitting framing explains why learning_rate × n_estimators trade off and why early stopping works.' },
+  { weak: 'used accuracy as the metric', strong: 'accuracy is misleading under class imbalance; use PR-AUC for rare-class tradeoffs, NDCG for ranking, calibrated probabilities for downstream decisions', why: 'Metric must match the business cost structure, not dataset balance.' },
+  { weak: 'features were stored in a database', strong: 'dual-layer feature store: offline store (Hive/BQ) for training + online store (Redis) for sub-ms serving; single computation code for both layers', why: 'Separate compute paths for training and serving are the primary cause of training-serving skew.' },
+  { weak: 'tuned hyperparameters with grid search', strong: 'fix n_estimators with early stopping first; then Bayesian optimisation for continuous spaces, random search for high-dimensional spaces', why: 'Grid search is exponential in dimensionality; early stopping decouples the most expensive hyperparameter.' },
+  { weak: 'the model was too slow at serving time', strong: 'decompose latency budget: feature lookup + model inference + I/O overhead; then optimise the bottleneck — quantisation, ONNX, request batching, or pre-computation', why: 'Without decomposing latency you optimise the wrong layer.' },
+  { weak: 'Spark had a shuffle', strong: 'wide transformation: serialise → disk write → network transfer → deserialise; minimise with broadcast joins, partition pruning, and AQE skew handling', why: 'Every shuffle is a full disk + network round-trip; understanding the mechanism explains why it dominates job cost.' },
+  { weak: 'split data into train and test', strong: 'stratified k-fold for classification; forward-chained split for time-series to prevent temporal leakage; group-aware split when entity observations are correlated', why: 'Standard random splits leak information when observations are temporally or entity-correlated.' },
+  { weak: 'monitored the model with dashboards', strong: 'three-layer monitoring: data quality (null rates, schema drift), feature drift (PSI/KS vs baseline), model performance (proxy metrics where labels are delayed)', why: 'Dashboards without a monitoring strategy miss early drift signals before business metrics degrade.' },
+  { weak: 'the label was whether the user churned', strong: 'point-in-time correct label: observable at prediction time, not retrospectively; audit for label leakage — could any feature value be caused by the outcome itself?', why: 'A misdefined label creates a model that learns the effect, not the cause.' },
+  { weak: 'used a simple baseline model', strong: 'business rule → majority-class heuristic → single-feature logistic regression → full model; champion must beat all baselines; document why each was insufficient', why: 'A baseline hierarchy forces justification for model complexity at every step.' },
+  { weak: 'joined features on date', strong: 'point-in-time correct join: for each event (entity, event_ts), join feature table on max(feature_ts) ≤ event_ts; asof join in SQL or Feast get_historical_features()', why: 'Standard date joins silently use current feature values, introducing future information into training.' },
+  { weak: 'set the threshold to 0.5', strong: 'tune threshold on held-out validation set using the FP/FN cost ratio; plot the precision-recall curve and select the operating point matching business cost structure', why: '0.5 is arbitrary for any imbalanced or asymmetric-cost problem.' },
+  { weak: 'the data had one row per user', strong: 'explicit grain definition: one row per (user, date), or per transaction, or per session; wrong grain causes aggregation errors and silent model bugs in every downstream join', why: 'The grain is the most fundamental property of a dataset; ambiguity propagates to every join and metric.' },
+  { weak: 'deployed with a CI/CD pipeline', strong: 'shadow (parallel prediction, zero traffic impact) vs blue-green (instant swap) vs canary (gradual ramp); feature flags to decouple code deploy from traffic routing', why: 'Deployment pattern determines rollback speed and blast radius for a bad model version.' },
+  { weak: 'used a pipeline for preprocessing', strong: 'sklearn Pipeline enforces fit-only-on-train-fold semantics within each CV split; scaler statistics never see test data, preventing normalisation leakage', why: 'Fitting preprocessing on all data before CV is a common, silent source of optimistic evaluation.' },
+  { weak: 'the model creates a feedback loop', strong: 'self-reinforcing loop: model shapes behaviour → behaviour becomes labels → next model reinforces biases; detect with long-term holdout groups only', why: 'Feedback loops are invisible to standard offline eval; holdout groups are the only reliable detection method.' },
+  { weak: 'labels are delayed', strong: 'two-model strategy: early-signal model (proxy labels <24h) + delayed-label model (ground truth after full observation window); blend or use by latency requirement', why: 'A single model either uses stale data or noisy labels; the two-model approach matches design to label availability.' },
+  { weak: 'user and item embeddings', strong: 'two-tower model: independent user/item encoders trained with contrastive loss (in-batch + hard negatives); inner product at serving enables ANN retrieval at billion scale', why: 'Decoupled encoders allow pre-computing all item embeddings offline, enabling sub-10ms retrieval at scale.' },
+  { weak: 'SHAP explains the model', strong: 'SHAP computes Shapley values: average marginal contribution across all feature subsets; locally faithful, globally consistent, and theoretically grounded unlike ad-hoc importance', why: 'SHAP satisfies efficiency, symmetry, dummy, and additivity axioms — guarantees other methods lack.' },
+  { weak: 'documented the model', strong: 'model card: intended use, out-of-scope uses, training data distribution, performance disaggregated by slice, known failure modes, fairness evaluation', why: 'Model cards are the governance artifact enabling safe reuse and audit; undocumented models accumulate hidden debt.' },
+  { weak: 'the model was calibrated', strong: 'calibration: P(y=1 | score=p) ≈ p across all p; assess with reliability diagram + ECE; fix with Platt scaling or isotonic regression', why: 'Calibration matters whenever scores drive decisions or are compared across models.' },
+]
+
+const TIER_LEVELS = [
+  { key: 'junior',  label: 'Junior',  desc: 'Named the concept',                      color: 'var(--ink-mid)' },
+  { key: 'analyst', label: 'Analyst', desc: 'Understood the mechanism',                color: 'var(--sky)' },
+  { key: 'senior',  label: 'Senior',  desc: 'Covered tradeoffs & failure modes',       color: 'var(--mint)' },
+  { key: 'staff',   label: 'Staff',   desc: 'Systemic thinking + downstream impact',   color: 'var(--prime)' },
+]
+
+// ─── Fluency Drills Component ─────────────────────────────────────────────────
+function FluencyDrills() {
   const [idx,      setIdx]      = useState(0)
   const [revealed, setRevealed] = useState(false)
-  const [elapsed,  setElapsed]  = useState(0)
+  const drill = FLUENCY_DRILLS[idx]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '4px' }}>Fluency Drills</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.5 }}>Replace weak phrases with the production-grade equivalent. {FLUENCY_DRILLS.length} drills.</p>
+        </div>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", paddingTop: '4px' }}>{idx + 1} / {FLUENCY_DRILLS.length}</span>
+      </div>
+
+      {/* Weak phrase card */}
+      <div style={{ padding: '24px 28px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: '12px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Weak phrase</div>
+        <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', color: 'var(--ink-mid)', lineHeight: 1.5, margin: 0 }}>"{drill.weak}"</p>
+      </div>
+
+      {!revealed ? (
+        <button className="btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => setRevealed(true)}>Reveal strong phrase →</button>
+      ) : (
+        <>
+          <div style={{ padding: '24px 28px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: '12px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Strong phrase</div>
+            <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
+            <div style={{ paddingTop: '14px', borderTop: '1px solid rgba(52,211,153,0.15)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '6px' }}>Why it matters</div>
+              <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{drill.why}</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className="btn-primary"
+              onClick={() => { setIdx(i => Math.min(i + 1, FLUENCY_DRILLS.length - 1)); setRevealed(false) }}
+              disabled={idx === FLUENCY_DRILLS.length - 1}>
+              Next drill →
+            </button>
+            <button className="btn-ghost" onClick={() => { setIdx(0); setRevealed(false) }}>↺ Restart</button>
+          </div>
+        </>
+      )}
+
+      {/* Dot progress */}
+      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', paddingTop: '4px' }}>
+        {FLUENCY_DRILLS.map((_, i) => (
+          <button key={i} onClick={() => { setIdx(i); setRevealed(false) }}
+            title={`Drill ${i + 1}`}
+            style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--mint)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Timed Practice Mode ─────────────────────────────────────────────────────
+function TimedPractice({ questions, onExit }) {
+  const DURATION = 45 * 60
+  const [idx,          setIdx]          = useState(0)
+  const [revealed,     setRevealed]     = useState(false)
+  const [elapsed,      setElapsed]      = useState(0)
+  const [tierSelected, setTierSelected] = useState(null)
+  const [tierHistory,  setTierHistory]  = useState([])
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -149,6 +249,41 @@ function TimedPractice({ questions, onExit }) {
   const mins = Math.floor(Math.abs(remaining) / 60)
   const secs = Math.abs(remaining) % 60
   const overtime = remaining < 0
+  const isLast = idx === questions.length - 1
+
+  function nextQ() {
+    setIdx(i => Math.min(i + 1, questions.length - 1))
+    setRevealed(false)
+    setTierSelected(null)
+  }
+
+  // Summary screen
+  if (isLast && tierSelected) {
+    const counts = TIER_LEVELS.map(t => ({ ...t, n: tierHistory.filter(h => h.tier === t.key).length }))
+    const topTier = [...tierHistory].reverse().find(h => h.tier)
+    const topTierObj = TIER_LEVELS.slice().reverse().find(t => tierHistory.some(h => h.tier === t.key))
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ padding: '28px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '12px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Session complete</div>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
+            {questions.length} questions · {Math.floor(elapsed/60)}m {elapsed%60}s
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', margin: 0 }}>Self-assessment breakdown:</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px' }}>
+          {counts.map(t => (
+            <div key={t.key} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid var(--rim)`, borderRadius: '10px' }}>
+              <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: t.color, fontWeight: 700, marginBottom: '4px' }}>{t.label.toUpperCase()}</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: t.n > 0 ? t.color : 'var(--ink-low)' }}>{t.n}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+        <button className="btn-secondary" onClick={onExit}>← Back to question bank</button>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -176,17 +311,16 @@ function TimedPractice({ questions, onExit }) {
         <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.5, margin: 0 }}>{q?.q}</p>
       </div>
 
-      {/* Reveal */}
       {!revealed ? (
         <div style={{ display: 'flex', gap: '10px' }}>
           <button className="btn-primary" onClick={() => setRevealed(true)}>Reveal answer</button>
-          <button className="btn-secondary" onClick={() => { setIdx(i => Math.min(i+1, questions.length-1)); setRevealed(false) }}>Skip →</button>
+          <button className="btn-secondary" onClick={nextQ}>Skip →</button>
         </div>
       ) : (
-        <div>
-          <div style={{ padding: '20px 24px', background: cc.bg, border: `1px solid ${cc.border}`, borderRadius: '10px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ padding: '20px 24px', background: cc.bg, border: `1px solid ${cc.border}`, borderRadius: '10px' }}>
             {q?.framework && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: q.answer ? '12px' : 0 }}>
                 <div style={{ fontSize: '11px', color: cc.text, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Framework</div>
                 <ol style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {q.framework.map((f, i) => <li key={i} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{f}</li>)}
@@ -200,13 +334,32 @@ function TimedPractice({ questions, onExit }) {
               </div>
             )}
           </div>
-          <button className="btn-primary" onClick={() => { setIdx(i => Math.min(i+1, questions.length-1)); setRevealed(false) }}
-            disabled={idx === questions.length - 1}>
-            Next question →
-          </button>
-          {idx === questions.length - 1 && (
-            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', fontSize: '14px', color: 'var(--mint)', fontWeight: 600 }}>
-              ✓ Practice complete! Time: {Math.floor(elapsed/60)}m {elapsed%60}s
+
+          {/* 4-tier self-assessment */}
+          {!tierSelected ? (
+            <div style={{ padding: '16px 20px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>How did you do?</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                {TIER_LEVELS.map(t => (
+                  <button key={t.key}
+                    onClick={() => { setTierSelected(t.key); setTierHistory(h => [...h, { id: q.id, tier: t.key }]) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', background: 'transparent', border: `1px solid ${t.color}20`, borderRadius: '8px', cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = `${t.color}12`}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '52px' }}>{t.label}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{t.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", color: TIER_LEVELS.find(t => t.key === tierSelected)?.color, fontWeight: 700 }}>
+                ✓ {tierSelected.toUpperCase()}
+              </span>
+              <button className="btn-primary" onClick={nextQ} disabled={isLast}>
+                {isLast ? 'View summary →' : 'Next question →'}
+              </button>
             </div>
           )}
         </div>
@@ -217,12 +370,12 @@ function TimedPractice({ questions, onExit }) {
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function InterviewPrepTab() {
-  const [cat,       setCat]       = useState('All')
-  const [company,   setCompany]   = useState('All')
-  const [level,     setLevel]     = useState('All')
-  const [open,      setOpen]      = useState(null)
-  const [search,    setSearch]    = useState('')
-  const [practising,setPractising]= useState(false)
+  const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency'
+  const [cat,     setCat]     = useState('All')
+  const [company, setCompany] = useState('All')
+  const [level,   setLevel]   = useState('All')
+  const [open,    setOpen]    = useState(null)
+  const [search,  setSearch]  = useState('')
 
   const filtered = useMemo(() => QUESTIONS.filter(q => {
     if (cat !== 'All' && q.cat !== cat) return false
@@ -236,84 +389,102 @@ export default function InterviewPrepTab() {
     const a = [...arr]; for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a
   }
 
-  if (practising) return <TimedPractice questions={shuffle(filtered.length > 0 ? filtered : QUESTIONS)} onExit={() => setPractising(false)} />
+  if (mode === 'practice') return <TimedPractice questions={shuffle(filtered.length > 0 ? filtered : QUESTIONS)} onExit={() => setMode('bank')} />
+
+  const MODES = [
+    { key: 'bank',     label: '📋 Question Bank' },
+    { key: 'practice', label: '⏱ Timed Practice' },
+    { key: 'fluency',  label: '💬 Fluency Drills' },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Interview Prep</h1>
-          </div>
-          <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px' }}>
-            {QUESTIONS.length} questions across System Design, Evaluation, Features, Spark, Statistics, Trees &amp; Ensembles, SQL, and Regression — sourced from Meta, Spotify, Google, Airbnb, Uber, Netflix, Amazon. Every question ships with a framework or full model answer.
-          </p>
-        </div>
-        <button className="btn-secondary" onClick={() => setPractising(true)} style={{ whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>
-          ⏱ Timed Practice
-        </button>
+      {/* Header */}
+      <div>
+        <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '6px' }}>Interview Prep</h1>
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
+          {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, and Regression. Plus 30 fluency drills for weak-to-strong vocabulary.
+        </p>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search questions…"
-          style={{ width: '100%', maxWidth: '400px' }} type="search" />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {CATEGORIES.map(c => <button key={c} onClick={() => setCat(c)} className={`sub-tab ${cat === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {COMPANIES.map(c => <button key={c} onClick={() => setCompany(c)} className={`sub-tab ${company === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {LEVELS.map(c => <button key={c} onClick={() => setLevel(c)} className={`sub-tab ${level === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
-        </div>
+      {/* Mode switcher */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px', width: 'fit-content' }}>
+        {MODES.map(m => (
+          <button key={m.key} onClick={() => setMode(m.key)}
+            style={{ padding: '7px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, transition: 'all 0.15s',
+              background: mode === m.key ? 'var(--prime)' : 'transparent',
+              color: mode === m.key ? '#000' : 'var(--ink-mid)' }}>
+            {m.label}
+          </button>
+        ))}
       </div>
 
-      <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{filtered.length} question{filtered.length !== 1 ? 's' : ''} · click to expand answer</div>
+      {/* Fluency mode */}
+      {mode === 'fluency' && <FluencyDrills />}
 
-      {/* Question list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {filtered.map(q => {
-          const cc = CAT_COLORS[q.cat] || CAT_COLORS['Architecture']
-          const isOpen = open === q.id
-          return (
-            <div key={q.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', border: isOpen ? `1px solid ${cc.border}` : '1px solid var(--rim)' }}
-              onClick={() => setOpen(isOpen ? null : q.id)}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 18px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", paddingTop: '2px', minWidth: '24px' }}>{String(q.id).padStart(2, '0')}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{q.cat}</span>
-                    {q.company !== 'Any' && <span className="badge badge-ghost" style={{ fontSize: '10px' }}>{q.company}</span>}
-                    <span className={`badge ${q.level === 'Staff' ? 'badge-rose' : q.level === 'Senior' ? 'badge-ember' : 'badge-ghost'}`} style={{ fontSize: '10px' }}>{q.level}</span>
-                  </div>
-                  <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0 }}>{q.q}</p>
-                </div>
-                <span style={{ color: 'var(--ink-low)', fontSize: '13px', paddingTop: '2px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
-              </div>
-
-              {isOpen && (
-                <div style={{ borderTop: `1px solid ${cc.border}`, padding: '16px 18px 18px 56px', background: cc.bg }}>
-                  {q.framework && (
-                    <div style={{ marginBottom: q.answer ? '16px' : 0 }}>
-                      <div style={{ fontSize: '11px', color: cc.text, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Framework</div>
-                      <ol style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {q.framework.map((f, i) => <li key={i} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{f}</li>)}
-                      </ol>
-                    </div>
-                  )}
-                  {q.answer && (
-                    <div>
-                      <div style={{ fontSize: '11px', color: cc.text, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Model Answer</div>
-                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>{q.answer}</p>
-                    </div>
-                  )}
-                </div>
-              )}
+      {/* Bank mode */}
+      {mode === 'bank' && (
+        <>
+          {/* Filters */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search questions…"
+              style={{ width: '100%', maxWidth: '400px' }} type="search" />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {CATEGORIES.map(c => <button key={c} onClick={() => setCat(c)} className={`sub-tab ${cat === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
             </div>
-          )
-        })}
-      </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {COMPANIES.map(c => <button key={c} onClick={() => setCompany(c)} className={`sub-tab ${company === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {LEVELS.map(c => <button key={c} onClick={() => setLevel(c)} className={`sub-tab ${level === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
+            </div>
+          </div>
+
+          <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{filtered.length} question{filtered.length !== 1 ? 's' : ''} · click to expand answer</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {filtered.map(q => {
+              const cc = CAT_COLORS[q.cat] || CAT_COLORS['Architecture']
+              const isOpen = open === q.id
+              return (
+                <div key={q.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', border: isOpen ? `1px solid ${cc.border}` : '1px solid var(--rim)' }}
+                  onClick={() => setOpen(isOpen ? null : q.id)}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 18px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", paddingTop: '2px', minWidth: '24px' }}>{String(q.id).padStart(2, '0')}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{q.cat}</span>
+                        {q.company !== 'Any' && <span className="badge badge-ghost" style={{ fontSize: '10px' }}>{q.company}</span>}
+                        <span className={`badge ${q.level === 'Staff' ? 'badge-rose' : q.level === 'Senior' ? 'badge-ember' : 'badge-ghost'}`} style={{ fontSize: '10px' }}>{q.level}</span>
+                      </div>
+                      <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0 }}>{q.q}</p>
+                    </div>
+                    <span style={{ color: 'var(--ink-low)', fontSize: '13px', paddingTop: '2px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
+                  </div>
+                  {isOpen && (
+                    <div style={{ borderTop: `1px solid ${cc.border}`, padding: '16px 18px 18px 56px', background: cc.bg }}>
+                      {q.framework && (
+                        <div style={{ marginBottom: q.answer ? '16px' : 0 }}>
+                          <div style={{ fontSize: '11px', color: cc.text, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Framework</div>
+                          <ol style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {q.framework.map((f, i) => <li key={i} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{f}</li>)}
+                          </ol>
+                        </div>
+                      )}
+                      {q.answer && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: cc.text, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Model Answer</div>
+                          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>{q.answer}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
