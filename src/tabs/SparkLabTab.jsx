@@ -130,7 +130,7 @@ function ShuffleHell() {
             { val: 'broadcast',  label: 'Broadcast Hash', desc: 'No shuffle. Right table must fit in memory.' },
           ].map(opt => (
             <button key={opt.val} onClick={() => { setJoinStrategy(opt.val); setResult(null) }}
-              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(99,102,241,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(99,102,241,0.08)' : 'var(--void)', transition: 'all 0.15s' }}>
+              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(240,165,0,0.07)' : 'var(--void)', transition: 'all 0.15s' }}>
               <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{opt.label}</div>
               <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{opt.desc}</div>
             </button>
@@ -263,7 +263,7 @@ function SkewDoctor() {
           {Object.entries(FIXES).map(([k, v]) => (
             <button key={k} onClick={() => { setFix(k); setRevealed(true) }}
               className="card"
-              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(99,102,241,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(99,102,241,0.08)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '14px' }}>
+              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(240,165,0,0.07)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
               <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{v.label}</div>
               <div className="code-block" style={{ fontSize: '11px', padding: '8px', whiteSpace: 'pre-wrap' }}>{v.code}</div>
             </button>
@@ -344,7 +344,7 @@ function PartitionTuner() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
 
-          <div style={{ padding: '16px', background: 'rgba(6,214,160,0.06)', border: '1px solid rgba(6,214,160,0.25)', borderRadius: '8px', textAlign: 'center' }}>
+          <div style={{ padding: '16px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', marginBottom: '4px' }}>
               spark.sql.shuffle.partitions
             </div>

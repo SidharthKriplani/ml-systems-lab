@@ -298,7 +298,7 @@ function ShadowModeSim() {
       )}
 
       {phase === 'complete' && (
-        <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.25)' }}>
+        <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.25)' }}>
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp ({championMetrics.precision.toFixed(2)} → {challengerMetrics.precision.toFixed(2)})</p>

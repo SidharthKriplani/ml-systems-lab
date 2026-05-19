@@ -368,7 +368,7 @@ function KSTestExplorer() {
           <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '32px', fontWeight: 700, color: significant ? 'var(--rose)' : 'var(--mint)' }}>{result.pValue.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>threshold: 0.05</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.05)' : 'rgba(6,214,160,0.05)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(6,214,160,0.2)'}` }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.05)' : 'rgba(52,211,153,0.05)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verdict</div>
           <div style={{ fontSize: '12px', color: statusColor, fontWeight: 600, lineHeight: 1.4 }}>
             {significant ? 'Significant difference — reject H₀' : 'No significant difference — fail to reject H₀'}
@@ -619,7 +619,7 @@ function AlertTuner() {
       </div>
 
       {/* Recommendation */}
-      <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.04)' : sim.delay === null ? 'rgba(245,158,11,0.04)' : 'rgba(6,214,160,0.04)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(6,214,160,0.2)'}` }}>
+      <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.04)' : sim.delay === null ? 'rgba(245,158,11,0.04)' : 'rgba(52,211,153,0.04)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
         <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px' }}>📋 Recommendation</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
           {sim.delay === null

@@ -83,9 +83,9 @@ const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netfl
 const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
 
 const CAT_COLORS = {
-  'System Design': { bg: 'rgba(99,102,241,0.1)',  text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
+  'System Design': { bg: 'rgba(240,165,0,0.08)',  text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
   'Features':      { bg: 'rgba(56,189,248,0.1)',  text: 'var(--sky)',    border: 'rgba(56,189,248,0.2)' },
-  'Evaluation':    { bg: 'rgba(6,214,160,0.1)',   text: 'var(--mint)',   border: 'rgba(6,214,160,0.2)' },
+  'Evaluation':    { bg: 'rgba(52,211,153,0.10)',   text: 'var(--mint)',   border: 'rgba(240,165,0,0.18)' },
   'Spark':         { bg: 'rgba(249,115,22,0.1)',  text: 'var(--ember)',  border: 'rgba(249,115,22,0.2)' },
   'Coding':        { bg: 'rgba(168,85,247,0.1)',  text: 'var(--violet)', border: 'rgba(168,85,247,0.2)' },
   'Architecture':  { bg: 'rgba(244,63,94,0.1)',   text: 'var(--rose)',   border: 'rgba(244,63,94,0.2)' },
@@ -166,7 +166,7 @@ function TimedPractice({ questions, onExit }) {
             Next question →
           </button>
           {idx === questions.length - 1 && (
-            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(6,214,160,0.06)', border: '1px solid rgba(6,214,160,0.25)', borderRadius: '8px', fontSize: '14px', color: 'var(--mint)', fontWeight: 600 }}>
+            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', fontSize: '14px', color: 'var(--mint)', fontWeight: 600 }}>
               ✓ Practice complete! Time: {Math.floor(elapsed/60)}m {elapsed%60}s
             </div>
           )}

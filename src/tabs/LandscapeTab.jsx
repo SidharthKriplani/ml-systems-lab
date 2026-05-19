@@ -8,8 +8,8 @@ const ROLES = [
     icon: '⚙️',
     level: 'Core',
     accentColor: 'var(--mint)',
-    borderColor: 'rgba(6,214,160,0.25)',
-    bgColor: 'rgba(6,214,160,0.04)',
+    borderColor: 'rgba(52,211,153,0.25)',
+    bgColor: 'rgba(52,211,153,0.04)',
     demand: 'Very High',
     salaryUS: '$170k – $500k TC',
     salaryUK: '£80k – £200k',
@@ -113,8 +113,8 @@ const STAGES = [
   {
     stage: 'Seed / Pre-seed',
     size: '1–5 engineers',
-    bgColor: 'rgba(6,214,160,0.04)',
-    borderColor: 'rgba(6,214,160,0.2)',
+    bgColor: 'rgba(52,211,153,0.04)',
+    borderColor: 'rgba(240,165,0,0.18)',
     accentColor: 'var(--mint)',
     stack: [
       { cat: 'Experimentation',  tools: ['Jupyter', 'pandas', 'scikit-learn', 'Matplotlib'] },
@@ -299,7 +299,7 @@ const TIMELINE = [
 ]
 
 const MARKETS = [
-  { country: 'United States', flag: '🇺🇸', hubs: 'San Francisco, Seattle, New York, Austin', seniors: '$320k–500k TC', gradient: 'linear-gradient(135deg, rgba(6,214,160,0.2), rgba(6,214,160,0.05))', border: 'rgba(6,214,160,0.3)', strengths: 'Highest compensation globally. World-class equity culture. Deepest talent networks. Best access to cutting-edge research.', watch: 'H-1B visa lottery. Very high cost of living in major hubs. Working culture intensity.' },
+  { country: 'United States', flag: '🇺🇸', hubs: 'San Francisco, Seattle, New York, Austin', seniors: '$320k–500k TC', gradient: 'linear-gradient(135deg, rgba(240,165,0,0.18), rgba(52,211,153,0.05))', border: 'rgba(52,211,153,0.30)', strengths: 'Highest compensation globally. World-class equity culture. Deepest talent networks. Best access to cutting-edge research.', watch: 'H-1B visa lottery. Very high cost of living in major hubs. Working culture intensity.' },
   { country: 'United Kingdom', flag: '🇬🇧', hubs: 'London, Edinburgh, Cambridge', seniors: '£120k–180k base', gradient: 'linear-gradient(135deg, rgba(56,189,248,0.2), rgba(56,189,248,0.05))', border: 'rgba(56,189,248,0.3)', strengths: 'Strong equity via Global Talent Visa. DeepMind, Stability AI heritage. Excellent work-life balance. Strong academic pipeline.', watch: 'Equity culture weaker than US. High income tax (45% top bracket). Post-Brexit talent friction.' },
   { country: 'Germany', flag: '🇩🇪', hubs: 'Berlin, Munich, Hamburg', seniors: '€120k–160k base', gradient: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(168,85,247,0.05))', border: 'rgba(168,85,247,0.3)', strengths: 'EU AI Act expertise becoming premium skillset. Strong research institutions. Excellent engineering culture. Growing startup scene.', watch: 'High tax burden (42%+ effective). Lower equity culture. Language can be a barrier outside tech companies.' },
   { country: 'Canada', flag: '🇨🇦', hubs: 'Toronto, Montreal, Vancouver', seniors: 'CAD $170k–220k base', gradient: 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05))', border: 'rgba(249,115,22,0.3)', strengths: 'Hinton (Toronto), Bengio (Montreal) academic lineage. Strong immigration pathways. Good quality of life. US company outposts.', watch: 'CAD currency discount (~27%). Cold winters. Most top companies are US offices, limiting equity upside.' },
@@ -428,19 +428,19 @@ function SalarySection() {
                 </div>
               </div>
               <div style={{ position: 'relative', height: '20px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${tcPct}%`, background: 'rgba(6,214,160,0.2)', borderRadius: '4px', transition: 'width 0.4s' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${tcPct}%`, background: 'rgba(240,165,0,0.18)', borderRadius: '4px', transition: 'width 0.4s' }} />
                 <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${basePct}%`, background: 'var(--mint)', borderRadius: '4px', transition: 'width 0.4s' }} />
               </div>
               <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: 'var(--ink-ghost)' }}>
                 <span style={{ color: 'var(--mint)' }}>■ Base</span>
-                <span style={{ color: 'rgba(6,214,160,0.4)' }}>■ Equity + Bonus</span>
+                <span style={{ color: 'rgba(240,165,0,0.35)' }}>■ Equity + Bonus</span>
               </div>
             </div>
           )
         })}
       </div>
 
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(6,214,160,0.04)', borderColor: 'rgba(6,214,160,0.2)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
           <strong style={{ color: 'var(--mint)' }}>Reading this chart:</strong> The mint bar is base salary. The full bar (light green) includes equity (RSUs) and bonus. At senior US levels, equity can be 2–3× base. UK/EU equity culture is weaker — most of the bar is base.
           At FAANG, annual refresh grants (new equity each year) compound significantly over a multi-year tenure — not shown here.
@@ -555,7 +555,7 @@ function CompaniesSection() {
               ))}
             </div>
           </div>
-          <div className="card" style={{ padding: '16px 20px', background: 'rgba(6,214,160,0.04)', borderColor: 'rgba(6,214,160,0.2)' }}>
+          <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
             <div style={{ fontSize: '12px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Key insight</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{c.insight}</p>
           </div>

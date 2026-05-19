@@ -2,47 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design system — "Void" palette ─────────────────────────────────────── */
+/* ─── Design system — "Ember" palette ────────────────────────────────────── */
 /*
-   Philosophy: near-black surfaces, clean off-white type, one electric accent.
-   Indigo is the primary interactive colour. Everything else is neutral or
-   semantic (green = good, red = bad, amber = caution).
+   Concept: Bloomberg Terminal meets precision instrumentation.
+   Burnished amber on near-black — the colour of cockpit readouts,
+   trading floors, and oscilloscope traces. Not blue. Not purple.
+   Every dev tool looks the same; this one looks like it costs something.
+
+   Single primary accent: #f0a500 (electric amber).
+   One complementary data colour: #22d3ee (cold cyan — warm/cool contrast).
+   Everything else is neutral. Colour earns its place.
 */
 :root {
-  /* ── Surfaces ────────────────────────────────────── */
-  --void:    #07070e;   /* page background                */
-  --depth:   #0e0e1b;   /* card / panel background        */
-  --surface: #14141f;   /* elevated cards, code blocks    */
-  --rim:     #1e1e30;   /* default border                 */
-  --rim-hi:  #2e2e48;   /* hovered / active border        */
+  /* ── Surfaces — warm near-black ──────────────────── */
+  --void:    #090806;   /* page bg — faintest warm undertone  */
+  --depth:   #110f0c;   /* card / panel background            */
+  --surface: #191612;   /* elevated cards, code blocks        */
+  --rim:     #282420;   /* default border                     */
+  --rim-hi:  #3a3530;   /* hovered / active border            */
 
-  /* ── Primary accent: electric indigo ────────────── */
-  --prime:       #7c6af7;
-  --prime-hi:    #a89eff;
-  --prime-glow:  rgba(124,106,247,0.22);
-  --prime-faint: rgba(124,106,247,0.07);
+  /* ── Primary accent: burnished amber ────────────── */
+  --prime:       #f0a500;                  /* the signature colour   */
+  --prime-hi:    #fcc440;                  /* lighter, for text      */
+  --prime-glow:  rgba(240,165,0,0.20);
+  --prime-faint: rgba(240,165,0,0.07);
 
   /* ── Semantic / functional ───────────────────────── */
-  /* These intentionally keep the var names the rest of the codebase uses */
-  --mint:   #34d399;   /* success, positive delta          */
-  --sky:    #38bdf8;   /* info, code colour, data          */
-  --ember:  #f97316;   /* warning                          */
-  --rose:   #f43f5e;   /* error / danger                   */
-  --violet: #a78bfa;   /* secondary accent                 */
-  --gold:   #fbbf24;   /* caution / monetary               */
-  --green:  #4ade80;   /* strong positive / terminal green */
+  --mint:   #34d399;   /* success — emerald (not teal)         */
+  --sky:    #22d3ee;   /* data / code — cold cyan (complements amber) */
+  --ember:  #f97316;   /* warning — distinct orange, ≠ prime  */
+  --rose:   #f43f5e;   /* error / danger                      */
+  --violet: #a78bfa;   /* secondary accent, used sparingly    */
+  --gold:   var(--prime-hi);  /* monetary / caution — reuse amber family */
+  --green:  #4ade80;   /* strong positive / terminal green    */
 
-  /* Legacy glows — now indigo-tinted */
+  /* Legacy compat aliases (used by some components) */
   --mint-bright: var(--prime-hi);
-  --mint-dim:    #5548c8;
+  --mint-dim:    #b07800;
   --mint-glow:   var(--prime-glow);
   --mint-faint:  var(--prime-faint);
 
-  /* ── Typography ──────────────────────────────────── */
-  --ink-hi:    #eeeef6;   /* primary — clean off-white      */
-  --ink-mid:   #8282a2;   /* secondary — neutral mid gray   */
-  --ink-low:   #42425e;   /* tertiary — dark gray           */
-  --ink-ghost: #1a1a2c;   /* disabled / ghost               */
+  /* ── Typography — warm neutrals ─────────────────── */
+  --ink-hi:    #f0ece4;   /* primary — warm off-white           */
+  --ink-mid:   #80786c;   /* secondary — warm mid-tone          */
+  --ink-low:   #48403a;   /* tertiary — dark warm gray          */
+  --ink-ghost: #201c18;   /* disabled / ghost                   */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -61,7 +65,7 @@
   body {
     min-height: 100vh;
     /* Subtle indigo dot grid — barely visible, adds depth */
-    background-image: radial-gradient(circle, rgba(124,106,247,0.055) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(240,165,0,0.040) 1px, transparent 1px);
     background-size: 28px 28px;
     background-attachment: fixed;
   }
@@ -80,7 +84,7 @@
   ::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 99px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--rim-hi); }
 
-  ::selection { background: rgba(124,106,247,0.28); color: var(--ink-hi); }
+  ::selection { background: rgba(240,165,0,0.25); color: var(--ink-hi); }
 
   :focus-visible { outline: 2px solid var(--prime); outline-offset: 2px; border-radius: 4px; }
 }
@@ -99,8 +103,8 @@
   .card:hover { border-color: var(--rim-hi); }
 
   .card-glow:hover {
-    border-color: rgba(124,106,247,0.35);
-    box-shadow: 0 0 32px rgba(124,106,247,0.10);
+    border-color: rgba(240,165,0,0.35);
+    box-shadow: 0 0 32px rgba(240,165,0,0.10);
   }
 
   /* Gradient-border card — indigo → violet */
@@ -115,7 +119,7 @@
     position: absolute; inset: 0;
     border-radius: 12px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(124,106,247,0.55), rgba(167,139,250,0.30));
+    background: linear-gradient(135deg, rgba(240,165,0,0.50), rgba(167,139,250,0.30));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -158,7 +162,7 @@
   .sub-tab.active {
     background: var(--prime-faint);
     color: var(--prime-hi);
-    border: 1px solid rgba(124,106,247,0.30);
+    border: 1px solid rgba(240,165,0,0.28);
   }
   .sub-tab.inactive {
     color: var(--ink-low);
@@ -181,7 +185,7 @@
   }
   .btn-primary:hover {
     opacity: 0.88;
-    box-shadow: 0 4px 28px rgba(124,106,247,0.45);
+    box-shadow: 0 4px 28px rgba(240,165,0,0.45);
     transform: translateY(-1px);
   }
   .btn-primary:active { transform: translateY(0); }
@@ -193,13 +197,13 @@
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 500; font-size: 14px;
     padding: 9px 20px; border-radius: 8px;
-    border: 1px solid rgba(124,106,247,0.25);
+    border: 1px solid rgba(240,165,0,0.22);
     cursor: pointer; transition: all 0.15s;
     letter-spacing: -0.01em;
   }
   .btn-secondary:hover {
-    background: rgba(124,106,247,0.12);
-    border-color: rgba(124,106,247,0.45);
+    background: rgba(240,165,0,0.10);
+    border-color: rgba(240,165,0,0.45);
   }
 
   .btn-ghost {
@@ -219,12 +223,12 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px; font-weight: 500;
     padding: 7px 16px; border-radius: 8px;
-    border: 1px solid rgba(124,106,247,0.25);
+    border: 1px solid rgba(240,165,0,0.22);
     cursor: pointer; transition: all 0.15s;
   }
   .btn-run:hover {
-    background: rgba(124,106,247,0.14);
-    border-color: rgba(124,106,247,0.45);
+    background: rgba(240,165,0,0.10);
+    border-color: rgba(240,165,0,0.45);
   }
   .btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -242,7 +246,7 @@
   .badge-violet { background: rgba(167,139,250,0.10); color: var(--violet); border: 1px solid rgba(167,139,250,0.25); }
   .badge-sky    { background: rgba(56,189,248,0.10);  color: var(--sky);    border: 1px solid rgba(56,189,248,0.25); }
   .badge-gold   { background: rgba(251,191,36,0.10);  color: var(--gold);   border: 1px solid rgba(251,191,36,0.25); }
-  .badge-prime  { background: var(--prime-faint);     color: var(--prime-hi); border: 1px solid rgba(124,106,247,0.25); }
+  .badge-prime  { background: var(--prime-faint);     color: var(--prime-hi); border: 1px solid rgba(240,165,0,0.22); }
   .badge-ghost  { background: rgba(255,255,255,0.04); color: var(--ink-low);  border: 1px solid var(--rim); }
 
   /* ── Code / Python blocks ── */
@@ -274,7 +278,7 @@
     transition: box-shadow 0.15s;
   }
   input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 16px rgba(124,106,247,0.70);
+    box-shadow: 0 0 16px rgba(240,165,0,0.70);
   }
   input[type="radio"], input[type="checkbox"] { accent-color: var(--prime); }
   input[type="text"], input[type="search"] {
@@ -285,7 +289,7 @@
     transition: border-color 0.15s;
   }
   input[type="text"]:focus, input[type="search"]:focus {
-    border-color: rgba(124,106,247,0.45);
+    border-color: rgba(240,165,0,0.45);
     box-shadow: 0 0 0 3px var(--prime-faint);
   }
 
@@ -342,10 +346,10 @@
   }
   .search-box {
     background: var(--depth);
-    border: 1px solid rgba(124,106,247,0.30);
+    border: 1px solid rgba(240,165,0,0.28);
     border-radius: 16px;
     width: 100%; max-width: 600px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.75), 0 0 48px rgba(124,106,247,0.10);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.75), 0 0 48px rgba(240,165,0,0.10);
     overflow: hidden;
   }
 

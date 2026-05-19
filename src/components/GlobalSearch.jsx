@@ -111,7 +111,7 @@ const INDEX = [
 ]
 
 const KIND_COLORS = {
-  module: { bg: 'rgba(6,214,160,0.10)', color: 'var(--mint)', border: 'rgba(6,214,160,0.25)' },
+  module: { bg: 'rgba(52,211,153,0.10)', color: 'var(--mint)', border: 'rgba(52,211,153,0.25)' },
   post:   { bg: 'rgba(56,189,248,0.10)', color: 'var(--sky)',  border: 'rgba(56,189,248,0.25)' },
 }
 
@@ -194,7 +194,7 @@ export default function GlobalSearch({ onClose, onNavigate }) {
                   display: 'flex', alignItems: 'flex-start', gap: '12px',
                   width: '100%', textAlign: 'left', padding: '10px 12px',
                   borderRadius: '8px', border: 'none', cursor: 'pointer',
-                  background: isActive ? 'rgba(6,214,160,0.06)' : 'none',
+                  background: isActive ? 'rgba(52,211,153,0.06)' : 'none',
                   transition: 'background 0.1s',
                 }}
               >

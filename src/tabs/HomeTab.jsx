@@ -16,7 +16,7 @@ const TRACKS = [
   },
   {
     id: 'eval',      icon: '📊', label: 'Model Evaluation',
-    accent: 'var(--mint)', border: 'rgba(6,214,160,0.2)', bg: 'rgba(6,214,160,0.04)',
+    accent: 'var(--mint)', border: 'rgba(240,165,0,0.18)', bg: 'rgba(52,211,153,0.04)',
     modules: ['Metric Selector', 'A/B Test Designer', 'Shadow Mode Sim'],
     description: 'AUC vs PR, calibration, A/B design, shadow mode. Pick the wrong metric — watch it mislead you.',
   },

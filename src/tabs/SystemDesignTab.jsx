@@ -88,7 +88,7 @@ const INCIDENTS = [
 
 function ClueCard({ clue, isOpen, onToggle }) {
   return (
-    <div className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', borderColor: isOpen ? 'rgba(6,214,160,0.35)' : undefined }}
+    <div className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', borderColor: isOpen ? 'rgba(52,211,153,0.35)' : undefined }}
       onClick={onToggle}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -181,8 +181,8 @@ function IncidentRoom() {
                 disabled={!!selected && !isSelected}
                 style={{
                   textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: selected ? (isSelected ? 'default' : 'not-allowed') : 'pointer',
-                  border: `1px solid ${isRight ? 'rgba(6,214,160,0.5)' : isWrong ? 'rgba(244,63,94,0.5)' : 'var(--rim)'}`,
-                  background: isRight ? 'rgba(6,214,160,0.08)' : isWrong ? 'rgba(244,63,94,0.08)' : 'var(--depth)',
+                  border: `1px solid ${isRight ? 'rgba(52,211,153,0.50)' : isWrong ? 'rgba(244,63,94,0.5)' : 'var(--rim)'}`,
+                  background: isRight ? 'rgba(240,165,0,0.07)' : isWrong ? 'rgba(244,63,94,0.08)' : 'var(--depth)',
                   color: isRight ? 'var(--mint)' : isWrong ? 'var(--rose)' : isSelected ? 'var(--ink-hi)' : 'var(--ink-low)',
                   fontFamily: "'Inter',sans-serif", fontSize: '13.5px', opacity: selected && !isSelected ? 0.4 : 1,
                   transition: 'all 0.15s',
@@ -207,7 +207,7 @@ function IncidentRoom() {
       {/* Fix + lesson */}
       {showFix && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="card" style={{ borderColor: 'rgba(6,214,160,0.3)', background: 'rgba(6,214,160,0.04)' }}>
+          <div className="card" style={{ borderColor: 'rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.04)' }}>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--mint)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.fix}</p>
           </div>

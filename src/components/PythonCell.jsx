@@ -71,10 +71,10 @@ export default function PythonCell({
   const isRunning = status === 'loading' || status === 'running'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0', border: '1px solid #1c2040', borderRadius: '12px', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0', border: '1px solid var(--rim)', borderRadius: '12px', overflow: 'hidden' }}>
 
       {/* Cell header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#0b0d1a', borderBottom: '1px solid #1c2040' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: 'var(--depth)', borderBottom: '1px solid var(--rim)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#525a82' }}>⌁</span>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#525a82', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
@@ -119,7 +119,7 @@ export default function PythonCell({
             padding: '16px',
             border: 'none',
             outline: 'none',
-            borderBottom: '1px solid #1c2040',
+            borderBottom: '1px solid var(--rim)',
           }}
         />
       )}
@@ -138,7 +138,7 @@ export default function PythonCell({
             </pre>
           )}
           {imgSrc && (
-            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #1c2040' }}>
+            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--rim)' }}>
               <img src={imgSrc} alt="plot output" style={{ width: '100%', display: 'block' }} />
             </div>
           )}

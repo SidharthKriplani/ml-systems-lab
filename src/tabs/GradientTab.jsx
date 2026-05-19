@@ -103,7 +103,7 @@ A model can have 0.92 AUC and be completely uncalibrated. Uncalibrated means: wh
     slug: 'rec-system-design-framework',
     title: 'How to Design a Recommendation System (The MLE Interview Framework)',
     category: 'ML System Design',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 15,
     featured: true,
     excerpt: 'Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monitoring, cold start, exploration. Here\'s the framework that works.',
@@ -267,7 +267,7 @@ Training run 42 used features_v3. Training run 57 used features_v5. When you inv
     slug: 'mle-interview-system-design-prep',
     title: 'The MLE Interview Framework: What Top Companies Actually Ask',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 7,
     featured: false,
     excerpt: 'After 200+ MLE interviews (as both candidate and interviewer), here\'s what I\'ve learned about what separates strong candidates from weak ones in the ML system design round. It\'s not about knowing more frameworks. It\'s about a specific sequence of reasoning that signals production ML experience.',
@@ -458,7 +458,7 @@ Start with DDP. Add ZeRO stages if you need memory relief. Only add model parall
     slug: 'ml-interview-mistakes',
     title: '10 ML Interview Mistakes Even Senior Engineers Make',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(99,102,241,0.1)', text: 'var(--violet)', border: 'rgba(99,102,241,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 8,
     featured: false,
     excerpt: 'These aren\'t mistakes made by junior candidates who don\'t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they\'re talking about — but don\'t know how to show it in 45 minutes.',
@@ -1000,9 +1000,9 @@ function PostReader({ post, onBack }) {
         <div>{renderBody(post.body)}</div>
 
         {/* Tags */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid #1c2040' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
           {post.tags.map(t => (
-            <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid #1c2040', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
+            <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
           ))}
         </div>
       </article>
@@ -1014,7 +1014,7 @@ function PostReader({ post, onBack }) {
 function PostCard({ post, featured, onClick }) {
   if (featured) {
     return (
-      <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center', border: `1px solid ${post.catColor.border}`, background: `linear-gradient(135deg, #0b0d1a 0%, ${post.catColor.bg} 100%)`, transition: 'transform 0.15s', }}
+      <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center', border: `1px solid ${post.catColor.border}`, background: `linear-gradient(135deg, var(--depth) 0%, ${post.catColor.bg} 100%)`, transition: 'transform 0.15s', }}
         onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
         <div>

@@ -139,8 +139,8 @@ function FeatureStoreDesigner() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {Object.entries(scenarios).map(([k, v]) => (
           <button key={k} onClick={() => setFeatureType(k)} className="card"
-            style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${featureType === k ? 'rgba(124,106,247,0.4)' : 'var(--rim)'}`, background: featureType === k ? 'var(--prime-faint)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: featureType === k ? 'var(--prime-hi)' : 'var(--ink-low)', background: featureType === k ? 'rgba(124,106,247,0.12)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '4px', padding: '2px 7px', display: 'inline-block', marginBottom: '10px' }}>{v.icon}</div>
+            style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${featureType === k ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, background: featureType === k ? 'var(--prime-faint)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: featureType === k ? 'var(--prime-hi)' : 'var(--ink-low)', background: featureType === k ? 'rgba(240,165,0,0.10)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '4px', padding: '2px 7px', display: 'inline-block', marginBottom: '10px' }}>{v.icon}</div>
             <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{v.frequency}</div>
           </button>
@@ -151,7 +151,7 @@ function FeatureStoreDesigner() {
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Example features for this type</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {s.examples.map(ex => (
-            <code key={ex} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
+            <code key={ex} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
           ))}
         </div>
       </div>
@@ -161,7 +161,7 @@ function FeatureStoreDesigner() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
           {Object.entries(storageOptions).map(([k, v]) => (
             <button key={k} onClick={() => setStorage(k)} className="card"
-              style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : 'var(--rim)'}`, background: storage === k ? 'rgba(34,211,238,0.06)' : 'linear-gradient(135deg,#0b0d1a,#0e1122)', transition: 'all 0.15s', padding: '12px' }}>
+              style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : 'var(--rim)'}`, background: storage === k ? 'rgba(34,211,238,0.06)' : 'var(--depth)', transition: 'all 0.15s', padding: '12px' }}>
               <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--sky)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>P50: {v.latency}</div>
             </button>
@@ -315,7 +315,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(ENTITIES).map(([k, v]) => (
               <button key={k} onClick={() => { setEntity(k); setMetric(v.metrics[0]) }}
-                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(6,214,160,0.4)' : 'transparent'}`, background: entity === k ? 'rgba(6,214,160,0.08)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(240,165,0,0.35)' : 'transparent'}`, background: entity === k ? 'rgba(240,165,0,0.07)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
                 {v.icon} {v.label}
               </button>
             ))}
@@ -393,7 +393,7 @@ result = (df
       {/* Feature name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>Feature name:</span>
-        <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--mint)', background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.2)', borderRadius: '6px', padding: '4px 12px' }}>
+        <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--mint)', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px', padding: '4px 12px' }}>
           {feat}
         </code>
       </div>
