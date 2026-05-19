@@ -13,6 +13,8 @@ import InterviewPrepTab from './tabs/InterviewPrepTab.jsx'
 import GradientTab      from './tabs/GradientTab.jsx'
 import LandscapeTab     from './tabs/LandscapeTab.jsx'
 import ClassicalMLTab   from './tabs/ClassicalMLTab.jsx'
+import MLOpsDeployTab   from './tabs/MLOpsDeployTab.jsx'
+import MLOpsPipelinesTab from './tabs/MLOpsPipelinesTab.jsx'
 import DeepLearningTab  from './tabs/DeepLearningTab.jsx'
 import DLFineTuningTab  from './tabs/DLFineTuningTab.jsx'
 import DLServingTab     from './tabs/DLServingTab.jsx'
@@ -74,7 +76,9 @@ const DOMAINS = [
     color: 'var(--rose)',
     bg: 'rgba(244,63,94,0.08)',
     tabs: [
-      { id: 'monitor', label: 'Monitoring', component: MonitoringTab },
+      { id: 'monitor',      label: 'Monitoring',  component: MonitoringTab },
+      { id: 'mlops_deploy', label: 'Deployment',  component: MLOpsDeployTab },
+      { id: 'mlops_pipes',  label: 'CI/CD & Infra', component: MLOpsPipelinesTab },
     ],
   },
   {
