@@ -296,6 +296,215 @@ Weak: Jumps to neural network architecture before understanding the problem. Use
 "If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."`,
     tags: ['Interview Prep', 'System Design', 'MLE', 'Career'],
   },
+  {
+    id: 9,
+    slug: 'gradient-descent-intuition',
+    title: 'Gradient Descent: What Your Intuition Gets Wrong',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(168,85,247,0.1)', text: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'The "ball rolling down a hill" analogy is everywhere. It\'s also subtly wrong in ways that matter. Loss landscapes for neural networks are not convex bowls. They have saddle points, flat regions, and narrow ravines — and the optimiser you choose determines whether you escape them or get stuck.',
+    body: `The standard mental model: we have a loss surface, gradient descent finds the downhill direction, and we step in that direction until we reach the minimum. Simple, intuitive, incomplete.
+
+**Why the bowl analogy fails:**
+
+For neural networks, the loss surface is non-convex and exists in millions of dimensions. Visualisations showing a smooth bowl with a single minimum are generated for two-parameter toy models. Real loss surfaces have: saddle points (gradient = 0 but not a minimum), plateaus (gradient ≈ 0, not a minimum), sharp ravines (very different curvature in different directions), and many local minima.
+
+In high dimensions, local minima are surprisingly rare — saddle points are far more common. The real enemy isn't getting stuck in a local minimum; it's getting stuck near a saddle point where gradients are near zero.
+
+**SGD vs momentum vs Adam:**
+
+SGD: gradient = mean over mini-batch, step = -learning_rate * gradient. Unbiased but high variance. Sensitive to learning rate. Struggles in ravines (oscillates across, moves slowly along).
+
+Momentum: keeps an exponential moving average of past gradients (velocity). Helps escape saddle points. Smooths oscillations in ravines. The β parameter (typically 0.9) controls how much history to retain.
+
+RMSProp: divides the gradient by a running average of squared gradients. Adapts learning rate per parameter. Parameters with consistently large gradients get smaller updates. Useful for sparse features.
+
+Adam: combines momentum and RMSProp. First moment (mean) + second moment (uncentered variance). Bias correction for the first few steps. Most commonly used, but has known convergence issues and can generalise worse than SGD with careful tuning.
+
+**The learning rate is the most important hyperparameter:**
+
+Too high: loss diverges (explodes) or oscillates without converging.
+Too low: convergence is slow and may stall near saddle points.
+Warmup: start small, ramp up to target, then decay. Standard for transformer training.
+Cosine annealing: smoothly reduces learning rate following a cosine curve. Often improves final accuracy.
+
+**Batch size interacts with learning rate:**
+
+Larger batch → more accurate gradient estimate → can use larger learning rate → fewer updates to converge. The linear scaling rule: if you multiply batch size by k, multiply learning rate by k (with warmup). This breaks down at very large batch sizes.
+
+**What practitioners actually get wrong:**
+
+Not checking that training loss is actually decreasing in the first 100 steps. Using Adam's default parameters (lr=0.001) for fine-tuning LLMs without adjusting. Using the same learning rate for all parameter groups. Not visualising the gradient norms over training — norm collapse or explosion is diagnostic. Not logging the loss curve at all.`,
+    tags: ['Optimisation', 'Gradient Descent', 'Adam', 'SGD', 'Deep Learning'],
+  },
+  {
+    id: 10,
+    slug: 'shap-feature-importance',
+    title: 'SHAP Values: Feature Importance That Actually Makes Sense',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(16,185,129,0.1)', text: '#10b981', border: 'rgba(16,185,129,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first correctly — and they\'re game-theoretic, not heuristic. Here\'s what that actually means.',
+    body: `There are four common ways to compute feature importance, and they measure four different things.
+
+**1. Impurity-based importance (default in sklearn forests):** How much did this feature reduce impurity (Gini/entropy) on average across all splits? Problem: biased toward high-cardinality features. A random UUID feature will have high importance by this measure. Don't use this for anything serious.
+
+**2. Permutation importance:** Randomly shuffle one feature's values, measure the drop in model performance. Measures how much the model relies on this feature. Not biased by cardinality. Slow for many features. Can be misleading when features are correlated — shuffling one correlated feature still leaves signal in the others.
+
+**3. LIME (Local Interpretable Model-agnostic Explanations):** Fit a simple linear model around a specific prediction in the local neighbourhood. Fast, intuitive, model-agnostic. Problem: the neighbourhood is defined heuristically, explanations are unstable, and they don't guarantee consistency between local explanations.
+
+**4. SHAP (SHapley Additive exPlanations):** Based on Shapley values from cooperative game theory. The Shapley value of player i is the average marginal contribution of i across all possible orderings of players.
+
+In ML terms: the SHAP value for feature j on prediction x is the expected change in model output when we add feature j to a coalition, averaged over all possible feature coalitions. It satisfies three axioms: efficiency (SHAP values sum to prediction minus baseline), symmetry (features with equal contributions get equal values), dummy (features with no effect get zero SHAP value).
+
+**TreeSHAP:** For tree-based models (XGBoost, LightGBM, sklearn forests), SHAP can be computed exactly in O(TLD²) where T=trees, L=leaves, D=depth. This is fast enough for production feature attribution.
+
+**What SHAP tells you — and what it doesn't:**
+
+SHAP measures model-based contribution — not causal effect. A feature can have high SHAP values because it's correlated with a causal feature that isn't in the model. Don't use SHAP to make causal claims.
+
+Useful applications: explaining individual predictions to fraud analysts, auditing model behaviour for protected attributes, debugging why a model makes unexpected predictions, prioritising feature development.
+
+**Common misuses:**
+
+Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
+    tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
+  },
+  {
+    id: 11,
+    slug: 'cold-start-problem',
+    title: 'The Cold Start Problem: Beyond Popularity Heuristics',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(244,63,94,0.1)', text: '#f43f5e', border: 'rgba(244,63,94,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Every recommendation system has a cold start problem. Most teams solve it by falling back to popularity rankings. This works for items. It doesn\'t work for users. And it leaves a lot of personalisation quality on the table from the very first session.',
+    body: `Cold start manifests in three forms, each requiring a different solution.
+
+**User cold start (new user, no history):**
+
+The wrong approach: show popular items. This creates a feedback loop — popular items get more exposure, accumulate more clicks, become more popular. You end up serving the same 50 items to every new user.
+
+Better approaches:
+
+1. Onboarding signals. Ask for explicit preferences (genre, interest, category). Even 3–5 data points enable personalisation. Spotify's onboarding artist selection reduces cold start significantly. The friction cost is worth the quality gain.
+
+2. Contextual features. Browser/OS, time of day, location, UTM source, device type — all available before the first interaction. A new user arriving via a "Python tutorial" referral is not the same as one arriving from "deep learning paper."
+
+3. Item-based fallback. Instead of "most popular overall," serve "most popular in your apparent context." New user, evening, mobile → entertainment; new user, weekday morning, desktop → professional content.
+
+4. Meta-learning (few-shot). Train a model to quickly adapt to a user with few examples. MAML and its variants. Expensive to train but powerful for high-value users. Used at some scale by Netflix and Spotify for new premium subscribers.
+
+**Item cold start (new item, no interactions):**
+
+Content-based embeddings. Embed items using their metadata (title, description, category, author) using a pretrained encoder. New items immediately have a representation in the same space as established items. Quality improves as interactions accumulate.
+
+Exploration budget. Allocate a fixed fraction of impressions to new items across all users, regardless of predicted CTR. Treat it as a multi-armed bandit problem — Thompson sampling or UCB will naturally allocate more to items that are accruing positive signals.
+
+**System cold start (new recommendation system):**
+
+This is the hardest form. You have no historical interactions at all.
+
+Sequence of phases: (1) Popularity-based serving. Log everything. (2) Content-based model. Build from item metadata + contextual features. No interaction data needed. (3) Collaborative signals. Once you have enough interactions (typically 100k+ user-item events), matrix factorisation or two-tower starts outperforming content-based. (4) Hybrid model. Blend content-based scores with collaborative scores, weighting toward collaborative as interaction data grows.
+
+The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.`,
+    tags: ['Cold Start', 'Recommendation Systems', 'ML System Design', 'Exploration'],
+  },
+  {
+    id: 12,
+    slug: 'distributed-training-patterns',
+    title: 'Distributed Training: Data Parallel vs Model Parallel',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(168,85,247,0.1)', text: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'When your model doesn\'t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it\'s both, you need pipeline parallelism or tensor parallelism — and the choices interact in non-obvious ways.',
+    body: `**Data Parallelism:**
+
+Each GPU gets a full copy of the model and a different mini-batch. Gradients are synchronised across GPUs after each backward pass. This is the default and works well when the model fits in a single GPU's memory.
+
+AllReduce: the standard gradient synchronisation primitive. Each GPU computes its gradients, then AllReduce averages them across all GPUs. With ring-AllReduce (used by NCCL), communication cost is proportional to gradient size × 2, independent of the number of GPUs.
+
+PyTorch DDP (DistributedDataParallel): hooks into the backward pass to overlap gradient communication with backward computation. As soon as a gradient is ready, it starts being communicated while other gradients are still being computed. Near-linear scaling up to ~64 GPUs for large models.
+
+ZeRO (Zero Redundancy Optimizer): addresses memory inefficiency in data parallelism. With naive DDP, each GPU stores the full model parameters, gradients, AND optimiser state. ZeRO-1: shard optimiser state. ZeRO-2: shard gradients. ZeRO-3: shard parameters. ZeRO-3 reduces per-GPU memory by the number of GPUs but introduces communication overhead.
+
+**Model Parallelism:**
+
+When the model doesn't fit on one GPU. Two main variants:
+
+Tensor parallelism: split individual layers across GPUs. A matrix multiply A × B is split so each GPU holds a column shard of B and computes a partial result. Requires all-to-all communication for each layer. Used in Megatron-LM for large transformer models.
+
+Pipeline parallelism: split the model into stages, each stage on a different GPU. GPU 1 processes layers 1–8, GPU 2 processes layers 9–16, etc. The key challenge: GPU 2 is idle while GPU 1 processes the first micro-batch. Solved with micro-batching: break each batch into 8 micro-batches, pipeline them through the stages. GPU utilisation approaches ~(n-1)/n where n is the number of stages.
+
+**3D Parallelism:**
+
+Large language models (GPT-3, PaLM scale) use all three simultaneously: data parallelism across groups of GPUs, pipeline parallelism across stages within a group, tensor parallelism within each stage. Megatron-DeepSpeed uses this configuration for models with hundreds of billions of parameters.
+
+**Gradient accumulation:**
+
+Simulates a larger batch size by computing gradients over multiple micro-batches before updating. Useful when you can't increase batch size due to memory but want the stability benefits of larger batches. gradient_accumulation_steps=8 with micro_batch=16 is equivalent to batch=128.
+
+**Practical guidance:**
+
+Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.`,
+    tags: ['Distributed Training', 'Data Parallel', 'Model Parallel', 'ZeRO', 'Deep Learning'],
+  },
+  {
+    id: 13,
+    slug: 'ml-interview-mistakes',
+    title: '10 ML Interview Mistakes Even Senior Engineers Make',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(99,102,241,0.1)', text: '#818cf8', border: 'rgba(99,102,241,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'These aren\'t mistakes made by junior candidates who don\'t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they\'re talking about — but don\'t know how to show it in 45 minutes.',
+    body: `**1. Starting architecture before framing the problem.**
+
+The single most common mistake at Staff level. An interviewer says "design a recommendation system for Spotify." The candidate immediately starts drawing boxes: two-tower model, HNSW index, Redis feature store. The interviewer asks: "what latency constraint are you designing for?" Silence.
+
+Fix: spend the first 8 minutes on problem framing. Users and their goals. Latency. Scale. Constraints. The architecture flows from the constraints.
+
+**2. Treating AUC as the only metric.**
+
+Recommending AUC when asked "how would you evaluate this model" signals shallow evaluation knowledge. Real answer: what does success mean for the business? CTR? Session length? Revenue? Then: what offline proxy best predicts online success? Then: how do you validate that the offline metric actually predicts the online metric?
+
+**3. Not knowing what P99 latency means for your system.**
+
+If you can't give a rough latency budget for your design (e.g., "10ms feature fetch + 45ms retrieval + 8ms ranking = 63ms total, P99 should be under 100ms"), you don't have a production ML system — you have a notebook experiment.
+
+**4. Saying "I'd use a transformer" without justification.**
+
+Transformers are powerful. They're also slow, expensive, and overkill for tabular data, sparse feature models, and many production ranking systems. "I'd use a transformer" without latency/scale analysis signals that you're applying learned patterns, not reasoning.
+
+**5. Confusing offline and online evaluation.**
+
+"Our model has AUC 0.96" — offline metric. "Our CTR increased 3%" — online metric. The gap between them is where production ML fails. Interviewers at senior levels will probe: how do you know your offline metrics predict online improvement? What have you seen break this correlation?
+
+**6. Ignoring data quality and label noise.**
+
+Strong candidates mention: what are the label sources? What biases do they have? Position bias, selection bias, label delay. "Implicit feedback (clicks) is biased toward popular items" demonstrates practical knowledge. Ignoring it signals academic exposure only.
+
+**7. Not knowing when NOT to use ML.**
+
+A question like "how would you personalise the home feed for a platform with 100 users?" should be answered with "I wouldn't use ML yet — build good heuristics, instrument them, collect data, then train a model once you have 10,000+ users and a defined success metric." Applying ML to every problem signals poor engineering judgment.
+
+**8. Describing monitoring as an afterthought.**
+
+Saying "and then we'd monitor it" at minute 42 of a 45-minute interview. Strong candidates allocate time for monitoring because they've been paged at 2am. What specific metrics would you alert on? What's the threshold? What do you do when an alert fires?
+
+**9. Not discussing failure modes.**
+
+"What happens if the model is down? What happens if the feature store returns stale data? What happens if a new item has no embedding?" These aren't trick questions — they're the most important questions. Production ML engineers have been burned by these.
+
+**10. Not asking clarifying questions when uncertain.**
+
+Spending 20 minutes designing a batch inference system when the interviewer had real-time in mind. Or vice versa. Clarifying questions aren't a sign of weakness — they're a sign you understand that requirements matter. Ask once, confirm your understanding, then proceed.`,
+    tags: ['Interview Prep', 'MLE', 'Senior Engineer', 'Career', 'System Design'],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep']

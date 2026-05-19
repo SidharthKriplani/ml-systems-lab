@@ -473,13 +473,226 @@ print(f"Converged in {kmeans.n_iter_} iterations")
   )
 }
 
+// ─── NumPy Internals ─────────────────────────────────────────────────────────
+const NUMPY_BROADCAST_CODE = `
+import numpy as np
+
+# ── Broadcasting rules ──────────────────────────────────────────────
+a = np.array([[1],[2],[3]])          # shape (3,1)
+b = np.array([10,20,30,40])         # shape (4,)
+result = a + b                       # broadcasts to (3,4)
+print("Broadcasting demo:")
+print(f"  a shape: {a.shape}, b shape: {b.shape}")
+print(f"  a + b shape: {result.shape}")
+print(result)
+
+# ── Views vs copies ──────────────────────────────────────────────────
+x = np.arange(12).reshape(3,4)
+v = x[1:, ::2]   # VIEW — shares memory
+c = x[1:, ::2].copy()  # COPY — new allocation
+
+x[1, 0] = 999
+print("\\nViews vs copies:")
+print(f"  Original x[1,0] changed to 999")
+print(f"  View v[0,0] = {v[0,0]}  (tracks change)")
+print(f"  Copy c[0,0] = {c[0,0]}  (frozen)")
+
+print("\\nMemory: v shares base with x:", np.shares_memory(v, x))
+print("Memory: c shares base with x:", np.shares_memory(c, x))
+`
+
+const NUMPY_BENCH_CODE = `
+import numpy as np
+import time
+
+N = 5_000_000
+x = np.random.randn(N)
+
+# Python loop (slow)
+t0 = time.perf_counter()
+total = 0.0
+for val in x[:10_000]:      # only 10k to keep it fast in Pyodide
+    total += val * val
+t_loop = (time.perf_counter() - t0) * 1000
+
+# Vectorized (fast)
+t0 = time.perf_counter()
+total_vec = np.dot(x[:10_000], x[:10_000])
+t_vec = (time.perf_counter() - t0) * 1000
+
+print(f"Sum of squares (10k elements):")
+print(f"  Python loop : {t_loop:.3f} ms")
+print(f"  NumPy dot   : {t_vec:.4f} ms")
+print(f"  Speedup     : ~{t_loop/max(t_vec,0.0001):.0f}×")
+
+# strides demo
+a = np.arange(16, dtype=np.int32).reshape(4,4)
+print(f"\\nStrides of 4×4 int32 array: {a.strides}")
+print(f"  Row stride: {a.strides[0]} bytes ({a.strides[0]//4} ints)")
+print(f"  Col stride: {a.strides[1]} bytes ({a.strides[1]//4} ints)")
+transposed = a.T
+print(f"Transposed strides: {transposed.strides}  (same data, reversed strides)")
+`
+
+function NumPyInternals() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>NumPy Internals</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          Broadcasting, strides, views vs copies, vectorisation benchmark — the internals every ML practitioner should understand but rarely do.
+        </p>
+      </div>
+
+      <div className="card" style={{ padding: '20px' }}>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Broadcasting & Views vs Copies</div>
+        <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', marginBottom: '12px' }}>
+          NumPy broadcasting aligns arrays with compatible shapes without allocating extra memory.
+          A <em>view</em> shares the same data buffer — mutating the original mutates the view.
+          A <em>copy</em> is independent. Getting this wrong causes subtle, hard-to-debug bugs.
+        </p>
+        <PythonCell initialCode={NUMPY_BROADCAST_CODE} height={180} withPlot={false} label="broadcasting + views" />
+      </div>
+
+      <div className="card" style={{ padding: '20px' }}>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Vectorisation Benchmark + Strides</div>
+        <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', marginBottom: '12px' }}>
+          Vectorised NumPy operations call optimised BLAS routines in C — typically 10–100× faster than Python loops.
+          Strides describe the byte offset to move one step along each dimension — .T doesn't copy, it just reverses strides.
+        </p>
+        <PythonCell initialCode={NUMPY_BENCH_CODE} height={180} withPlot={false} label="vectorisation + strides" />
+      </div>
+
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(6,214,160,0.04)', borderColor: 'rgba(6,214,160,0.2)' }}>
+        <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7 }}>
+          <strong style={{ color: 'var(--mint)' }}>Key rules to remember:</strong><br />
+          • <code style={{ color: 'var(--sky)' }}>x[::2]</code> returns a view; <code style={{ color: 'var(--sky)' }}>x[[0,2,4]]</code> (fancy indexing) returns a copy.<br />
+          • Boolean indexing always returns a copy.<br />
+          • <code style={{ color: 'var(--sky)' }}>np.shares_memory(a, b)</code> tells you if two arrays share a buffer.<br />
+          • Reshaping preserves the view if the array is contiguous; otherwise numpy copies.<br />
+          • Always profile with <code style={{ color: 'var(--sky)' }}>%timeit</code> before assuming loop = slow.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Calibration Curves ──────────────────────────────────────────────────────
+const CALIBRATION_CODE = `
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+from sklearn.model_selection import train_test_split
+
+np.random.seed(42)
+X, y = make_classification(n_samples=2000, n_features=20,
+                            n_informative=6, n_redundant=4, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Fit models
+lr   = LogisticRegression(max_iter=500).fit(X_train, y_train)
+rf   = RandomForestClassifier(n_estimators=100, random_state=42).fit(X_train, y_train)
+rf_platt  = CalibratedClassifierCV(RandomForestClassifier(n_estimators=100, random_state=42),
+                                   cv=3, method='sigmoid').fit(X_train, y_train)
+rf_iso    = CalibratedClassifierCV(RandomForestClassifier(n_estimators=100, random_state=42),
+                                   cv=3, method='isotonic').fit(X_train, y_train)
+
+def ece(y_true, probs, n_bins=10):
+    bins = np.linspace(0,1,n_bins+1)
+    ece_val = 0
+    for lo, hi in zip(bins[:-1], bins[1:]):
+        mask = (probs >= lo) & (probs < hi)
+        if mask.sum() == 0: continue
+        acc  = y_true[mask].mean()
+        conf = probs[mask].mean()
+        ece_val += mask.mean() * abs(acc - conf)
+    return ece_val
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+models = [
+    ('Logistic Reg', lr, '#06d6a0'),
+    ('Random Forest (raw)', rf, '#f97316'),
+    ('RF + Platt', rf_platt, '#38bdf8'),
+    ('RF + Isotonic', rf_iso, '#a855f7'),
+]
+
+for name, model, color in models:
+    probs = model.predict_proba(X_test)[:, 1]
+    frac, mean_pred = calibration_curve(y_test, probs, n_bins=10)
+    ece_score = ece(y_test, probs)
+    axes[0].plot(mean_pred, frac, 'o-', color=color, lw=2, ms=5,
+                 label=f'{name} (ECE={ece_score:.3f})')
+
+axes[0].plot([0,1],[0,1],'--', color='#0e3040', lw=1.5, label='Perfect calibration')
+axes[0].set_xlabel('Mean predicted probability', fontsize=10)
+axes[0].set_ylabel('Fraction of positives', fontsize=10)
+axes[0].set_title('Reliability Diagram', fontsize=12, fontweight='bold')
+axes[0].legend(fontsize=8)
+axes[0].grid(True, alpha=0.3)
+
+# Confidence histogram
+for name, model, color in models:
+    probs = model.predict_proba(X_test)[:, 1]
+    axes[1].hist(probs, bins=20, alpha=0.4, color=color, label=name, density=True)
+
+axes[1].set_xlabel('Predicted probability', fontsize=10)
+axes[1].set_ylabel('Density', fontsize=10)
+axes[1].set_title('Confidence Distribution', fontsize=12, fontweight='bold')
+axes[1].legend(fontsize=8)
+
+plt.tight_layout(pad=2)
+
+# Print ECE summary
+print("Expected Calibration Error (ECE) — lower is better:")
+for name, model, _ in models:
+    probs = model.predict_proba(X_test)[:, 1]
+    print(f"  {name:<28} ECE = {ece(y_test, probs):.4f}")
+print("\\n→ A well-calibrated model: predicted 70% probability ≈ true 70% frequency.")
+print("→ Random forests are systematically overconfident — calibration fixes this.")
+`
+
+function CalibrationCurves() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Curves</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          A model can have great AUC but terrible calibration — its probability scores don't reflect real likelihoods.
+          Reliability diagrams reveal this. Platt scaling and isotonic regression fix it.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+        {[
+          { title: 'What ECE measures', body: 'Expected Calibration Error = weighted mean |confidence − accuracy| across probability bins. ECE < 0.02 is excellent; > 0.05 is concerning.' },
+          { title: 'Platt scaling', body: 'Fits a logistic regression on top of the raw model scores. Fast, works well when miscalibration is monotone. Default in sklearn\'s CalibratedClassifierCV.' },
+          { title: 'Isotonic regression', body: 'Fits a non-parametric monotone function. More flexible than Platt but needs more data (≥ 1000 test samples). Overfits on small datasets.' },
+        ].map(c => (
+          <div key={c.title} className="card" style={{ padding: '16px' }}>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--mint)', marginBottom: '6px' }}>{c.title}</div>
+            <div style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{c.body}</div>
+          </div>
+        ))}
+      </div>
+
+      <PythonCell initialCode={CALIBRATION_CODE} height={260} withPlot label="reliability diagram · ECE comparison" />
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'pca',    label: 'PCA Explorer',       icon: '🔵', component: PCAExplorer },
-  { id: 'svd',    label: 'SVD Decomposer',      icon: '✂️', component: SVDDecomposer },
-  { id: 'preproc',label: 'Preprocessing Lab',   icon: '⚙️', component: PreprocessingLab },
-  { id: 'reg',    label: 'Regularization Lab',  icon: '📐', component: RegularizationLab },
-  { id: 'repl',   label: 'Python Sandbox',      icon: '⌁', component: FreePythonREPL },
+  { id: 'pca',     label: 'PCA Explorer',       icon: '🔵', component: PCAExplorer },
+  { id: 'svd',     label: 'SVD Decomposer',      icon: '✂️', component: SVDDecomposer },
+  { id: 'preproc', label: 'Preprocessing Lab',   icon: '⚙️', component: PreprocessingLab },
+  { id: 'reg',     label: 'Regularization Lab',  icon: '📐', component: RegularizationLab },
+  { id: 'numpy',   label: 'NumPy Internals',     icon: '⚡', component: NumPyInternals },
+  { id: 'calib',   label: 'Calibration Curves',  icon: '📏', component: CalibrationCurves },
+  { id: 'repl',    label: 'Python Sandbox',      icon: '⌁', component: FreePythonREPL },
 ]
 
 export default function ModelsMathTab() {
@@ -491,13 +704,13 @@ export default function ModelsMathTab() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <span style={{ fontSize: '28px' }}>∑</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.04em' }}>Models & Math</h1>
-          <span className="badge badge-emerald">Python</span>
-          <span className="badge badge-indigo">Pyodide</span>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>Models & Math</h1>
+          <span className="badge badge-mint">Python</span>
+          <span className="badge badge-sky">Pyodide</span>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '620px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '620px' }}>
           Run real Python in your browser. sklearn, numpy, matplotlib, scipy — no install, no backend.
-          PCA, SVD, preprocessing, regularization. Math you can configure and break.
+          PCA, SVD, preprocessing, regularization, calibration, NumPy internals.
         </p>
       </div>
 
@@ -512,9 +725,9 @@ export default function ModelsMathTab() {
       </div>
 
       {/* Python runtime notice */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(6,214,160,0.05)', border: '1px solid rgba(6,214,160,0.15)', borderRadius: '8px' }}>
         <span style={{ fontSize: '16px' }}>⌁</span>
-        <p style={{ fontSize: '13px', color: '#525a82', margin: 0 }}>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>
           First run loads the Python runtime (~8 MB). Subsequent runs are instant.
           Everything executes locally — your data never leaves the browser.
         </p>

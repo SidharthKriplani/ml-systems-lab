@@ -287,10 +287,131 @@ function SkewDoctor() {
   )
 }
 
+// ─── Partition Tuner ─────────────────────────────────────────────────────────
+function PartitionTuner() {
+  const [dataGB,      setDataGB]      = useState(50)
+  const [targetSizeMB,setTargetSizeMB]= useState(128)
+  const [executors,   setExecutors]   = useState(20)
+  const [coresPerExec,setCoresPerExec]= useState(4)
+
+  const totalSlots    = executors * coresPerExec
+  const dataMB        = dataGB * 1024
+  const bySize        = Math.ceil(dataMB / targetSizeMB)
+  const byParallelism = totalSlots * 2
+  const recommended   = Math.max(bySize, byParallelism)
+  const roundedRec    = Math.ceil(recommended / totalSlots) * totalSlots  // multiple of total slots
+  const partSizeMB    = dataMB / roundedRec
+  const isSmall       = partSizeMB < 64
+  const isLarge       = partSizeMB > 256
+  const waveCount     = Math.ceil(roundedRec / totalSlots)
+
+  // Distribution bars: simulate skew-free partition sizes near target
+  const barHeights = Array.from({ length: Math.min(roundedRec, 40) }, (_, i) =>
+    partSizeMB * (0.9 + Math.sin(i * 2.3) * 0.08)
+  )
+  const maxBar = Math.max(...barHeights)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Partition Tuner</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          Find the optimal <code style={{ color: 'var(--sky)' }}>spark.sql.shuffle.partitions</code> value for your cluster and dataset.
+          Tune until partition size hits the 128–256 MB sweet spot and parallelism matches your slots.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+        {/* Controls */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {[
+            { label: 'Dataset size', val: dataGB, set: setDataGB, min: 1, max: 500, unit: 'GB', step: 1 },
+            { label: 'Target partition size', val: targetSizeMB, set: setTargetSizeMB, min: 32, max: 512, unit: 'MB', step: 32 },
+            { label: 'Executors', val: executors, set: setExecutors, min: 2, max: 200, unit: '', step: 1 },
+            { label: 'Cores per executor', val: coresPerExec, set: setCoresPerExec, min: 1, max: 16, unit: '', step: 1 },
+          ].map(({ label, val, set, min, max, unit, step }) => (
+            <div key={label}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--ink-low)', marginBottom: '6px' }}>
+                <span>{label}</span>
+                <span style={{ color: 'var(--ink-mid)', fontFamily: "'JetBrains Mono',monospace" }}>{val}{unit}</span>
+              </div>
+              <input type="range" min={min} max={max} step={step} value={val} onChange={e => set(Number(e.target.value))} />
+            </div>
+          ))}
+        </div>
+
+        {/* Results */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
+
+          <div style={{ padding: '16px', background: 'rgba(6,214,160,0.06)', border: '1px solid rgba(6,214,160,0.25)', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', marginBottom: '4px' }}>
+              spark.sql.shuffle.partitions
+            </div>
+            <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: 'var(--mint)' }}>
+              {roundedRec}
+            </div>
+          </div>
+
+          {[
+            ['By data size', bySize, 'partitions to hit target size'],
+            ['By parallelism', byParallelism, '2× total executor slots'],
+            ['Total slots', totalSlots, `${executors} execs × ${coresPerExec} cores`],
+            ['Partition size', `${partSizeMB.toFixed(0)} MB`, isSmall ? '⚠ too small — task overhead' : isLarge ? '⚠ too large — spill risk' : '✓ good'],
+            ['Wave count', waveCount, 'stages per shuffle'],
+          ].map(([k, v, hint]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', borderBottom: '1px solid var(--rim)', paddingBottom: '8px' }}>
+              <span style={{ color: 'var(--ink-low)' }}>{k}</span>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-mid)', fontSize: '12px' }}>{v} <span style={{ color: isSmall && k==='Partition size' ? 'var(--ember)' : isLarge && k==='Partition size' ? 'var(--rose)' : 'var(--ink-ghost)', fontSize: '11px' }}>{hint}</span></span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Partition size distribution */}
+      <div className="card" style={{ padding: '20px' }}>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>
+          Partition size distribution (first {barHeights.length} of {roundedRec})
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '14px' }}>
+          Target: {targetSizeMB} MB · Ideal range: 64–256 MB
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '80px' }}>
+          {barHeights.map((h, i) => {
+            const pct = (h / maxBar) * 100
+            const color = h < 64 ? 'var(--ember)' : h > 256 ? 'var(--rose)' : 'var(--mint)'
+            return <div key={i} style={{ flex: 1, background: color, opacity: 0.7, height: `${pct}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.3s' }} />
+          })}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--ink-ghost)', marginTop: '6px', fontFamily: "'JetBrains Mono',monospace" }}>
+          <span>partition 1</span>
+          <span style={{ color: partSizeMB < 64 ? 'var(--ember)' : partSizeMB > 256 ? 'var(--rose)' : 'var(--mint)' }}>
+            avg {partSizeMB.toFixed(0)} MB {isSmall ? '← too small' : isLarge ? '← too large' : '← good'}
+          </span>
+          <span>partition {barHeights.length}</span>
+        </div>
+      </div>
+
+      {/* Tips */}
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(249,115,22,0.04)', borderColor: 'rgba(249,115,22,0.2)' }}>
+        <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
+          <strong style={{ color: 'var(--ember)' }}>Rules of thumb:</strong><br />
+          • Default is 200 — fine for small jobs, catastrophic for large datasets.<br />
+          • Target 128–200 MB per partition after shuffle (tune with AQE if on Spark 3+).<br />
+          • Keep partitions as a multiple of total executor slots to avoid stragglers.<br />
+          • More waves = longer wall time; fewer waves = larger, spill-prone partitions.<br />
+          • With <strong>Adaptive Query Execution (AQE)</strong>: set a high upper bound and let Spark coalesce automatically.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'shuffle', label: 'Shuffle Hell',  icon: '🌪', component: ShuffleHell },
-  { id: 'skew',    label: 'Skew Doctor',   icon: '🩺', component: SkewDoctor },
+  { id: 'shuffle',   label: 'Shuffle Hell',    icon: '🌪', component: ShuffleHell },
+  { id: 'skew',      label: 'Skew Doctor',     icon: '🩺', component: SkewDoctor },
+  { id: 'partition', label: 'Partition Tuner', icon: '⚡', component: PartitionTuner },
 ]
 
 export default function SparkLabTab() {
@@ -302,10 +423,10 @@ export default function SparkLabTab() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <span style={{ fontSize: '28px' }}>🔥</span>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: '#eaecff', letterSpacing: '-0.04em' }}>Spark Lab</h1>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>Spark Lab</h1>
         </div>
-        <p style={{ fontSize: '14px', color: '#525a82', lineHeight: 1.6, maxWidth: '580px' }}>
-          Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, read execution plans, watch jobs fail.
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
+          Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.
         </p>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

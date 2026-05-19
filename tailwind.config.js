@@ -4,51 +4,53 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Base surfaces
-        base:  '#05060f',
-        card:  '#0b0d1a',
-        layer: '#12152a',
+        // ── Abyss palette ─────────────────────────────────────────────────
+        // Base surfaces — deep ocean black, tinted teal (not blue, not purple)
+        void:   '#020b0d',   // page background
+        depth:  '#041318',   // card background
+        layer:  '#07202a',   // elevated / hover
         // Borders
-        line:  '#1c2040',
-        lineBright: '#2a2e5a',
-        // Accents
-        indigo: {
-          DEFAULT: '#6366f1',
-          bright:  '#818cf8',
-          dim:     '#4338ca',
-          glow:    'rgba(99,102,241,0.25)',
+        rim:    '#0e3040',   // default border
+        rimHi:  '#175570',   // hover / active border
+        // Electric mint — the primary accent
+        mint: {
+          DEFAULT: '#06d6a0',
+          bright:  '#2effc0',
+          dim:     '#0a9e78',
+          glow:    'rgba(6,214,160,0.20)',
+          faint:   'rgba(6,214,160,0.07)',
         },
-        cyan: {
-          DEFAULT: '#22d3ee',
-          dim:     '#0891b2',
-          glow:    'rgba(34,211,238,0.2)',
-        },
-        amber: {
-          DEFAULT: '#f59e0b',
-          dim:     '#b45309',
-          glow:    'rgba(245,158,11,0.2)',
+        // Secondary accents
+        ember: {
+          DEFAULT: '#f97316',  // warm orange — Spark, fire, heat
+          dim:     '#c2530a',
+          glow:    'rgba(249,115,22,0.18)',
         },
         rose: {
           DEFAULT: '#f43f5e',
           dim:     '#be123c',
-          glow:    'rgba(244,63,94,0.2)',
-        },
-        emerald: {
-          DEFAULT: '#10b981',
-          dim:     '#047857',
-          glow:    'rgba(16,185,129,0.2)',
+          glow:    'rgba(244,63,94,0.18)',
         },
         violet: {
           DEFAULT: '#a855f7',
           dim:     '#7e22ce',
-          glow:    'rgba(168,85,247,0.2)',
+          glow:    'rgba(168,85,247,0.18)',
         },
-        // Text scale
+        sky: {
+          DEFAULT: '#38bdf8',
+          dim:     '#0369a1',
+          glow:    'rgba(56,189,248,0.18)',
+        },
+        gold: {
+          DEFAULT: '#fbbf24',
+          dim:     '#b45309',
+        },
+        // Text scale — slightly mint-tinted
         ink: {
-          high:   '#eaecff',
-          medium: '#8891b8',
-          low:    '#525a82',
-          faint:  '#2d3260',
+          hi:    '#dffff6',   // near white, mint cast
+          mid:   '#4db89c',   // muted teal
+          low:   '#1e6254',   // dim
+          ghost: '#0d3830',   // barely visible
         },
       },
       fontFamily: {
@@ -57,28 +59,19 @@ export default {
         serif:   ['"Playfair Display"', 'Georgia', 'serif'],
         mono:    ['"JetBrains Mono"', 'Fira Code', 'monospace'],
       },
+      boxShadow: {
+        'glow-mint':  '0 0 28px rgba(6,214,160,0.30)',
+        'glow-ember': '0 0 28px rgba(249,115,22,0.28)',
+        'card':       '0 1px 3px rgba(0,0,0,0.7), 0 0 0 1px rgba(14,48,64,0.9)',
+        'card-hi':    '0 4px 28px rgba(0,0,0,0.6), 0 0 0 1px rgba(23,85,112,0.8)',
+      },
       backgroundImage: {
-        'dot-grid': `radial-gradient(circle, #1c2040 1px, transparent 1px)`,
-        'gradient-brand': 'linear-gradient(135deg, #6366f1 0%, #22d3ee 100%)',
-        'gradient-card':  'linear-gradient(135deg, #0b0d1a 0%, #12152a 100%)',
+        'dot-grid':    'radial-gradient(circle, #0e3040 1px, transparent 1px)',
+        'grad-mint':   'linear-gradient(135deg, #06d6a0 0%, #38bdf8 100%)',
+        'grad-ember':  'linear-gradient(135deg, #f97316 0%, #fbbf24 100%)',
       },
       backgroundSize: {
         'dot-grid': '28px 28px',
-      },
-      boxShadow: {
-        'glow-indigo': '0 0 24px rgba(99,102,241,0.35)',
-        'glow-cyan':   '0 0 24px rgba(34,211,238,0.25)',
-        'card':        '0 1px 3px rgba(0,0,0,0.6), 0 0 0 1px rgba(28,32,64,0.8)',
-        'card-hover':  '0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(42,46,90,0.8)',
-      },
-      animation: {
-        'fade-in':    'fadeIn 0.4s ease-out',
-        'slide-up':   'slideUp 0.3s ease-out',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
-      },
-      keyframes: {
-        fadeIn:  { from: { opacity: 0 },                   to: { opacity: 1 } },
-        slideUp: { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
       },
     },
   },
