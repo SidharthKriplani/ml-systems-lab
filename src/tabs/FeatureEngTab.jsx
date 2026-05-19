@@ -431,11 +431,310 @@ result = (df
   )
 }
 
+// ─── Feature Leakage Zoo ─────────────────────────────────────────────────────
+const LEAKAGE_SCENARIOS = [
+  {
+    id: 'target',
+    type: 'Target Leakage',
+    color: 'var(--rose)',
+    example: 'Predicting fraud: including `is_flagged_by_ops` (set after fraud review) as a feature',
+    silentFailure: 'Training AUC 0.99, production AUC 0.62. Model only works when the label-adjacent signal is available.',
+    detection: 'Feature importance audit — if a feature has implausibly high importance, check its generation timestamp vs label timestamp.',
+    fix: 'Enforce a strict point-in-time join. Every feature must be computable using only data available before the prediction event.',
+    severity: 'Critical',
+  },
+  {
+    id: 'temporal',
+    type: 'Temporal Leakage',
+    color: 'var(--rose)',
+    example: 'Rolling 7-day avg computed using future rows due to wrong sort order before window',
+    silentFailure: 'Backtest P&L looks great. Live trading loses money from day 1. No error thrown.',
+    detection: 'Sort your dataset by time and recompute features row-by-row. Compare against batch-computed values. Any mismatch is leakage.',
+    fix: 'Compute time-based features with explicit ORDER BY + ROWS BETWEEN N PRECEDING AND CURRENT ROW. Never use RANGE unless you understand the boundary semantics.',
+    severity: 'Critical',
+  },
+  {
+    id: 'group',
+    type: 'Group / Split Leakage',
+    color: 'var(--ember)',
+    example: 'User appears in both train and test set — model memorizes user-level signal',
+    silentFailure: 'Offline eval looks strong. Production metrics are 10-15pp lower. A/B test shows no lift.',
+    detection: 'Check overlap between train and test entity IDs. For recommendation systems, always split by user, not by interaction.',
+    fix: 'Use group-aware splits (GroupKFold, time-based split, entity-based split). Never random-split when rows share an entity.',
+    severity: 'High',
+  },
+  {
+    id: 'proxy',
+    type: 'Proxy Label Leakage',
+    color: 'var(--ember)',
+    example: 'Predicting churn using `support_tickets_last_30d` — tickets spike because user is already churning',
+    silentFailure: 'Model performance is fine at launch, degrades as user behavior changes and ticket patterns shift.',
+    detection: 'Plot feature values stratified by label. A feature with near-perfect separation between labels is suspicious — understand why.',
+    fix: 'Distinguish leading indicators (available before outcome) from lagging indicators (correlated with outcome but caused by it). Only use leading indicators.',
+    severity: 'High',
+  },
+  {
+    id: 'aggregation',
+    type: 'Aggregation Leakage',
+    color: 'var(--gold)',
+    example: 'Mean-encoding target variable across all rows including the current row',
+    silentFailure: 'Target-encoded features look great in training. Encoding at serving time requires a lookup that doesn\'t exist — silent fallback to global mean.',
+    detection: 'Check if your encoding uses the target column. If yes, it must use out-of-fold estimates only.',
+    fix: 'Use out-of-fold target encoding (fit on k-1 folds, encode fold k). At serving time, use the held-out global estimate only.',
+    severity: 'Medium',
+  },
+  {
+    id: 'meta',
+    type: 'Meta-feature Leakage',
+    color: 'var(--gold)',
+    example: 'Including row index, file path, or dataset ID as a feature — model learns dataset split identity',
+    silentFailure: 'Model appears to generalize during CV. Fails on new data source. Feature importance shows row_id in top 10.',
+    detection: 'Audit all features including auto-generated or index columns. Drop anything that encodes dataset identity.',
+    fix: 'Before training, explicitly drop: row IDs, file metadata, timestamps used for splitting, data source identifiers.',
+    severity: 'Medium',
+  },
+  {
+    id: 'join_fanout',
+    type: 'Join Fanout Leakage',
+    color: 'var(--sky)',
+    example: 'Left-joining events to a slowly changing dim without snapshotting — gets today\'s dim value for historical events',
+    silentFailure: 'Model trained on historical events uses current attribute values. At serving time, behavior matches training — but only because serving also uses current values.',
+    detection: 'Compare feature distributions for old events vs new events. If old events have "current" attribute values, you have fanout leakage.',
+    fix: 'Snapshot dimension tables or use SCD Type 2. Always join on (entity_id, event_ts) with dim.valid_from <= event_ts < dim.valid_to.',
+    severity: 'Medium',
+  },
+  {
+    id: 'imputation',
+    type: 'Imputation Leakage',
+    color: 'var(--sky)',
+    example: 'Imputing missing values using statistics computed on the full dataset (including test rows)',
+    silentFailure: 'Cross-validation shows stable metrics. When deployed on future data, null handling differs — score distribution shifts.',
+    detection: 'Trace where imputation statistics (mean, median, mode) are computed. They should only see training data.',
+    fix: 'Always fit imputers inside a Pipeline or explicitly on train split only. Store fitted imputers as artifacts. Serving loads and applies them.',
+    severity: 'Low-Medium',
+  },
+]
+
+function FeatureLeakageZoo() {
+  const [selected, setSelected] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const scenario = LEAKAGE_SCENARIOS.find(s => s.id === selected)
+
+  const severityOrder = { Critical: 0, High: 1, Medium: 2, 'Low-Medium': 3 }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Leakage Zoo</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          8 leakage patterns that silently inflate offline metrics. Pick one — identify the silent failure before reading the diagnosis.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+        {LEAKAGE_SCENARIOS.map(s => (
+          <button key={s.id} onClick={() => { setSelected(s.id); setRevealed(false) }}
+            className="card"
+            style={{
+              textAlign: 'left', cursor: 'pointer',
+              border: `1px solid ${selected === s.id ? s.color : 'var(--rim)'}`,
+              background: selected === s.id ? `color-mix(in srgb, ${s.color} 8%, var(--depth))` : 'var(--depth)',
+              transition: 'all 0.15s',
+            }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.type}</span>
+              <span style={{
+                fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
+                background: `color-mix(in srgb, ${s.color} 15%, transparent)`,
+                color: s.color, letterSpacing: '0.05em',
+              }}>{s.severity}</span>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0 }}>{s.example}</p>
+          </button>
+        ))}
+      </div>
+
+      {scenario && (
+        <div className="card" style={{ border: `1px solid ${scenario.color}`, background: `color-mix(in srgb, ${scenario.color} 5%, var(--depth))` }}>
+          <h4 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: scenario.color, marginBottom: '16px' }}>
+            {scenario.type} — Severity: {scenario.severity}
+          </h4>
+
+          <div style={{ display: 'grid', gap: '14px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Example</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6, fontStyle: 'italic' }}>{scenario.example}</div>
+            </div>
+
+            <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Silent Failure Signature</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.silentFailure}</div>
+            </div>
+
+            {!revealed ? (
+              <button onClick={() => setRevealed(true)} className="card"
+                style={{ cursor: 'pointer', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.4)', padding: '12px', textAlign: 'center' }}>
+                <span style={{ color: 'var(--prime)', fontWeight: 600, fontSize: '13px' }}>Reveal Detection + Fix →</span>
+              </button>
+            ) : (
+              <>
+                <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Detection</div>
+                  <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.detection}</div>
+                </div>
+                <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Fix</div>
+                  <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.fix}</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Online vs Offline Feature Decision ──────────────────────────────────────
+const ONLINE_OFFLINE_SCENARIOS = [
+  {
+    id: 'reco_ctr',
+    label: 'Real-time recommendation CTR',
+    latency: '<50ms', freshness: 'seconds', load: 'high', complexity: 'medium',
+    verdict: 'Online feature store (Redis/DynamoDB)',
+    reasoning: 'CTR models need fresh user session context (last click, dwell time). Sub-50ms budget leaves no time for batch reads. Pre-compute aggregates in streaming (Flink/Kafka) and push to an online store.',
+    antipattern: 'Calling a feature computation service synchronously at inference time — adds 20-40ms and a failure mode.',
+    tags: ['Redis', 'Flink', 'Feast'],
+  },
+  {
+    id: 'fraud_txn',
+    label: 'Fraud scoring at payment',
+    latency: '<100ms', freshness: 'seconds', load: 'very high', complexity: 'high',
+    verdict: 'Dual-write: stream to online store + async to offline',
+    reasoning: 'Fraud needs both fresh signals (last 5 transactions, velocity) and historical signals (30-day spend pattern). Pre-compute historical nightly. Stream velocity features in real-time. Join at serving time from online store only.',
+    antipattern: 'Computing velocity counts in the serving path — unbounded latency under spike traffic. One slow DB query and the payment times out.',
+    tags: ['Dual-write', 'Kafka', 'Redis', 'Snowflake'],
+  },
+  {
+    id: 'batch_risk',
+    label: 'Monthly credit risk scoring',
+    latency: 'hours', freshness: 'daily', load: 'low', complexity: 'high',
+    verdict: 'Offline batch only (data warehouse)',
+    reasoning: 'Monthly batch scoring has no latency constraint. Complex features (12-month payment history, peer comparisons) are expensive to compute — run once nightly in the warehouse. No online store needed.',
+    antipattern: 'Building an online store for a batch use case — operational overhead with zero latency benefit.',
+    tags: ['Snowflake', 'dbt', 'Spark'],
+  },
+  {
+    id: 'search_rank',
+    label: 'Search result ranking',
+    latency: '<200ms', freshness: 'hours', load: 'high', complexity: 'medium',
+    verdict: 'Precompute + cache (CDN/local cache)',
+    reasoning: 'Query-independent features (document popularity, quality score) change slowly. Precompute daily and cache at edge. Query-dependent features (BM25 score, personalization) computed at request time from precomputed signals.',
+    antipattern: 'Recomputing document-level features at query time — O(docs) computation per request kills latency.',
+    tags: ['CDN cache', 'Elasticsearch', 'Redis'],
+  },
+  {
+    id: 'churn_pred',
+    label: 'Daily churn propensity',
+    latency: 'minutes', freshness: 'daily', load: 'medium', complexity: 'high',
+    verdict: 'Offline batch + feature snapshot table',
+    reasoning: 'Churn scores are consumed by CRM tools, not real-time serving. Run full feature pipeline nightly, write scores + feature snapshot to a table. Downstream systems read from the table.',
+    antipattern: 'Serving churn scores through an API with live feature computation — daily-fresh model doesn\'t benefit, but you pay for online infra.',
+    tags: ['Airflow', 'dbt', 'BigQuery'],
+  },
+  {
+    id: 'llm_rag',
+    label: 'LLM retrieval-augmented generation',
+    latency: '<500ms', freshness: 'hours-days', load: 'medium', complexity: 'high',
+    verdict: 'Offline embedding index + online vector search',
+    reasoning: 'Document embeddings are expensive to compute but change infrequently. Compute embeddings in batch, index in a vector DB (Pinecone, Weaviate, pgvector). At query time, embed the user query online and search the precomputed index.',
+    antipattern: 'Recomputing document embeddings at query time — 100ms+ per doc × corpus size = unusable latency.',
+    tags: ['Pinecone', 'pgvector', 'Batch embed'],
+  },
+]
+
+function OnlineOfflineDecider() {
+  const [selected, setSelected] = useState(null)
+  const scenario = ONLINE_OFFLINE_SCENARIOS.find(s => s.id === selected)
+
+  const BADGE_COLORS = {
+    '<50ms': 'var(--rose)', '<100ms': 'var(--ember)', '<200ms': 'var(--gold)',
+    '<500ms': 'var(--mint)', 'minutes': 'var(--sky)', 'hours': 'var(--violet)',
+    'seconds': 'var(--rose)', 'hours-days': 'var(--violet)', 'daily': 'var(--mint)',
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Online vs Offline Feature Decision</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          The most expensive mistake in MLOps: over-engineering feature serving. Choose a scenario — decide the architecture before reading the answer.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+        {ONLINE_OFFLINE_SCENARIOS.map(s => (
+          <button key={s.id} onClick={() => setSelected(s.id)}
+            className="card"
+            style={{
+              textAlign: 'left', cursor: 'pointer',
+              border: `1px solid ${selected === s.id ? 'var(--mint)' : 'var(--rim)'}`,
+              background: selected === s.id ? 'rgba(52,211,153,0.06)' : 'var(--depth)',
+              transition: 'all 0.15s',
+            }}>
+            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '10px' }}>{s.label}</div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {[
+                { label: `Latency: ${s.latency}`, color: BADGE_COLORS[s.latency] || 'var(--ink-low)' },
+                { label: `Freshness: ${s.freshness}`, color: BADGE_COLORS[s.freshness] || 'var(--ink-low)' },
+                { label: `Load: ${s.load}`, color: s.load === 'very high' ? 'var(--rose)' : s.load === 'high' ? 'var(--ember)' : 'var(--mint)' },
+              ].map(b => (
+                <span key={b.label} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: `color-mix(in srgb, ${b.color} 15%, transparent)`, color: b.color, fontWeight: 600 }}>
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {scenario && (
+        <div className="card" style={{ border: '1px solid var(--mint)', background: 'rgba(52,211,153,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+            <h4 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', margin: 0 }}>{scenario.label}</h4>
+            <div style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '6px', padding: '4px 10px' }}>
+              <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '13px' }}>{scenario.verdict}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.reasoning}</div>
+            </div>
+            <div style={{ background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Anti-pattern</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.antipattern}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {scenario.tags.map(t => (
+                <span key={t} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(99,102,241,0.1)', color: 'var(--violet)', fontWeight: 600 }}>{t}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'skew',     label: 'Skew Simulator',        icon: '[S]', component: SkewSimulator },
   { id: 'store',    label: 'Feature Store Designer', icon: '🏪', component: FeatureStoreDesigner },
   { id: 'window',   label: 'Window Aggregation',     icon: '⏱', component: WindowAggregationBuilder },
+  { id: 'leakage',  label: 'Leakage Zoo',            icon: '🔍', component: FeatureLeakageZoo },
+  { id: 'serving',  label: 'Online vs Offline',      icon: '⚡', component: OnlineOfflineDecider },
 ]
 
 export default function FeatureEngTab() {

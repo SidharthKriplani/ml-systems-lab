@@ -636,12 +636,357 @@ function AlertTuner() {
   )
 }
 
+// ─── Incident Triage ─────────────────────────────────────────────────────────
+const INCIDENTS = [
+  {
+    id: 'acc_drop',
+    alert: 'Accuracy dropped 8pp overnight. No deployment in last 48h.',
+    severity: 'high',
+    color: 'var(--rose)',
+    immediateAction: 'Investigate first — do not rollback yet',
+    hypothesis: 'Data distribution shift (seasonal, upstream schema change, or data pipeline failure). Check PSI on all input features before touching the model.',
+    triage: [
+      'Check data freshness — is the feature pipeline producing stale or incomplete data?',
+      'Run PSI on top-10 features. Isolate which features shifted.',
+      'Check if the label distribution changed (delayed labels, label schema change).',
+      'If input features are clean but predictions are wrong → model has degraded. Now consider retraining or rollback.',
+    ],
+    antipattern: 'Immediately rolling back to the previous model. If the cause is data drift, rollback won\'t help — the old model is equally blind to the new distribution.',
+  },
+  {
+    id: 'null_spike',
+    alert: 'Null rate on feature `user_session_duration` spiked from 2% to 34%.',
+    severity: 'high',
+    color: 'var(--rose)',
+    immediateAction: 'Page data engineering immediately — this is a pipeline incident',
+    hypothesis: 'Upstream event tracking change or ingestion failure. The model is now imputing nulls, producing systematically biased predictions.',
+    triage: [
+      'Check ingestion pipeline — was there a deploy or schema change in the event tracker?',
+      'Check if nulls are correlated with a user segment, device, or geography.',
+      'Assess model impact: what does the model output when this feature is null? Is the imputation value causing score collapse?',
+      'Hotfix: if imputation is causing harm, route affected traffic to a fallback model that doesn\'t use this feature.',
+    ],
+    antipattern: 'Treating this as a model problem. The model is behaving correctly given the null — the problem is upstream.',
+  },
+  {
+    id: 'score_collapse',
+    alert: 'Model score distribution compressed — 90% of users scoring 0.45–0.55 (was 0.15–0.85).',
+    severity: 'medium',
+    color: 'var(--ember)',
+    immediateAction: 'Investigate — prediction diversity loss, likely feature issue',
+    hypothesis: 'A high-weight feature has gone to a constant value or has very low variance. The model is essentially outputting the prior.',
+    triage: [
+      'Check feature variance for top-5 features by model weight. Look for features that became constant.',
+      'Check if a categorical feature encoding changed (e.g., a new category ID that maps to OOV token).',
+      'Check serving-side feature computation — is a real-time feature service returning a default value?',
+      'If feature is fine but scores are still collapsed: check model serving code for sigmoid/softmax being applied twice.',
+    ],
+    antipattern: 'Retraining immediately. The feature issue will persist through retraining and you\'ll waste compute.',
+  },
+  {
+    id: 'latency_spike',
+    alert: 'P99 inference latency spiked from 45ms to 380ms. P50 unchanged.',
+    severity: 'high',
+    color: 'var(--rose)',
+    immediateAction: 'Check for resource contention — likely a noisy neighbor or batch job',
+    hypothesis: 'P50 unchanged but P99 spiked = tail latency issue, not global slowdown. Likely: a co-located batch job, GC pause, or a specific feature query hitting a slow path.',
+    triage: [
+      'Check CPU/memory utilization on serving nodes — is a batch job co-located?',
+      'Profile which requests are slow — do they share a feature, user segment, or input size?',
+      'Check if a feature store query has a slow path (e.g., a cache miss that falls back to DB).',
+      'Check if model warmup is causing cold-start latency on recent pod restarts.',
+    ],
+    antipattern: 'Adding more replicas without diagnosing the cause. If it\'s a co-located batch job, scaling serving won\'t help.',
+  },
+  {
+    id: 'label_delay',
+    alert: 'Model accuracy looks great but business metric (conversion rate) dropped 4%.',
+    severity: 'medium',
+    color: 'var(--ember)',
+    immediateAction: 'Investigate label pipeline — metric-model disconnect suggests label delay or proxy mismatch',
+    hypothesis: 'The model is optimizing a proxy label that has decoupled from the true business metric. Common after a product change.',
+    triage: [
+      'Check the correlation between model score and the business metric over time — has it broken recently?',
+      'Check if a product change altered user behavior in a way the proxy label doesn\'t capture.',
+      'Check label delay: if conversion labels take 7 days to arrive, your "accurate" model is trained on stale feedback.',
+      'Run a hold-out analysis: compare business metric for high-score vs low-score predictions in the current period.',
+    ],
+    antipattern: 'Ignoring the business metric because the model metric is green. Model metrics are proxies — they can all look fine while value collapses.',
+  },
+  {
+    id: 'volume_crash',
+    alert: 'Prediction volume dropped 60% in 30 minutes. No errors in logs.',
+    severity: 'critical',
+    color: 'var(--rose)',
+    immediateAction: 'Page on-call immediately — this is likely an upstream traffic or routing failure',
+    hypothesis: 'Traffic is not reaching the model — not a model failure. Check: load balancer, upstream service, feature flag, A/B routing config.',
+    triage: [
+      'Check if upstream caller is healthy — is the service that calls the model seeing errors?',
+      'Check A/B or feature flag config — was the model\'s traffic allocation changed?',
+      'Check load balancer health checks — did a pod fail readiness and get removed from rotation?',
+      'Check if the drop is in all regions or just one — suggests geographic routing issue.',
+    ],
+    antipattern: 'Blaming the model. A 60% volume drop with no errors is almost never a model issue — it\'s a routing/infra issue.',
+  },
+  {
+    id: 'concept_drift',
+    alert: 'PSI stable, feature distributions normal, but precision dropped 12pp over 3 weeks.',
+    severity: 'medium',
+    color: 'var(--ember)',
+    immediateAction: 'This is concept drift — the model needs retraining, not investigation',
+    hypothesis: 'The relationship between features and labels has changed (concept drift), not the feature distribution (data drift). PSI won\'t catch this.',
+    triage: [
+      'Plot precision/recall over time — is it a gradual decline (drift) or a step change (incident)?',
+      'Check if the label definition or collection process changed around when decline started.',
+      'Segment error analysis: which user cohort or feature slice degraded most?',
+      'Retrain on recent data. Consider a time-weighted loss or short training window to prioritize recent patterns.',
+    ],
+    antipattern: 'Waiting for PSI to trigger before acting. PSI measures input drift, not concept drift. You need outcome monitoring too.',
+  },
+  {
+    id: 'schema_mismatch',
+    alert: 'Model serving throwing silent errors for 8% of requests, returning fallback scores.',
+    severity: 'high',
+    color: 'var(--rose)',
+    immediateAction: 'Find the schema mismatch — a feature has changed type or name in the serving payload',
+    hypothesis: 'A feature pipeline or upstream service changed a field name, type, or encoding. Serving code catches the error silently and returns a default score.',
+    triage: [
+      'Sample the 8% of requests that are getting fallback scores — what do their feature payloads look like?',
+      'Compare feature schema at training time vs current serving schema. Look for renamed columns, int→float coercions, or new categorical values.',
+      'Check if a recent upstream deploy changed the event schema or feature computation logic.',
+      'Fix: add schema validation at model entry point that raises loudly, not silently. A silent fallback hides the problem.',
+    ],
+    antipattern: 'Accepting 8% silent errors as normal. Every silent fallback is a real user getting a degraded experience and a missed opportunity to catch the root cause.',
+  },
+]
+
+function IncidentTriage() {
+  const [selected, setSelected] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const incident = INCIDENTS.find(i => i.id === selected)
+
+  const SEV_COLOR = { critical: 'var(--rose)', high: 'var(--ember)', medium: 'var(--gold)' }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Incident Triage</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          8 production alerts. For each: decide your immediate action before reading the triage protocol. Most wrong answers involve touching the model first.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+        {INCIDENTS.map(inc => (
+          <button key={inc.id} onClick={() => { setSelected(inc.id); setRevealed(false) }}
+            className="card"
+            style={{
+              textAlign: 'left', cursor: 'pointer',
+              border: `1px solid ${selected === inc.id ? inc.color : 'var(--rim)'}`,
+              background: selected === inc.id ? `color-mix(in srgb, ${inc.color} 7%, var(--depth))` : 'var(--depth)',
+              transition: 'all 0.15s',
+            }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: `color-mix(in srgb, ${SEV_COLOR[inc.severity]} 15%, transparent)`, color: SEV_COLOR[inc.severity], textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inc.severity}</span>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--ink-hi)', lineHeight: 1.5, margin: 0 }}>{inc.alert}</p>
+          </button>
+        ))}
+      </div>
+
+      {incident && (
+        <div className="card" style={{ border: `1px solid ${incident.color}`, background: `color-mix(in srgb, ${incident.color} 4%, var(--depth))` }}>
+          <div style={{ background: `color-mix(in srgb, ${incident.color} 12%, transparent)`, border: `1px solid ${incident.color}`, borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+            <div style={{ fontSize: '11px', color: incident.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px', fontWeight: 700 }}>Immediate Action</div>
+            <div style={{ fontSize: '14px', color: 'var(--ink-hi)', fontWeight: 600 }}>{incident.immediateAction}</div>
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Working Hypothesis</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{incident.hypothesis}</div>
+          </div>
+
+          {!revealed ? (
+            <button onClick={() => setRevealed(true)} className="card"
+              style={{ cursor: 'pointer', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.4)', padding: '12px', textAlign: 'center', width: '100%' }}>
+              <span style={{ color: 'var(--prime)', fontWeight: 600, fontSize: '13px' }}>Reveal Triage Protocol + Anti-pattern →</span>
+            </button>
+          ) : (
+            <>
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Triage Steps</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {incident.triage.map((step, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                      <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>{i + 1}.</span>
+                      <span style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Anti-pattern to Avoid</div>
+                <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{incident.antipattern}</div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Monitor Coverage Audit ───────────────────────────────────────────────────
+const PIPELINE_STAGES = [
+  {
+    id: 'raw_data',
+    label: 'Raw Data Ingestion',
+    icon: '📥',
+    monitored: ['Volume (row count per batch)', 'Schema validation (column names + types)', 'Freshness (time since last ingest)'],
+    blind_spots: [
+      { issue: 'Value range violations', example: 'age = -5, revenue = 10^15', signal: 'Silent: model silently uses garbage values', fix: 'Add min/max bounds checks per column. Alert if >0.1% of rows violate bounds.' },
+      { issue: 'Referential integrity', example: 'user_id in events has no matching row in users table', signal: 'Null features or silent join failures downstream', fix: 'Run daily uniqueness + FK checks. Alert if match rate drops below 98%.' },
+    ],
+  },
+  {
+    id: 'features',
+    label: 'Feature Pipeline',
+    icon: '⚙️',
+    monitored: ['Null rates per feature', 'Feature pipeline run time', 'Row count output'],
+    blind_spots: [
+      { issue: 'Distribution shift (PSI)', example: 'mean_purchase_7d shifted from $45 to $12 after a discount campaign', signal: 'Model scores compress without explanation. PSI > 0.2 on key features.', fix: 'Monitor PSI weekly for top-10 features by model weight. Page if PSI > 0.2.' },
+      { issue: 'Aggregation window boundary bugs', example: 'Rolling 7-day window accidentally includes 8 days after DST transition', signal: 'Spike in feature values on specific days. Hard to notice.', fix: 'Unit test window boundaries against known reference dates. Include DST edge cases.' },
+    ],
+  },
+  {
+    id: 'model_serving',
+    label: 'Model Serving',
+    icon: '🤖',
+    monitored: ['Request latency (P50, P99)', 'Error rate', 'Request volume'],
+    blind_spots: [
+      { issue: 'Score distribution monitoring', example: 'Scores compressed to 0.48–0.52 — model outputting near-prior for all users', signal: 'CTR drops. No latency or error spike. Business wonders what happened.', fix: 'Monitor score distribution mean, std, and percentiles. Alert if std drops >50% from baseline.' },
+      { issue: 'Prediction confidence calibration', example: 'Model says 90% confidence but is only right 60% of the time', signal: 'Downstream systems over-trust scores. Recall of high-confidence predictions unexpectedly low.', fix: 'Run calibration checks (ECE, reliability diagram) on a holdout set monthly.' },
+    ],
+  },
+  {
+    id: 'labels',
+    label: 'Label Collection',
+    icon: '🏷️',
+    monitored: ['Label volume', 'Label pipeline freshness'],
+    blind_spots: [
+      { issue: 'Label delay tracking', example: 'Conversion labels take 7–30 days to arrive. Model trained on last 7 days uses mostly null labels.', signal: 'Training data appears healthy but model performance mysteriously degrades after retraining.', fix: 'Track label coverage rate by prediction cohort. Don\'t train on cohorts with <80% label coverage.' },
+      { issue: 'Label distribution shift', example: 'Fraud rate dropped from 1.2% to 0.4% after a rule-based filter was added upstream', signal: 'Model appears to improve (lower FPR) but precision drops because true positives are being filtered.', fix: 'Monitor label positive rate as a KPI. Alert if positive rate changes >20% week-over-week.' },
+    ],
+  },
+  {
+    id: 'business',
+    label: 'Business Metrics',
+    icon: '📊',
+    monitored: ['Daily/weekly KPI dashboard'],
+    blind_spots: [
+      { issue: 'Model-to-metric correlation monitoring', example: 'Model AUC stable but conversion rate dropping — model is optimizing the wrong proxy', signal: 'Stakeholders notice revenue drop; ML team says model looks fine.', fix: 'Track correlation between model score and business metric weekly. Alert if correlation drops >0.1.' },
+      { issue: 'Segment-level monitoring', example: 'Overall metrics stable but mobile users degraded 15pp — hidden by desktop volume', signal: 'A complaint from mobile product team is the first signal.', fix: 'Monitor key segments (device, geo, user cohort) separately. Aggregate metrics hide segment failures.' },
+    ],
+  },
+]
+
+function MonitorCoverageAudit() {
+  const [selected, setSelected] = useState(null)
+  const [activeBlind, setActiveBlind] = useState(0)
+  const stage = PIPELINE_STAGES.find(s => s.id === selected)
+  const blind = stage?.blind_spots[activeBlind]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Monitor Coverage Audit</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          Every ML pipeline has monitored stages and blind spots. Select a stage to see what most teams monitor — and what they silently miss.
+        </p>
+      </div>
+
+      {/* Pipeline visualization */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+        {PIPELINE_STAGES.map((s, i) => (
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={() => { setSelected(s.id); setActiveBlind(0) }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
+                border: `1px solid ${selected === s.id ? 'var(--prime)' : 'var(--rim)'}`,
+                background: selected === s.id ? 'rgba(240,165,0,0.08)' : 'var(--depth)',
+                transition: 'all 0.15s', minWidth: '80px',
+              }}>
+              <span style={{ fontSize: '18px' }}>{s.icon}</span>
+              <span style={{ fontSize: '10px', color: selected === s.id ? 'var(--prime)' : 'var(--ink-low)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{s.label}</span>
+            </button>
+            {i < PIPELINE_STAGES.length - 1 && (
+              <span style={{ color: 'var(--rim)', fontSize: '16px', flexShrink: 0 }}>→</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {stage && (
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {/* What's monitored */}
+          <div className="card" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.04)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>Typically Monitored</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {stage.monitored.map((m, i) => (
+                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <span style={{ color: 'var(--mint)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: '13px', color: 'var(--ink-hi)' }}>{m}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Blind spots */}
+          <div className="card" style={{ border: '1px solid rgba(244,63,94,0.3)', background: 'rgba(244,63,94,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Blind Spots ({stage.blind_spots.length})</div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {stage.blind_spots.map((_, i) => (
+                  <button key={i} onClick={() => setActiveBlind(i)}
+                    style={{ width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', fontWeight: 700, fontSize: '11px', border: `1px solid ${activeBlind === i ? 'var(--rose)' : 'var(--rim)'}`, background: activeBlind === i ? 'rgba(244,63,94,0.2)' : 'transparent', color: activeBlind === i ? 'var(--rose)' : 'var(--ink-low)' }}>
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {blind && (
+              <div style={{ display: 'grid', gap: '10px' }}>
+                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--rose)' }}>{blind.issue}</div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Example</div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-hi)', fontStyle: 'italic', lineHeight: 1.5 }}>{blind.example}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Failure Signal</div>
+                  <div style={{ fontSize: '12px', color: 'var(--ember)', lineHeight: 1.5 }}>{blind.signal}</div>
+                </div>
+                <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '6px', padding: '10px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Fix</div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{blind.fix}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'drift', label: 'Drift Dashboard', icon: '📉', component: DriftDashboard },
-  { id: 'psi',   label: 'PSI Lab',         icon: '📏', component: PSILab },
-  { id: 'ks',    label: 'KS Test',         icon: '📐', component: KSTestExplorer },
-  { id: 'alert', label: 'Alert Tuner',     icon: '🔔', component: AlertTuner },
+  { id: 'drift',    label: 'Drift Dashboard',   icon: '📉', component: DriftDashboard },
+  { id: 'psi',     label: 'PSI Lab',            icon: '📏', component: PSILab },
+  { id: 'ks',      label: 'KS Test',            icon: '📐', component: KSTestExplorer },
+  { id: 'alert',   label: 'Alert Tuner',        icon: '🔔', component: AlertTuner },
+  { id: 'triage',  label: 'Incident Triage',    icon: '🚨', component: IncidentTriage },
+  { id: 'coverage',label: 'Coverage Audit',     icon: '🗺', component: MonitorCoverageAudit },
 ]
 
 export default function MonitoringTab() {
