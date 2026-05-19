@@ -1449,9 +1449,9 @@ function ServingTradeoffLab() {
   const recommended = getRecommendedArch(latency, throughput, freshness, depth)
 
   function statusIcon(s) {
-    if (s === 'meets')   return {, color: 'var(--mint)' }
-    if (s === 'partial') return {, color: 'var(--ember)' }
-    return                      {, color: 'var(--rose)' }
+    if (s === 'meets')   return { label: 'meets',   color: 'var(--mint)' }
+    if (s === 'partial') return { label: 'partial',  color: 'var(--ember)' }
+    return                     { label: 'fails',    color: 'var(--rose)' }
   }
 
   function ConfigRow({ label, options, value, onChange }) {
@@ -1527,7 +1527,7 @@ function ServingTradeoffLab() {
                   const si = statusIcon(r.status)
                   return (
                     <div key={r.dim} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                      <span style={{ fontWeight: 700, color: si.color, fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', minWidth: '12px', paddingTop: '2px' }}>{si.icon}</span>
+                      <span style={{ fontWeight: 700, color: si.color, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', minWidth: '48px', paddingTop: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{si.label}</span>
                       <span style={{ fontSize: '11px', color: 'var(--ink-low)', minWidth: '100px', fontFamily: "'Space Grotesk',sans-serif" }}>{r.dim}</span>
                       <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{r.reason}</span>
                     </div>
