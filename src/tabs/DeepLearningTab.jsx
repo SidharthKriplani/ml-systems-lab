@@ -453,8 +453,8 @@ function GradientDebugger() {
 const ROADMAP = [
   { icon: '🔴', label: 'Training Failure Diagnosis',    desc: 'Loss spikes, vanishing gradients, dead ReLUs, data leakage — diagnose from telemetry.',  status: 'live',   color: 'var(--mint)' },
   { icon: '📉', label: 'Backprop & Gradient Debugging', desc: 'Gradient flow visualisation, which layers are actually learning, per-layer norm analysis.', status: 'live',   color: 'var(--mint)' },
-  { icon: '🧊', label: 'Fine-tuning Decision Framework', desc: 'Freeze vs full fine-tune vs LoRA. When each makes sense based on data size and task delta.', status: 'soon',   color: 'var(--ink-low)' },
-  { icon: '⚡', label: 'Model Serving & Quantization',  desc: 'INT8/FP16 tradeoffs, batch size vs latency, GPU memory math, KV cache sizing.',             status: 'soon',   color: 'var(--ink-low)' },
+  { icon: '🧊', label: 'Fine-tuning Decision Framework', desc: 'Freeze vs full fine-tune vs LoRA. When each makes sense based on data size and task delta.', status: 'live',   color: 'var(--mint)' },
+  { icon: '⚡', label: 'Model Serving & Quantization',  desc: 'INT8/FP16 tradeoffs, batch size vs latency, GPU memory math, KV cache sizing.',             status: 'live',   color: 'var(--mint)' },
   { icon: '🔁', label: 'PyTorch Production Patterns',   desc: 'torch.compile, mixed precision, DDP vs FSDP, memory-efficient training.',                    status: 'soon',   color: 'var(--ink-low)' },
   { icon: '🔷', label: 'Attention & Transformer Internals', desc: 'Multi-head attention math, positional encoding choices, why Flash Attention matters.',   status: 'soon',   color: 'var(--ink-low)' },
   { icon: '📦', label: 'TensorFlow in Production',      desc: 'SavedModel vs keras save, TF Serving config, signature defs, batch inference patterns.',     status: 'soon',   color: 'var(--ink-low)' },
@@ -477,8 +477,7 @@ export default function DeepLearningTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Deep Learning</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(99,102,241,0.12)', color: 'var(--violet)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>New domain</span>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Training Lab</h1>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px' }}>
           DL courses teach you to build. This domain teaches you to debug — training failures, serving bottlenecks, fine-tuning tradeoffs. Real telemetry, real decisions.
