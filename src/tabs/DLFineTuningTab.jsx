@@ -27,7 +27,7 @@ function getRecommendation(modelSize, taskSim, dataSize, hw) {
         'Large model (>13B params) exceeds single-GPU VRAM even in fp16 — 4-bit quantization is mandatory.',
         'QLoRA keeps the base frozen in 4-bit NF4 format; only LoRA adapter weights are trained in bf16.',
         'Tiny or small dataset means full fine-tune would catastrophically overfit. Adapters constrain expressivity.',
-        'Near-full fine-tune performance at 40% of LoRA's already-efficient VRAM footprint.',
+        'Near-full fine-tune performance at 40% of LoRA\'s already-efficient VRAM footprint.',
       ],
       risk: 'Full fine-tune would OOM immediately on a single GPU. Even if you somehow fit it, tiny data + all-weights update = catastrophic forgetting of pretraining knowledge.',
       code: `from transformers import BitsAndBytesConfig, AutoModelForCausalLM
