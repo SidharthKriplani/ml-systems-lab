@@ -14,6 +14,9 @@ import GradientTab      from './tabs/GradientTab.jsx'
 import LandscapeTab     from './tabs/LandscapeTab.jsx'
 import DeepLearningTab  from './tabs/DeepLearningTab.jsx'
 import DataScienceTab   from './tabs/DataScienceTab.jsx'
+import AirflowTab       from './tabs/AirflowTab.jsx'
+import DbtTab           from './tabs/dbtTab.jsx'
+import DataModelingTab  from './tabs/DataModelingTab.jsx'
 
 // ── Domain → module hierarchy ─────────────────────────────────────────────────
 const DOMAINS = [
@@ -44,7 +47,10 @@ const DOMAINS = [
     color: 'var(--ember)',
     bg: 'rgba(249,115,22,0.08)',
     tabs: [
-      { id: 'spark', label: 'Spark Lab', component: SparkLabTab },
+      { id: 'spark',    label: 'Spark Lab',       component: SparkLabTab },
+      { id: 'airflow',  label: 'Airflow',          component: AirflowTab },
+      { id: 'dbt',      label: 'dbt',              component: DbtTab },
+      { id: 'modeling', label: 'Data Modeling',    component: DataModelingTab },
     ],
   },
   {
