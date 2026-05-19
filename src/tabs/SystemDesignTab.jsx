@@ -744,27 +744,833 @@ function IncidentScenarios() {
   )
 }
 
-// ─── Coming-soon modules ──────────────────────────────────────────────────────
-const COMING_SOON = [
+
+// ─── Design Review (DesignCanvas) ─────────────────────────────────────────────
+
+const DESIGN_REVIEW_SECTIONS = [
   {
-    icon: '🗺', name: 'ML System Design Canvas',
-    desc: 'Structured framework for designing end-to-end ML systems. Problem framing → data → features → training → serving → monitoring.',
+    id: 'objective',
+    title: 'ML Objective',
+    question: 'What is your primary ML objective for this recommendation system?',
+    options: [
+      {
+        text: 'Maximize CTR — we optimize for click-through rate as the main signal.',
+        tier: 'junior',
+        feedback: 'CTR optimization creates Goodhart\'s Law failure: the model learns to recommend clickbait. Users click, don\'t engage, and churn. CTR is a proxy; optimizing only for it breaks the actual goal.'
+      },
+      {
+        text: 'Optimize engagement (watch time / listen time) as a single north-star metric.',
+        tier: 'analyst',
+        feedback: 'Better than CTR — watch time is harder to game. But a single metric still creates blind spots: engagement can be maximized by showing addictive content at the expense of diversity and long-term user satisfaction.'
+      },
+      {
+        text: 'Multi-objective: engagement + satisfaction signal, with a constraint on diversity minimum.',
+        tier: 'senior',
+        feedback: 'Good production thinking. Explicit diversity constraint prevents filter bubbles. But without product-defined tradeoff weights, your model will find unexpected Pareto optima that satisfy the constraint technically but not spiritually.'
+      },
+      {
+        text: 'Multi-objective: listen-rate + 30-day return + diversity, with explicit product-defined tradeoff weights and a living document that records why those weights were chosen.',
+        tier: 'staff',
+        feedback: 'This is correct. Three signals covering short-term engagement, long-term retention, and ecosystem health. Explicit weights with recorded rationale means the objective can be debated, audited, and updated. The model optimizes what the business actually wants.'
+      },
+    ],
   },
   {
-    icon: '🗼', name: 'Two-Tower Explorer',
-    desc: 'Design a two-tower retrieval model for a real-time recommendation system. Embedding dims, negative sampling, ANN index tradeoffs.',
+    id: 'cold_start',
+    title: 'Cold Start',
+    question: 'How do you handle the cold-start problem for new items with no interaction history?',
+    options: [
+      {
+        text: 'Show popular items to all users when a new item has no embedding.',
+        tier: 'junior',
+        feedback: 'Popular-item fallback guarantees the rich get richer. New items never accumulate interactions, can never enter the recommendation loop, and the catalog becomes increasingly stale. This is not a solution — it\'s deferring the problem forever.'
+      },
+      {
+        text: 'Use item metadata (genre, tags, description) to build a content-based embedding for new items.',
+        tier: 'analyst',
+        feedback: 'Correct first step. Content-based retrieval for new items solves the cold-start. But without a transition strategy, you stay in content-based mode too long — even after the item has real interaction signal you could use.'
+      },
+      {
+        text: 'Two-stage: content-based retrieval for new items using metadata embeddings, transition to collaborative filtering after ~20 interactions.',
+        tier: 'senior',
+        feedback: 'Good. The transition threshold matters — 20 interactions may be too low for statistically stable embeddings depending on the domain. You also need to monitor whether the content → collaborative transition actually improves recommendation quality or regresses it.'
+      },
+      {
+        text: 'Two-stage: content-based retrieval for new items using metadata embeddings, merge with collaborative signal after 50+ interactions, monitor the cold-start cohort separately with its own metrics dashboard, and validate that the transition improves downstream metrics.',
+        tier: 'staff',
+        feedback: 'This is the right design. Separate monitoring for the cold-start cohort is the insight most engineers miss — without it, poor cold-start performance is averaged away in aggregate metrics and never gets fixed.'
+      },
+    ],
   },
   {
-    icon: '⚡', name: 'Serving Tradeoff Lab',
-    desc: 'Real-time vs near-real-time vs batch inference. Latency vs throughput. Batching strategies. Quantisation tradeoffs.',
+    id: 'recall_drop',
+    title: 'Recall Drop',
+    question: 'Your retrieval recall@100 dropped from 87% to 64% overnight. What are your first three things to check?',
+    options: [
+      {
+        text: 'Check if a new model version was deployed yesterday.',
+        tier: 'junior',
+        feedback: 'Checking model version is reasonable, but it\'s one signal, not a systematic process. If no model change happened, you\'re stuck. A recall drop has many possible causes — you need a checklist, not a single hypothesis.'
+      },
+      {
+        text: 'Check model version, then look at latency graphs, then check if A/B traffic split changed.',
+        tier: 'analyst',
+        feedback: 'Better — you\'re checking multiple signals. But latency is unlikely to explain a recall drop, and A/B traffic split is a low-probability cause. You\'re not checking the most likely failure modes for a retrieval system specifically.'
+      },
+      {
+        text: 'Check embedding freshness, then ANN index rebuild status, then training data for distribution shift.',
+        tier: 'senior',
+        feedback: 'This is retrieval-system-specific thinking — exactly right. Stale embeddings and stale ANN index are the two most common causes of overnight recall drops in a two-tower system. Distribution shift is a valid third check.'
+      },
+      {
+        text: 'Systematic: (1) embedding freshness/coverage — are item embeddings current and does the ANN index match? (2) ANN index staleness — when was it last rebuilt and with what data? (3) training data composition shift — did the label distribution or interaction data pipeline change?',
+        tier: 'staff',
+        feedback: 'Correct. Three specific, retrieval-system-native hypotheses in priority order. Embedding coverage and index staleness are the fastest to check and most likely causes. Label distribution shift requires more investigation but rules out model training issues.'
+      },
+    ],
+  },
+  {
+    id: 'skew',
+    title: 'Training-Serving Skew',
+    question: 'How do you detect and prevent training-serving skew in your two-tower model?',
+    options: [
+      {
+        text: 'Compare offline AUC to online AUC — if they diverge significantly, there\'s skew.',
+        tier: 'junior',
+        feedback: 'Offline vs online AUC divergence is a lagging indicator — by the time you notice it, you\'ve been serving a skewed model for days or weeks. This detects skew after it\'s causing harm, not before.'
+      },
+      {
+        text: 'Log features at serving time, sample them, and periodically compare the distribution to training features.',
+        tier: 'analyst',
+        feedback: 'Good direction. Feature distribution comparison is the right approach. But "periodically compare" is not a production-grade answer — you need continuous monitoring with thresholds and alerts, not ad hoc analysis.'
+      },
+      {
+        text: 'Continuous feature distribution monitoring with PSI thresholds, plus a scheduled validation run that scores a labeled holdout set and alerts if online score distribution drifts from training.',
+        tier: 'senior',
+        feedback: 'This is production-quality. PSI-gated alerts catch data drift early. Scheduled validation on a holdout set catches model degradation. Together they give you early warning on both feature and model skew.'
+      },
+      {
+        text: 'Feature parity test (assert training and serving compute the same feature values for identical inputs) + continuous score distribution monitoring (KL divergence alert) + scheduled ember test on labeled holdout — all three gates must pass before any model promotion.',
+        tier: 'staff',
+        feedback: 'This is the complete answer. Feature parity tests are deterministic — they catch code-level skew before deployment. Score distribution monitoring catches runtime drift. The ember test catches model degradation. Making all three promotion gates prevents any single point of failure from slipping through.'
+      },
+    ],
+  },
+  {
+    id: 'diversity',
+    title: 'Diversity Collapse',
+    question: 'Your recommendation diversity has dropped 40% over 6 weeks with no model changes. What is the root cause?',
+    options: [
+      {
+        text: 'The model has overfit to recent data. Retrain it on a longer history window.',
+        tier: 'junior',
+        feedback: 'Retraining is not the root cause fix — it is the exact mechanism that will reproduce the problem. If you retrain on data generated by a biased model, you\'ll get a more biased model. Understanding the cause matters before prescribing the fix.'
+      },
+      {
+        text: 'The training data has become less diverse over time. Augment it with more diverse examples.',
+        tier: 'analyst',
+        feedback: 'Correct observation — the training data is less diverse. But this is effect, not cause. Why did the training data become less diverse? Augmentation treats the symptom without understanding the feedback loop that caused it.'
+      },
+      {
+        text: 'Feedback loop: model recommendations influenced user behaviour, user behaviour became training labels, model reinforced popular items. Break the loop by adding a diversity regularization term in the loss.',
+        tier: 'senior',
+        feedback: 'You\'ve identified the feedback loop — this is the key insight. But diversity regularization alone doesn\'t fix data that\'s already been corrupted by the feedback loop. You also need a clean holdout and probably a long-term behavioral holdout to measure ecosystem health.'
+      },
+      {
+        text: 'Feedback loop: model shaped behaviour → behaviour became labels → model reinforced itself. Fix requires: (1) a long-term behavioral holdout (never touched by the recommender) to get unbiased training signal, (2) diversity constraint in objective, (3) causal correction or inverse propensity weighting to debias historical labels.',
+        tier: 'staff',
+        feedback: 'This is the complete answer. The behavioral holdout is the critical piece most engineers omit — without unbiased data, you can\'t break the loop. IPW debiasing is the statistically correct way to use historical logged data when the logging policy was your own model.'
+      },
+    ],
   },
 ]
+
+const TIER_META = {
+  junior:  { color: 'var(--ink-mid)', label: 'Junior' },
+  analyst: { color: 'var(--sky)',     label: 'Analyst' },
+  senior:  { color: 'var(--mint)',    label: 'Senior' },
+  staff:   { color: 'var(--prime)',   label: 'Staff' },
+}
+
+const TIER_ORDER = ['junior', 'analyst', 'senior', 'staff']
+
+function DesignCanvas() {
+  const [answers, setAnswers]     = useState({})  // sectionId -> optionIndex
+  const [revealed, setRevealed]   = useState({})  // sectionId -> bool
+  const [submitted, setSubmitted] = useState(false)
+
+  const totalSections = DESIGN_REVIEW_SECTIONS.length
+  const answeredCount = Object.keys(answers).length
+  const allAnswered   = answeredCount === totalSections
+
+  function handleSelect(sectionId, idx) {
+    if (submitted) return
+    setAnswers(a => ({ ...a, [sectionId]: idx }))
+  }
+
+  function handleReveal(sectionId) {
+    setRevealed(r => ({ ...r, [sectionId]: true }))
+  }
+
+  function getVerdict() {
+    const tiers = Object.entries(answers).map(([sid, idx]) => {
+      const sec = DESIGN_REVIEW_SECTIONS.find(s => s.id === sid)
+      return sec.options[idx].tier
+    })
+    const tierOrder = ['junior','analyst','senior','staff']
+    const counts = { junior: 0, analyst: 0, senior: 0, staff: 0 }
+    tiers.forEach(t => counts[t]++)
+    const seniorStaffCount = (counts.senior || 0) + (counts.staff || 0)
+    if (seniorStaffCount === totalSections) return { text: 'Production-ready thinking.', color: 'var(--prime)' }
+    if (seniorStaffCount >= 3) return { text: 'Solid foundations — gaps in a few critical areas.', color: 'var(--mint)' }
+    if (seniorStaffCount >= 1) return { text: 'Developing — needs deeper production experience.', color: 'var(--sky)' }
+    return { text: 'Junior level — strong fundamentals, but production patterns need work.', color: 'var(--ink-mid)' }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Scenario switcher */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario</div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', color: 'var(--prime)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+            Recommendation System
+          </span>
+          {['Fraud Detection', 'Search Ranking'].map(s => (
+            <span key={s} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '999px', background: 'var(--depth)', border: '1px solid var(--rim)', color: 'var(--ink-low)', fontFamily: "'Space Grotesk',sans-serif" }}>
+              {s} · coming soon
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.65, maxWidth: '600px' }}>
+          A structured design review with 5 sections. For each, pick the answer that best represents how you think — then see which tier your thinking maps to and why.
+        </p>
+      </div>
+
+      {/* Sections */}
+      {DESIGN_REVIEW_SECTIONS.map((section, si) => {
+        const chosen    = answers[section.id]
+        const isRevealed = revealed[section.id]
+        const hasAnswer  = chosen !== undefined
+
+        return (
+          <div key={section.id} className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Section header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', minWidth: '18px' }}>0{si + 1}</span>
+              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)' }}>{section.title}</span>
+              {hasAnswer && !submitted && (
+                <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>answered</span>
+              )}
+              {submitted && hasAnswer && (
+                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: `${TIER_META[section.options[chosen].tier].color}18`, color: TIER_META[section.options[chosen].tier].color, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+                  {TIER_META[section.options[chosen].tier].label}
+                </span>
+              )}
+            </div>
+
+            <p style={{ fontSize: '13px', color: 'var(--ink-hi)', margin: 0, lineHeight: 1.6, fontWeight: 500 }}>{section.question}</p>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {section.options.map((opt, oi) => {
+                const isChosen  = chosen === oi
+                const tier      = opt.tier
+                const tm        = TIER_META[tier]
+                const showFeedback = isRevealed && isChosen
+
+                return (
+                  <div key={oi}>
+                    <button
+                      onClick={() => handleSelect(section.id, oi)}
+                      style={{
+                        width: '100%', textAlign: 'left', padding: '12px 16px',
+                        background: isChosen ? `${tm.color}0d` : 'var(--depth)',
+                        border: `1px solid ${isChosen ? tm.color + '40' : 'var(--rim)'}`,
+                        borderRadius: '8px', cursor: submitted ? 'default' : 'pointer',
+                        transition: 'all 0.12s', display: 'flex', alignItems: 'flex-start', gap: '10px'
+                      }}
+                    >
+                      <span style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${isChosen ? tm.color : 'var(--rim)'}`, background: isChosen ? tm.color : 'transparent', flexShrink: 0, marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {isChosen && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000' }} />}
+                      </span>
+                      <span style={{ fontSize: '13px', color: isChosen ? 'var(--ink-hi)' : 'var(--ink-mid)', lineHeight: 1.6 }}>{opt.text}</span>
+                    </button>
+                    {showFeedback && (
+                      <div style={{ margin: '6px 0 0 0', padding: '12px 16px', background: `${tm.color}08`, border: `1px solid ${tm.color}25`, borderRadius: '8px' }}>
+                        <div style={{ fontSize: '10px', color: tm.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>
+                          {tm.label} — feedback
+                        </div>
+                        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{opt.feedback}</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Reveal button */}
+            {hasAnswer && !isRevealed && (
+              <button className="btn-ghost" style={{ alignSelf: 'flex-start', fontSize: '12px' }} onClick={() => handleReveal(section.id)}>
+                See feedback for my answer →
+              </button>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Submit */}
+      {!submitted && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button
+            className="btn-primary"
+            disabled={!allAnswered}
+            onClick={() => { setSubmitted(true); setRevealed(Object.fromEntries(DESIGN_REVIEW_SECTIONS.map(s => [s.id, true]))) }}
+          >
+            Submit design review ({answeredCount}/{totalSections} answered)
+          </button>
+        </div>
+      )}
+
+      {/* Verdict */}
+      {submitted && (
+        <div style={{ padding: '22px 24px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Design review verdict</div>
+
+          {/* Tier breakdown */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {TIER_ORDER.map(tier => {
+              const count = DESIGN_REVIEW_SECTIONS.filter(s => answers[s.id] !== undefined && s.options[answers[s.id]].tier === tier).length
+              if (count === 0) return null
+              return (
+                <div key={tier} style={{ padding: '8px 14px', borderRadius: '8px', background: `${TIER_META[tier].color}10`, border: `1px solid ${TIER_META[tier].color}30`, textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: TIER_META[tier].color, fontFamily: "'Space Grotesk',sans-serif" }}>{count}</div>
+                  <div style={{ fontSize: '11px', color: TIER_META[tier].color, fontFamily: "'Space Grotesk',sans-serif" }}>{TIER_META[tier].label}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Verdict line */}
+          {(() => {
+            const v = getVerdict()
+            return (
+              <div style={{ padding: '14px 18px', background: `${v.color}08`, border: `1px solid ${v.color}30`, borderRadius: '10px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: v.color, margin: 0, fontFamily: "'Space Grotesk',sans-serif" }}>{v.text}</p>
+              </div>
+            )
+          })()}
+
+          <button className="btn-ghost" style={{ alignSelf: 'flex-start', fontSize: '12px' }}
+            onClick={() => { setAnswers({}); setRevealed({}); setSubmitted(false) }}>
+            ↺ Restart review
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Two-Tower Explorer ───────────────────────────────────────────────────────
+
+function computeTradeoffs(embDim, negSampling, annIndex, cadence) {
+  // Retrieval quality: base from dim, boosted by neg sampling strategy
+  let recall = 60
+  if (embDim === 128) recall += 12
+  if (embDim === 256) recall += 22
+  if (negSampling === 'in_batch') recall += 8
+  if (negSampling === 'hard') recall += 15
+  if (annIndex === 'hnsw') recall -= 4   // approximate
+  if (annIndex === 'flat') recall += 5   // exact but slow
+  recall = Math.min(recall, 99)
+
+  // P99 latency (ms)
+  let latency = 20
+  if (embDim === 128) latency += 15
+  if (embDim === 256) latency += 40
+  if (annIndex === 'flat') latency += 120
+  if (annIndex === 'hnsw') latency += 8
+  if (annIndex === 'ivf') latency += 30
+  // cadence doesn't affect latency directly
+
+  // Memory (relative label)
+  let memScore = 1
+  if (embDim === 128) memScore = 2
+  if (embDim === 256) memScore = 4
+  if (annIndex === 'hnsw') memScore += 1.5  // HNSW graph overhead
+  if (annIndex === 'ivf') memScore += 0.5
+
+  const memLabel = memScore <= 1.5 ? 'Low' : memScore <= 3 ? 'Moderate' : memScore <= 5 ? 'High' : 'Very High'
+  const memColor = memScore <= 1.5 ? 'var(--mint)' : memScore <= 3 ? 'var(--sky)' : memScore <= 5 ? 'var(--ember)' : 'var(--rose)'
+
+  // Freshness
+  const freshnessMap = {
+    hourly:  { label: 'Hourly', color: 'var(--mint)' },
+    daily:   { label: 'Daily',  color: 'var(--sky)' },
+    weekly:  { label: 'Weekly', color: 'var(--ember)' },
+  }
+
+  // Training stability
+  let stability = 90
+  if (negSampling === 'hard') stability -= 25   // hard negatives can destabilize
+  if (negSampling === 'in_batch') stability -= 8
+  if (embDim === 256) stability -= 6
+  stability = Math.max(stability, 40)
+
+  const stabilityLabel = stability >= 85 ? 'Stable' : stability >= 65 ? 'Moderate' : 'Unstable'
+  const stabilityColor = stability >= 85 ? 'var(--mint)' : stability >= 65 ? 'var(--sky)' : 'var(--rose)'
+
+  // Recall color
+  const recallColor = recall >= 85 ? 'var(--mint)' : recall >= 70 ? 'var(--sky)' : 'var(--ember)'
+
+  // Latency color
+  const latencyColor = latency <= 30 ? 'var(--mint)' : latency <= 60 ? 'var(--sky)' : 'var(--ember)'
+
+  return {
+    recall, recallColor,
+    latency, latencyColor,
+    memLabel, memColor,
+    freshness: freshnessMap[cadence],
+    stabilityLabel, stabilityColor,
+  }
+}
+
+function getStressTests(embDim, negSampling, annIndex, cadence) {
+  // Cold start
+  let coldStart, coldColor
+  if (negSampling === 'hard') {
+    coldStart = 'Hard negatives make cold-start worse — items with no interactions won\'t surface as hard negatives, so the model sees them rarely during training.'
+    coldColor = 'var(--rose)'
+  } else if (embDim === 256) {
+    coldStart = 'Large embedding dim helps with representation quality but cold-start items have sparse signal — content-based fallback still needed.'
+    coldColor = 'var(--ember)'
+  } else {
+    coldStart = 'In-batch or random negatives are relatively neutral for cold-start. A content-based metadata tower would be needed to handle new items properly.'
+    coldColor = 'var(--sky)'
+  }
+
+  // Popularity bias
+  let popBias, popColor
+  if (negSampling === 'random') {
+    popBias = 'Random negatives heavily sample popular items — your model learns to push popular items up even more, amplifying popularity bias.'
+    popColor = 'var(--rose)'
+  } else if (negSampling === 'in_batch') {
+    popBias = 'In-batch negatives are correlated with popularity (popular items appear more in batches). Moderate popularity bias expected.'
+    popColor = 'var(--ember)'
+  } else {
+    popBias = 'Hard negatives help reduce popularity bias — the model is forced to distinguish between similar but less popular items. Best option for this stress test.'
+    popColor = 'var(--mint)'
+  }
+
+  // Embedding drift
+  let drift, driftColor
+  if (cadence === 'weekly') {
+    drift = 'Weekly retraining is slow — after 3 weeks of distribution shift, your embeddings will be severely out of date before the next cycle catches up.'
+    driftColor = 'var(--rose)'
+  } else if (cadence === 'daily') {
+    drift = 'Daily retraining picks up drift within 24 hours. Good for moderate drift, but rapid behavioral shifts can still cause a 1-day window of degraded recommendations.'
+    driftColor = 'var(--sky)'
+  } else {
+    drift = 'Hourly retraining minimizes embedding staleness. Handles moderate drift well. Rapid catalog changes (new items) still require ANN index rebuild to take effect.'
+    driftColor = 'var(--mint)'
+  }
+
+  return [
+    {
+      title: 'Cold Start',
+      desc: 'New item added with zero interaction history',
+      text: coldStart,
+      color: coldColor,
+      rating: coldColor === 'var(--rose)' ? 'POOR' : coldColor === 'var(--ember)' ? 'PARTIAL' : 'FAIR',
+    },
+    {
+      title: 'Popularity Bias',
+      desc: 'Top 1% of items account for 80% of recommendations',
+      text: popBias,
+      color: popColor,
+      rating: popColor === 'var(--rose)' ? 'POOR' : popColor === 'var(--ember)' ? 'PARTIAL' : 'GOOD',
+    },
+    {
+      title: 'Embedding Drift',
+      desc: 'Feature distribution shifts over 3 weeks',
+      text: drift,
+      color: driftColor,
+      rating: driftColor === 'var(--rose)' ? 'POOR' : driftColor === 'var(--sky)' ? 'PARTIAL' : 'GOOD',
+    },
+  ]
+}
+
+function TwoTowerExplorer() {
+  const [embDim,      setEmbDim]      = useState(128)
+  const [negSampling, setNegSampling] = useState('in_batch')
+  const [annIndex,    setAnnIndex]    = useState('hnsw')
+  const [cadence,     setCadence]     = useState('daily')
+
+  const t  = computeTradeoffs(embDim, negSampling, annIndex, cadence)
+  const st = getStressTests(embDim, negSampling, annIndex, cadence)
+
+  function ConfigRow({ label, options, value, onChange }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '130px' }}>{label}</span>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {options.map(o => (
+            <button key={o.value}
+              onClick={() => onChange(o.value)}
+              style={{
+                fontSize: '12px', padding: '5px 12px', borderRadius: '6px',
+                border: `1px solid ${value === o.value ? 'var(--prime)' : 'var(--rim)'}`,
+                background: value === o.value ? 'rgba(240,165,0,0.1)' : 'var(--depth)',
+                color: value === o.value ? 'var(--prime)' : 'var(--ink-mid)',
+                cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
+              }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  function TradeoffRow({ label, value, color, raw, unit }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--rim)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', minWidth: '180px', fontFamily: "'Space Grotesk',sans-serif" }}>{label}</span>
+        <span style={{ fontSize: '14px', fontWeight: 700, color, fontFamily: "'Space Grotesk',sans-serif" }}>
+          {raw !== undefined ? `${raw}${unit || ''}` : value}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.65, maxWidth: '600px' }}>
+        Configure your two-tower retrieval system and see how each choice affects production tradeoffs — and how the system handles real stress tests.
+      </p>
+
+      {/* Config panel */}
+      <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '4px' }}>System configuration</div>
+        <ConfigRow label="Embedding dim" value={embDim} onChange={setEmbDim}
+          options={[{ value: 64, label: '64d' }, { value: 128, label: '128d' }, { value: 256, label: '256d' }]} />
+        <ConfigRow label="Negative sampling" value={negSampling} onChange={setNegSampling}
+          options={[{ value: 'random', label: 'Random' }, { value: 'in_batch', label: 'In-batch' }, { value: 'hard', label: 'Hard' }]} />
+        <ConfigRow label="ANN index" value={annIndex} onChange={setAnnIndex}
+          options={[{ value: 'flat', label: 'Flat (exact)' }, { value: 'ivf', label: 'IVF' }, { value: 'hnsw', label: 'HNSW' }]} />
+        <ConfigRow label="Update cadence" value={cadence} onChange={setCadence}
+          options={[{ value: 'hourly', label: 'Hourly' }, { value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }]} />
+      </div>
+
+      {/* Tradeoff matrix */}
+      <div className="card" style={{ padding: '20px 22px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '14px' }}>Production tradeoff matrix</div>
+        <TradeoffRow label="Retrieval recall@100" raw={t.recall} unit="%" color={t.recallColor} />
+        <TradeoffRow label="P99 serving latency" raw={t.latency} unit=" ms" color={t.latencyColor} />
+        <TradeoffRow label="Memory footprint" value={t.memLabel} color={t.memColor} />
+        <TradeoffRow label="Embedding freshness" value={t.freshness.label} color={t.freshness.color} />
+        <TradeoffRow label="Training stability" value={t.stabilityLabel} color={t.stabilityColor} />
+      </div>
+
+      {/* Stress tests */}
+      <div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '12px' }}>Production stress tests</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {st.map(s => (
+            <div key={s.title} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid ${s.color}30`, borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.title}</span>
+                <span style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{s.desc}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: `${s.color}15`, color: s.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{s.rating}</span>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Serving Tradeoff Lab ─────────────────────────────────────────────────────
+
+const ARCHITECTURES = [
+  {
+    id: 'batch',
+    name: 'Batch Offline',
+    desc: 'Nightly job → precomputed scores → fast lookup at serving',
+    icon: '🗄',
+  },
+  {
+    id: 'stream',
+    name: 'Near-Real-Time Stream',
+    desc: 'Kafka → feature computation → model inference (~1–5 min lag)',
+    icon: '🌊',
+  },
+  {
+    id: 'online',
+    name: 'Online Request-Time',
+    desc: 'Feature fetch + model inference on every request',
+    icon: '⚡',
+  },
+  {
+    id: 'precomp',
+    name: 'Precomputed Embeddings + Online Scoring',
+    desc: 'Embeddings precomputed, only dot product at serving time',
+    icon: '🔢',
+  },
+]
+
+function evalArch(archId, latency, throughput, freshness, depth) {
+  // Returns array of { dimension, status: 'meets'|'partial'|'fails', reason }
+  const results = []
+
+  // Latency
+  const latencyBudgets = { '<50ms': 50, '<200ms': 200, '<1s': 1000, '<10s': 10000 }
+  const budgetMs = latencyBudgets[latency]
+
+  if (archId === 'batch') {
+    results.push({
+      dim: 'Latency', status: 'meets',
+      reason: 'Precomputed lookup is a table scan — sub-millisecond, easily meets any budget.',
+    })
+  } else if (archId === 'stream') {
+    const ok = budgetMs >= 200
+    results.push({
+      dim: 'Latency', status: ok ? 'meets' : 'fails',
+      reason: ok
+        ? 'Stream inference completes well within 200ms budget given pre-materialized features.'
+        : `Stream inference adds 50–150ms overhead — cannot meet ${latency} budget reliably.`,
+    })
+  } else if (archId === 'online') {
+    const ok = budgetMs >= 200
+    results.push({
+      dim: 'Latency', status: ok ? (budgetMs >= 1000 ? 'meets' : 'partial') : 'fails',
+      reason: ok
+        ? (budgetMs >= 1000 ? 'Feature fetch + inference can fit within 1s with good engineering.' : `Feature fetch + inference typically 100–400ms — tight for ${latency} budget, requires careful optimization.`)
+        : `Online feature fetch (20–80ms) + model inference (50–200ms) cannot reliably meet ${latency}.`,
+    })
+  } else { // precomp
+    const ok = budgetMs >= 50
+    results.push({
+      dim: 'Latency', status: ok ? 'meets' : 'partial',
+      reason: ok
+        ? 'Dot product scoring over precomputed embeddings adds <5ms — easily meets the budget.'
+        : 'Even dot product scoring at scale can hit 20–40ms at >10k QPS — verify with load test.',
+    })
+  }
+
+  // Throughput
+  const qpsMap = { '<100 QPS': 100, '<1k QPS': 1000, '<10k QPS': 10000, '>10k QPS': 100001 }
+  const qps = qpsMap[throughput]
+
+  if (archId === 'batch') {
+    results.push({ dim: 'Throughput', status: 'meets', reason: 'Table lookups scale to any QPS with read replicas — no model inference at serving.' })
+  } else if (archId === 'stream') {
+    results.push({ dim: 'Throughput', status: qps <= 10000 ? 'meets' : 'partial', reason: qps <= 10000 ? 'Kafka-backed stream infrastructure handles <10k QPS comfortably.' : 'Stream inference at >10k QPS requires careful partitioning and consumer scaling.' })
+  } else if (archId === 'online') {
+    results.push({ dim: 'Throughput', status: qps <= 1000 ? 'meets' : qps <= 10000 ? 'partial' : 'fails', reason: qps <= 1000 ? 'Online inference at <1k QPS is manageable with standard model serving.' : qps <= 10000 ? 'Online inference at this scale requires horizontal scaling and model batching.' : 'Online feature fetch + inference at >10k QPS is expensive — consider precomputed embeddings.' })
+  } else {
+    results.push({ dim: 'Throughput', status: 'meets', reason: 'Dot product scoring is compute-cheap and horizontally scalable to any QPS.' })
+  }
+
+  // Feature freshness
+  const freshnessRank = { 'real-time': 0, '<5min': 1, '<1hr': 2, 'daily': 3 }
+  const freshnessReq = freshnessRank[freshness]
+
+  if (archId === 'batch') {
+    const ok = freshnessReq >= 3
+    results.push({ dim: 'Freshness', status: ok ? 'meets' : 'fails', reason: ok ? 'Daily batch is aligned with your daily freshness requirement.' : `Batch scores are computed nightly — freshness is ~24h, cannot meet ${freshness} requirement.` })
+  } else if (archId === 'stream') {
+    const ok = freshnessReq >= 1
+    results.push({ dim: 'Freshness', status: ok ? 'meets' : 'partial', reason: ok ? 'Stream pipeline with 1–5 min lag meets your freshness requirement.' : 'Stream lag is 1–5 minutes — borderline for real-time requirement, depends on pipeline SLA.' })
+  } else if (archId === 'online') {
+    results.push({ dim: 'Freshness', status: 'meets', reason: 'Online feature fetch is real-time — the freshest possible signals on every request.' })
+  } else {
+    const ok = freshnessReq >= 2
+    results.push({ dim: 'Freshness', status: ok ? 'meets' : 'partial', reason: ok ? 'Precomputed embeddings refreshed on your cadence meet this freshness requirement.' : 'Embeddings are precomputed on a batch schedule — not suitable for sub-hour freshness needs.' })
+  }
+
+  // Personalization depth
+  // no_personalization | light | deep
+  if (archId === 'batch') {
+    const ok = depth !== 'deep'
+    results.push({ dim: 'Personalization', status: ok ? 'meets' : 'partial', reason: ok ? 'Batch-precomputed user scores provide light to user-level personalization.' : 'Batch cannot capture context-aware per-request signals (device, session state, recent actions).' })
+  } else if (archId === 'stream') {
+    const ok = depth !== 'deep'
+    results.push({ dim: 'Personalization', status: ok ? 'meets' : 'partial', reason: ok ? 'Stream pipeline can incorporate recent user events for user-level personalization.' : 'Per-request context (current session, real-time signals) requires online inference, not stream.' })
+  } else if (archId === 'online') {
+    results.push({ dim: 'Personalization', status: 'meets', reason: 'Online inference has access to full request context — supports deep, per-request personalization.' })
+  } else {
+    const ok = depth !== 'deep'
+    results.push({ dim: 'Personalization', status: ok ? 'meets' : 'partial', reason: ok ? 'Precomputed user embeddings support user-level personalization at scoring time.' : 'Precomputed user embeddings don\'t capture real-time session context — only user-level signals.' })
+  }
+
+  return results
+}
+
+function getRecommendedArch(latency, throughput, freshness, depth) {
+  const qpsMap = { '<100 QPS': 100, '<1k QPS': 1000, '<10k QPS': 10000, '>10k QPS': 100001 }
+  const qps = qpsMap[throughput]
+  const freshnessRank = { 'real-time': 0, '<5min': 1, '<1hr': 2, 'daily': 3 }
+  const fr = freshnessRank[freshness]
+  const latencyBudgets = { '<50ms': 50, '<200ms': 200, '<1s': 1000, '<10s': 10000 }
+  const latMs = latencyBudgets[latency]
+
+  if (fr >= 3 && depth !== 'deep') {
+    return { id: 'batch', name: 'Batch Offline', reason: 'Daily freshness requirement and no deep per-request personalization — the simplest option. Nightly batch is the lowest-risk, lowest-cost architecture for this use case.' }
+  }
+  if (fr >= 1 && depth !== 'deep' && qps <= 10000 && latMs >= 200) {
+    return { id: 'stream', name: 'Near-Real-Time Stream', reason: 'Sub-hour freshness without per-request context — stream pipeline is the right balance. Simpler than online inference, fresher than batch.' }
+  }
+  if (depth === 'deep' || fr === 0) {
+    if (qps > 10000 || latMs < 200) {
+      return { id: 'precomp', name: 'Precomputed Embeddings + Online Scoring', reason: 'Deep personalization or real-time freshness at high scale — precomputed embeddings with online dot-product scoring gives you per-request context without the full cost of online inference.' }
+    }
+    return { id: 'online', name: 'Online Request-Time', reason: 'Deep per-request personalization or real-time freshness at manageable scale — online inference is the right architecture here, despite higher operational complexity.' }
+  }
+  return { id: 'precomp', name: 'Precomputed Embeddings + Online Scoring', reason: 'Balances freshness, scale, and personalization needs without the full cost of online inference.' }
+}
+
+const WRONG_ARCH_CONSEQUENCES = {
+  batch: {
+    stream: 'Using batch when you need stream: scores are up to 24h stale. Users who just expressed strong intent get yesterday\'s recommendations.',
+    online: 'Using batch when you need online: you\'re missing real-time context entirely. A user who just searched for "shoes" still sees recommendations from their profile built last night.',
+    precomp: 'Using batch when you need real-time scoring: you\'re serving the same precomputed scores regardless of what the user is doing right now.',
+  },
+  default: 'Getting the serving architecture wrong means either serving stale scores (batch when freshness matters), spending 10x on infrastructure (online when batch suffices), or failing your latency SLA under load (online at >10k QPS without careful engineering).',
+}
+
+function ServingTradeoffLab() {
+  const [latency,    setLatency]    = useState('<200ms')
+  const [throughput, setThroughput] = useState('<1k QPS')
+  const [freshness,  setFreshness]  = useState('<5min')
+  const [depth,      setDepth]      = useState('light')
+
+  const recommended = getRecommendedArch(latency, throughput, freshness, depth)
+
+  function statusIcon(s) {
+    if (s === 'meets')   return { icon: '✓', color: 'var(--mint)' }
+    if (s === 'partial') return { icon: '⚠', color: 'var(--ember)' }
+    return                      { icon: '✗', color: 'var(--rose)' }
+  }
+
+  function ConfigRow({ label, options, value, onChange }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '145px' }}>{label}</span>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {options.map(o => (
+            <button key={o.value} onClick={() => onChange(o.value)}
+              style={{
+                fontSize: '12px', padding: '5px 12px', borderRadius: '6px',
+                border: `1px solid ${value === o.value ? 'var(--prime)' : 'var(--rim)'}`,
+                background: value === o.value ? 'rgba(240,165,0,0.1)' : 'var(--depth)',
+                color: value === o.value ? 'var(--prime)' : 'var(--ink-mid)',
+                cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
+              }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.65, maxWidth: '600px' }}>
+        Set your production requirements and see which serving architectures meet them, which partially meet them, and which fail — with specific reasoning for each.
+      </p>
+
+      {/* Requirements */}
+      <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace', marginBottom: '4px" }}>Your requirements</div>
+        <ConfigRow label="Latency budget" value={latency} onChange={setLatency}
+          options={[{ value: '<50ms', label: '<50ms' }, { value: '<200ms', label: '<200ms' }, { value: '<1s', label: '<1s' }, { value: '<10s', label: '<10s' }]} />
+        <ConfigRow label="Throughput" value={throughput} onChange={setThroughput}
+          options={[{ value: '<100 QPS', label: '<100 QPS' }, { value: '<1k QPS', label: '<1k QPS' }, { value: '<10k QPS', label: '<10k QPS' }, { value: '>10k QPS', label: '>10k QPS' }]} />
+        <ConfigRow label="Feature freshness" value={freshness} onChange={setFreshness}
+          options={[{ value: 'real-time', label: 'Real-time' }, { value: '<5min', label: '<5 min' }, { value: '<1hr', label: '<1 hr' }, { value: 'daily', label: 'Daily' }]} />
+        <ConfigRow label="Personalization" value={depth} onChange={setDepth}
+          options={[{ value: 'none', label: 'None' }, { value: 'light', label: 'User-level' }, { value: 'deep', label: 'Deep (per-request)' }]} />
+      </div>
+
+      {/* Architecture evaluation table */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Architecture evaluation</div>
+        {ARCHITECTURES.map(arch => {
+          const results = evalArch(arch.id, latency, throughput, freshness, depth)
+          const isRec   = recommended.id === arch.id
+          const fails   = results.filter(r => r.status === 'fails').length
+          const partials = results.filter(r => r.status === 'partial').length
+
+          return (
+            <div key={arch.id} style={{ padding: '18px 20px', background: 'var(--depth)', border: `1px solid ${isRec ? 'rgba(240,165,0,0.35)' : fails > 0 ? 'rgba(239,68,68,0.20)' : 'var(--rim)'}`, borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '18px' }}>{arch.icon}</span>
+                <div>
+                  <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: isRec ? 'var(--prime)' : 'var(--ink-hi)' }}>
+                    {arch.name}
+                    {isRec && <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace" }}>RECOMMENDED</span>}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{arch.desc}</div>
+                </div>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>{results.filter(r => r.status === 'meets').length} meets</span>
+                  {partials > 0 && <span style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace" }}>{partials} partial</span>}
+                  {fails > 0 && <span style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace" }}>{fails} fails</span>}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {results.map(r => {
+                  const si = statusIcon(r.status)
+                  return (
+                    <div key={r.dim} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                      <span style={{ fontWeight: 700, color: si.color, fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', minWidth: '12px', paddingTop: '2px' }}>{si.icon}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--ink-low)', minWidth: '100px', fontFamily: "'Space Grotesk',sans-serif" }}>{r.dim}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{r.reason}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Recommendation */}
+      <div style={{ padding: '20px 22px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Recommended architecture</div>
+        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--prime)' }}>{recommended.name}</div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{recommended.reason}</p>
+      </div>
+
+      {/* Why your choice matters */}
+      <div style={{ padding: '18px 20px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Why your choice matters</div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+          Getting the serving architecture wrong creates compounding problems. <strong style={{ color: 'var(--ink-hi)' }}>Batch offline with a real-time requirement</strong> means serving stale scores to users who just changed their preferences — a user who just bought a camera still sees camera ads. <strong style={{ color: 'var(--ink-hi)' }}>Online inference when batch suffices</strong> costs 5–20x more in infrastructure and adds latency variance. <strong style={{ color: 'var(--ink-hi)' }}>Choosing online at >10k QPS</strong> without careful model optimization will breach your latency SLA under load when you can least afford it. The right architecture is the simplest one that meets your actual requirements — not the most sophisticated one you can build.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'incident',   label: 'ML Incident Room',      icon: '🚨', component: IncidentRoom },
   { id: 'ownership',  label: 'DS Ownership Chain',    icon: '⛓',  component: DSOwnershipChain },
   { id: 'scenarios',  label: 'Incident Scenarios',    icon: '🔥', component: IncidentScenarios },
+  { id: 'canvas',     label: 'Design Review',         icon: '🗺', component: DesignCanvas },
+  { id: 'two_tower',  label: 'Two-Tower Explorer',    icon: '🗼', component: TwoTowerExplorer },
+  { id: 'serving',    label: 'Serving Tradeoffs',     icon: '⚡', component: ServingTradeoffLab },
 ]
 
 export default function SystemDesignTab() {
@@ -789,11 +1595,6 @@ export default function SystemDesignTab() {
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>
             <span style={{ marginRight: '6px' }}>{m.icon}</span>{m.label}
-          </button>
-        ))}
-        {COMING_SOON.map(m => (
-          <button key={m.name} disabled className="sub-tab inactive" style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-            {m.icon} {m.name} <span style={{ fontSize: '10px', marginLeft: '4px', color: 'var(--ink-ghost)' }}>soon</span>
           </button>
         ))}
       </div>

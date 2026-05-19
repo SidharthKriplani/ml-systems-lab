@@ -146,87 +146,6 @@ function MetricSelector() {
   )
 }
 
-// ─── A/B Test Designer ────────────────────────────────────────────────────────
-function ABTestDesigner() {
-  const [baseline, setBaseline]     = useState(5.0)  // %
-  const [mde, setMde]               = useState(10)   // relative % lift
-  const [alpha, setAlpha]           = useState(5)    // significance level %
-  const [power, setPower]           = useState(80)   // %
-  const [dailyUsers, setDailyUsers] = useState(10000)
-
-  const result = useMemo(() => {
-    const p1 = baseline / 100
-    const p2 = p1 * (1 + mde / 100)
-    const a  = alpha / 100
-    const pw = power / 100
-
-    // z-scores (normal approximation)
-    const z_alpha = a === 0.01 ? 2.576 : a === 0.05 ? 1.96 : a === 0.1 ? 1.645 : 1.96
-    const z_beta  = pw === 0.80 ? 0.842 : pw === 0.90 ? 1.282 : pw === 0.95 ? 1.645 : 0.842
-
-    const pooled = (p1 + p2) / 2
-    const n = Math.ceil(
-      (z_alpha * Math.sqrt(2 * pooled * (1 - pooled)) +
-       z_beta  * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
-      / (p2 - p1) ** 2
-    )
-
-    const daysNeeded = Math.ceil((n * 2) / dailyUsers)
-    return { nPerGroup: n, totalN: n * 2, p2: (p2 * 100).toFixed(2), daysNeeded }
-  }, [baseline, mde, alpha, power, dailyUsers])
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>A/B Test Designer</h3>
-        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
-          Configure your experiment parameters. See how sample size and experiment duration change with each lever.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
-        {[
-          { label: 'Baseline conversion rate', value: baseline, set: setBaseline, min: 0.5, max: 30, step: 0.5, suffix: '%' },
-          { label: 'Minimum detectable effect', value: mde, set: setMde, min: 1, max: 50, step: 1, suffix: '% relative lift' },
-          { label: 'Significance level (α)', value: alpha, set: setAlpha, min: 1, max: 20, step: 1, suffix: '%' },
-          { label: 'Statistical power', value: power, set: setPower, min: 50, max: 99, step: 5, suffix: '%' },
-          { label: 'Daily users (both groups)', value: dailyUsers, set: setDailyUsers, min: 100, max: 100000, step: 100, suffix: '' },
-        ].map(c => (
-          <div key={c.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
-              {c.label}: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{c.value}{c.suffix}</span>
-            </label>
-            <input type="range" min={c.min} max={c.max} step={c.step} value={c.value} onChange={e => c.set(+e.target.value)} />
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-        {[
-          { label: 'Sample per group', value: result.nPerGroup.toLocaleString(), color: 'var(--violet)' },
-          { label: 'Total sample needed', value: result.totalN.toLocaleString(), color: 'var(--sky)' },
-          { label: 'Target conversion', value: result.p2 + '%', color: 'var(--mint)' },
-          { label: 'Days to run', value: result.daysNeeded + ' days', color: result.daysNeeded > 30 ? 'var(--rose)' : 'var(--mint)' },
-        ].map(r => (
-          <div key={r.label} className="card" style={{ padding: '18px', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 700, color: r.color, marginBottom: '4px' }}>{r.value}</div>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {result.daysNeeded > 30 && (
-        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0, lineHeight: 1.7 }}>
-            ⚠ {result.daysNeeded} days is too long. Consider: increasing MDE (detect larger effects), raising significance level (accept more FP risk),
-            or increasing daily traffic allocation. Long experiments risk novelty effects and external validity issues.
-          </p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Shadow Mode Simulator ────────────────────────────────────────────────────
 function ShadowModeSim() {
   const [phase, setPhase]   = useState('design')
@@ -319,7 +238,6 @@ function ShadowModeSim() {
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'metric',   label: 'Metric Selector',   icon: '📉', component: MetricSelector },
-  { id: 'ab',       label: 'A/B Test Designer',  icon: '🧪', component: ABTestDesigner },
   { id: 'shadow',   label: 'Shadow Mode',        icon: '👥', component: ShadowModeSim },
 ]
 

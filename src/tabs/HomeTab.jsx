@@ -36,7 +36,7 @@ const LEARNING_PATHS = [
       { tab: 'interview', label: 'Question Bank — System Design',   desc: 'Work through all System Design questions. Build a reusable 6-step framework.' },
       { tab: 'interview', label: 'Fluency Drills',                  desc: '30 weak→strong vocabulary pairs. Replace vague phrases with production-grade ones.' },
       { tab: 'eval',      label: 'Metric Selector',                  desc: 'Know exactly when to use PR-AUC vs ROC-AUC vs calibration.' },
-      { tab: 'eval',      label: 'A/B Test Designer',                desc: 'Power, MDE, SRM — design an experiment interactively.' },
+      { tab: 'eval',      label: 'Shadow Mode Sim',                   desc: 'Run a challenger model in shadow before touching real traffic.' },
       { tab: 'design',    label: 'ML Incident Room',                 desc: 'Diagnose production incidents under pressure. Senior/Staff expected output.' },
       { tab: 'interview', label: 'Timed Practice — full mock',       desc: '45-minute session. Use 4-tier self-assessment. Aim for Analyst on every question.' },
     ],
@@ -229,7 +229,7 @@ export default function HomeTab({ onNavigate }) {
         </div>
 
         <p style={{ fontSize: '16px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '32px' }}>
-          {activeRole?.desc ?? 'Most ML courses tell you what to do. This lab makes you configure the system and watch it break — then fix it. PySpark, feature pipelines, model evaluation, system design. Real Python in the browser.'}
+          {activeRole?.desc ?? 'Most ML courses teach you to build. This lab teaches you to judge — diagnose production failures, defend trade-off decisions, and reason like a senior engineer. PySpark, feature pipelines, system design, evaluation. No toy examples.'}
         </p>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
