@@ -269,13 +269,27 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Hero ── */}
       <section>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(26px, 4vw, 44px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.04em', marginBottom: '16px' }}>
-          The training ground for<br />
-          <span className="text-gradient">production data & ML engineers.</span>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(28px, 4.5vw, 52px)', fontWeight: 800, lineHeight: 1.07, letterSpacing: '-0.04em', marginBottom: '20px' }}>
+          You can train a model.<br />
+          <span className="text-gradient">Can you debug it in production?</span>
         </h1>
 
+        <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', marginBottom: '24px' }}>
+          100+ production failure scenarios across 7 domains. Each one puts you inside a real system — Spark pipelines, DL training runs, recommendation stacks — and asks you to make the call.
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <button className="btn-primary" onClick={() => onNavigate('design')}>Run a failure scenario →</button>
+          <button className="btn-secondary" onClick={() => document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Find your path</button>
+        </div>
+
+        <p style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '28px', letterSpacing: '0.04em' }}>
+          Free · no account · 7 domains · 100+ scenarios
+        </p>
+
+        {/* ── Role selector ── */}
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>I'm here as a →</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Personalise by role →</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)} title={r.desc}
@@ -286,25 +300,15 @@ export default function HomeTab({ onNavigate }) {
           </div>
         </div>
 
-        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '520px', marginBottom: '20px' }}>
-          {activeRole?.desc ?? 'Most courses teach you to build. This lab teaches you to judge — diagnose production failures, make trade-off decisions, and reason like a senior engineer.'}
-        </p>
-
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
-          {activeRole ? (
-            <>
+        {activeRole && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '14px 18px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{activeRole.desc}</p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
               <button className="btn-secondary" onClick={() => onNavigate(activeRole.cta2.tab)}>{activeRole.cta2.label}</button>
-              <button className="btn-ghost"     onClick={() => onNavigate('gradient')}>∇ Gradient</button>
-            </>
-          ) : (
-            <>
-              <button className="btn-primary"   onClick={() => onNavigate('design')}>ML System Design →</button>
-              <button className="btn-secondary" onClick={() => onNavigate('dl')}>Training Lab</button>
-              <button className="btn-ghost"     onClick={() => onNavigate('gradient')}>∇ Gradient</button>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Stats strip ── */}
         <div style={{ display: 'flex', border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden' }}>
