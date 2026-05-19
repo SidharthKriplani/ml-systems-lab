@@ -15,11 +15,11 @@
 */
 :root {
   /* ── Surfaces — warm near-black ──────────────────── */
-  --void:    #090806;   /* page bg — faintest warm undertone  */
-  --depth:   #141210;   /* card / panel background            */
-  --surface: #1c1915;   /* elevated cards, code blocks        */
-  --rim:     #282420;   /* default border                     */
-  --rim-hi:  #3a3530;   /* hovered / active border            */
+  --void:    #0c0a08;   /* page bg — faintest warm undertone  */
+  --depth:   #161310;   /* card / panel background            */
+  --surface: #1e1b17;   /* elevated cards, code blocks        */
+  --rim:     #342e28;   /* default border — visible on depth  */
+  --rim-hi:  #4a433c;   /* hovered / active border            */
 
   /* ── Primary accent: burnished amber ────────────── */
   --prime:       #f0a500;                  /* the signature colour   */
@@ -43,10 +43,10 @@
   --mint-faint:  var(--prime-faint);
 
   /* ── Typography — warm neutrals ─────────────────── */
-  --ink-hi:    #f0ece4;   /* primary — warm off-white           */
-  --ink-mid:   #a09488;   /* secondary — readable body text     */
-  --ink-low:   #685e56;   /* tertiary — labels, meta, captions  */
-  --ink-ghost: #302824;   /* disabled / ghost                   */
+  --ink-hi:    #f5f1ea;   /* primary — warm off-white  ~17:1    */
+  --ink-mid:   #c0b3a8;   /* secondary — body text     ~10:1    */
+  --ink-low:   #8c8178;   /* tertiary — labels/meta    ~5.5:1   */
+  --ink-ghost: #4a433c;   /* disabled / ghost                   */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -57,8 +57,8 @@
     background: var(--void);
     color: var(--ink-hi);
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.65;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -255,8 +255,8 @@
     border: 1px solid var(--rim);
     border-radius: 10px; padding: 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px; line-height: 1.75;
-    overflow-x: auto; color: #c0b8ae;
+    font-size: 13px; line-height: 1.8;
+    overflow-x: auto; color: #cec6bc;
   }
   .code-block .kw  { color: var(--prime-hi); }
   .code-block .str { color: var(--mint); }
@@ -285,7 +285,7 @@
     background: var(--depth); border: 1px solid var(--rim);
     border-radius: 8px; padding: 9px 14px;
     color: var(--ink-hi); font-family: 'Inter', sans-serif;
-    font-size: 14px; outline: none;
+    font-size: 15px; outline: none;
     transition: border-color 0.15s;
   }
   input[type="text"]:focus, input[type="search"]:focus {
@@ -308,7 +308,7 @@
   /* ── Typography helpers ── */
   .eyebrow, .section-eyebrow {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.1em;
+    font-size: 12px; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--ink-low);
     margin-bottom: 8px;
   }
@@ -317,7 +317,7 @@
     font-size: 22px; font-weight: 700; color: var(--ink-hi);
     letter-spacing: -0.03em; margin-bottom: 6px;
   }
-  .section-sub { font-size: 14px; color: var(--ink-mid); line-height: 1.65; margin-bottom: 24px; }
+  .section-sub { font-size: 15px; color: var(--ink-mid); line-height: 1.70; margin-bottom: 24px; }
 
   /* ── Status indicators ── */
   .dot-live   { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 6px var(--mint); display: inline-block; }
