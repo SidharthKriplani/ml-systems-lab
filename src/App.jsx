@@ -12,6 +12,7 @@ import MonitoringTab    from './tabs/MonitoringTab.jsx'
 import InterviewPrepTab from './tabs/InterviewPrepTab.jsx'
 import GradientTab      from './tabs/GradientTab.jsx'
 import LandscapeTab     from './tabs/LandscapeTab.jsx'
+import ClassicalMLTab   from './tabs/ClassicalMLTab.jsx'
 import DeepLearningTab  from './tabs/DeepLearningTab.jsx'
 import DLFineTuningTab  from './tabs/DLFineTuningTab.jsx'
 import DLServingTab     from './tabs/DLServingTab.jsx'
@@ -40,7 +41,8 @@ const DOMAINS = [
       { id: 'models',   label: 'Models & Math',  component: ModelsMathTab },
       { id: 'features', label: 'Features',        component: FeatureEngTab },
       { id: 'eval',     label: 'Evaluation',      component: ModelEvalTab },
-      { id: 'design',   label: 'System Design',   component: SystemDesignTab },
+      { id: 'design',    label: 'System Design',  component: SystemDesignTab },
+      { id: 'classical', label: 'Classical ML',   component: ClassicalMLTab },
     ],
   },
   {
