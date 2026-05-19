@@ -359,6 +359,28 @@
   .animate-slide-up { animation: slideUp 0.20s ease-out; }
 }
 
+/* ─── Sidebar layout ─────────────────────────────────────────────────────── */
+.sidebar-desktop { display: flex; flex-direction: column; }
+.hamburger-btn   { display: none !important; }
+.sidebar-overlay { display: none; }
+
+@media (max-width: 768px) {
+  .sidebar-desktop { display: none !important; }
+  .hamburger-btn   { display: flex !important; }
+  .sidebar-overlay {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 48px; left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    background: var(--void);
+    overflow-y: auto;
+    border-right: 1px solid var(--rim);
+    width: 260px;
+  }
+  .content-area { padding: 24px 20px !important; }
+}
+
 /* ─── Keyframes ──────────────────────────────────────────────────────────── */
 @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }

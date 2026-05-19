@@ -265,7 +265,7 @@ export default function HomeTab({ onNavigate }) {
   const activeRole  = ROLES.find(r => r.key === role)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '72px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
 
       {/* ── Hero ── */}
       <section style={{ paddingTop: '16px' }}>
