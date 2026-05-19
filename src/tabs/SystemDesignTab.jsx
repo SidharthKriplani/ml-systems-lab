@@ -11,13 +11,13 @@ const INCIDENTS = [
     tagline: 'CTR dropped 18% over 4 days. No alerts fired.',
     context: 'You run a two-tower recommendation system. Item embeddings are refreshed daily from a feature pipeline. User embeddings are refreshed hourly. Your monitoring tracks accuracy@10 and latency. It\'s Tuesday 2am — PagerDuty fires for the first time.',
     clues: [
-      { id: 'metrics',   icon: '📉', label: 'Metrics dashboard',
+      { id: 'metrics', label: 'Metrics dashboard',
         content: 'CTR: -18% (Day-over-day). Accuracy@10: -12%. P50 latency: 45ms (normal). P99 latency: 210ms (normal). Model version: v2.3 (deployed 5 days ago, no change since). A/B test running: no.' },
-      { id: 'pipeline',  icon: '⚙️', label: 'Feature pipeline logs',
+      { id: 'pipeline', label: 'Feature pipeline logs',
         content: 'Day 1: item_embedding_pipeline SUCCESS 02:14\nDay 2: item_embedding_pipeline SUCCESS 02:11\nDay 3: item_embedding_pipeline FAILED 02:18 — "S3 path not found: s3://features/items/2025-01-14/"\nDay 4: item_embedding_pipeline FAILED 02:09 — "S3 path not found"\nDay 5 (today): item_embedding_pipeline FAILED 02:21 — "S3 path not found"\n\n⚠ No alert was configured on pipeline failure. Serving fell back to last successful embeddings silently.' },
-      { id: 'freshness', icon: '🕐', label: 'Feature freshness log',
+      { id: 'freshness', label: 'Feature freshness log',
         content: 'user_embeddings: last_updated=2h ago (FRESH)\nitem_embeddings: last_updated=3 days 21h ago (STALE ⚠)\nuser_context_features: last_updated=45m ago (FRESH)\nitem_metadata: last_updated=6h ago (FRESH)\n\nFreshness SLA breach: item_embeddings exceeded 26h threshold (3 days ago). No consumer alert configured.' },
-      { id: 'drift',     icon: '📊', label: 'Item catalog drift',
+      { id: 'drift', label: 'Item catalog drift',
         content: 'New items added last 3 days: 14,200\nItems with no embedding (added after last successful pipeline): 14,200\nCoverage: 73% of catalogue has fresh embeddings (down from 99%)\nImpact: 27% of eligible items cannot be retrieved — model defaults to popular-item fallback for all users.' },
     ],
     diagnosis: 'stale_pipeline',
@@ -38,13 +38,13 @@ const INCIDENTS = [
     tagline: 'Precision dropped from 0.91 to 0.43 in production overnight.',
     context: 'A gradient boosted fraud detection model was retrained last night on 60 days of data. Offline metrics were excellent: AUC 0.97, precision 0.91. It was promoted to production this morning. By noon, fraud operations is overwhelmed by false positives.',
     clues: [
-      { id: 'metrics',   icon: '📉', label: 'Online vs offline metrics',
+      { id: 'metrics', label: 'Online vs offline metrics',
         content: 'Offline (validation): AUC 0.97 | Precision 0.91 | Recall 0.88\nOnline (production): AUC 0.61 | Precision 0.43 | Recall 0.71\n\nValidation set period: Jan 1 – Mar 1\nTraining cutoff: Mar 1\nProduction serving: Mar 2 onwards\n\nNote: Offline metrics computed on held-out validation set carved from same dataset.' },
-      { id: 'features',  icon: '🧩', label: 'Feature list (top by importance)',
+      { id: 'features', label: 'Feature list (top by importance)',
         content: '1. transaction_count_30d           (importance: 0.22)\n2. avg_txn_amount_30d              (importance: 0.19)\n3. is_disputed_resolved            (importance: 0.17) ← POST-EVENT FEATURE\n4. chargeback_filed_within_7d      (importance: 0.14) ← POST-EVENT FEATURE\n5. velocity_1h                     (importance: 0.11)\n6. device_fingerprint_match        (importance: 0.08)\n...\n\n⚠ Features #3 and #4 are derived from dispute outcomes — they are only available AFTER fraud is confirmed. During training they were accidentally joined using transaction_id without timestamp filtering.' },
-      { id: 'pipeline',  icon: '⚙️', label: 'Feature engineering code diff',
+      { id: 'pipeline', label: 'Feature engineering code diff',
         content: '# Previous version (correct)\nfeatures = transactions.join(\n    labels,\n    on="txn_id",\n    how="left"\n).join(\n    dispute_outcomes.filter(\n        F.col("resolved_at") < F.col("transaction_at")  # time guard\n    ),\n    on="txn_id",\n    how="left"\n)\n\n# New version (introduced in last retrain)\nfeatures = transactions.join(\n    labels, on="txn_id", how="left"\n).join(\n    dispute_outcomes,  # ← time guard removed in refactor\n    on="txn_id",\n    how="left"\n)' },
-      { id: 'shadow',    icon: '🔮', label: 'Shadow model comparison',
+      { id: 'shadow', label: 'Shadow model comparison',
         content: 'Previous model (v4.1, still serving shadow): AUC 0.93 | Precision 0.87\nNew model (v4.2, promoted this morning): AUC 0.43 | Precision 0.43\n\nNote: Shadow mode was running but was NOT configured to block promotion if shadow AUC < champion AUC. Promotion was manual.' },
     ],
     diagnosis: 'label_leak',
@@ -65,13 +65,13 @@ const INCIDENTS = [
     tagline: 'P99 latency hit 8 seconds. P50 still fine at 120ms.',
     context: 'You run a two-stage search ranking system: ANN retrieval (fast) + cross-encoder reranking (slow). A new reranker model was deployed yesterday. P50 latency is fine but P99 started climbing 6 hours after deployment.',
     clues: [
-      { id: 'latency',   icon: '⏱', label: 'Latency percentiles (last 24h)',
+      { id: 'latency', label: 'Latency percentiles (last 24h)',
         content: 'P50: 120ms (baseline: 115ms) ✓\nP95: 890ms (baseline: 340ms) ⚠\nP99: 7,800ms (baseline: 450ms) ✗✗\nP99.9: 28,000ms ✗✗✗\n\nBreakdown by stage:\n  ANN retrieval P99: 45ms (normal)\n  Reranker P99: 7,750ms (up from 400ms baseline)\n  Feature fetch P99: 12ms (normal)\n\nQuery distribution:\n  Queries < 5 tokens: 67% of traffic — P99: 180ms ✓\n  Queries 5–20 tokens: 28% of traffic — P99: 650ms ⚠\n  Queries > 20 tokens: 5% of traffic — P99: 28,000ms ✗' },
-      { id: 'model',     icon: '🤖', label: 'Model change log',
+      { id: 'model', label: 'Model change log',
         content: 'v3.1 (yesterday, 14:00): New cross-encoder deployed\n  - Architecture: BERT-base → BERT-large (110M → 340M params)\n  - Sequence length: max_len=128 → max_len=512\n  - Batch size: fixed 32 → dynamic (fills to max_len)\n  - Reranking candidates: top-100 retrieval results (unchanged)\n\nkey change: dynamic batching fills sequences to max_len=512 — long queries trigger full 512-token computation for ALL 100 candidates.' },
-      { id: 'infra',     icon: '🖥', label: 'Serving infrastructure',
+      { id: 'infra', label: 'Serving infrastructure',
         content: 'GPU: A10G (24GB) — 100% utilisation on long-query instances\nCPU fallback: triggered when GPU queue > 500ms\nTimeout: 10s hard cutoff (user sees error)\n\nQueue depth (last 6h):\n  Short queries: 0–2 items queued\n  Long queries: 40–120 items queued\n\nGPU memory: 21/24 GB used (up from 14 GB with v3.0)\nOOM events: 3 in last hour (restarted pod automatically)' },
-      { id: 'traces',    icon: '🔍', label: 'Request traces (sample)',
+      { id: 'traces', label: 'Request traces (sample)',
         content: 'Query: "comfortable lightweight running shoes for wide feet flat arch support"\n  Token count: 13\n  Candidates: 100\n  Reranker time: 6,800ms\n  Padded sequence: 512 × 100 = 51,200 tokens processed\n\nQuery: "shoes"\n  Token count: 1\n  Candidates: 100\n  Reranker time: 145ms\n  Padded sequence: 512 × 100 = 51,200 tokens processed ← same!\n\nRoot cause: both queries process 51,200 tokens because batch is padded to max_len=512 regardless of actual query length.' },
     ],
     diagnosis: 'padding_batching',
@@ -1302,25 +1302,21 @@ const ARCHITECTURES = [
     id: 'batch',
     name: 'Batch Offline',
     desc: 'Nightly job → precomputed scores → fast lookup at serving',
-    icon: '🗄',
   },
   {
     id: 'stream',
     name: 'Near-Real-Time Stream',
     desc: 'Kafka → feature computation → model inference (~1–5 min lag)',
-    icon: '🌊',
   },
   {
     id: 'online',
     name: 'Online Request-Time',
     desc: 'Feature fetch + model inference on every request',
-    icon: '⚡',
   },
   {
     id: 'precomp',
     name: 'Precomputed Embeddings + Online Scoring',
     desc: 'Embeddings precomputed, only dot product at serving time',
-    icon: '🔢',
   },
 ]
 
@@ -1453,9 +1449,9 @@ function ServingTradeoffLab() {
   const recommended = getRecommendedArch(latency, throughput, freshness, depth)
 
   function statusIcon(s) {
-    if (s === 'meets')   return { icon: '✓', color: 'var(--mint)' }
-    if (s === 'partial') return { icon: '⚠', color: 'var(--ember)' }
-    return                      { icon: '✗', color: 'var(--rose)' }
+    if (s === 'meets')   return {, color: 'var(--mint)' }
+    if (s === 'partial') return {, color: 'var(--ember)' }
+    return                      {, color: 'var(--rose)' }
   }
 
   function ConfigRow({ label, options, value, onChange }) {
@@ -1565,12 +1561,12 @@ function ServingTradeoffLab() {
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'incident',   label: 'ML Incident Room',      icon: '🚨', component: IncidentRoom },
-  { id: 'ownership',  label: 'DS Ownership Chain',    icon: '⛓',  component: DSOwnershipChain },
-  { id: 'scenarios',  label: 'Incident Scenarios',    icon: '🔥', component: IncidentScenarios },
-  { id: 'canvas',     label: 'Design Review',         icon: '🗺', component: DesignCanvas },
-  { id: 'two_tower',  label: 'Two-Tower Explorer',    icon: '🗼', component: TwoTowerExplorer },
-  { id: 'serving',    label: 'Serving Tradeoffs',     icon: '⚡', component: ServingTradeoffLab },
+  { id: 'incident',   label: 'ML Incident Room', component: IncidentRoom },
+  { id: 'ownership',  label: 'DS Ownership Chain',  component: DSOwnershipChain },
+  { id: 'scenarios',  label: 'Incident Scenarios', component: IncidentScenarios },
+  { id: 'canvas',     label: 'Design Review', component: DesignCanvas },
+  { id: 'two_tower',  label: 'Two-Tower Explorer', component: TwoTowerExplorer },
+  { id: 'serving',    label: 'Serving Tradeoffs', component: ServingTradeoffLab },
 ]
 
 export default function SystemDesignTab() {
@@ -1581,11 +1577,10 @@ export default function SystemDesignTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '28px' }}>🏗</span>
           <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>ML System Design</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
-          End-to-end ML platform design — rec systems, fraud detection, search ranking — and the kind of failure diagnosis you face at 2am when something breaks.
+          Production judgment for ML systems — rec system design, deployment failures, ownership decisions, and the tradeoffs that separate junior from staff-level thinking.
         </p>
       </div>
 

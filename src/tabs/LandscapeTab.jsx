@@ -5,6 +5,7 @@ import { useState } from 'react'
 const ROLES = [
   {
     title: 'Machine Learning Engineer',
+    pathId: 'production_ml',
     icon: '⚙️',
     level: 'Core',
     accentColor: 'var(--mint)',
@@ -21,6 +22,7 @@ const ROLES = [
   },
   {
     title: 'MLOps / ML Platform Engineer',
+    pathId: 'mlops_track',
     icon: '🔧',
     level: 'Infra',
     accentColor: 'var(--sky)',
@@ -37,6 +39,7 @@ const ROLES = [
   },
   {
     title: 'Research Scientist',
+    pathId: 'staff_design',
     icon: '🔬',
     level: 'Research',
     accentColor: 'var(--violet)',
@@ -53,6 +56,7 @@ const ROLES = [
   },
   {
     title: 'Applied Scientist',
+    pathId: 'mle_interview',
     icon: '🧪',
     level: 'Applied Research',
     accentColor: 'var(--ember)',
@@ -69,6 +73,7 @@ const ROLES = [
   },
   {
     title: 'Data Scientist',
+    pathId: 'production_ml',
     icon: '📊',
     level: 'Analytics',
     accentColor: 'var(--gold)',
@@ -85,6 +90,7 @@ const ROLES = [
   },
   {
     title: 'NLP / Vision Specialist',
+    pathId: 'deep_learning_prod',
     icon: '👁',
     level: 'Specialist',
     accentColor: 'var(--rose)',
@@ -309,7 +315,7 @@ const MARKETS = [
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function RolesSection() {
+function RolesSection({ onNavigate }) {
   const [selected, setSelected] = useState(null)
   const role = selected !== null ? ROLES[selected] : null
 
@@ -368,7 +374,7 @@ function RolesSection() {
             </div>
           </div>
 
-          <div>
+          <div style={{ marginBottom: '20px' }}>
             <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Who hires for this</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {role.hires.map(h => (
@@ -376,6 +382,17 @@ function RolesSection() {
               ))}
             </div>
           </div>
+
+          {role.pathId && onNavigate && (
+            <button
+              onClick={() => {
+                localStorage.setItem('msl_goto_path', role.pathId)
+                onNavigate('home')
+              }}
+              style={{ fontSize: '13px', padding: '10px 20px', background: role.bgColor, border: `1px solid ${role.borderColor}`, borderRadius: '8px', color: role.accentColor, cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, letterSpacing: '-0.01em' }}>
+              Start this learning path →
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -638,7 +655,7 @@ const SECTIONS = [
   { id: 'markets',   label: 'Global',     icon: '🌍', component: MarketsSection },
 ]
 
-export default function LandscapeTab() {
+export default function LandscapeTab({ onNavigate }) {
   const [active, setActive] = useState('roles')
   const ActiveSection = SECTIONS.find(s => s.id === active)?.component ?? RolesSection
 
@@ -663,7 +680,7 @@ export default function LandscapeTab() {
         ))}
       </div>
 
-      <ActiveSection />
+      <ActiveSection onNavigate={active === 'roles' ? onNavigate : undefined} />
     </div>
   )
 }

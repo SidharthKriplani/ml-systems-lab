@@ -686,13 +686,13 @@ function CalibrationCurves() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'pca',     label: 'PCA Explorer',       icon: '🔵', component: PCAExplorer },
-  { id: 'svd',     label: 'SVD Decomposer',      icon: '✂️', component: SVDDecomposer },
-  { id: 'preproc', label: 'Preprocessing Lab',   icon: '⚙️', component: PreprocessingLab },
-  { id: 'reg',     label: 'Regularization Lab',  icon: '📐', component: RegularizationLab },
-  { id: 'numpy',   label: 'NumPy Internals',     icon: '⚡', component: NumPyInternals },
-  { id: 'calib',   label: 'Calibration Curves',  icon: '📏', component: CalibrationCurves },
-  { id: 'repl',    label: 'Python Sandbox',      icon: '⌁', component: FreePythonREPL },
+  { id: 'pca',     label: 'PCA Explorer', component: PCAExplorer },
+  { id: 'svd',     label: 'SVD Decomposer', component: SVDDecomposer },
+  { id: 'preproc', label: 'Preprocessing Lab', component: PreprocessingLab },
+  { id: 'reg',     label: 'Regularization Lab', component: RegularizationLab },
+  { id: 'numpy',   label: 'NumPy Internals', component: NumPyInternals },
+  { id: 'calib',   label: 'Calibration Curves', component: CalibrationCurves },
+  { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL },
 ]
 
 export default function ModelsMathTab() {
@@ -703,13 +703,10 @@ export default function ModelsMathTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Models & Math</h1>
-          <span className="badge badge-mint">Python</span>
-          <span className="badge badge-sky">Pyodide</span>
+          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Math Foundations</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '620px' }}>
-          Run real Python in your browser. sklearn, numpy, matplotlib, scipy — no install, no backend.
-          PCA, SVD, preprocessing, regularization, calibration, NumPy internals.
+          The math behind the decisions — why PCA fails with outliers, when regularization helps vs hurts, what the scree plot is actually telling you, and why calibration breaks after threshold tuning.
         </p>
       </div>
 
@@ -724,7 +721,6 @@ export default function ModelsMathTab() {
 
       {/* Python runtime notice */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '8px' }}>
-        <span style={{ fontSize: '16px' }}>⌁</span>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>
           First run loads the Python runtime (~8 MB). Subsequent runs are instant.
           Everything executes locally — your data never leaves the browser.

@@ -40,7 +40,7 @@ const DOMAINS = [
     color: 'var(--mint)',
     bg: 'rgba(52,211,153,0.08)',
     tabs: [
-      { id: 'models',   label: 'Models & Math',  component: ModelsMathTab },
+      { id: 'models',   label: 'Math Foundations', component: ModelsMathTab },
       { id: 'features', label: 'Features',        component: FeatureEngTab },
       { id: 'eval',     label: 'Evaluation',      component: ModelEvalTab },
       { id: 'design',    label: 'System Design',  component: SystemDesignTab },

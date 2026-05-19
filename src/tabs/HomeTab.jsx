@@ -23,7 +23,7 @@ const STATS = [
 // ── Changelog ─────────────────────────────────────────────────────────────────
 const CHANGELOG = [
   { date: 'May 2026', text: 'MLOps domain: Deployment strategies, Champion-Challenger, CI/CD & Infra (9 modules).' },
-  { date: 'May 2026', text: 'Data Science domain expanded: Statistical Testing, Calibration, Experiment Design.' },
+  { date: 'May 2026', text: 'Data Science domain expanded: Analysis Mistakes, Calibration, Metric Design Pitfalls.' },
   { date: 'May 2026', text: 'Deep Learning domain: Training Lab, Fine-tuning, Serving — 8 production judgment modules.' },
   { date: 'May 2026', text: 'Data Engineering domain: Airflow, dbt, Data Modeling & Storage — 9 modules.' },
   { date: 'May 2026', text: 'Classical ML tab: Model Failure Zoo, Ensemble Lab, Hyperparameter Priority.' },
@@ -35,7 +35,7 @@ const CHANGELOG = [
 // ── Ecosystem ─────────────────────────────────────────────────────────────────
 const ECOSYSTEM = [
   { name: 'GenAI Systems Lab', desc: 'Prompt engineering, RAG pipelines, LLM evaluation, hallucination measurement. The production GenAI counterpart.', accent: 'var(--violet)', border: 'rgba(167,139,250,0.25)', url: 'https://genai-systems-lab-ivory.vercel.app' },
-  { name: 'Experimentation Lab', desc: 'A/B testing mechanics, SRM detection, CUPED, power analysis. Experiment design for product and ML teams.', accent: 'var(--sky)', border: 'rgba(34,211,238,0.25)', url: '#' },
+  { name: 'Experimentation Lab', desc: 'A/B testing mechanics, SRM detection, CUPED, power analysis. Experiment design for product and ML teams.', accent: 'var(--sky)', border: 'rgba(34,211,238,0.25)', url: 'https://experimentation-lab.vercel.app' },
 ]
 
 // ── Mastery ───────────────────────────────────────────────────────────────────
@@ -212,6 +212,15 @@ export default function HomeTab({ onNavigate }) {
   useEffect(() => {
     refresh()
     window.addEventListener('msl_progress', refresh)
+    // Auto-open a learning path when navigated from LandscapeTab
+    const gotoPath = localStorage.getItem('msl_goto_path')
+    if (gotoPath) {
+      localStorage.removeItem('msl_goto_path')
+      setOpenPath(gotoPath)
+      setTimeout(() => {
+        document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 120)
+    }
     return () => window.removeEventListener('msl_progress', refresh)
   }, [])
 
@@ -325,7 +334,7 @@ export default function HomeTab({ onNavigate }) {
       )}
 
       {/* ── Learning paths ── */}
-      <section>
+      <section id="learning-paths">
         <div className="eyebrow">Learning paths</div>
         <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
           Guided sequences. Clear outcomes.
