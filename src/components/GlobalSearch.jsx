@@ -45,17 +45,41 @@ const INDEX = [
   { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'Two-Tower Explorer',
     desc: 'Design a retrieval model — embedding dims, negative sampling, ANN index tradeoffs' },
 
+  // ── Features ── new ─────────────────────────────────────────────────────
+  { id: 'features', tab: 'features', icon: '🧩', kind: 'module', title: 'Window Aggregation Builder',
+    desc: 'Generate SQL and PySpark for tumbling, sliding, session windows — with gotchas per config' },
+
   // ── Monitoring ──────────────────────────────────────────────────────────
   { id: 'monitor', tab: 'monitor', icon: '📡', kind: 'module', title: 'Drift Dashboard',
     desc: 'Synthetic 60-day time series with hidden drift onset — tune PSI threshold to catch it' },
   { id: 'monitor', tab: 'monitor', icon: '📡', kind: 'module', title: 'PSI Lab',
     desc: 'Real-time PSI calculation with distribution shift slider and bin-by-bin chart' },
+  { id: 'monitor', tab: 'monitor', icon: '📡', kind: 'module', title: 'KS Test Explorer',
+    desc: 'Interactive KS statistic and p-value visualization — shift mean and variance to see D move' },
+  { id: 'monitor', tab: 'monitor', icon: '📡', kind: 'module', title: 'Alert Tuner',
+    desc: 'Configure PSI/KS/accuracy alert rules and simulate detection delay vs false positive rate' },
 
   // ── Interview ───────────────────────────────────────────────────────────
   { id: 'interview', tab: 'interview', icon: '🎯', kind: 'module', title: 'System Design Questions',
-    desc: '28 questions across system design, features, evaluation, Spark, coding, architecture' },
-  { id: 'interview', tab: 'interview', icon: '🎯', kind: 'module', title: 'Meta / Google / Airbnb / Uber',
+    desc: '52 questions across system design, features, evaluation, Spark, coding, architecture' },
+  { id: 'interview', tab: 'interview', icon: '🎯', kind: 'module', title: 'Timed Practice Mode',
+    desc: '45-minute interview simulation with shuffled questions, reveal/skip flow, overtime detection' },
+  { id: 'interview', tab: 'interview', icon: '🎯', kind: 'module', title: 'Meta / Google / Airbnb / Uber / Amazon',
     desc: 'Company-tagged ML interview questions with model answers and frameworks' },
+
+  // ── ML Landscape ────────────────────────────────────────────────────────
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'Roles & Specialisations',
+    desc: 'MLE, MLOps, Research, Applied Scientist, Data Scientist, ML Platform — demand, salary, day-in-life' },
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'Salary by Level & Region',
+    desc: 'L3–L7 base vs TC for US, UK, Germany, India — animated bars with region toggle' },
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'ML Stack by Company Stage',
+    desc: 'Seed to Big Tech — how infra, tooling and philosophy changes as you scale' },
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'Company ML Systems',
+    desc: 'Netflix, Spotify, Uber, Airbnb, Google, Meta — key ML systems and what makes them interesting' },
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'ML History Timeline',
+    desc: 'AlexNet 2012 to agents 2025 — the twelve inflection points that defined modern ML engineering' },
+  { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'Global Job Markets',
+    desc: 'San Francisco, London, Berlin, Amsterdam, Toronto, Singapore, Bangalore — where and why' },
 
   // ── Gradient posts ──────────────────────────────────────────────────────
   { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Why Your Model Works in Training but Fails in Production',
@@ -94,6 +118,7 @@ const KIND_COLORS = {
 const TAB_LABELS = {
   spark: 'Spark Lab', features: 'Features', eval: 'Eval', models: 'Models & Math',
   design: 'System Design', monitor: 'Monitoring', interview: 'Interview', gradient: 'Gradient',
+  landscape: 'ML Landscape',
 }
 
 function match(item, q) {

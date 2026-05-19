@@ -185,10 +185,257 @@ function FeatureStoreDesigner() {
   )
 }
 
+// ─── Window Aggregation Builder ──────────────────────────────────────────────
+function WindowAggregationBuilder() {
+  const [entity, setEntity]         = useState('user')
+  const [metric, setMetric]         = useState('purchase_amount')
+  const [agg, setAgg]               = useState('sum')
+  const [windowType, setWindowType] = useState('tumbling')
+  const [windowSize, setWindowSize] = useState('7d')
+  const [codeTab, setCodeTab]       = useState('sql')
+
+  const ENTITIES = {
+    user:    { label: 'User',    icon: '👤', metrics: ['purchase_amount', 'page_views', 'session_duration', 'items_clicked', 'search_queries'] },
+    item:    { label: 'Item',    icon: '📦', metrics: ['view_count', 'add_to_cart_count', 'purchase_count', 'rating_sum', 'return_count'] },
+    session: { label: 'Session', icon: '⚡', metrics: ['events', 'duration_seconds', 'pages_visited', 'cart_value', 'scroll_depth'] },
+  }
+
+  const AGGS = {
+    sum:            { label: 'SUM',            spark: 'sum',            warn: null },
+    avg:            { label: 'AVG',            spark: 'avg',            warn: 'avg over sliding window ≠ running avg' },
+    count:          { label: 'COUNT',          spark: 'count',          warn: null },
+    max:            { label: 'MAX',            spark: 'max',            warn: null },
+    stddev:         { label: 'STDDEV',         spark: 'stddev',         warn: 'Returns null with < 2 rows in window' },
+    last:           { label: 'LAST VALUE',     spark: 'last',           warn: 'Add ignoreNulls=true in Spark' },
+    distinct_count: { label: 'COUNT DISTINCT', spark: 'countDistinct',  warn: 'Expensive at scale — use approx_count_distinct (HyperLogLog)' },
+  }
+
+  const WINDOW_TYPES = {
+    tumbling: { label: 'Tumbling', desc: 'Fixed non-overlapping intervals. Best for daily/hourly batch features.' },
+    sliding:  { label: 'Sliding',  desc: 'Rolling window. Every event belongs to multiple windows — more compute.' },
+    session:  { label: 'Session',  desc: 'Inactivity gap defines boundary. Needs a gap timeout parameter.' },
+  }
+
+  const SIZES = ['1h', '6h', '24h', '7d', '30d']
+
+  const e   = ENTITIES[entity]
+  const a   = AGGS[agg]
+  const wt  = WINDOW_TYPES[windowType]
+  const feat = `${entity}_${agg}_${metric}_${windowSize}`
+
+  const sqlCode = windowType === 'session'
+    ? `-- Session window (Spark Structured Streaming / Flink)
+SELECT
+  ${entity}_id,
+  SESSION_START(event_time, INTERVAL '30' MINUTE) AS window_start,
+  SESSION_END(event_time,   INTERVAL '30' MINUTE) AS window_end,
+  ${agg.toUpperCase()}(${metric}) AS ${feat}
+FROM events
+GROUP BY
+  ${entity}_id,
+  SESSION(event_time, INTERVAL '30' MINUTE);`
+    : windowType === 'sliding'
+    ? `-- Sliding window (1-hour slide)
+SELECT
+  ${entity}_id,
+  window.start,
+  window.end,
+  ${agg.toUpperCase()}(${metric}) AS ${feat}
+FROM events
+GROUP BY
+  ${entity}_id,
+  SLIDE(event_time, INTERVAL '1' HOUR, INTERVAL '${windowSize}');`
+    : `-- Tumbling window (Spark SQL)
+SELECT
+  ${entity}_id,
+  window(event_time, '${windowSize}').start AS window_start,
+  ${agg.toUpperCase()}(${metric})           AS ${feat}
+FROM events
+GROUP BY
+  ${entity}_id,
+  window(event_time, '${windowSize}');`
+
+  const sparkCode = windowType === 'session'
+    ? `from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+GAP_SECONDS = 30 * 60
+
+w = Window.partitionBy("${entity}_id").orderBy("event_time")
+
+df = (df
+  .withColumn("prev_ts", F.lag("event_time").over(w))
+  .withColumn("gap_sec",
+    F.col("event_time").cast("long") - F.col("prev_ts").cast("long"))
+  .withColumn("new_session",
+    (F.col("gap_sec") > GAP_SECONDS) | F.col("prev_ts").isNull())
+  .withColumn("session_id", F.sum("new_session").over(w))
+)
+
+result = df.groupBy("${entity}_id", "session_id").agg(
+    F.${a.spark}("${metric}").alias("${feat}")
+)`
+    : `from pyspark.sql import functions as F
+
+result = (df
+  .groupBy(
+    F.col("${entity}_id"),
+    F.window("event_time", "${windowSize}"${windowType === 'sliding' ? ', "1 hour"' : ''})
+  )
+  .agg(F.${a.spark}("${metric}").alias("${feat}"))
+  .select(
+    "${entity}_id",
+    F.col("window.start").alias("window_start"),
+    "${feat}"
+  )
+)`
+
+  const GOTCHAS = [
+    ...(agg === 'distinct_count' ? ['Exact COUNT DISTINCT triggers a full shuffle. Use approx_count_distinct() for > 10M rows (HyperLogLog, ~2% error).'] : []),
+    ...(windowType === 'sliding'  ? ['Sliding windows multiply data volume: a 7d window with 1h slide = 168 copies per event. Partition by entity before windowing.'] : []),
+    ...(windowType === 'session'  ? ['Session windows are stateful. In Spark Streaming, set withWatermark("event_time", "2 hours") to bound state store size.'] : []),
+    ...(agg === 'avg' || agg === 'stddev' ? [`${a.label} returns null when the window has < 2 rows. Wrap with COALESCE(${feat}, 0).`] : []),
+    'Point-in-time correctness: features must only use data available at prediction time. Use AS-OF joins when backfilling historical features.',
+    'Timezone traps: calendar-day boundaries differ from rolling 24h windows. Standardise all timestamps to UTC at ingest.',
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Window Aggregation Builder</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
+          Configure a time-window feature and get production-ready SQL and PySpark — plus the gotchas that get teams in trouble.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '12px' }}>
+        {/* Entity */}
+        <div className="card" style={{ padding: '14px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Entity</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {Object.entries(ENTITIES).map(([k, v]) => (
+              <button key={k} onClick={() => { setEntity(k); setMetric(v.metrics[0]) }}
+                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(6,214,160,0.4)' : 'transparent'}`, background: entity === k ? 'rgba(6,214,160,0.08)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                {v.icon} {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Metric */}
+        <div className="card" style={{ padding: '14px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Metric</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {e.metrics.map(m => (
+              <button key={m} onClick={() => setMetric(m)}
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${metric === m ? 'rgba(129,140,248,0.4)' : 'transparent'}`, background: metric === m ? 'rgba(129,140,248,0.08)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: metric === m ? 'var(--violet)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Aggregation */}
+        <div className="card" style={{ padding: '14px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Aggregation</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {Object.entries(AGGS).map(([k, v]) => (
+              <button key={k} onClick={() => setAgg(k)}
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(34,211,238,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(34,211,238,0.06)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--sky)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                {v.label}
+                {v.warn && <span style={{ fontSize: '9px', color: 'var(--ember)', marginLeft: '4px' }}>⚠</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Window type + size */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="card" style={{ padding: '14px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Window type</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {Object.entries(WINDOW_TYPES).map(([k, v]) => (
+                <button key={k} onClick={() => setWindowType(k)}
+                  style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${windowType === k ? 'rgba(245,158,11,0.4)' : 'transparent'}`, background: windowType === k ? 'rgba(245,158,11,0.06)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowType === k ? 'var(--gold)' : 'var(--ink-low)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="card" style={{ padding: '14px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Window size</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {SIZES.map(s => (
+                <button key={s} onClick={() => setWindowSize(s)}
+                  style={{ padding: '4px 10px', borderRadius: '5px', border: `1px solid ${windowSize === s ? 'rgba(245,158,11,0.4)' : 'var(--rim)'}`, background: windowSize === s ? 'rgba(245,158,11,0.08)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowSize === s ? 'var(--gold)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Window type note */}
+      <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.15)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 600 }}>{wt.label}: </span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{wt.desc}</span>
+      </div>
+
+      {/* Agg warning */}
+      {a.warn && (
+        <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--ember)', fontWeight: 600 }}>⚠ {a.label}: </span>
+          <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{a.warn}</span>
+        </div>
+      )}
+
+      {/* Feature name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>Feature name:</span>
+        <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--mint)', background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.2)', borderRadius: '6px', padding: '4px 12px' }}>
+          {feat}
+        </code>
+      </div>
+
+      {/* Code output */}
+      <div>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '-1px' }}>
+          {[['sql', 'SQL'], ['spark', 'PySpark']].map(([t, lbl]) => (
+            <button key={t} onClick={() => setCodeTab(t)}
+              style={{ padding: '6px 16px', borderRadius: '6px 6px 0 0', border: '1px solid var(--rim)', borderBottom: codeTab === t ? '1px solid var(--depth)' : undefined, background: codeTab === t ? 'var(--depth)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: codeTab === t ? 'var(--ink-hi)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", fontWeight: codeTab === t ? 600 : 400 }}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '0 6px 6px 6px', padding: '16px', overflowX: 'auto' }}>
+          <pre style={{ margin: 0, fontSize: '12px', color: 'var(--ink-hi)', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+            {codeTab === 'sql' ? sqlCode : sparkCode}
+          </pre>
+        </div>
+      </div>
+
+      {/* Gotchas */}
+      <div>
+        <div style={{ fontSize: '13px', color: 'var(--ember)', fontWeight: 600, marginBottom: '10px', fontFamily: "'Space Grotesk',sans-serif" }}>⚠ Gotchas for this configuration</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {GOTCHAS.map((g, i) => (
+            <div key={i} style={{ display: 'flex', gap: '10px', padding: '10px 14px', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--ember)', flexShrink: 0 }}>→</span>
+              <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{g}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'skew',     label: 'Skew Simulator',       icon: '⚡', component: SkewSimulator },
+  { id: 'skew',     label: 'Skew Simulator',        icon: '⚡', component: SkewSimulator },
   { id: 'store',    label: 'Feature Store Designer', icon: '🏪', component: FeatureStoreDesigner },
+  { id: 'window',   label: 'Window Aggregation',     icon: '⏱', component: WindowAggregationBuilder },
 ]
 
 export default function FeatureEngTab() {

@@ -11,6 +11,7 @@ import SystemDesignTab  from './tabs/SystemDesignTab.jsx'
 import MonitoringTab    from './tabs/MonitoringTab.jsx'
 import InterviewPrepTab from './tabs/InterviewPrepTab.jsx'
 import GradientTab      from './tabs/GradientTab.jsx'
+import LandscapeTab     from './tabs/LandscapeTab.jsx'
 
 const TABS = [
   { id: 'home',      label: 'Home',          icon: '⚡', component: HomeTab },
@@ -22,14 +23,37 @@ const TABS = [
   { id: 'monitor',   label: 'Monitoring',    icon: '📡', component: MonitoringTab },
   { id: 'interview', label: 'Interview',     icon: '🎯', component: InterviewPrepTab },
   { id: 'gradient',  label: 'Gradient',      icon: '∇',  component: GradientTab },
+  { id: 'landscape', label: 'ML Landscape',  icon: '🌍', component: LandscapeTab },
 ]
 
-export default function App() {
-  const [activeTab,    setActiveTab]    = useState(() => localStorage.getItem('msl_tab') || 'home')
-  const [menuOpen,     setMenuOpen]     = useState(false)
-  const [searchOpen,   setSearchOpen]   = useState(false)
+// ── URL hash routing ──────────────────────────────────────────────────────────
+function getTabFromHash() {
+  const hash = window.location.hash.replace('#', '')
+  return TABS.find(t => t.id === hash)?.id ?? null
+}
+function setHash(tabId) {
+  window.history.replaceState(null, '', tabId === 'home' ? window.location.pathname : `#${tabId}`)
+}
 
-  useEffect(() => { localStorage.setItem('msl_tab', activeTab) }, [activeTab])
+export default function App() {
+  const [activeTab,  setActiveTab]  = useState(() => getTabFromHash() || localStorage.getItem('msl_tab') || 'home')
+  const [menuOpen,   setMenuOpen]   = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    localStorage.setItem('msl_tab', activeTab)
+    setHash(activeTab)
+  }, [activeTab])
+
+  // Browser back/forward support
+  useEffect(() => {
+    function onHashChange() {
+      const t = getTabFromHash()
+      if (t) setActiveTab(t)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   // Cmd+K / Ctrl+K → open search
   useEffect(() => {
