@@ -25,6 +25,15 @@ import AirflowTab        from './tabs/AirflowTab.jsx'
 import DbtTab            from './tabs/dbtTab.jsx'
 import DataModelingTab   from './tabs/DataModelingTab.jsx'
 import AskTab            from './tabs/AskTab.jsx'
+import TakeHomeTab    from './tabs/TakeHomeTab.jsx'
+import TrainerTab     from './tabs/TrainerTab.jsx'
+import CombinatorTab  from './tabs/CombinatorTab.jsx'
+import CodeBugsTab    from './tabs/CodeBugsTab.jsx'
+import CaseStudiesTab from './tabs/CaseStudiesTab.jsx'
+import StaffLayerTab  from './tabs/StaffLayerTab.jsx'
+import JDPrepTab      from './tabs/JDPrepTab.jsx'
+import DefenseDocTab  from './tabs/DefenseDocTab.jsx'
+import VerbatimTab    from './tabs/VerbatimTab.jsx'
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -51,6 +60,16 @@ const ALL_TABS = [
   { id: 'gradient',     component: GradientTab },
   { id: 'landscape',    component: LandscapeTab },
   { id: 'ask',          component: AskTab },
+  // New feature tabs
+  { id: 'takehome',    component: TakeHomeTab },
+  { id: 'trainer',     component: TrainerTab },
+  { id: 'combinator',  component: CombinatorTab },
+  { id: 'codebugs',    component: CodeBugsTab },
+  { id: 'casestudies', component: CaseStudiesTab },
+  { id: 'stafflayer',  component: StaffLayerTab },
+  { id: 'jdprep',      component: JDPrepTab },
+  { id: 'defense',     component: DefenseDocTab },
+  { id: 'verbal',      component: VerbatimTab },
 ]
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
@@ -58,10 +77,12 @@ const TAB_TO_ZONE = {
   home: 'today', landscape: 'today',
   gradient: 'read',
   interview: 'interview',
+  takehome: 'interview', combinator: 'interview',
+  jdprep: 'interview', defense: 'interview', verbal: 'interview',
   ask: 'ask',
 }
 const ZONE_DEFAULTS = {
-  today: 'home', practice: null, read: 'gradient', interview: 'interview', ask: 'ask',
+  today: 'home', practice: null, read: 'gradient', interview: null, ask: 'ask',
 }
 function getZoneForTab(id) { return TAB_TO_ZONE[id] ?? 'practice' }
 
@@ -119,6 +140,25 @@ const PRACTICE_DOMAINS = [
       { id: 'mlops_pipes',  label: 'CI/CD & Infra', desc: 'Gates, infra decisions, model registry' },
     ],
   },
+  {
+    id: 'iprep', label: 'Interview Tools', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.06)',
+    tabs: [
+      { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
+      { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
+      { id: 'casestudies', label: 'Case Studies', desc: 'Netflix, Uber, Airbnb, DoorDash, Spotify' },
+      { id: 'stafflayer',  label: 'Staff Layer',  desc: 'IC3 → IC5 → Staff perspective reveals' },
+    ],
+  },
+]
+
+// ── Interview zone tools ──────────────────────────────────────────────────────
+const INTERVIEW_TOOLS = [
+  { id: 'interview',  label: 'Interview Q&A',   desc: '50+ curated questions with model answers', icon: '◈', accent: 'var(--sky)' },
+  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions · self-scored',    icon: '✎', accent: 'var(--mint)' },
+  { id: 'combinator', label: 'Combinator',       desc: 'Timed mock session — 30 / 45 / 60 min',    icon: '⊕', accent: 'var(--rose)' },
+  { id: 'jdprep',     label: 'JD Prep',          desc: 'Paste a JD → ranked study topics',          icon: '⚑', accent: 'var(--prime)' },
+  { id: 'defense',    label: 'Defense Doc',      desc: 'Weighted study brief + PDF export',         icon: '⛊', accent: 'var(--ember)' },
+  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Voice-record answers · Chrome / Edge',      icon: '◉', accent: 'var(--violet)' },
 ]
 
 // all practice tabs flat, for label lookup
@@ -252,6 +292,53 @@ function PracticeGrid({ onSelect, tabProgress }) {
   )
 }
 
+// ── InterviewToolCard ─────────────────────────────────────────────────────────
+function InterviewToolCard({ tool, onSelect }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={() => onSelect(tool.id)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        textAlign: 'left', padding: '16px 18px',
+        background: hov ? `color-mix(in srgb, ${tool.accent} 8%, transparent)` : 'transparent',
+        borderTop:    `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
+        borderRight:  `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
+        borderBottom: `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
+        borderLeft:   `3px solid ${tool.accent}`,
+        borderRadius: '10px', cursor: 'pointer', transition: 'all 0.14s', width: '100%',
+      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+        <span style={{ fontSize: '16px', color: tool.accent }}>{tool.icon}</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", transition: 'color 0.14s' }}>
+          {tool.label}
+        </span>
+      </div>
+      <p style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0 }}>{tool.desc}</p>
+    </button>
+  )
+}
+
+// ── InterviewGrid ─────────────────────────────────────────────────────────────
+function InterviewGrid({ onSelect }) {
+  return (
+    <div style={{ paddingTop: '8px' }}>
+      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--ink-hi)', marginBottom: '4px' }}>
+        Interview
+      </h2>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '28px', lineHeight: 1.6 }}>
+        6 tools — from Q&amp;A prep to timed mocks to defense docs
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+        {INTERVIEW_TOOLS.map(tool => (
+          <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 function BottomNav({ activeZone, onZoneNav }) {
   return (
@@ -367,15 +454,19 @@ export default function App() {
   }
 
   // Topbar context
-  const currentTabId   = zoneTab[activeZone]
-  const isPracticeGrid = activeZone === 'practice' && !currentTabId
-  const showBackBtn    = activeZone === 'practice' && !!currentTabId
-  const practiceTabInfo = showBackBtn ? ALL_PRACTICE_TABS.find(t => t.id === currentTabId) : null
+  const currentTabId    = zoneTab[activeZone]
+  const isPracticeGrid  = activeZone === 'practice'  && !currentTabId
+  const isInterviewGrid = activeZone === 'interview' && !currentTabId
+  const showBackBtn     = (activeZone === 'practice' || activeZone === 'interview') && !!currentTabId
+  const ALL_NAV_TABS    = [
+    ...ALL_PRACTICE_TABS,
+    ...INTERVIEW_TOOLS.map(t => ({ ...t, domainAccent: t.accent })),
+  ]
+  const activeTabInfo = showBackBtn ? ALL_NAV_TABS.find(t => t.id === currentTabId) : null
 
   function renderContent() {
-    if (isPracticeGrid) {
-      return <PracticeGrid onSelect={goTo} tabProgress={tabProgress} />
-    }
+    if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} />
+    if (isInterviewGrid) return <InterviewGrid onSelect={goTo} />
     const Component = ALL_TABS.find(t => t.id === currentTabId)?.component
     return Component ? <Component onNavigate={goTo} /> : <HomeTab onNavigate={goTo} />
   }
@@ -397,15 +488,15 @@ export default function App() {
           {showBackBtn ? (
             <>
               <button
-                onClick={() => setZoneTab(prev => ({ ...prev, practice: null }))}
+                onClick={() => setZoneTab(prev => ({ ...prev, [activeZone]: null }))}
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", padding: '4px 0' }}>
-                ← <span>Domains</span>
+                ← <span>{activeZone === 'interview' ? 'Tools' : 'Domains'}</span>
               </button>
-              {practiceTabInfo && (
+              {activeTabInfo && (
                 <>
                   <span style={{ color: 'var(--rim)', fontSize: '13px' }}>/</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: practiceTabInfo.domainAccent, fontFamily: "'Space Grotesk',sans-serif" }}>
-                    {practiceTabInfo.label}
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "'Space Grotesk',sans-serif" }}>
+                    {activeTabInfo.label}
                   </span>
                 </>
               )}

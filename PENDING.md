@@ -2,77 +2,115 @@
 
 Tracked improvements, bugs, and feature work. Roughly prioritized top-to-bottom within each section.
 
+Last updated: May 2026
+
+---
+
+## Recently completed ✓
+
+- [x] Bottom-nav 5-zone architecture (Today/Practice/Read/Interview/Ask)
+- [x] TakeHomeTab — 15 open-ended questions, textarea, model answer reveal, self-score /20
+- [x] TrainerTab — Setup/Drill/Results, domain multi-select, 30-question MCQ bank, weakness heatmap
+- [x] CombinatorTab — Config/Session/Debrief, countdown timer, 50-question bank, locked until time ends
+- [x] CodeBugsTab — 20 Python/SQL production bugs, 5 domains, AccordionMCQ with code blocks
+- [x] CaseStudiesTab — Netflix/Uber/Airbnb/DoorDash/Spotify, 4 escalating questions each
+- [x] StaffLayerTab — 12 scenarios, IC3 → IC5 → Staff sequential reveals
+- [x] JDPrepTab — paste JD → keyword-ranked Must Know/Important/Good to Have topics
+- [x] DefenseDocTab — weighted study brief, @media print PDF export, guided checklist mode
+- [x] VerbatimTab — Web Speech API voice practice, 25 questions, 4-criteria self-rating
+- [x] App.jsx wiring — all 9 tabs imported, zone-mapped, Practice + Interview grids updated
+- [x] Causal Inference tab — causal vs predictive, identification strategies, DAG types
+- [x] Time Series tab — forecast failure zoo, stationarity selector, anomaly detection
+- [x] InterviewPrepTab system design judgment module
+- [x] Sidebar → bottom-nav redesign
+
 ---
 
 ## High priority
 
 ### Content
-- [ ] Add 5+ Gradient posts (see LINEAGE.md backlog — start with "feature store time-travel bug" and "why your validation set leaks")
-- [ ] Add domain field to any Gradient posts added after May 2026 (domain injection script in `/scripts/inject_domains.py`)
-- [ ] Add YouTube embed IDs to remaining 16 posts (currently only 3 have videos)
-- [ ] Write "Forecast Failure Zoo" Gradient post (links to Time Series tab)
+- [ ] Add 5+ Gradient posts (priority order: "feature store time-travel bug", "why your validation set leaks", "Forecast Failure Zoo")
+- [ ] Add YouTube embed IDs to remaining Gradient posts (currently only 3 have videos)
+- [ ] Interview Q&A: expand to 100+ questions (currently ~77)
+- [ ] TrainerTab: expand MCQ bank from 30 to 60 questions (2 questions per domain per difficulty tier)
+- [ ] CombinatorTab: expand question bank from 50 to 100 (enable 90-min sessions)
 
 ### Modules
-- [ ] Causal Inference: DAG editor module (draw graph → identify confounder/collider/mediator interactively)
-- [ ] System Design: RAG architecture judgment module (chunk size, retrieval strategy, reranking)
-- [ ] Classical ML: Decision boundary visualizer (Pyodide — SVM kernel comparison)
-- [ ] Interview Prep: Add 20+ questions to reach 100 (current: ~77)
+- [ ] Causal Inference: DAG editor — draw causal graph, identify confounders/colliders/mediators
+- [ ] System Design: RAG architecture judgment (chunk size, retrieval strategy, reranking decisions)
+- [ ] Classical ML: Decision boundary visualizer (Pyodide — SVM kernel comparison, tree depth)
+- [ ] Behavioral question bank in Interview zone (ML-specific situations: disagreed with a metric, shipped despite uncertainty)
 
 ### UX
-- [ ] LandscapeTab: Update DS role `pathId` to point to `ds_track` learning path
-- [ ] Gradient posts: Add estimated reading time to each post card
-- [ ] Mobile: Test sidebar overlay on iOS Safari — check touch scroll behavior
+- [ ] VerbatimTab: show transcript word count + speaking rate (words/min) in Review screen
+- [ ] CombinatorTab: add per-domain breakdown chart in Debrief screen
+- [ ] StaffLayerTab: add "Reset all reveals" button for re-study
+- [ ] Mobile test: bottom-nav safe-area inset on iPhone (env(safe-area-inset-bottom))
 
 ---
 
 ## Medium priority
 
 ### Features
-- [ ] Progress export — download mastery snapshot as JSON (localStorage dump)
-- [ ] Module bookmarking — star a scenario to revisit it later
-- [ ] Scenario difficulty filter in judgment modules (easy / medium / hard)
+- [ ] Progress export — download full mastery snapshot as JSON (all localStorage msl_* keys)
+- [ ] Module bookmarking — star a scenario to revisit later (localStorage msl_bookmarks)
+- [ ] Scenario difficulty filter in judgment modules (easy/medium/hard — hidden metadata already exists)
 - [ ] Keyboard navigation for judgment modules (1/2/3/4 to select options, Enter to confirm)
-- [ ] Gradient: "Mark as read" per post (stored in localStorage)
+- [ ] Gradient: "Mark as read" per post
+- [ ] Global search: keyboard arrow-key navigation through results
+- [ ] HomeTab: "Recommended first module" based on selected role (more opinionated CTA)
 
 ### Content
-- [ ] Spark Lab: Memory pressure simulator — given executor config, predict OOM vs success
-- [ ] Deep Learning: Attention head visualization in Pyodide (transformer internals)
-- [ ] Interview Prep: Behavioral question bank (ML-specific situations)
-- [ ] MLOps: Add "Model Registry Patterns" module to CI/CD & Infra tab
+- [ ] Spark Lab: Memory pressure simulator — executor config + job → OOM prediction
+- [ ] Deep Learning: Attention head visualization (Pyodide)
+- [ ] MLOps: Model Registry Patterns module in CI/CD & Infra tab
+- [ ] Monitoring: Alerting decision tree (page vs log vs auto-rollback)
 
 ### Design
-- [ ] HomeTab: Replace role-based CTA box with a single "Recommended first module" based on role — more opinionated
-- [ ] Gradient: "Start here" ordering within each domain (beginner-first sort option)
-- [ ] Global search: Add keyboard arrow-key navigation through results
+- [ ] Gradient: "Start here" sort option within each domain (beginner-first ordering)
+- [ ] Practice zone: overall progress percentage on grid header (currently shows raw counts)
+- [ ] Interview zone: session history summary on hub grid (X sessions run, avg score)
 
 ---
 
 ## Low priority / Nice to have
 
-- [ ] Ecosystem cross-links: Add ML Systems Lab links from GenAI Lab and Experimentation Lab homepages
-- [ ] Unified "Systems Engineer" cross-lab learning path (ML + GenAI + Experimentation — 6–8 weeks)
-- [ ] OG image — generate a proper social preview image for the site (currently uses default Vercel)
-- [ ] Dark/light mode toggle (currently dark-only)
-- [ ] Changelog: surface changes in UI (small "NEW" badge on recently updated tabs)
+- [ ] Unified "Systems Engineer" cross-lab learning path (ML + GenAI + Experimentation — 6–8 weeks, cross-lab capstone)
+- [ ] Ecosystem cross-links: add ML Systems Lab deep links from GenAI Lab and Experimentation Lab homepages
+- [ ] OG image for social preview (currently uses Vercel default)
 - [ ] sitemap.xml for SEO
+- [ ] Dark/light mode toggle (currently dark-only)
+- [ ] "NEW" badge on tabs updated within last 30 days
+- [ ] Changelog visible in HomeTab (currently exists in data, not surfaced prominently)
 
 ---
 
 ## Bugs / known issues
 
-- [ ] `window.scrollTo` on tab switch causes jarring jump if user is mid-scroll in content — consider scroll-to-top only on sidebar nav clicks, not on programmatic `onNavigate` calls
+- [ ] `window.scrollTo` on tab switch causes jarring jump if user is mid-scroll — consider only triggering on zone nav clicks, not programmatic `onNavigate`
 - [ ] Pyodide cold start (~3s first load) — no loading indicator during Pyodide init in Math Foundations
-- [ ] Mobile: Sidebar overlay doesn't close on outside click — only closes on nav item click or Escape key
+- [ ] Mobile: test bottom-nav touch behavior on iOS Safari — verify tap targets and safe-area spacing
+- [ ] VerbatimTab: SpeechRecognition `onend` fires unexpectedly on some Chrome versions after silence — need auto-restart logic
+- [ ] DefenseDocTab: `@media print` hides everything except `.defense-doc-print` — verify this works correctly in all browsers before advertising PDF as a feature
+- [ ] CombinatorTab: timer continues if user navigates away (zone switch) — should pause or warn
 
 ---
 
-## Done (recently completed)
+## Architecture notes for future contributors
 
-- [x] Remove desktop topbar — logo + search moved into sidebar, full-width content area
-- [x] Causal Inference tab — causal vs predictive, identification strategies, DAG types
-- [x] Time Series tab — forecast failure zoo, stationarity selector, anomaly detection tiers
-- [x] Gradient curriculum redesign — domain filter, YouTube embeds, domain badges on cards
-- [x] System Design Judgment module in InterviewPrepTab
-- [x] DS Track learning path added (7th path)
-- [x] Sidebar nav replacing domain pill navigation
-- [x] HomeTab space optimization — compact stats strip, slim continue bar
+### Adding a new tab
+1. Create `src/tabs/YourTab.jsx` — export default `function YourTab({ onNavigate }) {}`
+2. Import in `src/App.jsx`
+3. Add to `ALL_TABS` array
+4. Add to `TAB_TO_ZONE` if not going to practice zone (default)
+5. Add a card to the relevant domain in `PRACTICE_DOMAINS` or `INTERVIEW_TOOLS`
+
+### localStorage conventions
+All keys prefixed with `msl_`. Score keys: `msl_score:{tabPrefix}_{moduleId}`.
+Format: array of `{id, revealed, selectedOption}` items.
+Progress rings read from this format via `readTabProgress()` in App.jsx.
+
+### Zone routing
+- `TAB_TO_ZONE`: maps tabId → zone (omit to default to `practice`)
+- `ZONE_DEFAULTS`: what each zone shows fresh (null = grid, string = specific tabId)
+- `goTo(tabId)`: navigate programmatically from any tab via `onNavigate` prop
