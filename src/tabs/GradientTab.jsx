@@ -1105,7 +1105,7 @@ Click into a stage and scroll to the task metrics. The task duration histogram i
 
 A healthy histogram: roughly normal or uniform distribution. All tasks finish within 2x of each other.
 
-A skew signature: most tasks finish in 0.2s, one task takes 120s. The job\'s total duration is dominated by that single slow task. This is data skew — one partition has far more data than the others. The fix: salting the join key or using skew hints (`spark.sql.autoBroadcastJoinThreshold`, `skewJoin` hint in Spark 3.x).
+A skew signature: most tasks finish in 0.2s, one task takes 120s. The job\'s total duration is dominated by that single slow task. This is data skew — one partition has far more data than the others. The fix: salting the join key or using skew hints (\`spark.sql.autoBroadcastJoinThreshold\`, \`skewJoin\` hint in Spark 3.x).
 
 A stragglers signature: a long right tail with 3–5 tasks taking 3x the median. This is usually resource contention (noisy neighbour on the executor) or GC pressure. Look at the GC time column — if GC time > 10% of task duration, you have memory pressure.
 
