@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ── Causal vs Predictive Diagnosis ───────────────────────────────────────────
 const CAUSAL_SCENARIOS = [
@@ -191,6 +191,195 @@ const DAG_SCENARIOS = [
     lesson: 'Some variables are both mediator and confounder depending on the causal structure. Always draw the DAG explicitly before deciding what to control for. The question "what is the total effect?" and "what is the direct effect?" require different adjustment sets.',
   },
 ]
+
+// ── Uplift Modeling Scenarios ─────────────────────────────────────────────────
+const UPLIFT_SCENARIOS = [
+  {
+    id: 'u1',
+    q: 'A retention team has a list of users they\'ve labeled "at-risk of churn." They want to send a $10 discount. What should the model predict to maximize ROI?',
+    options: ['P(churn)', 'P(churn | discount)', 'P(churn | discount) - P(churn | no discount)', 'Discount take-up rate'],
+    correct: 2,
+    exp: 'Uplift = CATE = P(Y=1|T=1) - P(Y=1|T=0). You want users who would have churned without the discount but won\'t with it ("persuadables"). Users who churn regardless are "lost causes" — wasted spend. Users who stay regardless are "sure things" — also wasted spend. Targeting top predicted churn (P(churn)) wastes budget on sure-things and lost-causes.',
+  },
+  {
+    id: 'u2',
+    q: 'You train an uplift model using the T-learner approach. You fit two separate models: μ₁(x) trained on treated units only, and μ₀(x) trained on control units only. What is the predicted CATE?',
+    options: ['μ₁(x) + μ₀(x)', 'μ₁(x) - μ₀(x)', 'μ₁(x) / μ₀(x)', '(μ₁(x) + μ₀(x)) / 2'],
+    correct: 1,
+    exp: 'T-learner: CATE(x) = μ₁(x) − μ₀(x). Train two separate outcome models on treated and control groups respectively, then subtract their predictions. Simple to implement but can suffer from high variance when treatment and control group sizes are very different (the smaller group\'s model is noisier).',
+  },
+  {
+    id: 'u3',
+    q: 'An X-learner is preferred over a T-learner when:',
+    options: ['The outcome is binary', 'Treatment and control group sizes are very imbalanced', 'The data has many features', 'The treatment effect is homogeneous'],
+    correct: 1,
+    exp: 'X-learner (Künzel et al.) is designed for imbalanced treatment assignment. It imputes counterfactual outcomes for each unit using the other group\'s model, then uses propensity-weighted averaging to combine estimates. When one group is much larger, X-learner leverages the larger group\'s model to impute better counterfactuals for the smaller group.',
+  },
+  {
+    id: 'u4',
+    q: 'You evaluate an uplift model using a "Qini curve." A Qini coefficient of 0 means:',
+    options: ['The model perfectly identifies persuadables', 'The model is equivalent to random targeting', 'The model targets all users', 'The model has 0% precision'],
+    correct: 1,
+    exp: 'The Qini curve plots incremental gains from uplift-ranked targeting vs a baseline. A Qini coefficient of 0 means the uplift model performs no better than random assignment — the curve matches the diagonal (random targeting). Positive Qini = model adds value over random. This is the uplift analogue of AUC for classification.',
+  },
+  {
+    id: 'u5',
+    q: 'A user segment shows high predicted churn (0.8) AND high predicted uplift (+0.4). What is the correct targeting decision?',
+    options: ['Don\'t target — churn risk is too high to recover', 'Target — high uplift means the intervention will have meaningful impact', 'Target only if uplift > churn probability', 'Cannot decide without knowing discount cost'],
+    correct: 1,
+    exp: 'High uplift + high churn is the ideal targeting combination: the user is genuinely at risk AND the intervention is likely to change their behavior. This is the "persuadable high-risk" quadrant — the reason you ran the uplift model. High churn alone (low uplift) = lost cause. Low churn + high uplift = "sleeping dog" (intervening might backfire).',
+  },
+  {
+    id: 'u6',
+    q: 'You can\'t run an A/B test for uplift estimation. You have rich observational data with many pre-treatment covariates. What is the best approach?',
+    options: ['T-learner on observational data directly', 'Doubly-robust estimator (AIPW) combining outcome model and propensity model', 'Use logistic regression on treated users only', 'Difference-in-means between high and low propensity users'],
+    correct: 1,
+    exp: 'Doubly-robust / Augmented IPW (AIPW) is the gold standard for observational uplift. It combines an outcome model (μ) AND a propensity model (e(x)), and is consistent if EITHER model is correctly specified. This gives robustness against misspecification in one of the two models. Pure T-learner on observational data ignores confounding in treatment assignment, leading to biased CATE estimates.',
+  },
+]
+
+// ── Obs vs Experimental Scenarios ────────────────────────────────────────────
+const OBS_EXP_SCENARIOS = [
+  {
+    id: 'oe1',
+    q: 'Your company wants to know if users who use the mobile app convert better than desktop users. You have a year of observational data. What is the primary threat to causal identification?',
+    options: ['Sample size too small', 'Self-selection: mobile users differ from desktop users in unobserved ways', 'Measurement error in conversions', 'Temporal confounding from seasonality'],
+    correct: 1,
+    exp: 'Self-selection is the core threat. Users who choose mobile may be younger, more tech-savvy, or higher-intent — all correlated with conversion for reasons unrelated to the device. Observational comparison gives you the correlation, not the causal effect of "using mobile." To isolate the device effect, you\'d need to randomize device presentation or find a natural experiment.',
+  },
+  {
+    id: 'oe2',
+    q: 'A regulatory change forced all users in Germany to see a cookie consent banner (treated) while users elsewhere didn\'t (control). You want to measure the banner\'s effect on engagement. What design should you use?',
+    options: ['Run an A/B test now', 'DiD using Germany vs other countries before/after the regulation', 'Propensity score matching on country', 'IV using legal system as instrument'],
+    correct: 1,
+    exp: 'Natural experiment + DiD. Germany is the treatment group, other countries are controls. You have pre-policy and post-policy data for both. DiD removes time-invariant country differences AND common time trends. This is a cleaner design than PSM because the assignment was exogenous (regulatory, not self-selected). Verify: parallel trends in engagement pre-regulation.',
+  },
+  {
+    id: 'oe3',
+    q: 'You want to know if an ML-recommended article causes users to read more content long-term. You can\'t randomize recommendations (the rec system is live). What is a viable design?',
+    options: ['Regression of reading on historical recommendation rate', 'IV: use rec system algorithm version rollout as instrument for recommendation exposure', 'Match users by reading history and compare', 'A/B test with 5% holdout receiving random recommendations'],
+    correct: 3,
+    exp: 'A holdout group receiving random or no recommendations is the gold standard — it creates an experimental control group within your live system. IV (using algorithm rollout) is the second-best: the rollout affected recommendation exposure but shouldn\'t directly affect reading except through recommendations (exclusion restriction). Pure observational regression won\'t work — engagement level is a confounder.',
+  },
+  {
+    id: 'oe4',
+    q: 'A DS team claims: "We found that users who receive personalized emails have 30% higher LTV in our observational data. We should roll this out to all users." What is the most likely flaw?',
+    options: ['30% is too high a lift to be real', 'Selection bias: engaged users are more likely to open personalized emails AND have higher LTV', 'The LTV measurement window is too short', 'Personalization cannot causally affect LTV'],
+    correct: 1,
+    exp: 'Classic selection-into-treatment confounding. Users who open and engage with personalized emails are already high-engagement users — they would have higher LTV regardless of the email. The 30% "lift" is mostly measuring pre-existing engagement, not the causal effect of personalization. To measure the true effect, you need to randomly assign personalized vs standard emails and analyze by send (ITT), not by open.',
+  },
+  {
+    id: 'oe5',
+    q: 'When is observational causal inference definitively preferable to an A/B test?',
+    options: ['When the sample is large (n > 100k)', 'When randomization is unethical, impossible, or would take too long to detect effects', 'When the outcome is continuous rather than binary', 'When propensity scores are well-calibrated'],
+    correct: 1,
+    exp: 'Observational methods are the only option when: (1) ethics prevent randomization (e.g., withholding a known-effective medical treatment), (2) the treatment already happened historically, (3) the effect is long-term and you can\'t wait years for an experiment, (4) regulatory or business constraints prevent a holdout. Large sample size doesn\'t make observational data causal — it just gives you a more precise biased estimate.',
+  },
+  {
+    id: 'oe6',
+    q: 'You have the option to run an A/B test (2 weeks, 50/50 split) or use a DiD design on historical data. When should you prefer the historical DiD?',
+    options: ['Always — DiD doesn\'t require running an experiment', 'When a clean natural experiment already happened (policy change, outage, regional rollout) and parallel trends hold', 'When the experiment would take longer than 4 weeks', 'When the treatment effect is expected to be small'],
+    correct: 1,
+    exp: 'Use historical DiD when a credible natural experiment exists AND parallel trends hold pre-treatment. Advantages: faster results, no experimentation cost, captures effects that already happened. However, DiD requires the parallel trends assumption — if the treated and control groups were on different trajectories before the "treatment," DiD gives biased estimates. A well-run A/B test with proper randomization is almost always preferred if feasible.',
+  },
+]
+
+// ── AccordionMCQ Component ────────────────────────────────────────────────────
+function AccordionMCQ({ scenarios, accentColor = 'var(--sky)' }) {
+  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+  const [diffFilter, setDiffFilter] = useState('All')
+
+  function getDiff(i) {
+    const n = scenarios.length
+    if (i < Math.floor(n/3)) return 'Easy'
+    if (i < Math.floor(2*n/3)) return 'Medium'
+    return 'Hard'
+  }
+
+  const visible = scenarios.map((s, i) => ({ s, i, diff: getDiff(i) })).filter(x => diffFilter === 'All' || x.diff === diffFilter)
+  const attempted = items.filter(it => it.revealed).length
+  const correct = items.filter((it, i) => it.revealed && it.picked === scenarios[i].correct).length
+
+  function toggle(i) { setItems(prev => prev.map((it, j) => j === i ? { ...it, open: !it.open } : it)) }
+  function pick(i, opt) {
+    setItems(prev => prev.map((it, j) => j === i && !it.revealed ? { ...it, picked: opt, revealed: true } : it))
+  }
+
+  useEffect(() => {
+    function onKey(e) {
+      const openIdx = items.findIndex(it => it.open && !it.revealed)
+      if (openIdx === -1) return
+      const n = scenarios[openIdx].options.length
+      const k = parseInt(e.key)
+      if (k >= 1 && k <= n) { e.preventDefault(); pick(openIdx, k - 1) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [items])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Score strip */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '10px 16px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px', flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: accentColor, fontWeight: 700 }}>{correct}/{attempted} correct</span>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{attempted}/{scenarios.length} attempted</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>Difficulty:</span>
+          {['All','Easy','Medium','Hard'].map(d => (
+            <button key={d} onClick={() => setDiffFilter(d)}
+              style={{ padding: '2px 8px', borderRadius: '5px', border: `1px solid ${diffFilter === d ? accentColor + '80' : 'var(--rim)'}`, background: diffFilter === d ? accentColor + '15' : 'transparent', color: diffFilter === d ? accentColor : 'var(--ink-low)', fontSize: '10px', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace" }}>
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible.map(({ s, i, diff }) => {
+        const it = items[i]
+        const isCorrect = it.revealed && it.picked === s.correct
+        const diffColor = diff === 'Easy' ? 'var(--mint)' : diff === 'Medium' ? 'var(--ember)' : 'var(--rose)'
+        return (
+          <div key={s.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', background: it.open ? accentColor + '04' : 'transparent' }}>
+            <button onClick={() => toggle(i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: diffColor + '18', color: diffColor, fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>{diff}</span>
+              <span style={{ flex: 1, fontSize: '13px', color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, lineHeight: 1.5 }}>{s.q}</span>
+              {it.revealed && <span style={{ fontSize: '12px', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ color: 'var(--ink-low)', fontSize: '12px', flexShrink: 0, transition: 'transform 0.15s', transform: it.open ? 'rotate(180deg)' : 'none' }}>▾</span>
+            </button>
+            {it.open && (
+              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {s.options.map((opt, oi) => {
+                    const isOpt = it.picked === oi
+                    const isAns = oi === s.correct
+                    let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
+                    if (it.revealed) {
+                      if (isAns) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.06)'; color = 'var(--mint)' }
+                      else if (isOpt) { border = 'rgba(244,63,94,0.4)'; bg = 'rgba(244,63,94,0.06)'; color = 'var(--rose)' }
+                    } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
+                    return (
+                      <button key={oi} onClick={() => pick(i, oi)} disabled={it.revealed}
+                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", cursor: it.revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
+                {it.revealed && (
+                  <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
+                    <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.exp}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 // ── Components ────────────────────────────────────────────────────────────────
 function CausalVsPredictive() {
@@ -602,12 +791,36 @@ function BackdoorCriterion() {
   )
 }
 
+function UpliftModeling() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
+        Uplift modeling estimates the individual causal treatment effect (CATE) — not just who will churn, but who will respond to intervention. Six scenarios covering T-learner, X-learner, Qini evaluation, and doubly-robust estimation.
+      </p>
+      <AccordionMCQ scenarios={UPLIFT_SCENARIOS} accentColor="var(--mint)" />
+    </div>
+  )
+}
+
+function ObsVsExperimental() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
+        Six scenarios deciding when observational causal inference is sufficient vs when you need an experiment. Covers DiD natural experiments, selection bias, holdout designs, and the limits of propensity matching.
+      </p>
+      <AccordionMCQ scenarios={OBS_EXP_SCENARIOS} accentColor="var(--gold)" />
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'causal_vs_pred', label: 'Causal vs Predictive', component: CausalVsPredictive },
   { id: 'identification', label: 'Identification Strategies', component: IdentificationStrategies },
   { id: 'dag',            label: 'Confounder or Collider', component: ConfounderOrCollider },
   { id: 'backdoor',       label: 'Backdoor Criterion', component: BackdoorCriterion },
+  { id: 'uplift',         label: 'Uplift Modeling', component: UpliftModeling },
+  { id: 'obs_vs_exp',     label: 'Obs vs Experimental', component: ObsVsExperimental },
 ]
 
 export default function CausalInferenceTab() {

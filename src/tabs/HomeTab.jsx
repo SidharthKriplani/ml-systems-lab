@@ -16,13 +16,15 @@ const ROLES = [
 // ── Stats ─────────────────────────────────────────────────────────────────────
 const STATS = [
   { n: '7',   label: 'Domains' },
-  { n: '100+', label: 'Production scenarios' },
+  { n: '150+', label: 'Production scenarios' },
   { n: '4',   label: 'Career levels' },
   { n: 'Free', label: 'No account needed' },
 ]
 
 // ── Changelog ─────────────────────────────────────────────────────────────────
 const CHANGELOG = [
+  { date: 'May 2026', text: '100 interview questions + bookmarking on every judgment tab. 5 new modules: Broadcast Join Decisions, OOM Diagnosis, TS Model Selector, TS Feature Engineering, RAG Architecture.' },
+  { date: 'May 2026', text: 'YouTube embeds for all 25 Gradient posts. Difficulty filter (easy/medium/hard), keyboard nav (1–4), module bookmarks, and progress export across all judgment modules.' },
   { date: 'May 2026', text: 'Causal Inference tab: causal vs predictive, identification strategies (RCT/DiD/PSM/IV/RDD/SC), DAG confounder/collider/mediator.' },
   { date: 'May 2026', text: 'Time Series tab: forecast failure zoo, stationarity selector, anomaly detection tiers.' },
   { date: 'May 2026', text: 'MLOps domain: Deployment strategies, Champion-Challenger, CI/CD & Infra (9 modules).' },
@@ -355,7 +357,7 @@ export default function HomeTab({ onNavigate }) {
               <div key={bm.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", minWidth: '80px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{bm.tabId}</span>
                 <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif" }}>{bm.label}</span>
-                <button onClick={() => onNavigate(bm.tabId)} style={{ fontSize: '11px', padding: '4px 12px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+                <button onClick={() => { localStorage.setItem('msl_goto_module', bm.moduleId); onNavigate(bm.tabId) }} style={{ fontSize: '11px', padding: '4px 12px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
                   Open →
                 </button>
                 <button onClick={() => { toggleBookmark(bm.tabId, bm.moduleId, bm.label); setBookmarks(getBookmarks()) }}

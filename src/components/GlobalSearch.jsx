@@ -81,6 +81,128 @@ const INDEX = [
   { id: 'landscape', tab: 'landscape', icon: '🌍', kind: 'module', title: 'Global Job Markets',
     desc: 'San Francisco, London, Berlin, Amsterdam, Toronto, Singapore, Bangalore — where and why' },
 
+  // ── Spark Lab ── new ──────────────────────────────────────────────────────
+  { id: 'spark', tab: 'spark', icon: '🔥', kind: 'module', title: 'Partition Tuner',
+    desc: 'Choose optimal partition count — coalesce vs repartition, AQE config, file-size targets' },
+  { id: 'spark', tab: 'spark', icon: '🔥', kind: 'module', title: 'Broadcast Join Decisions',
+    desc: '6 scenarios: when to broadcast, autoBroadcastJoinThreshold, skewJoin hints, join strategy selection' },
+  { id: 'spark', tab: 'spark', icon: '🔥', kind: 'module', title: 'OOM Diagnosis',
+    desc: 'Diagnose out-of-memory failures: driver OOM vs executor OOM, memory fractions, spill to disk' },
+
+  // ── System Design ── new ────────────────────────────────────────────────
+  { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'DS Ownership Chain',
+    desc: '17-node production ML lifecycle — interactive map of who owns which decision at each stage' },
+  { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'Serving Tradeoffs',
+    desc: 'Batch vs online vs streaming serving decisions, latency SLA, throughput math' },
+  { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'RAG Architecture',
+    desc: '6 RAG scenarios: chunk size, hybrid retrieval, reranking, embedding choice, RAGAS eval, hallucination gating' },
+
+  // ── Classical ML ─────────────────────────────────────────────────────────
+  { id: 'classical', tab: 'classical', icon: '🌲', kind: 'module', title: 'Model Failure Zoo',
+    desc: 'Silent production failure modes for 8 classical models — when linear regression, SVM, or trees quietly break' },
+  { id: 'classical', tab: 'classical', icon: '🌲', kind: 'module', title: 'Ensemble Lab',
+    desc: 'Bagging vs boosting vs stacking decisions — when each helps and when it hurts in production' },
+  { id: 'classical', tab: 'classical', icon: '🌲', kind: 'module', title: 'Hyperparameter Priority',
+    desc: 'Which hyperparameters matter most per model type — and why tuning them all is a waste' },
+
+  // ── Airflow ───────────────────────────────────────────────────────────────
+  { id: 'airflow', tab: 'airflow', icon: '⚙️', kind: 'module', title: 'DAG Failure Room',
+    desc: 'Diagnose 8 types of broken Airflow DAGs: trigger rules, timezone bugs, zombie tasks, upstream failures' },
+  { id: 'airflow', tab: 'airflow', icon: '⚙️', kind: 'module', title: 'Backfill Decision Lab',
+    desc: 'When to backfill, from when, in what order — and the downstream risks most teams skip' },
+  { id: 'airflow', tab: 'airflow', icon: '⚙️', kind: 'module', title: 'Late Data Handler',
+    desc: 'SLA miss detection, deferred evaluation windows, late data handling patterns for batch and streaming' },
+
+  // ── dbt ───────────────────────────────────────────────────────────────────
+  { id: 'dbt', tab: 'dbt', icon: '🔧', kind: 'module', title: 'Materialization Oracle',
+    desc: 'Table vs view vs incremental vs ephemeral — when each breaks in production and why' },
+  { id: 'dbt', tab: 'dbt', icon: '🔧', kind: 'module', title: 'Schema Drift Clinic',
+    desc: 'What breaks downstream when upstream columns change — and how to catch it before prod' },
+  { id: 'dbt', tab: 'dbt', icon: '🔧', kind: 'module', title: 'Incremental Decisions',
+    desc: 'is_incremental(), unique_key, full-refresh triggers, late data handling in dbt incremental models' },
+
+  // ── Data Modeling ─────────────────────────────────────────────────────────
+  { id: 'modeling', tab: 'modeling', icon: '🗄️', kind: 'module', title: 'Star vs OBT Selector',
+    desc: 'Star schema vs One Big Table tradeoffs — query performance, maintenance, and team skill requirements' },
+  { id: 'modeling', tab: 'modeling', icon: '🗄️', kind: 'module', title: 'SCD Type Selector',
+    desc: 'SCD Types 1/2/3 decisions — when to overwrite, when to preserve history, when to add a column' },
+  { id: 'modeling', tab: 'modeling', icon: '🗄️', kind: 'module', title: 'OLAP Format Showdown',
+    desc: 'Iceberg vs Delta Lake vs Hive — time travel, ACID, schema evolution, engine compatibility tradeoffs' },
+
+  // ── Deep Learning ─────────────────────────────────────────────────────────
+  { id: 'dl', tab: 'dl', icon: '🧠', kind: 'module', title: 'Training Failure Diagnosis',
+    desc: 'Diagnose 8 training failure types from telemetry: NaN loss, vanishing gradients, dead ReLUs, data leakage' },
+  { id: 'dl', tab: 'dl', icon: '🧠', kind: 'module', title: 'Backprop Debugging',
+    desc: 'Per-layer gradient norms, weight histograms — identify dead layers and unstable training dynamics' },
+
+  // ── DL Fine-tuning ────────────────────────────────────────────────────────
+  { id: 'dl_finetune', tab: 'dl_finetune', icon: '🔬', kind: 'module', title: 'Freeze vs Full Fine-tune vs LoRA',
+    desc: 'Given model size and labeled data budget — which fine-tuning approach and why' },
+  { id: 'dl_finetune', tab: 'dl_finetune', icon: '🔬', kind: 'module', title: 'Learning Rate Strategy',
+    desc: '8 scenarios on LR warmup, decay schedules, and layer-wise LR — the knob that matters most' },
+  { id: 'dl_finetune', tab: 'dl_finetune', icon: '🔬', kind: 'module', title: 'PEFT Methods Comparison',
+    desc: 'LoRA vs prefix tuning vs adapter layers — parameter efficiency vs performance tradeoffs' },
+
+  // ── DL Serving ────────────────────────────────────────────────────────────
+  { id: 'dl_serving', tab: 'dl_serving', icon: '🚀', kind: 'module', title: 'Quantization Tradeoffs',
+    desc: 'FP32 vs FP16 vs INT8 vs INT4 — accuracy loss vs latency gain under your hardware constraints' },
+  { id: 'dl_serving', tab: 'dl_serving', icon: '🚀', kind: 'module', title: 'GPU Memory Calculator',
+    desc: 'Will the model fit? KV cache sizing, batch size math, multi-GPU tensor parallelism tradeoffs' },
+  { id: 'dl_serving', tab: 'dl_serving', icon: '🚀', kind: 'module', title: 'Serving Architecture Selector',
+    desc: 'REST vs Triton vs Ray Serve vs vLLM — given your model type, latency SLA, and traffic shape' },
+
+  // ── MLOps: Deployment ─────────────────────────────────────────────────────
+  { id: 'mlops_deploy', tab: 'mlops_deploy', icon: '🚢', kind: 'module', title: 'Deployment Strategy Selector',
+    desc: 'Blue-green vs canary vs shadow vs feature flag — which strategy for which production scenario' },
+  { id: 'mlops_deploy', tab: 'mlops_deploy', icon: '🚢', kind: 'module', title: 'Champion-Challenger Decisions',
+    desc: 'The 4-decision promotion framework — metrics threshold, latency SLA, rollback trigger design' },
+  { id: 'mlops_deploy', tab: 'mlops_deploy', icon: '🚢', kind: 'module', title: 'Rollback Decisions',
+    desc: '8 production alert scenarios — rollback immediately, investigate first, or monitor only?' },
+
+  // ── MLOps: CI/CD & Infra ──────────────────────────────────────────────────
+  { id: 'mlops_pipes', tab: 'mlops_pipes', icon: '🔩', kind: 'module', title: 'CI/CD Gate Design',
+    desc: 'Which CI gates block the pipeline vs warn only — how ML CI/CD differs from software CI/CD' },
+  { id: 'mlops_pipes', tab: 'mlops_pipes', icon: '🔩', kind: 'module', title: 'Infrastructure Decisions',
+    desc: 'REST API vs Triton Inference Server vs Ray Serve vs vLLM — given scale and model type' },
+  { id: 'mlops_pipes', tab: 'mlops_pipes', icon: '🔩', kind: 'module', title: 'Model Registry Patterns',
+    desc: 'Version management, lineage tracking, approval workflows — model registry design decisions' },
+
+  // ── Data Science ──────────────────────────────────────────────────────────
+  { id: 'ds', tab: 'ds', icon: '📈', kind: 'module', title: 'Model Selection Oracle',
+    desc: 'When linear vs tree vs neural — the decision framework that gets you 80% of the way' },
+  { id: 'ds', tab: 'ds', icon: '📈', kind: 'module', title: 'Analysis Mistakes',
+    desc: "8 statistical antipatterns: p-hacking, Simpson's paradox, survivorship bias, Goodhart's Law" },
+  { id: 'ds', tab: 'ds', icon: '📈', kind: 'module', title: 'Calibration Clinic',
+    desc: 'When predicted probabilities are lying — reliability diagrams, ECE, Platt scaling vs isotonic' },
+  { id: 'ds', tab: 'ds', icon: '📈', kind: 'module', title: 'Metric Design Pitfalls',
+    desc: "Goodhart's Law, proxy metrics, leading vs lagging indicators, and metric decomposition" },
+
+  // ── Causal Inference ──────────────────────────────────────────────────────
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Causal vs Predictive',
+    desc: '8 scenarios: identify whether a problem needs causal inference or prediction — and why it matters' },
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Identification Strategies',
+    desc: 'RCT, DiD, PSM/IPW, IV, RDD, Synthetic Control — match strategy to your data constraints' },
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Confounder or Collider',
+    desc: '6 DAG scenarios: identify confounders, colliders, mediators, and when to control for each' },
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Backdoor Criterion',
+    desc: '6 DAG questions: front-door criterion, unobserved confounding, partial adjustment bias' },
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Uplift Modeling',
+    desc: 'CATE estimation: T-learner, X-learner, Qini evaluation, doubly-robust AIPW — who actually responds' },
+  { id: 'causal', tab: 'causal', icon: '🔀', kind: 'module', title: 'Obs vs Experimental',
+    desc: 'When observational data is sufficient vs when you need an experiment — DiD, holdout designs, ethics' },
+
+  // ── Time Series ───────────────────────────────────────────────────────────
+  { id: 'ts', tab: 'ts', icon: '📉', kind: 'module', title: 'Forecast Failure Zoo',
+    desc: 'Why forecasts fail in production: temporal leakage, nonstationarity, structural breaks, sparse series' },
+  { id: 'ts', tab: 'ts', icon: '📉', kind: 'module', title: 'Stationarity & Transforms',
+    desc: 'ADF test, differencing, log transforms — how to diagnose and fix non-stationary time series' },
+  { id: 'ts', tab: 'ts', icon: '📉', kind: 'module', title: 'Anomaly Detection Tiers',
+    desc: 'Statistical thresholds vs isolation forest vs LSTM autoencoders — tiered detection strategy' },
+  { id: 'ts', tab: 'ts', icon: '📉', kind: 'module', title: 'TS Model Selector',
+    desc: '6 scenarios: ARIMA vs Prophet vs LSTM vs NeuralProphet — match model to your series properties' },
+  { id: 'ts', tab: 'ts', icon: '📉', kind: 'module', title: 'TS Feature Engineering',
+    desc: 'Lag features, rolling windows, Fourier terms, holiday encoding — production-grade TS feature patterns' },
+
   // ── Gradient posts ──────────────────────────────────────────────────────
   { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Why Your Model Works in Training but Fails in Production',
     desc: 'The four most common training-serving skew bugs and how to catch them before they cost you' },
@@ -108,6 +230,30 @@ const INDEX = [
     desc: 'AllReduce, gradient accumulation, pipeline parallelism — when to use which pattern' },
   { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: '10 ML Interview Mistakes Even Senior Engineers Make',
     desc: 'The subtle errors that tank otherwise-strong candidates — and exactly how to avoid them' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The ML Engineer Salary Map 2025',
+    desc: 'Where the money is, why it\'s there, and what L3–L7 means in TC across US, UK, EU and Asia' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'How Netflix Became an ML Company',
+    desc: 'From DVD recommendations to personalization at scale — what every engineer can learn from it' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The Real ML Stack: From Jupyter to $10B Infrastructure',
+    desc: 'How the tools, processes and people change as you go from notebook to production at scale' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'AlexNet to Agents: The Twelve Years That Rewrote Everything',
+    desc: '2012–2025: twelve inflection points that changed what ML engineering means in practice' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Where in the World to Be an ML Engineer in 2025',
+    desc: 'San Francisco, London, Berlin, Singapore, Bangalore — real tradeoffs, real salary and visa data' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The MLE Career Ladder: What L3 to L7 Actually Means',
+    desc: 'What changes at each level, what "impact" means in practice, and what trips up the L4→L5 jump' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The Validation Set Is Lying to You',
+    desc: 'Four leakage patterns nobody warns you about — and how each one inflates validation metrics silently' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The Feature Store Time-Travel Bug',
+    desc: 'How point-in-time join errors quietly corrupt models — and how to build joins that are correct by construction' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Reading the Spark Execution DAG',
+    desc: 'The diagnostic skill nobody teaches — how to read plans, stages, and task metrics to find the real bottleneck' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Three Drift Signals That Predict Model Failure',
+    desc: 'PSI, population-level shift, and label drift — leading indicators that give you 2 weeks of warning' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'The 6-Step ML System Design Framework',
+    desc: 'The structured framework that answers any ML system design question in an interview or on the job' },
+  { id: 'gradient', tab: 'gradient', icon: '∇', kind: 'post', title: 'Why Your Forecast Was Wrong Before It Ran',
+    desc: 'The 8 silent killers of production forecasting — from temporal leakage to sparse series collapse' },
 ]
 
 const KIND_COLORS = {
@@ -118,7 +264,11 @@ const KIND_COLORS = {
 const TAB_LABELS = {
   spark: 'Spark Lab', features: 'Features', eval: 'Eval', models: 'Models & Math',
   design: 'System Design', monitor: 'Monitoring', interview: 'Interview', gradient: 'Gradient',
-  landscape: 'ML Landscape',
+  landscape: 'ML Landscape', classical: 'Classical ML',
+  airflow: 'Airflow', dbt: 'dbt', modeling: 'Data Modeling',
+  dl: 'Deep Learning', dl_finetune: 'Fine-tuning', dl_serving: 'DL Serving',
+  mlops_deploy: 'Deployment', mlops_pipes: 'CI/CD & Infra',
+  ds: 'Data Science', causal: 'Causal Inference', ts: 'Time Series',
 }
 
 function match(item, q) {

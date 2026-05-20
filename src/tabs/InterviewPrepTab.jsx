@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
+import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
 
 const QUESTIONS = [
   // ─── ML System Design ────────────────────────────────────────────────────
@@ -574,6 +575,7 @@ export default function InterviewPrepTab() {
   const [level,   setLevel]   = useState('All')
   const [open,    setOpen]    = useState(null)
   const [search,  setSearch]  = useState('')
+  const [, forceUpdate] = useState(0)
 
   const filtered = useMemo(() => QUESTIONS.filter(q => {
     if (cat !== 'All' && q.cat !== cat) return false
@@ -661,6 +663,11 @@ export default function InterviewPrepTab() {
                       </div>
                       <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0 }}>{q.q}</p>
                     </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleBookmark('interview', String(q.id), q.q.slice(0,40)); forceUpdate(n => n+1) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '0 4px', color: isBookmarked('interview', String(q.id)) ? 'var(--gold)' : 'var(--ink-ghost)', flexShrink: 0, lineHeight: 1 }}
+                      title={isBookmarked('interview', String(q.id)) ? 'Remove bookmark' : 'Bookmark'}
+                    >{isBookmarked('interview', String(q.id)) ? '★' : '☆'}</button>
                     <span style={{ color: 'var(--ink-low)', fontSize: '13px', paddingTop: '2px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
                   </div>
                   {isOpen && (
