@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getAllProgress, getNextRecommendation, getTrackMastery, inferMastery } from '../utils/progress.js'
+import { getBookmarks, toggleBookmark } from '../utils/bookmarks.js'
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 const ROLES = [
@@ -230,18 +231,21 @@ const TYPE_BADGE = {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function HomeTab({ onNavigate }) {
-  const [progress, setProgress] = useState([])
-  const [nextUp,   setNextUp]   = useState(null)
-  const [role,     setRole]     = useState(() => localStorage.getItem('msl_role') || null)
-  const [openPath, setOpenPath] = useState(null)
+  const [progress,  setProgress]  = useState([])
+  const [nextUp,    setNextUp]    = useState(null)
+  const [role,      setRole]      = useState(() => localStorage.getItem('msl_role') || null)
+  const [openPath,  setOpenPath]  = useState(null)
+  const [bookmarks, setBookmarks] = useState(() => getBookmarks())
 
   function refresh() {
     setProgress(getAllProgress())
     setNextUp(getNextRecommendation())
   }
+  function refreshBookmarks() { setBookmarks(getBookmarks()) }
   useEffect(() => {
     refresh()
     window.addEventListener('msl_progress', refresh)
+    window.addEventListener('msl_bookmarks', refreshBookmarks)
     // Auto-open a learning path when navigated from LandscapeTab
     const gotoPath = localStorage.getItem('msl_goto_path')
     if (gotoPath) {
@@ -251,7 +255,10 @@ export default function HomeTab({ onNavigate }) {
         document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 120)
     }
-    return () => window.removeEventListener('msl_progress', refresh)
+    return () => {
+      window.removeEventListener('msl_progress', refresh)
+      window.removeEventListener('msl_bookmarks', refreshBookmarks)
+    }
   }, [])
 
   function pickRole(key) {
@@ -337,6 +344,27 @@ export default function HomeTab({ onNavigate }) {
           </div>
           <span style={{ color: 'var(--ink-low)', fontSize: '13px', flexShrink: 0 }}>→</span>
         </div>
+      )}
+
+      {/* ── Bookmarks ── */}
+      {bookmarks.length > 0 && (
+        <section>
+          <div className="eyebrow">Bookmarked modules</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+            {bookmarks.map(bm => (
+              <div key={bm.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", minWidth: '80px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{bm.tabId}</span>
+                <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif" }}>{bm.label}</span>
+                <button onClick={() => onNavigate(bm.tabId)} style={{ fontSize: '11px', padding: '4px 12px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+                  Open →
+                </button>
+                <button onClick={() => { toggleBookmark(bm.tabId, bm.moduleId, bm.label); setBookmarks(getBookmarks()) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '14px', padding: '0 4px' }}
+                  title="Remove bookmark">✕</button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── Export progress ── */}

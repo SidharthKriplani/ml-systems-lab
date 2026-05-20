@@ -1,8 +1,15 @@
 import { useState, useMemo } from 'react'
+import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ─── Shared accordion MCQ component ──────────────────────────────────────────
 function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context' }) {
   const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+  const [diffFilter, setDiffFilter] = useState('all')
+
+  function getDiff(i, total) {
+    const t = total / 3
+    return i < t ? 'easy' : i < 2 * t ? 'medium' : 'hard'
+  }
 
   const score = items.reduce((acc, item, i) => ({
     attempted: acc.attempted + (item.revealed ? 1 : 0),
@@ -20,6 +27,23 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* Difficulty filter */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        {['all','easy','medium','hard'].map(d => (
+          <button key={d} onClick={() => setDiffFilter(d)} style={{
+            fontSize: '10px', padding: '3px 10px', borderRadius: '999px',
+            background: diffFilter === d ? accentColor + '15' : 'transparent',
+            border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
+            color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
+            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}>
+            {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
+          </button>
+        ))}
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+          {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
+        </span>
+      </div>
       {score.attempted > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
@@ -33,7 +57,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
         </div>
       )}
 
-      {scenarios.map((sc, i) => {
+      {scenarios.map((sc, i) => { if (diffFilter !== 'all' && getDiff(i, scenarios.length) !== diffFilter) return null;
         const item = items[i]
         const isCorrect = item.revealed && item.picked === sc.answer
         const isWrong   = item.revealed && item.picked !== sc.answer
@@ -652,6 +676,7 @@ const MODULES = [
 
 export default function ModelEvalTab() {
   const [active, setActive] = useState('metric')
+  const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
 
   return (
@@ -667,9 +692,14 @@ export default function ModelEvalTab() {
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)}
-            className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.icon} {m.label}
-          </button>
+          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <button onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`} style={{ paddingRight: '8px' }}>{m.label}</button>
+            <button onClick={(e) => { e.stopPropagation(); toggleBookmark('modeleval', m.id, m.label); forceUpdate(n => n+1) }}
+              title={isBookmarked('modeleval', m.id) ? 'Remove bookmark' : 'Bookmark module'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontSize: '12px', color: isBookmarked('modeleval', m.id) ? 'var(--prime)' : 'var(--ink-ghost)', lineHeight: 1 }}>
+              {isBookmarked('modeleval', m.id) ? '★' : '☆'}
+            </button>
+          </div>
         ))}
       </div>
 

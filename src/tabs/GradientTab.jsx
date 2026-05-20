@@ -33,7 +33,7 @@ Use a feature store. A real one. The same Python code that computes features for
 The engineering cost of a feature store is front-loaded. The cost of not having one compounds indefinitely.`,
     tags: ['Feature Engineering', 'Production ML', 'Debugging', 'Feature Store'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'pqe-HB7ZcUI', title: 'MFML 082 - The Training-Serving Skew' }],
   },
   {
     id: 2,
@@ -67,7 +67,7 @@ The engineering cost of a feature store is front-loaded. The cost of not having 
 **AQE is not magic.** It can't save a job with a 5000:1 key skew if you haven't enabled AQE skew join (\`spark.sql.adaptive.skewJoin.enabled=true\`). And even with skew join enabled, extremely hot keys (> 20× median) may require explicit salting.`,
     tags: ['PySpark', 'Performance', 'Internals', 'Spark UI'],
     domain: 'spark',
-    youtube: [],
+    youtube: [{ id: 'q1LtBU_ca20', title: 'Shuffle Partition Spark Optimization: 10x Faster!' }],
   },
   {
     id: 3,
@@ -164,7 +164,7 @@ Data quality: feature freshness, null rates, embedding staleness.
 Model performance: prediction score distribution drift, AUC on logged feedback.`,
     tags: ['System Design', 'Recommendations', 'Two-Tower', 'Interview Prep', 'Retrieval'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'jkKAeIx7F8c', title: 'ML System Design Interview: YouTube Recommendations' }],
   },
   {
     id: 5,
@@ -198,7 +198,7 @@ The 0.2 PSI threshold assumes your reference distribution is stable. If your dat
 You can observe data drift immediately (compare feature distributions). Concept drift requires labels, which often come with a lag. Bridge: use proxy metrics. For a revenue model, track predicted vs actual revenue. For a ranking model, track predicted CTR vs observed CTR on the same items. Divergence = concept drift signal, no labels required.`,
     tags: ['Monitoring', 'Drift', 'PSI', 'KS Test', 'Production ML'],
     domain: 'monitor',
-    youtube: [],
+    youtube: [{ id: 'QJTRNxUxmuc', title: 'Concept Drift & Data Drift in ML — Explained' }],
   },
   {
     id: 6,
@@ -274,7 +274,7 @@ Event timestamps and processing timestamps differ. A purchase that happened at 1
 Training run 42 used features_v3. Training run 57 used features_v5. When you investigate why run 57 underperformed in production, you need to reproduce the exact features that run 42 used. This requires: (1) Store feature definitions with immutable versioning. (2) Log which feature version was used in each training run. (3) Keep old feature computation code runnable.`,
     tags: ['Feature Store', 'Architecture', 'Online Features', 'Data Engineering'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'qh7bh4YVI2E', title: 'Rethinking Feature Stores with Feast and Tecton — apply() 2021' }],
   },
   {
     id: 8,
@@ -310,7 +310,7 @@ Weak: Jumps to neural network architecture before understanding the problem. Use
 "If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."`,
     tags: ['Interview Prep', 'System Design', 'MLE', 'Career'],
     domain: 'interview',
-    youtube: [],
+    youtube: [{ id: 's-MaQ6S9_DA', title: 'ML Engineer Interviews Explained — Exponent' }],
   },
   {
     id: 9,
@@ -433,7 +433,7 @@ Sequence of phases: (1) Popularity-based serving. Log everything. (2) Content-ba
 The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.`,
     tags: ['Cold Start', 'Recommendation Systems', 'ML System Design', 'Exploration'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'UFpF108gyaw', title: 'Mitigating Cold Start in TensorFlow Recommenders' }],
   },
   {
     id: 12,
@@ -475,7 +475,7 @@ Simulates a larger batch size by computing gradients over multiple micro-batches
 Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.`,
     tags: ['Distributed Training', 'Data Parallel', 'Model Parallel', 'ZeRO', 'Deep Learning'],
     domain: 'dl',
-    youtube: [],
+    youtube: [{ id: 'SivkGd6LQoU', title: 'Distributed Data Parallel Training in PyTorch' }],
   },
   {
     id: 13,
@@ -529,7 +529,7 @@ Saying "and then we'd monitor it" at minute 42 of a 45-minute interview. Strong 
 Spending 20 minutes designing a batch inference system when the interviewer had real-time in mind. Or vice versa. Clarifying questions aren't a sign of weakness — they're a sign you understand that requirements matter. Ask once, confirm your understanding, then proceed.`,
     tags: ['Interview Prep', 'MLE', 'Senior Engineer', 'Career', 'System Design'],
     domain: 'interview',
-    youtube: [],
+    youtube: [{ id: 'v6bzNvEi-k8', title: 'How to Crack Senior-level ML Interviews: Insider Tips' }],
   },
   {
     id: 14,
@@ -603,7 +603,7 @@ If you're senior: location flexibility is compensation. Working remotely for a S
 The map is not the territory. These are medians and ranges. The engineer who deploys the model that increases Amazon's recommendation CTR by 0.3% earns considerably more than the median. Compensation in ML is power-law distributed in the same way ML system impact is. The leverage is real, in both directions.`,
     tags: ['Salary', 'Career', 'ML Jobs', 'Total Compensation', 'Global', 'FAANG'],
     domain: 'career',
-    youtube: [],
+    youtube: [{ id: 'PFbXCIMlfc8', title: 'What I Actually Do as a Machine Learning Engineer' }],
   },
   {
     id: 15,
@@ -671,7 +671,7 @@ The entire Netflix ML enterprise, which now employs several hundred ML and data 
 This is the third and most important lesson from Netflix: find the one number, instrument it perfectly, and align everything — engineering, product, content, design — around moving it. The ML follows naturally.`,
     tags: ['Netflix', 'Case Study', 'Recommendation Systems', 'ML Industry', 'Feature Stores'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'IByC2keY3vo', title: 'Trends in Recommendation & Personalization at Netflix — Justin Basilico' }],
   },
   {
     id: 16,
@@ -739,7 +739,7 @@ Before adding any tool to your ML stack, ask: what specific failure mode does th
 Stack complexity is technical debt that compounds. Build for the problems you have today, with one quarter of headroom for where you'll be in six months. That's it.`,
     tags: ['ML Stack', 'MLOps', 'Career', 'Startup', 'Infrastructure', 'SageMaker', 'MLflow'],
     domain: 'career',
-    youtube: [],
+    youtube: [{ id: 'BPYOsDCZbno', title: 'Lecture 02: Dev Infrastructure & Tooling — FSDL 2022' }],
   },
   {
     id: 17,
@@ -899,7 +899,7 @@ Choose where you want to live first. Then optimise your career for that location
 Geography is not destiny. But it is the context in which everything else happens, and context shapes outcomes more than most people want to admit.`,
     tags: ['Global', 'ML Jobs', 'Salary', 'London', 'Berlin', 'Bangalore', 'San Francisco', 'Career'],
     domain: 'career',
-    youtube: [],
+    youtube: [{ id: 'v45cTIDbj9E', title: 'Advice From a Top 1% Machine Learning Engineer' }],
   },
   {
     id: 19,
@@ -971,7 +971,7 @@ Being technically brilliant in isolation. Every ML career ladder has a "collabor
 Waiting to be asked. The move from L5 to L6, in particular, requires a shift from "I do what I'm asked, very well" to "I identify what needs to be done and do it." The second mode is not optional at Staff level. It cannot be learned after promotion; it must be demonstrated before it.`,
     tags: ['Career Ladder', 'Levelling', 'Staff Engineer', 'MLE', 'Promotions', 'Senior Engineer'],
     domain: 'career',
-    youtube: [],
+    youtube: [{ id: 'yJSavCOuub8', title: 'The Software Engineering Career Ladder Explained' }],
   },
   {
     id: 20,
@@ -1020,7 +1020,7 @@ Leakage usually isn\'t visible in code. It\'s visible in unrealistically good va
 The question to ask for every feature: "At prediction time in production, is this value available, and is it computed the same way as at training time?" If the answer is "I\'m not sure," audit the feature.`,
     tags: ['Leakage', 'Cross-validation', 'Evaluation', 'Preprocessing', 'Production ML'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'fE_25esn-5U', title: 'Data Leakage — StatQuest with Josh Starmer' }],
   },
   {
     id: 21,
@@ -1072,7 +1072,7 @@ This requires materialising feature rows with accurate write timestamps, which m
 For 100 training events at time T, fetch the features your training pipeline used. Then independently compute those features using only events with timestamp < T. If they differ systematically, you have the bug.`,
     tags: ['Feature Store', 'Point-in-Time', 'Data Leakage', 'Training Data', 'Data Engineering'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines — OpML 2020' }],
   },
   {
     id: 22,
@@ -1136,7 +1136,7 @@ Check spark.executor.memory, spark.executor.cores, spark.sql.shuffle.partitions 
 After running this five times, you\'ll start catching Spark performance bugs in code review before they ever hit production.`,
     tags: ['Spark', 'PySpark', 'Performance', 'Debugging', 'Data Engineering', 'Skew'],
     domain: 'spark',
-    youtube: [],
+    youtube: [{ id: 'YgQgJceojJY', title: 'Understanding Query Plans and Spark UIs — Databricks' }],
   },
   {
     id: 23,
@@ -1199,7 +1199,7 @@ You don\'t need an expensive MLOps platform for this. You need:
 The teams that catch model failures early aren\'t the ones with the most sophisticated tooling. They\'re the ones who consistently run these three checks and act on the alerts rather than explaining them away.`,
     tags: ['Monitoring', 'Drift Detection', 'PSI', 'KS Test', 'Production ML', 'Calibration'],
     domain: 'monitor',
-    youtube: [],
+    youtube: [{ id: '_xjtxnFJakY', title: 'The Day After Deployment: Model Monitoring — Emeli Dral' }],
   },
   {
     id: 24,
@@ -1283,7 +1283,7 @@ Step 6: Evaluation — NDCG@10 offline; A/B on weekly active days online with 2-
 The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?`,
     tags: ['Interview', 'System Design', 'ML Interview', 'Framework', 'Recommendation', 'Evaluation'],
     domain: 'interview',
-    youtube: [],
+    youtube: [{ id: 'ZjNoipQAqRM', title: 'ML System Design Mock Interview: Tweet Toxicity — Exponent' }],
   },
   {
     id: 25,
@@ -1355,7 +1355,7 @@ Correct approach: Croston\'s method (separate demand interval and demand size mo
 Six of these eight failures are detectable before you train any model: by auditing the feature computation logic, checking stationarity, verifying your evaluation methodology, and profiling your series for sparsity and structural breaks. Spend 30% of your forecasting project on this audit before touching model selection. You\'ll find problems that no model architecture can fix.`,
     tags: ['Time Series', 'Forecasting', 'Evaluation', 'Leakage', 'Stationarity', 'Production ML'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: '6pP9meuusNw', title: 'Temporal Leakage in ML: Train-Test Contamination Explained' }],
   },
 ]
 
