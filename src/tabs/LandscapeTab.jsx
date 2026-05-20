@@ -73,7 +73,7 @@ const ROLES = [
   },
   {
     title: 'Data Scientist',
-    pathId: 'production_ml',
+    pathId: 'ds_track',
     icon: '📊',
     level: 'Analytics',
     accentColor: 'var(--gold)',

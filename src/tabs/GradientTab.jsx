@@ -391,7 +391,7 @@ Useful applications: explaining individual predictions to fraud analysts, auditi
 Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
     tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'VaIXMiNMEJU', title: 'SHAP Values, Clearly Explained — StatQuest' }],
   },
   {
     id: 11,
@@ -817,7 +817,7 @@ In 2025, ML engineering encompasses distributed training systems managing thousa
 The field that was a niche within data science in 2012 is now a primary driver of engineering investment at every company above a certain scale. The skills that matter have changed four times in twelve years. They will change again.`,
     tags: ['ML History', 'AlexNet', 'Transformer', 'GPT', 'Deep Learning', 'Timeline'],
     domain: 'dl',
-    youtube: [],
+    youtube: [{ id: 'kCc8FmEb1nY', title: "Let's build GPT from scratch — Andrej Karpathy" }],
   },
   {
     id: 18,
@@ -971,6 +971,107 @@ Being technically brilliant in isolation. Every ML career ladder has a "collabor
 Waiting to be asked. The move from L5 to L6, in particular, requires a shift from "I do what I'm asked, very well" to "I identify what needs to be done and do it." The second mode is not optional at Staff level. It cannot be learned after promotion; it must be demonstrated before it.`,
     tags: ['Career Ladder', 'Levelling', 'Staff Engineer', 'MLE', 'Promotions', 'Senior Engineer'],
     domain: 'career',
+    youtube: [],
+  },
+  {
+    id: 20,
+    slug: 'validation-set-leakage',
+    title: 'The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(16,185,129,0.1)', text: 'var(--mint)', border: 'rgba(16,185,129,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn\'t degrade — your validation set was infected from the start. Leakage is the most reliably career-damaging mistake in applied ML, and it hides in places most practitioners never check.',
+    body: `Leakage means your model has access to information during training that it won\'t have at prediction time. The validation set is supposed to catch this. It doesn\'t — because in most pipelines, the validation set is infected by the same leakage that corrupts the training set.
+
+**Type 1: Target leakage (the classic)**
+
+A feature is computed from or correlated with the target after the fact. Example: a credit default model includes "number of late payment notices sent" as a feature. Late notices are sent after the default is already detected — the feature is a consequence of the label, not a cause. In training data, this feature perfectly predicts the label. In production, it doesn't exist at prediction time.
+
+The diagnostic: plot feature values for positive vs negative labels. A feature with AUC > 0.95 on its own should be investigated immediately. Either it\'s extremely good (rare) or it leaks from the label.
+
+**Type 2: Temporal leakage**
+
+Future data is used to compute features for past events. The most common version: you compute a 30-day rolling average user activity as a feature for a purchase event. But you forgot to anchor the window to the event timestamp — it uses data from after the purchase. In batch training pipelines, this is easy to introduce and hard to detect without explicit timestamp audits.
+
+The fix: point-in-time correct joins. For every event at time T, features must be computed using only data available at T - epsilon. This requires either a time-travel-capable feature store or explicit timestamp filtering in every feature computation.
+
+**Type 3: Preprocessing leakage**
+
+Your scaler, imputer, or encoder is fitted on the full dataset (including validation) before the train/val split. This means the validation set has already "touched" the training distribution through the preprocessing step.
+
+The correct order:
+1. Split first (train, val, test)
+2. Fit scaler/encoder on train only
+3. Transform val and test using train-fitted parameters
+
+Using sklearn Pipeline ensures this order is preserved. Fitting on the full dataset before splitting is the mistake. It's subtle: your scaler.mean_ incorporates validation set statistics, giving your model slight information about validation examples during training.
+
+**Type 4: Group leakage**
+
+Your dataset has natural groups (users, patients, products) and multiple examples per group. A random 80/20 split puts some examples from user_id=12345 in training and others in validation. Any user-level features (historical engagement, spending patterns, demographics) are now shared between train and validation via the group. Your model learns user-specific patterns that generalize perfectly to the other rows from the same user in validation — but not to new users in production.
+
+The fix: group-aware splits. All rows from a given entity (user, patient, product) must be in the same split. sklearn provides GroupShuffleSplit. If you have time-ordered data, use a chronological split where validation contains only events that happen after all training events.
+
+**The meta-lesson:**
+
+Leakage usually isn\'t visible in code. It\'s visible in unrealistically good validation metrics. If your validation AUC is > 0.95 for a hard problem, or your RMSE is suspiciously low, investigate before celebrating. Strong validation performance is a diagnostic signal, not just a success metric.
+
+The question to ask for every feature: "At prediction time in production, is this value available, and is it computed the same way as at training time?" If the answer is "I\'m not sure," audit the feature.`,
+    tags: ['Leakage', 'Cross-validation', 'Evaluation', 'Preprocessing', 'Production ML'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 21,
+    slug: 'feature-store-time-travel-bug',
+    title: 'The Feature Store Time-Travel Bug That Quietly Corrupts Your Models',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(34,211,238,0.1)', text: 'var(--sky)', border: 'rgba(34,211,238,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn\'t. The time-travel bug is the most insidious failure mode in ML data infrastructure, and it exists in almost every feature store deployment that hasn\'t explicitly tested for it.',
+    body: `Point-in-time correctness means: when you build a training example for an event at timestamp T, every feature value reflects the state of the world at time T — not T+1, not T+24h, not "whenever the batch job ran."
+
+Almost every feature store tutorial demonstrates point-in-time joins. Very few explain how they silently break in production.
+
+**How the bug appears**
+
+Your feature store materialises features via a daily batch job that runs at 02:00 UTC. It reads all events from the previous calendar day and computes feature values. The features are stored with a timestamp of "2024-01-15" — the calendar date of the source events.
+
+Your training pipeline does a point-in-time join: for each training event at timestamp T, fetch the most recent feature row where feature_timestamp <= T.
+
+Looks correct. The bug: your feature computation job runs at 02:00 UTC on 2024-01-16 to process 2024-01-15 data. The feature row is available in your store starting at 02:00 UTC on 2024-01-16. But the feature_timestamp stored is "2024-01-15 00:00:00 UTC."
+
+For any training event that occurred on 2024-01-15 after 00:00 UTC but before 02:00 UTC on 2024-01-16, your point-in-time join correctly finds the 2024-01-15 feature row. But those features were computed including data from the full day of 2024-01-15 — including data after the event. If a user made a purchase at 08:00 UTC on 2024-01-15, their "purchases yesterday" feature will include that very purchase. Leakage.
+
+**The four variants**
+
+**1. Calendar-day vs event-time mismatch.** Features stamped at midnight of the source date but containing full-day data. Training events from early in the day see future-contaminated features.
+
+**2. Processing lag hiding behind event timestamp.** The feature row is available at T+N hours due to pipeline latency, but stamped at T. Any event between T and T+N uses a feature row that "didn\'t exist yet."
+
+**3. Late-arriving data correction.** Your pipeline reprocesses yesterday\'s data today to incorporate late-arriving events. The corrected feature row overwrites the original but keeps the original timestamp. Historical training data is retrospectively altered.
+
+**4. Wall-clock time vs event time aggregation.** A "sessions in the last 7 days" feature computed at 2024-01-15 23:55 UTC will include session data that arrived between the training event at 2024-01-15 10:00 UTC and the time the feature was computed.
+
+**How to detect it**
+
+For any feature that should reflect "state at time T," compute it independently from raw events for a sample of training rows. Compare against what your feature store served. Systematic overestimation of features for events early in the day = temporal leakage.
+
+Also: if a model degrades faster after deployment than expected, but shows no feature distribution shift in PSI monitoring, temporal leakage is a prime suspect. The model learned from future-contaminated data and production data is uncontaminated.
+
+**The correct fix**
+
+Store features with their availability_timestamp — the time the row was actually written to the store — not the event timestamp. Your point-in-time join must use availability_timestamp <= event_timestamp, not feature_date <= event_date.
+
+This requires materialising feature rows with accurate write timestamps, which means changing how your pipeline records metadata. Feast 0.28+ supports this with the ttl parameter and feature_view materialisation logs. Without this, you\'re doing "point-in-time" joins that are not actually point-in-time.
+
+**The test you should run**
+
+For 100 training events at time T, fetch the features your training pipeline used. Then independently compute those features using only events with timestamp < T. If they differ systematically, you have the bug.`,
+    tags: ['Feature Store', 'Point-in-Time', 'Data Leakage', 'Training Data', 'Data Engineering'],
+    domain: 'features',
     youtube: [],
   },
 ]

@@ -419,11 +419,195 @@ function ConfounderOrCollider() {
   )
 }
 
+// ── Backdoor Criterion ────────────────────────────────────────────────────────
+const BACKDOOR_SCENARIOS = [
+  {
+    id: 'bd1',
+    dag: 'Z → X → Y\nZ ────→ Y',
+    question: 'Z causes both X (treatment) and Y (outcome). You want the causal effect of X on Y. Should you control for Z?',
+    options: [
+      'Yes — Z is a confounder, controlling for it blocks the backdoor path X ← Z → Y',
+      'No — Z is on the causal path from X to Y (mediator)',
+      'No — Z is a collider, conditioning would create bias',
+      'It doesn\'t matter since X→Y has a direct path',
+    ],
+    correct: 0,
+    answer: 'Z is a confounder: it causes both treatment X and outcome Y, opening the backdoor path X ← Z → Y. This path injects spurious association. Controlling for Z blocks it and isolates the X → Y causal effect. This is the textbook application of the backdoor criterion.',
+    lesson: 'Rule: any variable that causes both treatment and outcome is a confounder. You must control for it (or match on it) to identify the causal effect.',
+    nodeType: 'confounder',
+  },
+  {
+    id: 'bd2',
+    dag: 'X → M → Y\n(M is the only path from X to Y)',
+    question: 'M lies between X and Y and is the only mechanism through which X affects Y. You want the TOTAL causal effect of X. Should you control for M?',
+    options: [
+      'Yes — M lies between X and Y and should be blocked',
+      'No — controlling for M blocks the only causal path, making X appear to have zero effect',
+      'Yes — M confounds the X→Y relationship',
+      'Depends on how strongly M correlates with Y',
+    ],
+    correct: 1,
+    answer: 'M is a mediator — it is ON the causal path from X to Y. Controlling for it blocks the very mechanism you are estimating. The model will then show X has zero total effect (because you\'ve absorbed all of X\'s effect into M). For the total causal effect, never control for mediators. For the direct effect only (X→Y bypassing M), you would control for M — but that\'s a different question.',
+    lesson: 'Confounders are common causes — control them. Mediators are on the causal path — don\'t control for total effect. The classic mistake is misidentifying a mediator as a confounder.',
+    nodeType: 'mediator',
+  },
+  {
+    id: 'bd3',
+    dag: 'X → C ← Y\n(X and Y have no direct connection)',
+    question: 'C is caused by both X and Y. You restrict your sample to cases where C = 1 (e.g., selected applicants, hospitalised patients). What happens?',
+    options: [
+      'Nothing — no causal path exists between X and Y, so there\'s no bias',
+      'A spurious X–Y association appears even though X has no causal effect on Y',
+      'The causal X→Y effect is correctly identified',
+      'C blocks a confounding path between X and Y',
+    ],
+    correct: 1,
+    answer: 'C is a collider — both X and Y point into it. Conditioning on a collider (restricting to C=1, including it as a regression covariate, or selecting on it) opens a spurious association between X and Y that doesn\'t reflect any causal relationship. This is collider bias, also called Berkson\'s paradox. Classic examples: sampling hospitalised patients (both disease A and disease B lead to hospitalisation — within hospitals they look negatively correlated), or studying tech startup success (talent and luck both cause success — within successful startups they appear to substitute for each other).',
+    lesson: 'Never condition on, filter by, or control for a collider. Selecting on an outcome variable (users who churned, patients who were hospitalised, startups that IPO\'d) introduces collider bias in all covariates that influenced selection.',
+    nodeType: 'collider',
+  },
+  {
+    id: 'bd4',
+    dag: 'U (unobserved) → X\nU ──────────→ Y\nX ──────────→ Y',
+    question: 'U is an unobserved confounder — you can\'t measure it. Can you identify the causal effect of X on Y from observational data alone?',
+    options: [
+      'Yes — just control for all the observed variables you have',
+      'No — the backdoor path X ← U → Y cannot be blocked, so the effect is not identified',
+      'Yes — X→Y is a direct path so its effect is always identified',
+      'Yes — the front-door criterion works automatically here',
+    ],
+    correct: 1,
+    answer: 'Unobserved confounding is the core problem in causal inference. The backdoor path X ← U → Y cannot be blocked because U is not measured. Controlling for observed variables that aren\'t U does nothing to close this path. Solutions: (1) Randomize (breaks U→X by design). (2) Find an instrument Z that affects X but not Y directly (IV). (3) Use front-door criterion if a mediator M exists on X→M→Y that is not caused by U. Without one of these, the causal effect is not identified.',
+    lesson: 'Observational data with unobserved confounding cannot identify causal effects without additional structure. This is why RCTs are the gold standard — randomisation makes U independent of X.',
+    nodeType: 'unobserved',
+  },
+  {
+    id: 'bd5',
+    dag: 'A → X,  A → Y\nB → X,  B → Y\nX ──────────→ Y',
+    question: 'Two confounders A and B both affect X and Y. In your regression, you control for A only. Is the X→Y effect identified?',
+    options: [
+      'Yes — controlling for one confounder removes most of the bias',
+      'No — the backdoor path X ← B → Y is still open, leaving residual confounding',
+      'Yes — partial adjustment is sufficient when confounders are independent',
+      'Depends on the relative effect sizes of A and B',
+    ],
+    correct: 1,
+    answer: 'Controlling for A blocks X ← A → Y, but B remains unblocked. The path X ← B → Y still injects bias into your X→Y estimate. Partial confounding adjustment gives a biased (not merely noisy) estimate. You must block ALL backdoor paths. The minimal adjustment set here is {A, B}. This is why propensity score models must include all measured confounders — each omission is a source of bias, not just variance.',
+    lesson: 'The adjustment set must close ALL backdoor paths. Controlling for some confounders but not others does not give an unbiased estimate — it gives a partially-corrected biased estimate. Each uncontrolled backdoor path is a separate source of bias.',
+    nodeType: 'multiple',
+  },
+  {
+    id: 'bd6',
+    dag: 'X → M → Y\nU (unobserved) → X,  U → Y\n(M is NOT caused by U)',
+    question: 'U confounds X and Y but is unobserved. However, mediator M (on path X→M→Y) is not caused by U. Can you identify the X→Y effect?',
+    options: [
+      'No — U is unobserved, so identification is impossible regardless of M',
+      'Yes — via the front-door criterion: identify X→M then M→Y, then compose them',
+      'Only if you have an instrument Z for X',
+      'Yes — control for M to block the U confounding path',
+    ],
+    correct: 1,
+    answer: 'This is the front-door criterion (Pearl, 1995). Even with unobserved U confounding X and Y, you can identify X→Y by: (1) Estimating X→M — since M has no backdoor paths through U, this is identified. (2) Estimating M→Y — controlling for X blocks all M→Y confounders. (3) Composing: P(Y|do(X)) = Σ_m P(M=m|X) × Σ_x P(Y|X=x, M=m) × P(X=x). The canonical example: smoking (X) → tar in lungs (M) → cancer (Y), with unobserved genetic confounders (U) affecting both smoking and cancer — identified via tar even without genotype data.',
+    lesson: 'The front-door criterion is a powerful result: unobserved confounding is not always fatal if a suitable mediator exists. It\'s rare in practice but important to know — it means the answer to "can I identify this effect?" depends on the full DAG structure, not just whether confounders are observed.',
+    nodeType: 'front-door',
+  },
+]
+
+const BD_NODE_COLORS = {
+  confounder: 'var(--ember)',
+  mediator: 'var(--sky)',
+  collider: 'var(--violet)',
+  unobserved: 'var(--rose)',
+  multiple: 'var(--gold)',
+  'front-door': 'var(--mint)',
+}
+
+function BackdoorCriterion() {
+  const [idx, setIdx] = useState(0)
+  const [picked, setPicked] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const [score, setScore] = useState(0)
+  const [done, setDone] = useState(false)
+
+  const s = BACKDOOR_SCENARIOS[idx]
+  const accent = BD_NODE_COLORS[s.nodeType]
+
+  function pick(i) { if (!revealed) setPicked(i) }
+  function reveal() { if (picked === null) return; setRevealed(true); if (picked === s.correct) setScore(sc => sc + 1) }
+  function next() {
+    if (idx < BACKDOOR_SCENARIOS.length - 1) { setIdx(i => i + 1); setPicked(null); setRevealed(false) }
+    else setDone(true)
+  }
+
+  if (done) return (
+    <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
+      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{BACKDOOR_SCENARIOS.length}</div>
+      <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
+        {score >= 5 ? 'Solid backdoor criterion intuition. The front-door result is the hardest.' : 'Focus on the collider and mediator cases — those are where most practitioners go wrong.'}
+      </p>
+      <button className="btn-primary" onClick={() => { setIdx(0); setPicked(null); setRevealed(false); setScore(0); setDone(false) }}>Try again</button>
+    </div>
+  )
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKDOOR_SCENARIOS.length}</span>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+      </div>
+
+      {/* DAG visualization */}
+      <div style={{ padding: '16px 20px', background: 'rgba(0,0,0,0.3)', border: `1px solid ${accent}30`, borderRadius: '10px' }}>
+        <div style={{ fontSize: '10px', color: accent, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>DAG</div>
+        <pre style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{s.dag}</pre>
+      </div>
+
+      <div className="card" style={{ padding: '20px 24px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0 }}>{s.question}</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {s.options.map((opt, i) => {
+          const isCorrect = i === s.correct
+          const isPicked = i === picked
+          let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
+          if (revealed) {
+            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.06)'; color = 'var(--mint)' }
+            else if (isPicked && !isCorrect) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.06)'; color = 'var(--rose)' }
+          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
+          return (
+            <button key={i} onClick={() => pick(i)} disabled={revealed}
+              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+
+      {!revealed && <button className="btn-primary" onClick={reveal} disabled={picked === null}>Reveal</button>}
+      {revealed && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="card" style={{ padding: '20px', border: `1px solid ${accent}30`, background: accent + '06' }}>
+            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: "'JetBrains Mono',monospace", display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
+            <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
+            <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
+              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={next}>{idx < BACKDOOR_SCENARIOS.length - 1 ? 'Next →' : 'See results'}</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'causal_vs_pred', label: 'Causal vs Predictive', component: CausalVsPredictive },
   { id: 'identification', label: 'Identification Strategies', component: IdentificationStrategies },
   { id: 'dag',            label: 'Confounder or Collider', component: ConfounderOrCollider },
+  { id: 'backdoor',       label: 'Backdoor Criterion', component: BackdoorCriterion },
 ]
 
 export default function CausalInferenceTab() {
