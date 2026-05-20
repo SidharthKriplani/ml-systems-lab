@@ -1559,14 +1559,224 @@ function ServingTradeoffLab() {
 
 
 
+// ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)' }) {
+  const [items, setItems] = React.useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+
+  function toggle(i) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, open: !it.open } : it))
+  }
+  function pick(i, opt) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: opt, revealed: true } : it))
+  }
+
+  React.useEffect(() => {
+    function handleKey(e) {
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 4) {
+        const openIdx = items.findIndex(it => it.open && !it.revealed)
+        if (openIdx !== -1 && n - 1 < scenarios[openIdx].options.length) pick(openIdx, n - 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [items])
+
+  const attempted = items.filter(it => it.revealed).length
+  const correct   = items.filter((it, i) => it.revealed && it.picked === scenarios[i].answer).length
+  const pct       = attempted === 0 ? 0 : Math.round((correct / attempted) * 100)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'var(--depth)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+          <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {scenarios.map((sc, i) => {
+        const it = items[i]
+        const isCorrect = it.revealed && it.picked === sc.answer
+        return (
+          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+            <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', transition: 'transform 0.2s', display: 'inline-block', transform: it.open ? 'rotate(90deg)' : 'none' }}>▶</span>
+            </button>
+
+            {it.open && (
+              <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)', marginTop: '4px' }}>
+                  {Array.isArray(sc.context) ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{sc.context}</p>
+                  )}
+                </div>
+
+                <p style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', margin: 0 }}>{sc.question}</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {sc.options.map((opt, oi) => {
+                    const isPicked = it.picked === oi
+                    const isAns    = sc.answer === oi
+                    let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
+                    if (it.revealed) {
+                      if (isAns)          { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
+                      else if (isPicked)  { bg = 'rgba(239,68,68,0.08)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
+                    } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
+                    return (
+                      <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {it.revealed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Diagnosis</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
+                    </div>
+                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Production fix</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── RAG Architecture Judgment ────────────────────────────────────────────────
+const RAG_SCENARIOS = [
+  {
+    id: 'rag1',
+    title: 'Chunk size decision',
+    context: 'You are building a RAG system over 10,000 legal contracts. Each contract is 20–50 pages. Users ask highly specific questions ("What is the termination notice period in the Acme contract?"). Your initial system uses 2,000-token chunks and retrieves top-3.',
+    question: 'What chunk size strategy is most appropriate for this use case?',
+    options: [
+      'Increase to 5,000-token chunks — bigger context is always better for long documents.',
+      'Use 256-512 token chunks with sentence boundary awareness — small chunks improve retrieval precision for specific queries.',
+      'Keep 2,000-token chunks but retrieve top-10 to ensure the answer is in the context.',
+      'Use document-level chunks — retrieve the full contract and let the LLM extract the answer.',
+    ],
+    answer: 1,
+    diagnosis: 'For specific fact-retrieval questions, smaller chunks improve recall precision: the relevant clause is a few sentences, not 2,000 tokens. Large chunks dilute the signal in the embedding — the embedding for a 2,000-token chunk averages over many topics, making it harder to surface the one relevant clause. Retrieving top-10 with large chunks fills the context window with irrelevant content and confuses the LLM.',
+    fix: 'Use 256–512 token chunks with sentence-boundary splitting (no mid-sentence cuts). Add 10% overlap between adjacent chunks to preserve context at boundaries. For hierarchical documents, consider "parent document retrieval": retrieve small chunks, then fetch the larger parent chunk for the LLM context window. Evaluate chunk quality with context recall metric (RAGAS).',
+  },
+  {
+    id: 'rag2',
+    title: 'Retrieval strategy for keyword-heavy queries',
+    context: 'A RAG system over software documentation receives queries like "HTTPConnectionPool timeout error Python 3.11." Dense embedding retrieval (cosine similarity) misses the exact error message and returns semantically related but irrelevant documents. Recall@5 is 42%.',
+    question: 'What retrieval strategy would improve recall for keyword-heavy, exact-match queries?',
+    options: [
+      'Switch entirely to BM25 sparse retrieval — it handles exact keywords better than embeddings.',
+      'Use hybrid search: combine BM25 sparse retrieval with dense embedding retrieval, fuse results with RRF or a weighted sum.',
+      'Use a larger embedding model — GPT-4 embeddings will handle exact keywords better.',
+      'Increase k from 5 to 50 — the answer is in the index, just not in top-5.',
+    ],
+    answer: 1,
+    diagnosis: 'Dense embeddings excel at semantic similarity but struggle with exact-match queries, product names, error codes, and technical jargon (rare tokens get diffused in the embedding space). BM25 handles exact matches perfectly. Hybrid search combines both strengths: BM25 for exact matches, dense for semantic understanding. Switching entirely to BM25 would hurt semantic queries. Increasing k degrades precision and fills the context window with noise.',
+    fix: 'Implement hybrid search: (1) Run BM25 (Elasticsearch or BM25Okapi) and dense ANN search in parallel. (2) Merge result lists using Reciprocal Rank Fusion (RRF): score = Σ 1/(k + rank_i) across retrieval methods. (3) Pass top-k fused results to LLM. Most vector DBs now support hybrid search natively (Weaviate, Qdrant, Pinecone). Tune BM25 weight vs dense weight on a labeled evaluation set.',
+  },
+  {
+    id: 'rag3',
+    title: 'Reranking decision',
+    context: 'Your RAG pipeline retrieves top-20 chunks via ANN search, then passes all 20 to the LLM. The LLM context window fills up and you hit token limit errors. Reducing k to 3 drops answer quality significantly.',
+    question: 'How do you maintain answer quality while fitting within the context window?',
+    options: [
+      'Switch to a model with a larger context window (128k tokens) to fit all 20 chunks.',
+      'Add a cross-encoder reranker between retrieval and generation: rerank top-20, pass top-3 to the LLM.',
+      'Summarise each of the 20 chunks before passing to the LLM to reduce token count.',
+      'Use map-reduce: have the LLM process each chunk independently and aggregate answers.',
+    ],
+    answer: 1,
+    diagnosis: 'A cross-encoder reranker scores each (query, chunk) pair jointly — far more accurate than bi-encoder ANN retrieval because it has direct query-document interaction. Retrieve a large candidate set with fast ANN (high recall, lower precision), rerank with cross-encoder (high precision on top-k). This separates the recall/latency tradeoff from the precision tradeoff.',
+    fix: 'Add cohere-rerank, BGE-Reranker, or cross-encoder/ms-marco-MiniLM after ANN retrieval. Pattern: ANN retrieves top-20 (fast, recall-optimised), cross-encoder reranks to top-3 (slow, precision-optimised). The reranker adds 50–200ms latency but dramatically improves top-3 relevance. Evaluate with NDCG@3 before and after reranking. For latency-sensitive systems, use a smaller reranker model (MiniLM vs large models).',
+  },
+  {
+    id: 'rag4',
+    title: 'Embedding model choice',
+    context: 'A team building a RAG system for medical literature is choosing between: text-embedding-ada-002 (OpenAI), a general-purpose sentence transformer (all-mpnet-base-v2), and a domain-specific biomedical embedding model (BioLinkBERT). Budget is not a primary constraint.',
+    question: 'Which embedding model is most appropriate and why?',
+    options: [
+      'text-embedding-ada-002 — it is the best general-purpose model and the simplest to use via API.',
+      'all-mpnet-base-v2 — open-source, no API dependency, good general performance.',
+      'BioLinkBERT — domain-specific models capture biomedical terminology and relationships that general models cannot represent.',
+      'Train a custom embedding model on this specific corpus — production systems always need custom embeddings.',
+    ],
+    answer: 2,
+    diagnosis: 'Medical literature contains domain-specific vocabulary (drug names, disease codes, biological pathways) that general embedding models represent poorly — rare tokens get averaged into generic embeddings. BioLinkBERT was trained on biomedical text and encodes the semantic relationships in medical literature correctly. ada-002 is a strong general baseline but loses to domain-specific models on specialized corpora.',
+    fix: 'Use BioLinkBERT or PubMedBERT as the base embedding model. Evaluate on a labeled retrieval benchmark from your specific document corpus (build a small eval set: 50–100 question-answer pairs with ground-truth source chunks). If domain-specific model underperforms surprisingly, fine-tune it on your corpus with a contrastive learning objective. Track NDCG@5 and context recall as primary retrieval metrics.',
+  },
+  {
+    id: 'rag5',
+    title: 'RAG evaluation without labels',
+    context: 'You have deployed a RAG system with no labeled evaluation dataset. Users are using it, but you have no ground truth question-answer pairs to measure quality. A stakeholder asks for a system quality metric.',
+    question: 'How do you evaluate RAG quality without a manually labeled dataset?',
+    options: [
+      'You cannot evaluate RAG quality without labeled data — tell the stakeholder evaluation is not possible.',
+      'Use LLM-as-judge metrics (RAGAS): faithfulness (does the answer contradict the retrieved context?), answer relevance (does the answer address the question?), and context precision (are retrieved chunks relevant?).',
+      'Use BLEU/ROUGE scores comparing LLM output to retrieved chunks.',
+      'Track user session length — longer sessions indicate better answers.',
+    ],
+    answer: 1,
+    diagnosis: 'RAGAS (Retrieval-Augmented Generation Assessment) provides reference-free metrics using an LLM judge. Faithfulness measures whether the answer is grounded in the retrieved context (hallucination detection). Answer relevance measures whether the answer addresses the question. Context precision/recall measure retrieval quality. These metrics correlate well with human judgment without requiring manually labeled data.',
+    fix: 'Implement RAGAS: pip install ragas. Run faithfulness + answer_relevance + context_precision on a sample of 100 production queries. Set threshold dashboards: faithfulness < 0.7 triggers a retrieval pipeline review. For a labeled evaluation set, have domain experts annotate 50 golden Q&A pairs — this is a one-time cost that pays for itself in deployment confidence. Monitor RAGAS scores weekly and alert on regressions.',
+  },
+  {
+    id: 'rag6',
+    title: 'Hallucination on out-of-scope queries',
+    context: 'A RAG system built on company internal documentation is asked "What is the capital of France?" The system retrieves irrelevant documents and the LLM answers "Paris" — correctly, but from its parametric knowledge, not from the retrieved context. A week later it answers a similar out-of-scope question incorrectly.',
+    question: 'How do you prevent the RAG system from answering questions beyond its knowledge base?',
+    options: [
+      'Add "only answer from the provided context" to the system prompt — the LLM will comply.',
+      'Implement a retrieval confidence gate: if the top retrieved chunk similarity is below threshold (e.g., 0.6 cosine), respond "I don\'t have information about this in the knowledge base."',
+      'Use a more powerful LLM that knows when to say "I don\'t know."',
+      'Increase the number of retrieved chunks — if the answer is anywhere in the corpus, more chunks will find it.',
+    ],
+    answer: 1,
+    diagnosis: 'System prompt instructions to "only use context" are not reliable — LLMs frequently ignore them under distribution shift or adversarial phrasing. The root issue is that when no relevant context is retrieved, the LLM falls back to parametric knowledge. A hard threshold on retrieval similarity is a deterministic gate that does not depend on LLM compliance.',
+    fix: 'Add a retrieval quality gate: compute max(cosine_similarity) over retrieved chunks. If below threshold (tune empirically, typically 0.55–0.65), return a canned response: "I don\'t have information about this topic in the knowledge base." Include a RAGAS faithfulness check as a post-generation guard: if faithfulness < 0.5, flag the response for human review or refuse. Log all low-confidence retrievals for knowledge base gap analysis.',
+  },
+]
+
+function RAGArchitecture() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
+        RAG system design requires judgment at every stage: chunking, retrieval strategy, reranking, evaluation, and hallucination prevention. Each scenario tests a critical production decision.
+      </p>
+      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--violet)" />
+    </div>
+  )
+}
+
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'incident',   label: 'ML Incident Room', component: IncidentRoom },
+  { id: 'incident',   label: 'ML Incident Room',    component: IncidentRoom },
   { id: 'ownership',  label: 'DS Ownership Chain',  component: DSOwnershipChain },
-  { id: 'scenarios',  label: 'Incident Scenarios', component: IncidentScenarios },
-  { id: 'canvas',     label: 'Design Review', component: DesignCanvas },
-  { id: 'two_tower',  label: 'Two-Tower Explorer', component: TwoTowerExplorer },
-  { id: 'serving',    label: 'Serving Tradeoffs', component: ServingTradeoffLab },
+  { id: 'scenarios',  label: 'Incident Scenarios',  component: IncidentScenarios },
+  { id: 'canvas',     label: 'Design Review',        component: DesignCanvas },
+  { id: 'two_tower',  label: 'Two-Tower Explorer',   component: TwoTowerExplorer },
+  { id: 'serving',    label: 'Serving Tradeoffs',    component: ServingTradeoffLab },
+  { id: 'rag',        label: 'RAG Architecture',     component: RAGArchitecture },
 ]
 
 export default function SystemDesignTab() {

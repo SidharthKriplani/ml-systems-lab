@@ -483,11 +483,327 @@ function AnomalyDetectionTiers() {
   )
 }
 
+// ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
+function AccordionMCQ({ scenarios, accentColor = 'var(--sky)' }) {
+  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+
+  function toggle(i) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, open: !it.open } : it))
+  }
+  function pick(i, opt) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: opt, revealed: true } : it))
+  }
+
+  useEffect(() => {
+    function handleKey(e) {
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 4) {
+        const openIdx = items.findIndex(it => it.open && !it.revealed)
+        if (openIdx !== -1 && n - 1 < scenarios[openIdx].options.length) pick(openIdx, n - 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [items])
+
+  const attempted = items.filter(it => it.revealed).length
+  const correct   = items.filter((it, i) => it.revealed && it.picked === scenarios[i].answer).length
+  const pct       = attempted === 0 ? 0 : Math.round((correct / attempted) * 100)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'var(--depth)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+          <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {scenarios.map((sc, i) => {
+        const it = items[i]
+        const isCorrect = it.revealed && it.picked === sc.answer
+        return (
+          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+            <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', transition: 'transform 0.2s', display: 'inline-block', transform: it.open ? 'rotate(90deg)' : 'none' }}>▶</span>
+            </button>
+
+            {it.open && (
+              <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)', marginTop: '4px' }}>
+                  {Array.isArray(sc.context) ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{sc.context}</p>
+                  )}
+                </div>
+
+                <p style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', margin: 0 }}>{sc.question}</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {sc.options.map((opt, oi) => {
+                    const isPicked = it.picked === oi
+                    const isAns    = sc.answer === oi
+                    let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
+                    if (it.revealed) {
+                      if (isAns)          { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
+                      else if (isPicked)  { bg = 'rgba(239,68,68,0.08)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
+                    } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
+                    return (
+                      <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {it.revealed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Diagnosis</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
+                    </div>
+                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Production fix</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── TS Model Selector ────────────────────────────────────────────────────────
+const TS_MODEL_SCENARIOS = [
+  {
+    id: 'ts_m1',
+    title: 'Short stationary series, no seasonality',
+    context: 'You have 3 years of weekly sales data for a single product. The series is stationary (ADF p < 0.05). No obvious seasonal pattern. You need next-12-week point forecasts.',
+    question: 'Which model family is the best starting point?',
+    options: [
+      'Prophet — it handles a wide range of time series automatically.',
+      'ARIMA — stationary data with no seasonality is a natural ARIMA use case.',
+      'LSTM — deep learning will capture the autocorrelation structure better.',
+      'Linear regression with time index as the only feature.',
+    ],
+    answer: 1,
+    diagnosis: 'ARIMA is purpose-built for stationary univariate series. Box-Jenkins ACF/PACF analysis gives you the p,d,q parameters directly. Prophet adds trend and seasonality components you don\'t need here — it will overfit. LSTMs need far more data (thousands of timesteps) to outperform ARIMA.',
+    fix: 'Fit ARIMA(p,0,q): d=0 because series is already stationary. Use auto_arima (pmdarima) or plot ACF/PACF to select p and q. Validate with expanding-window cross-validation, not random split. Baseline: ARIMA(1,0,1) as starting point.',
+  },
+  {
+    id: 'ts_m2',
+    title: 'Strong weekly + yearly seasonality',
+    context: 'E-commerce site visits: clear weekly cycle (weekend spikes) and yearly holiday seasonality. You have 2 years of daily data (730 points). The series is non-stationary (upward trend).',
+    question: 'Which model handles multi-period seasonality most naturally?',
+    options: [
+      'SARIMA with seasonal differencing.',
+      'Prophet — built for multiple seasonality components + trend with additive/multiplicative modes.',
+      'Exponential smoothing (Holt-Winters) — designed for trend + seasonality.',
+      'ARIMA with Fourier terms as external regressors.',
+    ],
+    answer: 1,
+    diagnosis: 'Prophet\'s core strength is decomposable multi-period seasonality + trend changes. It handles weekly + yearly seasonality automatically with Fourier series. SARIMA can handle one seasonal period cleanly but two seasonalities require hacks. Holt-Winters supports one seasonal period. 730 points is enough for Prophet\'s Bayesian inference.',
+    fix: 'from prophet import Prophet; m = Prophet(seasonality_mode="multiplicative"); m.fit(df). Add holiday effects with m.add_country_holidays(). Use multiplicative mode if the amplitude of seasonal swings grows with trend level. Evaluate with cross_validation() from prophet.diagnostics.',
+  },
+  {
+    id: 'ts_m3',
+    title: 'Many short related series',
+    context: 'You need to forecast demand for 10,000 SKUs across 50 stores. Each SKU-store combination has 18 months of weekly data (78 points). You have shared product features (category, price, weight) and store features (region, size).',
+    question: 'What is the most scalable forecasting approach?',
+    options: [
+      'Fit 500,000 individual ARIMA models — one per SKU-store combination.',
+      'Fit a global LightGBM model on all series simultaneously, using lag features + cross-series features.',
+      'Fit a Prophet model per SKU (ignore store dimension to reduce models).',
+      'Use a single LSTM trained on all series with one sequence per SKU-store.',
+    ],
+    answer: 1,
+    diagnosis: '500k individual ARIMA models are computationally infeasible and statistically poor on 78 points each. A global ML model (LightGBM, XGBoost) trained across all series learns cross-series patterns and leverages product/store features. 78-point series → strong reliance on tabular lag features. Tree models consistently outperform individual deep learning models at this scale with this data volume.',
+    fix: 'Create a flat feature table: one row per (sku, store, week) with lag_1, lag_2, lag_4, lag_52 (if available), rolling_mean_4w, rolling_std_4w, plus static product/store features and calendar features. Train LightGBM with time-based train/val split. Tune with Optuna. This approach generalises better than fitting 500k separate models and scales trivially.',
+  },
+  {
+    id: 'ts_m4',
+    title: 'Long sequence, non-linear patterns',
+    context: 'You are forecasting energy consumption at 5-minute intervals over 3 years (315,000 timesteps). The series has complex non-linear patterns, multiple driver variables (temperature, humidity, day_of_week), and regime changes (COVID lockdowns).',
+    question: 'When does a neural time series model beat classical methods here?',
+    options: [
+      'Neural models always beat ARIMA at any sample size.',
+      'When the sample size is large (100k+), multivariate inputs are available, and non-linear interactions between drivers are expected.',
+      'When the series has regime changes — neural models handle changepoints better than ARIMA.',
+      'Neural models are not appropriate here because the series is non-stationary.',
+    ],
+    answer: 1,
+    diagnosis: 'The three conditions for neural TS models to win: (1) large training data (100k+ points), (2) multivariate inputs with non-linear interactions, (3) complex patterns that parametric models cannot represent. All three hold here. 315k timesteps is sufficient for TFT or N-BEATS training. Regime changes are a challenge for all model families; neural models don\'t inherently handle them better without explicit treatment.',
+    fix: 'Temporal Fusion Transformer (TFT) or N-BEATS for this use case. TFT natively handles multi-horizon forecasting with multi-variate inputs and produces interpretable attention weights. Add lockdown as a binary covariate. Use PyTorch Forecasting library. Validate on the last 6 months only — not a random split.',
+  },
+  {
+    id: 'ts_m5',
+    title: 'Intermittent demand',
+    context: 'A spare parts retailer forecasts demand for 5,000 low-velocity SKUs. Many SKUs sell 0 units in most weeks — demand is sporadic and lumpy. Traditional MAPE blows up on zero-demand weeks.',
+    question: 'Which approach is designed for intermittent/lumpy demand?',
+    options: [
+      'Prophet with floor = 0 to prevent negative forecasts.',
+      'Croston\'s method — separates non-zero demand size from inter-demand interval.',
+      'ARIMA with log transform to handle the zeros.',
+      'LSTM trained on the raw count data with sparse inputs.',
+    ],
+    answer: 1,
+    diagnosis: 'Intermittent demand violates ARIMA and Prophet assumptions (both assume relatively continuous observations). Log transform of zero-heavy series is undefined or distorting. Croston\'s method models the non-zero demand level and the average inter-demand interval separately — purpose-built for this distribution.',
+    fix: 'Use Croston\'s method or its improved variant ADIDA (Aggregate-Disaggregate Intermittent Demand Approach). In Python: statsforecast library has CrostonClassic and CrostonOptimized. Evaluate with Mean Absolute Scaled Error (MASE) which handles zeros, not MAPE. For the ML approach: Tweedie regression (LightGBM with tweedie objective) handles zero-inflated continuous approximations of count data.',
+  },
+  {
+    id: 'ts_m6',
+    title: 'Very short series cold start',
+    context: 'A new product launched 6 weeks ago. You need a week-8 forecast. You have 6 data points and no historical precedent for this exact product. You do have 3 years of data from 200 similar existing products.',
+    question: 'How do you forecast for a new series with minimal history?',
+    options: [
+      'ARIMA requires at least 2× the seasonal period — 6 points is too short. Refuse to forecast.',
+      'Use cross-series learning: train a global model on the 200 similar products and apply it to the new product at inference time.',
+      'Exponential smoothing with a very low smoothing parameter to avoid overfitting to 6 points.',
+      'Naive seasonal: copy the pattern from the most similar existing product.',
+    ],
+    answer: 1,
+    diagnosis: 'With 6 data points, any univariate model overfits trivially. The correct approach exploits the cross-series signal from 200 similar products. A global model trained on all historical data applies immediately to new products — it has learned the typical demand trajectory for this product category even if this specific product is new.',
+    fix: 'Train a global LightGBM or N-BEATS model on the 200 existing products. At inference, pass the 6 available lags as features. The model generalises from similar product patterns. Add product attributes (category, price tier, launch campaign size) as static covariates — these drive early-lifecycle behavior. Monitor: compare week 7–10 actuals vs forecast to detect if this product is an outlier from the cluster.',
+  },
+]
+
+function TSModelSelector() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
+        ARIMA vs Prophet vs ML vs Neural — the right model depends on data volume, seasonality structure, and series count. Each scenario tests model selection judgment.
+      </p>
+      <AccordionMCQ scenarios={TS_MODEL_SCENARIOS} accentColor="var(--sky)" />
+    </div>
+  )
+}
+
+// ─── TS Feature Engineering ───────────────────────────────────────────────────
+const TS_FEAT_SCENARIOS = [
+  {
+    id: 'ts_f1',
+    title: 'Lag feature selection',
+    context: 'You are building a tabular ML forecasting model for weekly retail sales. You have 3 years of data. The series has a strong 52-week annual cycle.',
+    question: 'Which lag features are most important to include?',
+    options: [
+      'lag_1, lag_2, lag_3 only — recent history is always the best predictor.',
+      'lag_1, lag_2, lag_4, lag_52 — recent lags plus the seasonal lag to capture annual patterns.',
+      'All lags from 1 to 52 — let the model select which matter.',
+      'lag_52 only — the same week last year is the best predictor for seasonal data.',
+    ],
+    answer: 1,
+    diagnosis: 'Using only lag_1/2/3 misses the seasonal signal entirely. Including all 52 lags causes the curse of dimensionality, multicollinearity, and training instability. lag_52 alone ignores recent short-term dynamics. The right set: lag_1 (momentum), lag_2 (2-week autocorrelation), lag_4 (monthly cycle), lag_52 (same-week-last-year seasonal anchor).',
+    fix: 'Start with lag_1, lag_2, lag_4, lag_13 (quarterly), lag_52. Add rolling statistics: rolling_mean_4w, rolling_std_4w, rolling_mean_52w. Use feature importance from your model to prune. For SHAP: the relative importance of lag_52 vs lag_1 tells you whether the series is more seasonally driven or momentum-driven.',
+  },
+  {
+    id: 'ts_f2',
+    title: 'Cyclical calendar encoding',
+    context: 'You are adding "day of week" (0–6) as a feature to a daily demand model. You encode it as a raw integer (0 = Monday, 6 = Sunday). Your LightGBM model performs poorly on weekends.',
+    question: 'What is wrong with raw integer encoding for cyclical features?',
+    options: [
+      'LightGBM cannot use integer features — use one-hot encoding.',
+      'Raw integer encoding implies Sunday (6) is far from Monday (0) — but they are adjacent in the weekly cycle. Use sin/cos encoding.',
+      'The feature needs to be standardised to [0, 1] before use.',
+      'Day of week is not useful — remove it and use a weekend binary flag instead.',
+    ],
+    answer: 1,
+    diagnosis: 'Raw integer encoding imposes a false linear order: day 6 (Sunday) is numerically far from day 0 (Monday) even though they are 1 day apart in the weekly cycle. Tree models handle this via splits, but linear components cannot represent the cyclic proximity. Sin/cos encoding maps the cycle onto a unit circle — preserving the true distance between days.',
+    fix: 'day_sin = sin(2π × day_of_week / 7); day_cos = cos(2π × day_of_week / 7). Same for month_of_year (/12), hour_of_day (/24). These two features together encode any cyclic position correctly. For tree models, one-hot encoding of day_of_week is also fine (7 binary features); for neural/linear models, sin/cos is strongly preferred.',
+  },
+  {
+    id: 'ts_f3',
+    title: 'Target leakage via future information',
+    context: 'A data scientist adds "sales for the same store, next week" as a feature to predict demand for the current week. The model achieves 99% accuracy in offline eval. In production, accuracy drops to 55%.',
+    question: 'What caused the offline-production gap?',
+    options: [
+      'The model overfit — add dropout or L2 regularisation.',
+      '"Next week\'s sales" is a future value — it is not available at prediction time. This is feature leakage.',
+      'Production data has a different distribution than the training data.',
+      'The 99% accuracy was computed on the test set, which the model also trained on.',
+    ],
+    answer: 1,
+    diagnosis: 'This is a textbook example of temporal leakage: a feature value from the future (next week) was used to predict the present week. During offline eval, the future value exists in the dataset so the model uses it directly — trivially accurate. At serving time, next week has not happened yet, so the feature is absent or zero, and the model fails.',
+    fix: 'Enforce strict point-in-time joins: all features used to predict week T must be computed from data available at T-1 or earlier. Audit every feature with the question: "Could I have computed this value at prediction time?" Use the lag feature pattern: if you want "same store performance", use lag_1 (last week\'s sales), not next week\'s. In your data pipeline, use as-of joins.',
+  },
+  {
+    id: 'ts_f4',
+    title: 'Rolling statistics window choice',
+    context: 'You add rolling_mean_1w, rolling_mean_4w, rolling_mean_13w, rolling_mean_52w as features. Feature importance shows rolling_mean_1w has 80% of the importance weight. Your model is overfit and generalises poorly.',
+    question: 'What is likely happening and how do you fix it?',
+    options: [
+      'rolling_mean_1w has high importance because it is the best feature — keep it and remove the others.',
+      'rolling_mean_1w is highly correlated with the target (it is last week\'s average) — high importance signals that the model is overfitting to recent noise rather than learning the seasonal pattern.',
+      'The rolling windows need to be standardised before use.',
+      'Use an exponentially weighted mean instead of a rolling mean.',
+    ],
+    answer: 1,
+    diagnosis: 'When rolling_mean_1w dominates importance, the model is essentially predicting "next week ≈ this week" — which is often true in the short run but fails to capture seasonal and structural patterns. The model appears accurate in walk-forward validation but degrades for multi-step horizons. High importance on very short windows is a sign of horizon mismatch.',
+    fix: 'For horizon h (forecasting h steps ahead), the shortest lag you can use without leakage is lag_h. If forecasting 4 weeks out, rolling_mean_1w uses information from 1 week ago — valid, but ensure the window doesn\'t overlap with the forecast horizon. Balance importance: if rolling_mean_1w dominates, consider dropping it and forcing the model to rely on seasonal lags. Or use a minimum horizon-aware lookback: rolling_mean_4w as the shortest window.',
+  },
+  {
+    id: 'ts_f5',
+    title: 'External regressor for known future events',
+    context: 'You are forecasting hourly electricity demand. You know the weather forecast for the next 48 hours (temperature, humidity). You want to include this as a feature in your model.',
+    question: 'How do you correctly include known-future external regressors in a forecasting model?',
+    options: [
+      'Do not include weather — it creates a dependency on forecast accuracy that degrades your model.',
+      'Include future weather values directly as features at forecast time — these are known-future regressors, not leakage.',
+      'Include only historical weather (lagged by 24h) to avoid any future information.',
+      'Create a separate model that predicts weather, then chain the two models together.',
+    ],
+    answer: 1,
+    diagnosis: 'Known-future regressors are a different category from leakage: the weather forecast IS available at prediction time (you are using the forecast, not the actual future). This is the correct pattern for exogenous variables with external forecasts — the information is genuinely available when you need to make your prediction.',
+    fix: 'In ARIMAX, Prophet, and TFT, add weather as a "future covariate" or exogenous variable. Key: document explicitly that your model depends on weather forecast quality. Degrade analysis: what happens if the weather forecast is off by 5°C? Run sensitivity analysis. For neural models (TFT): weather is a "known future input" — the architecture explicitly separates these from historical-only features.',
+  },
+  {
+    id: 'ts_f6',
+    title: 'Cross-series features for global model',
+    context: 'You are training a global model across 5,000 SKUs. Each SKU is a different time series. You want to add features that encode each SKU\'s identity so the model can learn SKU-specific patterns.',
+    question: 'What is the best way to encode SKU identity in a global ML forecasting model?',
+    options: [
+      'Use the SKU string as a label-encoded integer — the model will learn the mapping.',
+      'Learn SKU embeddings: either pre-trained from product metadata, or learned end-to-end as a trainable embedding layer alongside the forecasting objective.',
+      'One-hot encode all 5,000 SKUs — this gives the model full expressivity per SKU.',
+      'Add SKU category as a single categorical feature and ignore SKU-level identity.',
+    ],
+    answer: 1,
+    diagnosis: 'Label encoding (integer ID) forces the model to treat SKU identity as a linear feature — SKU 1000 is implied to be halfway between SKU 500 and 1500. One-hot encoding of 5,000 SKUs creates 5,000 sparse features — the model sees very few training examples per SKU feature. Embedding representations learn a dense, low-dimensional representation of each SKU\'s demand pattern.',
+    fix: 'Option 1: pre-train SKU embeddings on product metadata (category, price tier, weight) using word2vec or a small neural network, then use as static features. Option 2: learn embeddings end-to-end in a neural forecasting model (TFT or N-BEATS with static covariate input). Option 3: for tree models, use target encoding of SKU ID computed with out-of-fold means to avoid leakage — this is a lightweight approximation of embeddings.',
+  },
+]
+
+function TSFeatureEngineering() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
+        Lag selection, cyclical encoding, leakage prevention, and cross-series embeddings — the feature engineering decisions that separate good TS models from broken ones.
+      </p>
+      <AccordionMCQ scenarios={TS_FEAT_SCENARIOS} accentColor="var(--violet)" />
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'failures', label: 'Forecast Failure Zoo', component: ForecastFailureZoo },
+  { id: 'failures',   label: 'Forecast Failure Zoo',     component: ForecastFailureZoo },
   { id: 'stationary', label: 'Stationarity & Transforms', component: StationaritySelector },
-  { id: 'anomaly', label: 'Anomaly Detection Tiers', component: AnomalyDetectionTiers },
+  { id: 'anomaly',    label: 'Anomaly Detection Tiers',   component: AnomalyDetectionTiers },
+  { id: 'model',      label: 'TS Model Selector',         component: TSModelSelector },
+  { id: 'features',   label: 'TS Feature Engineering',    component: TSFeatureEngineering },
 ]
 
 export default function TimeSeriesTab() {

@@ -339,6 +339,26 @@ export default function HomeTab({ onNavigate }) {
         </div>
       )}
 
+      {/* ── Export progress ── */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          className="btn-ghost"
+          style={{ fontSize: '11px', padding: '6px 14px' }}
+          onClick={() => {
+            const snapshot = {}
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i)
+              try { snapshot[k] = JSON.parse(localStorage.getItem(k)) }
+              catch { snapshot[k] = localStorage.getItem(k) }
+            }
+            const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' })
+            const url  = URL.createObjectURL(blob)
+            const a    = Object.assign(document.createElement('a'), { href: url, download: `msl-progress-${new Date().toISOString().slice(0,10)}.json` })
+            a.click(); URL.revokeObjectURL(url)
+          }}
+        >↓ Export progress snapshot</button>
+      </div>
+
       {/* ── Learning paths ── */}
       <section id="learning-paths">
         <div className="eyebrow">Learning paths</div>
