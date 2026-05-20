@@ -281,7 +281,7 @@ function PracticeGrid({ onSelect, tabProgress }) {
           <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, marginBottom: '10px', opacity: 0.9 }}>
             {domain.label}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '8px' }}>
+          <div className="grid-cards">
             {domain.tabs.map(tab => (
               <PracticeCard key={tab.id} tab={tab} domain={domain} onSelect={onSelect} tabProgress={tabProgress} />
             ))}
@@ -330,7 +330,7 @@ function InterviewGrid({ onSelect }) {
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '28px', lineHeight: 1.6 }}>
         6 tools — from Q&amp;A prep to timed mocks to defense docs
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+      <div className="grid-cards-wide">
         {INTERVIEW_TOOLS.map(tool => (
           <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} />
         ))}
@@ -342,14 +342,14 @@ function InterviewGrid({ onSelect }) {
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 function BottomNav({ activeZone, onZoneNav }) {
   return (
-    <nav style={{
+    <nav className="bottom-nav-safe" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      height: '56px', display: 'flex',
       background: 'rgba(6,4,2,0.97)',
       backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
       borderTop: '1px solid var(--rim)',
       zIndex: 100,
     }}>
+      <div style={{ height: '56px', display: 'flex' }}>
       {NAV_ZONES.map(zone => {
         const isActive = activeZone === zone.id
         return (
@@ -362,6 +362,8 @@ function BottomNav({ activeZone, onZoneNav }) {
               transition: 'color 0.15s',
               padding: '6px 4px 8px',
               position: 'relative',
+              minWidth: 0,
+              WebkitTapHighlightColor: 'transparent',
             }}>
             {isActive && (
               <div style={{
@@ -375,6 +377,7 @@ function BottomNav({ activeZone, onZoneNav }) {
           </button>
         )
       })}
+      </div>
     </nav>
   )
 }
@@ -484,7 +487,7 @@ export default function App() {
         WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--rim)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden', flex: 1 }}>
           {showBackBtn ? (
             <>
               <button
@@ -495,7 +498,7 @@ export default function App() {
               {activeTabInfo && (
                 <>
                   <span style={{ color: 'var(--rim)', fontSize: '13px' }}>/</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "'Space Grotesk',sans-serif" }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "'Space Grotesk',sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {activeTabInfo.label}
                   </span>
                 </>
@@ -513,18 +516,18 @@ export default function App() {
           onClick={() => setSearchOpen(true)}
           style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif" }}>
           <span style={{ fontSize: '13px' }}>⌕</span>
-          <span>Search</span>
-          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }}>⌘K</kbd>
+          <span style={{ display: 'inline' }}>Search</span>
+          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
         </button>
       </header>
 
       {/* ── Content ── */}
       <main
-        className="fade-in"
+        className="fade-in main-content"
         style={{
           maxWidth: '900px', width: '100%',
           margin: '0 auto',
-          padding: '32px 24px 80px',
+          padding: '32px 20px 80px',
           boxSizing: 'border-box',
         }}>
         {renderContent()}

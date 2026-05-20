@@ -359,28 +359,75 @@
   .animate-slide-up { animation: slideUp 0.20s ease-out; }
 }
 
-/* ─── Sidebar layout ─────────────────────────────────────────────────────── */
-.sidebar-desktop { display: flex; flex-direction: column; }
-.topbar-mobile   { display: none; }
-.hamburger-btn   { display: none !important; }
-.sidebar-overlay { display: none; }
+/* ─── Bottom-nav layout (mobile-first) ──────────────────────────────────── */
+
+/* Safe-area bottom padding for iPhone home indicator */
+.bottom-nav-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Main content clears the bottom nav + safe area */
+.main-content {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Responsive grids used across Practice/Interview zones */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  gap: 8px;
+}
+.grid-cards-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  /* Full-width single-column on small phones */
+  .grid-cards,
+  .grid-cards-wide {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tighten search box */
+  .search-box {
+    margin: 0 12px;
+    border-radius: 12px;
+  }
+  .search-overlay {
+    padding-top: 8vh;
+    align-items: flex-start;
+  }
+
+  /* Reduce section title size on small screens */
+  .section-title { font-size: 18px; }
+}
 
 @media (max-width: 768px) {
-  .sidebar-desktop { display: none !important; }
-  .topbar-mobile   { display: flex !important; }
-  .hamburger-btn   { display: flex !important; }
-  .sidebar-overlay {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 48px; left: 0; right: 0; bottom: 0;
-    z-index: 40;
-    background: var(--void);
-    overflow-y: auto;
-    border-right: 1px solid var(--rim);
-    width: 260px;
+  /* Search box gets side margins on tablet */
+  .search-box {
+    margin: 0 16px;
+    max-width: calc(100% - 32px);
   }
-  .content-area { padding: 24px 20px !important; }
+  /* Hide ⌘K shortcut hint on mobile */
+  .hide-mobile { display: none !important; }
+
+  /* Tighter topbar on mobile */
+  .topbar-left { min-width: 0; overflow: hidden; }
+}
+
+/* Ensure textareas and code blocks don't cause horizontal scroll */
+textarea { max-width: 100%; }
+pre { max-width: 100%; overflow-x: auto; }
+
+/* Touch-friendly tap targets — minimum 44px height on interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button { min-height: 36px; }
+  input[type="range"] { height: 20px; cursor: pointer; }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px; height: 20px;
+  }
 }
 
 /* ─── Keyframes ──────────────────────────────────────────────────────────── */
