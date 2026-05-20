@@ -1,10 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ─── Shared accordion MCQ component ──────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context' }) {
-  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = useState('all')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i, total) {
     const t = total / 3
@@ -409,7 +424,7 @@ function CalibrationClinic() {
           A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 6 calibration failure patterns.
         </p>
       </div>
-      <AccordionMCQ scenarios={CALIBRATION_SCENARIOS} accentColor="var(--mint)" contextLabel="Telemetry" />
+      <AccordionMCQ scenarios={CALIBRATION_SCENARIOS} accentColor="var(--mint)" contextLabel="Telemetry" storageKey="modeleval_calibration" />
     </div>
   )
 }
@@ -532,7 +547,7 @@ function ThresholdTuner() {
           The default threshold of 0.5 is almost always wrong. Business costs, asymmetric errors, and base rate shifts all demand deliberate threshold choices. 6 real-world cases.
         </p>
       </div>
-      <AccordionMCQ scenarios={THRESHOLD_SCENARIOS} accentColor="var(--gold)" contextLabel="Setup" />
+      <AccordionMCQ scenarios={THRESHOLD_SCENARIOS} accentColor="var(--gold)" contextLabel="Setup" storageKey="modeleval_threshold" />
     </div>
   )
 }
@@ -660,7 +675,7 @@ function RankingMetrics() {
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={RANKING_SCENARIOS} accentColor="var(--violet)" contextLabel="System" />
+      <AccordionMCQ scenarios={RANKING_SCENARIOS} accentColor="var(--violet)" contextLabel="System" storageKey="modeleval_ranking" />
     </div>
   )
 }
@@ -678,6 +693,17 @@ export default function ModelEvalTab() {
   const [active, setActive] = useState('metric')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ─── ML Incident Room ────────────────────────────────────────────────────────
@@ -1561,9 +1561,24 @@ function ServingTradeoffLab() {
 
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)' }) {
-  const [items, setItems] = React.useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = null }) {
+  const [items, setItems] = React.useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = React.useState('all')
+
+  React.useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i, total) {
     const t = total / 3
@@ -1787,7 +1802,7 @@ function RAGArchitecture() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         RAG system design requires judgment at every stage: chunking, retrieval strategy, reranking, evaluation, and hallucination prevention. Each scenario tests a critical production decision.
       </p>
-      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--violet)" />
+      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--violet)" storageKey="sysdesign_rag" />
     </div>
   )
 }
@@ -1807,6 +1822,17 @@ export default function SystemDesignTab() {
   const [active, setActive] = useState('incident')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? IncidentRoom
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

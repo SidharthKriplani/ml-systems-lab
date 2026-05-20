@@ -24,6 +24,7 @@ import TimeSeriesTab     from './tabs/TimeSeriesTab.jsx'
 import AirflowTab        from './tabs/AirflowTab.jsx'
 import DbtTab           from './tabs/dbtTab.jsx'
 import DataModelingTab  from './tabs/DataModelingTab.jsx'
+import AskTab           from './tabs/AskTab.jsx'
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -49,6 +50,7 @@ const ALL_TABS = [
   { id: 'interview',    component: InterviewPrepTab },
   { id: 'gradient',     component: GradientTab },
   { id: 'landscape',    component: LandscapeTab },
+  { id: 'ask',          component: AskTab },
 ]
 
 // ── Sidebar structure ─────────────────────────────────────────────────────────
@@ -99,12 +101,35 @@ const SIDEBAR_GROUPS = [
 ]
 
 const BOTTOM_LINKS = [
+  { id: 'ask',       label: '✦ Ask Anything' },
   { id: 'interview', label: 'Interview Prep' },
   { id: 'landscape', label: 'Landscape' },
 ]
 
+// ── Progress helpers ──────────────────────────────────────────────────────────
+const SCORE_TAB_MAP = { spark: 'spark', ts: 'ts', sysdesign: 'design', modeleval: 'eval', deeplearn: 'dl', causal: 'causal' }
+
+function readTabProgress() {
+  const progress = {}
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith('msl_score:')) continue
+      const rest = key.slice('msl_score:'.length)
+      const prefix = Object.keys(SCORE_TAB_MAP).find(p => rest.startsWith(p + '_'))
+      if (!prefix) continue
+      const appTab = SCORE_TAB_MAP[prefix]
+      if (!progress[appTab]) progress[appTab] = { attempted: 0, total: 0 }
+      const items = JSON.parse(localStorage.getItem(key) || '[]')
+      progress[appTab].total += items.length
+      progress[appTab].attempted += items.filter(it => it.revealed).length
+    }
+  } catch {}
+  return progress
+}
+
 // ── Sidebar component ─────────────────────────────────────────────────────────
-function Sidebar({ activeTab, onNavigate, onSearch }) {
+function Sidebar({ activeTab, onNavigate, onSearch, tabProgress }) {
   return (
     <div style={{
       width: '220px', flexShrink: 0,
@@ -153,6 +178,7 @@ function Sidebar({ activeTab, onNavigate, onSearch }) {
                 isActive={activeTab === tab.id}
                 accent={group.color}
                 onClick={() => onNavigate(tab.id)}
+                progress={tabProgress?.[tab.id]}
               />
             ))}
           </div>
@@ -199,7 +225,21 @@ function Sidebar({ activeTab, onNavigate, onSearch }) {
   )
 }
 
-function SidebarItem({ label, isActive, accent, onClick }) {
+function ProgressRing({ attempted, total, accent }) {
+  const r = 6, circ = 2 * Math.PI * r
+  const pct = total > 0 ? Math.min(attempted / total, 1) : 0
+  const dash = pct * circ
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+      <circle cx="8" cy="8" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+      <circle cx="8" cy="8" r={r} fill="none" stroke={accent} strokeWidth="2"
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        transform="rotate(-90 8 8)" opacity={0.75} />
+    </svg>
+  )
+}
+
+function SidebarItem({ label, isActive, accent, onClick, progress }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button
@@ -207,7 +247,8 @@ function SidebarItem({ label, isActive, accent, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: 'block', width: '100%', textAlign: 'left',
+        display: 'flex', alignItems: 'center', gap: '6px',
+        width: '100%', textAlign: 'left',
         padding: '6px 10px',
         borderRadius: '6px',
         border: 'none',
@@ -224,7 +265,10 @@ function SidebarItem({ label, isActive, accent, onClick }) {
         transition: 'all 0.12s',
         marginBottom: '1px',
       }}>
-      {label}
+      <span style={{ flex: 1 }}>{label}</span>
+      {progress && progress.total > 0 && (
+        <ProgressRing attempted={progress.attempted} total={progress.total} accent={accent} />
+      )}
     </button>
   )
 }
@@ -240,9 +284,10 @@ function setHash(tabId) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [activeTab,  setActiveTab]  = useState(() => getTabFromHash() || localStorage.getItem('msl_tab') || 'home')
-  const [menuOpen,   setMenuOpen]   = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [activeTab,   setActiveTab]   = useState(() => getTabFromHash() || localStorage.getItem('msl_tab') || 'home')
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [searchOpen,  setSearchOpen]  = useState(false)
+  const [tabProgress, setTabProgress] = useState(() => readTabProgress())
 
   useEffect(() => {
     localStorage.setItem('msl_tab', activeTab)
@@ -265,6 +310,13 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => {
+    function onStorage() { setTabProgress(readTabProgress()) }
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('msl_score_updated', onStorage)
+    return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('msl_score_updated', onStorage) }
   }, [])
 
   const goTo = useCallback((tabId) => {
@@ -314,13 +366,13 @@ export default function App() {
           borderRight: '1px solid var(--rim)',
           background: 'rgba(0,0,0,0.18)',
         }}>
-          <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} />
+          <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} />
         </aside>
 
         {/* Mobile sidebar overlay */}
         {menuOpen && (
           <div className="sidebar-overlay">
-            <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} />
+            <Sidebar activeTab={activeTab} onNavigate={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} />
           </div>
         )}
 

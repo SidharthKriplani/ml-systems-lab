@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { trackModuleStart, trackModuleComplete } from '../analytics.js'
 
@@ -409,9 +409,24 @@ function PartitionTuner() {
 }
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--ember)' }) {
-  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = useState('all')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i, total) {
     const t = total / 3
@@ -642,7 +657,7 @@ function BroadcastJoinDecisions() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         Broadcast joins eliminate shuffles but carry memory risks. Each scenario tests when to broadcast, when to avoid it, and what Spark chooses at runtime.
       </p>
-      <AccordionMCQ scenarios={BROADCAST_SCENARIOS} accentColor="var(--ember)" />
+      <AccordionMCQ scenarios={BROADCAST_SCENARIOS} accentColor="var(--ember)" storageKey="spark_broadcast" />
     </div>
   )
 }
@@ -747,7 +762,7 @@ function OOMDiagnosis() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         OOM errors in Spark have distinct signatures. Each scenario presents a real failure mode — diagnose the cause and pick the correct fix.
       </p>
-      <AccordionMCQ scenarios={OOM_SCENARIOS} accentColor="var(--rose)" />
+      <AccordionMCQ scenarios={OOM_SCENARIOS} accentColor="var(--rose)" storageKey="spark_oom" />
     </div>
   )
 }
@@ -765,6 +780,17 @@ export default function SparkLabTab() {
   const [active, setActive] = useState('shuffle')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? ShuffleHell
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

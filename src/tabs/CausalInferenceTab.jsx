@@ -285,9 +285,24 @@ const OBS_EXP_SCENARIOS = [
 ]
 
 // ── AccordionMCQ Component ────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--sky)' }) {
-  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = useState('All')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i) {
     const n = scenarios.length
@@ -797,7 +812,7 @@ function UpliftModeling() {
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
         Uplift modeling estimates the individual causal treatment effect (CATE) — not just who will churn, but who will respond to intervention. Six scenarios covering T-learner, X-learner, Qini evaluation, and doubly-robust estimation.
       </p>
-      <AccordionMCQ scenarios={UPLIFT_SCENARIOS} accentColor="var(--mint)" />
+      <AccordionMCQ scenarios={UPLIFT_SCENARIOS} accentColor="var(--mint)" storageKey="causal_uplift" />
     </div>
   )
 }
@@ -808,7 +823,7 @@ function ObsVsExperimental() {
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
         Six scenarios deciding when observational causal inference is sufficient vs when you need an experiment. Covers DiD natural experiments, selection bias, holdout designs, and the limits of propensity matching.
       </p>
-      <AccordionMCQ scenarios={OBS_EXP_SCENARIOS} accentColor="var(--gold)" />
+      <AccordionMCQ scenarios={OBS_EXP_SCENARIOS} accentColor="var(--gold)" storageKey="causal_obs_exp" />
     </div>
   )
 }
@@ -826,6 +841,17 @@ const MODULES = [
 export default function CausalInferenceTab() {
   const [active, setActive] = useState('causal_vs_pred')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? CausalVsPredictive
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>

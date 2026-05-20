@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ── Shared accordion MCQ ──────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context' }) {
-  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = useState('all')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i, total) {
     const t = total / 3
@@ -430,7 +445,7 @@ function OptimizerComparison() {
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={OPTIMIZER_SCENARIOS} accentColor="var(--violet)" contextLabel="Telemetry" />
+      <AccordionMCQ scenarios={OPTIMIZER_SCENARIOS} accentColor="var(--violet)" contextLabel="Telemetry" storageKey="deeplearn_optimizer" />
     </div>
   )
 }
@@ -550,7 +565,7 @@ function RegularizationDecisions() {
           Dropout, weight decay, augmentation, label smoothing, mixup — each attacks overfitting differently. 6 scenarios where the wrong regularizer makes things worse.
         </p>
       </div>
-      <AccordionMCQ scenarios={REGULARIZATION_SCENARIOS} accentColor="var(--rose)" contextLabel="Setup" />
+      <AccordionMCQ scenarios={REGULARIZATION_SCENARIOS} accentColor="var(--rose)" contextLabel="Setup" storageKey="deeplearn_regularize" />
     </div>
   )
 }
@@ -679,7 +694,7 @@ function TransformerArchitecture() {
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={TRANSFORMER_SCENARIOS} accentColor="var(--sky)" contextLabel="System State" />
+      <AccordionMCQ scenarios={TRANSFORMER_SCENARIOS} accentColor="var(--sky)" contextLabel="System State" storageKey="deeplearn_transformer" />
     </div>
   )
 }
@@ -697,6 +712,17 @@ export default function DeepLearningTab() {
   const [active, setActive] = useState('diagnosis')
   const [, forceUpdate] = useState(0)
   const ActiveModule = DL_MODULES.find(m => m.id === active)?.component ?? TrainingFailureDiagnosis
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = DL_MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>

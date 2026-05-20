@@ -485,9 +485,24 @@ function AnomalyDetectionTiers() {
 }
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--sky)' }) {
-  const [items, setItems] = useState(() => scenarios.map(() => ({ open: false, picked: null, revealed: false })))
+function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
   const [diffFilter, setDiffFilter] = useState('all')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
 
   function getDiff(i, total) {
     const t = total / 3
@@ -711,7 +726,7 @@ function TSModelSelector() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         ARIMA vs Prophet vs ML vs Neural — the right model depends on data volume, seasonality structure, and series count. Each scenario tests model selection judgment.
       </p>
-      <AccordionMCQ scenarios={TS_MODEL_SCENARIOS} accentColor="var(--sky)" />
+      <AccordionMCQ scenarios={TS_MODEL_SCENARIOS} accentColor="var(--sky)" storageKey="ts_model" />
     </div>
   )
 }
@@ -816,7 +831,7 @@ function TSFeatureEngineering() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         Lag selection, cyclical encoding, leakage prevention, and cross-series embeddings — the feature engineering decisions that separate good TS models from broken ones.
       </p>
-      <AccordionMCQ scenarios={TS_FEAT_SCENARIOS} accentColor="var(--violet)" />
+      <AccordionMCQ scenarios={TS_FEAT_SCENARIOS} accentColor="var(--violet)" storageKey="ts_features" />
     </div>
   )
 }
@@ -834,6 +849,17 @@ export default function TimeSeriesTab() {
   const [active, setActive] = useState('failures')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? ForecastFailureZoo
+
+  useEffect(() => {
+    const goto = localStorage.getItem('msl_goto_module')
+    if (goto) {
+      const found = MODULES.find(m => m.id === goto)
+      if (found) {
+        setActive(goto)
+        localStorage.removeItem('msl_goto_module')
+      }
+    }
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
