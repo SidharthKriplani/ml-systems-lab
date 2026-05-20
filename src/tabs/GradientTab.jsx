@@ -1074,6 +1074,289 @@ For 100 training events at time T, fetch the features your training pipeline use
     domain: 'features',
     youtube: [],
   },
+  {
+    id: 22,
+    slug: 'reading-spark-execution-dag',
+    title: 'Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches',
+    category: 'PySpark',
+    catColor: { bg: 'rgba(245,158,11,0.1)', text: 'var(--ember)', border: 'rgba(245,158,11,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see "completed." Senior engineers open the stages tab, find the task duration histogram, and know within 60 seconds whether the problem is skew, shuffle, or serialization. Here\'s the complete reading guide.',
+    body: `The Spark UI at port 4040 (or the History Server) tells you everything you need to debug a slow job. Most people only check if it completed. Here\'s how to actually read it.
+
+**The Jobs tab: your entry point**
+
+Each action (collect, write, count) triggers a job. Jobs are composed of stages, and stages are composed of tasks. The jobs tab shows you duration and whether any stages were skipped (cached). Start here — find the job that took longest.
+
+**The Stages tab: where the real diagnostic begins**
+
+Click into the slow job. You see its stages, each corresponding to a shuffle boundary (any wide transformation: groupBy, join, repartition, distinct). The stage table shows:
+
+- **Duration**: wall-clock time for the stage
+- **Input/Output/Shuffle Read/Shuffle Write**: data volume at each phase
+- **Tasks**: how many tasks ran, how many failed
+
+The ratio that matters most: if Shuffle Read is 10x the Input size, you have a skewed join or explosion in cardinality. If Shuffle Write is large but Shuffle Read is small in the next stage, data is being generated and discarded — look for unnecessary explode() calls.
+
+**The Task Duration Histogram: skew detector**
+
+Click into a stage and scroll to the task metrics. The task duration histogram is the single most useful chart in Spark debugging. It shows the distribution of time spent across all tasks.
+
+A healthy histogram: roughly normal or uniform distribution. All tasks finish within 2x of each other.
+
+A skew signature: most tasks finish in 0.2s, one task takes 120s. The job\'s total duration is dominated by that single slow task. This is data skew — one partition has far more data than the others. The fix: salting the join key or using skew hints (`spark.sql.autoBroadcastJoinThreshold`, `skewJoin` hint in Spark 3.x).
+
+A stragglers signature: a long right tail with 3–5 tasks taking 3x the median. This is usually resource contention (noisy neighbour on the executor) or GC pressure. Look at the GC time column — if GC time > 10% of task duration, you have memory pressure.
+
+**The SQL tab: for DataFrame and SQL queries**
+
+The SQL tab shows the physical plan for each query. Here you can see:
+
+- **BroadcastHashJoin vs SortMergeJoin**: broadcast joins are fast (table fits in memory and is copied to each executor). SortMergeJoin requires shuffle on both sides — much more expensive. If you see SortMergeJoin on a small table, force a broadcast with \`broadcast()\` hint.
+- **Exchange (shuffle)**: every Exchange node in the plan is a shuffle. Count them. Three joins between large tables = potentially 6 shuffles. Can any of them be avoided by co-partitioning? By denormalization?
+- **Filter pushdown**: good plans show filters pushed below joins. If your filter appears above the join in the plan, Spark is shuffling unneeded rows before filtering them.
+
+**The Storage tab: cache debugging**
+
+If you call .cache() or .persist(), the stored RDD/DataFrame appears here with memory and disk usage. Key checks: is the cached dataset fully materialized (fraction cached = 100%)? If it\'s 40% cached, the rest spills to disk — and your "cached" job is doing partial re-computation on every access.
+
+**The Environment tab: configuration audit**
+
+Check spark.executor.memory, spark.executor.cores, spark.sql.shuffle.partitions (default 200 — almost always wrong), spark.default.parallelism. If shuffle.partitions = 200 and your dataset has 10TB, each partition is 50GB and you\'ll OOM. Rule of thumb: target 100–200MB per partition, set shuffle.partitions accordingly.
+
+**The two-minute diagnostic**
+
+1. Jobs tab → find the slow job
+2. Stages tab → find the stage with the highest duration, check Shuffle Read/Write ratio
+3. Stage detail → task duration histogram → skewed? stragglers? uniform?
+4. SQL tab → count Exchange nodes, check join types, verify filter pushdown
+5. Storage tab → are your caches fully materialised?
+
+After running this five times, you\'ll start catching Spark performance bugs in code review before they ever hit production.`,
+    tags: ['Spark', 'PySpark', 'Performance', 'Debugging', 'Data Engineering', 'Skew'],
+    domain: 'spark',
+    youtube: [],
+  },
+  {
+    id: 23,
+    slug: 'three-drift-signals-model-failure',
+    title: 'Three Drift Signals That Predict Model Failure Before It Happens',
+    category: 'Monitoring',
+    catColor: { bg: 'rgba(244,63,94,0.1)', text: 'var(--rose)', border: 'rgba(244,63,94,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'By the time a model failure shows up in your business metrics, it\'s been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your residuals — but nobody was watching. Here\'s what to monitor, what thresholds matter, and what each signal actually tells you.',
+    body: `Model failures don\'t announce themselves. They compound quietly across days or weeks until a stakeholder notices conversion is down 18% and you spend a week reverse-engineering what happened. The information was available the whole time — just not in the right place, with the right alert.
+
+There are three layers of drift to monitor. They detect different failure modes at different points in the degradation timeline.
+
+**Layer 1: Input drift — the earliest signal**
+
+Input drift means your features are moving away from the training distribution. This doesn\'t guarantee model performance has degraded yet, but it\'s a leading indicator — the model is now operating in territory it didn\'t train on.
+
+The standard metric is PSI (Population Stability Index). For each feature:
+
+- PSI < 0.1: stable, no action needed
+- PSI 0.1–0.2: moderate drift, flag for review
+- PSI > 0.2: significant drift, investigate
+
+PSI is computed by binning the reference distribution (training) and current distribution, then summing: `Σ (Actual% - Expected%) × ln(Actual% / Expected%)`.
+
+For categorical features, track each category\'s share separately. The most common trigger: a new categorical value appears in production that was never seen during training. Your model\'s embedding for that value is random or zero — it will mispredict for every row with that category.
+
+Monitor input drift daily for high-cardinality features, weekly for stable ones. Alert on PSI > 0.15 for the top 10 features by importance.
+
+**Layer 2: Prediction drift — the performance proxy**
+
+You can\'t always get ground truth labels in real time (it takes 30 days to know if a loan defaulted). But you can watch how the model\'s predictions are distributed.
+
+Prediction drift compares the distribution of P(Y=1) today vs at the time of deployment. Use the KS (Kolmogorov-Smirnov) statistic: the maximum absolute difference between the two CDFs.
+
+A healthy model: KS < 0.05. Its predictions today look like its predictions at launch.
+
+A drifting model: the mean prediction drops from 0.23 to 0.18 over two weeks, and the KS grows to 0.14. The model is becoming more conservative — possibly due to feature drift, or due to a real shift in the population.
+
+Critical distinction: prediction drift can be a false alarm. If the underlying base rate genuinely changed (fewer people are actually likely to default this month), you want the predictions to shift. The signal is "investigate," not "rollback." Compare prediction drift against any known base rate changes.
+
+**Layer 3: Residual drift — the ground truth signal**
+
+When labels are available (even with delay), compute model residuals for a rolling cohort: residual = y_true - y_pred (for regression) or look at calibration curves (for classification).
+
+Systematic residual drift — where the model consistently over- or under-predicts a specific segment — indicates concept drift: the relationship between features and labels has changed. This is the hardest drift to catch early but the most actionable.
+
+For binary classification: run calibration checks by cohort. If your model predicts 0.3 probability but the actual rate for that score bucket is now 0.45, the model is miscalibrated and needs either a calibration update or a full retrain.
+
+**The monitoring architecture that works**
+
+You don\'t need an expensive MLOps platform for this. You need:
+
+1. Log serving features alongside predictions (not just predictions alone)
+2. Compute PSI daily vs training baseline — a 30-line SQL query
+3. Compute prediction KS weekly vs launch week distribution
+4. When labels arrive: compute residuals by score decile, alert if calibration error > 0.05
+
+The teams that catch model failures early aren\'t the ones with the most sophisticated tooling. They\'re the ones who consistently run these three checks and act on the alerts rather than explaining them away.`,
+    tags: ['Monitoring', 'Drift Detection', 'PSI', 'KS Test', 'Production ML', 'Calibration'],
+    domain: 'monitor',
+    youtube: [],
+  },
+  {
+    id: 24,
+    slug: 'ml-system-design-6-step-framework',
+    title: 'The 6-Step Framework That Answers Any ML System Design Question',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(251,191,36,0.1)', text: 'var(--gold)', border: 'rgba(251,191,36,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it\'s even an ML problem worth solving. The 6-step framework exists to prevent exactly this. Here\'s how it works, with a full worked example.',
+    body: `An ML system design interview tests whether you think like a senior engineer — someone who understands that model selection is step 5, not step 1. The framework below is a checklist that forces the right order of reasoning.
+
+**Step 1: Clarify the objective**
+
+Before anything else: what is the system trying to optimise for? And is that the same as the business metric?
+
+The classic trap: "optimise click-through rate." CTR is easy to maximise — show clickbait. The real objective is something like "increase long-term user satisfaction and retention." These require different models, different labels, different evaluation metrics. State this explicitly.
+
+Questions to ask: What is the north star metric? What does failure look like? What is the traffic volume? What is the acceptable latency? What is the cost of a false positive vs a false negative?
+
+**Step 2: Define the ML task**
+
+Given the objective, what type of ML problem is this? This sounds obvious but gets surprisingly complex:
+
+- Recommendation: retrieval (ANN search over candidates) + ranking (point-wise vs pair-wise vs list-wise scoring)
+- Fraud detection: binary classification, but with extreme class imbalance and adversarial dynamics
+- Search ranking: learning-to-rank with query-document pairs
+- ETA prediction: regression with right-skewed distribution and temporal features
+- Content moderation: multi-class classification with a "human review" third class
+
+State the task type, the output type, and whether you need a single model or a pipeline of models.
+
+**Step 3: Define labels**
+
+How do you know what "correct" looks like? This is where most designs fail.
+
+For recommendation: explicit (5-star rating) vs implicit (click, dwell time, share). Implicit labels are noisier but available at scale. Define your positive/negative events carefully — a 2-second dwell is not a positive signal.
+
+For fraud: the label is available (fraud confirmed / not), but delayed (chargebacks arrive 30 days after the transaction). Your training data is 30 days stale by definition. State this.
+
+For content moderation: you need human annotators. What is your labelling agreement threshold? How do you handle ambiguous cases? What is your label latency (time from content publication to label availability)?
+
+**Step 4: Feature design**
+
+Now you can talk about features. By this point you know the task, the labels, and the constraints — so feature design is guided by actual requirements, not intuition.
+
+Structure your feature discussion around: user features (demographics, historical behaviour, preferences), item features (content embeddings, metadata, popularity signals), context features (time of day, device, session context), and interaction features (user-item affinity, historical clicks on similar items).
+
+For each feature, state: availability at serving time? Point-in-time correct? Any leakage risk? This is where many candidates reveal whether they\'ve actually worked with ML data pipelines.
+
+**Step 5: Model choice**
+
+Only now do you choose a model. Given everything above: the task type, the latency requirement, the label quality, the feature space, and the training data volume.
+
+Common mapping:
+- Low latency + tabular features: GBM (LightGBM, XGBoost) — fast inference, interpretable
+- Retrieval stage: two-tower neural network — handles dense embedding spaces
+- Ranking stage: transformer over user-item sequence — captures sequential patterns
+- Small data + interpretability needed: logistic regression with handcrafted features
+- Large-scale NLP: fine-tuned BERT or task-specific instruction-tuned LLM
+
+State your training infrastructure assumptions: how often does the model retrain? Online learning or batch? What is the training compute requirement?
+
+**Step 6: Evaluation and serving**
+
+Offline evaluation: what is your test set? Is it a time-ordered hold-out? What metric? Why that metric and not the alternatives?
+
+Online evaluation: shadow mode first, then canary (5–10% traffic), then champion-challenger framework for promotion. What are your rollback triggers?
+
+Serving: latency budget, caching strategy (can you pre-compute scores for a subset of users?), failover behaviour (what does the system serve if the model is unavailable?), monitoring.
+
+**Worked example: news feed ranking**
+
+Step 1: Objective — maximise long-term user engagement, not pure CTR. North star: weekly active days.
+Step 2: Task — list-wise ranking over candidate posts for a user. Retrieval (ANN) + ranking (transformer).
+Step 3: Labels — implicit: 10s+ dwell = positive, scroll past = weak negative, share = strong positive. Labels available in realtime.
+Step 4: Features — user embedding (historical engagement), post embedding (BERT on text), user-post affinity, recency decay, source reliability signal.
+Step 5: Model — two-tower for retrieval, 6-layer transformer ranker for top-100 candidates. Retrain daily.
+Step 6: Evaluation — NDCG@10 offline; A/B on weekly active days online with 2-week exposure minimum.
+
+The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?`,
+    tags: ['Interview', 'System Design', 'ML Interview', 'Framework', 'Recommendation', 'Evaluation'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 25,
+    slug: 'why-forecasts-fail',
+    title: 'Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(16,185,129,0.1)', text: 'var(--mint)', border: 'rgba(16,185,129,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are data and evaluation failures, not model failures. Here are the 8 patterns that kill forecasts before deployment.',
+    body: `Forecasting failures are mostly diagnosed wrong. When a forecast misses badly, the instinct is to try a different model: ARIMA instead of Prophet, LSTM instead of ARIMA. Usually that\'s the wrong fix. The model wasn\'t the problem.
+
+Here are the 8 patterns that corrupt forecasting pipelines before the model gets involved.
+
+**1. Target leakage in temporal features**
+
+You\'re predicting sales tomorrow. One of your features is "average sales over the past 7 days" — computed using the 7 days before the prediction date. In training, you compute this lazily using the full history. In production, the pipeline that materialises this feature runs at 06:00 UTC, including transactions that came in at 23:55 the previous night.
+
+Result: training features are computed with a slightly different time boundary than production features. The model learns patterns that don\'t exist in the production data. Your MAPE looks fine in backtest; it degrades 15% in production.
+
+**2. Non-stationarity ignored at training time**
+
+Most classical forecasting methods assume stationarity: the statistical properties of the series (mean, variance, autocorrelation) don\'t change over time. Most real-world series aren\'t stationary. Retail sales trend upward. Energy consumption has decade-long cycles. Advertising spend has quarterly budget patterns.
+
+If you fit an ARIMA to a non-stationary series without differencing, the model is fitting to the trend rather than the patterns. It will forecast the trend to continue — and mean-revert when it doesn\'t.
+
+Always test stationarity with ADF or KPSS before model selection. Always apply the differencing order that makes the series stationary before passing it to a classical model.
+
+**3. Structural breaks treated as noise**
+
+A structural break is a permanent shift in the level or trend of a series — a new market entrant, a product line change, a regulation, a macro event. Models trained before the break will forecast as if the old regime continues. Models trained after the break may not have enough data to characterise the new regime.
+
+Prophet has built-in changepoint detection. For other models: detect breaks with the Chow test or Bai-Perron algorithm. Segment your training data at the break point — data before the break is either excluded or given lower weight.
+
+**4. Evaluation metric mismatch**
+
+RMSE penalises large errors heavily. MAPE breaks when the actual is near zero. MAE treats all errors equally regardless of scale. Symmetric MAPE (SMAPE) has its own pathologies.
+
+The right metric depends on your use case: if an underforecast and overforecast have equal cost, MAE. If large errors are catastrophically costly (safety-critical applications), RMSE. If you care about percentage errors and your series never goes to zero, MAPE.
+
+The mistake: optimising RMSE in training when operations cares about MAPE, or reporting MAPE on a series with near-zero values where the denominator explodes.
+
+**5. Look-ahead bias in the evaluation window**
+
+Your backtest generates forecasts for each week using a model fit on all prior data. But did you re-fit the model at each step of the walk-forward validation, or did you fit it once on the full history and generate "forecasts" with the model that already saw the future?
+
+A model fit once on full history then evaluated over historical windows has already seen the "future" of those windows during training. Your backtest numbers are not honest. Always use expanding window or rolling window cross-validation where the model is genuinely blind to future data.
+
+**6. Cold start on sparse series**
+
+Your inventory model works well for your top-100 SKUs. It fails for the 4,000 long-tail SKUs with 2–3 transactions per month. Classical time series models need at least 2–3 seasonal cycles of history to characterise seasonality. For sparse series, fitting a model per series is both computationally wasteful and statistically unsound.
+
+Solutions: hierarchical forecasting (borrow statistical strength from similar series), global models (one neural network trained on all series simultaneously), or default-to-category-average for series below a sparsity threshold.
+
+**7. Feature pipeline drift after deployment**
+
+Your forecast model uses 6 external features (weather, economic indicators, competitor prices). These features are fetched from third-party APIs. One API changes its response schema in month 3. Your feature pipeline silently fills that feature with NULL, which gets imputed to the mean. The model continues running and producing numbers — slightly wrong ones, for the next 8 months, until a quarterly review catches it.
+
+Validation: apply schema checks and null-rate monitoring to every external feature, not just the model\'s predictions. Alert if null rate for any feature exceeds 2x its training baseline.
+
+**8. Not accounting for intermittency**
+
+A series that is zero 70% of the time (a product that doesn\'t sell most days) should not be forecast with a model designed for continuous data. Standard RMSE will be dominated by the zero periods. Standard models will forecast small positive values for the zero periods (systematic positive bias).
+
+Correct approach: Croston\'s method (separate demand interval and demand size models), or zero-inflated distributions, or — for very sparse series — just forecast the probability of a non-zero period and the expected size conditional on non-zero.
+
+**The meta-pattern**
+
+Six of these eight failures are detectable before you train any model: by auditing the feature computation logic, checking stationarity, verifying your evaluation methodology, and profiling your series for sparsity and structural breaks. Spend 30% of your forecasting project on this audit before touching model selection. You\'ll find problems that no model architecture can fix.`,
+    tags: ['Time Series', 'Forecasting', 'Evaluation', 'Leakage', 'Stationarity', 'Production ML'],
+    domain: 'eval',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers']
@@ -1377,7 +1660,7 @@ const POST_PRACTICE = {
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────
-function PostReader({ post, onBack, onNavigate }) {
+function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
   const [scrollPct, setScrollPct] = useState(0)
 
   function handleScroll(e) {
@@ -1500,10 +1783,15 @@ function PostReader({ post, onBack, onNavigate }) {
         <div style={{ height: '100%', background: 'linear-gradient(90deg,#6366f1,#22d3ee)', width: `${scrollPct}%`, transition: 'width 0.1s', borderRadius: '1px' }} />
       </div>
 
-      {/* Back */}
-      <button onClick={onBack} className="btn-ghost" style={{ alignSelf: 'flex-start', marginBottom: '32px', fontSize: '13px' }}>
-        ← Back to Gradient
-      </button>
+      {/* Back + mark read */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '8px' }}>
+        <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
+          ← Back to Gradient
+        </button>
+        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.08)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", transition: 'all 0.15s' }}>
+          {isRead ? '✓ Read' : 'Mark as read'}
+        </button>
+      </div>
 
       <article onScroll={handleScroll} style={{ outline: 'none' }}>
         {/* Meta */}
@@ -1560,7 +1848,7 @@ function PostReader({ post, onBack, onNavigate }) {
 }
 
 // ─── Post card ────────────────────────────────────────────────────────────────
-function PostCard({ post, featured, onClick }) {
+function PostCard({ post, featured, onClick, isRead }) {
   if (featured) {
     return (
       <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center', border: `1px solid ${post.catColor.border}`, background: `linear-gradient(135deg, var(--depth) 0%, ${post.catColor.bg} 100%)`, transition: 'transform 0.15s', }}
@@ -1592,6 +1880,7 @@ function PostCard({ post, featured, onClick }) {
         <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
         {post.domain && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
         {post.youtube && post.youtube.length > 0 && <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace" }}>▶ video</span>}
+        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>✓ read</span>}
         <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{post.readMin} min</span>
       </div>
       <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
@@ -1605,6 +1894,14 @@ export default function GradientTab({ onNavigate }) {
   const [activeDomain, setActiveDomain] = useState('all')
   const [reading,      setReading]      = useState(null)
   const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
+  const [read, setRead] = useState(() => new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')))
+
+  function markRead(id) {
+    const next = new Set(read)
+    next.add(id)
+    setRead(next)
+    localStorage.setItem('msl_read', JSON.stringify([...next]))
+  }
 
   const filtered = POSTS.filter(p => activeDomain === 'all' || p.domain === activeDomain)
   const featured = filtered.filter(p => p.featured)
@@ -1612,7 +1909,7 @@ export default function GradientTab({ onNavigate }) {
 
   if (reading) {
     const post = POSTS.find(p => p.id === reading)
-    if (post) return <PostReader post={post} onBack={() => setReading(null)} onNavigate={onNavigate} />
+    if (post) return <PostReader post={post} onBack={() => setReading(null)} onNavigate={onNavigate} isRead={read.has(post.id)} onMarkRead={() => markRead(post.id)} />
   }
 
   if (mode === 'cases') return (
@@ -1679,8 +1976,8 @@ export default function GradientTab({ onNavigate }) {
 
       {/* Posts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-        {featured.map(p => <PostCard key={p.id} post={p} featured onClick={() => setReading(p.id)} />)}
-        {rest.map(p => <PostCard key={p.id} post={p} onClick={() => setReading(p.id)} />)}
+        {featured.map(p => <PostCard key={p.id} post={p} featured isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
+        {rest.map(p => <PostCard key={p.id} post={p} isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
       </div>
 
       {filtered.length === 0 && (
