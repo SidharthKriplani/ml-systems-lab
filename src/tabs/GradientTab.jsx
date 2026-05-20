@@ -1161,7 +1161,7 @@ The standard metric is PSI (Population Stability Index). For each feature:
 - PSI 0.1–0.2: moderate drift, flag for review
 - PSI > 0.2: significant drift, investigate
 
-PSI is computed by binning the reference distribution (training) and current distribution, then summing: `Σ (Actual% - Expected%) × ln(Actual% / Expected%)`.
+PSI is computed by binning the reference distribution (training) and current distribution, then summing: \`Σ (Actual% - Expected%) × ln(Actual% / Expected%)\`.
 
 For categorical features, track each category\'s share separately. The most common trigger: a new categorical value appears in production that was never seen during training. Your model\'s embedding for that value is random or zero — it will mispredict for every row with that category.
 
