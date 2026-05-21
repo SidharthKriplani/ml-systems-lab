@@ -107,50 +107,6 @@ Philosophy: by the time you've run through all 9 tools against a specific JD, yo
 
 ---
 
-## Content ideas backlog
-
-### New Gradient posts (priority order)
-1. "Why your feature store probably has a time-travel bug" → Feature Engineering tab
-2. "The myth of the validation set: how leakage hides there" → Feature Engineering tab
-3. "Forecast Failure Zoo: 8 ways time series models fail in production" → Time Series tab
-4. "The two failure modes of A/B tests" → links to Experimentation Lab
-5. "Quantization from first principles: what FP16 actually throws away" → DL Serving tab
-6. "The 6 ways a recommendation system can silently stop recommending" → System Design tab
-7. "When DiD breaks: parallel trends violations in practice" → Causal Inference tab
-8. "Cold-start is not a model problem, it's a product problem" → System Design tab
-
-### New modules
-- **Causal Inference**: DAG editor — draw graph, identify confounders/colliders/mediators interactively (Pyodide)
-- **Spark Lab**: Memory pressure simulator — given executor config + job spec, predict OOM vs success
-- **System Design**: RAG architecture judgment — chunk size, retrieval strategy, reranking decisions
-- **Deep Learning**: Attention head visualization (Pyodide — transformer internals)
-- **Classical ML**: Decision boundary visualizer (Pyodide — SVM kernel comparison, tree depth impact)
-- **Interview**: Behavioral question bank — ML-specific situations (disagreed with a metric, shipped despite uncertainty)
-- **MLOps**: Model Registry Patterns module in CI/CD & Infra tab
-- **Monitoring**: Alerting decision tree (when to page vs log vs auto-rollback)
-
-### UX improvements
-- Progress export — download full mastery snapshot as JSON
-- Module bookmarking — star scenarios to revisit (localStorage `msl_bookmarks`)
-- Scenario difficulty filter in judgment modules (easy/medium/hard)
-- Keyboard navigation: 1/2/3/4 to pick options, Enter to confirm
-- Gradient "mark as read" per post
-- Global search: keyboard arrow-key navigation through results
-- HomeTab: "Recommended first module" based on selected role
-- Gradient: "Start here" sort option (beginner-first within each domain)
-- VerbatimTab: word count + speaking rate (words/min) in Review screen
-- CombinatorTab: per-domain breakdown chart in Debrief screen
-- StaffLayerTab: "Reset all reveals" button for re-study
-
-### Platform
-- Unified "Systems Engineer" cross-lab learning path (ML + GenAI + Experimentation — 6–8 weeks)
-- Ecosystem cross-links: ML Systems Lab deep links from GenAI Lab and Experimentation Lab
-- OG image for proper social preview
-- sitemap.xml for SEO
-- "NEW" badge on tabs updated within last 30 days
-
----
-
 ## Ecosystem context
 
 ```
