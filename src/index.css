@@ -379,7 +379,7 @@
 
 /* Main content clears the bottom nav + safe area */
 .main-content {
-  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── Desktop: sidebar replaces bottom nav ───────────────────────────────── */
