@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { trackModuleComplete } from '../analytics'
 
 // ─── Question Bank ──────────────────────────────────────────────────────────
 
@@ -343,6 +344,9 @@ export default function CombinatorTab() {
     setTotalTimeUsed(duration * 60 - (auto ? 0 : timeLeft))
     setShowEndConfirm(false)
     saveToHistory()
+    const mcqs = questions.filter(q => q.type === 'mcq')
+    const correct = mcqs.filter((q) => userAnswers[questions.indexOf(q)] !== undefined && parseInt(userAnswers[questions.indexOf(q)]) === q.correct).length
+    trackModuleComplete('combinator_session', 'combinator', mcqs.length > 0 ? Math.round((correct / mcqs.length) * 100) : null)
     setScreen('debrief')
   }
 

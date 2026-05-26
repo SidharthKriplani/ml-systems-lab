@@ -189,8 +189,8 @@ Every share of the app URL (LinkedIn, Slack, WhatsApp, Twitter) will render a br
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | `autocapture` not explicitly disabled — PostHog default is `autocapture: true`, capturing all clicks, text inputs, form submissions. Tabs with free-text inputs (`VerbatimTab`, `CodeBugsTab`, `AskTab`, `TakeHomeTab`) risk capturing user-entered content | `src/analytics.js` | High | ⚠️ Open |
-| 2 | Only 1 of 30+ tabs (`SparkLabTab`) fires any analytics events — `trackModuleStart` and `trackModuleComplete` are defined but called nowhere else | All tabs except `SparkLabTab` | High | ⚠️ Open |
+| 1 | `autocapture` not explicitly disabled — PostHog default is `autocapture: true`, capturing all clicks, text inputs, form submissions. Tabs with free-text inputs (`VerbatimTab`, `CodeBugsTab`, `AskTab`, `TakeHomeTab`) risk capturing user-entered content | `src/analytics.js` | High | ✅ Fixed — `autocapture: false` added to `posthog.init()` |
+| 2 | Only 1 of 30+ tabs (`SparkLabTab`) fires any analytics events — `trackModuleStart` and `trackModuleComplete` are defined but called nowhere else | All tabs except `SparkLabTab` | High | ✅ Partially fixed — added to `TrainerTab` (session end), `CombinatorTab` (debrief), `StaffLayerTab` (staff level reached). 27 tabs still fire nothing. |
 | 3 | `trackTabSwitch` fires in `App.jsx` on every zone/tab change — tab navigation is tracked | `src/App.jsx` | — | ✅ Clean |
 | 4 | All localStorage keys properly `msl_`-prefixed — 12 distinct keys/prefixes found | All tabs | — | ✅ Clean |
 | 5 | No METRICS.md — localStorage key taxonomy and intended event schema are undocumented | — | Medium | ⚠️ Open |
@@ -243,14 +243,14 @@ Without completion events, there is no signal on which tabs users actually use v
 | 001 | BUILD baseline — brace balance, colors, localStorage, onNavigate, index keys | 2026-05-26 | BUILD / Visual Consistency | 3 open ⚠️ |
 | 002 | Font hardcoding, dead PipelineBlogTab | 2026-05-26 | BUILD / Visual Consistency | 2 open ⚠️ |
 | 003 | Security baseline — gitignore, env vars, secrets | 2026-05-26 | Security | ✅ All clean |
-| 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | 2 open ⚠️ |
+| 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | #1 fixed ✅ · #2 open ⚠️ |
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
-| 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | 3 open ⚠️ |
+| 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | #1 #2 fixed ✅ · #5 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| High | 3 | #004 og-image.png missing · #006 autocapture not disabled · #006 29/30 tabs fire zero events |
+| High | 0 | — all resolved |
 | Medium | 5 | #001 hardcoded colors · #001 missing onNavigate · #002 font hardcoding · #004 sitemap missing · #006 no METRICS.md |
 | Low | 2 | #001 index keys · #002 dead PipelineBlogTab |

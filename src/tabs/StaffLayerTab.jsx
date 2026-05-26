@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { trackModuleComplete } from '../analytics'
 
 const REVEALS_KEY = 'msl_staff_reveals'
 
@@ -170,6 +171,7 @@ export default function StaffLayerTab() {
 
   function revealLevel(id, level) {
     setReveals(prev => ({ ...prev, [id]: level }))
+    if (level === 3) trackModuleComplete('staff_scenario', 'staff', id)
   }
 
   function toggleExpanded(id) {

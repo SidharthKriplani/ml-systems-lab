@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { trackModuleComplete } from '../analytics'
 
 // ─── MCQ Bank ────────────────────────────────────────────────────────────────
 
@@ -868,6 +869,7 @@ export default function TrainerTab() {
 
   function handleFinish(score, domainStats, qs) {
     const total = qs.length
+    trackModuleComplete('trainer_session', 'trainer', Math.round((score / total) * 100))
 
     // Build domain breakdown for storage
     const domainBreakdown = Object.entries(domainStats).map(([domain, s]) => ({
