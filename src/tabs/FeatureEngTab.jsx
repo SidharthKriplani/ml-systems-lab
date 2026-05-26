@@ -729,12 +729,245 @@ function OnlineOfflineDecider() {
 }
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
+// ─── Feature Store Architecture Diagram ──────────────────────────────────────
+const ARCH_NODES = [
+  {
+    id: 'sources', label: 'Data Sources', sub: 'DBs · event logs · CDC streams',
+    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.04)',
+    what: 'The raw inputs to your feature pipeline: transactional databases (user profiles, orders), event logs (clicks, page views), and change-data-capture (CDC) streams from upstream systems.',
+    decisions: 'Decide the ingestion pattern per source type: database → batch export or CDC (Debezium); events → Kafka; files → S3/GCS drop zone. This choice determines freshness and operational cost.',
+    failures: 'Schema changes upstream break downstream pipelines silently. Always register schemas in a schema registry (Confluent, Glue) and version them.',
+    signal: 'Senior engineers discuss schema governance and upstream coupling — not just "we read from Kafka."',
+  },
+  {
+    id: 'batch', label: 'Batch ETL', sub: 'Spark · dbt · hourly/daily jobs',
+    color: 'var(--ember)', bg: 'rgba(249,115,22,0.08)',
+    what: 'Scheduled jobs (Spark, dbt, SQL) that compute aggregated features over historical data windows. Example: "user\'s 30-day purchase count", "listing\'s 90-day average review score."',
+    decisions: 'Materialization strategy: full recompute vs incremental. Full is safe and simple; incremental is cheaper but requires a reliable watermark. Partition by entity + date for efficient backfill.',
+    failures: 'Recomputing on every run without partitioning scans the full table daily. At scale, this becomes the most expensive job in your org. Incremental updates with proper partitioning are non-negotiable.',
+    signal: 'Know the difference between full recompute and incremental strategies. Explain how you\'d design backfill.',
+  },
+  {
+    id: 'stream', label: 'Streaming Ingest', sub: 'Kafka → Flink / Spark Streaming',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    what: 'Real-time event processing pipeline that computes features as events arrive. Example: "session click count in last 10 minutes", "transaction velocity in last 60 seconds."',
+    decisions: 'Exactly-once vs at-least-once semantics. Windowing strategy: tumbling (non-overlapping), sliding (overlapping), session (gap-based). Late data handling: watermarks define how long to wait.',
+    failures: 'Watermark too tight → late events dropped silently. Watermark too wide → high latency. No exactly-once → duplicate feature updates corrupt aggregates. Test late-data scenarios explicitly.',
+    signal: 'Discuss watermarks and late-data handling specifically — this separates engineers who\'ve operated streaming systems from those who\'ve only read about them.',
+  },
+  {
+    id: 'offline', label: 'Offline Store', sub: 'S3 / Hive / BigQuery / Iceberg',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Columnar storage of historical feature values, partitioned by entity and timestamp. This is the source of truth for generating training datasets via point-in-time correct joins.',
+    decisions: 'File format: Parquet or Iceberg (prefer Iceberg for time-travel). Partitioning: by entity_id + date is most common. Retention: keep enough history for retraining windows (typically 1–2 years).',
+    failures: 'Storing only the latest feature value (no history) makes point-in-time correct retrieval impossible. This is the most common feature store implementation mistake.',
+    signal: 'Point-in-time correctness is the key concept. If the candidate doesn\'t know what it is, they haven\'t operated a real feature store.',
+  },
+  {
+    id: 'online', label: 'Online Store', sub: 'Redis · Cassandra · DynamoDB · <5ms',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Low-latency key-value store holding the most recent pre-computed feature values for each entity. Queried at request time during model inference. Must return values in <5ms P99.',
+    decisions: 'Storage system: Redis for <1ms latency + small data; Cassandra/DynamoDB for >10M entities or higher durability requirements. TTL per feature type (session features: 30min; user profile: 24h).',
+    failures: 'No TTL on features → stale values served indefinitely. Cache stampede under load when many keys expire simultaneously. Hot partitions for popular entities in Cassandra.',
+    signal: 'Discuss TTL design explicitly. Engineers who\'ve built online stores worry about stale features and eviction policies — not just the happy path.',
+  },
+  {
+    id: 'pit', label: 'Point-in-Time Join', sub: 'as-of query · training data gen',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    what: 'For each (entity, label_timestamp) pair in your training dataset, retrieves the feature value that was valid at label_timestamp — not the current value. Prevents future data leakage into training.',
+    decisions: 'Implementation: range join on (entity_id, feature_ts <= label_ts ORDER BY feature_ts DESC LIMIT 1). Feast calls this a point-in-time join. Without this, your offline metrics are inflated.',
+    failures: 'Using latest-value join for training data is the single most common cause of inflated offline metrics that don\'t hold up in production. The gap can be 5–20% AUC.',
+    signal: 'If a candidate can explain point-in-time joins without prompting, they\'ve been burned by this bug before. This is a senior-level concept.',
+  },
+  {
+    id: 'servapi', label: 'Feature Serving API', sub: 'batch lookup · entity keys',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    what: 'The API layer that retrieves pre-computed features from the online store at inference time. Accepts entity keys (user_id, item_id), returns feature vectors. Must be sub-5ms P99.',
+    decisions: 'Batch vs single lookup: fetch all features for an entity in one call to minimize round trips. Fallback strategy: what to return if a feature is missing (default value, or flag the request).',
+    failures: 'Fallback to recompute on cache miss is a latency timebomb — works fine at low QPS, blows P99 at 10K+ QPS. Design explicit fallback values and test the miss path under load.',
+    signal: 'Ask about the cache miss strategy. Engineers who haven\'t operated serving systems give vague answers. The correct answer is "explicit fallback values defined per feature, never recompute at request time."',
+  },
+  {
+    id: 'training', label: 'Model Training', sub: 'offline features → artifacts',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    what: 'Consumes the point-in-time correct training dataset from the offline store. Outputs a trained model artifact plus the feature pipeline version used — both must be versioned together.',
+    decisions: 'The training pipeline must record which feature pipeline version was used. A model artifact alone is incomplete — you also need the exact feature computation logic that was used to train it.',
+    failures: 'Feature pipeline is updated after training but before the model is promoted. Now training and serving compute features differently. Always tie model version to feature pipeline version.',
+    signal: 'Mention co-versioning model artifacts with feature pipeline versions. This is the production ML hygiene that separates researchers from engineers.',
+  },
+  {
+    id: 'inference', label: 'Model Serving', sub: 'online features + inference',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    what: 'At request time: fetch features from online store, run model inference, return prediction. The model must use the same feature computation logic as was used at training time.',
+    decisions: 'Synchronous (real-time) vs pre-compute (batch score + cache). Real-time: fresh features but adds latency. Pre-computed: fast but stale. Right choice depends on feature freshness requirements.',
+    failures: 'Training used feature_version=2, serving fetches feature_version=1 from online store because the migration was incomplete. This is silent — no error, just degraded model performance.',
+    signal: 'Strong candidates discuss the training-serving feature version alignment and how they\'d validate it before promotion.',
+  },
+  {
+    id: 'monitor', label: 'Feature Monitoring', sub: 'PSI · freshness · null rates',
+    color: 'var(--rose)', bg: 'rgba(244,63,94,0.08)',
+    what: 'Continuous monitoring of feature health across both stores: PSI to detect distribution drift, null rate tracking, freshness lag monitoring (how stale are online store values?), and schema drift alerts.',
+    decisions: 'Monitor at the feature level, not just model level. PSI > 0.2 on any feature triggers investigation before it affects model performance. Set separate alerts for offline store freshness vs online store TTL.',
+    failures: 'Monitoring only model output metrics (CTR, conversion) catches problems too late. Feature-level monitoring catches upstream data issues hours before they impact model performance.',
+    signal: 'Ask "what would you monitor beyond model output metrics?" Weak answer: "accuracy and latency." Strong answer: per-feature PSI, null rates, serving freshness, schema version drift.',
+  },
+]
+
+const ARCH_EDGES = [
+  { from: 'sources', to: 'batch' },
+  { from: 'sources', to: 'stream' },
+  { from: 'batch',   to: 'offline' },
+  { from: 'stream',  to: 'online' },
+  { from: 'offline', to: 'pit' },
+  { from: 'online',  to: 'servapi' },
+  { from: 'pit',     to: 'training' },
+  { from: 'servapi', to: 'inference' },
+  { from: 'offline', to: 'monitor' },
+  { from: 'online',  to: 'monitor' },
+]
+
+// Layout: [col, row] — col 0..4, row 0..2
+const ARCH_LAYOUT = {
+  sources:  [0, 1],
+  batch:    [1, 0],
+  stream:   [1, 2],
+  offline:  [2, 0],
+  online:   [2, 2],
+  pit:      [3, 0],
+  servapi:  [3, 2],
+  training: [4, 0],
+  inference:[4, 2],
+  monitor:  [4, 1],
+}
+
+function FeatureStoreArchitecture() {
+  const [selected, setSelected] = useState(null)
+  const node = ARCH_NODES.find(n => n.id === selected)
+
+  const COL_W = 160
+  const ROW_H = 110
+  const NODE_W = 148
+  const NODE_H = 60
+  const PAD = 8
+  const SVG_W = 5 * COL_W + PAD * 2
+  const SVG_H = 3 * ROW_H + PAD * 2
+
+  function cx(col) { return PAD + col * COL_W + NODE_W / 2 }
+  function cy(row) { return PAD + row * ROW_H + NODE_H / 2 }
+  function nx(col) { return PAD + col * COL_W }
+  function ny(row) { return PAD + row * ROW_H }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+          Click any block to explore
+        </div>
+        <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <svg
+            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+            width={SVG_W}
+            height={SVG_H}
+            style={{ display: 'block', minWidth: SVG_W }}
+          >
+            {/* Edges */}
+            {ARCH_EDGES.map((e, i) => {
+              const [fc, fr] = ARCH_LAYOUT[e.from]
+              const [tc, tr] = ARCH_LAYOUT[e.to]
+              const x1 = cx(fc) + (tc > fc ? NODE_W / 2 : -NODE_W / 2)
+              const y1 = cy(fr)
+              const x2 = cx(tc) - (tc > fc ? NODE_W / 2 : -NODE_W / 2)
+              const y2 = cy(tr)
+              const mx = (x1 + x2) / 2
+              return (
+                <path
+                  key={i}
+                  d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.12)"
+                  strokeWidth="1.5"
+                  markerEnd="url(#arrow)"
+                />
+              )
+            })}
+
+            {/* Arrow marker */}
+            <defs>
+              <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="rgba(255,255,255,0.25)" />
+              </marker>
+            </defs>
+
+            {/* Nodes */}
+            {ARCH_NODES.map(n => {
+              const [col, row] = ARCH_LAYOUT[n.id]
+              const x = nx(col)
+              const y = ny(row)
+              const isSelected = selected === n.id
+              return (
+                <g key={n.id} onClick={() => setSelected(isSelected ? null : n.id)} style={{ cursor: 'pointer' }}>
+                  <rect
+                    x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
+                    fill={isSelected ? n.bg : 'rgba(255,255,255,0.03)'}
+                    stroke={isSelected ? n.color : 'rgba(255,255,255,0.1)'}
+                    strokeWidth={isSelected ? 2 : 1}
+                  />
+                  <text x={x + NODE_W / 2} y={y + 22} textAnchor="middle"
+                    fill={isSelected ? n.color : 'rgba(255,255,255,0.75)'}
+                    fontSize="12" fontFamily="var(--font-sans)" fontWeight="600">
+                    {n.label}
+                  </text>
+                  <text x={x + NODE_W / 2} y={y + 38} textAnchor="middle"
+                    fill="rgba(255,255,255,0.35)" fontSize="10" fontFamily="var(--font-mono)">
+                    {n.sub}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* Detail panel */}
+      {node ? (
+        <div style={{ padding: '20px', borderRadius: '10px', background: node.bg, border: `1px solid ${node.color}30` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '14px' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: node.color }}>{node.label}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{node.sub}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+            {[
+              { label: 'What it is', text: node.what, col: 'var(--ink-mid)' },
+              { label: 'Key decisions', text: node.decisions, col: 'var(--sky)' },
+              { label: 'Failure modes', text: node.failures, col: 'var(--rose)' },
+              { label: 'Interview signal', text: node.signal, col: 'var(--prime)' },
+            ].map(row => (
+              <div key={row.label}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: row.col, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{row.label}</div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{row.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Key insight</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+            The offline store and online store must compute features using the same code. The offline store generates training data via point-in-time joins. The online store serves pre-computed values at inference. If they diverge — different logic, different versions, different null handling — you have training-serving skew, and your model silently degrades.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const MODULES = [
   { id: 'skew',     label: 'Skew Simulator',        icon: '[S]', component: SkewSimulator },
   { id: 'store',    label: 'Feature Store Designer', icon: '🏪', component: FeatureStoreDesigner },
   { id: 'window',   label: 'Window Aggregation',     icon: '⏱', component: WindowAggregationBuilder },
   { id: 'leakage',  label: 'Leakage Zoo',            icon: '🔍', component: FeatureLeakageZoo },
   { id: 'serving',  label: 'Online vs Offline',      icon: '⚡', component: OnlineOfflineDecider },
+  { id: 'arch',     label: 'Architecture Diagram',   icon: '◈', component: FeatureStoreArchitecture },
 ]
 
 export default function FeatureEngTab({ onNavigate }) {
