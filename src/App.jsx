@@ -393,23 +393,23 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
     }),
     domainBtn: {
       width: '100%', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '4px 12px 4px 26px',
+      justifyContent: 'space-between', padding: '5px 12px 5px 28px',
       background: 'none', border: 'none', cursor: 'pointer',
     },
     tabBtn: (isActive, accent) => ({
-      width: '100%', textAlign: 'left', padding: '3px 12px 3px 38px',
+      width: '100%', textAlign: 'left', padding: '5px 12px 5px 40px',
       background: isActive ? `${accent}12` : 'none', border: 'none', cursor: 'pointer',
       borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
       transition: 'background 0.1s',
     }),
     leafBtn: (isActive, accent) => ({
-      width: '100%', textAlign: 'left', padding: '4px 12px 4px 26px',
+      width: '100%', textAlign: 'left', padding: '6px 12px 6px 28px',
       background: isActive ? `${accent}12` : 'none', border: 'none', cursor: 'pointer',
       borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
       transition: 'background 0.1s',
     }),
     chevron: (open) => ({
-      fontSize: '8px', color: 'var(--ink-low)', display: 'inline-block',
+      fontSize: '9px', color: 'rgba(255,255,255,0.3)', display: 'inline-block',
       transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
     }),
   }
@@ -432,9 +432,9 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
             <div key={zone.id}>
               <button style={S.zoneBtn(isZoneActive, zone.accent)}
                 onClick={() => { toggleZone(zone.id); onZoneNav(zone.id) }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <span style={{ fontSize: '12px', color: isZoneActive ? zone.accent : 'var(--ink-low)' }}>{zone.icon}</span>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: isZoneActive ? zone.accent : 'var(--ink-low)' }}>{zone.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                  <span style={{ fontSize: '15px', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.4)', filter: isZoneActive ? `drop-shadow(0 0 4px ${zone.accent})` : 'none', transition: 'all 0.15s' }}>{zone.icon}</span>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.45)', transition: 'color 0.15s' }}>{zone.label}</span>
                 </div>
                 <span style={S.chevron(isOpen)}>▶</span>
               </button>
@@ -445,7 +445,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
                   {/* TODAY → Home only */}
                   {zone.id === 'today' && (
                     <button style={S.leafBtn(activeTabId === 'home' && isZoneActive, 'var(--prime)')} onClick={() => goTo('home')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: activeTabId === 'home' && isZoneActive ? 'var(--prime)' : 'var(--ink-mid)' }}>Home</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: activeTabId === 'home' && isZoneActive ? 'var(--prime)' : 'var(--ink-mid)' }}>Home</span>
                     </button>
                   )}
 
@@ -456,7 +456,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
                     return (
                       <div key={domain.id}>
                         <button style={S.domainBtn} onClick={() => toggleDomain(domain.id)}>
-                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: domainHasActive ? domain.accent : 'var(--ink-mid)', fontWeight: domainHasActive ? 600 : 400 }}>{domain.label}</span>
+                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: domainHasActive ? domain.accent : 'var(--ink-mid)', fontWeight: domainHasActive ? 600 : 400 }}>{domain.label}</span>
                           <span style={S.chevron(isDomainOpen || domainHasActive)}>▶</span>
                         </button>
                         {(isDomainOpen || domainHasActive) && domain.tabs.map(tab => {
@@ -474,7 +474,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
                   {/* READ → Gradient */}
                   {zone.id === 'read' && (
                     <button style={S.leafBtn(isZoneActive, 'var(--sky)')} onClick={() => goTo('gradient')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: isZoneActive ? 'var(--sky)' : 'var(--ink-mid)' }}>Gradient ∇</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isZoneActive ? 'var(--sky)' : 'var(--ink-mid)' }}>Gradient ∇</span>
                     </button>
                   )}
 
@@ -483,7 +483,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
                     const isToolActive = activeTabId === tool.id && isZoneActive
                     return (
                       <button key={tool.id} style={S.leafBtn(isToolActive, tool.accent)} onClick={() => goTo(tool.id)}>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: isToolActive ? tool.accent : 'var(--ink-mid)', fontWeight: isToolActive ? 600 : 400 }}>{tool.label}</span>
+                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isToolActive ? tool.accent : 'var(--ink-mid)', fontWeight: isToolActive ? 600 : 400 }}>{tool.label}</span>
                       </button>
                     )
                   })}
@@ -491,7 +491,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
                   {/* SEARCH */}
                   {zone.id === 'ask' && (
                     <button style={S.leafBtn(isZoneActive, 'var(--violet)')} onClick={() => goTo('ask')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: isZoneActive ? 'var(--violet)' : 'var(--ink-mid)' }}>KB Search</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isZoneActive ? 'var(--violet)' : 'var(--ink-mid)' }}>KB Search</span>
                     </button>
                   )}
                 </div>

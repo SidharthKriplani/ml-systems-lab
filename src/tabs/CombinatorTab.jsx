@@ -1218,18 +1218,18 @@ export default function CombinatorTab({ onNavigate }) {
                 key={idx}
                 onClick={() => navigateTo(idx)}
                 style={{
-                  minWidth: 32,
-                  height: 32,
-                  borderRadius: 6,
+                  minWidth: 40,
+                  height: 40,
+                  borderRadius: 8,
                   border: isActive ? '2px solid var(--prime)' : '1px solid var(--rim)',
-                  background: isActive ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
-                  color: isActive ? 'var(--prime)' : isAnswered ? 'var(--mint)' : 'var(--ink-low)',
+                  background: isActive ? 'rgba(240,165,0,0.15)' : 'var(--surface)',
+                  color: isActive ? 'var(--prime)' : isAnswered ? 'var(--mint)' : 'rgba(255,255,255,0.45)',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.8rem',
                   cursor: 'pointer',
                   position: 'relative',
                   flexShrink: 0,
-                  fontWeight: isActive ? 700 : 400,
+                  fontWeight: isActive ? 700 : 500,
                   transition: 'all 0.1s',
                 }}
               >
@@ -1505,7 +1505,7 @@ export default function CombinatorTab({ onNavigate }) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                     {timeSpent}s
                   </span>
                 </div>
@@ -1522,7 +1522,7 @@ export default function CombinatorTab({ onNavigate }) {
                     if (isUserOpt && !isCorrectOpt) { bg = 'rgba(244,63,94,0.1)'; color = 'var(--rose)'; border = '1px solid rgba(244,63,94,0.3)' }
                     return (
                       <div key={optIdx} style={{
-                        padding: '0.4rem 0.75rem', borderRadius: 6,
+                        padding: '0.4rem 0.75rem', borderRadius: 8,
                         background: bg, border, color, fontSize: '0.85rem',
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                       }}>
@@ -1544,7 +1544,7 @@ export default function CombinatorTab({ onNavigate }) {
                 <div style={{
                   padding: '0.6rem 0.75rem',
                   background: 'var(--depth)',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   fontSize: '0.82rem',
                   color: 'var(--ink-mid)',
                   lineHeight: 1.55,
@@ -1579,7 +1579,7 @@ export default function CombinatorTab({ onNavigate }) {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                         {timeSpent}s
                       </span>
                     </div>
@@ -1590,7 +1590,7 @@ export default function CombinatorTab({ onNavigate }) {
                         padding: '0.65rem 0.75rem',
                         background: 'rgba(34,211,238,0.04)',
                         border: '1px solid rgba(34,211,238,0.15)',
-                        borderRadius: 6,
+                        borderRadius: 8,
                         fontSize: '0.85rem',
                         color: 'var(--ink-mid)',
                         lineHeight: 1.55,
@@ -1606,7 +1606,7 @@ export default function CombinatorTab({ onNavigate }) {
                       padding: '0.65rem 0.75rem',
                       background: 'rgba(52,211,153,0.04)',
                       border: '1px solid rgba(52,211,153,0.15)',
-                      borderRadius: 6,
+                      borderRadius: 8,
                       fontSize: '0.82rem',
                       color: 'var(--ink-mid)',
                       lineHeight: 1.55,
@@ -1624,7 +1624,7 @@ export default function CombinatorTab({ onNavigate }) {
                           key={n}
                           onClick={() => setSelfRatings(prev => ({ ...prev, [idx]: n }))}
                           style={{
-                            width: 32, height: 32, borderRadius: 6,
+                            width: 32, height: 40, borderRadius: 8,
                             border: rating >= n ? '1px solid var(--prime)' : '1px solid var(--rim)',
                             background: rating >= n ? 'rgba(240,165,0,0.15)' : 'var(--depth)',
                             color: rating >= n ? 'var(--prime)' : 'var(--ink-ghost)',
