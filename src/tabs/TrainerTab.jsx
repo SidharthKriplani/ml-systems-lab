@@ -492,7 +492,7 @@ function SetupScreen({ onStart }) {
           color: selectedDomains.size === 0 ? 'var(--ink-ghost)' : 'var(--void)',
           border: 'none', borderRadius: 10, padding: '0.85rem 2.5rem',
           fontSize: '1rem', fontWeight: 700, cursor: selectedDomains.size === 0 ? 'not-allowed' : 'pointer',
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
           transition: 'all 0.15s',
         }}
       >
@@ -563,7 +563,7 @@ function DrillScreen({ questions, onFinish, onAbort }) {
     const base = {
       width: '100%', textAlign: 'left', padding: '0.85rem 1.1rem',
       borderRadius: 10, fontSize: '0.95rem', cursor: answered !== null ? 'default' : 'pointer',
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: 'var(--font-sans)',
       border: '1px solid var(--rim)',
       background: 'var(--depth)',
       color: 'var(--ink-hi)',
@@ -586,13 +586,13 @@ function DrillScreen({ questions, onFinish, onAbort }) {
           style={{
             background: 'none', border: '1px solid var(--rim)', borderRadius: 8,
             color: 'var(--ink-low)', cursor: 'pointer', fontSize: '0.8rem',
-            padding: '0.35rem 0.85rem', fontFamily: "'Space Grotesk', sans-serif",
+            padding: '0.35rem 0.85rem', fontFamily: 'var(--font-sans)',
           }}
         >
           Abort
         </button>
         <span style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: '0.9rem',
+          fontFamily: 'var(--font-mono)', fontSize: '0.9rem',
           color: 'var(--mint)', fontWeight: 600,
         }}>
           {score} / {idx + (answered !== null ? 1 : 0)} correct
@@ -647,7 +647,7 @@ function DrillScreen({ questions, onFinish, onAbort }) {
                 display: 'inline-block', width: 22, height: 22, lineHeight: '22px',
                 textAlign: 'center', borderRadius: '50%', marginRight: '0.75rem',
                 background: 'var(--rim)', fontSize: '0.78rem', fontWeight: 700,
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-mono)',
               }}>
                 {String.fromCharCode(65 + i)}
               </span>
@@ -689,7 +689,7 @@ function DrillScreen({ questions, onFinish, onAbort }) {
               background: 'var(--prime)', color: 'var(--void)',
               border: 'none', borderRadius: 10, padding: '0.75rem 2rem',
               fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
             }}
           >
             {idx + 1 >= total ? 'See Results' : 'Next'}
@@ -740,7 +740,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
         background: 'var(--surface)', border: '1px solid var(--rim)',
         borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: '1.5rem',
       }}>
-        <div style={{ fontSize: '3.5rem', fontWeight: 800, color: scoreColor, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>
+        <div style={{ fontSize: '3.5rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)', lineHeight: 1 }}>
           {score} / {total}
         </div>
         <div style={{ fontSize: '1.4rem', fontWeight: 600, color: scoreColor, marginTop: '0.5rem' }}>
@@ -771,7 +771,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
                     <span style={{ fontSize: '0.85rem', color: 'var(--ink-mid)' }}>{d}</span>
                     <span style={{
-                      fontSize: '0.8rem', fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '0.8rem', fontFamily: 'var(--font-mono)',
                       color: barColor, fontWeight: 600,
                     }}>
                       {correct}/{dtotal} ({Math.round(acc * 100)}%)
@@ -810,7 +810,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
                   borderRadius: 10, padding: '0.75rem',
                 }}>
                   <div style={{ fontSize: '0.78rem', color: 'var(--ink-low)', marginBottom: '0.35rem' }}>{d}</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: barColor, fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: barColor, fontFamily: 'var(--font-mono)' }}>
                     {correct}/{dtotal}
                   </div>
                   <div style={{ background: 'var(--rim)', borderRadius: 99, height: 4, marginTop: '0.4rem' }}>
@@ -831,7 +831,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
             background: 'var(--prime)', color: 'var(--void)',
             border: 'none', borderRadius: 10, padding: '0.8rem 1.75rem',
             fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
           }}
         >
           Drill Again
@@ -842,7 +842,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
             background: 'none', color: 'var(--ink-mid)',
             border: '1px solid var(--rim)', borderRadius: 10, padding: '0.8rem 1.75rem',
             fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
           }}
         >
           New Session
@@ -854,7 +854,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function TrainerTab() {
+export default function TrainerTab({ onNavigate }) {
   const [screen, setScreen] = useState('setup') // 'setup' | 'drill' | 'results'
   const [questions, setQuestions] = useState([])
   const [results, setResults] = useState(null) // { score, total, domainStats }
@@ -909,7 +909,7 @@ export default function TrainerTab() {
       minHeight: '100%',
       background: 'var(--void)',
       color: 'var(--ink-hi)',
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: 'var(--font-sans)',
     }}>
       {screen === 'setup' && (
         <SetupScreen onStart={handleStart} />

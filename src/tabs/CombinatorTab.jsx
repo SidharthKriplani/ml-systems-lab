@@ -272,7 +272,7 @@ function formatTime(seconds) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function CombinatorTab() {
+export default function CombinatorTab({ onNavigate }) {
   const [screen, setScreen] = useState('config')
   const [duration, setDuration] = useState(30)
   const [questions, setQuestions] = useState([])
@@ -443,7 +443,7 @@ export default function CombinatorTab() {
                   background: duration === parseInt(mins) ? 'rgba(240,165,0,0.08)' : 'var(--surface)',
                   cursor: 'pointer',
                   color: duration === parseInt(mins) ? 'var(--prime)' : 'var(--ink-mid)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   transition: 'all 0.15s',
                 }}
               >
@@ -477,7 +477,7 @@ export default function CombinatorTab() {
             background: 'var(--prime)',
             border: 'none',
             color: 'var(--void)',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontWeight: 700,
             fontSize: '1rem',
             cursor: 'pointer',
@@ -516,7 +516,7 @@ export default function CombinatorTab() {
           <div
             className={timerPulse ? 'combinator-pulse' : undefined}
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: 'var(--font-mono)',
               fontSize: '2rem',
               fontWeight: 700,
               color: timerColor,
@@ -554,7 +554,7 @@ export default function CombinatorTab() {
                   border: isActive ? '2px solid var(--prime)' : '1px solid var(--rim)',
                   background: isActive ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
                   color: isActive ? 'var(--prime)' : isAnswered ? 'var(--mint)' : 'var(--ink-low)',
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: 'var(--font-mono)',
                   fontSize: '0.7rem',
                   cursor: 'pointer',
                   position: 'relative',
@@ -623,7 +623,7 @@ export default function CombinatorTab() {
                       border: isSelected ? '2px solid var(--rim)' : '1px solid var(--rim)',
                       background: isSelected ? 'rgba(52,46,40,0.6)' : 'var(--depth)',
                       color: isSelected ? 'var(--ink-hi)' : 'var(--ink-mid)',
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       fontSize: '0.9rem',
                       textAlign: 'left',
                       cursor: 'pointer',
@@ -631,7 +631,7 @@ export default function CombinatorTab() {
                       outline: isSelected ? '1px solid rgba(240,165,0,0.15)' : 'none',
                     }}
                   >
-                    <span style={{ color: 'var(--ink-low)', marginRight: '0.5rem', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--ink-low)', marginRight: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
                       {['A', 'B', 'C', 'D'][optIdx]}
                     </span>
                     {opt}
@@ -652,7 +652,7 @@ export default function CombinatorTab() {
                 border: '1px solid var(--rim)',
                 background: 'var(--depth)',
                 color: 'var(--ink-hi)',
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-sans)',
                 fontSize: '0.9rem',
                 resize: 'vertical',
                 boxSizing: 'border-box',
@@ -674,7 +674,7 @@ export default function CombinatorTab() {
               border: '1px solid var(--rim)',
               background: 'var(--surface)',
               color: currentIdx === 0 ? 'var(--ink-ghost)' : 'var(--ink-mid)',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
               fontSize: '0.875rem',
             }}
@@ -690,7 +690,7 @@ export default function CombinatorTab() {
               border: '1px solid var(--rose)',
               background: 'transparent',
               color: 'var(--rose)',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               fontSize: '0.8rem',
             }}
@@ -707,7 +707,7 @@ export default function CombinatorTab() {
               border: '1px solid var(--rim)',
               background: 'var(--surface)',
               color: currentIdx === questions.length - 1 ? 'var(--ink-ghost)' : 'var(--ink-mid)',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               cursor: currentIdx === questions.length - 1 ? 'not-allowed' : 'pointer',
               fontSize: '0.875rem',
             }}
@@ -736,7 +736,7 @@ export default function CombinatorTab() {
                   style={{
                     flex: 1, padding: '0.65rem', borderRadius: 7,
                     background: 'var(--rose)', border: 'none',
-                    color: '#fff', fontFamily: "'Space Grotesk', sans-serif",
+                    color: 'var(--white)', fontFamily: 'var(--font-sans)',
                     fontWeight: 600, cursor: 'pointer',
                   }}
                 >
@@ -747,7 +747,7 @@ export default function CombinatorTab() {
                   style={{
                     flex: 1, padding: '0.65rem', borderRadius: 7,
                     background: 'var(--depth)', border: '1px solid var(--rim)',
-                    color: 'var(--ink-mid)', fontFamily: "'Space Grotesk', sans-serif",
+                    color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)',
                     cursor: 'pointer',
                   }}
                 >
@@ -779,7 +779,7 @@ export default function CombinatorTab() {
           marginBottom: '1.5rem',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '3rem', fontWeight: 800, color: scoreColor, fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ fontSize: '3rem', fontWeight: 800, color: scoreColor, fontFamily: 'var(--font-mono)' }}>
             {pct}%
           </div>
           <div style={{ color: 'var(--ink-mid)', marginTop: '0.25rem', fontSize: '1rem' }}>
@@ -805,7 +805,7 @@ export default function CombinatorTab() {
                   borderRadius: 8, padding: '0.75rem',
                 }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--ink-low)', marginBottom: '0.3rem' }}>{domain}</div>
-                  <div style={{ fontWeight: 700, color: c, fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div style={{ fontWeight: 700, color: c, fontFamily: 'var(--font-mono)' }}>
                     {stats.correct}/{stats.total}
                   </div>
                 </div>
@@ -835,7 +835,7 @@ export default function CombinatorTab() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                     {timeSpent}s
                   </span>
                 </div>
@@ -856,7 +856,7 @@ export default function CombinatorTab() {
                         background: bg, border, color, fontSize: '0.85rem',
                         display: 'flex', alignItems: 'center', gap: '0.5rem',
                       }}>
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', opacity: 0.7 }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', opacity: 0.7 }}>
                           {['A', 'B', 'C', 'D'][optIdx]}
                         </span>
                         {opt}
@@ -909,7 +909,7 @@ export default function CombinatorTab() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono', monospace" }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                         {timeSpent}s
                       </span>
                     </div>
@@ -958,7 +958,7 @@ export default function CombinatorTab() {
                             border: rating >= n ? '1px solid var(--prime)' : '1px solid var(--rim)',
                             background: rating >= n ? 'rgba(240,165,0,0.15)' : 'var(--depth)',
                             color: rating >= n ? 'var(--prime)' : 'var(--ink-ghost)',
-                            fontFamily: "'JetBrains Mono', monospace",
+                            fontFamily: 'var(--font-mono)',
                             fontSize: '0.8rem',
                             cursor: 'pointer',
                             fontWeight: 600,
@@ -988,7 +988,7 @@ export default function CombinatorTab() {
               flex: 1, padding: '0.75rem',
               borderRadius: 8, background: 'var(--prime)',
               border: 'none', color: 'var(--void)',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
             }}
           >
@@ -1000,7 +1000,7 @@ export default function CombinatorTab() {
               flex: 1, padding: '0.75rem',
               borderRadius: 8, background: 'var(--depth)',
               border: '1px solid var(--rim)', color: 'var(--ink-mid)',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: '0.9rem', cursor: 'pointer',
             }}
           >

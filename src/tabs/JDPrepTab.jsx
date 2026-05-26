@@ -109,10 +109,10 @@ export default function JDPrepTab({ onNavigate }) {
     return (
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 32 }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
             JD Analyzer
           </h2>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-mid)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: 0 }}>
             Paste a job description and get a ranked study plan tailored to what they're actually looking for.
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function JDPrepTab({ onNavigate }) {
             border: '1px solid var(--rim)',
             borderRadius: 10,
             padding: 16,
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 14,
             color: 'var(--ink-hi)',
             resize: 'vertical',
@@ -148,7 +148,7 @@ export default function JDPrepTab({ onNavigate }) {
               border: 'none',
               borderRadius: 8,
               padding: '12px 28px',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700,
               fontSize: 15,
               cursor: jdText.trim() ? 'pointer' : 'not-allowed',
@@ -173,10 +173,10 @@ export default function JDPrepTab({ onNavigate }) {
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 24, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
             Study Plan
           </h2>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--ink-mid)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-mid)', margin: 0 }}>
             {results.topics.length} topic{results.topics.length !== 1 ? 's' : ''} identified across {results.totalKeywords} unique keyword{results.totalKeywords !== 1 ? 's' : ''}
           </p>
         </div>
@@ -188,7 +188,7 @@ export default function JDPrepTab({ onNavigate }) {
             border: '1px solid var(--rim)',
             borderRadius: 8,
             padding: '8px 16px',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 13,
             cursor: 'pointer',
           }}
@@ -205,7 +205,7 @@ export default function JDPrepTab({ onNavigate }) {
           padding: 32,
           textAlign: 'center',
           color: 'var(--ink-mid)',
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
         }}>
           No known ML keywords detected. Try a more detailed job description.
         </div>
@@ -219,7 +219,7 @@ export default function JDPrepTab({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <span style={{ fontSize: 18 }}>{config.emoji}</span>
               <h3 style={{
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-sans)',
                 fontSize: 16,
                 fontWeight: 700,
                 color: config.color,
@@ -247,10 +247,10 @@ export default function JDPrepTab({ onNavigate }) {
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, color: 'var(--ink-hi)', marginBottom: 4 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, color: 'var(--ink-hi)', marginBottom: 4 }}>
                       {topic.topic}
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-low)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       matched: {topic.matched.join(', ')}
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export default function JDPrepTab({ onNavigate }) {
                       border: 'none',
                       borderRadius: 6,
                       padding: '7px 14px',
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       fontWeight: 700,
                       fontSize: 12,
                       cursor: 'pointer',

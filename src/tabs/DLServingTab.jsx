@@ -7,7 +7,7 @@ const pillBase = {
   padding: '6px 14px',
   borderRadius: '999px',
   fontSize: '13px',
-  fontFamily: "'Space Grotesk', sans-serif",
+  fontFamily: 'var(--font-sans)',
   fontWeight: 500,
   cursor: 'pointer',
   border: '1.5px solid var(--rim)',
@@ -19,7 +19,7 @@ const pillActive = {
   ...pillBase,
   background: ACCENT,
   borderColor: ACCENT,
-  color: '#fff',
+  color: 'var(--white)',
 }
 
 function Pill({ label, active, onClick }) {
@@ -33,7 +33,7 @@ function Pill({ label, active, onClick }) {
 function SectionHeader({ title, subtitle }) {
   return (
     <div style={{ marginBottom: '20px' }}>
-      <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+      <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
         {title}
       </h3>
       {subtitle && (
@@ -48,7 +48,7 @@ function SectionHeader({ title, subtitle }) {
 function CodeBlock({ code }) {
   return (
     <pre style={{
-      fontFamily: "'JetBrains Mono', monospace",
+      fontFamily: 'var(--font-mono)',
       fontSize: '12px',
       lineHeight: 1.7,
       background: 'var(--surface)',
@@ -199,7 +199,7 @@ function QuantModule() {
           { label: 'Latency target', options: LATENCIES, value: latency, set: setLatency },
         ].map(({ label, options, value, set }) => (
           <div key={label}>
-            <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {label}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -213,7 +213,7 @@ function QuantModule() {
 
       {/* Ranked list */}
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
           Ranked recommendations
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -229,7 +229,7 @@ function QuantModule() {
                 border: isTop ? `1.5px solid ${ACCENT}` : '1px solid var(--rim)',
               }}>
                 <span style={{
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: 'var(--font-mono)',
                   fontSize: '12px',
                   fontWeight: 700,
                   color: isTop ? ACCENT : 'var(--ink-low)',
@@ -241,7 +241,7 @@ function QuantModule() {
                   {prec?.label}
                 </span>
                 {isTop && (
-                  <span style={{ marginLeft: 'auto', fontSize: '12px', color: ACCENT, fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span style={{ marginLeft: 'auto', fontSize: '12px', color: ACCENT, fontFamily: 'var(--font-mono)' }}>
                     recommended
                   </span>
                 )}
@@ -259,7 +259,7 @@ function QuantModule() {
           { label: 'VRAM savings', value: topMeta.vramSave, color: 'var(--sky)' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color }}>{value}</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'var(--font-mono)', color }}>{value}</div>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
           </div>
         ))}
@@ -280,7 +280,7 @@ function QuantModule() {
 
       {/* Code snippet */}
       <div>
-        <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
           Implementation ({topLabel})
         </div>
         <CodeBlock code={CODE_SNIPPETS[topMeta.codeKey]} />
@@ -382,7 +382,7 @@ function MemoryModule() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Model parameters */}
         <div>
-          <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Model parameters
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -399,7 +399,7 @@ function MemoryModule() {
               style={{
                 marginTop: '10px',
                 padding: '8px 12px',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-mono)',
                 fontSize: '13px',
                 borderRadius: '8px',
                 border: '1.5px solid var(--rim)',
@@ -414,7 +414,7 @@ function MemoryModule() {
 
         {/* Precision */}
         <div>
-          <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Precision
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -427,7 +427,7 @@ function MemoryModule() {
         {/* Batch size + Seq length side by side */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Batch size
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -437,7 +437,7 @@ function MemoryModule() {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Sequence length
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -450,7 +450,7 @@ function MemoryModule() {
 
         {/* Mode */}
         <div>
-          <div style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Mode
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -480,7 +480,7 @@ function MemoryModule() {
       {/* Memory breakdown */}
       {memory && (
         <div className="card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
+          <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
             Memory breakdown
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -497,16 +497,16 @@ function MemoryModule() {
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0', borderBottom: '1px solid var(--rim)' }}>
                 <div>
                   <span style={{ fontSize: '14px', color: 'var(--ink-hi)', fontWeight: 500 }}>{label}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', marginLeft: '10px', fontFamily: "'JetBrains Mono', monospace" }}>{note}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', marginLeft: '10px', fontFamily: 'var(--font-mono)' }}>{note}</span>
                 </div>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', fontWeight: 600, color: 'var(--ink-hi)', minWidth: '90px', textAlign: 'right' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 600, color: 'var(--ink-hi)', minWidth: '90px', textAlign: 'right' }}>
                   {fmtGB(value)}
                 </span>
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px' }}>
               <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)' }}>Total</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '15px', fontWeight: 700, color: ACCENT }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '15px', fontWeight: 700, color: ACCENT }}>
                 {fmtGB(memory.total)}
               </span>
             </div>
@@ -517,7 +517,7 @@ function MemoryModule() {
       {/* GPU tier bar */}
       {memory && (
         <div className="card" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
+          <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>
             GPU VRAM compatibility
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -526,10 +526,10 @@ function MemoryModule() {
               const pct = Math.min(100, (memory.total / (vram * 1e9)) * 100)
               return (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--ink-mid)', minWidth: '130px', fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <span style={{ fontSize: '13px', color: 'var(--ink-mid)', minWidth: '130px', fontFamily: 'var(--font-sans)' }}>
                     {label}
                   </span>
-                  <span style={{ fontSize: '12px', fontFamily: "'JetBrains Mono', monospace", color: 'var(--ink-low)', minWidth: '40px' }}>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', minWidth: '40px' }}>
                     {vram}GB
                   </span>
                   <div style={{ flex: 1, height: '10px', borderRadius: '999px', background: 'var(--rim)', overflow: 'hidden' }}>
@@ -565,12 +565,12 @@ function MemoryModule() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>
             <div>
               <strong style={{ color: 'var(--ink-hi)' }}>1. Use INT4 quantization</strong> → estimated{' '}
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", color: ACCENT }}>{fmtGB(int4Estimate)}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: ACCENT }}>{fmtGB(int4Estimate)}</span>
               {int4Estimate < 80e9 ? ` — fits on A100-80/H100` : ` — still requires multi-GPU`}
             </div>
             <div>
               <strong style={{ color: 'var(--ink-hi)' }}>2. Tensor parallelism</strong> → split across{' '}
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", color: ACCENT }}>{gpuCount}× A100-80GB</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: ACCENT }}>{gpuCount}× A100-80GB</span>
               {' '}GPUs using NVLink
             </div>
             <div>
@@ -683,7 +683,7 @@ function ServingModule() {
             {/* Scenario header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
                   {scenario.title}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
@@ -694,7 +694,7 @@ function ServingModule() {
                       borderRadius: '999px',
                       background: `${ACCENT}15`,
                       color: ACCENT,
-                      fontFamily: "'JetBrains Mono', monospace",
+                      fontFamily: 'var(--font-mono)',
                       fontWeight: 600,
                     }}>
                       {t}
@@ -736,7 +736,7 @@ function ServingModule() {
                       background: bg,
                       color: textColor,
                       fontSize: '13px',
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       cursor: 'pointer',
                       fontWeight: isPicked || (isRevealed && isAnswer) ? 600 : 400,
                       transition: 'all 0.15s ease',
@@ -817,7 +817,7 @@ const MODULES = [
 ]
 
 // ─── Tab shell ─────────────────────────────────────────────────────────────────
-export default function DLServingTab() {
+export default function DLServingTab({ onNavigate }) {
   const [activeModule, setActiveModule] = useState('quant')
   const active = MODULES.find(m => m.id === activeModule)
   const ActiveComponent = active?.Component
@@ -830,7 +830,7 @@ export default function DLServingTab() {
           Deep Learning · Production Serving
         </div>
         <h2 style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
           fontSize: '28px',
           fontWeight: 800,
           color: 'var(--ink-hi)',

@@ -47,7 +47,7 @@ function SkewSimulator() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Four real skew bugs. Pick the one you think will hurt model performance the most. Then see the impact.
         </p>
@@ -63,16 +63,16 @@ function SkewSimulator() {
               background: bug === b.id ? 'rgba(244,63,94,0.05)' : 'var(--depth)',
               transition: 'all 0.15s',
             }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '10px' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '10px' }}>
               {b.label}
             </div>
             <div style={{ marginBottom: '6px' }}>
               <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Training</div>
-              <code style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.training}</code>
+              <code style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.training}</code>
             </div>
             <div>
               <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Serving</div>
-              <code style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", display: 'block' }}>{b.serving}</code>
+              <code style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.serving}</code>
             </div>
           </button>
         ))}
@@ -88,7 +88,7 @@ function SkewSimulator() {
         const b = BUGS.find(x => x.id === bug)
         return (
           <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.25)' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>{b.label}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>{b.label}</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '12px' }}>{b.desc}</p>
             <div style={{ marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--rose)', fontWeight: 600 }}>Impact: </span>
@@ -130,7 +130,7 @@ function FeatureStoreDesigner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Design an online feature store for a real-time recommendation system. Choose feature type, freshness SLA, and storage backend.
         </p>
@@ -140,8 +140,8 @@ function FeatureStoreDesigner() {
         {Object.entries(scenarios).map(([k, v]) => (
           <button key={k} onClick={() => setFeatureType(k)} className="card"
             style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${featureType === k ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, background: featureType === k ? 'var(--prime-faint)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: featureType === k ? 'var(--prime-hi)' : 'var(--ink-low)', background: featureType === k ? 'rgba(240,165,0,0.10)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '4px', padding: '2px 7px', display: 'inline-block', marginBottom: '10px' }}>{v.icon}</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: featureType === k ? 'var(--prime-hi)' : 'var(--ink-low)', background: featureType === k ? 'rgba(240,165,0,0.10)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '4px', padding: '2px 7px', display: 'inline-block', marginBottom: '10px' }}>{v.icon}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{v.frequency}</div>
           </button>
         ))}
@@ -151,7 +151,7 @@ function FeatureStoreDesigner() {
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Example features for this type</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {s.examples.map(ex => (
-            <code key={ex} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
+            <code key={ex} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
           ))}
         </div>
       </div>
@@ -162,7 +162,7 @@ function FeatureStoreDesigner() {
           {Object.entries(storageOptions).map(([k, v]) => (
             <button key={k} onClick={() => setStorage(k)} className="card"
               style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : 'var(--rim)'}`, background: storage === k ? 'rgba(34,211,238,0.06)' : 'var(--depth)', transition: 'all 0.15s', padding: '12px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--sky)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--sky)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>P50: {v.latency}</div>
             </button>
           ))}
@@ -170,7 +170,7 @@ function FeatureStoreDesigner() {
       </div>
 
       <div className="card" style={{ padding: '18px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.15)' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--sky)', marginBottom: '10px' }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--sky)', marginBottom: '10px' }}>
           {st.label} for {s.label}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -302,7 +302,7 @@ result = (df
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Window Aggregation Builder</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Window Aggregation Builder</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Configure a time-window feature and get production-ready SQL and PySpark — plus the gotchas that get teams in trouble.
         </p>
@@ -315,7 +315,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(ENTITIES).map(([k, v]) => (
               <button key={k} onClick={() => { setEntity(k); setMetric(v.metrics[0]) }}
-                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(240,165,0,0.35)' : 'transparent'}`, background: entity === k ? 'rgba(240,165,0,0.07)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(240,165,0,0.35)' : 'transparent'}`, background: entity === k ? 'rgba(240,165,0,0.07)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                 {v.icon} {v.label}
               </button>
             ))}
@@ -328,7 +328,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {e.metrics.map(m => (
               <button key={m} onClick={() => setMetric(m)}
-                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${metric === m ? 'rgba(129,140,248,0.4)' : 'transparent'}`, background: metric === m ? 'rgba(129,140,248,0.08)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: metric === m ? 'var(--violet)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${metric === m ? 'rgba(129,140,248,0.4)' : 'transparent'}`, background: metric === m ? 'rgba(129,140,248,0.08)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: metric === m ? 'var(--violet)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                 {m}
               </button>
             ))}
@@ -341,7 +341,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(AGGS).map(([k, v]) => (
               <button key={k} onClick={() => setAgg(k)}
-                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(34,211,238,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(34,211,238,0.06)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--sky)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(34,211,238,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(34,211,238,0.06)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--sky)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                 {v.label}
                 {v.warn && <span style={{ fontSize: '9px', color: 'var(--ember)', marginLeft: '4px' }}>⚠</span>}
               </button>
@@ -356,7 +356,7 @@ result = (df
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {Object.entries(WINDOW_TYPES).map(([k, v]) => (
                 <button key={k} onClick={() => setWindowType(k)}
-                  style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${windowType === k ? 'rgba(245,158,11,0.4)' : 'transparent'}`, background: windowType === k ? 'rgba(245,158,11,0.06)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowType === k ? 'var(--gold)' : 'var(--ink-low)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                  style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${windowType === k ? 'rgba(245,158,11,0.4)' : 'transparent'}`, background: windowType === k ? 'rgba(245,158,11,0.06)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowType === k ? 'var(--gold)' : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                   {v.label}
                 </button>
               ))}
@@ -367,7 +367,7 @@ result = (df
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {SIZES.map(s => (
                 <button key={s} onClick={() => setWindowSize(s)}
-                  style={{ padding: '4px 10px', borderRadius: '5px', border: `1px solid ${windowSize === s ? 'rgba(245,158,11,0.4)' : 'var(--rim)'}`, background: windowSize === s ? 'rgba(245,158,11,0.08)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowSize === s ? 'var(--gold)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+                  style={{ padding: '4px 10px', borderRadius: '5px', border: `1px solid ${windowSize === s ? 'rgba(245,158,11,0.4)' : 'var(--rim)'}`, background: windowSize === s ? 'rgba(245,158,11,0.08)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowSize === s ? 'var(--gold)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                   {s}
                 </button>
               ))}
@@ -393,7 +393,7 @@ result = (df
       {/* Feature name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>Feature name:</span>
-        <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--mint)', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px', padding: '4px 12px' }}>
+        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--mint)', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px', padding: '4px 12px' }}>
           {feat}
         </code>
       </div>
@@ -403,13 +403,13 @@ result = (df
         <div style={{ display: 'flex', gap: '4px', marginBottom: '-1px' }}>
           {[['sql', 'SQL'], ['spark', 'PySpark']].map(([t, lbl]) => (
             <button key={t} onClick={() => setCodeTab(t)}
-              style={{ padding: '6px 16px', borderRadius: '6px 6px 0 0', border: '1px solid var(--rim)', borderBottom: codeTab === t ? '1px solid var(--depth)' : undefined, background: codeTab === t ? 'var(--depth)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: codeTab === t ? 'var(--ink-hi)' : 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", fontWeight: codeTab === t ? 600 : 400 }}>
+              style={{ padding: '6px 16px', borderRadius: '6px 6px 0 0', border: '1px solid var(--rim)', borderBottom: codeTab === t ? '1px solid var(--depth)' : undefined, background: codeTab === t ? 'var(--depth)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: codeTab === t ? 'var(--ink-hi)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)', fontWeight: codeTab === t ? 600 : 400 }}>
               {lbl}
             </button>
           ))}
         </div>
         <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '0 6px 6px 6px', padding: '16px', overflowX: 'auto' }}>
-          <pre style={{ margin: 0, fontSize: '12px', color: 'var(--ink-hi)', fontFamily: "'JetBrains Mono',monospace", lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+          <pre style={{ margin: 0, fontSize: '12px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
             {codeTab === 'sql' ? sqlCode : sparkCode}
           </pre>
         </div>
@@ -417,7 +417,7 @@ result = (df
 
       {/* Gotchas */}
       <div>
-        <div style={{ fontSize: '13px', color: 'var(--ember)', fontWeight: 600, marginBottom: '10px', fontFamily: "'Space Grotesk',sans-serif" }}>⚠ Gotchas for this configuration</div>
+        <div style={{ fontSize: '13px', color: 'var(--ember)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>⚠ Gotchas for this configuration</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {GOTCHAS.map((g, i) => (
             <div key={i} style={{ display: 'flex', gap: '10px', padding: '10px 14px', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
@@ -525,7 +525,7 @@ function FeatureLeakageZoo() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Leakage Zoo</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Leakage Zoo</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           8 leakage patterns that silently inflate offline metrics. Pick one — identify the silent failure before reading the diagnosis.
         </p>
@@ -542,7 +542,7 @@ function FeatureLeakageZoo() {
               transition: 'all 0.15s',
             }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.type}</span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.type}</span>
               <span style={{
                 fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
                 background: `color-mix(in srgb, ${s.color} 15%, transparent)`,
@@ -556,7 +556,7 @@ function FeatureLeakageZoo() {
 
       {scenario && (
         <div className="card" style={{ border: `1px solid ${scenario.color}`, background: `color-mix(in srgb, ${scenario.color} 5%, var(--depth))` }}>
-          <h4 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: scenario.color, marginBottom: '16px' }}>
+          <h4 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: scenario.color, marginBottom: '16px' }}>
             {scenario.type} — Severity: {scenario.severity}
           </h4>
 
@@ -666,7 +666,7 @@ function OnlineOfflineDecider() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Online vs Offline Feature Decision</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Online vs Offline Feature Decision</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           The most expensive mistake in MLOps: over-engineering feature serving. Choose a scenario — decide the architecture before reading the answer.
         </p>
@@ -682,7 +682,7 @@ function OnlineOfflineDecider() {
               background: selected === s.id ? 'rgba(52,211,153,0.06)' : 'var(--depth)',
               transition: 'all 0.15s',
             }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '10px' }}>{s.label}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '10px' }}>{s.label}</div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {[
                 { label: `Latency: ${s.latency}`, color: BADGE_COLORS[s.latency] || 'var(--ink-low)' },
@@ -701,7 +701,7 @@ function OnlineOfflineDecider() {
       {scenario && (
         <div className="card" style={{ border: '1px solid var(--mint)', background: 'rgba(52,211,153,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-            <h4 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', margin: 0 }}>{scenario.label}</h4>
+            <h4 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', margin: 0 }}>{scenario.label}</h4>
             <div style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '6px', padding: '4px 10px' }}>
               <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '13px' }}>{scenario.verdict}</span>
             </div>
@@ -737,7 +737,7 @@ const MODULES = [
   { id: 'serving',  label: 'Online vs Offline',      icon: '⚡', component: OnlineOfflineDecider },
 ]
 
-export default function FeatureEngTab() {
+export default function FeatureEngTab({ onNavigate }) {
   const [active, setActive] = useState('skew')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? SkewSimulator
 
@@ -745,7 +745,7 @@ export default function FeatureEngTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Feature Engineering</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Feature Engineering</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           The gap between a model that works in a notebook and one that works in production is almost always a feature engineering problem.

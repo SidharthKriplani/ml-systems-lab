@@ -218,13 +218,13 @@ function FreezeLoRAModule() {
   function PillGroup({ label, options, value, onChange }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {options.map((opt, i) => (
             <button key={i} onClick={() => onChange(i)}
               style={{
                 padding: '7px 14px', borderRadius: '20px', fontSize: '12px',
-                fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer',
+                fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
                 border: `1px solid ${value === i ? 'var(--violet)' : 'var(--rim)'}`,
                 background: value === i ? 'rgba(99,102,241,0.12)' : 'transparent',
                 color: value === i ? 'var(--violet)' : 'var(--ink-low)',
@@ -241,7 +241,7 @@ function FreezeLoRAModule() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
           Freeze vs Fine-tune vs LoRA
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
@@ -260,15 +260,15 @@ function FreezeLoRAModule() {
         <div className="card animate-slide-up" style={{ padding: '24px', borderLeft: `3px solid ${rec.color}`, display: 'flex', flexDirection: 'column', gap: '18px' }}>
           {/* Method badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: rec.color + '18', color: rec.color, fontWeight: 700, letterSpacing: '0.02em' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: rec.color + '18', color: rec.color, fontWeight: 700, letterSpacing: '0.02em' }}>
               {rec.method}
             </span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', color: 'var(--ink-mid)', fontStyle: 'italic' }}>{rec.tagline}</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', color: 'var(--ink-mid)', fontStyle: 'italic' }}>{rec.tagline}</span>
           </div>
 
           {/* Why it fits */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Why this fits</div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Why this fits</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               {rec.reasons.map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
@@ -281,7 +281,7 @@ function FreezeLoRAModule() {
 
           {/* Risk callout */}
           <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.22)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '6px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '6px' }}>
               Risk: if you used full fine-tune instead
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{rec.risk}</p>
@@ -291,16 +291,16 @@ function FreezeLoRAModule() {
           <div>
             <button onClick={() => setShowCode(v => !v)}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showCode ? '12px' : 0 }}>
-              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: rec.color, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: rec.color, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
                 {showCode ? '▾' : '▸'} Key setup code
               </span>
             </button>
             {showCode && (
               <pre style={{
-                background: '#0d0d0f', border: '1px solid var(--rim)', borderRadius: '8px',
+                background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px',
                 padding: '18px', overflowX: 'auto', margin: 0,
-                fontFamily: "'JetBrains Mono',monospace", fontSize: '12px',
-                color: '#c9d1d9', lineHeight: 1.7,
+                fontFamily: 'var(--font-mono)', fontSize: '12px',
+                color: 'var(--ink-mid)', lineHeight: 1.7,
               }}>
                 {rec.code}
               </pre>
@@ -423,15 +423,15 @@ function LRStrategyModule() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Learning Rate Strategy</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Learning Rate Strategy</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
             Given the training setup, pick the correct LR strategy. Then see the explanation.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {LR_SCENARIOS.length}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {LR_SCENARIOS.length}</span>
           {score.total > 0 && (
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
               {score.correct}/{score.total} correct
             </span>
           )}
@@ -440,12 +440,12 @@ function LRStrategyModule() {
 
       {/* Scenario card */}
       <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--violet)' }}>
-        <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.6, margin: '0 0 14px 0' }}>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.6, margin: '0 0 14px 0' }}>
           {scenario.setup}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.details.map((d, i) => (
-            <div key={i} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
               {d}
             </div>
           ))}
@@ -464,7 +464,7 @@ function LRStrategyModule() {
           }
           return (
             <button key={opt.id} onClick={() => choose(opt.id)} disabled={revealed}
-              style={{ padding: '11px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', lineHeight: 1.4 }}>
+              style={{ padding: '11px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', lineHeight: 1.4 }}>
               {revealed && opt.id === scenario.answer && '✓ '}
               {revealed && opt.id === picked && opt.id !== scenario.answer && '✗ '}
               {opt.label}
@@ -476,12 +476,12 @@ function LRStrategyModule() {
       {/* Reveal */}
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{LR_OPTIONS.find(o => o.id === scenario.answer)?.label}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
           <div style={{ padding: '12px 14px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Practical note</div>
+            <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Practical note</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.note}</p>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
@@ -593,7 +593,7 @@ function PEFTComparisonModule() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>PEFT Method Comparison</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>PEFT Method Comparison</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Pick your primary constraint. Methods are reranked. Feature matrix in mono for quick scanning.
         </p>
@@ -601,13 +601,13 @@ function PEFTComparisonModule() {
 
       {/* Constraint selector */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Primary constraint</div>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Primary constraint</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {PEFT_CONSTRAINTS.map(c => (
             <button key={c.id} onClick={() => setConstraint(c.id)}
               style={{
                 padding: '7px 16px', borderRadius: '20px', fontSize: '13px',
-                fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer',
+                fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
                 border: `1px solid ${constraint === c.id ? 'var(--violet)' : 'var(--rim)'}`,
                 background: constraint === c.id ? 'rgba(99,102,241,0.12)' : 'transparent',
                 color: constraint === c.id ? 'var(--violet)' : 'var(--ink-low)',
@@ -632,12 +632,12 @@ function PEFTComparisonModule() {
                 <div style={{ minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {constraint && (
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: isTop ? 'var(--violet)' : 'var(--ink-low)', fontWeight: 700 }}>#{rank + 1}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: isTop ? 'var(--violet)' : 'var(--ink-low)', fontWeight: 700 }}>#{rank + 1}</span>
                     )}
-                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: isTop ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{method.name}</span>
-                    {isTop && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(99,102,241,0.15)', color: 'var(--violet)', borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>BEST FIT</span>}
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: isTop ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{method.name}</span>
+                    {isTop && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(99,102,241,0.15)', color: 'var(--violet)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>BEST FIT</span>}
                   </div>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>Trainable: {method.trainable}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Trainable: {method.trainable}</span>
                 </div>
 
                 {/* Description */}
@@ -646,7 +646,7 @@ function PEFTComparisonModule() {
                 </div>
 
                 {/* Feature matrix */}
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '220px' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '220px' }}>
                   {[
                     ['VRAM',        method.vram],
                     ['Latency',     method.latency],
@@ -664,10 +664,10 @@ function PEFTComparisonModule() {
                 {/* Score for selected constraint */}
                 {constraint && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '48px' }}>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '18px', color: SCORE_COLORS[method.scores[constraint]], fontWeight: 700 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', color: SCORE_COLORS[method.scores[constraint]], fontWeight: 700 }}>
                       {SCORE_LABELS[method.scores[constraint]]}
                     </span>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-low)' }}>{method.scores[constraint]}/5</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-low)' }}>{method.scores[constraint]}/5</span>
                   </div>
                 )}
               </div>
@@ -693,7 +693,7 @@ const FT_MODULES = [
   { id: 'peft',   label: 'PEFT Comparison', icon: '⚡', component: PEFTComparisonModule },
 ]
 
-export default function DLFineTuningTab() {
+export default function DLFineTuningTab({ onNavigate }) {
   const [active, setActive] = useState('freeze')
   const ActiveModule = FT_MODULES.find(m => m.id === active)?.component ?? FreezeLoRAModule
 
@@ -703,8 +703,8 @@ export default function DLFineTuningTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Fine-tuning & Adaptation</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(99,102,241,0.12)', color: 'var(--violet)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>DL</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Fine-tuning & Adaptation</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(99,102,241,0.12)', color: 'var(--violet)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '680px', margin: 0 }}>
           Full fine-tune when you shouldn't, LoRA when you don't need to, freeze when you need to update — these are the real mistakes. Make the right call from constraints.
@@ -720,7 +720,7 @@ export default function DLFineTuningTab() {
               border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`,
               background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent',
               color: active === m.id ? 'var(--violet)' : 'var(--ink-low)',
-              fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500,
+              fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500,
             }}>
             {m.label}
           </button>

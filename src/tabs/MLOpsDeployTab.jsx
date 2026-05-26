@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 
 // ─── Shared style helpers ─────────────────────────────────────────────────────
-const mono = { fontFamily: "'JetBrains Mono',monospace" }
-const grotesk = { fontFamily: "'Space Grotesk',sans-serif" }
+const mono = { fontFamily: 'var(--font-mono)' }
+const grotesk = { fontFamily: 'var(--font-sans)' }
 
 const pill = (color) => ({
   display: 'inline-block',
@@ -636,7 +636,7 @@ const MODULES = [
   { id: 'rollback',  label: 'Rollback Decision',    icon: '🔄', component: RollbackDecision },
 ]
 
-export default function MLOpsDeployTab() {
+export default function MLOpsDeployTab({ onNavigate }) {
   const [active, setActive] = useState('deploy')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? DeployStrategy
 

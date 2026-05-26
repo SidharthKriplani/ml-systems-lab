@@ -94,12 +94,12 @@ function ClueCard({ clue, isOpen, onToggle }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '18px' }}>{clue.icon}</span>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: isOpen ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{clue.label}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: isOpen ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{clue.label}</span>
         </div>
         <span style={{ color: 'var(--ink-low)', fontSize: '12px' }}>{isOpen ? '▲ hide' : '▼ reveal'}</span>
       </div>
       {isOpen && (
-        <pre style={{ marginTop: '14px', fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.75, whiteSpace: 'pre-wrap', overflowX: 'auto', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '12px', margin: 0 }}>
+        <pre style={{ marginTop: '14px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.75, whiteSpace: 'pre-wrap', overflowX: 'auto', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '12px', margin: 0 }}>
           {clue.content}
         </pre>
       )}
@@ -137,7 +137,7 @@ function IncidentRoom() {
         {INCIDENTS.map((inc, i) => (
           <button key={inc.id} onClick={() => selectIncident(i)}
             className={`sub-tab ${incidentIdx === i ? 'active' : 'inactive'}`}>
-            <span style={{ marginRight: '6px', fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: inc.severityColor, color: '#fff', fontWeight: 700 }}>{inc.severity}</span>
+            <span style={{ marginRight: '6px', fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: inc.severityColor, color: 'var(--white)', fontWeight: 700 }}>{inc.severity}</span>
             {inc.title}
           </button>
         ))}
@@ -146,8 +146,8 @@ function IncidentRoom() {
       {/* Incident brief */}
       <div className="card" style={{ borderColor: inc.severityColor + '66', background: `linear-gradient(135deg, var(--depth), rgba(0,0,0,0.1))` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: inc.severityColor, color: '#fff', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{inc.severity}</span>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '18px', color: 'var(--ink-hi)' }}>{inc.title}</span>
+          <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: inc.severityColor, color: 'var(--white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{inc.severity}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '18px', color: 'var(--ink-hi)' }}>{inc.title}</span>
         </div>
         <p style={{ fontSize: '14px', color: inc.severityColor, fontWeight: 600, marginBottom: '10px' }}>"{inc.tagline}"</p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{inc.context}</p>
@@ -157,7 +157,7 @@ function IncidentRoom() {
       <div>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '12px' }}>
           Explore the evidence below. Reveal what you need — don't peek at everything at once.
-          <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace" }}>{revealedCount}/{inc.clues.length} revealed</span>
+          <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{revealedCount}/{inc.clues.length} revealed</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {inc.clues.map(clue => (
@@ -168,7 +168,7 @@ function IncidentRoom() {
 
       {/* Diagnosis */}
       <div>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '12px' }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '12px' }}>
           What's the root cause?
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -209,11 +209,11 @@ function IncidentRoom() {
       {showFix && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ borderColor: 'rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.04)' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--mint)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--mint)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.fix}</p>
           </div>
           <div className="card" style={{ borderColor: 'rgba(56,189,248,0.25)', background: 'rgba(56,189,248,0.04)' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--sky)', marginBottom: '8px' }}>Lesson</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--sky)', marginBottom: '8px' }}>Lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.lesson}</p>
           </div>
         </div>
@@ -483,11 +483,11 @@ function DSOwnershipChain() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{reviewedCount}/{DS_CHAIN.length} reviewed</span>
+          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{reviewedCount}/{DS_CHAIN.length} reviewed</span>
           <div style={{ display: 'flex', gap: '4px' }}>
             {['junior','analyst','senior','staff'].map(t => (
               <button key={t} onClick={() => setActiveTier(t)}
-                style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '6px', border: `1px solid ${activeTier === t ? TIER_COLORS[t] : 'var(--rim)'}`, background: activeTier === t ? `${TIER_COLORS[t]}15` : 'transparent', color: activeTier === t ? TIER_COLORS[t] : 'var(--ink-low)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500 }}>
+                style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '6px', border: `1px solid ${activeTier === t ? TIER_COLORS[t] : 'var(--rim)'}`, background: activeTier === t ? `${TIER_COLORS[t]}15` : 'transparent', color: activeTier === t ? TIER_COLORS[t] : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
@@ -519,7 +519,7 @@ function DSOwnershipChain() {
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: isOpen ? 'rgba(240,165,0,0.05)' : 'transparent', border: `1px solid ${isOpen ? 'rgba(240,165,0,0.20)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div>
-                      <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--mint)' : 'var(--ink-hi)' }}>{node.title}</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--mint)' : 'var(--ink-hi)' }}>{node.title}</span>
                       <span style={{ fontSize: '12px', color: 'var(--ink-low)', marginLeft: '10px' }}>{node.short}</span>
                     </div>
                     <span style={{ color: 'var(--ink-low)', fontSize: '11px', flexShrink: 0 }}>{isOpen ? '▲' : '▼'}</span>
@@ -529,23 +529,23 @@ function DSOwnershipChain() {
                 {isOpen && (
                   <div style={{ margin: '4px 0 6px', padding: '16px 18px', background: 'var(--depth)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>What it means</div>
+                      <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>What it means</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{node.what}</p>
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Common failure if skipped</div>
+                      <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Common failure if skipped</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{node.failure}</p>
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: TIER_COLORS[activeTier], textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>{activeTier.charAt(0).toUpperCase() + activeTier.slice(1)} ownership</div>
+                      <div style={{ fontSize: '10px', color: TIER_COLORS[activeTier], textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>{activeTier.charAt(0).toUpperCase() + activeTier.slice(1)} ownership</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: 0 }}>{node.tiers[activeTier]}</p>
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '6px' }}>Ownership means</div>
+                      <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Ownership means</div>
                       <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{node.own}</p>
                     </div>
                     <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
-                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim)'}`, background: isDone ? 'rgba(52,211,153,0.08)' : 'transparent', color: isDone ? 'var(--mint)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif" }}>
+                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim)'}`, background: isDone ? 'rgba(52,211,153,0.08)' : 'transparent', color: isDone ? 'var(--mint)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                       {isDone ? '✓ Marked as reviewed' : 'Mark as reviewed'}
                     </button>
                   </div>
@@ -674,7 +674,7 @@ function IncidentScenarios() {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.6, maxWidth: '560px' }}>
           Six real scenarios with business pressure. Read the situation, form your response, then reveal the tier breakdown.
         </p>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{idx + 1} / {SCENARIOS.length}</span>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{idx + 1} / {SCENARIOS.length}</span>
       </div>
 
       {/* Scenario selector */}
@@ -689,18 +689,18 @@ function IncidentScenarios() {
 
       {/* Pressure card */}
       <div style={{ padding: '20px 24px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.22)', borderRadius: '12px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Business pressure</div>
-        <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 500, color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0 }}>"{sc.pressure}"</p>
+        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Business pressure</div>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 500, color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0 }}>"{sc.pressure}"</p>
       </div>
 
       {/* Context */}
       <div style={{ padding: '16px 20px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Context</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Context</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.context}</p>
       </div>
 
       {/* Decision prompt */}
-      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif" }}>
+      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
         {sc.decision}
       </div>
       <p style={{ fontSize: '12px', color: 'var(--ink-low)', margin: '-14px 0 0', fontStyle: 'italic' }}>Think through your answer first, then reveal the tier breakdown below.</p>
@@ -714,8 +714,8 @@ function IncidentScenarios() {
             <div key={t.key} style={{ padding: '14px 18px', background: selfAssessed === t.key ? `${t.color}0f` : 'var(--depth)', border: `1px solid ${selfAssessed === t.key ? t.color + '40' : 'var(--rim)'}`, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.12s' }}
               onClick={() => setSelfAssessed(t.key)}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '50px' }}>{t.label}</span>
-                {selfAssessed === t.key && <span style={{ fontSize: '10px', color: t.color, fontFamily: "'JetBrains Mono',monospace" }}>← your level</span>}
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '50px' }}>{t.label}</span>
+                {selfAssessed === t.key && <span style={{ fontSize: '10px', color: t.color, fontFamily: 'var(--font-mono)' }}>← your level</span>}
               </div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.tiers[t.key]}</p>
             </div>
@@ -723,7 +723,7 @@ function IncidentScenarios() {
 
           {/* Lesson */}
           <div style={{ marginTop: '4px', padding: '14px 18px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: '10px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '6px' }}>Key lesson</div>
+            <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Key lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.lesson}</p>
           </div>
 
@@ -932,13 +932,13 @@ function DesignCanvas() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Scenario switcher */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario</div>
+        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', color: 'var(--prime)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+          <span style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
             Recommendation System
           </span>
           {['Fraud Detection', 'Search Ranking'].map(s => (
-            <span key={s} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '999px', background: 'var(--depth)', border: '1px solid var(--rim)', color: 'var(--ink-low)', fontFamily: "'Space Grotesk',sans-serif" }}>
+            <span key={s} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '999px', background: 'var(--depth)', border: '1px solid var(--rim)', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>
               {s} · coming soon
             </span>
           ))}
@@ -961,13 +961,13 @@ function DesignCanvas() {
           <div key={section.id} className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Section header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', minWidth: '18px' }}>0{si + 1}</span>
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)' }}>{section.title}</span>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', minWidth: '18px' }}>0{si + 1}</span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)' }}>{section.title}</span>
               {hasAnswer && !submitted && (
-                <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>answered</span>
+                <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>answered</span>
               )}
               {submitted && hasAnswer && (
-                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: `${TIER_META[section.options[chosen].tier].color}18`, color: TIER_META[section.options[chosen].tier].color, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: `${TIER_META[section.options[chosen].tier].color}18`, color: TIER_META[section.options[chosen].tier].color, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
                   {TIER_META[section.options[chosen].tier].label}
                 </span>
               )}
@@ -996,13 +996,13 @@ function DesignCanvas() {
                       }}
                     >
                       <span style={{ width: '16px', height: '16px', borderRadius: '50%', border: `2px solid ${isChosen ? tm.color : 'var(--rim)'}`, background: isChosen ? tm.color : 'transparent', flexShrink: 0, marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {isChosen && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000' }} />}
+                        {isChosen && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--void)' }} />}
                       </span>
                       <span style={{ fontSize: '13px', color: isChosen ? 'var(--ink-hi)' : 'var(--ink-mid)', lineHeight: 1.6 }}>{opt.text}</span>
                     </button>
                     {showFeedback && (
                       <div style={{ margin: '6px 0 0 0', padding: '12px 16px', background: `${tm.color}08`, border: `1px solid ${tm.color}25`, borderRadius: '8px' }}>
-                        <div style={{ fontSize: '10px', color: tm.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>
+                        <div style={{ fontSize: '10px', color: tm.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>
                           {tm.label} — feedback
                         </div>
                         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{opt.feedback}</p>
@@ -1039,7 +1039,7 @@ function DesignCanvas() {
       {/* Verdict */}
       {submitted && (
         <div style={{ padding: '22px 24px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Design review verdict</div>
+          <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Design review verdict</div>
 
           {/* Tier breakdown */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1048,8 +1048,8 @@ function DesignCanvas() {
               if (count === 0) return null
               return (
                 <div key={tier} style={{ padding: '8px 14px', borderRadius: '8px', background: `${TIER_META[tier].color}10`, border: `1px solid ${TIER_META[tier].color}30`, textAlign: 'center' }}>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: TIER_META[tier].color, fontFamily: "'Space Grotesk',sans-serif" }}>{count}</div>
-                  <div style={{ fontSize: '11px', color: TIER_META[tier].color, fontFamily: "'Space Grotesk',sans-serif" }}>{TIER_META[tier].label}</div>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: TIER_META[tier].color, fontFamily: 'var(--font-sans)' }}>{count}</div>
+                  <div style={{ fontSize: '11px', color: TIER_META[tier].color, fontFamily: 'var(--font-sans)' }}>{TIER_META[tier].label}</div>
                 </div>
               )
             })}
@@ -1060,7 +1060,7 @@ function DesignCanvas() {
             const v = getVerdict()
             return (
               <div style={{ padding: '14px 18px', background: `${v.color}08`, border: `1px solid ${v.color}30`, borderRadius: '10px' }}>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: v.color, margin: 0, fontFamily: "'Space Grotesk',sans-serif" }}>{v.text}</p>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: v.color, margin: 0, fontFamily: 'var(--font-sans)' }}>{v.text}</p>
               </div>
             )
           })()}
@@ -1216,7 +1216,7 @@ function TwoTowerExplorer() {
   function ConfigRow({ label, options, value, onChange }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '130px' }}>{label}</span>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', minWidth: '130px' }}>{label}</span>
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {options.map(o => (
             <button key={o.value}
@@ -1226,7 +1226,7 @@ function TwoTowerExplorer() {
                 border: `1px solid ${value === o.value ? 'var(--prime)' : 'var(--rim)'}`,
                 background: value === o.value ? 'rgba(240,165,0,0.1)' : 'var(--depth)',
                 color: value === o.value ? 'var(--prime)' : 'var(--ink-mid)',
-                cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
+                cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
               }}>
               {o.label}
             </button>
@@ -1239,8 +1239,8 @@ function TwoTowerExplorer() {
   function TradeoffRow({ label, value, color, raw, unit }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--rim)' }}>
-        <span style={{ fontSize: '12px', color: 'var(--ink-low)', minWidth: '180px', fontFamily: "'Space Grotesk',sans-serif" }}>{label}</span>
-        <span style={{ fontSize: '14px', fontWeight: 700, color, fontFamily: "'Space Grotesk',sans-serif" }}>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', minWidth: '180px', fontFamily: 'var(--font-sans)' }}>{label}</span>
+        <span style={{ fontSize: '14px', fontWeight: 700, color, fontFamily: 'var(--font-sans)' }}>
           {raw !== undefined ? `${raw}${unit || ''}` : value}
         </span>
       </div>
@@ -1255,7 +1255,7 @@ function TwoTowerExplorer() {
 
       {/* Config panel */}
       <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '4px' }}>System configuration</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>System configuration</div>
         <ConfigRow label="Embedding dim" value={embDim} onChange={setEmbDim}
           options={[{ value: 64, label: '64d' }, { value: 128, label: '128d' }, { value: 256, label: '256d' }]} />
         <ConfigRow label="Negative sampling" value={negSampling} onChange={setNegSampling}
@@ -1268,7 +1268,7 @@ function TwoTowerExplorer() {
 
       {/* Tradeoff matrix */}
       <div className="card" style={{ padding: '20px 22px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '14px' }}>Production tradeoff matrix</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '14px' }}>Production tradeoff matrix</div>
         <TradeoffRow label="Retrieval recall@100" raw={t.recall} unit="%" color={t.recallColor} />
         <TradeoffRow label="P99 serving latency" raw={t.latency} unit=" ms" color={t.latencyColor} />
         <TradeoffRow label="Memory footprint" value={t.memLabel} color={t.memColor} />
@@ -1278,14 +1278,14 @@ function TwoTowerExplorer() {
 
       {/* Stress tests */}
       <div>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '12px' }}>Production stress tests</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>Production stress tests</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {st.map(s => (
             <div key={s.title} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid ${s.color}30`, borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.title}</span>
-                <span style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{s.desc}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: `${s.color}15`, color: s.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{s.rating}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)' }}>{s.title}</span>
+                <span style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{s.desc}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: `${s.color}15`, color: s.color, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{s.rating}</span>
               </div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.text}</p>
             </div>
@@ -1458,7 +1458,7 @@ function ServingTradeoffLab() {
   function ConfigRow({ label, options, value, onChange }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '145px' }}>{label}</span>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', minWidth: '145px' }}>{label}</span>
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {options.map(o => (
             <button key={o.value} onClick={() => onChange(o.value)}
@@ -1467,7 +1467,7 @@ function ServingTradeoffLab() {
                 border: `1px solid ${value === o.value ? 'var(--prime)' : 'var(--rim)'}`,
                 background: value === o.value ? 'rgba(240,165,0,0.1)' : 'var(--depth)',
                 color: value === o.value ? 'var(--prime)' : 'var(--ink-mid)',
-                cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
+                cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: value === o.value ? 600 : 400, transition: 'all 0.1s'
               }}>
               {o.label}
             </button>
@@ -1498,7 +1498,7 @@ function ServingTradeoffLab() {
 
       {/* Architecture evaluation table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Architecture evaluation</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Architecture evaluation</div>
         {ARCHITECTURES.map(arch => {
           const results = evalArch(arch.id, latency, throughput, freshness, depth)
           const isRec   = recommended.id === arch.id
@@ -1510,16 +1510,16 @@ function ServingTradeoffLab() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '18px' }}>{arch.icon}</span>
                 <div>
-                  <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: isRec ? 'var(--prime)' : 'var(--ink-hi)' }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: isRec ? 'var(--prime)' : 'var(--ink-hi)' }}>
                     {arch.name}
-                    {isRec && <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace" }}>RECOMMENDED</span>}
+                    {isRec && <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{arch.desc}</div>
                 </div>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>{results.filter(r => r.status === 'meets').length} meets</span>
-                  {partials > 0 && <span style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace" }}>{partials} partial</span>}
-                  {fails > 0 && <span style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace" }}>{fails} fails</span>}
+                  <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>{results.filter(r => r.status === 'meets').length} meets</span>
+                  {partials > 0 && <span style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: 'var(--font-mono)' }}>{partials} partial</span>}
+                  {fails > 0 && <span style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)' }}>{fails} fails</span>}
                 </div>
               </div>
 
@@ -1528,8 +1528,8 @@ function ServingTradeoffLab() {
                   const si = statusIcon(r.status)
                   return (
                     <div key={r.dim} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                      <span style={{ fontWeight: 700, color: si.color, fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', minWidth: '48px', paddingTop: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{si.label}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--ink-low)', minWidth: '100px', fontFamily: "'Space Grotesk',sans-serif" }}>{r.dim}</span>
+                      <span style={{ fontWeight: 700, color: si.color, fontFamily: 'var(--font-mono)', fontSize: '10px', minWidth: '48px', paddingTop: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{si.label}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--ink-low)', minWidth: '100px', fontFamily: 'var(--font-sans)' }}>{r.dim}</span>
                       <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{r.reason}</span>
                     </div>
                   )
@@ -1542,14 +1542,14 @@ function ServingTradeoffLab() {
 
       {/* Recommendation */}
       <div style={{ padding: '20px 22px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Recommended architecture</div>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--prime)' }}>{recommended.name}</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Recommended architecture</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--prime)' }}>{recommended.name}</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{recommended.reason}</p>
       </div>
 
       {/* Why your choice matters */}
       <div style={{ padding: '18px 20px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace" }}>Why your choice matters</div>
+        <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Why your choice matters</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
           Getting the serving architecture wrong creates compounding problems. <strong style={{ color: 'var(--ink-hi)' }}>Batch offline with a real-time requirement</strong> means serving stale scores to users who just changed their preferences — a user who just bought a camera still sees camera ads. <strong style={{ color: 'var(--ink-hi)' }}>Online inference when batch suffices</strong> costs 5–20x more in infrastructure and adds latency variance. <strong style={{ color: 'var(--ink-hi)' }}>Choosing online at {'>'}10k QPS</strong> without careful model optimization will breach your latency SLA under load when you can least afford it. The right architecture is the simplest one that meets your actual requirements — not the most sophisticated one you can build.
         </p>
@@ -1618,18 +1618,18 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
             background: diffFilter === d ? accentColor + '15' : 'transparent',
             border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
             color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
           }}>
             {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
           </button>
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'var(--depth)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{attempted}/{scenarios.length} attempted</span>
-        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
           <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
@@ -1641,9 +1641,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
         return (
           <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
               <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', transition: 'transform 0.2s', display: 'inline-block', transform: it.open ? 'rotate(90deg)' : 'none' }}>▶</span>
             </button>
 
@@ -1673,7 +1673,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
                         style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
                       </button>
@@ -1684,11 +1684,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Diagnosis</div>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -1818,7 +1818,7 @@ const MODULES = [
   { id: 'rag',        label: 'RAG Architecture',     component: RAGArchitecture },
 ]
 
-export default function SystemDesignTab() {
+export default function SystemDesignTab({ onNavigate }) {
   const [active, setActive] = useState('incident')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? IncidentRoom
@@ -1838,7 +1838,7 @@ export default function SystemDesignTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>ML System Design</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em' }}>ML System Design</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Production judgment for ML systems — rec system design, deployment failures, ownership decisions, and the tradeoffs that separate junior from staff-level thinking.

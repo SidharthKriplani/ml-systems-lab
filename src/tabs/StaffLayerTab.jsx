@@ -161,7 +161,7 @@ function initReveals() {
   return {}
 }
 
-export default function StaffLayerTab() {
+export default function StaffLayerTab({ onNavigate }) {
   const [reveals, setReveals] = useState(initReveals)
   const [expanded, setExpanded] = useState(new Set())
 
@@ -186,7 +186,7 @@ export default function StaffLayerTab() {
   const staffCount = SCENARIOS.filter(s => (reveals[s.id] || 0) >= 3).length
 
   return (
-    <div style={{ padding: '24px', maxWidth: '920px', margin: '0 auto', fontFamily: "'Space Grotesk', sans-serif", color: 'var(--ink-hi)' }}>
+    <div style={{ padding: '24px', maxWidth: '920px', margin: '0 auto', fontFamily: 'var(--font-sans)', color: 'var(--ink-hi)' }}>
       {/* Header */}
       <div style={{ marginBottom: '20px' }}>
         <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Senior / Staff Layer</h2>
@@ -319,7 +319,7 @@ function RevealButton({ level, onReveal }) {
         fontSize: '12px', fontWeight: 600, padding: '7px 16px',
         background: cfg.bg, color: cfg.color, border: cfg.border,
         borderRadius: '6px', cursor: 'pointer',
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: 'var(--font-sans)',
         transition: 'opacity 0.15s',
       }}
     >

@@ -336,13 +336,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {/* Score strip */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '10px 16px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px', flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: accentColor, fontWeight: 700 }}>{correct}/{attempted} correct</span>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{attempted}/{scenarios.length} attempted</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: accentColor, fontWeight: 700 }}>{correct}/{attempted} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{attempted}/{scenarios.length} attempted</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>Difficulty:</span>
           {['All','Easy','Medium','Hard'].map(d => (
             <button key={d} onClick={() => setDiffFilter(d)}
-              style={{ padding: '2px 8px', borderRadius: '5px', border: `1px solid ${diffFilter === d ? accentColor + '80' : 'var(--rim)'}`, background: diffFilter === d ? accentColor + '15' : 'transparent', color: diffFilter === d ? accentColor : 'var(--ink-low)', fontSize: '10px', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace" }}>
+              style={{ padding: '2px 8px', borderRadius: '5px', border: `1px solid ${diffFilter === d ? accentColor + '80' : 'var(--rim)'}`, background: diffFilter === d ? accentColor + '15' : 'transparent', color: diffFilter === d ? accentColor : 'var(--ink-low)', fontSize: '10px', cursor: 'pointer', fontFamily: 'var(--font-mono)' }}>
               {d}
             </button>
           ))}
@@ -356,8 +356,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
         return (
           <div key={s.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', background: it.open ? accentColor + '04' : 'transparent' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: diffColor + '18', color: diffColor, fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>{diff}</span>
-              <span style={{ flex: 1, fontSize: '13px', color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, lineHeight: 1.5 }}>{s.q}</span>
+              <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: diffColor + '18', color: diffColor, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{diff}</span>
+              <span style={{ flex: 1, fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 500, lineHeight: 1.5 }}>{s.q}</span>
               {it.revealed && <span style={{ fontSize: '12px', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>}
               <span style={{ color: 'var(--ink-low)', fontSize: '12px', flexShrink: 0, transition: 'transform 0.15s', transform: it.open ? 'rotate(180deg)' : 'none' }}>▾</span>
             </button>
@@ -374,8 +374,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                     } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
                     return (
                       <button key={oi} onClick={() => pick(i, oi)} disabled={it.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", cursor: it.revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
-                        <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
+                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: it.revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
                         {opt}
                       </button>
                     )
@@ -383,7 +383,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                 </div>
                 {it.revealed && (
                   <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
-                    <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+                    <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
                     <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.exp}</p>
                   </div>
                 )}
@@ -430,7 +430,7 @@ function CausalVsPredictive() {
   if (done) return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="card" style={{ padding: '32px', textAlign: 'center', border: '1px solid var(--rim)' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{CAUSAL_SCENARIOS.length}</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{CAUSAL_SCENARIOS.length}</div>
         <div style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
           {score >= 7 ? 'Strong causal reasoning. You distinguish prediction from inference correctly.' : score >= 5 ? 'Solid foundation. Review the scenarios you missed — the framing of the question is the key signal.' : 'The hardest part is seeing that "predictive" questions can hide causal assumptions. Work through each trap explanation.'}
         </div>
@@ -442,12 +442,12 @@ function CausalVsPredictive() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>Scenario {idx + 1} of {CAUSAL_SCENARIOS.length}</span>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Scenario {idx + 1} of {CAUSAL_SCENARIOS.length}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
       </div>
 
       <div className="card" style={{ padding: '24px 28px', border: '1px solid var(--rim)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>The ask</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>The ask</div>
         <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0 }}>{s.scenario}</p>
       </div>
 
@@ -464,7 +464,7 @@ function CausalVsPredictive() {
           }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
-              style={{ padding: '16px', borderRadius: '10px', border: `1px solid ${border}`, background: bg, color, fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', fontWeight: 600, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', textAlign: 'center' }}>
+              style={{ padding: '16px', borderRadius: '10px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 600, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', textAlign: 'center' }}>
               {opt}
             </button>
           )
@@ -478,14 +478,14 @@ function CausalVsPredictive() {
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px', border: `1px solid ${picked === s.correct ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}`, background: picked === s.correct ? 'rgba(52,211,153,0.04)' : 'rgba(244,63,94,0.04)' }}>
-            <div style={{ fontSize: '10px', color: picked === s.correct ? 'var(--mint)' : 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{picked === s.correct ? 'Correct' : 'Incorrect'}</div>
+            <div style={{ fontSize: '10px', color: picked === s.correct ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{picked === s.correct ? 'Correct' : 'Incorrect'}</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
+              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.method}</span>
             </div>
             <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(244,63,94,0.04)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
+              <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.trap}</span>
             </div>
           </div>
@@ -508,7 +508,7 @@ function IdentificationStrategies() {
         {IDENTIFICATION_SCENARIOS.map(s => (
           <button key={s.id} onClick={() => setSelected(selected === s.id ? null : s.id)}
             style={{ textAlign: 'left', padding: '18px 20px', borderRadius: '12px', border: `1px solid ${selected === s.id ? s.accent + '50' : 'var(--rim)'}`, background: selected === s.id ? s.accent + '08' : 'var(--depth)', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '14px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '6px' }}>{s.strategy}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '6px' }}>{s.strategy}</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{s.situation}</p>
           </button>
         ))}
@@ -517,19 +517,19 @@ function IdentificationStrategies() {
         const s = IDENTIFICATION_SCENARIOS.find(x => x.id === selected)
         return (
           <div className="card" style={{ padding: '24px 28px', border: `1px solid ${s.accent}30`, background: s.accent + '06' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: s.accent, marginBottom: '16px' }}>{s.strategy}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: s.accent, marginBottom: '16px' }}>{s.strategy}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>When to use</div>
+                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>When to use</div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.constraints}</p>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>When it breaks</div>
+                <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>When it breaks</div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.when_breaks}</p>
               </div>
             </div>
             <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: s.accent, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>Strength: </span>
+              <span style={{ fontSize: '10px', color: s.accent, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Strength: </span>
               <span style={{ fontSize: '12.5px', color: 'var(--ink-low)' }}>{s.strength}</span>
             </div>
           </div>
@@ -566,7 +566,7 @@ function ConfounderOrCollider() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{DAG_SCENARIOS.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{DAG_SCENARIOS.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 5 ? 'Solid DAG intuition.' : 'Focus on the mediator vs confounder distinction — that\'s where most practitioners go wrong.'}
       </p>
@@ -577,12 +577,12 @@ function ConfounderOrCollider() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {DAG_SCENARIOS.length}</span>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {DAG_SCENARIOS.length}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {['confounder','collider','mediator'].map(t => (
-          <span key={t} style={{ fontSize: '11px', padding: '2px 10px', borderRadius: '999px', background: TYPE_COLORS[t] + '15', color: TYPE_COLORS[t], fontFamily: "'JetBrains Mono',monospace", border: `1px solid ${TYPE_COLORS[t]}30` }}>{t}</span>
+          <span key={t} style={{ fontSize: '11px', padding: '2px 10px', borderRadius: '999px', background: TYPE_COLORS[t] + '15', color: TYPE_COLORS[t], fontFamily: 'var(--font-mono)', border: `1px solid ${TYPE_COLORS[t]}30` }}>{t}</span>
         ))}
       </div>
       <div className="card" style={{ padding: '24px 28px' }}>
@@ -599,7 +599,7 @@ function ConfounderOrCollider() {
           } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
-              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {opt}
             </button>
           )
@@ -609,10 +609,10 @@ function ConfounderOrCollider() {
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px', border: `1px solid ${TYPE_COLORS[s.type]}30`, background: TYPE_COLORS[s.type] + '06' }}>
-            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: "'JetBrains Mono',monospace", display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
+            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -745,7 +745,7 @@ function BackdoorCriterion() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{BACKDOOR_SCENARIOS.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{BACKDOOR_SCENARIOS.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 5 ? 'Solid backdoor criterion intuition. The front-door result is the hardest.' : 'Focus on the collider and mediator cases — those are where most practitioners go wrong.'}
       </p>
@@ -756,14 +756,14 @@ function BackdoorCriterion() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKDOOR_SCENARIOS.length}</span>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKDOOR_SCENARIOS.length}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
       </div>
 
       {/* DAG visualization */}
       <div style={{ padding: '16px 20px', background: 'rgba(0,0,0,0.3)', border: `1px solid ${accent}30`, borderRadius: '10px' }}>
-        <div style={{ fontSize: '10px', color: accent, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>DAG</div>
-        <pre style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{s.dag}</pre>
+        <div style={{ fontSize: '10px', color: accent, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>DAG</div>
+        <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{s.dag}</pre>
       </div>
 
       <div className="card" style={{ padding: '20px 24px' }}>
@@ -781,7 +781,7 @@ function BackdoorCriterion() {
           } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
-              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {opt}
             </button>
           )
@@ -792,10 +792,10 @@ function BackdoorCriterion() {
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px', border: `1px solid ${accent}30`, background: accent + '06' }}>
-            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: "'JetBrains Mono',monospace", display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
+            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -838,7 +838,7 @@ const MODULES = [
   { id: 'obs_vs_exp',     label: 'Obs vs Experimental', component: ObsVsExperimental },
 ]
 
-export default function CausalInferenceTab() {
+export default function CausalInferenceTab({ onNavigate }) {
   const [active, setActive] = useState('causal_vs_pred')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? CausalVsPredictive
 
@@ -857,8 +857,8 @@ export default function CausalInferenceTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-          <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Causal Inference</h2>
-          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>judgment</span>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Causal Inference</h2>
+          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
           The question that trips up most practitioners: is this a prediction problem or a causal inference problem? Getting this wrong leads to the wrong method and misleading conclusions.

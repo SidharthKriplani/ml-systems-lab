@@ -172,7 +172,7 @@ function StarOBT() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Star vs OBT Judgment</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Star vs OBT Judgment</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your constraints. Which model breaks first?
         </p>
@@ -182,7 +182,7 @@ function StarOBT() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         {Object.entries(PARAM_OPTIONS).map(([key, param]) => (
           <div key={key}>
-            <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>{param.label}</div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>{param.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {param.choices.map(c => {
                 const active = params[key] === c.id
@@ -190,7 +190,7 @@ function StarOBT() {
                   <button key={c.id} onClick={() => pick(key, c.id)}
                     style={{
                       padding: '7px 13px', borderRadius: '20px', fontSize: '12px',
-                      fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500,
+                      fontFamily: 'var(--font-sans)', fontWeight: 500,
                       cursor: 'pointer', transition: 'all 0.15s',
                       border: `1px solid ${active ? 'var(--ember)' : 'var(--rim)'}`,
                       background: active ? 'rgba(249,115,22,0.12)' : 'transparent',
@@ -206,7 +206,7 @@ function StarOBT() {
       </div>
 
       {!allSet && (
-        <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", padding: '10px 14px', border: '1px dashed var(--rim)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', padding: '10px 14px', border: '1px dashed var(--rim)', borderRadius: '8px' }}>
           Set all 5 parameters to get a recommendation.
         </div>
       )}
@@ -215,13 +215,13 @@ function StarOBT() {
       {result && (
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="card" style={{ padding: '20px', borderLeft: `3px solid ${result.color}` }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: result.color, marginBottom: '16px' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: result.color, marginBottom: '16px' }}>
               Recommendation: {result.label}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>Why this fits</div>
+                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>Why this fits</div>
                 <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {result.fits.map((f, i) => (
                     <li key={i} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{f}</li>
@@ -229,7 +229,7 @@ function StarOBT() {
                 </ul>
               </div>
               <div>
-                <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>Where this breaks</div>
+                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>Where this breaks</div>
                 <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {result.breaks.map((b, i) => (
                     <li key={i} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{b}</li>
@@ -240,8 +240,8 @@ function StarOBT() {
           </div>
 
           <div className="card" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Schema sketch</div>
-            <pre style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', border: '1px solid var(--rim)' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Schema sketch</div>
+            <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', border: '1px solid var(--rim)' }}>
               {result.schema}
             </pre>
           </div>
@@ -358,15 +358,15 @@ function SCDSelector() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>SCD Type Selector</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>SCD Type Selector</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
             Business scenario → correct SCD type. Wrong choices have production consequences.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {SCD_SCENARIOS.length}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {SCD_SCENARIOS.length}</span>
           {score.total > 0 && (
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
               {score.correct}/{score.total} correct
             </span>
           )}
@@ -377,14 +377,14 @@ function SCDSelector() {
       <div className="card" style={{ padding: '14px' }}>
         <button onClick={() => setRefOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%' }}>
-          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>SCD Quick Reference</span>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>SCD Quick Reference</span>
           <span style={{ fontSize: '10px', color: 'var(--ink-low)', marginLeft: 'auto' }}>{refOpen ? '▲ collapse' : '▼ expand'}</span>
         </button>
         {refOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
             {SCD_REFERENCE.map(r => (
               <div key={r.type} style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ember)', fontWeight: 700, minWidth: '50px' }}>{r.type}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ember)', fontWeight: 700, minWidth: '50px' }}>{r.type}</span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{r.desc}</span>
               </div>
             ))}
@@ -394,7 +394,7 @@ function SCDSelector() {
 
       {/* Scenario */}
       <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--ember)' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>{scenario.title}</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>{scenario.title}</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.desc}</p>
       </div>
 
@@ -413,7 +413,7 @@ function SCDSelector() {
               style={{
                 padding: '10px 20px', borderRadius: '8px', border: `1px solid ${border}`,
                 background: bg, color, fontSize: '14px',
-                fontFamily: "'JetBrains Mono',monospace", fontWeight: 700,
+                fontFamily: 'var(--font-mono)', fontWeight: 700,
                 cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s',
               }}>
               {revealed && type === scenario.answer && '✓ '}
@@ -428,12 +428,12 @@ function SCDSelector() {
       {revealed && (
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '10px' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '10px' }}>
               {picked === scenario.answer ? '✓ Correct — ' : `✗ Wrong — `}Type {scenario.answer} is correct
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px 0' }}>{scenario.reasoning}</p>
             <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production tradeoff</div>
+              <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production tradeoff</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.tradeoff}</p>
             </div>
             <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start', marginTop: '14px' }}>Next scenario →</button>
@@ -580,7 +580,7 @@ function OLAPShowdown() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>OLAP Format Showdown</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>OLAP Format Showdown</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your constraints — get a ranked format recommendation with production tradeoffs.
         </p>
@@ -590,7 +590,7 @@ function OLAPShowdown() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         {Object.entries(OLAP_PARAMS).map(([key, param]) => (
           <div key={key}>
-            <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>{param.label}</div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '8px' }}>{param.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {param.choices.map(c => {
                 const active = params[key] === c.id
@@ -598,7 +598,7 @@ function OLAPShowdown() {
                   <button key={c.id} onClick={() => pick(key, c.id)}
                     style={{
                       padding: '7px 13px', borderRadius: '20px', fontSize: '12px',
-                      fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500,
+                      fontFamily: 'var(--font-sans)', fontWeight: 500,
                       cursor: 'pointer', transition: 'all 0.15s',
                       border: `1px solid ${active ? 'var(--ember)' : 'var(--rim)'}`,
                       background: active ? 'rgba(249,115,22,0.12)' : 'transparent',
@@ -625,12 +625,12 @@ function OLAPShowdown() {
                 opacity: allSet && i > 0 ? Math.max(0.55, 1 - i * 0.15) : 1,
               }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: fmt.color }}>{fmt.name}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: fmt.color }}>{fmt.name}</span>
                 {isTop && (
-                  <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '3px', background: `color-mix(in srgb, ${fmt.color} 15%, transparent)`, color: fmt.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>RECOMMENDED</span>
+                  <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '3px', background: `color-mix(in srgb, ${fmt.color} 15%, transparent)`, color: fmt.color, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>RECOMMENDED</span>
                 )}
                 {allSet && (
-                  <span style={{ marginLeft: 'auto', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)' }}>score: {fmt.score}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>score: {fmt.score}</span>
                 )}
               </div>
 
@@ -640,7 +640,7 @@ function OLAPShowdown() {
 
               {/* Feature grid */}
               <div style={{ overflowX: 'auto', marginBottom: '12px' }}>
-                <table style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', borderCollapse: 'collapse', width: '100%', minWidth: '480px' }}>
+                <table style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', borderCollapse: 'collapse', width: '100%', minWidth: '480px' }}>
                   <thead>
                     <tr>
                       {FEAT_COLS.map(col => (
@@ -662,7 +662,7 @@ function OLAPShowdown() {
               </div>
 
               <div style={{ padding: '10px 12px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: '6px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Production note</div>
+                <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Production note</div>
                 <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{fmt.prodNote}</p>
               </div>
             </div>
@@ -696,7 +696,7 @@ const DM_MODULES = [
   { id: 'olap',     label: 'OLAP Format Showdown', icon: '🏔', component: OLAPShowdown },
 ]
 
-export default function DataModelingTab() {
+export default function DataModelingTab({ onNavigate }) {
   const [active, setActive] = useState('star_obt')
   const ActiveModule = DM_MODULES.find(m => m.id === active)?.component ?? StarOBT
 
@@ -706,8 +706,8 @@ export default function DataModelingTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Data Modeling & Storage</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(249,115,22,0.12)', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>DE domain</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Data Modeling & Storage</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(249,115,22,0.12)', color: 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Star schema or OBT? Which SCD type for this business rule? What breaks when you put 10TB through Hive without compaction? Real decisions, not definitions.
@@ -720,7 +720,7 @@ export default function DataModelingTab() {
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{
               padding: '8px 16px', borderRadius: '8px', fontSize: '13px',
-              fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s',
+              fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s',
               border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`,
               background: active === m.id ? 'rgba(249,115,22,0.10)' : 'transparent',
               color: active === m.id ? 'var(--ember)' : 'var(--ink-low)',
@@ -741,8 +741,8 @@ export default function DataModelingTab() {
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

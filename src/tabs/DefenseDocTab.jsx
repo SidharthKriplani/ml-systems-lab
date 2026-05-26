@@ -213,16 +213,16 @@ export default function DefenseDocTab({ onNavigate }) {
     return (
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
             Defense Brief
           </h2>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-mid)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: 0 }}>
             Generate a weighted study brief from a job description — exportable as PDF or workable in guided mode.
           </p>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
             Your name (optional — for PDF header)
           </label>
           <input
@@ -235,7 +235,7 @@ export default function DefenseDocTab({ onNavigate }) {
               border: '1px solid var(--rim)',
               borderRadius: 8,
               padding: '10px 14px',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: 14,
               color: 'var(--ink-hi)',
               outline: 'none',
@@ -245,7 +245,7 @@ export default function DefenseDocTab({ onNavigate }) {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
             Job Description
           </label>
           <textarea
@@ -259,7 +259,7 @@ export default function DefenseDocTab({ onNavigate }) {
               border: '1px solid var(--rim)',
               borderRadius: 10,
               padding: 16,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: 14,
               color: 'var(--ink-hi)',
               resize: 'vertical',
@@ -280,7 +280,7 @@ export default function DefenseDocTab({ onNavigate }) {
               border: 'none',
               borderRadius: 8,
               padding: '12px 28px',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700,
               fontSize: 15,
               cursor: jdText.trim() ? 'pointer' : 'not-allowed',
@@ -306,11 +306,11 @@ export default function DefenseDocTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
           <button
             onClick={() => setScreen('brief')}
-            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}
+            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
           >
             ← Back to Brief
           </button>
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--ink-mid)' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-mid)' }}>
             Topic {guidedIdx + 1} of {topics.length} · {overallPct}% checklist complete
           </span>
         </div>
@@ -322,7 +322,7 @@ export default function DefenseDocTab({ onNavigate }) {
 
         <div style={{ background: 'var(--surface)', border: `1px solid ${config.border}`, borderRadius: 12, padding: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', margin: 0, flex: 1 }}>
+            <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', margin: 0, flex: 1 }}>
               {topic.name}
             </h2>
             <span style={{
@@ -332,7 +332,7 @@ export default function DefenseDocTab({ onNavigate }) {
               borderRadius: 20,
               padding: '3px 10px',
               fontSize: 11,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
@@ -341,7 +341,7 @@ export default function DefenseDocTab({ onNavigate }) {
             </span>
           </div>
 
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-low)', marginBottom: 20 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', marginBottom: 20 }}>
             keywords: {topic.keywords.join(', ')}
           </div>
 
@@ -357,14 +357,14 @@ export default function DefenseDocTab({ onNavigate }) {
                   onChange={() => handleChecklistToggle(topic.id, i)}
                   style={{ marginTop: 1, accentColor: 'var(--mint)', width: 16, height: 16, flexShrink: 0 }}
                 />
-                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: item.done ? 'var(--ink-mid)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: item.done ? 'var(--ink-mid)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
                   {item.text}
                 </span>
               </label>
             ))}
           </div>
 
-          <div style={{ fontSize: 12, color: 'var(--ink-low)', fontFamily: "'Space Grotesk', sans-serif", marginBottom: 20, textAlign: 'right' }}>
+          <div style={{ fontSize: 12, color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', marginBottom: 20, textAlign: 'right' }}>
             {topicDone}/{topicTotal} items checked
           </div>
 
@@ -372,14 +372,14 @@ export default function DefenseDocTab({ onNavigate }) {
             <button
               onClick={() => setGuidedIdx(i => Math.max(0, i - 1))}
               disabled={guidedIdx === 0}
-              style={{ background: 'var(--rim)', color: guidedIdx === 0 ? 'var(--ink-ghost)' : 'var(--ink-hi)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, cursor: guidedIdx === 0 ? 'not-allowed' : 'pointer' }}
+              style={{ background: 'var(--rim)', color: guidedIdx === 0 ? 'var(--ink-ghost)' : 'var(--ink-hi)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14, cursor: guidedIdx === 0 ? 'not-allowed' : 'pointer' }}
             >
               ← Prev Topic
             </button>
             <button
               onClick={() => setGuidedIdx(i => Math.min(topics.length - 1, i + 1))}
               disabled={guidedIdx === topics.length - 1}
-              style={{ background: guidedIdx === topics.length - 1 ? 'var(--rim)' : 'var(--prime)', color: guidedIdx === topics.length - 1 ? 'var(--ink-ghost)' : 'var(--void)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, cursor: guidedIdx === topics.length - 1 ? 'not-allowed' : 'pointer' }}
+              style={{ background: guidedIdx === topics.length - 1 ? 'var(--rim)' : 'var(--prime)', color: guidedIdx === topics.length - 1 ? 'var(--ink-ghost)' : 'var(--void)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 14, cursor: guidedIdx === topics.length - 1 ? 'not-allowed' : 'pointer' }}
             >
               Next Topic →
             </button>
@@ -410,21 +410,21 @@ export default function DefenseDocTab({ onNavigate }) {
       {/* Screen-only controls */}
       <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 24, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
             Defense Brief
           </h2>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--ink-mid)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-mid)', margin: 0 }}>
             {topics.length} topics · {doneItems}/{totalItems} checklist items done
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={handleReset} style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={handleReset} style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}>
             ← New JD
           </button>
-          <button onClick={handlePrint} style={{ background: 'var(--surface)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 8, padding: '8px 14px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={handlePrint} style={{ background: 'var(--surface)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Download PDF
           </button>
-          <button onClick={() => { setGuidedIdx(0); setScreen('guided'); }} style={{ background: 'var(--prime)', color: 'var(--void)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => { setGuidedIdx(0); setScreen('guided'); }} style={{ background: 'var(--prime)', color: 'var(--void)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Start Guided Mode →
           </button>
         </div>
@@ -434,15 +434,15 @@ export default function DefenseDocTab({ onNavigate }) {
       <div className="defense-doc-print" style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: 32 }}>
         {/* Header */}
         <div style={{ borderBottom: '2px solid var(--prime)', paddingBottom: 16, marginBottom: 28 }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
             Interview Defense Brief
           </div>
           {candidateName && (
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', marginBottom: 4 }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', marginBottom: 4 }}>
               {candidateName}
             </div>
           )}
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--ink-low)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-low)' }}>
             Generated {printDate} · {topics.length} topics · weighted by signal strength
           </div>
         </div>
@@ -457,26 +457,26 @@ export default function DefenseDocTab({ onNavigate }) {
           const config = TIER_CONFIG[tier];
           return (
             <div key={tier} style={{ marginBottom: 28 }}>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color: config.color, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, color: config.color, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>
                 {label}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {list.map(topic => (
                   <div key={topic.id} style={{ background: config.bg, border: `1px solid ${config.border}`, borderRadius: 10, padding: '16px 18px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: 'var(--ink-hi)' }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--ink-hi)' }}>
                         {topic.name}
                       </span>
-                      <span style={{ background: config.bg, color: config.color, border: `1px solid ${config.border}`, borderRadius: 20, padding: '2px 8px', fontSize: 10, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span style={{ background: config.bg, color: config.color, border: `1px solid ${config.border}`, borderRadius: 20, padding: '2px 8px', fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {label}
                       </span>
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-low)', marginBottom: 12 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', marginBottom: 12 }}>
                       {topic.keywords.join(', ')}
                     </div>
                     <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {topic.checklist.map((item, i) => (
-                        <li key={i} style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: item.done ? 'var(--ink-low)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                        <li key={i} style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: item.done ? 'var(--ink-low)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
                           {item.text}
                         </li>
                       ))}

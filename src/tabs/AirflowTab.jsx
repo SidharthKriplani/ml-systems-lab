@@ -153,15 +153,15 @@ function DAGFailureRoom() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>DAG Failure Room</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>DAG Failure Room</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
             Read the symptoms. Diagnose the root cause before revealing.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {DAG_SCENARIOS.length}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {DAG_SCENARIOS.length}</span>
           {score.total > 0 && (
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
               {score.correct}/{score.total} correct
             </span>
           )}
@@ -171,11 +171,11 @@ function DAGFailureRoom() {
       <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--ember)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.symptoms.map((s, i) => (
-            <div key={i} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
               {s}
             </div>
           ))}
@@ -193,7 +193,7 @@ function DAGFailureRoom() {
           }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
-              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {revealed && i === scenario.answer && '✓ '}
               {revealed && i === picked && i !== scenario.answer && '✗ '}
               {opt}
@@ -204,12 +204,12 @@ function DAGFailureRoom() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
           <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Airflow Fix</div>
+            <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Airflow Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
@@ -338,15 +338,15 @@ function BackfillDecisionLab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backfill Decision Lab</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backfill Decision Lab</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
             Data is wrong or missing. What is your backfill strategy?
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKFILL_SCENARIOS.length}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKFILL_SCENARIOS.length}</span>
           {score.total > 0 && (
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>
               {score.correct}/{score.total} correct
             </span>
           )}
@@ -356,15 +356,15 @@ function BackfillDecisionLab() {
       <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--ember)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <span style={{ fontSize: '18px' }}>⏪</span>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div>
-            <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>What happened</div>
+            <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>What happened</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.what_happened}</p>
           </div>
           <div>
-            <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Downstream consumers</div>
+            <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Downstream consumers</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.downstream}</p>
           </div>
         </div>
@@ -381,7 +381,7 @@ function BackfillDecisionLab() {
           }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
-              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {revealed && i === scenario.answer && '✓ '}
               {revealed && i === picked && i !== scenario.answer && '✗ '}
               {opt}
@@ -392,7 +392,7 @@ function BackfillDecisionLab() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
@@ -499,7 +499,7 @@ function LateDataHandler() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Late Data Handler</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Late Data Handler</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your pipeline constraints and get a recommended late-data strategy with production config.
         </p>
@@ -508,13 +508,13 @@ function LateDataHandler() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
         {/* Arrival pattern */}
         <div className="card" style={{ padding: '18px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Arrival pattern</div>
+          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Arrival pattern</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {ARRIVAL_PATTERNS.map(p => (
               <button key={p.id} onClick={() => setArrival(p.id)}
                 style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${arrival === p.id ? 'var(--ember)' : 'var(--rim)'}`, background: arrival === p.id ? 'rgba(249,115,22,0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                <div style={{ fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: arrival === p.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{p.label}</div>
-                <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', marginTop: '2px' }}>{p.desc}</div>
+                <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: arrival === p.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{p.label}</div>
+                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginTop: '2px' }}>{p.desc}</div>
               </button>
             ))}
           </div>
@@ -522,13 +522,13 @@ function LateDataHandler() {
 
         {/* Reprocess tolerance */}
         <div className="card" style={{ padding: '18px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Reprocessing tolerance</div>
+          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Reprocessing tolerance</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {REPROCESS_TOLERANCES.map(t => (
               <button key={t.id} onClick={() => setReprocess(t.id)}
                 style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${reprocess === t.id ? 'var(--ember)' : 'var(--rim)'}`, background: reprocess === t.id ? 'rgba(249,115,22,0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                <div style={{ fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: reprocess === t.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{t.label}</div>
-                <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
+                <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: reprocess === t.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{t.label}</div>
+                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
               </button>
             ))}
           </div>
@@ -536,7 +536,7 @@ function LateDataHandler() {
 
         {/* Downstream consumers */}
         <div className="card" style={{ padding: '18px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Downstream consumers</div>
+          <div style={{ fontSize: '11px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '12px' }}>Downstream consumers</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {DOWNSTREAM_TYPES.map(d => {
               const active = consumers.includes(d.id)
@@ -547,7 +547,7 @@ function LateDataHandler() {
                     <div style={{ width: '14px', height: '14px', borderRadius: '3px', border: `2px solid ${active ? 'var(--ember)' : 'var(--rim)'}`, background: active ? 'var(--ember)' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {active && <span style={{ color: 'white', fontSize: '9px', fontWeight: 700 }}>✓</span>}
                     </div>
-                    <span style={{ fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, color: active ? 'var(--ember)' : 'var(--ink-mid)' }}>{d.label}</span>
+                    <span style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, color: active ? 'var(--ember)' : 'var(--ink-mid)' }}>{d.label}</span>
                   </div>
                 </button>
               )
@@ -561,19 +561,19 @@ function LateDataHandler() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
           
           <div>
-            <div style={{ fontSize: '10px', color: strat.color, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '2px' }}>Recommended strategy</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>{strat.name}</div>
+            <div style={{ fontSize: '10px', color: strat.color, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '2px' }}>Recommended strategy</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>{strat.name}</div>
           </div>
         </div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 16px' }}>{strat.why({ arrival, reprocess, consumers })}</p>
 
         <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '8px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Production config</div>
-          <pre style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{strat.config}</pre>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Production config</div>
+          <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{strat.config}</pre>
         </div>
 
         <div style={{ padding: '12px 14px', background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Risks</div>
+          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Risks</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{strat.risks}</p>
         </div>
       </div>
@@ -599,7 +599,7 @@ const MODULES = [
 ]
 
 // ── Tab shell ─────────────────────────────────────────────────────────────────
-export default function AirflowTab() {
+export default function AirflowTab({ onNavigate }) {
   const [active, setActive] = useState('dag_failure')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? DAGFailureRoom
 
@@ -609,8 +609,8 @@ export default function AirflowTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Airflow & Orchestration</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(249,115,22,0.12)', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>Data Engineering</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Airflow & Orchestration</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(249,115,22,0.12)', color: 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>Data Engineering</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Pipeline failures are silent by default. This domain teaches you to diagnose DAG failures, design backfill strategies, and handle late-arriving data — before your 3am incident.
@@ -621,7 +621,7 @@ export default function AirflowTab() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(249,115,22,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(249,115,22,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
             {m.label}
           </button>
         ))}
@@ -638,9 +638,9 @@ export default function AirflowTab() {
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
-                {m.status === 'soon' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>soon</span>}
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
+                {m.status === 'soon' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>soon</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

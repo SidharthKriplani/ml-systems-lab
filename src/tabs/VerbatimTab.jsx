@@ -60,7 +60,7 @@ function CategoryBadge({ category }) {
       borderRadius: 20,
       padding: '3px 10px',
       fontSize: 11,
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: 'var(--font-sans)',
       fontWeight: 700,
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
@@ -231,14 +231,14 @@ export default function VerbatimTab({ onNavigate }) {
     return (
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
             Verbatim Practice
           </h2>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-mid)', margin: '0 0 4px' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: '0 0 4px' }}>
             Record yourself answering interview questions, then self-rate.
           </p>
           {history.length > 0 && (
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--ink-low)', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-low)', margin: 0 }}>
               {history.length} session{history.length !== 1 ? 's' : ''} recorded · avg score {avgScore}/20
             </p>
           )}
@@ -256,7 +256,7 @@ export default function VerbatimTab({ onNavigate }) {
                 border: `1px solid ${filterCategory === cat ? (CATEGORY_COLORS[cat] || 'var(--prime)') + '55' : 'var(--rim)'}`,
                 borderRadius: 20,
                 padding: '5px 14px',
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-sans)',
                 fontSize: 12,
                 fontWeight: filterCategory === cat ? 700 : 400,
                 cursor: 'pointer',
@@ -289,17 +289,17 @@ export default function VerbatimTab({ onNavigate }) {
                 onMouseEnter={e => e.currentTarget.style.borderColor = CATEGORY_COLORS[q.category] || 'var(--prime)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}
               >
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--ink-ghost)', flexShrink: 0, paddingTop: 2 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-ghost)', flexShrink: 0, paddingTop: 2 }}>
                   {String(q.id).padStart(2, '0')}
                 </span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-hi)', lineHeight: 1.5, marginBottom: 6 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', lineHeight: 1.5, marginBottom: 6 }}>
                     {q.text}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <CategoryBadge category={q.category} />
                     {sessionCount > 0 && (
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'var(--ink-ghost)' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-ghost)' }}>
                         {sessionCount}× practiced
                       </span>
                     )}
@@ -323,26 +323,26 @@ export default function VerbatimTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button
             onClick={handleDiscardAndBack}
-            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '7px 14px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}
+            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '7px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
           >
             ← Back
           </button>
           <CategoryBadge category={selectedQ.category} />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--ink-ghost)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-ghost)' }}>
             Q{String(selectedQ.id).padStart(2, '0')}
           </span>
         </div>
 
         {/* Question */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: 24, marginBottom: 24 }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 17, fontWeight: 600, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 600, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.6 }}>
             {selectedQ.text}
           </p>
         </div>
 
         {/* Speech not supported fallback */}
         {!speechSupported && (
-          <div style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--ember)' }}>
+          <div style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ember)' }}>
             Web Speech API not supported in this browser. Use Chrome or Edge for voice input.
           </div>
         )}
@@ -356,7 +356,7 @@ export default function VerbatimTab({ onNavigate }) {
             padding: 18,
             minHeight: 180,
             marginBottom: 20,
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 14,
             lineHeight: 1.7,
             color: 'var(--ink-hi)',
@@ -384,7 +384,7 @@ export default function VerbatimTab({ onNavigate }) {
               border: '1px solid var(--rim)',
               borderRadius: 10,
               padding: 18,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: 14,
               color: 'var(--ink-hi)',
               resize: 'vertical',
@@ -408,7 +408,7 @@ export default function VerbatimTab({ onNavigate }) {
                   border: `1px solid ${isRecording ? 'rgba(244,63,94,0.4)' : 'rgba(52,211,153,0.4)'}`,
                   borderRadius: 8,
                   padding: '10px 20px',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   fontWeight: 700,
                   fontSize: 14,
                   cursor: 'pointer',
@@ -433,7 +433,7 @@ export default function VerbatimTab({ onNavigate }) {
               {(finalTranscript || isRecording) && (
                 <button
                   onClick={() => { setFinalTranscript(''); setInterimTranscript(''); stopRecording(); }}
-                  style={{ background: 'var(--surface)', color: 'var(--ink-low)', border: '1px solid var(--rim)', borderRadius: 8, padding: '10px 16px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}
+                  style={{ background: 'var(--surface)', color: 'var(--ink-low)', border: '1px solid var(--rim)', borderRadius: 8, padding: '10px 16px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
                 >
                   Clear
                 </button>
@@ -452,7 +452,7 @@ export default function VerbatimTab({ onNavigate }) {
               border: 'none',
               borderRadius: 8,
               padding: '10px 22px',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700,
               fontSize: 14,
               cursor: hasContent ? 'pointer' : 'not-allowed',
@@ -476,7 +476,7 @@ export default function VerbatimTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button
             onClick={() => setScreen('practice')}
-            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '7px 14px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}
+            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '7px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
           >
             ← Edit Answer
           </button>
@@ -485,22 +485,22 @@ export default function VerbatimTab({ onNavigate }) {
 
         {/* Question recap */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Question</div>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.55 }}>{selectedQ.text}</p>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Question</div>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.55 }}>{selectedQ.text}</p>
         </div>
 
         {/* Transcript */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '14px 18px', marginBottom: 24 }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Your Answer</div>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{transcript || '(no transcript)'}</p>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Your Answer</div>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{transcript || '(no transcript)'}</p>
         </div>
 
         {/* Rating */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '20px 20px', marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 700, color: 'var(--ink-hi)', marginBottom: 18 }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--ink-hi)', marginBottom: 18 }}>
             Self-Rating
             {allRated && (
-              <span style={{ marginLeft: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: 'var(--prime)' }}>
+              <span style={{ marginLeft: 12, fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--prime)' }}>
                 {totalRating}/20
               </span>
             )}
@@ -509,15 +509,15 @@ export default function VerbatimTab({ onNavigate }) {
             {RATING_CRITERIA.map(({ key, label, desc }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 120, flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600, color: 'var(--ink-hi)' }}>{label}</div>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, color: 'var(--ink-ghost)' }}>{desc}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, color: 'var(--ink-hi)' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--ink-ghost)' }}>{desc}</div>
                 </div>
                 <StarRating
                   value={ratings[key]}
                   onChange={val => setRatings(r => ({ ...r, [key]: val }))}
                 />
                 {ratings[key] > 0 && (
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: 'var(--ink-low)' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-low)' }}>
                     {ratings[key]}/5
                   </span>
                 )}
@@ -529,7 +529,7 @@ export default function VerbatimTab({ onNavigate }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button
             onClick={handleDiscardAndBack}
-            style={{ background: 'var(--surface)', color: 'var(--ink-low)', border: '1px solid var(--rim)', borderRadius: 8, padding: '10px 16px', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, cursor: 'pointer' }}
+            style={{ background: 'var(--surface)', color: 'var(--ink-low)', border: '1px solid var(--rim)', borderRadius: 8, padding: '10px 16px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
           >
             Discard
           </button>
@@ -542,7 +542,7 @@ export default function VerbatimTab({ onNavigate }) {
               border: 'none',
               borderRadius: 8,
               padding: '11px 26px',
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontWeight: 700,
               fontSize: 15,
               cursor: allRated && transcript ? 'pointer' : 'not-allowed',

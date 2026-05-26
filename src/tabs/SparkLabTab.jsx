@@ -92,7 +92,7 @@ function ShuffleHell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           You're joining a {dataGB}GB fact table to a 512MB dimension table. Configure the job — then run it.
         </p>
@@ -114,7 +114,7 @@ function ShuffleHell() {
           { label: 'Skew factor', value: skewFactor, set: setSkewFactor, min: 1, max: 20, step: 0.5, unit: '×', warn: skewFactor > 5 },
         ].map(c => (
           <div key={c.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
               {c.label}: <span style={{ color: c.warn ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{c.value}{c.unit}</span>
             </label>
             <input type="range" min={c.min} max={c.max} step={c.step} value={c.value} onChange={e => { c.set(+e.target.value); setResult(null) }} />
@@ -124,7 +124,7 @@ function ShuffleHell() {
 
       {/* Join strategy */}
       <div className="card" style={{ padding: '16px' }}>
-        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '12px' }}>Join strategy hint</label>
+        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '12px' }}>Join strategy hint</label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {[
             { val: 'sort_merge', label: 'Sort-Merge', desc: 'Default. Always works. Full shuffle.' },
@@ -132,7 +132,7 @@ function ShuffleHell() {
           ].map(opt => (
             <button key={opt.val} onClick={() => { setJoinStrategy(opt.val); setResult(null) }}
               style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(240,165,0,0.07)' : 'var(--void)', transition: 'all 0.15s' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{opt.label}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{opt.label}</div>
               <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{opt.desc}</div>
             </button>
           ))}
@@ -146,12 +146,12 @@ function ShuffleHell() {
       {ran && result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', animation: 'slideUp 0.3s ease-out' }}>
           <div className="card" style={{ padding: '16px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '12px' }}>Execution DAG — task duration distribution</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>Execution DAG — task duration distribution</div>
             <DagVis result={result} partitions={partitions} />
           </div>
 
           <div style={{ background: statusBg, border: `1px solid ${statusBorder}`, borderRadius: '12px', padding: '18px' }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, fontSize: '13px', marginBottom: '14px', color: 'var(--ink-hi)' }}>{statusMsg}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '13px', marginBottom: '14px', color: 'var(--ink-hi)' }}>{statusMsg}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px', marginBottom: '14px' }}>
               {[
                 { label: 'Strategy', value: result.actualStrategy.replace('_', ' '), warn: result.actualStrategy === 'sort_merge_fallback' },
@@ -163,7 +163,7 @@ function ShuffleHell() {
               ].map(m => (
                 <div key={m.label} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '10px 12px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '4px' }}>{m.label}</div>
-                  <div style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, color: m.warn ? 'var(--rose)' : m.good ? 'var(--mint)' : 'var(--ink-hi)' }}>{m.value}</div>
+                  <div style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: m.warn ? 'var(--rose)' : m.good ? 'var(--mint)' : 'var(--ink-hi)' }}>{m.value}</div>
                 </div>
               ))}
             </div>
@@ -223,7 +223,7 @@ function SkewDoctor() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Select a skew scenario. Diagnose it via the task duration chart. Then apply a fix and see the result.
         </p>
@@ -242,7 +242,7 @@ function SkewDoctor() {
       {/* Task chart */}
       <div className="card" style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Task duration (Stage: shuffle read → aggregate)</span>
+          <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Task duration (Stage: shuffle read → aggregate)</span>
           <span style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace', fontWeight: 600, color: +skewRatio > 10 ? 'var(--rose)' : +skewRatio > 3 ? 'var(--gold)' : 'var(--mint)'" }}>
             max/median: {skewRatio}×
           </span>
@@ -265,7 +265,7 @@ function SkewDoctor() {
             <button key={k} onClick={() => { setFix(k); setRevealed(true) }}
               className="card"
               style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(240,165,0,0.07)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{v.label}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{v.label}</div>
               <div className="code-block" style={{ fontSize: '11px', padding: '8px', whiteSpace: 'pre-wrap' }}>{v.code}</div>
             </button>
           ))}
@@ -274,7 +274,7 @@ function SkewDoctor() {
 
       {revealed && fix && fixedDist && (
         <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--mint)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--mint)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '60px', marginBottom: '8px' }}>
             {fixedDist.tasks.map((t, i) => {
               const max2 = Math.max(...fixedDist.tasks)
@@ -315,7 +315,7 @@ function PartitionTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Partition Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Partition Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Find the optimal <code style={{ color: 'var(--sky)' }}>spark.sql.shuffle.partitions</code> value for your cluster and dataset.
           Tune until partition size hits the 128–256 MB sweet spot and parallelism matches your slots.
@@ -334,7 +334,7 @@ function PartitionTuner() {
             <div key={label}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--ink-low)', marginBottom: '6px' }}>
                 <span>{label}</span>
-                <span style={{ color: 'var(--ink-mid)', fontFamily: "'JetBrains Mono',monospace" }}>{val}{unit}</span>
+                <span style={{ color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>{val}{unit}</span>
               </div>
               <input type="range" min={min} max={max} step={step} value={val} onChange={e => set(Number(e.target.value))} />
             </div>
@@ -343,13 +343,13 @@ function PartitionTuner() {
 
         {/* Results */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
 
           <div style={{ padding: '16px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', marginBottom: '4px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '4px' }}>
               spark.sql.shuffle.partitions
             </div>
-            <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: 'var(--mint)' }}>
+            <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--mint)' }}>
               {roundedRec}
             </div>
           </div>
@@ -363,7 +363,7 @@ function PartitionTuner() {
           ].map(([k, v, hint]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', borderBottom: '1px solid var(--rim)', paddingBottom: '8px' }}>
               <span style={{ color: 'var(--ink-low)' }}>{k}</span>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-mid)', fontSize: '12px' }}>{v} <span style={{ color: isSmall && k==='Partition size' ? 'var(--ember)' : isLarge && k==='Partition size' ? 'var(--rose)' : 'var(--ink-ghost)', fontSize: '11px' }}>{hint}</span></span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', fontSize: '12px' }}>{v} <span style={{ color: isSmall && k==='Partition size' ? 'var(--ember)' : isLarge && k==='Partition size' ? 'var(--rose)' : 'var(--ink-ghost)', fontSize: '11px' }}>{hint}</span></span>
             </div>
           ))}
         </div>
@@ -371,7 +371,7 @@ function PartitionTuner() {
 
       {/* Partition size distribution */}
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>
           Partition size distribution (first {barHeights.length} of {roundedRec})
         </div>
         <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '14px' }}>
@@ -384,7 +384,7 @@ function PartitionTuner() {
             return <div key={i} style={{ flex: 1, background: color, opacity: 0.7, height: `${pct}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.3s' }} />
           })}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--ink-ghost)', marginTop: '6px', fontFamily: "'JetBrains Mono',monospace" }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--ink-ghost)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
           <span>partition 1</span>
           <span style={{ color: partSizeMB < 64 ? 'var(--ember)' : partSizeMB > 256 ? 'var(--rose)' : 'var(--mint)' }}>
             avg {partSizeMB.toFixed(0)} MB {isSmall ? '← too small' : isLarge ? '← too large' : '← good'}
@@ -466,20 +466,20 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
             background: diffFilter === d ? accentColor + '15' : 'transparent',
             border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
             color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
           }}>
             {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
           </button>
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
 
       {/* Score strip */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'var(--depth)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{attempted}/{scenarios.length} attempted</span>
-        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
           <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
@@ -492,9 +492,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
           <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
             {/* Header row */}
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
               <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', transition: 'transform 0.2s', display: 'inline-block', transform: it.open ? 'rotate(90deg)' : 'none' }}>▶</span>
             </button>
 
@@ -527,7 +527,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
                         style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
                       </button>
@@ -539,11 +539,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Diagnosis</div>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -776,7 +776,7 @@ const MODULES = [
   { id: 'oom',       label: 'OOM Diagnosis',        icon: '💥', component: OOMDiagnosis },
 ]
 
-export default function SparkLabTab() {
+export default function SparkLabTab({ onNavigate }) {
   const [active, setActive] = useState('shuffle')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? ShuffleHell
@@ -796,7 +796,7 @@ export default function SparkLabTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Spark Lab</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Spark Lab</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.

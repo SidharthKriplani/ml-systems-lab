@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 function pill(label, active, onClick, activeColor = 'var(--ember)') {
   return (
     <button key={label} onClick={onClick}
-      style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
+      style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
       {label}
     </button>
   )
@@ -12,7 +12,7 @@ function pill(label, active, onClick, activeColor = 'var(--ember)') {
 
 function CodeBlock({ children }) {
   return (
-    <pre style={{ margin: 0, padding: '14px 16px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px', fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, overflowX: 'auto', whiteSpace: 'pre' }}>
+    <pre style={{ margin: 0, padding: '14px 16px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, overflowX: 'auto', whiteSpace: 'pre' }}>
       {children}
     </pre>
   )
@@ -160,7 +160,7 @@ function MaterializationOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your model constraints. Get ranked materialization recommendations with production gotchas and ready-to-paste config blocks.
         </p>
@@ -175,7 +175,7 @@ function MaterializationOracle() {
           { label: 'Downstream consumers',  items: CONSUMER_OPTIONS,   val: consumer,  set: setConsumer,  color: 'var(--violet)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
+            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
             </div>
@@ -190,27 +190,27 @@ function MaterializationOracle() {
           <div key={m.id} className="card" style={{ padding: 0, overflow: 'hidden', border: i === 0 ? `1px solid ${m.color}50` : undefined }}>
             <button onClick={() => setExpanded(expanded === m.id ? null : m.id)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: i === 0 ? m.color : 'var(--ink-low)', fontWeight: 700, minWidth: '24px' }}>#{i + 1}</span>
-              <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '14px', fontWeight: 700, color: i === 0 ? m.color : 'var(--ink-hi)', flex: 1 }}>materialized='{m.name}'</code>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: i === 0 ? m.color : 'var(--ink-low)', fontWeight: 700, minWidth: '24px' }}>#{i + 1}</span>
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 700, color: i === 0 ? m.color : 'var(--ink-hi)', flex: 1 }}>materialized='{m.name}'</code>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{m.label}</span>
-              {i === 0 && <span style={{ fontSize: '10px', padding: '2px 7px', background: m.color + '18', color: m.color, borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace" }}>RECOMMENDED</span>}
+              {i === 0 && <span style={{ fontSize: '10px', padding: '2px 7px', background: m.color + '18', color: m.color, borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>}
               <span style={{ fontSize: '12px', color: 'var(--ink-low)', transition: 'transform 0.15s', transform: expanded === m.id ? 'rotate(90deg)' : 'none' }}>›</span>
             </button>
 
             {expanded === m.id && (
               <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--rim)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why it fits your constraints</div>
+                  <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why it fits your constraints</div>
                   {m.reasons.map((r, j) => (
                     <div key={j} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>&#10003; {r}</div>
                   ))}
                 </div>
                 <div style={{ padding: '12px 14px', background: 'rgba(251,113,133,0.05)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Production gotcha</div>
+                  <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Production gotcha</div>
                   <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.gotcha}</p>
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config block</div>
+                  <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config block</div>
                   <CodeBlock>{m.config}</CodeBlock>
                 </div>
               </div>
@@ -474,13 +474,13 @@ function SchemaDriftClinic() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         </div>
         <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--ember)' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>
             {score >= 7 ? 'Excellent' : score >= 5 ? 'Good' : 'Review'}
           </div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px' }}>
             {score} / {DRIFT_SCENARIOS.length}
           </div>
           <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '400px', margin: '0 auto 20px' }}>
@@ -499,7 +499,7 @@ function SchemaDriftClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real drift scenarios. Upstream changes — what breaks in your dbt model, and how do you fix it?
         </p>
@@ -512,18 +512,18 @@ function SchemaDriftClinic() {
             <div key={i} style={{ width: '24px', height: '4px', borderRadius: '2px', background: i < current ? 'var(--ember)' : i === current ? 'var(--ink-low)' : 'var(--rim)' }} />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{current + 1} / {DRIFT_SCENARIOS.length}</span>
-        <span style={{ fontSize: '12px', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", marginLeft: 'auto' }}>{score} correct</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{current + 1} / {DRIFT_SCENARIOS.length}</span>
+        <span style={{ fontSize: '12px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{score} correct</span>
       </div>
 
       {/* Scenario card */}
       <div className="card animate-slide-up" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-          <h4 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.4 }}>{scenario.title}</h4>
-          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: DANGER_COLORS[scenario.danger] + '18', color: DANGER_COLORS[scenario.danger], fontFamily: "'JetBrains Mono',monospace", whiteSpace: 'nowrap', flexShrink: 0 }}>{scenario.danger}</span>
+          <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.4 }}>{scenario.title}</h4>
+          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: DANGER_COLORS[scenario.danger] + '18', color: DANGER_COLORS[scenario.danger], fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', flexShrink: 0 }}>{scenario.danger}</span>
         </div>
         <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Scenario</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Scenario</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.context}</p>
         </div>
 
@@ -538,7 +538,7 @@ function SchemaDriftClinic() {
             if (revealed && selected === i && i !== scenario.answer) { bg = 'rgba(251,113,133,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
             return (
               <button key={i} onClick={() => handleSelect(i)}
-                style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.12s', lineHeight: 1.5 }}>
+                style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', textAlign: 'left', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.12s', lineHeight: 1.5 }}>
                 {opt}
               </button>
             )
@@ -555,13 +555,13 @@ function SchemaDriftClinic() {
         {revealed && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ padding: '14px 16px', background: selected === scenario.answer ? 'rgba(52,211,153,0.06)' : 'rgba(251,113,133,0.06)', border: `1px solid ${selected === scenario.answer ? 'rgba(52,211,153,0.25)' : 'rgba(251,113,133,0.25)'}`, borderRadius: '8px' }}>
-              <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', color: selected === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '6px' }}>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', color: selected === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '6px' }}>
                 {selected === scenario.answer ? 'Correct' : 'Incorrect — here is why'}
               </div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.explanation}</p>
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>How to fix it</div>
+              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>How to fix it</div>
               <CodeBlock>{scenario.fix}</CodeBlock>
             </div>
             <button className="btn-primary" onClick={handleNext} style={{ alignSelf: 'flex-start' }}>
@@ -734,7 +734,7 @@ function IncrementalModelDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Answer 4 questions about your data. Get the right incremental pattern with a copy-paste config and production gotchas.
         </p>
@@ -749,7 +749,7 @@ function IncrementalModelDecisions() {
           { label: 'Late data / out-of-order?',    items: LATE_DATA_OPTIONS,     val: lateData,    set: setLateData,    color: 'var(--gold)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
+            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
             </div>
@@ -761,25 +761,25 @@ function IncrementalModelDecisions() {
       <div className="card animate-slide-up" style={{ padding: '24px', border: `1px solid ${rec.color}40`, display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '10px', color: rec.color, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Recommended pattern</div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{rec.title}</div>
+            <div style={{ fontSize: '10px', color: rec.color, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Recommended pattern</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{rec.title}</div>
             <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginTop: '2px' }}>{rec.label}</div>
           </div>
-          <span style={{ fontSize: '11px', padding: '3px 10px', background: rec.color + '18', color: rec.color, borderRadius: '5px', fontFamily: "'JetBrains Mono',monospace" }}>RECOMMENDED</span>
+          <span style={{ fontSize: '11px', padding: '3px 10px', background: rec.color + '18', color: rec.color, borderRadius: '5px', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Why this pattern</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Why this pattern</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{rec.explanation}</p>
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config</div>
           <CodeBlock>{rec.config}</CodeBlock>
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Production gotchas</div>
+          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Production gotchas</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {rec.gotchas.map((g, i) => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
@@ -812,7 +812,7 @@ const DBT_MODULES = [
 ]
 
 // ── Tab shell ──────────────────────────────────────────────────────────────────
-export default function DbtTab() {
+export default function DbtTab({ onNavigate }) {
   const [active, setActive] = useState('materialization')
   const ActiveModule = DBT_MODULES.find(m => m.id === active)?.component ?? MaterializationOracle
 
@@ -822,8 +822,8 @@ export default function DbtTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>dbt &amp; Transformations</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,160,50,0.12)', color: 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>DE domain</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>dbt &amp; Transformations</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,160,50,0.12)', color: 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Transformation bugs are silent. Wrong materialization costs 10x. Schema drift breaks downstream without warning. This lab teaches you to make the right call before it is a 3am incident.
@@ -834,7 +834,7 @@ export default function DbtTab() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {DBT_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(255,160,50,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(255,160,50,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
             {m.label}
           </button>
         ))}
@@ -851,8 +851,8 @@ export default function DbtTab() {
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

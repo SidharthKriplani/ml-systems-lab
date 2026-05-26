@@ -323,7 +323,7 @@ function ForecastFailureZoo() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{FORECAST_FAILURES.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{FORECAST_FAILURES.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 6 ? 'Sharp time-series diagnostic instincts.' : score >= 4 ? 'Solid. The look-ahead bias and structural break scenarios trip most people.' : 'Focus on the train/test split scenarios — they account for most real production forecast failures.'}
       </p>
@@ -336,18 +336,18 @@ function ForecastFailureZoo() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FORECAST_FAILURES.length}</span>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FORECAST_FAILURES.length}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
       </div>
       <div className="card" style={{ padding: '22px 26px', borderLeft: '3px solid var(--rose)' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{s.title}</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{s.title}</div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, marginBottom: '12px' }}>{s.context}</p>
         <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
-          <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
+          <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.clue}</span>
         </div>
       </div>
-      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Root cause?</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Root cause?</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {s.options.map((opt, i) => {
           const isCorrect = i === correctIdx
@@ -359,7 +359,7 @@ function ForecastFailureZoo() {
           } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
-              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {opt.label}
             </button>
           )
@@ -371,11 +371,11 @@ function ForecastFailureZoo() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${picked === correctIdx ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}` }}>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(52,211,153,0.04)', borderRadius: '8px', border: '1px solid rgba(52,211,153,0.2)', marginBottom: '8px' }}>
-              <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Fix: </span>
+              <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.fix}</span>
             </div>
             <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.04)', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -398,7 +398,7 @@ function StationaritySelector() {
         {STATIONARITY_SCENARIOS.map(s => (
           <button key={s.id} onClick={() => setSelected(selected === s.id ? null : s.id)}
             style={{ textAlign: 'left', padding: '16px 18px', borderRadius: '10px', border: `1px solid ${selected === s.id ? s.accent + '50' : 'var(--rim)'}`, background: selected === s.id ? s.accent + '08' : 'var(--depth)', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '4px' }}>{s.name}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '4px' }}>{s.name}</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
           </button>
         ))}
@@ -408,21 +408,21 @@ function StationaritySelector() {
         return (
           <div className="card" style={{ padding: '24px 28px', border: `1px solid ${s.accent}30` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: s.accent }}>{s.name}</div>
-              <span style={{ fontSize: '11px', padding: '2px 8px', background: s.accent + '15', color: s.accent, border: `1px solid ${s.accent}30`, borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace" }}>{s.issue}</span>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: s.accent }}>{s.name}</div>
+              <span style={{ fontSize: '11px', padding: '2px 8px', background: s.accent + '15', color: s.accent, border: `1px solid ${s.accent}30`, borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>{s.issue}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
               <div style={{ padding: '14px', background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Transform</div>
+                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Transform</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.transform}</p>
               </div>
               <div style={{ padding: '14px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>How to check</div>
+                <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>How to check</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.check}</p>
               </div>
             </div>
             <div style={{ padding: '10px 14px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.15)', borderRadius: '8px' }}>
-              <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>Don\'t: </span>
+              <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Don\'t: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.dont}</span>
             </div>
           </div>
@@ -447,8 +447,8 @@ function AnomalyDetectionTiers() {
           const bgs = ['rgba(52,211,153,0.04)', 'rgba(34,211,238,0.04)', 'rgba(99,102,241,0.04)']
           return (
             <div key={tier} style={{ padding: '14px', borderRadius: '10px', background: bgs[i], border: `1px solid ${colors[i]}25`, textAlign: 'center' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '13px', color: colors[i] }}>{tier}</div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: "'JetBrains Mono',monospace" }}>{['fast, explicit', 'distributional', 'correlational'][i]}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: colors[i] }}>{tier}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{['fast, explicit', 'distributional', 'correlational'][i]}</div>
             </div>
           )
         })}
@@ -458,7 +458,7 @@ function AnomalyDetectionTiers() {
         {ANOMALY_SCENARIOS.map(s => (
           <button key={s.id} onClick={() => setSelected(selected === s.id ? null : s.id)}
             style={{ textAlign: 'left', padding: '16px 20px', borderRadius: '10px', border: `1px solid ${selected === s.id ? s.accent + '50' : 'var(--rim)'}`, background: selected === s.id ? s.accent + '06' : 'var(--depth)', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13.5px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '4px' }}>{s.title}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13.5px', color: selected === s.id ? s.accent : 'var(--ink-hi)', marginBottom: '4px' }}>{s.title}</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55, margin: 0 }}>{s.context}</p>
           </button>
         ))}
@@ -470,11 +470,11 @@ function AnomalyDetectionTiers() {
         return (
           <div className="card" style={{ padding: '22px 26px', border: `1px solid ${s.accent}30` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '11px', padding: '3px 10px', background: s.accent + '18', color: s.accent, border: `1px solid ${s.accent}35`, borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>Use: {tierLabels[s.correct]}</span>
+              <span style={{ fontSize: '11px', padding: '3px 10px', background: s.accent + '18', color: s.accent, border: `1px solid ${s.accent}35`, borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>Use: {tierLabels[s.correct]}</span>
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
+              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.when_to_upgrade}</span>
             </div>
           </div>
@@ -542,18 +542,18 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
             background: diffFilter === d ? accentColor + '15' : 'transparent',
             border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
             color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
           }}>
             {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
           </button>
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'var(--depth)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{attempted}/{scenarios.length} attempted</span>
-        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
           <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
@@ -565,9 +565,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
         return (
           <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '40' : 'var(--rim)'}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif", textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
               <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', transition: 'transform 0.2s', display: 'inline-block', transform: it.open ? 'rotate(90deg)' : 'none' }}>▶</span>
             </button>
 
@@ -597,7 +597,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
                         style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
                       </button>
@@ -608,11 +608,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Diagnosis</div>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -845,7 +845,7 @@ const MODULES = [
   { id: 'features',   label: 'TS Feature Engineering',    component: TSFeatureEngineering },
 ]
 
-export default function TimeSeriesTab() {
+export default function TimeSeriesTab({ onNavigate }) {
   const [active, setActive] = useState('failures')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? ForecastFailureZoo
@@ -865,8 +865,8 @@ export default function TimeSeriesTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-          <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Time Series</h2>
-          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>judgment</span>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Time Series</h2>
+          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
           Why good forecasts fail in production — and how to diagnose it. Stationarity decisions, anomaly detection tier selection, and the failure modes that look fine in testing but break in the field.

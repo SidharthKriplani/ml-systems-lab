@@ -50,25 +50,25 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             background: diffFilter === d ? accentColor + '15' : 'transparent',
             border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
             color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
           }}>
             {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
           </button>
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
       {score.attempted > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '4px' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}
           </span>
           <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
           </div>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
         </div>
       )}
 
@@ -84,9 +84,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
           <div key={sc.id} style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.2s', background: 'rgba(255,255,255,0.015)' }}>
             {/* Row header */}
             <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ flex: 1, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
-              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", whiteSpace: 'nowrap' }}>{sc.tier}</span>}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
+              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
               {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
               {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
               <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
@@ -96,9 +96,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
               <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {/* Context */}
                 <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>{contextLabel}</div>
+                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>{contextLabel}</div>
                   {Array.isArray(sc.context) ? sc.context.map((line, j) => (
-                    <div key={j} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 0', lineHeight: 1.5 }}>{line}</div>
+                    <div key={j} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 0', lineHeight: 1.5 }}>{line}</div>
                   )) : <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.context}</p>}
                 </div>
 
@@ -117,8 +117,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
+                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
                         {item.revealed && j === sc.answer         && <span>✓ </span>}
                         {item.revealed && j === item.picked && j !== sc.answer && <span>✗ </span>}
                         {opt}
@@ -130,13 +130,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                 {/* Reveal */}
                 {item.revealed && (
                   <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.05)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
                       {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.explanation}</p>
                     {sc.fix && (
                       <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
-                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
+                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
                         <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                       </div>
                     )}
@@ -186,12 +186,12 @@ function MetricSelector() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>Configure your dataset and pick a metric. Then see if you chose correctly — and why.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{imbalance}%</span>
             {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}>⚠ imbalanced</span>}
           </label>
@@ -201,7 +201,7 @@ function MetricSelector() {
           </div>
         </div>
         <div className="card" style={{ padding: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Decision threshold: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{threshold}</span>
           </label>
           <input type="range" min={0.1} max={0.9} step={0.05} value={threshold} onChange={e => { setThreshold(+e.target.value); setRevealed(false); setPicked(null) }} />
@@ -212,8 +212,8 @@ function MetricSelector() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', maxWidth: '360px' }}>
           {[{ label: 'TP', val: metrics.tp, color: 'var(--mint)' }, { label: 'FP', val: metrics.fp, color: 'var(--rose)' }, { label: 'FN', val: metrics.fn, color: 'var(--gold)' }, { label: 'TN', val: metrics.tn, color: 'var(--ink-low)' }].map(c => (
             <div key={c.label} style={{ background: 'var(--void)', border: `1px solid ${c.color}30`, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: c.color, fontFamily: "'Space Grotesk',sans-serif" }}>{c.val}</div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{c.label}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: c.color, fontFamily: 'var(--font-sans)' }}>{c.val}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{c.label}</div>
             </div>
           ))}
         </div>
@@ -224,15 +224,15 @@ function MetricSelector() {
           {METRICS.map(m => (
             <button key={m.id} onClick={() => { setPicked(m.id); setRevealed(true) }}
               style={{ padding: '14px', borderRadius: '10px', border: `1px solid ${picked === m.id ? (m.good ? 'var(--mint)' : 'var(--rose)') : 'var(--rim)'}`, background: picked === m.id ? (m.good ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)') : 'var(--void)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{m.name}</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '16px', color: m.good ? 'var(--mint)' : 'var(--rose)', fontWeight: 700 }}>{m.value}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{m.name}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: m.good ? 'var(--mint)' : 'var(--rose)', fontWeight: 700 }}>{m.value}</div>
             </button>
           ))}
         </div>
       </div>
       {revealed && picked && (
         <div className="card animate-slide-up" style={{ padding: '18px', background: METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)', border: `1px solid ${METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}` }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: METRICS.find(m => m.id === picked)?.good ? 'var(--mint)' : 'var(--rose)', marginBottom: '8px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: METRICS.find(m => m.id === picked)?.good ? 'var(--mint)' : 'var(--rose)', marginBottom: '8px' }}>
             {METRICS.find(m => m.id === picked)?.good ? '✓ Good choice' : '⚠ Think again'}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{METRICS.find(m => m.id === picked)?.note}</p>
@@ -263,17 +263,17 @@ function ShadowModeSim() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>A challenger model runs in shadow alongside the champion — serving no real traffic, just logging predictions. After 14 days, compare offline metrics and decide on promotion.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         {[{ label: 'Champion (v1)', metrics: championMetrics, color: 'var(--mint)' }, { label: 'Challenger (v2)', metrics: challengerMetrics, color: 'var(--prime)' }].map(m => (
           <div key={m.label} className="card" style={{ padding: '18px', border: `1px solid ${m.color}30` }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: m.color, marginBottom: '14px' }}>{m.label}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: m.color, marginBottom: '14px' }}>{m.label}</div>
             {Object.entries(m.metrics).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{k}</span>
-                <span style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{typeof v === 'number' && v < 2 ? v.toFixed(2) : v}{k === 'p99Latency' ? 'ms' : k === 'errorRate' ? '%' : ''}</span>
+                <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{k}</span>
+                <span style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{typeof v === 'number' && v < 2 ? v.toFixed(2) : v}{k === 'p99Latency' ? 'ms' : k === 'errorRate' ? '%' : ''}</span>
               </div>
             ))}
           </div>
@@ -283,8 +283,8 @@ function ShadowModeSim() {
       {(phase === 'running' || phase === 'complete') && (
         <div className="card animate-fade-in" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-low)' }}>Shadow run progress</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '18px', color: 'var(--violet)' }}>Day {days} / 14</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-low)' }}>Shadow run progress</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '18px', color: 'var(--violet)' }}>Day {days} / 14</span>
           </div>
           <div style={{ height: '8px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${(days / 14) * 100}%`, background: 'linear-gradient(90deg,#6366f1,#22d3ee)', transition: 'width 0.1s', borderRadius: '4px' }} />
@@ -293,7 +293,7 @@ function ShadowModeSim() {
       )}
       {phase === 'complete' && (
         <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.25)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp</p>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Recall: +9pp</p>
@@ -419,7 +419,7 @@ function CalibrationClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 6 calibration failure patterns.
         </p>
@@ -542,7 +542,7 @@ function ThresholdTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           The default threshold of 0.5 is almost always wrong. Business costs, asymmetric errors, and base rate shifts all demand deliberate threshold choices. 6 real-world cases.
         </p>
@@ -662,7 +662,7 @@ function RankingMetrics() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           NDCG, MAP, MRR, Precision@K — each captures a different aspect of ranking quality. Using the wrong one silently optimizes the wrong thing. 6 scenarios, one right answer each.
         </p>
@@ -670,7 +670,7 @@ function RankingMetrics() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
         {[['NDCG', 'Graded relevance + position discount', 'var(--violet)'], ['MAP', 'Binary relevance, all positions', 'var(--mint)'], ['MRR', 'Single correct answer', 'var(--sky)'], ['P@K', 'Top-K precision', 'var(--gold)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${color}30`, background: `${color}08` }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', fontWeight: 700, color }}>{name}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '8px' }}>{desc}</span>
           </div>
         ))}
@@ -689,7 +689,7 @@ const MODULES = [
   { id: 'shadow',      label: 'Shadow Mode',         icon: '👥', component: ShadowModeSim },
 ]
 
-export default function ModelEvalTab() {
+export default function ModelEvalTab({ onNavigate }) {
   const [active, setActive] = useState('metric')
   const [, forceUpdate] = useState(0)
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
@@ -709,7 +709,7 @@ export default function ModelEvalTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Evaluation</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Evaluation</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px' }}>
           Offline metrics lie. Pick the wrong metric and you'll ship a model that looks great on paper while failing in production.

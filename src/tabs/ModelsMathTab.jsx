@@ -77,7 +77,7 @@ function PCAExplorer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PCA Explorer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PCA Explorer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Adjust the dataset parameters, then hit Run to execute real sklearn PCA in your browser.
           Watch the scree plot change as you add noise or dimensions.
@@ -92,7 +92,7 @@ function PCAExplorer() {
           { label: 'Noise level', value: noise, set: setNoise, min: 0, max: 3, step: 0.1 },
         ].map(ctrl => (
           <div key={ctrl.label} className="card" style={{ padding: '16px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+            <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
               {ctrl.label}: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{ctrl.value}</span>
             </label>
             <input type="range" min={ctrl.min} max={ctrl.max} step={ctrl.step}
@@ -175,7 +175,7 @@ function SVDDecomposer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>SVD Decomposer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>SVD Decomposer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Visualise truncated SVD on a synthetic matrix. Slide rank k and see how reconstruction quality degrades.
           This is the math behind collaborative filtering, LSA, and image compression.
@@ -183,7 +183,7 @@ function SVDDecomposer() {
       </div>
 
       <div className="card" style={{ padding: '16px', maxWidth: '320px' }}>
-        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+        <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
           Rank k: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{rank}</span>
         </label>
         <input type="range" min={1} max={15} step={1} value={rank} onChange={e => setRank(+e.target.value)} />
@@ -282,7 +282,7 @@ function PreprocessingLab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Preprocessing Pipeline Lab</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Preprocessing Pipeline Lab</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Two pipelines, same data. One has a data leakage bug. Run both — see if you can spot the difference in metrics,
           and understand why it matters at production scale.
@@ -293,14 +293,14 @@ function PreprocessingLab() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span style={{ fontSize: '16px' }}>✅</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--mint)', fontSize: '14px' }}>Correct pipeline</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--mint)', fontSize: '14px' }}>Correct pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_CORRECT} height={280} label="sklearn Pipeline (correct)" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span style={{ fontSize: '16px' }}>❌</span>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--rose)', fontSize: '14px' }}>Leaky pipeline</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--rose)', fontSize: '14px' }}>Leaky pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_LEAKY} height={280} label="sklearn (data leakage bug)" />
         </div>
@@ -394,7 +394,7 @@ function RegularizationLab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Lab</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Lab</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           L1 vs L2 on a dataset with 20 features (only 5 informative). See the geometric difference:
           L1 drives coefficients to zero (feature selection), L2 shrinks them smoothly.
@@ -403,14 +403,14 @@ function RegularizationLab() {
 
       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
         <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Penalty type
           </label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['l1', 'l2', 'elasticnet'].map(p => (
               <button key={p} onClick={() => setPenalty(p)}
                 className={`sub-tab ${penalty === p ? 'active' : 'inactive'}`}
-                style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px' }}>
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
                 {p}
               </button>
             ))}
@@ -418,7 +418,7 @@ function RegularizationLab() {
         </div>
 
         <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             α (strength): <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{alpha}</span>
           </label>
           <input type="range" min={0.001} max={10} step={0.001} value={alpha}
@@ -462,7 +462,7 @@ print(f"Converged in {kmeans.n_iter_} iterations")
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Python Sandbox</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Python Sandbox</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Full Python environment. Edit and run anything — numpy, sklearn, matplotlib, scipy.
           Your compute. Your browser. No server.
@@ -538,14 +538,14 @@ function NumPyInternals() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>NumPy Internals</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>NumPy Internals</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Broadcasting, strides, views vs copies, vectorisation benchmark — the internals every ML practitioner should understand but rarely do.
         </p>
       </div>
 
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Broadcasting & Views vs Copies</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Broadcasting & Views vs Copies</div>
         <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', marginBottom: '12px' }}>
           NumPy broadcasting aligns arrays with compatible shapes without allocating extra memory.
           A <em>view</em> shares the same data buffer — mutating the original mutates the view.
@@ -555,7 +555,7 @@ function NumPyInternals() {
       </div>
 
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Vectorisation Benchmark + Strides</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>Vectorisation Benchmark + Strides</div>
         <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', marginBottom: '12px' }}>
           Vectorised NumPy operations call optimised BLAS routines in C — typically 10–100× faster than Python loops.
           Strides describe the byte offset to move one step along each dimension — .T doesn't copy, it just reverses strides.
@@ -659,7 +659,7 @@ function CalibrationCurves() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Curves</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Curves</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           A model can have great AUC but terrible calibration — its probability scores don't reflect real likelihoods.
           Reliability diagrams reveal this. Platt scaling and isotonic regression fix it.
@@ -673,7 +673,7 @@ function CalibrationCurves() {
           { title: 'Isotonic regression', body: 'Fits a non-parametric monotone function. More flexible than Platt but needs more data (≥ 1000 test samples). Overfits on small datasets.' },
         ].map(c => (
           <div key={c.title} className="card" style={{ padding: '16px' }}>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--mint)', marginBottom: '6px' }}>{c.title}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--mint)', marginBottom: '6px' }}>{c.title}</div>
             <div style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{c.body}</div>
           </div>
         ))}
@@ -695,7 +695,7 @@ const MODULES = [
   { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL },
 ]
 
-export default function ModelsMathTab() {
+export default function ModelsMathTab({ onNavigate }) {
   const [active, setActive] = useState('pca')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? PCAExplorer
 
@@ -703,7 +703,7 @@ export default function ModelsMathTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Math Foundations</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Math Foundations</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '620px' }}>
           The math behind the decisions — why PCA fails with outliers, when regularization helps vs hurts, what the scree plot is actually telling you, and why calibration breaks after threshold tuning.

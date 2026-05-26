@@ -628,7 +628,7 @@ function DomainBadge({ domain }) {
       borderRadius: 4,
       border: `1px solid ${DOMAIN_COLORS[domain]}`,
       color: DOMAIN_COLORS[domain],
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: 'var(--font-sans)',
       letterSpacing: '0.03em',
       whiteSpace: 'nowrap',
       flexShrink: 0,
@@ -645,7 +645,7 @@ function CodeBlock({ code }) {
       border: '1px solid var(--rim)',
       borderRadius: 6,
       padding: 12,
-      fontFamily: "'JetBrains Mono', monospace",
+      fontFamily: 'var(--font-mono)',
       fontSize: 12,
       color: 'var(--ink-hi)',
       whiteSpace: 'pre',
@@ -670,7 +670,7 @@ function BugCard({ bug, answer, onAnswer }) {
       textAlign: 'left',
       padding: '9px 14px',
       borderRadius: 6,
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: 'var(--font-sans)',
       fontSize: 13,
       cursor: answered ? 'default' : 'pointer',
       marginBottom: 6,
@@ -736,7 +736,7 @@ function BugCard({ bug, answer, onAnswer }) {
         <span style={{
           fontSize: 13,
           color: 'var(--ink-ghost)',
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-mono)',
           flexShrink: 0,
           minWidth: 28,
         }}>
@@ -748,7 +748,7 @@ function BugCard({ bug, answer, onAnswer }) {
           fontSize: 14,
           fontWeight: 600,
           color: 'var(--ink-hi)',
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
         }}>
           {bug.title}
         </span>
@@ -776,7 +776,7 @@ function BugCard({ bug, answer, onAnswer }) {
           <p style={{
             fontSize: 13,
             color: 'var(--ink-mid)',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             margin: '0 0 4px',
             lineHeight: 1.6,
           }}>
@@ -794,7 +794,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 disabled={answered}
               >
                 <span style={{
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: 'var(--font-mono)',
                   fontWeight: 700,
                   marginRight: 8,
                   color: answered && key === bug.correct ? 'var(--mint)' : answered && key === answer ? 'var(--rose)' : 'var(--ink-ghost)',
@@ -822,7 +822,7 @@ function BugCard({ bug, answer, onAnswer }) {
                   fontSize: 12,
                   fontWeight: 700,
                   color: isCorrect ? 'var(--mint)' : 'var(--rose)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
                 }}>
@@ -841,7 +841,7 @@ function BugCard({ bug, answer, onAnswer }) {
                   fontSize: 11,
                   fontWeight: 700,
                   color: 'var(--ember)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.07em',
                   marginBottom: 4,
@@ -851,7 +851,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 <p style={{
                   fontSize: 13,
                   color: 'var(--ink-mid)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   margin: 0,
                   lineHeight: 1.6,
                 }}>
@@ -869,7 +869,7 @@ function BugCard({ bug, answer, onAnswer }) {
                   fontSize: 11,
                   fontWeight: 700,
                   color: 'var(--mint)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.07em',
                   marginBottom: 4,
@@ -879,7 +879,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 <p style={{
                   fontSize: 13,
                   color: 'var(--ink-mid)',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: 'var(--font-sans)',
                   margin: 0,
                   lineHeight: 1.6,
                 }}>
@@ -894,7 +894,7 @@ function BugCard({ bug, answer, onAnswer }) {
   )
 }
 
-export default function CodeBugsTab() {
+export default function CodeBugsTab({ onNavigate }) {
   const [answers, setAnswers] = useState(loadAnswers)
   const [filter, setFilter] = useState('All')
 
@@ -916,7 +916,7 @@ export default function CodeBugsTab() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <h2 style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
           fontWeight: 700,
           fontSize: 22,
           color: 'var(--ink-hi)',
@@ -925,7 +925,7 @@ export default function CodeBugsTab() {
           Code Bugs
         </h2>
         <p style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
           fontSize: 14,
           color: 'var(--ink-low)',
           margin: 0,
@@ -946,7 +946,7 @@ export default function CodeBugsTab() {
         marginBottom: 20,
       }}>
         <div style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-mono)',
           fontSize: 28,
           fontWeight: 700,
           color: score === 20 ? 'var(--mint)' : score >= 15 ? 'var(--prime)' : 'var(--ink-hi)',
@@ -957,7 +957,7 @@ export default function CodeBugsTab() {
         </div>
         <div>
           <div style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 13,
             fontWeight: 600,
             color: 'var(--ink-hi)',
@@ -965,7 +965,7 @@ export default function CodeBugsTab() {
             Bugs caught correctly
           </div>
           <div style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontSize: 12,
             color: 'var(--ink-low)',
           }}>
@@ -990,7 +990,7 @@ export default function CodeBugsTab() {
               }} />
             </div>
             <div style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               fontSize: 11,
               color: 'var(--ink-ghost)',
               marginTop: 3,
@@ -1019,7 +1019,7 @@ export default function CodeBugsTab() {
               style={{
                 padding: '5px 14px',
                 borderRadius: 20,
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-sans)',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',

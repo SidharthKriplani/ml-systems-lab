@@ -262,7 +262,7 @@ function ModelFailureZoo() {
               color: selectedModel === m.id ? 'var(--mint)' : 'var(--ink-mid)',
               fontSize: '13px',
               fontWeight: selectedModel === m.id ? 600 : 400,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
@@ -281,15 +281,15 @@ function ModelFailureZoo() {
               width: '36px', height: '36px', borderRadius: '8px',
               background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace",
+              fontSize: '11px', fontWeight: 700, color: 'var(--mint)', fontFamily: 'var(--font-mono)',
             }}>
               ML
             </div>
             <div>
-              <h3 style={{ margin: 0, fontFamily: "'Space Grotesk', sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>
                 {model.name}
               </h3>
-              <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                 PRODUCTION FAILURE MODES
               </span>
             </div>
@@ -297,7 +297,7 @@ function ModelFailureZoo() {
 
           {/* Silent failure */}
           <div style={{ borderLeft: '3px solid var(--rose)', paddingLeft: '16px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: "'JetBrains Mono', monospace", marginBottom: '6px', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
               SILENT FAILURE
             </div>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -312,7 +312,7 @@ function ModelFailureZoo() {
             borderRadius: '8px',
             padding: '14px 16px',
           }}>
-            <div style={{ fontSize: '11px', color: 'var(--gold)', fontFamily: "'JetBrains Mono', monospace", marginBottom: '8px', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '11px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.05em' }}>
               PRODUCTION INCIDENT
             </div>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, fontStyle: 'italic' }}>
@@ -323,7 +323,7 @@ function ModelFailureZoo() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {/* Diagnostic signal */}
             <div style={{ borderLeft: '3px solid var(--sky)', paddingLeft: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--sky)', fontFamily: "'JetBrains Mono', monospace", marginBottom: '6px', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '11px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
                 DIAGNOSTIC SIGNAL
               </div>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -333,7 +333,7 @@ function ModelFailureZoo() {
 
             {/* Fix */}
             <div style={{ borderLeft: '3px solid var(--mint)', paddingLeft: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono', monospace", marginBottom: '6px', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
                 FIX
               </div>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -351,7 +351,7 @@ function ModelFailureZoo() {
             borderRadius: '6px',
             fontSize: '12px',
             color: 'var(--mint)',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: 'var(--font-mono)',
             overflowX: 'auto',
             lineHeight: 1.6,
           }}>
@@ -412,7 +412,7 @@ function EnsembleDecisionLab() {
             border: '1px solid rgba(52,211,153,0.2)',
             fontSize: '13px',
             color: 'var(--mint)',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: 'var(--font-mono)',
             fontWeight: 600,
           }}>
             {correct}/{attempted} correct
@@ -436,13 +436,13 @@ function EnsembleDecisionLab() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '11px', fontWeight: 700,
                 color: isRevealed ? (isCorrect ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-mono)',
                 flexShrink: 0, marginTop: '2px',
               }}>
                 {isRevealed ? (isCorrect ? '✓' : '✗') : scenario.id}
               </div>
               <div>
-                <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
                   {scenario.situation}
                 </p>
                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5 }}>
@@ -480,7 +480,7 @@ function EnsembleDecisionLab() {
                       color: textColor,
                       fontSize: '12px',
                       fontWeight: isSelected || (isRevealed && isCorrectOpt) ? 600 : 400,
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       cursor: isRevealed ? 'default' : 'pointer',
                       transition: 'all 0.15s',
                     }}
@@ -508,7 +508,7 @@ function EnsembleDecisionLab() {
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                       ANSWER: {scenario.answer.toUpperCase()}
                     </span>
                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -517,7 +517,7 @@ function EnsembleDecisionLab() {
                   </div>
                 </div>
                 <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '6px', padding: '10px 12px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono', monospace" }}>Why not the others: </span>
+                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Why not the others: </span>
                   <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{scenario.whyNot}</span>
                 </div>
               </div>
@@ -557,7 +557,7 @@ function HyperparamPriority() {
             border: '1px solid rgba(52,211,153,0.2)',
             fontSize: '13px',
             color: 'var(--mint)',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: 'var(--font-mono)',
             fontWeight: 600,
           }}>
             {correct}/{attempted} correct
@@ -581,7 +581,7 @@ function HyperparamPriority() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '11px', fontWeight: 700,
                 color: isRevealed ? (isCorrect ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-mono)',
                 flexShrink: 0, marginTop: '2px',
               }}>
                 {isRevealed ? (isCorrect ? '✓' : '✗') : scenario.id}
@@ -591,12 +591,12 @@ function HyperparamPriority() {
                   <span style={{
                     padding: '2px 8px', borderRadius: '10px',
                     background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
-                    fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)',
                   }}>
                     {scenario.model}
                   </span>
                 </div>
-                <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', fontFamily: "'Space Grotesk', sans-serif" }}>
+                <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
                   {scenario.problem}
                 </p>
                 <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5 }}>
@@ -634,7 +634,7 @@ function HyperparamPriority() {
                       color: textColor,
                       fontSize: '12px',
                       fontWeight: isSelected || (isRevealed && isCorrectOpt) ? 600 : 400,
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                       cursor: isRevealed ? 'default' : 'pointer',
                       transition: 'all 0.15s',
                     }}
@@ -663,7 +663,7 @@ function HyperparamPriority() {
                   <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                         TUNE FIRST: {scenario.answer.toUpperCase()}
                       </span>
                       <span style={{
@@ -672,7 +672,7 @@ function HyperparamPriority() {
                         border: `1px solid ${scenario.impact.startsWith('HIGH') ? 'rgba(52,211,153,0.2)' : 'rgba(245,158,11,0.2)'}`,
                         fontSize: '10px',
                         color: scenario.impact.startsWith('HIGH') ? 'var(--mint)' : 'var(--gold)',
-                        fontFamily: "'JetBrains Mono', monospace",
+                        fontFamily: 'var(--font-mono)',
                       }}>
                         IMPACT: {scenario.impact}
                       </span>
@@ -683,7 +683,7 @@ function HyperparamPriority() {
                   </div>
                 </div>
                 <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '6px', padding: '10px 12px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono', monospace" }}>Why not others: </span>
+                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Why not others: </span>
                   <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{scenario.whyNotOthers}</span>
                 </div>
               </div>
@@ -703,7 +703,7 @@ const MODULES = [
   { id: 'hyperparam', icon: '🎛', label: 'Hyperparameter Priority', component: HyperparamPriority },
 ]
 
-export default function ClassicalMLTab() {
+export default function ClassicalMLTab({ onNavigate }) {
   const [activeModule, setActiveModule] = useState('zoo')
 
   const ActiveComponent = MODULES.find(m => m.id === activeModule)?.component
@@ -716,7 +716,7 @@ export default function ClassicalMLTab() {
           Classical ML
         </div>
         <h1 style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: 'var(--font-sans)',
           fontSize: 'clamp(22px, 4vw, 30px)',
           fontWeight: 700,
           color: 'var(--ink-hi)',
@@ -754,7 +754,7 @@ export default function ClassicalMLTab() {
               color: activeModule === mod.id ? 'var(--mint)' : 'var(--ink-mid)',
               fontSize: '13px',
               fontWeight: activeModule === mod.id ? 600 : 400,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}

@@ -1383,7 +1383,7 @@ const DOMAIN_COLOR = {
 function YouTubeEmbed({ videoId, title }) {
   return (
     <div style={{ margin: '28px 0' }}>
-      <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Watch</div>
+      <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Watch</div>
       <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', border: '1px solid var(--rim)' }}>
         <iframe
           src={'https://www.youtube-nocookie.com/embed/' + videoId}
@@ -1563,13 +1563,13 @@ function CaseDetail({ c, onBack }) {
       <button onClick={onBack} className="btn-ghost" style={{ alignSelf: 'flex-start', marginBottom: '28px', fontSize: '13px' }}>← Back to Case Library</button>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
-        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: '#fff', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{c.severity}</span>
-        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{c.sector}</span>
+        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: 'var(--white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{c.severity}</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{c.sector}</span>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>·</span>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{c.duration}</span>
       </div>
 
-      <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '32px', lineHeight: 1.2 }}>{c.title}</h1>
+      <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '32px', lineHeight: 1.2 }}>{c.title}</h1>
 
       {[
         { label: 'What happened',  color: 'var(--rose)',  content: c.what },
@@ -1579,14 +1579,14 @@ function CaseDetail({ c, onBack }) {
         { label: 'Key lesson',     color: 'var(--prime)', content: c.lesson },
       ].map(section => (
         <div key={section.label} style={{ marginBottom: '28px', paddingLeft: '16px', borderLeft: `3px solid ${section.color}40` }}>
-          <div style={{ fontSize: '11px', color: section.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px', fontWeight: 700 }}>{section.label}</div>
+          <div style={{ fontSize: '11px', color: section.color, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px', fontWeight: 700 }}>{section.label}</div>
           <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{section.content}</p>
         </div>
       ))}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', paddingTop: '20px', borderTop: '1px solid var(--rim)' }}>
         {c.tags.map(tag => (
-          <span key={tag} style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '2px 8px' }}>{tag}</span>
+          <span key={tag} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '2px 8px' }}>{tag}</span>
         ))}
       </div>
     </div>
@@ -1625,14 +1625,14 @@ function CaseLibrary() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.3)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: '#fff', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{c.severity}</span>
+              <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: 'var(--white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{c.severity}</span>
               <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace' "}}>{c.sector}</span>
             </div>
-            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px', lineHeight: 1.3 }}>{c.title}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px', lineHeight: 1.3 }}>{c.title}</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0, marginBottom: '12px' }}>{c.what.slice(0, 110)}…</p>
             <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
               {c.tags.slice(0, 3).map(tag => (
-                <span key={tag} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '4px', padding: '1px 6px' }}>{tag}</span>
+                <span key={tag} style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '4px', padding: '1px 6px' }}>{tag}</span>
               ))}
             </div>
           </button>
@@ -1742,7 +1742,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
 
     return blocks.map((block, idx) => {
       if (block.type === 'code') return (
-        <pre key={idx} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12.5px', color: '#c0b8ae', lineHeight: 1.8, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '16px 20px', margin: '20px 0', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+        <pre key={idx} style={{ fontFamily: 'var(--font-mono)', fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.8, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '16px 20px', margin: '20px 0', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
           {block.lang && <div style={{ fontSize: '10px', color: 'var(--sky)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.lang}</div>}
           <code>{block.content}</code>
         </pre>
@@ -1751,7 +1751,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         const c = CALLOUT_STYLES[block.calloutType]
         return (
           <div key={idx} style={{ padding: '14px 18px', background: c.bg, border: `1px solid ${c.border}`, borderRadius: '10px', margin: '20px 0' }}>
-            <div style={{ fontSize: '10px', color: c.text, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontWeight: 700 }}>{c.label}</div>
+            <div style={{ fontSize: '10px', color: c.text, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontWeight: 700 }}>{c.label}</div>
             <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{renderInline(block.content)}</p>
           </div>
         )
@@ -1766,7 +1766,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
       // Paragraph or heading
       const content = block.content.trim()
       if (/^\*\*[^*]+\*\*$/.test(content)) {
-        return <h3 key={idx} style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{content.slice(2,-2)}</h3>
+        return <h3 key={idx} style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{content.slice(2,-2)}</h3>
       }
       return (
         <p key={idx} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.85, marginBottom: '18px' }}>
@@ -1788,7 +1788,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
           ← Back to Gradient
         </button>
-        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.08)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", transition: 'all 0.15s' }}>
+        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.08)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
           {isRead ? '✓ Read' : 'Mark as read'}
         </button>
       </div>
@@ -1796,8 +1796,8 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
       <article onScroll={handleScroll} style={{ outline: 'none' }}>
         {/* Meta */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
-          {post.domain && <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
+          <span style={{ fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
+          {post.domain && <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{post.readMin} min read</span>
         </div>
 
@@ -1826,7 +1826,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
           {post.tags.map(t => (
-            <span key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
+            <span key={t} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
           ))}
         </div>
 
@@ -1834,8 +1834,8 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         {POST_PRACTICE[post.id] && onNavigate && (
           <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', color: 'var(--ink-mid)' }}>{POST_PRACTICE[post.id].label}</div>
+              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-mid)' }}>{POST_PRACTICE[post.id].label}</div>
             </div>
             <button onClick={() => onNavigate(POST_PRACTICE[post.id].tab)} className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px', whiteSpace: 'nowrap' }}>
               Practice this →
@@ -1857,7 +1857,7 @@ function PostCard({ post, featured, onClick, isRead }) {
         <div>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', alignItems: 'center' }}>
             <span className="badge badge-indigo" style={{ fontSize: '10px' }}>Featured</span>
-            <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
           </div>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.25, marginBottom: '14px', letterSpacing: '-0.01em' }}>{post.title}</h2>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, marginBottom: '16px' }}>{post.excerpt.slice(0, 180)}…</p>
@@ -1865,7 +1865,7 @@ function PostCard({ post, featured, onClick, isRead }) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {post.tags.slice(0, 4).map(t => (
-            <div key={t} style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '5px', padding: '6px 12px' }}>{t}</div>
+            <div key={t} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '5px', padding: '6px 12px' }}>{t}</div>
           ))}
         </div>
       </button>
@@ -1877,10 +1877,10 @@ function PostCard({ post, featured, onClick, isRead }) {
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = post.catColor.border }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--rim)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{post.category}</span>
-        {post.domain && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
-        {post.youtube && post.youtube.length > 0 && <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace" }}>▶ video</span>}
-        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace" }}>✓ read</span>}
+        <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
+        {post.domain && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
+        {post.youtube && post.youtube.length > 0 && <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: 'var(--font-mono)' }}>▶ video</span>}
+        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ read</span>}
         <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{post.readMin} min</span>
       </div>
       <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
@@ -1916,13 +1916,13 @@ export default function GradientTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '4px' }}>Case Library</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '4px' }}>Case Library</h1>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
-              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>
           ))}
@@ -1942,7 +1942,7 @@ export default function GradientTab({ onNavigate }) {
             <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               Gradient
             </h1>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
           </div>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
             Start here. Read a post, understand the concept, then hit Practice to apply it in the interactive modules. Each post links directly to its practice module.
@@ -1951,7 +1951,7 @@ export default function GradientTab({ onNavigate }) {
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
-              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>
           ))}
@@ -1964,7 +1964,7 @@ export default function GradientTab({ onNavigate }) {
           <button key={d.id} onClick={() => setActiveDomain(d.id)}
             style={{
               padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
-              fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, transition: 'all 0.12s',
+              fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
               background: activeDomain === d.id ? (d.color ? `${d.color}20` : 'rgba(255,255,255,0.08)') : 'rgba(0,0,0,0.25)',
               color: activeDomain === d.id ? (d.color ?? 'var(--ink-hi)') : 'var(--ink-low)',
               border: activeDomain === d.id ? `1px solid ${d.color ?? 'var(--rim)'}40` : '1px solid var(--rim)',

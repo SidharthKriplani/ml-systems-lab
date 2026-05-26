@@ -334,10 +334,10 @@ function RolesSection({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
               <span style={{ fontSize: '22px' }}>{r.icon}</span>
               <div>
-                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: selected === i ? r.accentColor : 'var(--ink-hi)' }}>{r.title}</div>
-                <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{r.level}</div>
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: selected === i ? r.accentColor : 'var(--ink-hi)' }}>{r.title}</div>
+                <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{r.level}</div>
               </div>
-              <div style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: r.bgColor, color: r.accentColor, border: `1px solid ${r.borderColor}`, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>{r.demand}</div>
+              <div style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: r.bgColor, color: r.accentColor, border: `1px solid ${r.borderColor}`, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{r.demand}</div>
             </div>
             <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{r.focus}</p>
           </button>
@@ -348,37 +348,37 @@ function RolesSection({ onNavigate }) {
         <div className="card" style={{ border: `1px solid ${role.borderColor}`, background: role.bgColor, padding: '24px 28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '28px' }}>{role.icon}</span>
-            <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '20px', fontWeight: 700, color: role.accentColor, margin: 0 }}>{role.title}</h3>
+            <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: role.accentColor, margin: 0 }}>{role.title}</h3>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
             {[['🇺🇸 US TC', role.salaryUS], ['🇬🇧 UK Base', role.salaryUK], ['🇩🇪 DE Base', role.salaryDE]].map(([label, val]) => (
               <div key={label} style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
                 <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '4px' }}>{label}</div>
-                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{val}</div>
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{val}</div>
               </div>
             ))}
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>A Tuesday afternoon</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>A Tuesday afternoon</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, fontStyle: 'italic', margin: 0 }}>{role.dayInLife}</p>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Core skills</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Core skills</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {role.skills.map(s => (
-                <span key={s} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontFamily: "'JetBrains Mono',monospace" }}>{s}</span>
+                <span key={s} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>{s}</span>
               ))}
             </div>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Who hires for this</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Who hires for this</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {role.hires.map(h => (
-                <span key={h} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: role.bgColor, border: `1px solid ${role.borderColor}`, color: role.accentColor, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>{h}</span>
+                <span key={h} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: role.bgColor, border: `1px solid ${role.borderColor}`, color: role.accentColor, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{h}</span>
               ))}
             </div>
           </div>
@@ -389,7 +389,7 @@ function RolesSection({ onNavigate }) {
                 localStorage.setItem('msl_goto_path', role.pathId)
                 onNavigate('home')
               }}
-              style={{ fontSize: '13px', padding: '10px 20px', background: role.bgColor, border: `1px solid ${role.borderColor}`, borderRadius: '8px', color: role.accentColor, cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, letterSpacing: '-0.01em' }}>
+              style={{ fontSize: '13px', padding: '10px 20px', background: role.bgColor, border: `1px solid ${role.borderColor}`, borderRadius: '8px', color: role.accentColor, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600, letterSpacing: '-0.01em' }}>
               Start this learning path →
             </button>
           )}
@@ -436,10 +436,10 @@ function SalarySection() {
             <div key={l.level} className="card" style={{ padding: '16px 20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
-                  <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginRight: '10px' }}>{l.level}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{l.yoe}</span>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginRight: '10px' }}>{l.level}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{l.yoe}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: "'JetBrains Mono',monospace" }}>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
                   <span style={{ color: 'var(--ink-low)' }}>Base: <span style={{ color: 'var(--ink-mid)' }}>{d.base}k</span></span>
                   <span style={{ color: 'var(--mint)', fontWeight: 700 }}>TC: {d.tc}k</span>
                 </div>
@@ -489,14 +489,14 @@ function StackSection() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
         <div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: s.accentColor, marginBottom: '4px' }}>{s.stage}</div>
-          <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '16px' }}>{s.size}</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: s.accentColor, marginBottom: '4px' }}>{s.stage}</div>
+          <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '16px' }}>{s.size}</div>
           {s.stack.map(cat => (
             <div key={cat.cat} style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '6px' }}>{cat.cat}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>{cat.cat}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {cat.tools.map(t => (
-                  <span key={t} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: `1px solid ${s.borderColor}`, color: s.accentColor, fontFamily: "'JetBrains Mono',monospace" }}>{t}</span>
+                  <span key={t} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: `1px solid ${s.borderColor}`, color: s.accentColor, fontFamily: 'var(--font-mono)' }}>{t}</span>
                 ))}
               </div>
             </div>
@@ -504,11 +504,11 @@ function StackSection() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '16px 20px', borderColor: s.borderColor, background: s.bgColor }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Philosophy</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Philosophy</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{s.philosophy}</p>
           </div>
           <div className="card" style={{ padding: '16px 20px', background: 'rgba(244,63,94,0.04)', borderColor: 'rgba(244,63,94,0.25)' }}>
-            <div style={{ fontSize: '12px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
+            <div style={{ fontSize: '12px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{s.antipattern}</p>
           </div>
         </div>
@@ -543,12 +543,12 @@ function CompaniesSection() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '36px', lineHeight: 1 }}>{c.icon}</span>
             <div style={{ flex: 1, minWidth: '200px' }}>
-              <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '22px', color: 'var(--ink-hi)', margin: '0 0 4px' }}>{c.name}</h3>
+              <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '22px', color: 'var(--ink-hi)', margin: '0 0 4px' }}>{c.name}</h3>
               <div style={{ fontSize: '13px', color: 'var(--mint)', fontStyle: 'italic', marginBottom: '8px' }}>{c.mlMotto}</div>
               <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{c.headline}</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", padding: '12px 0', borderTop: '1px solid var(--rim)' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', fontFamily: 'var(--font-mono)', padding: '12px 0', borderTop: '1px solid var(--rim)' }}>
             <span style={{ color: 'var(--ink-low)' }}>Team: <span style={{ color: 'var(--ink-mid)' }}>{c.teamSize}</span></span>
             {c.mlBudget !== 'N/A (private)' && c.mlBudget !== 'N/A' && <span style={{ color: 'var(--ink-low)' }}>Investment: <span style={{ color: 'var(--mint)' }}>{c.mlBudget}</span></span>}
           </div>
@@ -557,7 +557,7 @@ function CompaniesSection() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {c.keyMLSystems.map(sys => (
             <div key={sys.name} className="card" style={{ padding: '16px 20px' }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '6px' }}>{sys.name}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '6px' }}>{sys.name}</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>{sys.impact}</p>
             </div>
           ))}
@@ -565,15 +565,15 @@ function CompaniesSection() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
           <div className="card" style={{ padding: '16px 20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Tech highlights</div>
+            <div style={{ fontSize: '12px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Tech highlights</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {c.techHighlights.map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace" }}>{t}</span>
+                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: 'var(--sky)', fontFamily: 'var(--font-mono)' }}>{t}</span>
               ))}
             </div>
           </div>
           <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
-            <div style={{ fontSize: '12px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Key insight</div>
+            <div style={{ fontSize: '12px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Key insight</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{c.insight}</p>
           </div>
         </div>
@@ -597,8 +597,8 @@ function TimelineSection() {
           <div key={e.year} style={{ position: 'relative', marginBottom: '28px', paddingLeft: '24px' }}>
             <div style={{ position: 'absolute', left: '-24px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: e.color, border: '2px solid var(--depth)', boxShadow: `0 0 8px ${e.color}` }} />
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '4px', flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: e.color, fontWeight: 700 }}>{e.year}</span>
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{e.title}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: e.color, fontWeight: 700 }}>{e.year}</span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{e.title}</span>
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{e.desc}</p>
           </div>
@@ -623,11 +623,11 @@ function MarketsSection() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <span style={{ fontSize: '24px' }}>{m.flag}</span>
               <div>
-                <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{m.country}</div>
-                <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{m.hubs}</div>
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{m.country}</div>
+                <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{m.hubs}</div>
               </div>
             </div>
-            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginBottom: '12px', fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--mint)' }}>
+            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginBottom: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--mint)' }}>
               Senior MLE: {m.seniors}
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -663,7 +663,7 @@ export default function LandscapeTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Landscape</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Landscape</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '620px' }}>
           The full picture of ML as a career and industry — roles, salaries, tech stacks, how top companies use ML,

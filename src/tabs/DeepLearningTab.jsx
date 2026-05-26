@@ -50,25 +50,25 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             background: diffFilter === d ? accentColor + '15' : 'transparent',
             border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
             color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.05em'
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
           }}>
             {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
           </button>
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", marginLeft: '4px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
       {score.attempted > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '4px' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}
           </span>
           <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
           </div>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
         </div>
       )}
 
@@ -83,9 +83,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
         return (
           <div key={sc.id} style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.2s', background: 'rgba(255,255,255,0.015)' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ flex: 1, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
-              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", whiteSpace: 'nowrap' }}>{sc.tier}</span>}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
+              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
               {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
               {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
               <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
@@ -94,9 +94,9 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             {item.open && (
               <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>{contextLabel}</div>
+                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>{contextLabel}</div>
                   {Array.isArray(sc.context) ? sc.context.map((line, j) => (
-                    <div key={j} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 0', lineHeight: 1.5 }}>{line}</div>
+                    <div key={j} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 0', lineHeight: 1.5 }}>{line}</div>
                   )) : <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.context}</p>}
                 </div>
 
@@ -113,8 +113,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
+                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
                         {item.revealed && j === sc.answer                      && <span>✓ </span>}
                         {item.revealed && j === item.picked && j !== sc.answer && <span>✗ </span>}
                         {opt}
@@ -125,13 +125,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
 
                 {item.revealed && (
                   <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.05)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
                       {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.explanation}</p>
                     {sc.fix && (
                       <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
-                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
+                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
                         <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                       </div>
                     )}
@@ -183,21 +183,21 @@ function TrainingFailureDiagnosis() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the training telemetry. Diagnose before you scroll.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FAILURES.length}</span>
-          {score.total > 0 && <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FAILURES.length}</span>
+          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
         </div>
       </div>
 
       <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--rose)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
-          <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{scenario.tier}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
+          <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{scenario.tier}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -209,7 +209,7 @@ function TrainingFailureDiagnosis() {
           } else if (i === picked) { bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
-              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {revealed && i === scenario.answer && '✓ '}
               {revealed && i === picked && i !== scenario.answer && '✗ '}
               {opt}
@@ -220,12 +220,12 @@ function TrainingFailureDiagnosis() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
           <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
@@ -270,21 +270,21 @@ function GradientDebugger() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the gradient telemetry. Diagnose the gradient flow problem before you reveal.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {GRAD_SCENARIOS.length}</span>
-          {score.total > 0 && <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {GRAD_SCENARIOS.length}</span>
+          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
         </div>
       </div>
 
       <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--sky)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <span style={{ fontSize: '18px' }}>📉</span>
-          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -296,7 +296,7 @@ function GradientDebugger() {
           } else if (i === picked) { bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
-              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               {revealed && i === scenario.answer && '✓ '}
               {revealed && i === picked && i !== scenario.answer && '✗ '}
               {opt}
@@ -307,12 +307,12 @@ function GradientDebugger() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
           <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
@@ -432,7 +432,7 @@ function OptimizerComparison() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           SGD vs Adam vs AdamW vs RMSprop — each has failure modes the others don't. 6 scenarios where optimizer choice is the deciding factor.
         </p>
@@ -440,7 +440,7 @@ function OptimizerComparison() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
         {[['SGD', 'Flatter minima, large-batch', 'var(--mint)'], ['Adam', 'Sparse grads, NLP', 'var(--violet)'], ['AdamW', 'Transformers (decoupled WD)', 'var(--sky)'], ['RMSprop', 'RNNs, non-stationary', 'var(--gold)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', fontWeight: 700, color }}>{name}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
           </div>
         ))}
@@ -560,7 +560,7 @@ function RegularizationDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Dropout, weight decay, augmentation, label smoothing, mixup — each attacks overfitting differently. 6 scenarios where the wrong regularizer makes things worse.
         </p>
@@ -681,7 +681,7 @@ function TransformerArchitecture() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Attention heads, KV cache, positional encodings, Pre vs Post-LN, FlashAttention — architecture decisions that separate LLM practitioners from LLM users. 6 production scenarios.
         </p>
@@ -689,7 +689,7 @@ function TransformerArchitecture() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
         {[['MHA', 'Multi-Head Attention', 'var(--violet)'], ['GQA', 'Grouped Query Attention', 'var(--sky)'], ['RoPE/ALiBi', 'Positional Encoding', 'var(--mint)'], ['Flash Attn', 'IO-efficient attention', 'var(--gold)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', fontWeight: 700, color }}>{name}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
           </div>
         ))}
@@ -708,7 +708,7 @@ const DL_MODULES = [
   { id: 'transformer', label: 'Transformer Architecture', icon: '🔷', component: TransformerArchitecture },
 ]
 
-export default function DeepLearningTab() {
+export default function DeepLearningTab({ onNavigate }) {
   const [active, setActive] = useState('diagnosis')
   const [, forceUpdate] = useState(0)
   const ActiveModule = DL_MODULES.find(m => m.id === active)?.component ?? TrainingFailureDiagnosis
@@ -727,7 +727,7 @@ export default function DeepLearningTab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: '0 0 6px' }}>Training Lab</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: '0 0 6px' }}>Training Lab</h1>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px', margin: 0 }}>
           DL courses teach you to build. This domain teaches you to debug — training failures, gradient issues, optimizer tradeoffs, regularization choices, transformer internals. Real telemetry, real decisions.
         </p>
@@ -737,7 +737,7 @@ export default function DeepLearningTab() {
         {DL_MODULES.map(m => (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
             <button onClick={() => setActive(m.id)}
-              style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent', color: active === m.id ? 'var(--violet)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+              style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent', color: active === m.id ? 'var(--violet)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
               {m.icon} {m.label}
             </button>
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('deeplearn', m.id, m.label); forceUpdate(n => n+1) }}

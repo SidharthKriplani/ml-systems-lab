@@ -243,14 +243,14 @@ Without completion events, there is no signal on which tabs users actually use v
 | 001 | BUILD baseline — brace balance, colors, localStorage, onNavigate, index keys | 2026-05-26 | BUILD / Visual Consistency | 3 open ⚠️ |
 | 002 | Font hardcoding, dead PipelineBlogTab | 2026-05-26 | BUILD / Visual Consistency | 2 open ⚠️ |
 | 003 | Security baseline — gitignore, env vars, secrets | 2026-05-26 | Security | ✅ All clean |
-| 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | #1 fixed ✅ · #2 open ⚠️ |
+| 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | ✅ Both fixed |
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
-| 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | #1 #2 fixed ✅ · #5 open ⚠️ |
+| 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — all resolved |
-| Medium | 5 | #001 hardcoded colors · #001 missing onNavigate · #002 font hardcoding · #004 sitemap missing · #006 no METRICS.md |
-| Low | 2 | #001 index keys · #002 dead PipelineBlogTab |
+| Medium | 0 | — all resolved |
+| Low | 1 | #001 index keys — replace with stable keys only where lists filter/reorder |

@@ -218,16 +218,16 @@ function FluencyDrills() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '4px' }}>Fluency Drills</div>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>Fluency Drills</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.5 }}>Replace weak phrases with the production-grade equivalent. {FLUENCY_DRILLS.length} drills.</p>
         </div>
-        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", paddingTop: '4px' }}>{idx + 1} / {FLUENCY_DRILLS.length}</span>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', paddingTop: '4px' }}>{idx + 1} / {FLUENCY_DRILLS.length}</span>
       </div>
 
       {/* Weak phrase card */}
       <div style={{ padding: '24px 28px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: '12px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Weak phrase</div>
-        <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '17px', color: 'var(--ink-mid)', lineHeight: 1.5, margin: 0 }}>"{drill.weak}"</p>
+        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Weak phrase</div>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', color: 'var(--ink-mid)', lineHeight: 1.5, margin: 0 }}>"{drill.weak}"</p>
       </div>
 
       {!revealed ? (
@@ -235,10 +235,10 @@ function FluencyDrills() {
       ) : (
         <>
           <div style={{ padding: '24px 28px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: '12px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Strong phrase</div>
-            <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
+            <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Strong phrase</div>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
             <div style={{ paddingTop: '14px', borderTop: '1px solid rgba(52,211,153,0.15)' }}>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '6px' }}>Why it matters</div>
+              <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Why it matters</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{drill.why}</p>
             </div>
           </div>
@@ -303,8 +303,8 @@ function TimedPractice({ questions, onExit }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ padding: '28px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '12px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '10px' }}>Session complete</div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Session complete</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {questions.length} questions · {Math.floor(elapsed/60)}m {elapsed%60}s
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', margin: 0 }}>Self-assessment breakdown:</p>
@@ -312,8 +312,8 @@ function TimedPractice({ questions, onExit }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px' }}>
           {counts.map(t => (
             <div key={t.key} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid var(--rim)`, borderRadius: '10px' }}>
-              <div style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: t.color, fontWeight: 700, marginBottom: '4px' }}>{t.label.toUpperCase()}</div>
-              <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: t.n > 0 ? t.color : 'var(--ink-low)' }}>{t.n}</div>
+              <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: t.color, fontWeight: 700, marginBottom: '4px' }}>{t.label.toUpperCase()}</div>
+              <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: t.n > 0 ? t.color : 'var(--ink-low)' }}>{t.n}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
             </div>
           ))}
@@ -329,10 +329,10 @@ function TimedPractice({ questions, onExit }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>Question {idx + 1}/{questions.length}</span>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>{q?.cat}</span>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{q?.cat}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '18px', fontWeight: 700, color: overtime ? 'var(--rose)' : remaining < 300 ? 'var(--ember)' : 'var(--mint)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: 700, color: overtime ? 'var(--rose)' : remaining < 300 ? 'var(--ember)' : 'var(--mint)' }}>
             {overtime ? '+' : ''}{mins}:{String(secs).padStart(2, '0')}
           </span>
           <button onClick={onExit} className="btn-ghost" style={{ fontSize: '12px' }}>✕ Exit</button>
@@ -346,7 +346,7 @@ function TimedPractice({ questions, onExit }) {
 
       {/* Question */}
       <div style={{ padding: '28px 32px', background: 'var(--depth)', border: `1px solid ${cc.border}`, borderRadius: '12px' }}>
-        <p style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.5, margin: 0 }}>{q?.q}</p>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.5, margin: 0 }}>{q?.q}</p>
       </div>
 
       {!revealed ? (
@@ -359,7 +359,7 @@ function TimedPractice({ questions, onExit }) {
           <div style={{ padding: '20px 24px', background: cc.bg, border: `1px solid ${cc.border}`, borderRadius: '10px' }}>
             {q?.framework && (
               <div style={{ marginBottom: q.answer ? '12px' : 0 }}>
-                <div style={{ fontSize: '11px', color: cc.text, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Framework</div>
+                <div style={{ fontSize: '11px', color: cc.text, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Framework</div>
                 <ol style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {q.framework.map((f, i) => <li key={i} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{f}</li>)}
                 </ol>
@@ -367,7 +367,7 @@ function TimedPractice({ questions, onExit }) {
             )}
             {q?.answer && (
               <div>
-                <div style={{ fontSize: '11px', color: cc.text, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Model Answer</div>
+                <div style={{ fontSize: '11px', color: cc.text, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Model Answer</div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>{q.answer}</p>
               </div>
             )}
@@ -376,7 +376,7 @@ function TimedPractice({ questions, onExit }) {
           {/* 4-tier self-assessment */}
           {!tierSelected ? (
             <div style={{ padding: '16px 20px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>How did you do?</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>How did you do?</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {TIER_LEVELS.map(t => (
                   <button key={t.key}
@@ -384,7 +384,7 @@ function TimedPractice({ questions, onExit }) {
                     style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', background: 'transparent', border: `1px solid ${t.color}20`, borderRadius: '8px', cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
                     onMouseEnter={e => e.currentTarget.style.background = `${t.color}12`}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '52px' }}>{t.label}</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '52px' }}>{t.label}</span>
                     <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{t.desc}</span>
                   </button>
                 ))}
@@ -392,7 +392,7 @@ function TimedPractice({ questions, onExit }) {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', fontFamily: "'JetBrains Mono',monospace", color: TIER_LEVELS.find(t => t.key === tierSelected)?.color, fontWeight: 700 }}>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: TIER_LEVELS.find(t => t.key === tierSelected)?.color, fontWeight: 700 }}>
                 ✓ {tierSelected.toUpperCase()}
               </span>
               <button className="btn-primary" onClick={nextQ} disabled={isLast}>
@@ -531,7 +531,7 @@ function SystemDesignJudgment() {
           if (revealed && isChosen && !isCorrect) { bg = 'rgba(244,63,94,0.08)';  border = 'rgba(244,63,94,0.4)';   color = 'var(--ink-hi)' }
           return (
             <button key={i} disabled={revealed} onClick={() => setChosen(i)}
-              style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', fontFamily: "'Space Grotesk',sans-serif", fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
+              style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-sans)', fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
               {label}
               {revealed && isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--mint)' }}>correct</span>}
               {revealed && isChosen && !isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--rose)' }}>your pick</span>}
@@ -568,7 +568,7 @@ function SystemDesignJudgment() {
 }
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
-export default function InterviewPrepTab() {
+export default function InterviewPrepTab({ onNavigate }) {
   const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency' | 'design'
   const [cat,     setCat]     = useState('All')
   const [company, setCompany] = useState('All')
@@ -602,7 +602,7 @@ export default function InterviewPrepTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
-        <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '6px' }}>Interview Prep</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '6px' }}>Interview Prep</h1>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
           {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Plus 30 fluency drills for weak-to-strong vocabulary.
         </p>
@@ -612,7 +612,7 @@ export default function InterviewPrepTab() {
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px', width: 'fit-content' }}>
         {MODES.map(m => (
           <button key={m.key} onClick={() => setMode(m.key)}
-            style={{ padding: '7px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, transition: 'all 0.15s',
+            style={{ padding: '7px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.15s',
               background: mode === m.key ? 'var(--prime)' : 'transparent',
               color: mode === m.key ? '#000' : 'var(--ink-mid)' }}>
             {m.label}
@@ -654,10 +654,10 @@ export default function InterviewPrepTab() {
                 <div key={q.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', border: isOpen ? `1px solid ${cc.border}` : '1px solid var(--rim)' }}
                   onClick={() => setOpen(isOpen ? null : q.id)}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 18px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", paddingTop: '2px', minWidth: '24px' }}>{String(q.id).padStart(2, '0')}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', paddingTop: '2px', minWidth: '24px' }}>{String(q.id).padStart(2, '0')}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: "'Space Grotesk',sans-serif" }}>{q.cat}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: 'var(--font-sans)' }}>{q.cat}</span>
                         {q.company !== 'Any' && <span className="badge badge-ghost" style={{ fontSize: '10px' }}>{q.company}</span>}
                         <span className={`badge ${q.level === 'Staff' ? 'badge-rose' : q.level === 'Senior' ? 'badge-ember' : 'badge-ghost'}`} style={{ fontSize: '10px' }}>{q.level}</span>
                       </div>

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 
 // ─── Shared style helpers ─────────────────────────────────────────────────────
-const mono = { fontFamily: "'JetBrains Mono',monospace" }
-const grotesk = { fontFamily: "'Space Grotesk',sans-serif" }
+const mono = { fontFamily: 'var(--font-mono)' }
+const grotesk = { fontFamily: 'var(--font-sans)' }
 
 const pill = (color) => ({
   display: 'inline-block',
@@ -579,7 +579,7 @@ const MODULES = [
   { id: 'registry', label: 'Model Registry Patterns',  icon: '📦',  component: RegistryPatterns },
 ]
 
-export default function MLOpsPipelinesTab() {
+export default function MLOpsPipelinesTab({ onNavigate }) {
   const [active, setActive] = useState('cicd')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? CiCdGates
 

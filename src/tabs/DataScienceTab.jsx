@@ -82,7 +82,7 @@ const FEAT_TYPES  = [{ v: 'tabular', l: 'Tabular / structured' }, { v: 'text', l
 function pill(label, active, onClick, activeColor = 'var(--sky)') {
   return (
     <button key={label} onClick={onClick}
-      style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
+      style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
       {label}
     </button>
   )
@@ -111,7 +111,7 @@ function ModelSelectionOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your problem constraints. Get ranked model recommendations with production tradeoffs.
         </p>
@@ -126,7 +126,7 @@ function ModelSelectionOracle() {
           { label: 'Feature type', items: FEAT_TYPES, val: featType, set: setFeatType, color: 'var(--mint)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
+            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
             </div>
@@ -154,9 +154,9 @@ function ModelSelectionOracle() {
             <div key={m.id} className="card" style={{ padding: 0, overflow: 'hidden', border: i === 0 ? `1px solid ${m.color}50` : undefined }}>
               <button onClick={() => setExpanded(expanded === m.id ? null : m.id)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '13px', color: i === 0 ? m.color : 'var(--ink-low)', fontWeight: 700, minWidth: '24px' }}>#{i + 1}</span>
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '14px', fontWeight: 600, color: i === 0 ? m.color : 'var(--ink-hi)', flex: 1 }}>{m.name}</span>
-                {i === 0 && <span style={{ fontSize: '10px', padding: '2px 7px', background: m.color + '18', color: m.color, borderRadius: '4px', fontFamily: "'JetBrains Mono',monospace" }}>RECOMMENDED</span>}
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: i === 0 ? m.color : 'var(--ink-low)', fontWeight: 700, minWidth: '24px' }}>#{i + 1}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 600, color: i === 0 ? m.color : 'var(--ink-hi)', flex: 1 }}>{m.name}</span>
+                {i === 0 && <span style={{ fontSize: '10px', padding: '2px 7px', background: m.color + '18', color: m.color, borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>}
                 <span style={{ fontSize: '12px', color: 'var(--ink-low)', transition: 'transform 0.15s', transform: expanded === m.id ? 'rotate(90deg)' : 'none' }}>›</span>
               </button>
 
@@ -164,16 +164,16 @@ function ModelSelectionOracle() {
                 <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--rim)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Strengths</div>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Strengths</div>
                       {m.strengths.map((s, j) => <div key={j} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '3px' }}>✓ {s}</div>)}
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Watch out for</div>
+                      <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Watch out for</div>
                       {m.risks.map((r, j) => <div key={j} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '3px' }}>⚠ {r}</div>)}
                     </div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>Production note</div>
+                    <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>Production note</div>
                     <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.prodNote}</p>
                   </div>
                 </div>
@@ -348,7 +348,7 @@ function StatisticalTestingPitfalls() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real scenarios. Identify the statistical mistake. Understand why it matters in production.
         </p>
@@ -362,18 +362,18 @@ function StatisticalTestingPitfalls() {
               style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--sky)' : i === current ? 'rgba(34,211,238,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
           ))}
         </div>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{STATS_SCENARIOS.length} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{STATS_SCENARIOS.length} correct</span>
       </div>
 
       {/* Scenario card */}
       <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--sky)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {STATS_SCENARIOS.length}</div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: "'Space Grotesk',sans-serif" }}>{s.scenario}</p>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {STATS_SCENARIOS.length}</div>
+        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: 'var(--font-sans)' }}>{s.scenario}</p>
       </div>
 
       {/* Question */}
       <div>
-        <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: "'Space Grotesk',sans-serif" }}>What is the primary mistake being made?</div>
+        <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>What is the primary mistake being made?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {s.options.map((opt, idx) => {
             let borderColor = 'var(--rim)'
@@ -384,8 +384,8 @@ function StatisticalTestingPitfalls() {
             if (revealed && selected === idx && idx !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.08)'; textColor = 'var(--rose)' }
             return (
               <button key={idx} onClick={() => handleSelect(idx)}
-                style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', minWidth: '18px' }}>{String.fromCharCode(65 + idx)}</span>
+                style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', minWidth: '18px' }}>{String.fromCharCode(65 + idx)}</span>
                 {opt}
                 {revealed && idx === s.correct && <span style={{ marginLeft: 'auto', fontSize: '11px' }}>✓</span>}
                 {revealed && selected === idx && idx !== s.correct && <span style={{ marginLeft: 'auto', fontSize: '11px' }}>✗</span>}
@@ -407,12 +407,12 @@ function StatisticalTestingPitfalls() {
       {revealed && (
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '18px', borderLeft: `3px solid ${isCorrect ? 'var(--mint)' : 'var(--rose)'}` }}>
-            <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+            <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
               {isCorrect ? 'Correct — ' : 'Incorrect — '}{s.mistake}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 10px' }}>{s.explanation}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(34,211,238,0.06)', borderRadius: '6px', border: '1px solid rgba(34,211,238,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
+              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</span>
             </div>
           </div>
@@ -428,7 +428,7 @@ function StatisticalTestingPitfalls() {
       {allDone && revealed && current === STATS_SCENARIOS.length - 1 && (
         <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
           
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{STATS_SCENARIOS.length} correct
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: '0 0 14px', lineHeight: 1.6 }}>
@@ -558,7 +558,7 @@ function CalibrationInPractice() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Given a model and scenario, pick the right calibration approach. Understand when and why each method applies.
         </p>
@@ -568,14 +568,14 @@ function CalibrationInPractice() {
       <div className="card" style={{ padding: '16px', border: '1px solid var(--rim)' }}>
         <button onClick={() => setRefOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}>
-          <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>Quick reference</span>
+          <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>Quick reference</span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)', transform: refOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>›</span>
         </button>
         {refOpen && (
           <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {CALIB_REFERENCE.map(r => (
               <div key={r.term} style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--sky)', minWidth: '140px', paddingTop: '1px' }}>{r.term}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)', minWidth: '140px', paddingTop: '1px' }}>{r.term}</span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{r.def}</span>
               </div>
             ))}
@@ -591,18 +591,18 @@ function CalibrationInPractice() {
               style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--sky)' : i === current ? 'rgba(34,211,238,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
           ))}
         </div>
-        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{CALIB_SCENARIOS.length} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{CALIB_SCENARIOS.length} correct</span>
       </div>
 
       {/* Scenario */}
       <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--sky)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {CALIB_SCENARIOS.length}</div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: "'Space Grotesk',sans-serif" }}>{s.scenario}</p>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {CALIB_SCENARIOS.length}</div>
+        <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: 'var(--font-sans)' }}>{s.scenario}</p>
       </div>
 
       {/* Options */}
       <div>
-        <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: "'Space Grotesk',sans-serif" }}>Which calibration approach is most appropriate?</div>
+        <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>Which calibration approach is most appropriate?</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {CALIB_OPTIONS.map(opt => {
             let borderColor = 'var(--rim)'
@@ -613,7 +613,7 @@ function CalibrationInPractice() {
             if (revealed && selected === opt.id && opt.id !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.08)'; textColor = 'var(--rose)' }
             return (
               <button key={opt.id} onClick={() => { if (!revealed) setSelected(opt.id) }}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s' }}>
                 {opt.label}
               </button>
             )
@@ -631,13 +631,13 @@ function CalibrationInPractice() {
       {revealed && (
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '18px', borderLeft: `3px solid ${isCorrect ? 'var(--mint)' : 'var(--rose)'}` }}>
-            <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+            <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
               {isCorrect ? 'Correct' : `Incorrect — answer: ${CALIB_OPTIONS.find(o => o.id === s.correct)?.label}`}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px' }}>{s.explanation}</p>
             {selected !== s.correct && s.wrong[selected] && (
               <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.05)', borderRadius: '6px', border: '1px solid rgba(251,113,133,0.15)', marginBottom: '10px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em' }}>Why {CALIB_OPTIONS.find(o => o.id === selected)?.label} is wrong: </span>
+                <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Why {CALIB_OPTIONS.find(o => o.id === selected)?.label} is wrong: </span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.wrong[selected]}</span>
               </div>
             )}
@@ -654,7 +654,7 @@ function CalibrationInPractice() {
       {answered.length === CALIB_SCENARIOS.length && revealed && current === CALIB_SCENARIOS.length - 1 && (
         <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
           <div style={{ fontSize: '22px', marginBottom: '8px' }}>🎛</div>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{CALIB_SCENARIOS.length} correct
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: '0 0 14px', lineHeight: 1.6 }}>
@@ -859,7 +859,7 @@ function MetricDesign() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 production cases where the metric looked right but led teams wrong. Goodhart's Law, proxy decoupling, time horizons, counter-metrics.
         </p>
@@ -877,14 +877,14 @@ function MetricDesign() {
             }} />
           ))}
         </div>
-        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>
+        <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
           {answered.length}/{METRIC_SCENARIOS.length} correct
         </span>
       </div>
 
       {/* Scenario */}
       <div className="card" style={{ borderLeft: `3px solid ${s.color}`, padding: '18px 20px' }}>
-        <div style={{ fontSize: '10px', color: s.color, fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div style={{ fontSize: '10px', color: s.color, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
           Scenario {idx + 1} of {METRIC_SCENARIOS.length}
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.7, margin: '0 0 12px' }}>{s.scenario}</p>
@@ -908,7 +908,7 @@ function MetricDesign() {
                 border: `1px solid ${border}`, background: bg, color,
                 display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.15s',
               }}>
-              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, flexShrink: 0, marginTop: '2px', opacity: 0.6 }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, flexShrink: 0, marginTop: '2px', opacity: 0.6 }}>
                 {String.fromCharCode(65 + i)}
               </span>
               <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
@@ -935,7 +935,7 @@ function MetricDesign() {
       )}
       {revealed && idx === METRIC_SCENARIOS.length - 1 && (
         <div className="card" style={{ textAlign: 'center', padding: '20px', border: '1px solid var(--prime)' }}>
-          <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: '16px', color: 'var(--prime)', marginBottom: '4px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--prime)', marginBottom: '4px' }}>
             {score}/{METRIC_SCENARIOS.length} correct
           </div>
           <div style={{ fontSize: '13px', color: 'var(--ink-low)' }}>
@@ -965,7 +965,7 @@ const DS_MODULES = [
   { id: 'expdesign',   label: 'Metric Design Pitfalls', component: MetricDesign },
 ]
 
-export default function DataScienceTab() {
+export default function DataScienceTab({ onNavigate }) {
   const [active, setActive] = useState('oracle')
   const ActiveModule = DS_MODULES.find(m => m.id === active)?.component ?? ModelSelectionOracle
 
@@ -975,7 +975,7 @@ export default function DataScienceTab() {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Data Science</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Data Science</h1>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px' }}>
           Statistics courses teach you the math. This domain teaches you the judgment — when each model is the wrong choice, which tests are being misused, and why your calibration is broken.
@@ -986,7 +986,7 @@ export default function DataScienceTab() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {DS_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--sky)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(34,211,238,0.10)' : 'transparent', color: active === m.id ? 'var(--sky)' : 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--sky)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(34,211,238,0.10)' : 'transparent', color: active === m.id ? 'var(--sky)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
             {m.label}
           </button>
         ))}
@@ -1003,8 +1003,8 @@ export default function DataScienceTab() {
             <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--sky)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
-                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: "'JetBrains Mono',monospace" }}>LIVE</span>}
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

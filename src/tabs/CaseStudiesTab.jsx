@@ -271,7 +271,7 @@ function initProgress() {
   return {}
 }
 
-export default function CaseStudiesTab() {
+export default function CaseStudiesTab({ onNavigate }) {
   const [openCase, setOpenCase] = useState(null)
   const [progress, setProgress] = useState(initProgress)
 
@@ -303,7 +303,7 @@ export default function CaseStudiesTab() {
   const completedCases = CASES.filter(c => countAnswered(c.id) === 4).length
 
   return (
-    <div style={{ padding: '24px', maxWidth: '860px', margin: '0 auto', fontFamily: "'Space Grotesk', sans-serif", color: 'var(--ink-hi)' }}>
+    <div style={{ padding: '24px', maxWidth: '860px', margin: '0 auto', fontFamily: 'var(--font-sans)', color: 'var(--ink-hi)' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Case Studies</h2>
@@ -428,7 +428,7 @@ function MCQOptions({ q, state, onChange }) {
             onClick={() => onChange({ answer: String(i), revealed: true })}
             style={{ background: bg, border, borderRadius: '6px', padding: '10px 14px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', fontSize: '13px', color, transition: 'all 0.15s' }}
           >
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', marginRight: '8px', opacity: 0.6 }}>{['A', 'B', 'C', 'D'][i]}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', marginRight: '8px', opacity: 0.6 }}>{['A', 'B', 'C', 'D'][i]}</span>
             {opt}
           </button>
         )
@@ -452,7 +452,7 @@ function OpenQuestion({ q, state, caseColor, onChange }) {
         placeholder="Write your answer here..."
         style={{
           width: '100%', boxSizing: 'border-box', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px',
-          padding: '10px 12px', fontSize: '13px', color: 'var(--ink-hi)', fontFamily: "'Space Grotesk', sans-serif",
+          padding: '10px 12px', fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)',
           resize: 'vertical', minHeight: '90px', outline: 'none', lineHeight: 1.5,
         }}
       />
@@ -460,7 +460,7 @@ function OpenQuestion({ q, state, caseColor, onChange }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
         <button
           onClick={() => onChange({ revealed: !state.revealed })}
-          style={{ fontSize: '12px', padding: '6px 14px', background: state.revealed ? 'rgba(240,165,0,0.12)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: "'Space Grotesk', sans-serif" }}
+          style={{ fontSize: '12px', padding: '6px 14px', background: state.revealed ? 'rgba(240,165,0,0.12)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
         >
           {state.revealed ? 'Hide Answer' : 'Reveal Model Answer'}
         </button>
@@ -473,7 +473,7 @@ function OpenQuestion({ q, state, caseColor, onChange }) {
               onChange={e => onChange({ selfRating: Number(e.target.value) })}
               style={{ accentColor: caseColor, width: '80px' }}
             />
-            <span style={{ color: caseColor, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: '13px' }}>
+            <span style={{ color: caseColor, fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
               {state.selfRating || 3}/5
             </span>
           </div>

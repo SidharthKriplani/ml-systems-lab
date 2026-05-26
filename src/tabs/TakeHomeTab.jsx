@@ -152,7 +152,7 @@ function scoreBadgeColor(total) {
   return 'var(--rose)';
 }
 
-export default function TakeHomeTab() {
+export default function TakeHomeTab({ onNavigate }) {
   const [expanded, setExpanded] = useState(new Set());
   const [scores, setScores] = useState({});
   const [drafts, setDrafts] = useState({});
@@ -219,14 +219,14 @@ export default function TakeHomeTab() {
     : QUESTIONS.filter(q => q.category === activeCategory);
 
   return (
-    <div style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--ink-hi)', padding: '0 0 48px' }}>
+    <div style={{ fontFamily: 'var(--font-sans)', color: 'var(--ink-hi)', padding: '0 0 48px' }}>
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)' }}>
             Take-Home Bank
           </h2>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-mid)', fontFamily: "'JetBrains Mono', monospace" }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>
             15 open-ended questions · self-scored · export your answers
           </p>
         </div>
@@ -238,7 +238,7 @@ export default function TakeHomeTab() {
             border: 'none',
             borderRadius: 8,
             padding: '8px 18px',
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: 'var(--font-sans)',
             fontWeight: 700,
             fontSize: 13,
             cursor: 'pointer',
@@ -267,7 +267,7 @@ export default function TakeHomeTab() {
                 padding: '4px 14px',
                 fontSize: 12,
                 fontWeight: 600,
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-sans)',
                 cursor: 'pointer',
                 transition: 'background 0.15s, color 0.15s',
               }}
@@ -309,14 +309,14 @@ export default function TakeHomeTab() {
                       padding: '2px 10px',
                       fontSize: 11,
                       fontWeight: 700,
-                      fontFamily: "'JetBrains Mono', monospace",
+                      fontFamily: 'var(--font-mono)',
                       letterSpacing: '0.04em',
                       textTransform: 'uppercase',
                     }}
                   >
                     {q.category}
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                     Q{q.id}
                   </span>
                   {hasScores && (
@@ -330,7 +330,7 @@ export default function TakeHomeTab() {
                         padding: '2px 12px',
                         fontSize: 12,
                         fontWeight: 700,
-                        fontFamily: "'JetBrains Mono', monospace",
+                        fontFamily: 'var(--font-mono)',
                       }}
                     >
                       {total}/20
@@ -355,7 +355,7 @@ export default function TakeHomeTab() {
                     border: '1px solid var(--rim)',
                     borderRadius: 8,
                     color: 'var(--ink-hi)',
-                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontFamily: 'var(--font-sans)',
                     fontSize: 13,
                     lineHeight: 1.6,
                     padding: '10px 12px',
@@ -377,7 +377,7 @@ export default function TakeHomeTab() {
                     color: 'var(--ink-mid)',
                     fontSize: 12,
                     fontWeight: 600,
-                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontFamily: 'var(--font-sans)',
                     cursor: 'pointer',
                     padding: '5px 14px',
                     display: 'flex',
@@ -402,7 +402,7 @@ export default function TakeHomeTab() {
                       fontSize: 13,
                       lineHeight: 1.65,
                       color: 'var(--ink-mid)',
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: 'var(--font-sans)',
                     }}
                   >
                     {q.modelAnswer}
@@ -425,10 +425,10 @@ export default function TakeHomeTab() {
                   return (
                     <div key={key}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-mid)', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           {label}
                         </label>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--prime)', fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>
                           {val}
                         </span>
                       </div>

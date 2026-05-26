@@ -278,7 +278,7 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Hero ── */}
       <section>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(28px, 4.5vw, 52px)', fontWeight: 800, lineHeight: 1.07, letterSpacing: '-0.04em', marginBottom: '20px' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4.5vw, 52px)', fontWeight: 800, lineHeight: 1.07, letterSpacing: '-0.04em', marginBottom: '20px' }}>
           You can train a model.<br />
           <span className="text-gradient">Can you debug it in production?</span>
         </h1>
@@ -292,17 +292,17 @@ export default function HomeTab({ onNavigate }) {
           <button className="btn-secondary" onClick={() => document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Find your path</button>
         </div>
 
-        <p style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", marginBottom: '28px', letterSpacing: '0.04em' }}>
+        <p style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '28px', letterSpacing: '0.04em' }}>
           Free · no account · 7 domains · 100+ scenarios
         </p>
 
         {/* ── Role selector ── */}
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'JetBrains Mono',monospace", marginBottom: '8px' }}>Personalise by role →</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Personalise by role →</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)} title={r.desc}
-                style={{ padding: '5px 12px', borderRadius: '7px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.10)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                style={{ padding: '5px 12px', borderRadius: '7px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.10)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
                 {r.label}
               </button>
             ))}
@@ -323,7 +323,7 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ display: 'flex', border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden' }}>
           {STATS.map((s, i) => (
             <div key={s.label} style={{ flex: 1, padding: '12px 16px', borderRight: i < STATS.length - 1 ? '1px solid var(--rim)' : 'none', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1 }} className="text-gradient">{s.n}</div>
+              <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-sans)', lineHeight: 1 }} className="text-gradient">{s.n}</div>
               <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '4px' }}>{s.label}</div>
             </div>
           ))}
@@ -334,15 +334,15 @@ export default function HomeTab({ onNavigate }) {
       {nextUp && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '10px', cursor: 'pointer' }}
           onClick={() => onNavigate(nextUp.tab)}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Continue</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Continue</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif" }}>{TRACKS.find(t => t.id === nextUp.tab)?.label ?? nextUp.tab}</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{TRACKS.find(t => t.id === nextUp.tab)?.label ?? nextUp.tab}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{ width: '72px', height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${nextUp.pct}%`, height: '100%', background: TAB_ACCENT[nextUp.tab] ?? 'var(--mint)', borderRadius: '2px' }} />
             </div>
-            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>{nextUp.pct}%</span>
+            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{nextUp.pct}%</span>
           </div>
           <span style={{ color: 'var(--ink-low)', fontSize: '13px', flexShrink: 0 }}>→</span>
         </div>
@@ -355,9 +355,9 @@ export default function HomeTab({ onNavigate }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
             {bookmarks.map(bm => (
               <div key={bm.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: "'JetBrains Mono',monospace", minWidth: '80px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{bm.tabId}</span>
-                <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: "'Space Grotesk',sans-serif" }}>{bm.label}</span>
-                <button onClick={() => { localStorage.setItem('msl_goto_module', bm.moduleId); onNavigate(bm.tabId) }} style={{ fontSize: '11px', padding: '4px 12px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600 }}>
+                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', minWidth: '80px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{bm.tabId}</span>
+                <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{bm.label}</span>
+                <button onClick={() => { localStorage.setItem('msl_goto_module', bm.moduleId); onNavigate(bm.tabId) }} style={{ fontSize: '11px', padding: '4px 12px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
                   Open →
                 </button>
                 <button onClick={() => { toggleBookmark(bm.tabId, bm.moduleId, bm.label); setBookmarks(getBookmarks()) }}
@@ -392,7 +392,7 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Learning paths ── */}
       <section id="learning-paths">
         <div className="eyebrow">Learning paths</div>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '4px' }}>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '4px' }}>
           Guided sequences. Clear outcomes.
         </h2>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '16px', maxWidth: '500px', lineHeight: 1.6 }}>
@@ -406,8 +406,8 @@ export default function HomeTab({ onNavigate }) {
                 <button onClick={() => setOpenPath(isOpen ? null : path.id)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', gap: '16px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '15px', color: isOpen ? path.accent : 'var(--ink-hi)' }}>{path.name}</span>
-                    <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)', padding: '2px 8px', border: '1px solid var(--rim)', borderRadius: '999px' }}>{path.duration}</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: isOpen ? path.accent : 'var(--ink-hi)' }}>{path.name}</span>
+                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', padding: '2px 8px', border: '1px solid var(--rim)', borderRadius: '999px' }}>{path.duration}</span>
                     <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{path.steps.length} steps</span>
                   </div>
                   <span style={{ color: 'var(--ink-low)', fontSize: '13px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
@@ -415,19 +415,19 @@ export default function HomeTab({ onNavigate }) {
                 {isOpen && (
                   <div style={{ padding: '0 20px 20px' }}>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: '16px', borderTop: `1px solid ${path.border}`, paddingTop: '14px' }}>
-                      <span style={{ fontSize: '10px', color: path.accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace", display: 'block', marginBottom: '4px' }}>Outcome</span>
+                      <span style={{ fontSize: '10px', color: path.accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '4px' }}>Outcome</span>
                       {path.outcome}
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {path.steps.map((step, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '11px', color: path.accent, minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>{String(i+1).padStart(2,'0')}</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: path.accent, minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>{String(i+1).padStart(2,'0')}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '3px', fontFamily: "'Space Grotesk',sans-serif" }}>{step.label}</div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '3px', fontFamily: 'var(--font-sans)' }}>{step.label}</div>
                             <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55 }}>{step.desc}</div>
                           </div>
                           <button onClick={() => onNavigate(step.tab)}
-                            style={{ fontSize: '11px', padding: '4px 10px', background: `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, whiteSpace: 'nowrap' }}>
+                            style={{ fontSize: '11px', padding: '4px 10px', background: `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                             Go →
                           </button>
                         </div>
@@ -444,14 +444,14 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Track grid ── */}
       <section>
         <div className="eyebrow">All tracks</div>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '20px' }}>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '20px' }}>
           7 domains · 100+ scenarios · all free
         </h2>
         {DOMAIN_LABELS.map(domain => {
           const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))
           return (
             <div key={domain.key} style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'JetBrains Mono',monospace", fontWeight: 600, marginBottom: '8px' }}>{domain.label}</div>
+              <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '8px' }}>{domain.label}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
                 {domainTracks.map(t => {
                   const pct     = getTrackPct(t.id)
@@ -462,19 +462,19 @@ export default function HomeTab({ onNavigate }) {
                       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${t.border}` }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: t.accent }}>{t.label}</span>
+                        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: t.accent }}>{t.label}</span>
                         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                          {t.type && (() => { const tb = TYPE_BADGE[t.type]; return <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '4px', background: tb.bg, color: tb.color, border: `1px solid ${tb.border}`, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{tb.label}</span> })()}
-                          {mastery && <span style={{ fontSize: '9px', fontFamily: "'JetBrains Mono',monospace", color: MASTERY_COLORS[mastery], padding: '1px 5px', border: `1px solid ${MASTERY_COLORS[mastery]}30`, borderRadius: '999px' }}>{MASTERY_LABELS[mastery]}</span>}
-                          {pct > 0 && !mastery && <span style={{ fontSize: '9px', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink-low)' }}>{pct}%</span>}
+                          {t.type && (() => { const tb = TYPE_BADGE[t.type]; return <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '4px', background: tb.bg, color: tb.color, border: `1px solid ${tb.border}`, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{tb.label}</span> })()}
+                          {mastery && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: MASTERY_COLORS[mastery], padding: '1px 5px', border: `1px solid ${MASTERY_COLORS[mastery]}30`, borderRadius: '999px' }}>{MASTERY_LABELS[mastery]}</span>}
+                          {pct > 0 && !mastery && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>{pct}%</span>}
                         </div>
                       </div>
                       <p style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.description}</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {t.modules.slice(0, 3).map(m => (
-                          <span key={m} style={{ fontSize: '9px', fontFamily: "'JetBrains Mono',monospace", background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '4px', padding: '1px 6px' }}>{m}</span>
+                          <span key={m} style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '4px', padding: '1px 6px' }}>{m}</span>
                         ))}
-                        {t.modules.length > 3 && <span style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>+{t.modules.length - 3}</span>}
+                        {t.modules.length > 3 && <span style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>+{t.modules.length - 3}</span>}
                       </div>
                     </button>
                   )
@@ -489,7 +489,7 @@ export default function HomeTab({ onNavigate }) {
       <section className="card-border-gradient" style={{ padding: '28px 32px' }}>
         <div style={{ flex: 1 }}>
           <div className="eyebrow" style={{ marginBottom: '6px' }}>Python sandbox</div>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px', letterSpacing: '-0.03em' }}>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px', letterSpacing: '-0.03em' }}>
             Run sklearn, numpy, matplotlib — no server, no install.
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '520px', marginBottom: '16px' }}>
@@ -502,16 +502,16 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Ecosystem ── */}
       <section>
         <div className="eyebrow">Part of an ecosystem</div>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '4px' }}>Three labs. One production mindset.</h2>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '4px' }}>Three labs. One production mindset.</h2>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '14px', maxWidth: '520px', lineHeight: 1.6 }}>ML Systems Lab covers core ML, DE, DL, and MLOps. The companion labs handle GenAI and experimentation.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
           {ECOSYSTEM.map(lab => (
             <div key={lab.name} className="card" style={{ padding: '22px', border: `1px solid ${lab.border}` }}>
-              <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: lab.accent, marginBottom: '8px' }}>{lab.name}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: lab.accent, marginBottom: '8px' }}>{lab.name}</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: '0 0 14px 0' }}>{lab.desc}</p>
               {lab.url !== '#'
-                ? <a href={lab.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: lab.accent, fontFamily: "'JetBrains Mono',monospace", textDecoration: 'none' }}>Visit ↗</a>
-                : <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Coming soon</span>
+                ? <a href={lab.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: lab.accent, fontFamily: 'var(--font-mono)', textDecoration: 'none' }}>Visit ↗</a>
+                : <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Coming soon</span>
               }
             </div>
           ))}
@@ -524,7 +524,7 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {CHANGELOG.map((entry, i) => (
             <div key={i} style={{ display: 'flex', gap: '16px', padding: '11px 0', borderBottom: i < CHANGELOG.length - 1 ? '1px solid var(--rim)' : 'none', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace", minWidth: '72px', flexShrink: 0 }}>{entry.date}</span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', minWidth: '72px', flexShrink: 0 }}>{entry.date}</span>
               <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{entry.text}</span>
             </div>
           ))}
