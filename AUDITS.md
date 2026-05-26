@@ -236,6 +236,37 @@ Without completion events, there is no signal on which tabs users actually use v
 
 ---
 
+## Part V — UX & First-Time User Audits
+
+### #007 — 2026-05-26 · First-Time User
+
+**Scope:** Simulated cold walk-through based on source-read of `HomeTab.jsx`, `App.jsx` (zone/nav structure), `AskTab.jsx`, `GradientTab.jsx`. No fixes applied in this pass.  
+**Trigger:** Requested before any public promotion. Audit type listed as "high value, not yet run" since #001.  
+**Output:** 5 friction points found — 2 Medium, 3 Low. No High severity blockers.
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `AskTab` label mismatch — zone is labelled "Ask" in bottom nav; tab is keyword search over a hardcoded KB, not an AI assistant. First-timer clicks expecting to type a question to Claude, gets a search interface with no explanation | `AskTab.jsx`, `App.jsx` nav label | Medium | ⚠️ Open |
+| 2 | Interview tools split across two zones without visible logic — Trainer, CodeBugs, CaseStudies, StaffLayer live in Practice zone under "Interview Tools" domain; Combinator, JDPrep, Defense, Verbal live in Interview zone. First-timer has no mental model for why some tools are in Practice and others in Interview | `App.jsx` (`PRACTICE_DOMAINS`, `INTERVIEW_TOOLS`) | Medium | ⚠️ Open |
+| 3 | CHANGELOG on HomeTab is first-timer-visible — scroll past hero, role selector, stats → changelog entries showing "May 2026 / Apr 2026" update notes. Returning-user content has no visibility guard for cold users | `HomeTab.jsx` | Low | ⚠️ Open |
+| 4 | GradientTab has no "start here" signal — Read zone lands directly on 25+ posts with domain filter bar. No recommended first post, no beginner path, no orientation copy. First-timer sees a flat list with no entry point | `GradientTab.jsx` | Low | ⚠️ Open |
+| 5 | Interview zone tool sequence not communicated — intended flow is JD Prep → Defense Doc → Combinator → Verbal, but tools are presented as an unordered grid. A first-timer who lands in the Interview zone has no idea what order to run them in | `App.jsx` (`INTERVIEW_TOOLS`), `InterviewGrid` render | Low | ⚠️ Open |
+
+**Finding 1 detail — Ask label mismatch:**  
+`AskTab` is a keyword search component querying a hardcoded KB of ML concepts. The word "Ask" on a modern app strongly implies "ask an AI". There is no copy on the tab explaining it's a search interface. Fix options: (a) rename the nav label to "Search" or "Explore"; (b) add a one-line explainer above the search input: "Search the ML Systems KB — concepts, patterns, failure modes."
+
+**Finding 2 detail — Interview tools split:**  
+The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are practice modules that happen to be interview-relevant; the Interview zone tools are specifically simulation tools). But a first-timer doesn't know this. The domain card in Practice is labelled "Interview Tools" which doubles the confusion — why is there an "Interview Tools" domain AND an "Interview" zone? Fix path: rename the Practice-zone domain card from "Interview Tools" to "Practice Drills" or "Scenario Drills", and add a one-liner to the Interview zone hub explaining the simulation sequence.
+
+**Priority actions:**
+1. *(Medium)* Add a one-line explainer to `AskTab` above the search input. Rename bottom nav label from "Ask" to "Search". ~15 min.
+2. *(Medium)* Rename Practice-zone "Interview Tools" domain card to "Drills" or "Practice Drills". Add sequence hint to Interview zone hub. ~20 min.
+3. *(Low)* Add a `showForReturning` guard or collapsible to the CHANGELOG section in HomeTab, or move it to the bottom of the scroll. ~10 min.
+4. *(Low)* Add a "Start here" pinned post or recommendation row to GradientTab. ~20 min.
+5. *(Low)* Add numbered sequence labels (1→2→3→4) to Interview zone tool cards in the hub grid. ~15 min.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -246,11 +277,12 @@ Without completion events, there is no signal on which tabs users actually use v
 | 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | ✅ Both fixed |
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
 | 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
+| 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | 5 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — all resolved |
-| Medium | 0 | — all resolved |
-| Low | 1 | #001 index keys — replace with stable keys only where lists filter/reorder |
+| Medium | 2 | #007 Ask label mismatch · #007 Interview tools zone split |
+| Low | 4 | #001 index keys · #007 changelog visibility · #007 Gradient cold entry · #007 Interview sequence labels |

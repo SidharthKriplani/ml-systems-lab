@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.2 — Audit sweep + StaffLayerTab expansion (May 2026)
+
+Full baseline audit pass (7 audits, #001–#007). All high and medium findings resolved in the same session. Key changes:
+
+**Analytics hardening:** `autocapture: false` added to `posthog.init()` in `analytics.js` — prevents PII capture from free-text input tabs (VerbatimTab, CodeBugsTab, AskTab, TakeHomeTab). `trackModuleComplete` wired into TrainerTab (session end), CombinatorTab (debrief), StaffLayerTab (staff level reached). `METRICS.md` created as canonical analytics and localStorage taxonomy.
+
+**Design system cleanup:** Three CSS variables added to `:root` in `index.css`: `--white` (#ffffff), `--font-sans`, `--font-mono`. Hardcoded hex colors replaced across 5 files. Hardcoded `fontFamily` strings replaced across 31 files with `var(--font-sans)` / `var(--font-mono)`.
+
+**Structural fixes:** `onNavigate` prop added to all 26 tab exports that were missing it (single housekeeping pass via Python regex). `PipelineBlogTab.jsx` deleted — was dead code returning null, replaced months earlier by `GradientTab`.
+
+**SEO/Social:** `og-image.png` (1200×630px) generated and placed in `public/` — was referenced but missing, breaking all social share previews. `sitemap.xml` created in `public/` covering 28 routes.
+
+**Content expansion (StaffLayerTab):** 5 "Do we need ML?" problem-framing scenarios added (s13–s17: churn→email blast, ticket auto-categoriser at 2 tickets/day, fraud flag at 0.001% base rate, semantic search vs keyword, employee attrition prediction). Domain tag added: `'Problem Framing'`. Progress bar made dynamic (was hardcoded to 12 scenarios). Total scenario count: 17.
+
+**First-Time User audit (#007):** 5 friction points documented — Ask label mismatch, Interview tools zone split, changelog first-timer visibility, Gradient cold entry, Interview sequence not communicated. All open, buildable.
+
 ### v4.1 — Mobile optimization
 - `env(safe-area-inset-bottom)` on bottom nav for iPhone home indicator
 - Responsive grids: `minmax(min(210px, 100%), 1fr)` — no horizontal scroll on 375px

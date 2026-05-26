@@ -36,6 +36,7 @@ React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser
 src/
   App.jsx                  Zone routing, nav, all tab imports, grid components
   index.css                Design tokens, layout classes (no component styles)
+  analytics.js             PostHog wrapper — env-var gated, autocapture: false
   tabs/
     HomeTab.jsx
     GradientTab.jsx
@@ -68,6 +69,7 @@ src/
     JDPrepTab.jsx
     DefenseDocTab.jsx
     VerbatimTab.jsx
+    (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/
     gradientPosts.js       All Gradient post content
   components/
@@ -154,4 +156,5 @@ The goal is a high-signal IDEAS.md backlog, not a long one.
 | `LINEAGE.md` | Build history — narrative, past-tense | Understanding why something exists |
 | `IDEAS.md` | Build backlog — Tier 1/2/3 + In Progress + Retired | Planning what to build next |
 | `AUDITS.md` | Health log — findings, resolved/open | Before touching anything; after any audit |
+| `METRICS.md` | Analytics & storage taxonomy — PostHog events, localStorage key registry | Before adding any new event or localStorage key |
 | `README.md` | External-facing project overview | For new visitors / contributors |

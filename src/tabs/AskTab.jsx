@@ -694,20 +694,20 @@ export default function AskTab({ onNavigate }) {
           <h2 style={{
             margin: 0,
             fontSize: 22,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-sans)',
             fontWeight: 700,
             color: 'var(--ink-hi)',
             lineHeight: 1.2,
           }}>
-            Ask Anything
+            KB Search
           </h2>
           <p style={{
             margin: '4px 0 0',
             fontSize: 13,
             color: 'var(--ink-low)',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'var(--font-sans)',
           }}>
-            Search the ML knowledge base — concepts, trade-offs, failure modes, and production patterns.
+            Keyword search across the ML Systems KB — concepts, trade-offs, failure modes, production patterns.
           </p>
         </div>
         <button

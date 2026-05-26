@@ -25,6 +25,12 @@ Last updated: May 2026
 - [ ] TrainerTab: expand MCQ bank from 30 → 60 questions (2 per domain per difficulty tier)
 - [ ] CombinatorTab: expand question bank from 50 → 100 (enables 90-min sessions)
 
+### First-Time User friction (from Audit #007)
+- [ ] **Rename "Ask" zone → "Search" and add explainer copy** — bottom nav label "Ask" implies AI assistant; AskTab is keyword search over a hardcoded KB. Rename nav label. Add one line above search input: "Search the ML Systems KB — concepts, patterns, failure modes." ~15 min.
+- [ ] **Rename Practice-zone "Interview Tools" domain card to "Drills" or "Scenario Drills"** — having an "Interview Tools" domain in Practice AND an "Interview" zone in bottom nav is a naming collision for first-timers. Rename the domain card. ~5 min.
+- [ ] **Add numbered sequence labels to Interview zone hub cards** — intended flow JD Prep → Defense → Combinator → Verbal is not communicated. Add step numbers (①②③④) to the relevant tool cards in the hub grid. ~15 min.
+- [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
+
 ### Mobile fixes
 - [ ] CombinatorTab question navigator — pill buttons need larger touch targets on mobile
 - [ ] CombinatorTab — countdown timer should pause or warn when user navigates to a different zone
@@ -75,8 +81,8 @@ Last updated: May 2026
 
 - [ ] Unified "Systems Engineer" cross-lab learning path spanning ML + GenAI + Experimentation (6–8 weeks, cross-lab capstone)
 - [ ] Ecosystem cross-links: deep links from GenAI Lab and Experimentation Lab into this project
-- [ ] OG image for proper social preview (currently uses Vercel default)
-- [ ] sitemap.xml for SEO
+- [x] ~~OG image for proper social preview~~ — done (2026-05-26, public/og-image.png)
+- [x] ~~sitemap.xml for SEO~~ — done (2026-05-26, public/sitemap.xml)
 - [ ] "NEW" badge on tabs updated within last 30 days
 - [ ] Dark/light mode toggle (currently dark-only — see DECISIONS.md for why this is excluded for now)
 

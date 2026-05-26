@@ -92,7 +92,7 @@ const NAV_ZONES = [
   { id: 'practice',  label: 'Practice',  icon: '⊞', accent: 'var(--mint)' },
   { id: 'read',      label: 'Read',      icon: '∇', accent: 'var(--sky)' },
   { id: 'interview', label: 'Interview', icon: '◈', accent: 'var(--gold)' },
-  { id: 'ask',       label: 'Ask',       icon: '✦', accent: 'var(--violet)' },
+  { id: 'ask',       label: 'Search',    icon: '✦', accent: 'var(--violet)' },
 ]
 
 // ── Practice domain config ────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'iprep', label: 'Interview Tools', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.06)',
+    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.06)',
     tabs: [
       { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
       { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
@@ -153,12 +153,12 @@ const PRACTICE_DOMAINS = [
 
 // ── Interview zone tools ──────────────────────────────────────────────────────
 const INTERVIEW_TOOLS = [
-  { id: 'interview',  label: 'Interview Q&A',   desc: '50+ curated questions with model answers', icon: '◈', accent: 'var(--sky)' },
-  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions · self-scored',    icon: '✎', accent: 'var(--mint)' },
-  { id: 'combinator', label: 'Combinator',       desc: 'Timed mock session — 30 / 45 / 60 min',    icon: '⊕', accent: 'var(--rose)' },
-  { id: 'jdprep',     label: 'JD Prep',          desc: 'Paste a JD → ranked study topics',          icon: '⚑', accent: 'var(--prime)' },
-  { id: 'defense',    label: 'Defense Doc',      desc: 'Weighted study brief + PDF export',         icon: '⛊', accent: 'var(--ember)' },
-  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Voice-record answers · Chrome / Edge',      icon: '◉', accent: 'var(--violet)' },
+  { id: 'interview',  label: 'Interview Q&A',   desc: '50+ curated questions with model answers',    icon: '◈', accent: 'var(--sky)' },
+  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions · self-scored',       icon: '✎', accent: 'var(--mint)' },
+  { id: 'jdprep',     label: '① JD Prep',        desc: 'Start here — paste a JD → ranked study topics', icon: '⚑', accent: 'var(--prime)' },
+  { id: 'defense',    label: '② Defense Doc',    desc: 'Build your study brief + PDF export',         icon: '⛊', accent: 'var(--ember)' },
+  { id: 'combinator', label: '③ Combinator',     desc: 'Timed mock session — 30 / 45 / 60 min',       icon: '⊕', accent: 'var(--rose)' },
+  { id: 'verbal',     label: '④ Verbal Practice', desc: 'Voice-record answers · close the loop',      icon: '◉', accent: 'var(--violet)' },
 ]
 
 // all practice tabs flat, for label lookup

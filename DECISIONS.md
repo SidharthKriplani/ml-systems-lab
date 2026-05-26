@@ -20,7 +20,10 @@ Tailwind is in the config for historical reasons. All component styling uses inl
 Defined in `:root` in `index.css`. Never hardcode hex values in component files. Adding a new color = add it to `:root` first, then reference it.
 
 **Space Grotesk for UI, JetBrains Mono for code/labels.**  
-Do not introduce additional fonts. These two cover every case.
+Do not introduce additional fonts. These two cover every case. Font families are exposed as CSS variables — `--font-sans` (`'Space Grotesk', system-ui, sans-serif`) and `--font-mono` (`'JetBrains Mono', 'Fira Code', monospace`) — defined in `:root` in `index.css`. Always reference these variables; never hardcode font family strings inline.
+
+**`--white` (#ffffff) is a named CSS variable, not a hardcoded hex.**  
+Use `var(--white)` for contrast text on colored badge backgrounds or anywhere pure white is needed. Do not write `#fff` or `#ffffff` in component files.
 
 ---
 
@@ -70,7 +73,7 @@ Read → practice in one click. Every new Gradient post must identify its target
 Signature: `export default function XTab({ onNavigate }) {}`. Even if the tab doesn't currently use `onNavigate`, include it for future cross-tab navigation.
 
 **localStorage keys prefixed `msl_`.**  
-Score keys: `msl_score:{tabPrefix}`. Tab-specific keys: `msl_{tabname}`. Never write to localStorage without the prefix. Full key registry is in README.md.
+Score keys: `msl_score:{tabPrefix}`. Tab-specific keys: `msl_{tabname}`. Never write to localStorage without the prefix. Full key registry is in **METRICS.md** (not README.md — METRICS.md is the canonical source).
 
 **No `isolation: "worktree"` in Agent tool calls.**  
 This repo has a recurring git issue where worktree isolation fails. Agents must write directly to the workspace path.
