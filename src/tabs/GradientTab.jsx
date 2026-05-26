@@ -2265,6 +2265,30 @@ export default function GradientTab({ onNavigate }) {
         </div>
       </div>
 
+      {/* Start here — only visible on All Posts, no filter active */}
+      {activeDomain === 'all' && (
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>New here? Start with these</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {[1, 3, 27, 9].map(id => {
+              const p = POSTS.find(x => x.id === id)
+              if (!p) return null
+              return (
+                <button key={id} onClick={() => setReading(id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--rim)', background: 'rgba(0,0,0,0.25)', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(240,165,0,0.4)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}
+                >
+                  <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{p.readMin} min</span>
+                  <span style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 500, textAlign: 'left', lineHeight: 1.3 }}>{p.title.split(':')[0]}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--prime)', marginLeft: 'auto', paddingLeft: '4px' }}>→</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Domain filter */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
         {GRADIENT_DOMAINS.map(d => (

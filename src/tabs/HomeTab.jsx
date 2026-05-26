@@ -233,11 +233,12 @@ const TYPE_BADGE = {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function HomeTab({ onNavigate }) {
-  const [progress,  setProgress]  = useState([])
-  const [nextUp,    setNextUp]    = useState(null)
-  const [role,      setRole]      = useState(() => localStorage.getItem('msl_role') || null)
-  const [openPath,  setOpenPath]  = useState(null)
-  const [bookmarks, setBookmarks] = useState(() => getBookmarks())
+  const [progress,       setProgress]       = useState([])
+  const [nextUp,         setNextUp]         = useState(null)
+  const [role,           setRole]           = useState(() => localStorage.getItem('msl_role') || null)
+  const [openPath,       setOpenPath]       = useState(null)
+  const [bookmarks,      setBookmarks]      = useState(() => getBookmarks())
+  const [showChangelog,  setShowChangelog]  = useState(false)
 
   function refresh() {
     setProgress(getAllProgress())
@@ -520,15 +521,23 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Changelog ── */}
       <section>
-        <div className="eyebrow">Changelog</div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {CHANGELOG.map((entry, i) => (
-            <div key={i} style={{ display: 'flex', gap: '16px', padding: '11px 0', borderBottom: i < CHANGELOG.length - 1 ? '1px solid var(--rim)' : 'none', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', minWidth: '72px', flexShrink: 0 }}>{entry.date}</span>
-              <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{entry.text}</span>
-            </div>
-          ))}
-        </div>
+        <button
+          onClick={() => setShowChangelog(v => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: showChangelog ? '12px' : 0 }}
+        >
+          <div className="eyebrow" style={{ margin: 0 }}>Changelog</div>
+          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', transition: 'transform 0.15s', display: 'inline-block', transform: showChangelog ? 'rotate(90deg)' : 'rotate(0deg)' }}>▸</span>
+        </button>
+        {showChangelog && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {CHANGELOG.map((entry, i) => (
+              <div key={i} style={{ display: 'flex', gap: '16px', padding: '11px 0', borderBottom: i < CHANGELOG.length - 1 ? '1px solid var(--rim)' : 'none', alignItems: 'baseline' }}>
+                <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', minWidth: '72px', flexShrink: 0 }}>{entry.date}</span>
+                <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{entry.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
     </div>
