@@ -165,6 +165,59 @@ Every share of the app URL (LinkedIn, Slack, WhatsApp, Twitter) will render a br
 
 ---
 
+### #005 — 2026-05-26 · Build Safety
+
+**Scope:** All `src/tabs/*.jsx` and `src/*.js` utility files — template literals, apostrophe risk, Vite parse safety  
+**Trigger:** PAL had a production Vercel build failure from unescaped apostrophes in single-quoted JS data strings. Checking before it happens here.  
+**Output:** Clean — no build safety risks found
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | Template literals in JSX tab files (102 in `CodeBugsTab`, 80 in `GradientTab`, etc.) — **not a risk** in JSX context; Vite processes these correctly | All JSX tabs | — | ✅ Clean — JSX context, no parse risk |
+| 2 | Template literals in `progress.js` and `python.js` — used for dynamic localStorage key construction and Pyodide code execution; legitimate use, not prose data | `src/utils/progress.js`, `src/python.js` | — | ✅ Clean — not data files with prose |
+| 3 | Apostrophe pattern scan across all tab files — all matches were false positives; prose content lives in double-quoted strings (`"What's..."`, `"don't..."`) not single-quoted strings | All JSX tabs | — | ✅ Clean — no unescaped apostrophe risk |
+
+**Verdict:** Build safety is clean. The PAL failure mode (apostrophes inside single-quoted JS data strings) does not apply here — prose content is consistently in double-quoted strings and JSX template literals are processed safely by Vite.
+
+---
+
+### #006 — 2026-05-26 · Analytics
+
+**Scope:** `src/analytics.js`, `src/App.jsx`, all tab files — event coverage, autocapture config, localStorage key taxonomy  
+**Trigger:** PostHog is wired but no audit has been run on what's actually firing vs. what should be  
+**Output:** Two significant gaps found — autocapture PII risk and near-zero event coverage across tabs
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `autocapture` not explicitly disabled — PostHog default is `autocapture: true`, capturing all clicks, text inputs, form submissions. Tabs with free-text inputs (`VerbatimTab`, `CodeBugsTab`, `AskTab`, `TakeHomeTab`) risk capturing user-entered content | `src/analytics.js` | High | ⚠️ Open |
+| 2 | Only 1 of 30+ tabs (`SparkLabTab`) fires any analytics events — `trackModuleStart` and `trackModuleComplete` are defined but called nowhere else | All tabs except `SparkLabTab` | High | ⚠️ Open |
+| 3 | `trackTabSwitch` fires in `App.jsx` on every zone/tab change — tab navigation is tracked | `src/App.jsx` | — | ✅ Clean |
+| 4 | All localStorage keys properly `msl_`-prefixed — 12 distinct keys/prefixes found | All tabs | — | ✅ Clean |
+| 5 | No METRICS.md — localStorage key taxonomy and intended event schema are undocumented | — | Medium | ⚠️ Open |
+
+**Finding 1 detail — autocapture PII risk:**  
+`posthog.init()` is called without `autocapture: false`. PostHog's default behaviour captures clicks (including button text), input values on change, and form submissions. Fix: add `autocapture: false` to the init config in `analytics.js`. One-line change, no behaviour loss on intentional events.
+
+**Finding 2 detail — event coverage gaps:**  
+The following high-value user actions fire zero analytics events:
+
+| Action | Tab(s) | What's missing |
+|--------|--------|---------------|
+| Scenario reveal (IC3 → IC5 → Staff) | `StaffLayerTab` | Level revealed, scenario id |
+| Score submission | `TrainerTab`, `ClassicalMLTab`, `ModelEvalTab`, 12 others | Score, tab, question id |
+| Session start / completion | `CombinatorTab`, `VerbatimTab`, `TakeHomeTab` | Session duration, score |
+| Question attempt | `InterviewPrepTab` | Question id, category |
+| Gradient post read | `GradientTab` | Post id, read duration |
+
+Without completion events, there is no signal on which tabs users actually use vs. open and leave.
+
+**Priority actions:**
+1. *(High)* Add `autocapture: false` to `posthog.init()` in `src/analytics.js`. Immediate PII risk mitigation.
+2. *(High)* Add `trackModuleComplete` calls to at minimum: `StaffLayerTab` (on staff-level reached), `TrainerTab` (on session end), `CombinatorTab` (on debrief). These are the highest-signal completion events.
+3. *(Medium)* Create `METRICS.md` documenting: intended event taxonomy, localStorage key purposes, and what each score key prefix maps to.
+
+---
+
 ## Part IV — Content Coverage Audits
 
 *No formal coverage audit run yet. Preliminary signal from scenario count scan:*
@@ -190,12 +243,14 @@ Every share of the app URL (LinkedIn, Slack, WhatsApp, Twitter) will render a br
 | 001 | BUILD baseline — brace balance, colors, localStorage, onNavigate, index keys | 2026-05-26 | BUILD / Visual Consistency | 3 open ⚠️ |
 | 002 | Font hardcoding, dead PipelineBlogTab | 2026-05-26 | BUILD / Visual Consistency | 2 open ⚠️ |
 | 003 | Security baseline — gitignore, env vars, secrets | 2026-05-26 | Security | ✅ All clean |
-| 004 | SEO baseline — og-image, sitemap, meta tags | 2026-05-26 | SEO / Social | 2 open ⚠️ |
+| 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | 2 open ⚠️ |
+| 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
+| 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | 3 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| High | 1 | #004 og-image.png missing |
-| Medium | 4 | #001 hardcoded colors, #001 missing onNavigate, #002 font hardcoding, #004 sitemap missing |
-| Low | 2 | #001 index keys, #002 dead PipelineBlogTab |
+| High | 3 | #004 og-image.png missing · #006 autocapture not disabled · #006 29/30 tabs fire zero events |
+| Medium | 5 | #001 hardcoded colors · #001 missing onNavigate · #002 font hardcoding · #004 sitemap missing · #006 no METRICS.md |
+| Low | 2 | #001 index keys · #002 dead PipelineBlogTab |
