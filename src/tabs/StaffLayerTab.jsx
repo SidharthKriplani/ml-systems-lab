@@ -10,6 +10,7 @@ const DOMAIN_COLORS = {
   'Systems': 'var(--sky)',
   'Ethics/Fairness': 'var(--rose)',
   'Feature Engineering': 'var(--mint)',
+  'Problem Framing': 'var(--amber, #f59e0b)',
 }
 
 const SCENARIOS = [
@@ -109,6 +110,46 @@ const SCENARIOS = [
     ic5: 'Depends on performance decay curve. Measure how much metric degrades per day without retraining. Compare to training cost and deployment risk.',
     staff: "What's the cost of retraining (compute, on-call, deployment risk) vs. benefit? Measure performance decay empirically: run a holdback experiment, freeze a model for 2 weeks, measure divergence on business metrics. Daily retraining = daily deployment risk — add automated rollback and shadow evaluation to make it safe.",
   },
+  {
+    id: 's13',
+    title: 'PM wants an ML model to predict which users will churn so we can send them a retention email.',
+    domain: 'Problem Framing',
+    ic3: 'Build a churn classifier on historical engagement data. Score users weekly, trigger email for top decile.',
+    ic5: "What's the precision/recall target? What action threshold triggers the email? Do we have clean churn labels? How fresh does scoring need to be for the email to be actionable?",
+    staff: "What do you do differently with users you predict won't churn? If the only action is 'send email,' just send everyone the email and A/B test it — you'll have results in a week. A churn model earns its place only when segmentation meaningfully changes the action: different message, different incentive, different channel. Until you can prove that, a model adds cost and delay. Start with the email. Measure. Then decide if ML-driven targeting moves the needle.",
+  },
+  {
+    id: 's14',
+    title: 'Support team wants ML to auto-categorize incoming tickets across 8 categories.',
+    domain: 'Problem Framing',
+    ic3: 'Fine-tune a text classifier on historical tickets. Deploy to production with a confidence threshold for human fallback.',
+    ic5: "What's label quality on historical tickets? Training examples per category? Consequence of miscategorization — does a wrong category delay resolution or just route wrong? What's the current manual cost?",
+    staff: "How many tickets per day? If it's under 100, a human categorizes them in minutes — ML ROI is negative. At 8 categories with sparse data, the classifier will be confidently wrong on rare classes. Ship regex + keyword rules in a day. Define the volume threshold at which ML makes sense — probably 500+ tickets/day — and revisit then. Don't build a data flywheel for a problem that doesn't need one.",
+  },
+  {
+    id: 's15',
+    title: 'Security team requests an ML fraud detection model. Current fraud rate is 0.001%.',
+    domain: 'Problem Framing',
+    ic3: 'Train a binary classifier with class imbalance techniques — SMOTE, class weights, focal loss. Optimize for recall.',
+    ic5: "At 0.001% base rate, precision-recall tradeoff is brutal. What's the cost of a false positive (blocking a legitimate user) vs. false negative (missing fraud)? What volume are we talking?",
+    staff: "Do the math before writing a line of code. At 0.001% base rate and 99% precision, you're still generating 1 false positive per fraudster caught. At 1M transactions/day that's thousands of legitimate users flagged daily. Calculate expected FP volume at your actual traffic. Start with velocity rules and device fingerprinting — these catch 80% of fraud patterns with zero training data and full explainability for disputes. ML earns its place when adversarial adaptation outpaces rules. Not before.",
+  },
+  {
+    id: 's16',
+    title: 'Product team wants semantic ML search across the catalog to replace keyword search.',
+    domain: 'Problem Framing',
+    ic3: 'Build embeddings with a transformer model. Implement vector similarity search with FAISS or Pinecone.',
+    ic5: "Catalog size and query volume? Current search quality metrics and failure mode analysis? Latency and infrastructure requirements? What specific query types is keyword search failing on?",
+    staff: "How many products? If it's under 5,000, BM25 with synonym expansion and typo tolerance beats semantic search on precision and is 10x easier to debug when it goes wrong. Semantic search wins on long-tail queries and conceptual matching — but only if you've measured that keyword search is actually failing there. Don't bring in embeddings, vector DB infra, and reranking complexity until you've run a failure analysis on current search logs and proved keyword search is the bottleneck. What does the query log say?",
+  },
+  {
+    id: 's17',
+    title: 'HR wants a model to predict which employees will quit in the next 6 months.',
+    domain: 'Problem Framing',
+    ic3: 'Train a survival model or binary classifier on HR data — tenure, performance ratings, compensation bands, manager changes.',
+    ic5: "What's the base attrition rate? What features are available without violating privacy norms? What action does a positive prediction trigger? Do we have enough runway to act on predictions?",
+    staff: "HR managers already know which employees are flight risks — they talk to people. The real question: what intervention changes based on a model score that isn't already happening through manager judgment? If the action (compensation review, role change, 1:1 escalation) requires discretion anyway, the model just adds a bureaucratic layer. Where a model earns its place is scale — when a manager has 40 reports and can't have 40 meaningful conversations. Define the intervention precisely, then check if manager judgment already routes it. Build the model only where that breaks down.",
+  },
 ]
 
 function initReveals() {
@@ -139,6 +180,7 @@ export default function StaffLayerTab() {
     })
   }
 
+  const total = SCENARIOS.length
   const staffCount = SCENARIOS.filter(s => (reveals[s.id] || 0) >= 3).length
 
   return (
@@ -152,11 +194,11 @@ export default function StaffLayerTab() {
       {/* Progress */}
       <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--ink-mid)', marginBottom: '6px' }}>
-          <span>{staffCount} / 12 staff-level reached</span>
-          <span>{Math.round((staffCount / 12) * 100)}%</span>
+          <span>{staffCount} / {total} staff-level reached</span>
+          <span>{Math.round((staffCount / total) * 100)}%</span>
         </div>
         <div style={{ background: 'var(--rim)', borderRadius: '4px', height: '6px' }}>
-          <div style={{ background: 'var(--prime)', borderRadius: '4px', height: '6px', width: `${(staffCount / 12) * 100}%`, transition: 'width 0.3s' }} />
+          <div style={{ background: 'var(--prime)', borderRadius: '4px', height: '6px', width: `${(staffCount / total) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
 
