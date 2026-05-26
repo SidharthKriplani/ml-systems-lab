@@ -370,7 +370,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
     aside: {
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
       background: 'rgba(8,6,4,0.99)', borderRight: '1px solid var(--rim)',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'thin',
     },
     logo: {
