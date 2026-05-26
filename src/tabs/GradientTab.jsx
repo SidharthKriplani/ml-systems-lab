@@ -1357,9 +1357,311 @@ Six of these eight failures are detectable before you train any model: by auditi
     domain: 'eval',
     youtube: [{ id: '6pP9meuusNw', title: 'Temporal Leakage in ML: Train-Test Contamination Explained' }],
   },
+  {
+    id: 26,
+    slug: 'feature-store-time-travel-bug',
+    title: 'The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Your feature store has a bug that doesn\'t show up in unit tests, doesn\'t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that didn\'t exist at the time of the event you\'re training on. This is the point-in-time correctness problem, and it silently inflates your offline metrics by 5–20% while doing nothing for your production model.',
+    body: `Feature stores exist to solve one hard problem: making sure the features you use to train a model are identical to the features you compute at serving time. Most teams solve the serving-skew half of this (same code, same logic). Far fewer solve the training half: making sure training features are computed using only data that was available at the moment of each training example.
+
+This second problem is called point-in-time correctness, and the feature store time-travel bug is what happens when you get it wrong.
+
+**The bug in concrete terms**
+
+You\'re building a churn model. One feature is "number of support tickets in the past 30 days." Your training dataset is a table of (user_id, event_date, churned_90_days_later).
+
+A naive feature store join: for each row in your training set, look up the user\'s ticket count from the tickets table. If you do this join without a timestamp filter, you fetch the ticket count as it exists today — including tickets filed after the prediction date. A user who churned 18 months ago and then filed a support ticket 6 months ago will have a ticket count of 1, not 0 as it would have appeared at training time.
+
+The model learns that support tickets predict non-churn. In production, the signal is noise.
+
+**Why it\'s hard to catch**
+
+The features look valid. The ticket counts are real numbers from real data. There\'s no null, no type error, no join failure. The offline AUC is actually higher than it should be — because the model has access to information from the future that implicitly tells it what happened. Your validation set is also contaminated the same way, so the metric looks consistent.
+
+The only way to catch it: compare feature distributions at training time vs. a held-out evaluation set where you manually verified point-in-time correctness for a sample of rows.
+
+**How point-in-time correct feature stores work**
+
+The correct join is: for each (entity_id, event_timestamp) pair in your training set, retrieve the feature value that was valid at event_timestamp — not the latest value.
+
+This requires your feature store to store feature history, not just current values. Every write to the feature store needs to be stamped with an as-of timestamp. The lookup becomes: \`WHERE entity_id = ? AND feature_timestamp <= event_timestamp ORDER BY feature_timestamp DESC LIMIT 1\`.
+
+Tecton, Feast, and Hopsworks all support this pattern. In Feast, it\'s called a point-in-time join and is triggered by passing the event_timestamp column in your training dataset. Without it, you\'re getting the latest feature value regardless of when the training event occurred.
+
+**The most common way teams get this wrong**
+
+1. **Batch materialisation without history:** The feature pipeline runs nightly and overwrites the current value. No history is kept. Point-in-time correct retrieval is impossible — you have no historical values to look up.
+
+2. **The right feature store, wrong API:** The feature store supports point-in-time retrieval, but the engineer generating the training dataset uses the real-time lookup API (get latest value) instead of the historical retrieval API. One function call, silent contamination.
+
+3. **Aggregate window bugs:** A "30-day rolling average" computed at 06:00 UTC uses data through 05:59 yesterday. The model was trained on data where the window used data through 23:59 yesterday. Small difference per row; consistent bias across the training set.
+
+**The test you should run before every model release**
+
+Take 100 rows from your training set. For each row, manually compute the feature using only data with timestamp <= event_timestamp. Compare to what the feature store returned. If the numbers don\'t match, you have a point-in-time bug. This is the most important data quality check in an ML pipeline.`,
+    tags: ['Feature Engineering', 'Feature Store', 'Data Leakage', 'Production ML', 'Point-in-Time'],
+    domain: 'features',
+    youtube: [],
+  },
+  {
+    id: 27,
+    slug: 'validation-set-leakage',
+    title: 'Validation Set Leakage: Why Your Offline Metrics Are Lying to You',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn\'t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap between offline and online metrics is the cost of that mistake. This happens more often than the industry admits.',
+    body: `Validation set leakage is not the same as training-serving skew. Training-serving skew is about the gap between how features are computed at training time versus serving time. Validation set leakage is about contaminating your evaluation signal during model development — making your model appear better than it is before you ever deploy it.
+
+The result: you select the wrong model, tune hyperparameters toward a mirage, and ship with misplaced confidence.
+
+**Form 1: Preprocessing fitted on the full dataset**
+
+The classic. You load your data, call \`scaler.fit_transform(X)\`, then split into train and validation. The scaler has seen the validation data. Its mean and standard deviation reflect the full dataset, including validation examples.
+
+The correct procedure: split first, then fit the scaler on train only, then transform both train and validation with the train-fitted scaler. In sklearn: use \`Pipeline\` to enforce this. A Pipeline fitted on X_train will only transform X_val with statistics from X_train.
+
+This seems obvious. It\'s broken in the majority of Kaggle notebooks and a non-trivial fraction of production ML codebases.
+
+**Form 2: Feature selection using the full dataset**
+
+You\'re building a model with 500 candidate features. You run a correlation analysis or mutual information score on the full dataset (train + validation), select the top 50 features, then train and evaluate. Your feature selection has seen the validation labels. The selected features are implicitly optimised for the validation set, not a truly held-out evaluation.
+
+Correct procedure: feature selection is part of the model pipeline. Run it inside cross-validation folds, fitted on training data only. If you\'re selecting features outside of CV, you\'re leaking.
+
+**Form 3: Target encoding without out-of-fold logic**
+
+Target encoding replaces a categorical value with the mean target value for that category. If you compute the target encoding on the full dataset, categories that appear in the validation set are encoded using validation labels. The model receives direct information about the target.
+
+Correct procedure: target encoding must be computed fold-by-fold in cross-validation (out-of-fold encoding). Libraries like category_encoders provide this with \`TargetEncoder(smoothing=1.0)\` used inside a pipeline.
+
+**Form 4: Time series with random splits**
+
+You have 2 years of daily data. You do a random 80/20 train/val split. Your validation set contains examples from across the 2 years, including examples whose timestamps are earlier than some training examples. The model has seen the future.
+
+For time series data: always split by time. Train on [day 1 → day 547], validate on [day 548 → day 730]. No random shuffling.
+
+**How to audit your pipeline for leakage**
+
+1. **Permutation test:** Shuffle your target labels randomly and retrain. Your model should now score near chance. If it doesn\'t, you have data leakage — the model is fitting to something other than the signal.
+
+2. **Baseline comparison:** A model with no useful features (constant predictions, simple averages) has a known AUC ceiling. If your model beats this by more than your domain knowledge suggests is plausible, suspect leakage.
+
+3. **Train AUC ≈ Val AUC with no regularisation:** If your training and validation metrics are suspiciously close on a complex model with no regularisation, your validation set is not independent.
+
+**The cost of not catching this**
+
+Wrong model selection. Hyperparameters tuned to a leaky metric. False confidence in a model that will perform poorly in production. And crucially: the production degradation looks like "model drift" when it was never as good as you thought.`,
+    tags: ['Feature Engineering', 'Data Leakage', 'Validation', 'Cross-Validation', 'Model Selection'],
+    domain: 'features',
+    youtube: [],
+  },
+  {
+    id: 28,
+    slug: 'ab-test-failure-modes',
+    title: 'The Two Failure Modes of A/B Tests (And How to Catch Them)',
+    category: 'Data Science',
+    catColor: { bg: 'rgba(52,211,153,0.1)', text: 'var(--mint)', border: 'rgba(52,211,153,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Most A/B testing mistakes aren\'t statistical errors — they\'re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to detect a sample ratio mismatch (makes all your metrics untrustworthy). Both are invisible unless you know where to look.',
+    body: `A/B testing looks simple: split traffic, measure a metric, compare. It\'s not simple. The statistical machinery underneath has failure modes that are invisible to the untrained eye, and that silently corrupt your product decisions.
+
+The two failure modes that cause the most damage in practice are peeking and sample ratio mismatch. Here\'s what they are, why they\'re dangerous, and how to catch them.
+
+**Failure Mode 1: Peeking**
+
+Peeking is looking at your experiment results before the planned end date, and making a decision based on what you see.
+
+The problem: p-values are not stable over time. If you run 1000 A/A tests (same experience for both groups) and check them each day until one hits p < 0.05, roughly 30% of tests will cross that threshold at some point during the run — even though there is no real effect. The standard p < 0.05 threshold assumes you check once, at the end.
+
+Peeking inflates your false positive rate (calling a winner when there isn\'t one) from 5% to 20–30%, depending on how often you check. This means a large fraction of the "winners" you ship are actually noise.
+
+Why everyone peeks anyway: experiment dashboards are updated in real-time. PMs and executives watch them. Someone sees a metric moving in the right direction and wants to ship. The pressure to stop early is enormous.
+
+**Fixes for peeking:**
+
+Sequential testing / always-valid inference: methods that allow continuous monitoring while maintaining the correct false positive rate. Implementations include CUPED (Microsoft), mSPRT (Uber), and mixture sequential probability ratio tests. Statsig and Optimizely both offer always-valid p-values by default.
+
+Pre-registration: write down your sample size, primary metric, and end date before the experiment starts. Don\'t change them. An experiment log with these parameters committed before launch is sufficient.
+
+**Failure Mode 2: Sample Ratio Mismatch (SRM)**
+
+SRM is when the ratio of users assigned to treatment and control doesn\'t match the intended ratio. You randomise 50/50, but the treatment group ends up with 47% of users. The 3% difference seems small. It isn\'t.
+
+When an SRM occurs, it means something is wrong with your randomisation or traffic routing — and that something has differential selection effects on your treatment and control groups. The users who are "missing" from one group aren\'t random; they have some systematic property (device type, browser version, geographic region, load time). Your control group and treatment group are no longer comparable populations.
+
+This means all your metric comparisons are invalid. Not noisy — invalid. You cannot trust any metric that shows a difference, positive or negative, when an SRM exists.
+
+**How to detect SRM:**
+
+Run a chi-squared test on your assignment counts: expected ratio (50%) vs. actual ratio. If the p-value is below 0.01, you have an SRM. This test costs nothing and should run automatically on every experiment the moment it starts.
+
+Chi-squared: \`from scipy.stats import chisquare; chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2])\`
+
+Common SRM causes: bot traffic filtered differently in treatment vs. control, JavaScript errors in the treatment that prevent logging, different caching behavior, geographic load balancing sending disproportionate traffic, or A/B assignment happening after the first meaningful user action.
+
+**Bonus failure mode: The novelty effect**
+
+Users in the treatment group interact differently with a new experience simply because it\'s new — not because it\'s better. This shows up as a spike in the treatment metric in week 1 that regresses toward control in weeks 2–3.
+
+Fix: run experiments for at least 2 full novelty cycles. For consumer products with weekly engagement patterns, that\'s typically 2 weeks minimum. For features with low interaction frequency (monthly), longer.
+
+**The SRM check is the first check, always**
+
+Before you look at your treatment effect: run the SRM check. If there\'s an SRM, stop analysis. Fix the randomisation. Re-run the experiment. Reporting results from an experiment with known SRM is worse than no experiment at all.`,
+    tags: ['A/B Testing', 'Statistics', 'Experimentation', 'Peeking', 'SRM', 'Data Science'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 29,
+    slug: 'time-series-model-selection',
+    title: 'When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide',
+    category: 'Time Series',
+    catColor: { bg: 'rgba(245,158,11,0.1)', text: 'var(--gold)', border: 'rgba(245,158,11,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'The most common time series mistake isn\'t using the wrong model — it\'s using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover these failure modes in production, after the model is deployed, when a forecast catastrophically misses. Here\'s the framework that prevents that.',
+    body: `Time series model selection is backwards in most teams: pick the model first, tune it, evaluate it, deploy it. The correct order is the reverse: understand the data properties first, then select the model that fits those properties.
+
+ARIMA, Prophet, and LSTMs are not interchangeable tools. Each assumes a different data generating process. When the data violates those assumptions, the model fails — often silently.
+
+**When ARIMA fails**
+
+ARIMA (AutoRegressive Integrated Moving Average) assumes:
+1. The series is stationary after d differences
+2. The autocorrelation structure is well-approximated by p AR terms and q MA terms
+3. The errors are normally distributed
+
+ARIMA fails when: the series has multiple seasonal periods (daily + weekly + yearly), when the relationship between lags is nonlinear, when there are structural breaks (a permanent level shift), or when you have too few data points to reliably estimate p, d, and q.
+
+The diagnostic: if your ACF/PACF plots don\'t show clear cutoffs, ARIMA is misspecified. If your Ljung-Box test rejects (residuals are not white noise), you have unexplained structure.
+
+ARIMA is still the right choice for: short univariate series (< 500 observations) with clear linear autocorrelation structure, no strong seasonality, and stable variance. It\'s interpretable, fast to train, and has well-understood uncertainty quantification.
+
+**When Prophet fails**
+
+Prophet (Facebook/Meta) decomposes the series into trend + seasonality + holidays. It uses a piecewise linear (or logistic) trend with automatic changepoint detection, and Fourier series for seasonality.
+
+Prophet fails when: the series has complex interacting seasonality that isn\'t additive, when the trend is non-monotonic in a way that doesn\'t fit piecewise linear assumptions, when the series has long-range dependencies beyond the seasonality components, or when you need well-calibrated prediction intervals (Prophet\'s uncertainty intervals are often too wide or too narrow in practice).
+
+The common mistake: using Prophet because it\'s easy to use. The default parameters (25 changepoints, additive seasonality) are not universally appropriate. A series with strong multiplicative seasonality (where seasonal amplitude scales with the trend level) needs \`seasonality_mode='multiplicative'\`. A series with few changepoints needs \`n_changepoints=5\`.
+
+Prophet is the right choice for: business time series with strong weekly and annual seasonality, known holidays, and a monotonic trend. Retail, web traffic, and appointment volumes are good fits. Sub-daily series are not.
+
+**When LSTMs fail**
+
+LSTMs are the choice when you want the model to learn complex nonlinear temporal dependencies from the data, without specifying a functional form. They can theoretically model anything.
+
+In practice, LSTMs fail on time series for specific reasons:
+
+1. **Data volume:** An LSTM needs thousands of complete seasonality cycles to learn seasonal patterns. If you have 2 years of daily data (730 observations), an LSTM will overfit to noise rather than learn the annual cycle.
+
+2. **Stationarity:** LSTMs learn from sequences. If the series has trend or non-stationarity, the training and test distributions are different by construction. You must detrend and difference before training, then un-transform predictions.
+
+3. **Uncertainty quantification:** A standard LSTM produces a point forecast. Prediction intervals require Monte Carlo Dropout, deep ensembles, or conformal prediction wrapping — none of which are trivial to implement correctly.
+
+4. **Hyperparameter sensitivity:** LSTM performance is highly sensitive to sequence length, hidden units, learning rate schedule, and dropout rate. Random search over this space with a small dataset produces misleading results.
+
+LSTMs are the right choice when: you have thousands of related time series (demand forecasting across 10,000 SKUs — train one model across all), your series have complex nonlinear dependencies that domain knowledge suggests exist, and you have the data volume to support the model complexity.
+
+**The framework: data-first model selection**
+
+Before touching any model:
+
+1. **Plot the series.** Trend? Seasonality? Structural breaks? Outliers? This takes 5 minutes and eliminates half your candidate models.
+2. **Test stationarity.** ADF test. If non-stationary, difference until it is. The number of differences required is the d in ARIMA.
+3. **Count observations.** < 200 → ARIMA or exponential smoothing. 200–2000 → Prophet or SARIMA. > 2000 with multiple series → consider neural methods.
+4. **Characterise seasonality.** Single period, regular → Prophet. Multiple overlapping periods → Fourier terms. No clear pattern → ARIMA with no seasonal component, then test.
+5. **Check for structural breaks.** Chow test or visual inspection. If breaks exist, either exclude pre-break data or add a regressor at the break point.
+
+Then — and only then — select the model. Fit it. Check residuals for white noise (Ljung-Box). If residuals have structure, your model hasn\'t captured all the signal.`,
+    tags: ['Time Series', 'ARIMA', 'Prophet', 'LSTM', 'Forecasting', 'Model Selection'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 30,
+    slug: 'fp16-quantization-first-principles',
+    title: 'Quantization from First Principles: What FP16 Actually Throws Away',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    readMin: 13,
+    featured: false,
+    excerpt: 'Every DL serving tutorial tells you to use FP16 to halve your memory and double your throughput. Few explain what you\'re actually sacrificing — and when that sacrifice breaks your model. Quantization isn\'t free. Here\'s the bit-level mental model that lets you reason about when it\'s safe and when it\'s not.',
+    body: `Quantization is the practice of representing neural network weights and activations with fewer bits. FP32 → FP16 → INT8 → INT4. Each step halves memory. Each step introduces approximation error. Whether that error matters depends on the specific model and the specific operation.
+
+**The bit layout of floating point**
+
+FP32 uses 32 bits: 1 sign bit, 8 exponent bits, 23 mantissa bits.
+FP16 uses 16 bits: 1 sign bit, 5 exponent bits, 10 mantissa bits.
+BF16 uses 16 bits: 1 sign bit, 8 exponent bits, 7 mantissa bits.
+
+The exponent bits determine range: the maximum representable value. The mantissa bits determine precision: how finely values within that range are represented.
+
+**What FP16 throws away: precision**
+
+By reducing the mantissa from 23 bits to 10, FP16 can represent the same range of values as FP32, but with lower precision within that range. The relative error of any FP16 value is approximately 2× higher than FP32.
+
+For most neural network operations, this is fine. Weights after training are typically distributed in [-1, 1] with gradients of similar magnitude. The precision loss of FP16 doesn\'t materially affect inference quality.
+
+**The FP16 failure mode: activation outliers**
+
+Some model architectures have activation outliers — individual neurons with values orders of magnitude larger than the typical activation. When you quantize to FP16, the representable range shrinks. If activation values exceed ~65,504 (the FP16 max), they overflow to inf or NaN. Downstream computations collapse.
+
+Large language models are particularly susceptible. LLaMA-2, GPT-NeoX, and similar models have specific attention head dimensions with outlier activations of 100–1000×. This is why naive FP16 inference on large LLMs produces incoherent outputs.
+
+The fix: LLM.int8() (Dettmers et al., 2022) handles this by decomposing the matrix multiplication: outlier features (typically < 0.1% of dimensions) are computed in FP16, the rest in INT8. Full INT8 quantization without this decomposition destroys LLM output quality.
+
+**BF16 vs FP16: why the exponent matters for LLMs**
+
+BF16 trades mantissa precision for range. It has the same 8 exponent bits as FP32, meaning the same maximum representable value (~3.4 × 10^38). FP16\'s 5 exponent bits mean a max of ~65,504.
+
+For LLMs, BF16 is almost always preferable to FP16: activation outliers fit in the range without overflow, and the reduced mantissa precision (7 vs 23 bits, relative to FP32) is acceptable for inference. Modern GPU hardware (A100, H100) supports BF16 at the same throughput as FP16.
+
+If your GPU supports BF16 (Ampere and later for NVIDIA), use BF16, not FP16, for LLM inference.
+
+**INT8 and INT4: dynamic range compression**
+
+INT8 quantization represents values as 8-bit integers in the range [-128, 127]. There\'s no concept of exponent — the numeric range is fixed. Quantization maps the float range of each tensor to this fixed range.
+
+The scale factor: \`x_int = round(x_float / scale)\`, where \`scale = max(|x|) / 127\`. The scale is chosen per-tensor (per-tensor quantization) or per-channel (per-channel quantization).
+
+Per-tensor quantization uses a single scale for the entire weight matrix. If the matrix has a few very large values, the scale is large, and small values lose all precision. Per-channel quantization uses a separate scale per output channel — more expensive but much better quality.
+
+INT4 (4-bit) halves the memory of INT8. At 4 bits per weight, a 7B parameter LLM fits in ~3.5GB. The quality cost is significant but surprisingly tolerable for inference when combined with mixed-precision (some layers in higher precision) and groupwise quantization (separate scales per group of weights).
+
+**The practical decision matrix**
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Transformer inference, Ampere+ GPU | BF16 |
+| Transformer inference, older GPU | FP16 with overflow checks |
+| LLM inference, memory-constrained | INT8 with LLM.int8() |
+| LLM inference, extreme memory constraint | INT4 with GPTQ or AWQ |
+| CNN inference, production serving | INT8 per-channel, calibrated on representative data |
+| Training | BF16 mixed precision (FP32 master weights, BF16 compute) |
+
+**What calibration actually does**
+
+Static INT8 quantization requires a calibration dataset: a representative sample of inputs run through the model before quantization. Calibration collects the activation distributions at each layer, which are used to choose the optimal scale factors.
+
+A calibration dataset that doesn\'t represent your production distribution will produce poor scale factors, which will produce quality degradation. 100–1000 representative inputs is typically sufficient. The inputs must cover the range of magnitudes you\'ll see in production.
+
+TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantization. Using these tools correctly requires understanding which layers are quantization-sensitive (attention, layer norm) and may need to be kept in higher precision.`,
+    tags: ['Deep Learning', 'Quantization', 'Serving', 'FP16', 'BF16', 'INT8', 'LLMs'],
+    domain: 'dl',
+    youtube: [],
+  },
 ]
 
-const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers']
+const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
 
 const GRADIENT_DOMAINS = [
   { id: 'all',       label: 'All Posts' },
@@ -1657,6 +1959,11 @@ const POST_PRACTICE = {
   11: { tab: 'design',       label: 'System Design — Design Canvas' },
   12: { tab: 'dl',           label: 'Training Lab — Training Failure Diagnosis' },
   13: { tab: 'interview',    label: 'Interview Prep — System Design Questions' },
+  26: { tab: 'features',     label: 'Feature Engineering — Feature Store Designer' },
+  27: { tab: 'features',     label: 'Feature Engineering — Skew Simulator' },
+  28: { tab: 'causal',       label: 'Causal Inference — Experiment Design' },
+  29: { tab: 'ts',           label: 'Time Series — Forecast Failure Zoo' },
+  30: { tab: 'dl_serving',   label: 'DL Serving — Quantization Lab' },
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────

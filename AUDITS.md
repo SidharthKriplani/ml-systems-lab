@@ -246,8 +246,8 @@ Without completion events, there is no signal on which tabs users actually use v
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | `AskTab` label mismatch — zone is labelled "Ask" in bottom nav; tab is keyword search over a hardcoded KB, not an AI assistant. First-timer clicks expecting to type a question to Claude, gets a search interface with no explanation | `AskTab.jsx`, `App.jsx` nav label | Medium | ⚠️ Open |
-| 2 | Interview tools split across two zones without visible logic — Trainer, CodeBugs, CaseStudies, StaffLayer live in Practice zone under "Interview Tools" domain; Combinator, JDPrep, Defense, Verbal live in Interview zone. First-timer has no mental model for why some tools are in Practice and others in Interview | `App.jsx` (`PRACTICE_DOMAINS`, `INTERVIEW_TOOLS`) | Medium | ⚠️ Open |
+| 1 | `AskTab` label mismatch — zone is labelled "Ask" in bottom nav; tab is keyword search over a hardcoded KB, not an AI assistant. First-timer clicks expecting to type a question to Claude, gets a search interface with no explanation | `AskTab.jsx`, `App.jsx` nav label | Medium | ✅ Fixed — nav label → "Search"; heading → "KB Search"; sub-copy updated |
+| 2 | Interview tools split across two zones without visible logic — Trainer, CodeBugs, CaseStudies, StaffLayer live in Practice zone under "Interview Tools" domain; Combinator, JDPrep, Defense, Verbal live in Interview zone. First-timer has no mental model for why some tools are in Practice and others in Interview | `App.jsx` (`PRACTICE_DOMAINS`, `INTERVIEW_TOOLS`) | Medium | ✅ Fixed — Practice domain renamed "Drills"; Interview hub tools reordered ①②③④ with "Start here" on JD Prep |
 | 3 | CHANGELOG on HomeTab is first-timer-visible — scroll past hero, role selector, stats → changelog entries showing "May 2026 / Apr 2026" update notes. Returning-user content has no visibility guard for cold users | `HomeTab.jsx` | Low | ⚠️ Open |
 | 4 | GradientTab has no "start here" signal — Read zone lands directly on 25+ posts with domain filter bar. No recommended first post, no beginner path, no orientation copy. First-timer sees a flat list with no entry point | `GradientTab.jsx` | Low | ⚠️ Open |
 | 5 | Interview zone tool sequence not communicated — intended flow is JD Prep → Defense Doc → Combinator → Verbal, but tools are presented as an unordered grid. A first-timer who lands in the Interview zone has no idea what order to run them in | `App.jsx` (`INTERVIEW_TOOLS`), `InterviewGrid` render | Low | ⚠️ Open |
@@ -277,12 +277,12 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 | 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | ✅ Both fixed |
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
 | 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
-| 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | 5 open ⚠️ |
+| 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | 3 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — all resolved |
-| Medium | 2 | #007 Ask label mismatch · #007 Interview tools zone split |
-| Low | 4 | #001 index keys · #007 changelog visibility · #007 Gradient cold entry · #007 Interview sequence labels |
+| Medium | 0 | — all resolved |
+| Low | 3 | #001 index keys · #007 changelog visibility · #007 Gradient cold entry |
