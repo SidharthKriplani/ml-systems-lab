@@ -366,7 +366,11 @@
   .animate-slide-up { animation: slideUp 0.20s ease-out; }
 }
 
-/* ─── Bottom-nav layout (mobile-first) ──────────────────────────────────── */
+/* ─── Responsive nav layout ──────────────────────────────────────────────── */
+
+/* Mobile-first: bottom nav visible, sidebar hidden */
+.desktop-sidebar   { display: none; }
+.desktop-main-wrapper { display: contents; }
 
 /* Safe-area bottom padding for iPhone home indicator */
 .bottom-nav-safe {
@@ -376,6 +380,31 @@
 /* Main content clears the bottom nav + safe area */
 .main-content {
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── Desktop: sidebar replaces bottom nav ───────────────────────────────── */
+@media (min-width: 769px) {
+  /* Show sidebar, hide bottom nav */
+  .desktop-sidebar  { display: flex; }
+  .bottom-nav-safe  { display: none; }
+
+  /* Main wrapper shifts right to clear the 220px sidebar */
+  .desktop-main-wrapper {
+    display: block;
+    margin-left: 220px;
+  }
+
+  /* Content no longer needs to clear a bottom nav */
+  .main-content {
+    padding-bottom: 48px;
+    max-width: 860px;
+  }
+
+  /* Topbar also offset for sidebar */
+  header {
+    left: 220px;
+    width: calc(100% - 220px);
+  }
 }
 
 /* Responsive grids used across Practice/Interview zones */

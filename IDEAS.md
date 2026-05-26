@@ -40,7 +40,6 @@ Last updated: May 2026
 ### Modules
 - [ ] Behavioral question bank in Interview zone — ML-specific situations (disagreed with a metric, shipped despite uncertainty, stakeholder conflict over model decision)
 - [ ] Causal Inference: DAG editor — draw causal graph, identify confounders/colliders/mediators interactively (Pyodide)
-- [ ] System Design: RAG architecture judgment module (chunk size, retrieval strategy, reranking decisions)
 
 ---
 
@@ -104,6 +103,7 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 | Idea | Reason retired |
 |------|---------------|
+| RAG architecture judgment module | RAG is GenAI Lab territory (prompt engineering, retrieval, reranking). Wrong lab. |
 | Backend / server-side storage | Zero-friction access is a core principle. localStorage + JSON export covers the need. |
 | Account system / login | Same as above. Adds friction, adds infra, solves no current problem. |
 | Sidebar navigation | Replaced in v4. Scaled poorly on mobile, too many clicks. Bottom-nav is permanent. |

@@ -29,8 +29,8 @@ Use `var(--white)` for contrast text on colored badge backgrounds or anywhere pu
 
 ## Architecture
 
-**5-zone bottom-nav is the permanent navigation model.**  
-Zones: Today / Practice / Read / Interview / Ask. Each zone has independent drill-down state (`zoneTab`). This replaced sidebar navigation in v4 and will not revert. Do not add a 6th zone without strong justification — the bottom nav fits exactly 5.
+**Responsive dual-nav: bottom nav on mobile, sidebar accordion on desktop.**  
+Zones: Today / Practice / Read / Interview / Ask. On mobile (≤768px): 5-zone bottom nav. On desktop (≥769px): fixed left sidebar (220px) with accordion zones — Practice expands to domain groups, Interview expands to tool list. Same zone/tab routing state for both. Bottom nav is hidden on desktop via CSS; sidebar is hidden on mobile. Do not add a 6th zone without strong justification.
 
 **Zone routing via `TAB_TO_ZONE` + `ZONE_DEFAULTS` in App.jsx.**  
 - `TAB_TO_ZONE`: omit a tabId to default it to `practice`. Only add entries for non-practice tabs.
