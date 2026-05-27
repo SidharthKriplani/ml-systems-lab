@@ -649,7 +649,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
           </h1>
           <span style={{ ...pill('var(--rose)'), fontSize: '12px' }}>MLOps</span>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '600px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           Deployment strategy, champion-challenger promotion, and rollback decisions. The judgment calls that separate careful operators from cowboy deploys.
         </p>
       </div>

@@ -595,7 +595,7 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
             background: 'rgba(244,63,94,0.2)', color: 'var(--rose)', ...mono,
           }}>MLOps</span>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '600px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           CI/CD gate design, infrastructure selection, and model registry patterns. The plumbing decisions that determine whether a model makes it from training to production reliably.
         </p>
       </div>

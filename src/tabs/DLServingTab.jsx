@@ -1058,7 +1058,7 @@ export default function DLServingTab({ onNavigate }) {
         }}>
           Production Serving
         </h2>
-        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '640px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           The model works in notebooks. It fails in production at p99. Quantization decisions, memory math, and serving architecture — before your first oncall.
         </p>
       </div>

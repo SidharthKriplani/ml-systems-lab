@@ -342,7 +342,7 @@ function TimedPractice({ questions, onExit }) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px' }}>
           {counts.map(t => (
-            <div key={t.key} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid var(--rim)`, borderRadius: '10px' }}>
+            <div key={t.key} style={{ padding: '16px 18px', background: 'linear-gradient(160deg, rgba(255,255,255,0.04) 0%, var(--depth) 50%)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
               <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: t.color, fontWeight: 700, marginBottom: '4px' }}>{t.label.toUpperCase()}</div>
               <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: t.n > 0 ? t.color : 'var(--ink-low)' }}>{t.n}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>

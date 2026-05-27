@@ -2277,7 +2277,7 @@ export default function GradientTab({ onNavigate }) {
             </h1>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>
           </div>
-          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '560px' }}>
             Start here. Read a post, understand the concept, then hit Practice to apply it in the interactive modules. Each post links directly to its practice module.
           </p>
         </div>

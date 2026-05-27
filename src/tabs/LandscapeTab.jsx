@@ -665,7 +665,7 @@ export default function LandscapeTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Landscape</h1>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '620px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '620px' }}>
           The full picture of ML as a career and industry — roles, salaries, tech stacks, how top companies use ML,
           the history that got us here, and where in the world the jobs are.
         </p>
