@@ -234,8 +234,8 @@ function PracticeCard({ tab, domain, onSelect, tabProgress }) {
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: hov
-          ? `0 10px 32px rgba(0,0,0,0.42), 0 0 0 1px ${domain.accent}18`
-          : 'none',
+          ? `0 16px 48px rgba(0,0,0,0.60), 0 0 0 1px ${domain.accent}30, -4px 0 24px ${domain.accent}18`
+          : '0 2px 12px rgba(0,0,0,0.40)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
@@ -263,7 +263,7 @@ function PracticeGrid({ onSelect, tabProgress }) {
 
   return (
     <div style={{ paddingTop: '8px' }}>
-      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--ink-hi)', marginBottom: '4px' }}>
+      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 800, letterSpacing: '-0.05em', marginBottom: '4px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         Practice
       </h2>
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '6px', lineHeight: 1.6 }}>
@@ -273,7 +273,7 @@ function PracticeGrid({ onSelect, tabProgress }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Your progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.5s' }} />
+            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(52,211,153,0.60)' }} />
           </div>
           <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
             {totalAttempted}/{totalScenarios}
@@ -282,8 +282,11 @@ function PracticeGrid({ onSelect, tabProgress }) {
       )}
       {PRACTICE_DOMAINS.map(domain => (
         <div key={domain.id} style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, marginBottom: '10px', opacity: 0.9 }}>
-            {domain.label}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, textShadow: `0 0 18px ${domain.accent}90`, whiteSpace: 'nowrap' }}>
+              {domain.label}
+            </span>
+            <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, ${domain.accent}50, transparent)` }} />
           </div>
           <div className="grid-cards">
             {domain.tabs.map(tab => (
@@ -315,8 +318,8 @@ function InterviewToolCard({ tool, onSelect }) {
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: hov
-          ? `0 10px 32px rgba(0,0,0,0.42), 0 0 0 1px ${tool.accent}18`
-          : 'none',
+          ? `0 16px 48px rgba(0,0,0,0.60), 0 0 0 1px ${tool.accent}30, -4px 0 24px ${tool.accent}18`
+          : '0 2px 12px rgba(0,0,0,0.40)',
       }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
         <span style={{ fontSize: '16px', color: tool.accent }}>{tool.icon}</span>
@@ -333,7 +336,7 @@ function InterviewToolCard({ tool, onSelect }) {
 function InterviewGrid({ onSelect }) {
   return (
     <div style={{ paddingTop: '8px' }}>
-      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '24px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--ink-hi)', marginBottom: '4px' }}>
+      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 800, letterSpacing: '-0.05em', marginBottom: '4px', background: 'linear-gradient(135deg, var(--gold) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         Interview
       </h2>
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '28px', lineHeight: 1.6 }}>
@@ -378,7 +381,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
   const S = {
     aside: {
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-      background: 'rgba(10,8,5,0.82)',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.06) 0%, rgba(10,8,5,0.88) 120px, rgba(8,6,4,0.88) 100%)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
       borderRight: '1px solid rgba(255,255,255,0.055)',
       flexDirection: 'column', overflowY: 'auto',
@@ -402,11 +405,12 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       width: '100%', display: 'flex', alignItems: 'center',
       justifyContent: 'space-between', padding: '7px 12px 7px 14px',
       background: isActive
-        ? `linear-gradient(90deg, ${accent}18 0%, transparent 80%)`
+        ? `linear-gradient(90deg, ${accent}28 0%, ${accent}08 50%, transparent 100%)`
         : 'none',
       border: 'none', cursor: 'pointer',
       borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
-      transition: 'background 0.15s',
+      boxShadow: isActive ? `inset 3px 0 12px ${accent}30` : 'none',
+      transition: 'all 0.15s',
     }),
     domainBtn: {
       width: '100%', display: 'flex', alignItems: 'center',
@@ -436,7 +440,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       {/* Logo */}
       <button style={S.logo} onClick={() => goTo('home')}>
         <div style={S.logoIcon}>ML</div>
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
+        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '14px', color: 'var(--ink-hi)', letterSpacing: '-0.03em' }}>Systems Lab</span>
       </button>
 
       {/* Zone accordion */}
@@ -559,11 +563,14 @@ function BottomNav({ activeZone, onZoneNav }) {
             )}
             {/* Icon with active glow pill */}
             <div style={{
-              width: '38px', height: '28px',
+              width: '44px', height: '30px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: '8px',
-              background: isActive ? `color-mix(in srgb, ${zone.accent} 14%, transparent)` : 'transparent',
-              transition: 'background 0.15s',
+              borderRadius: '10px',
+              background: isActive
+                ? `radial-gradient(ellipse at center, ${zone.accent}38 0%, ${zone.accent}12 60%, transparent 100%)`
+                : 'transparent',
+              boxShadow: isActive ? `0 0 18px ${zone.accent}50` : 'none',
+              transition: 'all 0.20s ease',
             }}>
               <span style={{ fontSize: '19px', lineHeight: 1 }}>{zone.icon}</span>
             </div>
