@@ -553,20 +553,20 @@ function BottomNav({ activeZone, onZoneNav }) {
       boxShadow: 'inset 0 1px 0 0 rgba(240,165,0,0.22), 0 -12px 48px rgba(0,0,0,0.55)',
       zIndex: 100,
     }}>
-      <div style={{ height: '68px', display: 'flex', alignItems: 'stretch' }}>
+      <div style={{ height: '68px', display: 'flex', alignItems: 'stretch', width: '100%', overflow: 'hidden' }}>
       {NAV_ZONES.map(zone => {
         const isActive = activeZone === zone.id
         return (
           <button key={zone.id} onClick={() => onZoneNav(zone.id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: '5px',
+              alignItems: 'center', justifyContent: 'center', gap: '4px',
               background: 'none', border: 'none', cursor: 'pointer',
               color: isActive ? zone.accent : 'rgba(255,255,255,0.62)',
               transition: 'color 0.15s',
-              padding: '8px 4px 10px',
+              padding: '8px 2px 10px',
               position: 'relative',
-              minWidth: 0,
+              minWidth: 0, overflow: 'hidden',
               WebkitTapHighlightColor: 'transparent',
             }}>
             {/* Active top bar */}
@@ -580,22 +580,27 @@ function BottomNav({ activeZone, onZoneNav }) {
             )}
             {/* Icon with active glow pill */}
             <div style={{
-              width: '44px', height: '30px',
+              width: '36px', height: '26px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: '10px',
+              borderRadius: '8px',
               background: isActive
                 ? `radial-gradient(ellipse at center, ${zone.accent}38 0%, ${zone.accent}12 60%, transparent 100%)`
                 : 'transparent',
               boxShadow: isActive ? `0 0 18px ${zone.accent}50` : 'none',
               transition: 'all 0.20s ease',
+              flexShrink: 0,
             }}>
-              <span style={{ fontSize: '20px', lineHeight: 1, filter: isActive ? `drop-shadow(0 0 6px ${zone.accent})` : 'none', transition: 'filter 0.20s' }}>{zone.icon}</span>
+              <span style={{ fontSize: '18px', lineHeight: 1, filter: isActive ? `drop-shadow(0 0 6px ${zone.accent})` : 'none', transition: 'filter 0.20s' }}>{zone.icon}</span>
             </div>
             <span style={{
-              fontSize: '11px', fontFamily: 'var(--font-sans)',
+              fontSize: '10px', fontFamily: 'var(--font-sans)',
               fontWeight: isActive ? 700 : 500,
-              letterSpacing: '0.01em',
+              letterSpacing: '0',
               lineHeight: 1,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '100%',
             }}>{zone.label}</span>
           </button>
         )

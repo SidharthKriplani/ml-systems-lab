@@ -60,6 +60,11 @@
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
+  html, body {
+    overflow-x: hidden;   /* prevent horizontal scroll from any overflowing child */
+    max-width: 100vw;
+  }
+
   html {
     background: var(--void);
     color: var(--ink-hi);
