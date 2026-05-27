@@ -16,10 +16,10 @@
 :root {
   /* ── Surfaces — warm near-black ──────────────────── */
   --void:    #0c0a08;   /* page bg — faintest warm undertone  */
-  --depth:   #161310;   /* card / panel background            */
-  --surface: #1e1b17;   /* elevated cards, code blocks        */
-  --rim:     #342e28;   /* default border — visible on depth  */
-  --rim-hi:  #4a433c;   /* hovered / active border            */
+  --depth:   #1c1916;   /* card / panel background            */
+  --surface: #242119;   /* elevated cards, code blocks        */
+  --rim:     #403930;   /* default border — visible on depth  */
+  --rim-hi:  #564e45;   /* hovered / active border            */
 
   /* ── Primary accent: burnished amber ────────────── */
   --prime:       #f0a500;                  /* the signature colour   */
@@ -44,9 +44,9 @@
 
   /* ── Typography — warm neutrals ─────────────────── */
   --ink-hi:    #f5f1ea;   /* primary — warm off-white  ~17:1    */
-  --ink-mid:   #c0b3a8;   /* secondary — body text     ~10:1    */
-  --ink-low:   #8c8178;   /* tertiary — labels/meta    ~5.5:1   */
-  --ink-ghost: #4a433c;   /* disabled / ghost                   */
+  --ink-mid:   #cec3b9;   /* secondary — body text     ~11:1    */
+  --ink-low:   #a09489;   /* tertiary — labels/meta    ~7:1     */
+  --ink-ghost: #756c62;   /* disabled / ghost          ~4:1     */
 
   /* ── Utility ─────────────────────────────────────── */
   --white:     #ffffff;   /* contrast text on colored badge backgrounds */
@@ -105,15 +105,15 @@
 
   /* ── Cards ── */
   .card {
-    background: linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 25%);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, var(--depth) 25%);
+    border: 1px solid rgba(255,255,255,0.13);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.60), 0 2px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.60), 0 2px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
     transition: border-color 0.18s, box-shadow 0.22s, transform 0.22s ease;
   }
   .card:hover {
-    border-color: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.22);
     transform: translateY(-4px);
     box-shadow: 0 24px 64px rgba(0,0,0,0.70), 0 8px 20px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08);
   }
