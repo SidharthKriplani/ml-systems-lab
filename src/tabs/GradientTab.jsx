@@ -2156,23 +2156,38 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
 
 // ─── Post card ────────────────────────────────────────────────────────────────
 function PostCard({ post, featured, onClick, isRead }) {
+  const [hov, setHov] = useState(false)
+
   if (featured) {
     return (
-      <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center', border: `1px solid ${post.catColor.border}`, background: `linear-gradient(135deg, var(--depth) 0%, ${post.catColor.bg} 100%)`, transition: 'transform 0.15s', }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+      <button onClick={onClick}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1',
+          padding: '32px 36px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, var(--depth) 40%)',
+          border: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.09)'}`,
+          borderTop: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.13)'}`,
+          borderRadius: '16px',
+          boxShadow: hov ? '0 24px 72px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.09)' : '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+          transform: hov ? 'translateY(-3px)' : 'translateY(0)',
+          transition: 'all 0.18s ease',
+          display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,0.6fr)', gap: '40px', alignItems: 'center',
+        }}>
         <div>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', alignItems: 'center' }}>
-            <span className="badge badge-indigo" style={{ fontSize: '10px' }}>Featured</span>
-            <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '2px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.14)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.30)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Featured</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '5px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
+            <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{post.readMin} min read</span>
           </div>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.25, marginBottom: '14px', letterSpacing: '-0.01em' }}>{post.title}</h2>
-          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, marginBottom: '16px' }}>{post.excerpt.slice(0, 180)}…</p>
-          <span style={{ fontSize: '13px', color: post.catColor.text, fontWeight: 600 }}>Read {post.readMin} min →</span>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', lineHeight: 1.2, marginBottom: '14px', letterSpacing: '-0.04em' }}>{post.title}</h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.75, marginBottom: '20px' }}>{post.excerpt.slice(0, 220)}…</p>
+          <span style={{ fontSize: '13px', color: post.catColor.text, fontWeight: 700, letterSpacing: '-0.01em' }}>Read → {post.readMin} min</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {post.tags.slice(0, 4).map(t => (
-            <div key={t} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '5px', padding: '6px 12px' }}>{t}</div>
+            <div key={t} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '7px', padding: '8px 14px' }}>{t}</div>
           ))}
         </div>
       </button>
@@ -2180,18 +2195,29 @@ function PostCard({ post, featured, onClick, isRead }) {
   }
 
   return (
-    <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: '20px 22px', transition: 'transform 0.15s, border-color 0.15s', }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = post.catColor.border }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--rim)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
-        {post.domain && <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '999px', border: '1px solid var(--rim)', color: DOMAIN_COLOR[post.domain] ?? 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{post.domain}</span>}
-        {post.youtube && post.youtube.length > 0 && <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: 'var(--font-mono)' }}>▶ video</span>}
-        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ read</span>}
-        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{post.readMin} min</span>
+    <button onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        textAlign: 'left', cursor: 'pointer', padding: '20px 22px',
+        background: hov ? 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)' : 'linear-gradient(160deg, rgba(255,255,255,0.025) 0%, var(--depth) 40%)',
+        border: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.08)'}`,
+        borderTop: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.11)'}`,
+        borderRadius: '14px',
+        boxShadow: hov ? '0 16px 48px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.08)' : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+        transform: hov ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'all 0.18s ease',
+      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '5px', background: post.catColor.bg, color: post.catColor.text, border: `1px solid ${post.catColor.border}`, fontFamily: 'var(--font-sans)' }}>{post.category}</span>
+        {post.youtube && post.youtube.length > 0 && (
+          <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '4px', padding: '1px 6px', letterSpacing: '0.04em' }}>▶ VIDEO</span>
+        )}
+        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '4px', padding: '1px 6px' }}>✓ READ</span>}
+        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{post.readMin} min</span>
       </div>
-      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.3, marginBottom: '10px' }}>{post.title}</h2>
-      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{post.excerpt.slice(0, 130)}…</p>
+      <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.35, marginBottom: '10px', letterSpacing: '-0.03em' }}>{post.title}</h2>
+      <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{post.excerpt.slice(0, 160)}…</p>
     </button>
   )
 }

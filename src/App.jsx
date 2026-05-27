@@ -153,12 +153,18 @@ const PRACTICE_DOMAINS = [
 
 // ── Interview zone tools ──────────────────────────────────────────────────────
 const INTERVIEW_TOOLS = [
-  { id: 'interview',  label: 'Interview Q&A',   desc: '50+ curated questions with model answers',    icon: '◈', accent: 'var(--sky)' },
-  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions · self-scored',       icon: '✎', accent: 'var(--mint)' },
-  { id: 'jdprep',     label: '① JD Prep',        desc: 'Start here — paste a JD → ranked study topics', icon: '⚑', accent: 'var(--prime)' },
-  { id: 'defense',    label: '② Defense Doc',    desc: 'Build your study brief + PDF export',         icon: '⛊', accent: 'var(--ember)' },
-  { id: 'combinator', label: '③ Combinator',     desc: 'Timed mock session — 30 / 45 / 60 min',       icon: '⊕', accent: 'var(--rose)' },
-  { id: 'verbal',     label: '④ Verbal Practice', desc: 'Voice-record answers · close the loop',      icon: '◉', accent: 'var(--violet)' },
+  { id: 'interview',  label: 'Interview Q&A',    desc: '128 curated questions with model answers across system design, ML fundamentals, and behavioural.', step: null, accent: 'var(--sky)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
+  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions. No time limit. Write your answer, then compare against a senior model response.', step: null, accent: 'var(--mint)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+  { id: 'jdprep',     label: 'JD Prep',          desc: 'Paste a job description. Get a ranked list of study topics weighted by how often they appear in real interviews for that role.', step: '01', accent: 'var(--prime)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+  { id: 'defense',    label: 'Defense Doc',      desc: 'Build a structured study brief from your JD Prep output. Export as PDF. Your written commitment to what you will master.', step: '02', accent: 'var(--ember)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '03', accent: 'var(--rose)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '04', accent: 'var(--violet)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
 ]
 
 // all practice tabs flat, for label lookup
@@ -263,12 +269,15 @@ function PracticeGrid({ onSelect, tabProgress }) {
 
   return (
     <div style={{ paddingTop: '8px' }}>
-      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 800, letterSpacing: '-0.05em', marginBottom: '4px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-        Practice
-      </h2>
-      <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '6px', lineHeight: 1.6 }}>
-        20 domains · 150+ production scenarios
-      </p>
+      <div style={{ marginBottom: '6px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
+        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          200+ production scenarios.
+        </h2>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '6px' }}>
+          Every module starts with a real incident. No definitions. No theory. You make the call first, then see why you were right or wrong.
+        </p>
+      </div>
       {totalScenarios > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Your progress</span>
@@ -308,26 +317,31 @@ function InterviewToolCard({ tool, onSelect }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        textAlign: 'left', padding: '16px 18px',
-        background: hov ? `color-mix(in srgb, ${tool.accent} 9%, transparent)` : 'transparent',
-        borderTop:    `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
-        borderRight:  `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
-        borderBottom: `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
-        borderLeft:   `3px solid ${tool.accent}`,
-        borderRadius: '10px', cursor: 'pointer',
+        textAlign: 'left', padding: '20px 22px',
+        background: hov
+          ? `linear-gradient(160deg, rgba(255,255,255,0.06) 0%, var(--depth) 30%)`
+          : `linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)`,
+        border: `1px solid ${hov ? tool.accent + '55' : 'rgba(255,255,255,0.08)'}`,
+        borderTop: `1px solid ${hov ? tool.accent + '80' : 'rgba(255,255,255,0.11)'}`,
+        borderRadius: '14px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
-        transform: hov ? 'translateY(-2px)' : 'translateY(0)',
+        transform: hov ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: hov
-          ? `0 16px 48px rgba(0,0,0,0.60), 0 0 0 1px ${tool.accent}30, -4px 0 24px ${tool.accent}18`
-          : '0 2px 12px rgba(0,0,0,0.40)',
+          ? `0 20px 56px rgba(0,0,0,0.65), 0 0 0 1px ${tool.accent}22, inset 0 1px 0 rgba(255,255,255,0.09)`
+          : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        <span style={{ fontSize: '16px', color: tool.accent }}>{tool.icon}</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", transition: 'color 0.14s' }}>
-          {tool.label}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div style={{ color: tool.accent, opacity: hov ? 1 : 0.75, transition: 'opacity 0.15s' }}>{tool.svg}</div>
+        {tool.step && (
+          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
+            STEP {tool.step}
+          </span>
+        )}
       </div>
-      <p style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0 }}>{tool.desc}</p>
+      <div style={{ fontSize: '14px', fontWeight: 700, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '-0.02em', marginBottom: '8px', transition: 'color 0.14s' }}>
+        {tool.label}
+      </div>
+      <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{tool.desc}</p>
     </button>
   )
 }
@@ -336,12 +350,15 @@ function InterviewToolCard({ tool, onSelect }) {
 function InterviewGrid({ onSelect }) {
   return (
     <div style={{ paddingTop: '8px' }}>
-      <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 800, letterSpacing: '-0.05em', marginBottom: '4px', background: 'linear-gradient(135deg, var(--gold) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-        Interview
-      </h2>
-      <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '28px', lineHeight: 1.6 }}>
-        6 tools — from Q&amp;A prep to timed mocks to defense docs
-      </p>
+      <div style={{ marginBottom: '28px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
+        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          Nine tools. One loop.
+        </h2>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
+          Steps 01–04 are a sequence: JD Prep → Defense Doc → Combinator → Verbal. Run them in order two weeks before your interview. The other tools work any time.
+        </p>
+      </div>
       <div className="grid-cards-wide">
         {INTERVIEW_TOOLS.map(tool => (
           <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} />
