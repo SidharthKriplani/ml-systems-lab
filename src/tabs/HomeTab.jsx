@@ -237,12 +237,24 @@ export default function HomeTab({ onNavigate }) {
   const [nextUp,         setNextUp]         = useState(null)
   const [role,           setRole]           = useState(() => localStorage.getItem('msl_role') || null)
   const [openPath,       setOpenPath]       = useState(null)
+  const [pathDone,       setPathDone]       = useState(() => {
+    try { return JSON.parse(localStorage.getItem('msl_path_progress') || '{}') }
+    catch(_) { return {} }
+  })
   const [bookmarks,      setBookmarks]      = useState(() => getBookmarks())
   const [showChangelog,  setShowChangelog]  = useState(false)
 
   function refresh() {
     setProgress(getAllProgress())
     setNextUp(getNextRecommendation())
+  }
+
+  function markStepDone(pathId, stepIdx) {
+    setPathDone(prev => {
+      const next = { ...prev, [pathId]: [...new Set([...(prev[pathId] || []), stepIdx])] }
+      try { localStorage.setItem('msl_path_progress', JSON.stringify(next)) } catch(_) {}
+      return next
+    })
   }
   function refreshBookmarks() { setBookmarks(getBookmarks()) }
   useEffect(() => {
@@ -403,14 +415,22 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {LEARNING_PATHS.map(path => {
             const isOpen = openPath === path.id
+            const doneSets = pathDone[path.id] || []
+            const doneCount = doneSets.length
+            const allDone = doneCount >= path.steps.length
             return (
-              <div key={path.id} style={{ border: `1px solid ${isOpen ? path.border : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', background: isOpen ? path.bg : 'transparent', transition: 'all 0.15s' }}>
+              <div key={path.id} style={{ border: `1px solid ${isOpen ? path.border : allDone ? path.border : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', background: isOpen ? path.bg : 'transparent', transition: 'all 0.15s' }}>
                 <button onClick={() => setOpenPath(isOpen ? null : path.id)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', gap: '16px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: isOpen ? path.accent : 'var(--ink-hi)' }}>{path.name}</span>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', padding: '2px 8px', border: '1px solid var(--rim)', borderRadius: '999px' }}>{path.duration}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{path.steps.length} steps</span>
+                    {doneCount > 0
+                      ? <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: allDone ? path.accent : 'var(--ink-mid)', padding: '2px 8px', border: `1px solid ${allDone ? path.border : 'var(--rim)'}`, borderRadius: '999px', fontWeight: allDone ? 700 : 400 }}>
+                          {allDone ? '✓ Complete' : `${doneCount}/${path.steps.length} done`}
+                        </span>
+                      : <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{path.steps.length} steps</span>
+                    }
                   </div>
                   <span style={{ color: 'var(--ink-low)', fontSize: '13px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
                 </button>
@@ -421,19 +441,24 @@ export default function HomeTab({ onNavigate }) {
                       {path.outcome}
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {path.steps.map((step, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: path.accent, minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>{String(i+1).padStart(2,'0')}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '3px', fontFamily: 'var(--font-sans)' }}>{step.label}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55 }}>{step.desc}</div>
+                      {path.steps.map((step, i) => {
+                        const isDone = (pathDone[path.id] || []).includes(i)
+                        return (
+                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: isDone ? `${path.accent}08` : 'rgba(0,0,0,0.25)', border: `1px solid ${isDone ? path.border : 'var(--rim)'}`, borderRadius: '8px', transition: 'all 0.15s' }}>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: isDone ? path.accent : 'var(--ink-low)', minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>
+                              {isDone ? '✓' : String(i+1).padStart(2,'0')}
+                            </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: isDone ? path.accent : 'var(--ink-hi)', marginBottom: '3px', fontFamily: 'var(--font-sans)', textDecoration: isDone ? 'none' : 'none' }}>{step.label}</div>
+                              <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55 }}>{step.desc}</div>
+                            </div>
+                            <button onClick={() => { markStepDone(path.id, i); onNavigate(step.tab) }}
+                              style={{ fontSize: '11px', padding: '4px 10px', background: isDone ? `${path.accent}20` : `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                              {isDone ? 'Revisit' : 'Go →'}
+                            </button>
                           </div>
-                          <button onClick={() => onNavigate(step.tab)}
-                            style={{ fontSize: '11px', padding: '4px 10px', background: `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                            Go →
-                          </button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}
