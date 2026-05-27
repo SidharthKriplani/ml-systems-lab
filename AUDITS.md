@@ -340,6 +340,25 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 
 ---
 
+### #009 — 2026-05-27 · Visual Polish / "Take My Money" Audit
+
+**Scope:** End-to-end visual audit of all major surfaces — home, grids, every content tab, interactive cards, icons, typography  
+**Trigger:** User-directed polish pass targeting premium product feel across every screen  
+**Output:** All findings resolved in the same session
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | HomeTab hero: single-column, weak stats, emoji feature icons, no product mockup | `HomeTab.jsx` | High | ✅ Fixed — two-column hero, ScenarioMockup, SVG feature cards |
+| 2 | All tab h1 headers plain white text — no domain accent differentiation | All 20+ tab files | High | ✅ Fixed — domain accent gradient text, fontWeight 900 |
+| 3 | H3 section headers inside modules plain `var(--ink-hi)` — no visual hierarchy vs body | 13 tab files | Medium | ✅ Fixed — domain accent color, fontWeight 800 |
+| 4 | ☆/★ bookmark icons — unicode emoji, visually weak and inconsistent with SVG design language | 6 tab files | Medium | ✅ Fixed — SVG bookmark (outline/filled) |
+| 5 | ▶ chevron expand/collapse — unicode, no proper animation (transform: 'none') | 4 tab files | Medium | ✅ Fixed — SVG chevron, fixed rotation to rotate(0deg) |
+| 6 | Interview tool grid icons — 6 unicode emoji (📝🛡️⏱️🎙️etc.) | `App.jsx` | Medium | ✅ Fixed — SVG icons, step badges (01–04) |
+| 7 | InterviewPrepTab session summary stat cards — plain `var(--depth)` + `var(--rim)`, no glass treatment | `InterviewPrepTab.jsx` | Low | ✅ Fixed — glass gradient, inset highlight, depth shadow |
+| 8 | Tab description copy under h1 — `var(--ink-low)` at 40% opacity, near-invisible | 11 tab files | Low | ✅ Fixed — bumped to `var(--ink-mid)` |
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -352,6 +371,7 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
 | 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | ✅ All resolved |
 | 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
+| 009 | Visual Polish — "take my money" end-to-end audit: tab headers, icons, cards, interactive surfaces | 2026-05-27 | Visual Consistency / UX | ✅ All resolved |
 
 **Open findings by severity:**
 

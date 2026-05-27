@@ -98,6 +98,45 @@ Large session covering four parallel workstreams: learning quality, visual upgra
 **Optimization objective established:**
 - Confirmed as learning quality (mental model transfer, production failure mode recognition) — not engagement. Documented in `DECISIONS.md` as a content rule.
 
+### v4.4 — "Take my money" visual polish pass (May 2026)
+
+Full end-to-end UI audit and polish pass targeting premium product feel across every surface.
+
+**Hero + grids:**
+- `HomeTab` hero redesigned: two-column layout (text left, `ScenarioMockup` right), gradient headline with `clamp` font size, live amber pulse badge, body copy bumped to 17px / `var(--ink-hi)`.
+- Feature cards: replaced stats (200+, 9 tools, Free) with 3 SVG-icon cards (Scenarios / Interview tools / Career levels). "Free" card removed.
+- `App.jsx` `INTERVIEW_TOOLS`: all 6 unicode icons → SVG, `step` field added (01–04), step badges rendered on cards.
+- `InterviewGrid`: "Nine tools. One loop." editorial header + sequence copy.
+- `PracticeGrid`: "Practice" eyebrow + "200+ production scenarios." headline.
+- Topbar: GitHub link button added (desktop only).
+
+**Design system upgrades (`index.css`):**
+- Body background: center-top amber atmosphere (radial-gradient, 50% 0%, 0.22 opacity).
+- `.card`: gradient top sheen, rgba border, inset highlight, depth shadow.
+- `.card:hover`: `translateY(-4px)` + stronger shadow.
+- `.card-glow:hover`: strong amber bloom.
+- Keyframes added: `float-mockup` (5s), `orb-pulse` (7s), `mesh-drift`. Utility classes `.mockup-float`, `.orb-pulse`.
+
+**Tab headers — gradient text pass:**
+- All 20+ tab h1 headers upgraded: `fontSize: '28px', fontWeight: 900`, domain accent → `var(--ink-hi)` gradient. Domain accent map: ML Eng/Classical/SysDesign = mint, DE = ember, DL = violet, DS = sky, MLOps = rose, Interview = prime.
+- All h3 section headers (sub-module titles) upgraded: `fontWeight: 800`, plain `var(--ink-hi)` → domain accent color. Covers FeatureEng, ModelEval, Spark, Airflow, dbt, DataModeling, DeepLearning, DLFineTuning, DLServing, DataScience, Monitoring, MLOpsDeploy, MLOpsPipelines, ClassicalML, SystemDesign.
+
+**Icon replacements:**
+- ☆/★ bookmark icons → inline SVG bookmark (outline/filled) in 6 tabs: DeepLearning, InterviewPrep, ModelEval, SparkLab, SystemDesign, TimeSeries.
+- ▶ expand/collapse chevron → SVG chevron with smooth rotation in 4 tabs: SparkLab, SystemDesign, TakeHome, TimeSeries. Also fixed `transform: 'none'` → `rotate(0deg)` for proper CSS animation.
+
+**Content surface upgrades:**
+- `GradientTab`: PostCard featured redesigned (2-col, Space Grotesk, 220-char excerpt, gradient sheen). Standard PostCard consistent card design. Playfair Display removed — PostReader h1 now Space Grotesk weight 900 gradient.
+- `AskTab`: KB Search h2 → 28px weight 900 sky gradient.
+- `CombinatorTab`: h1 → rose→white gradient.
+- `TrainerTab`: h1 → violet→white gradient.
+
+**Polish details:**
+- `InterviewPrepTab` session summary stat cards: plain `var(--depth)` → glass style (gradient bg, inset highlight, depth shadow).
+- Tab description copy under h1: `var(--ink-low)` → `var(--ink-mid)` across 11 tabs (was near-invisible at 40% opacity).
+- Context blocks in SparkLab, CausalInference, TimeSeries, SystemDesign: upgraded to glass style.
+- Score strips in 4 tabs: upgraded from plain `var(--depth)` to gradient sheen + inset highlight.
+
 ### v4.2 — Audit sweep + StaffLayerTab expansion (May 2026)
 
 Full baseline audit pass (7 audits, #001–#007). All high and medium findings resolved in the same session. Key changes:
