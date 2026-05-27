@@ -15,10 +15,22 @@ const ROLES = [
 
 // ── Features / stats strip ─────────────────────────────────────────────────────
 const FEATURES = [
-  { icon: '⚡', n: '200+', label: 'Scenarios', desc: 'Real production failures across 7 ML domains', accent: 'var(--prime)' },
-  { icon: '🎯', n: '9',    label: 'Interview tools', desc: 'JD Prep → Defense Doc → Mock. All linked.', accent: 'var(--violet)' },
-  { icon: '📈', n: '4',    label: 'Career levels', desc: 'IC2 → IC3 → IC5 → Staff answers side-by-side', accent: 'var(--mint)' },
-  { icon: '🔓', n: 'Free', label: 'No signup', desc: 'Open in browser. All progress in localStorage.', accent: 'var(--sky)' },
+  {
+    n: '200+', label: 'Scenarios', desc: 'Real production failures across 7 ML domains', accent: 'var(--prime)',
+    svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  },
+  {
+    n: '9', label: 'Interview tools', desc: 'JD Prep → Defense Doc → Mock. All linked.', accent: 'var(--violet)',
+    svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+  },
+  {
+    n: '4', label: 'Career levels', desc: 'IC2 → IC3 → IC5 → Staff answers side-by-side', accent: 'var(--mint)',
+    svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  },
+  {
+    n: 'Free', label: 'No signup', desc: 'Open in browser. All progress in localStorage.', accent: 'var(--sky)',
+    svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>,
+  },
 ]
 
 // ── Product Mockup ─────────────────────────────────────────────────────────────
@@ -382,11 +394,11 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Feature cards ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '10px' }}>
         {FEATURES.map(f => (
-          <div key={f.label} style={{ padding: '20px', background: 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: '22px', marginBottom: '10px' }}>{f.icon}</div>
-            <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: `linear-gradient(135deg, ${f.accent} 0%, var(--ink-hi) 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '4px' }}>{f.n}</div>
-            <div style={{ fontSize: '12px', color: 'var(--ink-hi)', fontWeight: 700, fontFamily: 'var(--font-sans)', marginBottom: '4px' }}>{f.label}</div>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{f.desc}</div>
+          <div key={f.label} style={{ padding: '22px', background: 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+            <div style={{ color: f.accent, marginBottom: '14px', opacity: 0.90 }}>{f.svg}</div>
+            <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: `linear-gradient(135deg, ${f.accent} 0%, var(--ink-hi) 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '5px' }}>{f.n}</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-hi)', fontWeight: 700, fontFamily: 'var(--font-sans)', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{f.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.55, fontFamily: 'var(--font-sans)' }}>{f.desc}</div>
           </div>
         ))}
       </div>
