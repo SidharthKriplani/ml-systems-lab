@@ -40,6 +40,18 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
     setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: optIdx, revealed: true, open: true } : it))
   }
 
+  useEffect(() => {
+    function handleKey(e) {
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 4) {
+        const openIdx = items.findIndex(it => it.open && !it.revealed)
+        if (openIdx !== -1 && n - 1 < scenarios[openIdx].options.length) pick(openIdx, n - 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [items])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {/* Difficulty filter */}

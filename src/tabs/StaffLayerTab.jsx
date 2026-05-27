@@ -221,9 +221,28 @@ export default function StaffLayerTab({ onNavigate }) {
   return (
     <div style={{ padding: '24px', maxWidth: '920px', margin: '0 auto', fontFamily: 'var(--font-sans)', color: 'var(--ink-hi)' }}>
       {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Senior / Staff Layer</h2>
-        <p style={{ margin: '4px 0 0', color: 'var(--ink-mid)', fontSize: '13px' }}>The same problem through IC3 → IC5 → Staff eyes</p>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Senior / Staff Layer</h2>
+          <p style={{ margin: '4px 0 0', color: 'var(--ink-mid)', fontSize: '13px' }}>The same problem through IC3 → IC5 → Staff eyes</p>
+        </div>
+        <button
+          onClick={() => { setReveals({}); setExpanded(new Set()); }}
+          style={{
+            background: 'var(--surface)',
+            color: 'var(--ink-low)',
+            border: '1px solid var(--rim)',
+            borderRadius: '6px',
+            padding: '5px 12px',
+            fontSize: '12px',
+            fontFamily: 'var(--font-sans)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ↺ Reset reveals
+        </button>
       </div>
 
       {/* Progress */}

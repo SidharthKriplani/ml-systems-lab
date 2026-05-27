@@ -1505,28 +1505,29 @@ export default function CombinatorTab({ onNavigate }) {
         </div>
 
         {/* Domain breakdown */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ color: 'var(--ink-hi)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-            Domain Breakdown
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
-            {Object.entries(domainStats).map(([domain, stats]) => {
-              const domPct = Math.round((stats.correct / stats.total) * 100)
-              const c = domPct >= 75 ? 'var(--mint)' : domPct >= 50 ? 'var(--prime)' : 'var(--rose)'
-              return (
-                <div key={domain} style={{
-                  background: 'var(--surface)', border: '1px solid var(--rim)',
-                  borderRadius: 8, padding: '0.75rem',
-                }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--ink-low)', marginBottom: '0.3rem' }}>{domain}</div>
-                  <div style={{ fontWeight: 700, color: c, fontFamily: 'var(--font-mono)' }}>
-                    {stats.correct}/{stats.total}
+        {mcqQuestions.length > 0 && (
+          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-low)', marginBottom: '0.75rem' }}>
+              Domain Breakdown
+            </div>
+            {Object.entries(domainStats)
+              .map(([domain, stats]) => [domain, stats, stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0])
+              .sort((a, b) => a[2] - b[2])
+              .map(([domain, stats, pct]) => {
+                const barColor = pct >= 70 ? 'var(--mint)' : pct >= 40 ? 'var(--ember)' : 'var(--rose)'
+                return (
+                  <div key={domain} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <div style={{ width: '110px', fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', flexShrink: 0, textAlign: 'right' }}>{domain}</div>
+                    <div style={{ flex: 1, height: '8px', background: 'var(--surface)', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: '4px', transition: 'width 0.6s ease' }} />
+                    </div>
+                    <div style={{ width: '48px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: barColor, flexShrink: 0 }}>{stats.correct}/{stats.total}</div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })
+            }
           </div>
-        </div>
+        )}
 
         {/* MCQ review */}
         <h3 style={{ color: 'var(--ink-hi)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>

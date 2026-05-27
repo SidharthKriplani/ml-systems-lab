@@ -379,6 +379,7 @@ export default function HomeTab({ onNavigate }) {
             const snapshot = {}
             for (let i = 0; i < localStorage.length; i++) {
               const k = localStorage.key(i)
+              if (!k.startsWith('msl_')) continue
               try { snapshot[k] = JSON.parse(localStorage.getItem(k)) }
               catch { snapshot[k] = localStorage.getItem(k) }
             }

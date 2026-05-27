@@ -584,7 +584,7 @@ export default function App() {
     setZoneTab(prev => ({ ...prev, [zone]: tabId }))
     setSearchOpen(false)
     trackTabSwitch(tabId)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo(0, 0)
   }, [])
 
   // Hash + localStorage sync
@@ -634,7 +634,7 @@ export default function App() {
     } else {
       setActiveZone(zoneId)
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo(0, 0)
   }
 
   // Topbar context

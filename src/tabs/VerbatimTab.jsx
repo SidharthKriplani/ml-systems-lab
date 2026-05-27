@@ -106,6 +106,8 @@ export default function VerbatimTab({ onNavigate }) {
   const [history, setHistory] = useState([]);
   const [filterCategory, setFilterCategory] = useState('All');
   const recognitionRef = useRef(null);
+  const recordingStartRef = useRef(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
 
   useEffect(() => {
     try {
@@ -128,6 +130,10 @@ export default function VerbatimTab({ onNavigate }) {
         recognitionRef.current = null;
       }
     } catch {}
+    if (recordingStartRef.current) {
+      setRecordingDuration(prev => prev + Math.round((Date.now() - recordingStartRef.current) / 1000));
+      recordingStartRef.current = null;
+    }
     setIsRecording(false);
     setInterimTranscript('');
   }, []);
@@ -173,6 +179,7 @@ export default function VerbatimTab({ onNavigate }) {
 
       recognitionRef.current = recognition;
       recognition.start();
+      recordingStartRef.current = Date.now();
       setIsRecording(true);
     } catch {
       setIsRecording(false);
@@ -185,6 +192,7 @@ export default function VerbatimTab({ onNavigate }) {
     setInterimTranscript('');
     setFallbackText('');
     setRatings({ clarity: 0, completeness: 0, conciseness: 0, confidence: 0 });
+    setRecordingDuration(0);
     setScreen('practice');
   }
 
@@ -493,6 +501,20 @@ export default function VerbatimTab({ onNavigate }) {
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '14px 18px', marginBottom: 24 }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Your Answer</div>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{transcript || '(no transcript)'}</p>
+          {transcript && (() => {
+            const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;
+            const wpm = recordingDuration > 0 ? Math.round(wordCount / (recordingDuration / 60)) : null;
+            const paceLabel = wpm === null ? null : wpm >= 120 && wpm <= 160 ? '· good pace' : wpm < 120 ? '· slow pace' : '· fast pace';
+            const paceColor = wpm === null ? 'var(--ink-ghost)' : wpm >= 120 && wpm <= 160 ? 'var(--mint)' : 'var(--ember)';
+            return (
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--rim)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)' }}>{wordCount} words</span>
+                {wpm !== null && (
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: paceColor }}>{wpm} wpm {paceLabel}</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Rating */}
