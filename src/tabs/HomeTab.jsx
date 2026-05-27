@@ -13,13 +13,64 @@ const ROLES = [
   { key: 'staff',          label: 'Staff / Principal',desc: 'ML platform design, cross-domain trade-offs, and engineering judgment at scale.',          cta1: { label: 'ML System Design →', tab: 'design' },      cta2: { label: 'Gradient Posts',  tab: 'gradient' } },
 ]
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-const STATS = [
-  { n: '7',   label: 'Domains' },
-  { n: '150+', label: 'Production scenarios' },
-  { n: '4',   label: 'Career levels' },
-  { n: 'Free', label: 'No account needed' },
+// ── Features / stats strip ─────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: '⚡', n: '200+', label: 'Scenarios', desc: 'Real production failures across 7 ML domains', accent: 'var(--prime)' },
+  { icon: '🎯', n: '9',    label: 'Interview tools', desc: 'JD Prep → Defense Doc → Mock. All linked.', accent: 'var(--violet)' },
+  { icon: '📈', n: '4',    label: 'Career levels', desc: 'IC2 → IC3 → IC5 → Staff answers side-by-side', accent: 'var(--mint)' },
+  { icon: '🔓', n: 'Free', label: 'No signup', desc: 'Open in browser. All progress in localStorage.', accent: 'var(--sky)' },
 ]
+
+// ── Product Mockup ─────────────────────────────────────────────────────────────
+function ScenarioMockup() {
+  const opts = [
+    { l: 'A', text: 'Retrain with more recent data', selected: false },
+    { l: 'B', text: 'Feature store serving stale snapshots', selected: true  },
+    { l: 'C', text: 'Traffic distribution has shifted', selected: false },
+    { l: 'D', text: 'Scale up serving infrastructure', selected: false },
+  ]
+  return (
+    <div className="mockup-float" style={{ position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: '-40px', background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(240,165,0,0.14) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(160deg, rgba(255,255,255,0.055) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+        {/* Browser chrome */}
+        <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {['rgba(244,63,94,0.7)','rgba(249,115,22,0.7)','rgba(52,211,153,0.7)'].map((c,i) => (
+              <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: c }} />
+            ))}
+          </div>
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: '5px', height: '18px', maxWidth: '180px', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+            <span style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>ml-systems-lab.vercel.app</span>
+          </div>
+        </div>
+        {/* Scenario */}
+        <div style={{ padding: '16px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(240,165,0,0.14)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '5px', padding: '2px 8px', fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Feature Engineering</div>
+            <div style={{ background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '5px', padding: '2px 8px', fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Production</div>
+          </div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.55, marginBottom: '12px', fontFamily: 'var(--font-sans)' }}>
+            Offline AUC: 0.91. Online CTR drops 18% on day 3. Pipeline logs look clean. What&apos;s the root cause?
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '11px' }}>
+            {opts.map(opt => (
+              <div key={opt.l} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 10px', background: opt.selected ? 'rgba(52,211,153,0.10)' : 'rgba(255,255,255,0.025)', border: `1px solid ${opt.selected ? 'rgba(52,211,153,0.38)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '7px' }}>
+                <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: opt.selected ? 'var(--mint)' : 'var(--ink-ghost)', fontWeight: 700, flexShrink: 0, paddingTop: '1px' }}>{opt.l}</span>
+                <span style={{ fontSize: '10px', color: opt.selected ? 'var(--ink-hi)' : 'var(--ink-mid)', lineHeight: 1.45, fontFamily: 'var(--font-sans)' }}>{opt.text}</span>
+                {opt.selected && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '11px', flexShrink: 0 }}>✓</span>}
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: '10px 12px', background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.18)', borderRadius: '8px' }}>
+            <div style={{ fontSize: '9px', color: 'var(--mint)', fontWeight: 700, marginBottom: '4px', fontFamily: 'var(--font-sans)' }}>✓ Correct — Feature store time-travel bug</div>
+            <div style={{ fontSize: '9px', color: 'var(--ink-mid)', lineHeight: 1.55, fontFamily: 'var(--font-sans)' }}>In production, this breaks as: silent drift, no pipeline errors. The tell: feature timestamps stop advancing while serving still returns HTTP 200.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Changelog ─────────────────────────────────────────────────────────────────
 const CHANGELOG = [
@@ -291,60 +342,78 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Hero ── */}
       <section style={{ position: 'relative' }}>
-        {/* Amber glow orb — lights up the hero from behind */}
-        <div style={{ position: 'absolute', top: '-80px', left: '-60px', width: '500px', height: '400px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.18) 0%, rgba(240,165,0,0.06) 40%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, 5.5vw, 64px)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-0.05em', marginBottom: '20px' }}>
-          You can train a model.<br />
-          <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 50%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 30px rgba(240,165,0,0.40))' }}>Can you debug it in production?</span>
-        </h1>
+        {/* Ambient orb */}
+        <div className="orb-pulse" style={{ position: 'absolute', top: '-100px', left: '-80px', width: '600px', height: '500px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.05) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* Two-column grid: text left, mockup right */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '48px', alignItems: 'center' }}>
 
-        <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', marginBottom: '24px' }}>
-          100+ production failure scenarios across 7 domains. Each one puts you inside a real system — Spark pipelines, DL training runs, recommendation stacks — and asks you to make the call.
-        </p>
+          {/* ── Left: copy + CTAs ── */}
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '20px', padding: '4px 12px', marginBottom: '20px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--prime)', boxShadow: '0 0 8px rgba(240,165,0,0.80)', flexShrink: 0, display: 'inline-block' }} />
+              <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>200+ production scenarios · Free</span>
+            </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
-          <button className="btn-primary" onClick={() => onNavigate('design')}>Run a failure scenario →</button>
-          <button className="btn-secondary" onClick={() => document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Find your path</button>
-        </div>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(30px, 4.5vw, 58px)', fontWeight: 900, lineHeight: 1.04, letterSpacing: '-0.05em', marginBottom: '20px' }}>
+              You can train a model.<br />
+              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))' }}>Can you debug it in&nbsp;production?</span>
+            </h1>
 
-        <p style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '28px', letterSpacing: '0.04em' }}>
-          Free · no account · 7 domains · 100+ scenarios
-        </p>
+            <p style={{ fontSize: '17px', color: 'var(--ink-hi)', lineHeight: 1.7, maxWidth: '500px', marginBottom: '28px', opacity: 0.80 }}>
+              Scenario-first drills across 7 ML domains — Feature Engineering, Spark, DL Serving, MLOps, System Design, and more. Each one puts you inside a real incident and asks you to make the call.
+            </p>
 
-        {/* ── Role selector ── */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.10em', fontFamily: 'var(--font-mono)', marginBottom: '8px', textShadow: '0 0 12px rgba(240,165,0,0.50)' }}>Personalise by role →</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {ROLES.map(r => (
-              <button key={r.key} onClick={() => pickRole(r.key)} title={r.desc}
-                style={{ padding: '5px 12px', borderRadius: '7px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.14)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 14px rgba(240,165,0,0.35)' : 'none' }}>
-                {r.label}
-              </button>
-            ))}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              <button className="btn-primary" onClick={() => onNavigate('design')} style={{ fontSize: '14px', padding: '12px 26px' }}>Run a scenario →</button>
+              <button className="btn-secondary" onClick={() => document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ fontSize: '14px', padding: '12px 22px' }}>Find your path</button>
+            </div>
+
+            <p style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+              Free · no account · no install · works offline
+            </p>
           </div>
-        </div>
 
+          {/* ── Right: product mockup ── */}
+          <ScenarioMockup />
+
+        </div>{/* end two-column grid */}
+      </section>
+
+      {/* ── Feature cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '10px' }}>
+        {FEATURES.map(f => (
+          <div key={f.label} style={{ padding: '20px', background: 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: '22px', marginBottom: '10px' }}>{f.icon}</div>
+            <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: `linear-gradient(135deg, ${f.accent} 0%, var(--ink-hi) 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '4px' }}>{f.n}</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-hi)', fontWeight: 700, fontFamily: 'var(--font-sans)', marginBottom: '4px' }}>{f.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{f.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Role selector ── */}
+      <section style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '28px', boxShadow: '0 8px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Personalise by role</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em' }}>What brings you here today?</div>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: activeRole ? '20px' : '0' }}>
+          {ROLES.map(r => (
+            <button key={r.key} onClick={() => pickRole(r.key)}
+              style={{ padding: '7px 16px', borderRadius: '8px', border: `1px solid ${role === r.key ? 'rgba(240,165,0,0.55)' : 'rgba(255,255,255,0.10)'}`, background: role === r.key ? 'rgba(240,165,0,0.16)' : 'rgba(255,255,255,0.04)', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 16px rgba(240,165,0,0.30)' : 'none' }}>
+              {r.label}
+            </button>
+          ))}
+        </div>
         {activeRole && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '16px 20px', background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderLeft: '3px solid var(--prime)', borderRadius: '10px', boxShadow: '0 4px 24px rgba(0,0,0,0.50), 0 0 0 1px rgba(240,165,0,0.08)' }}>
-            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{activeRole.desc}</p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0, flex: 1, minWidth: '200px' }}>{activeRole.desc}</p>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
               <button className="btn-secondary" onClick={() => onNavigate(activeRole.cta2.tab)}>{activeRole.cta2.label}</button>
             </div>
           </div>
         )}
-
-        {/* ── Stats strip ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-          {STATS.map((s) => (
-            <div key={s.label} style={{ padding: '18px 12px', textAlign: 'center', background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.07)' }}>
-              <div style={{ fontSize: '40px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 12px rgba(240,165,0,0.55))' }}>{s.n}</div>
-              <div style={{ fontSize: '9px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '5px', fontFamily: 'var(--font-mono)' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-        </div>{/* end relative zIndex wrapper */}
       </section>
 
       {/* ── Progress ── */}

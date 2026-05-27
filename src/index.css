@@ -521,3 +521,21 @@ pre { max-width: 100%; overflow-x: auto; }
 @keyframes pulse   { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
 .animate-spin  { animation: spin  1s linear infinite; }
 .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+
+@keyframes float-mockup {
+  0%,100% { transform: translateY(0px) rotate(-1.5deg); }
+  50%     { transform: translateY(-10px) rotate(-1.5deg); }
+}
+.mockup-float { animation: float-mockup 5s ease-in-out infinite; }
+
+@keyframes orb-pulse {
+  0%,100% { opacity: 0.7; transform: scale(1); }
+  50%     { opacity: 1;   transform: scale(1.12); }
+}
+.orb-pulse { animation: orb-pulse 7s ease-in-out infinite; }
+
+@keyframes mesh-drift {
+  0%   { background-position: 0% 0%,   0% 0%,   100% 100%, 0 0; }
+  50%  { background-position: 2% -3%,  -4% 2%,  98% 96%,  0 0; }
+  100% { background-position: 0% 0%,   0% 0%,   100% 100%, 0 0; }
+}
