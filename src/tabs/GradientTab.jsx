@@ -2109,7 +2109,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(24px, 4vw, 38px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.05em', marginBottom: '20px', background: 'linear-gradient(135deg, var(--ink-hi) 0%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(24px, 4vw, 38px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.05em', marginBottom: '20px', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
           {post.title}
         </h1>
 
@@ -2249,7 +2249,7 @@ export default function GradientTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--ink-hi) 0%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '4px' }}>Case Library</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '4px' }}>Case Library</h1>
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -2272,7 +2272,7 @@ export default function GradientTab({ onNavigate }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '8px' }}>
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.1, background: 'linear-gradient(135deg, var(--ink-hi) 0%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.1, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Gradient
             </h1>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--ink-low)' }}>∇ long-form ML writing</span>

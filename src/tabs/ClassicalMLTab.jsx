@@ -717,12 +717,15 @@ export default function ClassicalMLTab({ onNavigate }) {
         </div>
         <h1 style={{
           fontFamily: 'var(--font-sans)',
-          fontSize: 'clamp(22px, 4vw, 30px)',
-          fontWeight: 700,
-          color: 'var(--ink-hi)',
+          fontSize: '28px',
+          fontWeight: 900,
+          letterSpacing: '-0.05em',
           margin: '0 0 10px',
-          letterSpacing: '-0.03em',
-          lineHeight: 1.2,
+          lineHeight: 1.1,
+          background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
         }}>
           When Models Break in Production
         </h1>

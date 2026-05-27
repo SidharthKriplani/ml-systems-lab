@@ -644,7 +644,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--ink-hi) 0%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--rose) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             MLOps: Deploy & Promote
           </h1>
           <span style={{ ...pill('var(--rose)'), fontSize: '12px' }}>MLOps</span>
