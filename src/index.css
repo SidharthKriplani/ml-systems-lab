@@ -528,6 +528,25 @@ pre { max-width: 100%; overflow-x: auto; }
 }
 .mockup-float { animation: float-mockup 5s ease-in-out infinite; }
 
+/* ── Hero two-column grid — collapses to single column on mobile ── */
+.hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .hero-mockup {
+    display: none;
+  }
+}
+
 @keyframes orb-pulse {
   0%,100% { opacity: 0.7; transform: scale(1); }
   50%     { opacity: 1;   transform: scale(1.12); }

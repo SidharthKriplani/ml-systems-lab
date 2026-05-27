@@ -353,7 +353,7 @@ export default function HomeTab({ onNavigate }) {
         {/* Ambient orb */}
         <div className="orb-pulse" style={{ position: 'absolute', top: '-100px', left: '-80px', width: '600px', height: '500px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.05) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
         {/* Two-column grid: text left, mockup right */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: '48px', alignItems: 'center' }}>
+        <div className="hero-grid">
 
           {/* ── Left: copy + CTAs ── */}
           <div>
@@ -382,7 +382,9 @@ export default function HomeTab({ onNavigate }) {
           </div>
 
           {/* ── Right: product mockup ── */}
-          <ScenarioMockup />
+          <div className="hero-mockup">
+            <ScenarioMockup />
+          </div>
 
         </div>{/* end two-column grid */}
       </section>
