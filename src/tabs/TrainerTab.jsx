@@ -15,7 +15,7 @@ const ALL_QUESTIONS = [
       'Removing features with >50% null rate',
     ],
     correct: 1,
-    explanation: 'Target leakage occurs when features incorporate information from the future. Using only past data for rolling statistics ensures no future signal contaminates training.',
+    explanation: "Target leakage occurs when features incorporate information from the future. Using only past data for rolling statistics ensures no future signal contaminates training. Production tell: offline AUC is suspiciously high (0.94 where 0.80 was the prior ceiling); model craters in live serving where the future signal is unavailable.",
   },
   {
     id: 2, domain: 'Feature Engineering',
@@ -27,7 +27,7 @@ const ALL_QUESTIONS = [
       'Dropping the feature',
     ],
     correct: 1,
-    explanation: 'Target encoding maps categories to their mean target value. Cross-validation folding prevents leakage. OHE creates 10k sparse dimensions; GBTs handle target encoding well.',
+    explanation: "Target encoding maps categories to their mean target value. Cross-validation folding prevents leakage. OHE creates 10k sparse dimensions; GBTs handle target encoding well. In production this breaks as: model ships with full-dataset target-encoded means; rare categories (cold-start items) get mean imputed to the global average and rank randomly, spiking p0 latency errors in the ranker.",
   },
   {
     id: 3, domain: 'Feature Engineering',
@@ -39,7 +39,7 @@ const ALL_QUESTIONS = [
       'Add the feature to the monitoring dashboard only',
     ],
     correct: 2,
-    explanation: 'PSI >0.25 indicates significant shift. Investigate: data pipeline changes, upstream schema drift. Options: remove feature, apply transformation, retrain. Monitoring alone is insufficient.',
+    explanation: "PSI >0.25 indicates significant shift. Investigate: data pipeline changes, upstream schema drift. Options: remove feature, apply transformation, retrain. Monitoring alone is insufficient. In production this breaks as: PSI alert fires at 3am, on-call finds null rate spiked from 0.2% to 34% on a key feature — upstream team changed a column name and null-imputation masked it for two weeks.",
   },
   // Model Evaluation
   {
@@ -52,7 +52,7 @@ const ALL_QUESTIONS = [
       'The model has high recall but low specificity',
     ],
     correct: 1,
-    explanation: 'With severe class imbalance, AUC can be inflated by easy negatives. Precision-recall AUC and precision@K are more relevant for top-K prediction tasks.',
+    explanation: "With severe class imbalance, AUC can be inflated by easy negatives. Precision-recall AUC and precision@K are more relevant for top-K prediction tasks. Production tell: AUROC looks great at 0.97 but Precision@100 is 2% — model is ranking fraudulent transactions below thousands of easy negatives it correctly ignores.",
   },
   {
     id: 5, domain: 'Model Evaluation',
@@ -64,7 +64,7 @@ const ALL_QUESTIONS = [
       'Maximize AUC-ROC',
     ],
     correct: 2,
-    explanation: 'Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN.',
+    explanation: "Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN. In production this breaks as: default 0.5 threshold ships; oncall receives escalation that high-severity fraud cases are being missed at 60% rate because nobody set the threshold for the actual cost ratio.",
   },
   {
     id: 6, domain: 'Model Evaluation',
@@ -76,7 +76,7 @@ const ALL_QUESTIONS = [
       'It makes cross-validation unreliable',
     ],
     correct: 1,
-    explanation: 'With 99% negative class, a trivial classifier gets 99% accuracy. Use precision, recall, F1, or AUC-PR which are insensitive to class imbalance.',
+    explanation: "With 99% negative class, a trivial classifier gets 99% accuracy. Use precision, recall, F1, or AUC-PR which are insensitive to class imbalance. Production tell: model accuracy dashboard shows 99.1% and stakeholders celebrate; fraud team reports zero detections in two weeks — model is predicting all-negative.",
   },
   // ML Systems
   {
@@ -89,7 +89,7 @@ const ALL_QUESTIONS = [
       'Business metric (CTR) drop',
     ],
     correct: 2,
-    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. Feature PSI is also early but doesn't capture model behavior directly.",
+    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. Feature PSI is also early but doesn't capture model behavior directly. Production tell: score histogram compresses toward 0.5 for 3 days before CTR drops — a feature pipeline bug was flattening variance upstream, invisible to business dashboards.",
   },
   {
     id: 8, domain: 'ML Systems',
@@ -101,7 +101,7 @@ const ALL_QUESTIONS = [
       'Eliminates the need for feature stores',
     ],
     correct: 2,
-    explanation: 'Retrieval (ANN/heuristics) narrows from O(millions) to O(hundreds) at low cost. Ranker then applies expensive features only to candidates. This is the standard RecSys architecture.',
+    explanation: "Retrieval (ANN/heuristics) narrows from O(millions) to O(hundreds) at low cost. Ranker then applies expensive features only to candidates. This is the standard RecSys architecture. In production this breaks as: retrieval stage has a bug silently filtering out an entire item category — ranker never sees those items, precision@K drops, and the root cause takes days to trace back past the ranker.",
   },
   {
     id: 9, domain: 'ML Systems',
@@ -113,7 +113,7 @@ const ALL_QUESTIONS = [
       'Cache the model weights in broadcast variable',
     ],
     correct: 2,
-    explanation: 'In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort.',
+    explanation: "In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort. In production this breaks as: Spark job hangs at 99% for 4 hours; one executor is processing the top-10 users who each have 50M events while 199 executors sit idle.",
   },
   // Statistics & Probability
   {
@@ -121,14 +121,14 @@ const ALL_QUESTIONS = [
     q: 'You run 20 A/B tests simultaneously. How many would you expect to show p<0.05 by chance?',
     options: ['0', '1', '5', '10'],
     correct: 1,
-    explanation: 'With α=0.05 and 20 independent tests, expected false positives = 0.05 × 20 = 1. Apply Bonferroni correction (α/20 = 0.0025) or Benjamini-Hochberg FDR control.',
+    explanation: "With α=0.05 and 20 independent tests, expected false positives = 0.05 × 20 = 1. Apply Bonferroni correction (α/20 = 0.0025) or Benjamini-Hochberg FDR control. In production this breaks as: team runs 20 metric slices on a single A/B test, finds one p=0.03 slice, ships the feature, and the lift evaporates in follow-up experiment — it was the expected false positive.",
   },
   {
     id: 11, domain: 'Statistics & Probability',
     q: 'Which distribution best models the time between user events in a recommendation system?',
     options: ['Normal', 'Binomial', 'Exponential', 'Uniform'],
     correct: 2,
-    explanation: 'Inter-arrival times for Poisson processes follow an exponential distribution. User events (clicks, purchases) are often modeled as Poisson processes, making exponential the natural choice.',
+    explanation: "Inter-arrival times for Poisson processes follow an exponential distribution. User events (clicks, purchases) are often modeled as Poisson processes, making exponential the natural choice. Production tell: time-to-purchase model fitted with Gaussian residuals shows systematic underestimation for high-value users whose inter-event times have heavy right tails.",
   },
   {
     id: 12, domain: 'Statistics & Probability',
@@ -140,7 +140,7 @@ const ALL_QUESTIONS = [
       'There is a 5% chance the mean is exactly 4.5 minutes',
     ],
     correct: 2,
-    explanation: 'Frequentist confidence intervals: the procedure produces intervals that contain the true parameter 95% of the time across repeated samples. This specific interval may or may not contain the truth.',
+    explanation: "Frequentist confidence intervals: the procedure produces intervals that contain the true parameter 95% of the time across repeated samples. This specific interval may or may not contain the truth. In production this breaks as: analyst tells stakeholder the CI means there is 95% chance the true lift is inside the interval; ship decision is made on a misinterpretation — the realized effect is outside the CI.",
   },
   // Deep Learning
   {
@@ -153,7 +153,7 @@ const ALL_QUESTIONS = [
       'Reducing batch size',
     ],
     correct: 2,
-    explanation: 'Residual connections (ResNet-style) allow gradients to flow directly through skip paths, bypassing saturating nonlinearities. Batch normalization also helps. Sigmoid worsens vanishing.',
+    explanation: "Residual connections (ResNet-style) allow gradients to flow directly through skip paths, bypassing saturating nonlinearities. Batch normalization also helps. Sigmoid worsens vanishing. Production tell: training loss plateaus after epoch 2 on a 20-layer network; gradient norms logged per layer show near-zero norms in the first 5 layers — no skip connections, sigmoid activations throughout.",
   },
   {
     id: 14, domain: 'Deep Learning',
@@ -165,7 +165,7 @@ const ALL_QUESTIONS = [
       "BatchNorm doesn't work with attention",
     ],
     correct: 1,
-    explanation: 'BatchNorm normalizes across the batch dimension — problematic for variable-length sequences and small batches (e.g., in autoregressive decoding). LayerNorm normalizes across feature dim, independent of batch.',
+    explanation: "BatchNorm normalizes across the batch dimension — problematic for variable-length sequences and small batches (e.g., in autoregressive decoding). LayerNorm normalizes across feature dim, independent of batch. In production this breaks as: model trained with batch_size=256 performs well offline but degrades at serving with batch_size=1; BatchNorm running stats diverge from single-sample inference statistics.",
   },
   {
     id: 15, domain: 'Deep Learning',
@@ -177,7 +177,7 @@ const ALL_QUESTIONS = [
       'Reduce memory usage during inference',
     ],
     correct: 1,
-    explanation: "High temperature T flattens the teacher's output distribution, revealing relative similarities between classes (dark knowledge). Student learns richer structure than from one-hot hard labels.",
+    explanation: "High temperature T flattens the teacher's output distribution, revealing relative similarities between classes (dark knowledge). Student learns richer structure than from one-hot hard labels. Production tell: student distilled at T=1 (hard labels) matches teacher on head classes but degrades 18% on tail classes where the teacher's soft probabilities carried the most information.",
   },
   // MLOps
   {
@@ -190,7 +190,7 @@ const ALL_QUESTIONS = [
       'Rolling restart',
     ],
     correct: 2,
-    explanation: "Canary: route X% of traffic to new model, monitor metrics, gradually increase %. Blue-green: instant switch (less gradual). Shadow: new model runs but responses aren't served (no user impact).",
+    explanation: "Canary: route X% of traffic to new model, monitor metrics, gradually increase %. Blue-green: instant switch (less gradual). Shadow: new model runs but responses aren't served (no user impact). In production this breaks as: team does blue-green switch on a model with a latency regression; p99 latency triples for all users simultaneously with no gradual signal — canary would have caught it at 1% traffic.",
   },
   {
     id: 17, domain: 'MLOps',
@@ -202,7 +202,7 @@ const ALL_QUESTIONS = [
       'Load testing only',
     ],
     correct: 2,
-    explanation: 'Champion-challenger comparison: new model must beat production on held-out data with statistical significance. Plus: data validation, integration tests, latency benchmarks.',
+    explanation: "Champion-challenger comparison: new model must beat production on held-out data with statistical significance. Plus: data validation, integration tests, latency benchmarks. In production this breaks as: model passes offline eval but fails latency benchmark — feature store call added 80ms to p99; goes to production anyway because latency check was not in the gate, causing SLA breach.",
   },
   {
     id: 18, domain: 'MLOps',
@@ -214,7 +214,7 @@ const ALL_QUESTIONS = [
       'API endpoints change breaking client calls',
     ],
     correct: 1,
-    explanation: 'Concept drift: P(Y|X) changes. E.g., user behavior patterns shift post-COVID. Distinct from covariate drift (P(X) changes). Requires model retraining, not just recalibration.',
+    explanation: "Concept drift: P(Y|X) changes. E.g., user behavior patterns shift post-COVID. Distinct from covariate drift (P(X) changes). Requires model retraining, not just recalibration. Production tell: feature distributions look stable (PSI < 0.1) but model precision drops 12 points over 6 weeks — user intent has shifted while the input signals remain the same.",
   },
   // Ranking & Retrieval
   {
@@ -227,7 +227,7 @@ const ALL_QUESTIONS = [
       'The ratio of relevant to irrelevant items',
     ],
     correct: 1,
-    explanation: 'NDCG@K = DCG@K / IDCG@K. DCG discounts relevance by log2(rank+1), rewarding top-ranked relevant items. Normalized by ideal DCG enables comparison across queries.',
+    explanation: "NDCG@K = DCG@K / IDCG@K. DCG discounts relevance by log2(rank+1), rewarding top-ranked relevant items. Normalized by ideal DCG enables comparison across queries. Production tell: offline NDCG@10 improves 2% but online CTR is flat — the model is improving rank 6-10 positions where discount factors make NDCG sensitive but users rarely scroll.",
   },
   {
     id: 20, domain: 'Ranking & Retrieval',
@@ -239,7 +239,7 @@ const ALL_QUESTIONS = [
       'Batch size vs. embedding dimension',
     ],
     correct: 1,
-    explanation: 'ANN algorithms (HNSW, IVF-PQ) reduce exact search cost by trading recall. HNSW: high recall, high memory. IVF-PQ: lower memory via quantization, slightly lower recall. Tune ef_search for recall/latency tradeoff.',
+    explanation: "ANN algorithms (HNSW, IVF-PQ) reduce exact search cost by trading recall. HNSW: high recall, high memory. IVF-PQ: lower memory via quantization, slightly lower recall. Tune ef_search for recall/latency tradeoff. In production this breaks as: HNSW index built on 100M items exhausts instance memory at serving; recall@100 drops 15% after switching to IVF-PQ without retuning ef_search for the new index type.",
   },
   {
     id: 21, domain: 'Ranking & Retrieval',
@@ -251,7 +251,7 @@ const ALL_QUESTIONS = [
       'Listwise requires no negative examples',
     ],
     correct: 1,
-    explanation: 'Pointwise: regress/classify each item independently. Pairwise: compare item pairs. Listwise: optimize the whole list ordering (e.g., LambdaMART optimizes NDCG directly). Listwise best aligns with ranking metrics.',
+    explanation: "Pointwise: regress/classify each item independently. Pairwise: compare item pairs. Listwise: optimize the whole list ordering (e.g., LambdaMART optimizes NDCG directly). Listwise best aligns with ranking metrics. Production tell: pointwise model trained on CTR shows high recall but poor NDCG — it ranks all high-CTR items equally without differentiating their relative order within a slate.",
   },
   // Experiment Design
   {
@@ -264,7 +264,7 @@ const ALL_QUESTIONS = [
       'Experiment duration',
     ],
     correct: 1,
-    explanation: 'CUPED uses pre-experiment covariate (e.g., pre-period metric) to reduce residual variance: Y_cuped = Y - θ·X_pre. Same expected value, lower variance → smaller MDE → shorter experiments.',
+    explanation: "CUPED uses pre-experiment covariate (e.g., pre-period metric) to reduce residual variance: Y_cuped = Y - θ·X_pre. Same expected value, lower variance → smaller MDE → shorter experiments. In production this breaks as: CUPED applied but pre-period covariate is correlated with treatment assignment (novelty effect users had higher pre-period activity); variance reduction is real but θ is biased, inflating estimated lift.",
   },
   {
     id: 23, domain: 'Experiment Design',
@@ -276,7 +276,7 @@ const ALL_QUESTIONS = [
       'Run the experiment longer',
     ],
     correct: 2,
-    explanation: 'Conflicting metrics require pre-defined OEC or guardrail thresholds. Define: engagement is a primary metric, revenue is a guardrail. If guardrail is violated, do not ship regardless of primary metric lift.',
+    explanation: "Conflicting metrics require pre-defined OEC or guardrail thresholds. Define: engagement is a primary metric, revenue is a guardrail. If guardrail is violated, do not ship regardless of primary metric lift. In production this breaks as: team ships because engagement is up 4%; revenue guardrail was never defined pre-experiment; post-ship analysis shows revenue down 2%, but guardrail threshold debate happens after the fact.",
   },
   {
     id: 24, domain: 'Experiment Design',
@@ -288,7 +288,7 @@ const ALL_QUESTIONS = [
       'A multi-armed bandit with switching costs',
     ],
     correct: 1,
-    explanation: 'Switchback: used in marketplace settings (e.g., Uber surge pricing) where all users in a market must receive the same treatment. Alternate treatment/control by time window, account for carryover effects.',
+    explanation: "Switchback: used in marketplace settings (e.g., Uber surge pricing) where all users in a market must receive the same treatment. Alternate treatment/control by time window, account for carryover effects. In production this breaks as: switchback windows set to 1 hour; driver positioning decisions from treatment window carry over into control windows for 2+ hours, contaminating the control measurement with treatment effects.",
   },
   // SQL & Data
   {
@@ -301,7 +301,7 @@ const ALL_QUESTIONS = [
       'PARTITION BY date',
     ],
     correct: 1,
-    explanation: 'Window functions with ROWS UNBOUNDED PRECEDING compute cumulative aggregates without collapsing rows. PARTITION BY resets the running total per group.',
+    explanation: "Window functions with ROWS UNBOUNDED PRECEDING compute cumulative aggregates without collapsing rows. PARTITION BY resets the running total per group. In production this breaks as: missing PARTITION BY on a revenue cumsum query produces a single running total across all users; the query returns one row per transaction with a global cumsum, silently wrong — no error thrown.",
   },
   {
     id: 26, domain: 'SQL & Data',
@@ -313,7 +313,7 @@ const ALL_QUESTIONS = [
       'CROSS JOIN all visits and purchases',
     ],
     correct: 0,
-    explanation: 'Self-join: JOIN first_visit_table ON user_id AND purchase_date BETWEEN first_visit_date AND first_visit_date+7. Use indexed columns. Correlated subquery is O(N²).',
+    explanation: "Self-join: JOIN first_visit_table ON user_id AND purchase_date BETWEEN first_visit_date AND first_visit_date+7. Use indexed columns. Correlated subquery is O(N²). In production this breaks as: correlated subquery version runs overnight on 50M users before timing out; self-join on unindexed purchase_date still takes 4 hours — adding a composite index on (user_id, purchase_date) drops it to 8 minutes.",
   },
   {
     id: 27, domain: 'SQL & Data',
@@ -325,7 +325,7 @@ const ALL_QUESTIONS = [
       'Switch to a subquery',
     ],
     correct: 1,
-    explanation: 'GROUP BY can be better optimized than DISTINCT in many query planners (e.g., hash aggregation vs. sort-based dedup). Also consider: is DISTINCT truly needed? Can you filter earlier?',
+    explanation: "GROUP BY can be better optimized than DISTINCT in many query planners (e.g., hash aggregation vs. sort-based dedup). Also consider: is DISTINCT truly needed? Can you filter earlier? Production tell: DISTINCT query spills to disk on a 1B-row table; rewriting as GROUP BY with early WHERE filter reduces shuffled data by 70% and eliminates the spill.",
   },
   // Optimization
   {
@@ -338,7 +338,7 @@ const ALL_QUESTIONS = [
       'When training speed is the priority',
     ],
     correct: 2,
-    explanation: 'Adam converges faster but often to sharper minima (higher test loss). SGD+momentum with learning rate warmup and cosine decay finds flatter minima. Many production models use SGD for final training after Adam warmup.',
+    explanation: "Adam converges faster but often to sharper minima (higher test loss). SGD+momentum with learning rate warmup and cosine decay finds flatter minima. Many production models use SGD for final training after Adam warmup. Production tell: Adam-trained model has 0.5% lower val loss than SGD but 1.8% higher test loss on held-out distribution — the sharp minimum does not generalize.",
   },
   {
     id: 29, domain: 'Optimization',
@@ -350,7 +350,7 @@ const ALL_QUESTIONS = [
       'A regularization technique to prevent overfitting',
     ],
     correct: 1,
-    explanation: 'Exploding gradients (common in RNNs, transformers on long sequences) cause parameter updates to diverge. Clip by global norm: scale all gradients uniformly when ||g|| > threshold.',
+    explanation: "Exploding gradients (common in RNNs, transformers on long sequences) cause parameter updates to diverge. Clip by global norm: scale all gradients uniformly when ||g|| > threshold. Production tell: training loss spikes to NaN at step 1200 of a 10k-step run; gradient norm logs show ||g|| hitting 1e6 two steps before the NaN — clip threshold was missing from the optimizer config.",
   },
   {
     id: 30, domain: 'Optimization',
@@ -362,7 +362,7 @@ const ALL_QUESTIONS = [
       'Prevents catastrophic forgetting',
     ],
     correct: 1,
-    explanation: 'At initialization, weights are random and gradients are noisy. High LR early → large unstable updates. Warmup starts with tiny LR, increases linearly. Prevents early divergence, especially with Adam.',
+    explanation: "At initialization, weights are random and gradients are noisy. High LR early → large unstable updates. Warmup starts with tiny LR, increases linearly. Prevents early divergence, especially with Adam. In production this breaks as: fine-tuning a pretrained model with full LR from step 0 causes catastrophic forgetting in the first 100 steps; loss recovers but pretrained features are destroyed, final accuracy 6% below baseline.",
   },
   // Feature Engineering — questions 31-33
   {
@@ -375,7 +375,7 @@ const ALL_QUESTIONS = [
       'RFE requires a linear model as estimator',
     ],
     correct: 1,
-    explanation: 'Performing RFE on the full dataset before CV means the feature selector has seen the validation folds\' labels, a form of selection leakage. Always nest RFE inside the CV loop.',
+    explanation: "Performing RFE on the full dataset before CV means the feature selector has seen the validation folds labels, a form of selection leakage. Always nest RFE inside the CV loop. Production tell: nested CV AUC is 0.76; outer-only RFE CV reports 0.84 — the 8-point gap is pure selection leakage that vanishes when the model hits unseen production data.",
   },
   {
     id: 32, domain: 'Feature Engineering',
@@ -387,7 +387,7 @@ const ALL_QUESTIONS = [
       'Linear models require all features to be log-normal',
     ],
     correct: 1,
-    explanation: 'Linear models assume roughly Gaussian residuals and are sensitive to outliers; heavy right-skew creates extreme values that disproportionately influence gradient updates and coefficient estimation.',
+    explanation: "Linear models assume roughly Gaussian residuals and are sensitive to outliers; heavy right-skew creates extreme values that disproportionately influence gradient updates and coefficient estimation. In production this breaks as: insurance claim model trained on raw claim amounts; a single $10M outlier claim dominates the loss, pulling coefficients so far that median predictions are off by 40%.",
   },
   {
     id: 33, domain: 'Feature Engineering',
@@ -399,7 +399,7 @@ const ALL_QUESTIONS = [
       'Fill with zero — new users have zero days since last purchase',
     ],
     correct: 1,
-    explanation: 'NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps.',
+    explanation: "NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps. In production this breaks as: NULLs imputed with mean days_since_purchase (e.g., 45 days); new users look identical to average-lapsed users, suppressing a strong new-user conversion signal the model could have learned.",
   },
   // Model Evaluation — questions 34-36
   {
@@ -412,7 +412,7 @@ const ALL_QUESTIONS = [
       'The model\'s sensitivity to threshold selection',
     ],
     correct: 1,
-    explanation: 'ECE bins predictions by confidence, then computes a weighted average of |accuracy - confidence| per bin. A perfectly calibrated model\'s 0.7 probability means 70% of those predictions are correct.',
+    explanation: "ECE bins predictions by confidence, then computes a weighted average of |accuracy - confidence| per bin. A perfectly calibrated model at 0.7 probability means 70% of those predictions are correct. In production this breaks as: fraud model outputs 0.9 scores; ops team assumes 90% precision and deprioritizes manual review — actual precision is 60% due to class imbalance and no calibration step.",
   },
   {
     id: 35, domain: 'Model Evaluation',
@@ -424,7 +424,7 @@ const ALL_QUESTIONS = [
       'When the model is a logistic regression',
     ],
     correct: 2,
-    explanation: 'Platt scaling fits a parametric sigmoid — fast but assumes a monotone miscalibration pattern. Isotonic regression is non-parametric and flexible, but prone to overfitting on small calibration sets.',
+    explanation: "Platt scaling fits a parametric sigmoid — fast but assumes a monotone miscalibration pattern. Isotonic regression is non-parametric and flexible, but prone to overfitting on small calibration sets. In production this breaks as: isotonic regression fitted on 500 calibration samples produces a non-monotone mapping; scores in [0.6, 0.7] get mapped lower than scores in [0.5, 0.6], reversing rank order for a score band.",
   },
   {
     id: 36, domain: 'Model Evaluation',
@@ -436,7 +436,7 @@ const ALL_QUESTIONS = [
       'CTR is a lagging indicator that takes months to stabilize',
     ],
     correct: 1,
-    explanation: 'Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data can\'t capture.',
+    explanation: "Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data cannot capture. In production this breaks as: new ranker improves offline NDCG 3% but online A/B shows -1% CTR; model learned to exploit position bias in logged data, surfacing items that were clicked because they were rank-1, not because they were relevant.",
   },
   // ML Systems — questions 37-39
   {
@@ -449,7 +449,7 @@ const ALL_QUESTIONS = [
       'Use JSON without a schema — flexibility is built-in',
     ],
     correct: 1,
-    explanation: 'Schema registries (e.g., Confluent) enforce compatibility rules. Forward compatibility means new writers, old readers — deploy consumers first, then producers, to avoid deserialization failures.',
+    explanation: "Schema registries (e.g., Confluent) enforce compatibility rules. Forward compatibility means new writers, old readers — deploy consumers first, then producers, to avoid deserialization failures. In production this breaks as: producer deployed first with a new required field; old consumer throws deserialization exception on every message; feature pipeline goes dark for 40 minutes until rollback completes.",
   },
   {
     id: 38, domain: 'ML Systems',
@@ -461,7 +461,7 @@ const ALL_QUESTIONS = [
       'Caching the model\'s last prediction per user',
     ],
     correct: 1,
-    explanation: 'Online feature stores precompute batch features into key-value stores optimized for microsecond point lookups. On-the-fly computation cannot meet single-digit millisecond SLAs for complex features.',
+    explanation: "Online feature stores precompute batch features into key-value stores optimized for microsecond point lookups. On-the-fly computation cannot meet single-digit millisecond SLAs for complex features. In production this breaks as: feature computed on-the-fly by joining 3 tables at serving time; p99 latency is 220ms vs. 8ms SLA — feature store lookup would be 0.5ms, but the batch pipeline was never built.",
   },
   {
     id: 39, domain: 'ML Systems',
@@ -473,7 +473,7 @@ const ALL_QUESTIONS = [
       'The batch size was not fixed during export',
     ],
     correct: 1,
-    explanation: 'ONNX tracing captures operations on a specific input; dynamic Python control flow (data-dependent branching, variable-length loops) is not captured. Use torch.jit.script or rewrite with torch.where for static graphs.',
+    explanation: "ONNX tracing captures operations on a specific input; dynamic Python control flow (data-dependent branching, variable-length loops) is not captured. Use torch.jit.script or rewrite with torch.where for static graphs. In production this breaks as: model traced with a short input silently takes the short-sequence branch for all inputs; long sequences trigger wrong computation path, producing nonsense scores with no exception thrown.",
   },
   // Statistics & Probability — questions 40-42
   {
@@ -486,7 +486,7 @@ const ALL_QUESTIONS = [
       'You need exact intervals rather than approximate ones',
     ],
     correct: 1,
-    explanation: 'The t-test assumes normality of the sampling distribution of the mean (CLT helps for means). For non-standard statistics like median, Gini coefficient, or AUC, bootstrapping empirically estimates the sampling distribution without parametric assumptions.',
+    explanation: "The t-test assumes normality of the sampling distribution of the mean (CLT helps for means). For non-standard statistics like median, Gini coefficient, or AUC, bootstrapping empirically estimates the sampling distribution without parametric assumptions. In production this breaks as: t-test applied to revenue-per-user (heavy right tail, Gini target); p-value is 0.04 but bootstrapped CI crosses zero — the parametric assumption inflated significance, and the result does not replicate.",
   },
   {
     id: 41, domain: 'Statistics & Probability',
@@ -498,7 +498,7 @@ const ALL_QUESTIONS = [
       'There is a 97% chance the alternative hypothesis is true',
     ],
     correct: 1,
-    explanation: 'P-values are not posterior probabilities of hypotheses. They measure how surprising the data is under H0. Small p-value → data is unlikely under H0 → reject H0. This says nothing about practical significance.',
+    explanation: "P-values are not posterior probabilities of hypotheses. They measure how surprising the data is under H0. Small p-value → data is unlikely under H0 → reject H0. This says nothing about practical significance. In production this breaks as: A/B test on 50M users yields p=0.001 for a 0.003% revenue lift — statistically significant, shipped, but engineering cost to maintain the feature exceeds the revenue impact by 10x.",
   },
   {
     id: 42, domain: 'Statistics & Probability',
@@ -510,7 +510,7 @@ const ALL_QUESTIONS = [
       'You need to run a frequentist test to confirm',
     ],
     correct: 1,
-    explanation: 'Bayesian decision theory uses expected loss, not just posterior probability. If B is 4% likely to be worse but the downside is catastrophic (e.g., revenue loss), expected loss may exceed your risk tolerance even at 96% confidence.',
+    explanation: "Bayesian decision theory uses expected loss, not just posterior probability. If B is 4% likely to be worse but the downside is catastrophic (e.g., revenue loss), expected loss may exceed your risk tolerance even at 96% confidence. Production tell: team ships at 95% probability of improvement; the 5% downside scenario materializes — revenue drops 8% for a week because expected loss was never computed against downside magnitude.",
   },
   // Deep Learning — questions 43-45
   {
@@ -523,7 +523,7 @@ const ALL_QUESTIONS = [
       'Quantizing weights to int8 for faster matrix multiplication',
     ],
     correct: 1,
-    explanation: 'Autoregressive decoding recomputes K,V for all past tokens each step without a cache — O(n²) total. KV cache stores these projections, making each new token O(n) attention instead of O(n²) recomputation.',
+    explanation: "Autoregressive decoding recomputes K,V for all past tokens each step without a cache — O(n²) total. KV cache stores these projections, making each new token O(n) attention instead of O(n²) recomputation. In production this breaks as: serving system disabled KV cache to save GPU memory; 512-token generation goes from 80ms to 6 seconds p99 — KV cache memory cost is linear but the compute saving is quadratic.",
   },
   {
     id: 44, domain: 'Deep Learning',
@@ -535,7 +535,7 @@ const ALL_QUESTIONS = [
       'Batch size for gradient accuracy',
     ],
     correct: 1,
-    explanation: 'Standard backprop stores all forward activations for gradient computation, consuming O(layers) memory. Checkpointing stores only checkpoint activations and recomputes intermediate values during backward, reducing memory at the cost of ~33% extra compute.',
+    explanation: "Standard backprop stores all forward activations for gradient computation, consuming O(layers) memory. Checkpointing stores only checkpoint activations and recomputes intermediate values during backward, reducing memory at the cost of ~33% extra compute. In production this breaks as: training a 7B model on A100-80GB OOMs at batch_size=4 without checkpointing; enabling it allows batch_size=16 with only 28% training throughput reduction, well worth the tradeoff.",
   },
   {
     id: 45, domain: 'Deep Learning',
@@ -547,7 +547,7 @@ const ALL_QUESTIONS = [
       'O(L² + d_model²)',
     ],
     correct: 1,
-    explanation: 'Each attention head computes QKᵀ which is (L × d_k) × (d_k × L) = O(L² × d_k). Across all heads: O(L² × d_model). This quadratic scaling in L is why long-context transformers need sparse/linear attention variants.',
+    explanation: "Each attention head computes QKᵀ which is (L × d_k) × (d_k × L) = O(L² × d_k). Across all heads: O(L² × d_model). This quadratic scaling in L is why long-context transformers need sparse/linear attention variants. In production this breaks as: context length doubled from 2K to 4K tokens; attention memory quadruples, batch size must halve, throughput drops 60% — linear attention or sliding-window attention needed for cost-effective scaling.",
   },
   // MLOps — questions 46-48
   {
@@ -560,7 +560,7 @@ const ALL_QUESTIONS = [
       'The experiment ran for too short a period',
     ],
     correct: 1,
-    explanation: 'SRM (detected via chi-square test on group sizes) invalidates the experiment\'s randomization. Common causes: bots, cache hits, logging bugs, or inconsistent assignment logic. Always check SRM before analyzing results.',
+    explanation: "SRM (detected via chi-square test on group sizes) invalidates the experiment randomization. Common causes: bots, cache hits, logging bugs, or inconsistent assignment logic. Always check SRM before analyzing results. In production this breaks as: treatment group is 8% smaller than control (p<0.001 chi-square); root cause is a CDN cache serving control content to some treatment users — lift estimate is biased by the non-random group difference.",
   },
   {
     id: 47, domain: 'MLOps',
@@ -572,7 +572,7 @@ const ALL_QUESTIONS = [
       'To signal that model training is still in progress',
     ],
     correct: 1,
-    explanation: 'The Staging stage gates models through champion-challenger evaluation, integration validation, and latency checks before serving live traffic. This mirrors software release pipelines and enables rollback.',
+    explanation: "The Staging stage gates models through champion-challenger evaluation, integration validation, and latency checks before serving live traffic. This mirrors software release pipelines and enables rollback. In production this breaks as: model promoted directly from training to production skipping staging; a subtle preprocessing mismatch (train used median imputation, serving uses mean) causes 15% accuracy drop, only discovered after 6 hours of degraded predictions.",
   },
   {
     id: 48, domain: 'MLOps',
@@ -584,7 +584,7 @@ const ALL_QUESTIONS = [
       'The model is retraining in the background',
     ],
     correct: 1,
-    explanation: 'Gradual latency increase without code changes typically indicates resource exhaustion: memory leaks, growing in-process caches, or degrading external dependencies (feature store, DB). Profile memory/GC and downstream service latencies.',
+    explanation: "Gradual latency increase without code changes typically indicates resource exhaustion: memory leaks, growing in-process caches, or degrading external dependencies (feature store, DB). Profile memory/GC and downstream service latencies. Production tell: p99 latency grows from 40ms to 180ms over 72 hours on a stable-traffic service; heap profiler shows unbounded growth in a prediction cache that has no TTL eviction policy.",
   },
   // Ranking & Retrieval — questions 49-51
   {
@@ -597,7 +597,7 @@ const ALL_QUESTIONS = [
       'The embedding model positions similar items closer in vector space',
     ],
     correct: 0,
-    explanation: 'Users are less likely to examine lower positions — clicks at rank 10 are sparse not because the item is irrelevant, but because it wasn\'t seen. Inverse propensity scoring (IPS) or regression-EM debiasing is needed for unbiased learning from clicks.',
+    explanation: "Users are less likely to examine lower positions — clicks at rank 10 are sparse not because the item is irrelevant, but because it was not seen. Inverse propensity scoring (IPS) or regression-EM debiasing is needed for unbiased learning from clicks. In production this breaks as: model trained on raw clicks learns to always rank popular high-position items first; tail items with high relevance at rank 8-10 are never surfaced, creating a feedback loop that worsens diversity.",
   },
   {
     id: 50, domain: 'Ranking & Retrieval',
@@ -609,7 +609,7 @@ const ALL_QUESTIONS = [
       'MIPS requires normalized embeddings',
     ],
     correct: 1,
-    explanation: 'For normalized vectors, MIPS ≡ NNS (cosine = dot product). For unnormalized embeddings, high dot product can come from large norms rather than directional alignment, requiring MIPS-specific algorithms (e.g., ScaNN, FAISS with inner product index).',
+    explanation: "For normalized vectors, MIPS ≡ NNS (cosine = dot product). For unnormalized embeddings, high dot product can come from large norms rather than directional alignment, requiring MIPS-specific algorithms (e.g., ScaNN, FAISS with inner product index). In production this breaks as: cosine similarity index used with unnormalized embeddings; a few high-norm item embeddings (viral items with many interactions) dominate top-K results for every user regardless of actual user preference.",
   },
   {
     id: 51, domain: 'Ranking & Retrieval',
@@ -621,7 +621,7 @@ const ALL_QUESTIONS = [
       'The two towers use different activation functions that are incompatible',
     ],
     correct: 1,
-    explanation: 'The separation enables ANN search: precompute and index all item embeddings offline. At serving time, compute only the user embedding online, then retrieve top-K items via ANN — O(log N) vs. O(N) cross-encoder scoring.',
+    explanation: "The separation enables ANN search: precompute and index all item embeddings offline. At serving time, compute only the user embedding online, then retrieve top-K items via ANN — O(log N) vs. O(N) cross-encoder scoring. In production this breaks as: item embeddings refreshed only weekly while user embeddings update hourly; new items are invisible to retrieval for up to 7 days — a full week of missed exposure for new catalog additions.",
   },
   // Experiment Design — questions 52-54
   {
@@ -634,7 +634,7 @@ const ALL_QUESTIONS = [
       'User-level randomization is too computationally expensive at scale',
     ],
     correct: 1,
-    explanation: 'SUTVA requires that one unit\'s treatment doesn\'t affect another\'s outcome. In marketplaces, treating drivers differently affects riders in the same market — a SUTVA violation. Use cluster/geo randomization or switchback designs.',
+    explanation: "SUTVA requires that one unit treatment does not affect another outcome. In marketplaces, treating drivers differently affects riders in the same market — a SUTVA violation. Use cluster/geo randomization or switchback designs. In production this breaks as: individual rider A/B test on pricing; treatment riders get lower prices and book more trips, starving control riders of available drivers — control group conversion drops, making treatment look more impactful than it is.",
   },
   {
     id: 53, domain: 'Experiment Design',
@@ -646,7 +646,7 @@ const ALL_QUESTIONS = [
       'Automatically correcting for multiple testing',
     ],
     correct: 1,
-    explanation: 'Revenue lift could come from more orders (volume) or higher AOV (quality). Decomposition tells you mechanism — e.g., if AOV drops while orders rise, you\'re acquiring lower-value customers, which changes the ship decision.',
+    explanation: "Revenue lift could come from more orders (volume) or higher AOV (quality). Decomposition tells you mechanism — e.g., if AOV drops while orders rise, you are acquiring lower-value customers, which changes the ship decision. Production tell: +3% revenue looks like a win until decomposition shows orders +12%, AOV -8% — the feature is attracting discount seekers, long-term LTV impact is negative.",
   },
   {
     id: 54, domain: 'Experiment Design',
@@ -658,7 +658,7 @@ const ALL_QUESTIONS = [
       'Increases by 1.41x (square root of 2)',
     ],
     correct: 1,
-    explanation: 'Sample size for a given power scales as 1/MDE². Halving MDE (detecting a smaller effect) requires 4x more samples to maintain the same power, because smaller signals require tighter estimation intervals.',
+    explanation: "Sample size for a given power scales as 1/MDE². Halving MDE (detecting a smaller effect) requires 4x more samples to maintain the same power, because smaller signals require tighter estimation intervals. In production this breaks as: experiment designed for MDE=5% but true effect is 1%; experiment ends underpowered after 2 weeks — result is inconclusive and the team re-runs for 8 more weeks at a cost of delayed roadmap decisions.",
   },
   // SQL & Data — questions 55-57
   {
@@ -671,7 +671,7 @@ const ALL_QUESTIONS = [
       'Non-selective indexes only work with composite keys',
     ],
     correct: 1,
-    explanation: 'Index selectivity = distinct values / total rows. For a boolean column (2 distinct values on 100M rows), each lookup still fetches ~50% of the table via scattered I/O — worse than a sequential scan. Planners correctly skip these indexes.',
+    explanation: "Index selectivity = distinct values / total rows. For a boolean column (2 distinct values on 100M rows), each lookup still fetches ~50% of the table via scattered I/O — worse than a sequential scan. Planners correctly skip these indexes. Production tell: adding an index on is_active does not speed up the query; EXPLAIN shows sequential scan chosen by planner — a composite index on (is_active, created_at) with a date filter would have the selectivity needed.",
   },
   {
     id: 56, domain: 'SQL & Data',
@@ -683,7 +683,7 @@ const ALL_QUESTIONS = [
       'Simultaneously with WHERE in a single pass',
     ],
     correct: 0,
-    explanation: 'SQL logical order: FROM → WHERE → window functions → SELECT. WHERE runs first, so LAG/LEAD only see rows that pass the WHERE clause. To lag over unfiltered data, use a subquery or CTE to apply the window before filtering.',
+    explanation: "SQL logical order: FROM → WHERE → window functions → SELECT. WHERE runs first, so LAG/LEAD only see rows that pass the WHERE clause. To lag over unfiltered data, use a subquery or CTE to apply the window before filtering. In production this breaks as: session gap analysis uses LAG after a WHERE status=active filter; gaps are computed only across active events, silently skipping churned sessions and producing a 40% underestimate of median session gap.",
   },
   {
     id: 57, domain: 'SQL & Data',
@@ -695,7 +695,7 @@ const ALL_QUESTIONS = [
       'The query planner is using a nested loop join',
     ],
     correct: 1,
-    explanation: 'If many rows in table A match many rows in table B on the join key, the result set is multiplicative. 10M × 100M = 1B worst case. Deduplicate keys before joining or use aggregation first (early aggregation pattern).',
+    explanation: "If many rows in table A match many rows in table B on the join key, the result set is multiplicative. 10M × 100M = 1B worst case. Deduplicate keys before joining or use aggregation first (early aggregation pattern). In production this breaks as: joining events to user-attributes without deduplicating user_id first; one user with 500K events × 3 attribute rows produces 1.5M rows per user — total result is 300x larger than expected and OOMs the Spark job.",
   },
   // Optimization — questions 58-60
   {
@@ -708,7 +708,7 @@ const ALL_QUESTIONS = [
       'It reduces gradient variance across batches',
     ],
     correct: 1,
-    explanation: 'SGDR (Loshchilov & Hutter 2017): LR follows cosine decay then resets. Restarts act as perturbations that escape sharp minima; snapshots at each restart\'s end can be ensembled. Especially effective for models with many local optima.',
+    explanation: "SGDR (Loshchilov & Hutter 2017): LR follows cosine decay then resets. Restarts act as perturbations that escape sharp minima; snapshots at each restart end can be ensembled. Especially effective for models with many local optima. Production tell: loss plateau after 20k steps despite dropping LR manually; adding cosine restarts every 5k steps drops val loss an additional 0.8% by escaping the plateau region.",
   },
   {
     id: 59, domain: 'Optimization',
@@ -720,7 +720,7 @@ const ALL_QUESTIONS = [
       'FP16 accumulation introduces systematic bias in the gradient direction',
     ],
     correct: 0,
-    explanation: 'FP16 minimum positive value is ~6e-8; many gradients are smaller and flush to zero. Loss scaling multiplies the loss by a large constant (e.g., 2^15) before backward, shifting gradient magnitudes into representable FP16 range, then unscaled before the optimizer step.',
+    explanation: "FP16 minimum positive value is ~6e-8; many gradients are smaller and flush to zero. Loss scaling multiplies the loss by a large constant (e.g., 2^15) before backward, shifting gradient magnitudes into representable FP16 range, then unscaled before the optimizer step. In production this breaks as: mixed-precision training without loss scaling; gradients in early layers flush to zero after 500 steps, model stops learning — loss plateaus at a high value and the team mistakenly attributes it to a learning rate bug.",
   },
   {
     id: 60, domain: 'Optimization',
@@ -732,7 +732,7 @@ const ALL_QUESTIONS = [
       'Applying gradient clipping before the parameter update',
     ],
     correct: 1,
-    explanation: 'AdaGrad accumulates all squared gradients from the start — denominator grows monotonically → effective LR → 0. RMSProp/AdaDelta use an EMA (controlled by decay ρ), so only recent gradient history influences the adaptive rate.',
+    explanation: "AdaGrad accumulates all squared gradients from the start — denominator grows monotonically → effective LR → 0. RMSProp/AdaDelta use an EMA (controlled by decay ρ), so only recent gradient history influences the adaptive rate. In production this breaks as: AdaGrad used for a continuously retrained model; after 30 retraining cycles on streaming data, the accumulated denominator is so large that the effective learning rate is near zero — model stops adapting to distribution shift.",
   },
 ]
 

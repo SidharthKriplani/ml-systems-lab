@@ -267,6 +267,79 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 ---
 
+---
+
+## Part VI — Learning Quality Audit
+
+### #008 — 2026-05-27 · Learning Quality / Source Material
+
+**Scope:** Static read of `StaffLayerTab.jsx`, `CombinatorTab.jsx`, `TrainerTab.jsx` — scenario realism, explanation depth, mental model transferability, distractor quality.  
+**Trigger:** Optimization objective confirmed as learning quality (explanation depth, scenario realism, mental model transfer — not engagement). First audit targeting the actual learning outcome rather than code health.  
+**Output:** 4 findings — 0 High, 2 Medium, 2 Low.
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | MCQ explanations in CombinatorTab and TrainerTab state the correct answer but don't explain the production failure mode — user can pass the question without building transferable judgment | `CombinatorTab.jsx`, `TrainerTab.jsx` | Medium | ⚠️ Open |
+| 2 | Distractor quality is uneven — several wrong options are too obviously wrong (e.g., "Accuracy" in an imbalanced-class MCQ), reducing the judgment signal. A user who knows anything picks the right answer without reasoning through the tradeoff | `CombinatorTab.jsx`, `TrainerTab.jsx` | Medium | ⚠️ Open |
+| 3 | StaffLayerTab domain coverage is thin for high-value domains — Experiment Design (1 scenario), Feature Engineering (1), Ranking (1), Ethics/Fairness (1). These are the domains most likely to come up in Staff-level interviews and incidents | `StaffLayerTab.jsx` | Low | ⚠️ Open |
+| 4 | IC3 reveals in StaffLayerTab are occasionally strawman-level — "Ship it — p < 0.05" as IC3 is too obviously wrong. A real IC3 engineer knows more than that. Strawman IC3 makes the Staff reveal feel earned without being earned | `StaffLayerTab.jsx` | Low | ⚠️ Open |
+
+**Finding 1 detail — thin explanations:**
+
+The explanations in CombinatorTab and TrainerTab follow a consistent pattern: state the mechanism, optionally add a formula or threshold. What they don't do: explain what goes wrong in production if you get this wrong, or give a signal for recognizing the pattern in a real codebase or incident.
+
+Examples of thin explanations and what they're missing:
+
+| Question | Current explanation | Missing |
+|----------|-------------------|---------|
+| Imputer fit on full dataset | "Fit imputer on train, transform both. Using full dataset leaks test statistics." | Why this matters: offline metrics look fine, production degrades silently because imputed values shift when test distribution differs. The signal: train/val agreement is suspiciously high. |
+| Target leakage (TrainerTab) | "Target leakage occurs when features incorporate information from the future." | What failure mode looks like: model AUC is 0.94 where 0.80 was previously the ceiling. The tell: model performs perfectly in backtest, crashes live. |
+| Shadow vs canary | "Shadow: mirror traffic to new model, compare outputs, no user impact." | When you choose shadow over canary: when you can't afford to serve degraded results to anyone — high-stakes, irreversible decisions. When canary is better: when you need real user behavior signal. |
+
+The fix pattern: append 1-2 sentences per explanation following "In production, getting this wrong looks like: X. The signal that you're in this situation: Y." This is the **what/why/signal** pattern already used in the StaffLayerTab staff-level reveals and the FeatureStoreArchitecture detail panels — apply it to the MCQ explanations.
+
+**Finding 2 detail — distractor quality:**
+
+Several MCQ wrong options are eliminable without judgment:
+- "Accuracy" as a wrong option in any imbalanced-class question — no practitioner above IC3 would pick this
+- "Drop rows with missing values" as a wrong option in any feature engineering question about imputation — too obviously destructive
+- "All layers simultaneously" for fine-tuning order — anyone who has run fine-tuning knows this is wrong
+
+Better distractors would be options that are: (a) correct in a different context, (b) used commonly but for the wrong reason, or (c) adjacent to the right answer but subtly wrong. Example: replace "Drop rows with missing values" with "Impute with mean computed on training set only, ignoring missingness mechanism" — this is what many practitioners actually do, and it's wrong for a specific reason worth teaching.
+
+Target: 2 of the 3 wrong options per question should require genuine judgment to eliminate, not just recall.
+
+**Finding 3 detail — StaffLayerTab domain gaps:**
+
+17 scenarios total. Distribution:
+- Problem Framing: 5 — well covered
+- ML Necessity: 4 — well covered (recently added)
+- Systems: 3 — adequate
+- MLOps: 3 — adequate
+- Architecture: 2 — thin
+- Experiment Design: 1 — critical gap (A/B testing judgment is the #1 Staff-level interview topic)
+- Feature Engineering: 1 — critical gap (feature stores, leakage triage are core production skills)
+- Ranking: 1 — gap
+- Ethics/Fairness: 1 — gap
+
+Experiment Design has 1 scenario: "A/B test shows p=0.03." That's too narrow. Missing: SRM diagnosis, network effects / SUTVA violations, novelty effect, metric selection before running (not after), sequential testing decisions.
+
+Feature Engineering has 1 scenario. Missing: point-in-time join debugging, feature store version mismatch, leakage triage (where in the pipeline did it enter?).
+
+**Finding 4 detail — IC3 strawman:**
+
+"Ship it — p < 0.05, statistically significant." is not a real IC3 response. A real IC3 engineer has read about A/B testing and knows about practical significance, segment breakdowns, and minimum runtime. The strawman makes the Staff reveal feel more insightful than it is — you're not teaching judgment, you're teaching "don't be like the strawman."
+
+Better IC3: an answer that is competent but incomplete. Something a good engineer would say before they'd seen a few experiments fail: "Check practical significance, confirm no segment regressions, get PM sign-off on the effect size, then ship." This is wrong at Staff level (missing guardrail violations, metric selection, rollback plan) but it's a real human answer.
+
+**Priority actions:**
+1. *(Medium)* Expand MCQ explanations in CombinatorTab and TrainerTab to include production failure mode + recognition signal. ~90 min across ~60 questions. Target: every explanation ends with the pattern "In production, this breaks as: [X]" or "The tell is: [Y]."
+2. *(Medium)* Audit and improve distractor quality — replace 1 obviously-wrong option per affected question with a plausibly-wrong option that requires real judgment to eliminate. ~60 min across 20-30 questions.
+3. *(Low)* Add 4-6 new StaffLayerTab scenarios in thin domains: 2-3 Experiment Design (SRM, network effects, novelty effect), 1-2 Feature Engineering (leakage triage, point-in-time debugging), 1 Ranking.
+4. *(Low)* Revise IC3 reveals in StaffLayerTab to be competent-but-incomplete rather than obviously-wrong. Target: IC3 should be something a good mid-level engineer would genuinely say.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -278,11 +351,12 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
 | 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
 | 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | ✅ All resolved |
+| 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 4 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| High | 0 | — all resolved |
-| Medium | 0 | — all resolved |
-| Low | 1 | #001 index keys — replace with stable keys only where lists filter/reorder (deferred) |
+| High | 0 | — |
+| Medium | 2 | #008.1 thin MCQ explanations, #008.2 weak distractors |
+| Low | 3 | #001 index keys (deferred), #008.3 StaffLayer domain gaps, #008.4 IC3 strawman |
