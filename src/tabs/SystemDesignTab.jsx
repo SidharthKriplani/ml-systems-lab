@@ -2090,7 +2090,7 @@ export default function SystemDesignTab({ onNavigate }) {
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('sysdesign', m.id, m.label); forceUpdate(n => n+1) }}
               title={isBookmarked('sysdesign', m.id) ? 'Remove bookmark' : 'Bookmark module'}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontSize: '12px', color: isBookmarked('sysdesign', m.id) ? 'var(--prime)' : 'var(--ink-ghost)', lineHeight: 1 }}>
-              {isBookmarked('sysdesign', m.id) ? {<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg>} : {<svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}}
+              {isBookmarked('sysdesign', m.id) ? <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg> : <svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}
             </button>
           </div>
         ))}
