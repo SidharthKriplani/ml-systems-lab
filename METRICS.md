@@ -59,6 +59,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 |-----|------|--------|---------|
 | `msl_score:{tabPrefix}` | `number` | Per-tab score logic | Cumulative score for each practice tab. `tabPrefix` examples: `spark`, `ts`, `classical` |
 | `msl_trainer_history` | `JSON array` | `TrainerTab` | Last 50 MCQ session records: `{ date, score, total, domainBreakdown }` |
+| `msl_combinator_session` | `JSON` | `CombinatorTab` | Active in-progress session state: `{ screen, duration, questionIds, currentIdx, userAnswers, timeLeft, timePerQuestion, selfRatings, savedAt }`. `savedAt` is a Unix timestamp — elapsed time is subtracted on restore to correct timer drift across zone switches. Cleared on session end. |
 | `msl_combinator_history` | `JSON array` | `CombinatorTab` | Last 50 timed session records: `{ date, duration, score, total, domainBreakdown }` |
 | `msl_verbal_history` | `JSON array` | `VerbatimTab` | Practice session history |
 | `msl_staff_reveals` | `JSON object` | `StaffLayerTab` | Map of `{ scenarioId: revealLevel }` — persists reveal state across sessions |
@@ -70,6 +71,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_tab` | `string` | `App.jsx` | Last active tab — used for restore on reload |
 | `msl_goto_module` | `string` | Navigation helpers | Deep-link target module, cleared after use |
 | `msl_goto_path` | `string` | Navigation helpers | Deep-link target path, cleared after use |
+| `msl_path_progress` | `JSON object` | `HomeTab` | Map of `{ pathId: { completedSteps: string[] } }` — persists step completion state for guided learning paths |
 
 ---
 

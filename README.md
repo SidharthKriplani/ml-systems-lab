@@ -117,12 +117,15 @@ msl_tab                    last active tab
 msl_score:{prefix}         module scores (revealed/attempted)
 msl_takehome               take-home exam drafts + scores
 msl_trainer_history        trainer session results
+msl_combinator_session     active timed session state (cleared on end)
 msl_combinator_history     combinator session results
-msl_casestudies            case study answers
 msl_staff_reveals          staff layer reveal state
 msl_jdprep_last            last JD prep analysis
 msl_defense_progress       defense doc checklist state
 msl_verbal_history         verbal practice sessions
+msl_read                   set of Gradient post IDs marked as read
+msl_role                   selected role for personalization
+msl_path_progress          learning path step completion state
 ```
 
 ---
@@ -132,10 +135,14 @@ msl_verbal_history         verbal practice sessions
 Fully optimized for mobile:
 - Bottom nav with `env(safe-area-inset-bottom)` for iPhone home indicator
 - Responsive card grids (`minmax(min(210px, 100%), 1fr)`) — single column on 375px
-- Touch-friendly tap targets (min 36px height, 20px slider thumbs)
+- Touch-friendly tap targets (min 44px for nav/back button per WCAG 2.5.5)
 - `WebkitTapHighlightColor: transparent` — no grey flash on iOS Safari
 - Topbar breadcrumb truncates with ellipsis — can't push search button off-screen
-- Code blocks with `overflow-x: auto` — horizontal scroll within block only
+- `overflow-x: hidden` on html/body — prevents horizontal scroll from overflow children
+- Fixed SVG diagrams (SystemDesign, DLServing) scroll horizontally inside `overflow-x: auto` containers — diagram layout preserved, phone doesn't overflow
+- Input `font-size: 16px` — prevents iOS Safari page-zoom on input tap
+- iOS Safari: SpeechRecognition unsupported — VerbatimTab shows platform-specific fallback
+- High-contrast ink scale — readable at low phone brightness (tested to dark mode minimum)
 
 ---
 

@@ -122,9 +122,9 @@ Last updated: May 2026
 
 - [ ] `window.scrollTo` on zone switch can feel jarring mid-scroll — consider only triggering on user-initiated nav, not programmatic `onNavigate`
 - [ ] Pyodide cold start (~3s first load) — no loading indicator during init in Math Foundations
-- [ ] VerbatimTab: SpeechRecognition `onend` fires unexpectedly on some Chrome versions after silence — needs auto-restart
-- [ ] CombinatorTab: countdown timer continues running if user switches zones — should pause
-- [ ] DefenseDocTab: `@media print` PDF export — needs cross-browser verification (Safari, Firefox)
+- [x] ~~VerbatimTab: SpeechRecognition `onend` fires unexpectedly on some Chrome versions after silence — needs auto-restart~~ — fixed v4.8 (isStoppingRef guard)
+- [x] ~~CombinatorTab: countdown timer continues running if user switches zones — should pause~~ — fixed v4.8 (savedAt timestamp + elapsed subtraction on restore)
+- [x] ~~DefenseDocTab: `@media print` PDF export — needs cross-browser verification (Safari, Firefox)~~ — fixed v4.8 (visibility pattern + @page margins)
 
 ---
 

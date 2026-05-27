@@ -96,6 +96,6 @@ Run `node -e "..."` brace counter on any new or heavily edited `.jsx` file. Outp
 
 **No Tailwind utilities in component files.** See Stack section above.
 
-**No sidebar navigation.** Replaced in v4. The sidebar scaled poorly on mobile and required too many clicks. Bottom-nav is permanent.
+**No mobile sidebar.** The v3 persistent sidebar scaled poorly on mobile and was replaced with the bottom-nav 5-zone architecture in v4. A desktop-only accordion sidebar was re-added alongside the bottom nav (≥769px breakpoint) as a secondary navigation aid — it mirrors the same zone/tab state. Bottom-nav is the primary navigation and is permanent.
 
 **No external component libraries (MUI, shadcn, etc.)** All UI is custom — inline styles + CSS variables. This keeps the visual language consistent and the bundle lean.
