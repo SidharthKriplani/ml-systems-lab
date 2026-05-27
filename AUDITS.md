@@ -359,6 +359,52 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 
 ---
 
+## Part VII — Mobile UI/UX Audits
+
+### #015 — 2026-05-27 · Mobile UI/UX Comprehensive
+
+**Scope:** Full static audit of App.jsx, index.css, and all 30+ tab files for mobile layout, touch targets, platform compatibility, interactive bugs, and content scaling. No physical device — code-only audit.  
+**Trigger:** User reported visible horizontal clipping and nav overflow on phone. Extended to a full mobile pass after layout bugs confirmed.  
+**Output:** 10 findings — 2 High, 4 Medium, 4 Low.
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `input[type="text"]` and `input[type="search"]` have `font-size: 15px` in `index.css` — iOS Safari auto-zooms the entire page on input focus when font-size < 16px | `index.css` | High | ⚠️ Open |
+| 2 | `TwoTowerArchitecture` (SystemDesignTab) and `MLServingArchitecture` (DLServingTab) SVGs have `width={SVG_W}` (fixed px, ~650px) and `style={{ minWidth: SVG_W }}` — these cannot shrink on mobile and will cause horizontal overflow past `overflow-x:hidden` | `SystemDesignTab.jsx`, `DLServingTab.jsx` | High | ⚠️ Open |
+| 3 | `MLOpsDeployTab` metrics table is inside a `.card` with `overflow: hidden` — table content is **clipped**, not scrollable, on narrow screens | `MLOpsDeployTab.jsx` | Medium | ⚠️ Open |
+| 4 | `VerbatimTab` SpeechRecognition has no iOS Safari detection — Web Speech API (`window.SpeechRecognition` / `webkitSpeechRecognition`) is unsupported on iOS Safari. No warning shown; microphone button appears functional but silently fails | `VerbatimTab.jsx` | Medium | ⚠️ Open |
+| 5 | Topbar back button: `padding: '4px 0'` — effective tap height ~22px, well below the 44px WCAG minimum for touch targets | `App.jsx` | Medium | ⚠️ Open |
+| 6 | `CombinatorTab` countdown timer continues running when user switches zones mid-session — timer state and interval behavior under zone navigation needs verification | `CombinatorTab.jsx` | Medium | ⚠️ Open |
+| 7 | Pyodide Python cells — cold start 3s+ on desktop; no mobile compatibility warning shown; low-end phones may OOM or time out silently on wasm load | `PythonCell.jsx`, `MathFoundationsTab.jsx` | Low | ⚠️ Open |
+| 8 | `VerbatimTab` `SpeechRecognition.onend` fires unexpectedly after silence on some Chrome/Android versions — auto-restart logic may double-fire | `VerbatimTab.jsx` | Low | ⚠️ Open |
+| 9 | `DefenseDocTab` PDF export via `window.print()` — `@media print` CSS untested on Safari and Firefox mobile; known cross-browser inconsistencies with print layouts | `DefenseDocTab.jsx` | Low | ⚠️ Open |
+| 10 | `InterviewPrepTab` long-form answer text has no `maxWidth` or `lineHeight` cap on mobile — walls of text at full viewport width are hard to read on phones | `InterviewPrepTab.jsx` | Low | ⚠️ Open |
+
+**Finding 1 detail — iOS input zoom:**  
+iOS Safari fires a page-level zoom when the user taps any `<input>` with `font-size < 16px`. The CSS sets `font-size: 15px` on `input[type="text"]` and `input[type="search"]`. This affects `AskTab` (KB search), `JDPrepTab` (JD text input), `VerbatimTab`, and others. Fix: change to `font-size: 16px` in `index.css`. No visual change on desktop; eliminates the iOS zoom.
+
+**Finding 2 detail — fixed-size SVG diagrams:**  
+`TwoTowerArchitecture` in SystemDesignTab computes `SVG_W = COLS * 155 + PAD*2` — with COLS=4, PAD=20, that is `SVG_W = 660px`. `MLServingArchitecture` in DLServingTab computes `SVG_W = COLS * 160 + PAD*2` ≈ similar. Both set `width={SVG_W}` and `style={{ minWidth: SVG_W }}` on the `<svg>` element. On a 390px phone, these force 660px-wide content. Fix: wrap each SVG in an `overflow-x: auto` container, remove `minWidth`, and replace `width={SVG_W}` with `style={{ width: '100%', minWidth: SVG_W }}` — lets the container scroll horizontally while preserving the diagram layout.
+
+**Finding 3 detail — clipped table:**  
+`MLOpsDeployTab` metrics table is inside a `.card` div with `overflow: hidden` (the card's border-radius clip). No `overflow-x: auto` wrapper on the table. On mobile, table columns that exceed viewport width are clipped with no scroll affordance. Fix: wrap the table in `<div style={{ overflowX: 'auto' }}>`.
+
+**Finding 4 detail — iOS Speech API:**  
+`window.SpeechRecognition || window.webkitSpeechRecognition` returns `undefined` on iOS Safari (confirmed unsupported as of iOS 17). The `speechSupported` flag is set correctly but no user-facing message explains the limitation on iOS. Users see the full VerbatimTab UI, tap the microphone, and nothing happens. Fix: detect iOS Safari specifically and show an inline notice: "Voice recording requires Chrome or Android. On iOS, type your answer instead."
+
+**Finding 5 detail — back button tap target:**  
+The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `fontSize: '13px'`. Effective touch height is approximately 21px. WCAG 2.5.5 recommends 44×44px. On mobile, users frequently mis-tap and trigger scroll instead of navigation. Fix: increase padding to `'10px 8px'` — no visual change at normal density, full tap target on mobile.
+
+**Priority actions (in order):**
+1. *(High)* `font-size: 15px` → `16px` on inputs in `index.css`. One-line change.
+2. *(High)* Wrap SVG diagrams in `overflow-x: auto` containers, remove `minWidth` inline style from both SVGs.
+3. *(Medium)* Wrap `MLOpsDeployTab` table in `overflowX: 'auto'` div.
+4. *(Medium)* Add iOS Safari detection to `VerbatimTab` with fallback message.
+5. *(Medium)* Increase topbar back button padding to `'10px 8px'`.
+6. *(Medium)* Verify/fix CombinatorTab timer behavior on zone switch.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -377,15 +423,14 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | 012 | Low-brightness contrast pass 1 — ink-low/ink-ghost variables too conservative; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale and surfaces bumped |
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds (0.04–0.08 opacity) invisible at low brightness; affected all interactive states (selected MCQ, correct/wrong highlights, info boxes, domain cards) | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — 369 lines across 31 files: 0.04→0.10, 0.05→0.11, 0.06→0.13, 0.07→0.14, 0.08→0.15; ink scale more aggressive; nav inactive 0.35→0.62 |
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav 5 items overflow narrow viewports, dragging fixed nav off-screen left and clipping all content | 2026-05-27 | Mobile | ✅ Fixed — overflow-x:hidden + max-width:100vw on html/body; nav items shrink-safe with overflow:hidden, smaller icon container, whiteSpace:nowrap + textOverflow:ellipsis |
-| 011 | Mobile: hero two-column grid not responsive — ScenarioMockup clipped on narrow viewports | 2026-05-27 | Mobile | ✅ Fixed — `.hero-grid` CSS class, mockup hidden below 700px |
-| 012 | Low-brightness contrast — `--ink-low`/`--ink-ghost` fail at reduced backlight; card surfaces blend into void | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale brightened, surfaces lightened, card border opacity raised |
+| 015 | Mobile UI/UX comprehensive audit — 9 findings across layout, touch targets, platform support, and interactive bugs | 2026-05-27 | Mobile | See #015 detail below |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| High | 0 | — |
-| Medium | 1 | #008.2 weak distractors |
-| Low | 1 | #001 index keys (deferred) |
+| High | 2 | #015.1 (input zoom), #015.2 (SVG overflow) |
+| Medium | 4 | #008.2 (distractors), #015.3 (table clip), #015.4 (iOS speech), #015.5 (back button tap target) |
+| Low | 4 | #001 index keys, #015.6 (timer), #015.7 (Pyodide mobile), #015.8 (onend bug), #015.9 (print), #015.10 (line length) |
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

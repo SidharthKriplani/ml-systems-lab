@@ -60,7 +60,7 @@ Key routing architecture:
 - Fix: `overflow-x: hidden; max-width: 100vw` on `html, body`.
 - Secondary fix: bottom nav 5 items were overflowing on ~360px phones. Nav row now has `overflow: hidden`, icon container shrunk (44→36px), labels use `whiteSpace: nowrap; textOverflow: ellipsis; maxWidth: 100%` so they truncate rather than push layout.
 
-**Audits logged:** #013 (full contrast), #014 (mobile overflow) — both resolved.
+**Audits logged:** #013 (full contrast), #014 (mobile overflow) — both resolved. #015 (mobile UI/UX comprehensive) — 10 findings logged, 6 open for next sprint.
 
 ### v4.6 — Mobile layout + low-brightness contrast (May 2026)
 
