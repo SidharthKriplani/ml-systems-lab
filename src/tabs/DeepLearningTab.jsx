@@ -195,7 +195,7 @@ function TrainingFailureDiagnosis() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the training telemetry. Diagnose before you scroll.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -282,7 +282,7 @@ function GradientDebugger() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the gradient telemetry. Diagnose the gradient flow problem before you reveal.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -444,7 +444,7 @@ function OptimizerComparison() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           SGD vs Adam vs AdamW vs RMSprop — each has failure modes the others don't. 6 scenarios where optimizer choice is the deciding factor.
         </p>
@@ -572,7 +572,7 @@ function RegularizationDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Dropout, weight decay, augmentation, label smoothing, mixup — each attacks overfitting differently. 6 scenarios where the wrong regularizer makes things worse.
         </p>
@@ -693,7 +693,7 @@ function TransformerArchitecture() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Attention heads, KV cache, positional encodings, Pre vs Post-LN, FlashAttention — architecture decisions that separate LLM practitioners from LLM users. 6 production scenarios.
         </p>
@@ -755,7 +755,7 @@ export default function DeepLearningTab({ onNavigate }) {
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('deeplearn', m.id, m.label); forceUpdate(n => n+1) }}
               title={isBookmarked('deeplearn', m.id) ? 'Remove bookmark' : 'Bookmark module'}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontSize: '12px', color: isBookmarked('deeplearn', m.id) ? 'var(--prime)' : 'var(--ink-ghost)', lineHeight: 1 }}>
-              {isBookmarked('deeplearn', m.id) ? '★' : '☆'}
+              {isBookmarked('deeplearn', m.id) ? {<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg>} : {<svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}}
             </button>
           </div>
         ))}

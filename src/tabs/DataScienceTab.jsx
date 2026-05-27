@@ -111,7 +111,7 @@ function ModelSelectionOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your problem constraints. Get ranked model recommendations with production tradeoffs.
         </p>
@@ -348,7 +348,7 @@ function StatisticalTestingPitfalls() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real scenarios. Identify the statistical mistake. Understand why it matters in production.
         </p>
@@ -558,7 +558,7 @@ function CalibrationInPractice() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Given a model and scenario, pick the right calibration approach. Understand when and why each method applies.
         </p>
@@ -859,7 +859,7 @@ function MetricDesign() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 production cases where the metric looked right but led teams wrong. Goodhart's Law, proxy decoupling, time horizons, counter-metrics.
         </p>

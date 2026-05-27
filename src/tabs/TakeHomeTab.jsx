@@ -385,7 +385,7 @@ export default function TakeHomeTab({ onNavigate }) {
                     gap: 6,
                   }}
                 >
-                  <span style={{ fontSize: 10, transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-ghost)', transition: 'transform 0.15s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 2l4 3-4 3"/></svg></span>
                   {isExpanded ? 'Hide Model Answer' : 'Show Model Answer'}
                 </button>
               </div>

@@ -198,7 +198,7 @@ function MetricSelector() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>Configure your dataset and pick a metric. Then see if you chose correctly — and why.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -275,7 +275,7 @@ function ShadowModeSim() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>A challenger model runs in shadow alongside the champion — serving no real traffic, just logging predictions. After 14 days, compare offline metrics and decide on promotion.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -431,7 +431,7 @@ function CalibrationClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 6 calibration failure patterns.
         </p>
@@ -554,7 +554,7 @@ function ThresholdTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           The default threshold of 0.5 is almost always wrong. Business costs, asymmetric errors, and base rate shifts all demand deliberate threshold choices. 6 real-world cases.
         </p>
@@ -674,7 +674,7 @@ function RankingMetrics() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           NDCG, MAP, MRR, Precision@K — each captures a different aspect of ranking quality. Using the wrong one silently optimizes the wrong thing. 6 scenarios, one right answer each.
         </p>
@@ -735,7 +735,7 @@ export default function ModelEvalTab({ onNavigate }) {
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('modeleval', m.id, m.label); forceUpdate(n => n+1) }}
               title={isBookmarked('modeleval', m.id) ? 'Remove bookmark' : 'Bookmark module'}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontSize: '12px', color: isBookmarked('modeleval', m.id) ? 'var(--prime)' : 'var(--ink-ghost)', lineHeight: 1 }}>
-              {isBookmarked('modeleval', m.id) ? '★' : '☆'}
+              {isBookmarked('modeleval', m.id) ? {<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg>} : {<svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}}
             </button>
           </div>
         ))}

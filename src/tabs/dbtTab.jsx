@@ -160,7 +160,7 @@ function MaterializationOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your model constraints. Get ranked materialization recommendations with production gotchas and ready-to-paste config blocks.
         </p>
@@ -474,7 +474,7 @@ function SchemaDriftClinic() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         </div>
         <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--ember)' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>
@@ -499,7 +499,7 @@ function SchemaDriftClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real drift scenarios. Upstream changes — what breaks in your dbt model, and how do you fix it?
         </p>
@@ -734,7 +734,7 @@ function IncrementalModelDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Answer 4 questions about your data. Get the right incremental pattern with a copy-paste config and production gotchas.
         </p>

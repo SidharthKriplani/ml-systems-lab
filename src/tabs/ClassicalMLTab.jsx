@@ -286,7 +286,7 @@ function ModelFailureZoo() {
               ML
             </div>
             <div>
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 800, color: 'var(--mint)' }}>
                 {model.name}
               </h3>
               <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
