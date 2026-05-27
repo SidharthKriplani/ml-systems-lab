@@ -27,10 +27,6 @@ const FEATURES = [
     n: '4', label: 'Career levels', desc: 'IC2 → IC3 → IC5 → Staff answers side-by-side', accent: 'var(--mint)',
     svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   },
-  {
-    n: 'Free', label: 'No signup', desc: 'Open in browser. All progress in localStorage.', accent: 'var(--sky)',
-    svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>,
-  },
 ]
 
 // ── Product Mockup ─────────────────────────────────────────────────────────────
@@ -357,7 +353,7 @@ export default function HomeTab({ onNavigate }) {
         {/* Ambient orb */}
         <div className="orb-pulse" style={{ position: 'absolute', top: '-100px', left: '-80px', width: '600px', height: '500px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.05) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
         {/* Two-column grid: text left, mockup right */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '48px', alignItems: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: '48px', alignItems: 'center' }}>
 
           {/* ── Left: copy + CTAs ── */}
           <div>
@@ -366,9 +362,9 @@ export default function HomeTab({ onNavigate }) {
               <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>200+ production scenarios · Free</span>
             </div>
 
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(30px, 4.5vw, 58px)', fontWeight: 900, lineHeight: 1.04, letterSpacing: '-0.05em', marginBottom: '20px' }}>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 3.6vw, 52px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
               You can train a model.<br />
-              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))' }}>Can you debug it in&nbsp;production?</span>
+              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))', whiteSpace: 'nowrap' }}>Can you debug it in production?</span>
             </h1>
 
             <p style={{ fontSize: '17px', color: 'var(--ink-hi)', lineHeight: 1.7, maxWidth: '500px', marginBottom: '28px', opacity: 0.80 }}>
