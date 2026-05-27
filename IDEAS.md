@@ -50,6 +50,16 @@ Last updated: May 2026
 - [ ] Behavioral question bank in Interview zone — ML-specific situations (disagreed with a metric, shipped despite uncertainty, stakeholder conflict over model decision)
 - [ ] Causal Inference: DAG editor — draw causal graph, identify confounders/colliders/mediators interactively (Pyodide)
 
+### "Spot the Flaw" adversarial format (new tab or Interview zone tool)
+- [ ] **New format: show a real-looking ML analysis/pipeline with a buried methodological flaw — user must find it.** Distinct from MCQ (which gives options) — this is open diagnosis. Flaw types: data leakage in evaluation, train/test split after imputation, wrong metric for class imbalance, SRM in A/B test, silent feature drift, imputer fit on full dataset, eval metric computed before target lag. Format: show the analysis with context (code snippet or narrative), ask "what's wrong here?", user selects from 4-6 options (flaw category + location), reveal shows the exact failure mode and why it's dangerous in production. Seed: 12 scenarios across Feature Eng, Model Eval, Experimentation, Monitoring. Tab: new "Spot the Flaw" tool in Interview zone (sits alongside CodeBugsTab). Builds: adversarial reading of real analyses — the skill interviewers test when they say "what would you check first?" (Source: PAL experimentation-systems-lab, May 2026)
+
+### Features
+- [ ] **"Share Score" clipboard button on CombinatorTab debrief and TrainerTab session end** — one button, copies score summary to clipboard as plain text (e.g., "ML Systems Lab: 17/20 correct · 85% · Weak: Feature Engineering. Try: ml-systems-lab-v9xe.vercel.app"). 15 min. (Source: GenAI Systems Lab challenge log, May 2026)
+- [ ] **91-day practice heatmap** — localStorage-based activity grid (GitHub-style), 1 square per day, colored by modules attempted. Renders in HomeTab or a Progress panel. Tracks `msl_activity_YYYY-MM-DD` keys. High retention signal for returning users. (Source: PAL Progress dashboard, May 2026)
+- [ ] **Streak tracking** — daily visit streak counter, stored in `msl_streak` / `msl_last_visit`. Show on HomeTab alongside the practice heatmap. Simple but drives return rate. (Source: GenAI Systems Lab, May 2026)
+- [ ] **RSS feed for Gradient posts** — generate `/rss.xml` at build time from `gradientPosts.js` metadata. 20 most recent posts. Adds a distribution channel for free. ~30 min to write a Vite plugin or pre-build script. (Source: GenAI Systems Lab, May 2026)
+- [ ] **Fidelity/simulation badges on module headers** — label each interactive module with what it actually is: `✓ Real execution` (Pyodide cells — actual Python running), `~ Simulated` (scripted scenario, not live model), `◌ Illustrative` (conceptual diagram, not a real system). Builds trust, prevents users from mistaking a simulation for ground truth. Render as a small chip on the h3 module header. (Source: GenAI Systems Lab fidelity tagging system, May 2026)
+
 ---
 
 ## Tier 2 — High impact, more effort
@@ -69,6 +79,8 @@ Last updated: May 2026
 - [ ] Gradient: "Mark as read" per post (localStorage)
 - [ ] Global search: keyboard arrow-key navigation through results
 - [ ] HomeTab: "Recommended first module" based on role (more opinionated than current CTA)
+- [ ] **React.lazy() + Suspense code splitting across all 30+ tabs** — currently all tabs are eagerly imported in App.jsx, which inflates the initial JS bundle. Wrap each tab in `React.lazy()` and add a `<Suspense fallback={<LoadingSpinner />}>` wrapper in the router. Each tab loads only on first visit, then cached. Significant improvement to first-load performance, especially on mobile. ~1–2 hours to wire correctly. (Source: PAL architecture, May 2026)
+- [ ] **Role Readiness Score** — compute a Junior / Mid / Senior / Staff readiness label from cross-tab scores (CombinatorTab session score, TrainerTab accuracy, SparkLab completion, ModelEval, StaffLayerTab reveals). Aggregate into a single `msl_readiness_score` with per-domain breakdown. Show on HomeTab Progress section. (Source: PAL role readiness dashboard, May 2026)
 
 ### Design
 - [ ] VerbatimTab: add word count + speaking rate (words/min) in Review screen
@@ -77,6 +89,9 @@ Last updated: May 2026
 - [ ] Practice zone: overall progress percentage on grid header
 - [ ] Interview zone: session history summary on hub grid (X sessions run, avg score)
 - [ ] Gradient: "Start here" sort option within each domain (beginner-first)
+
+### Cross-domain scenarios
+- [ ] **"Production Incident" cross-tab scenarios** — a single scenario that requires reasoning across multiple domains simultaneously. E.g., "Model AUC dropped 4 points 72 hours after a feature store migration. Serving P95 latency increased 40ms. What do you check first, in what order, and what's the most likely root cause?" Correct answer requires: Feature Engineering (store migration → feature drift), Monitoring (latency signal = schema mismatch or embedding recomputation), MLOps (was the migration rolled forward or is there a rollback option). Format: multi-step diagnosis with branching — choose your first action, see what that reveals, choose next. 6–8 scenarios. Tab: could be a new "Incident Room" tool in Interview zone. (Source: PAL cross-room challenges concept, May 2026)
 
 ### Gradient posts (remaining from ideation)
 - [ ] "The 6 ways a recommendation system can silently stop recommending" → System Design
@@ -93,6 +108,7 @@ Last updated: May 2026
 - [x] ~~sitemap.xml for SEO~~ — done (2026-05-26, public/sitemap.xml)
 - [ ] "NEW" badge on tabs updated within last 30 days
 - [ ] Dark/light mode toggle (currently dark-only — see DECISIONS.md for why this is excluded for now)
+- [ ] **PWA manifest + service worker** — add `manifest.json` to `public/` (name, icons, theme color, display: standalone) and a minimal service worker that caches the app shell. Makes the app installable on mobile from Chrome/Safari. ~30 min. (Source: GenAI Systems Lab, May 2026)
 
 ---
 
