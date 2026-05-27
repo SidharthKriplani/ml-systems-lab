@@ -336,7 +336,7 @@
     background: var(--depth); border: 1px solid var(--rim);
     border-radius: 8px; padding: 9px 14px;
     color: var(--ink-hi); font-family: 'Inter', sans-serif;
-    font-size: 15px; outline: none;
+    font-size: 16px; outline: none; /* 16px prevents iOS Safari auto-zoom on focus */
     transition: border-color 0.15s;
   }
   input[type="text"]:focus, input[type="search"]:focus {

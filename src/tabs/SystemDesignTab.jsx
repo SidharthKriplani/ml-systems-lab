@@ -1946,7 +1946,7 @@ function TwoTowerArchitecture() {
             viewBox={`0 0 ${SVG_W} ${SVG_H}`}
             width={SVG_W}
             height={SVG_H}
-            style={{ display: 'block', minWidth: SVG_W }}
+            style={{ display: 'block', minWidth: SVG_W, maxWidth: '100%' }}
           >
             <defs>
               <marker id="tt-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">

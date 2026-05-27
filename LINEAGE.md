@@ -46,6 +46,21 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.8 — Mobile UI/UX audit fixes (May 2026)
+
+Resolved 8 of 10 findings from Audit #015 (comprehensive mobile pass). 2 deferred (Pyodide mobile warning, InterviewPrepTab line length).
+
+**Fixes:**
+- `index.css`: input `font-size` 15px → 16px — eliminates iOS Safari page-zoom on input tap
+- `SystemDesignTab.jsx`, `DLServingTab.jsx`: `maxWidth: '100%'` on fixed-width SVG diagrams — allows horizontal scroll without diagram distortion
+- `MLOpsDeployTab.jsx`: metrics table wrapped in `overflowX: auto` div with `minWidth: 480px` — table is now scrollable, not clipped
+- `VerbatimTab.jsx`: UA-based iOS Safari detection, platform-specific fallback message, `isStoppingRef` guard on `recognition.onend` to prevent Chrome/Android double-fire
+- `App.jsx`: topbar back button padding `4px 0` → `10px 8px` with `margin: -10px -8px` — expands touch target to ~44px without layout shift; bottom nav inactive opacity 0.35 → 0.62
+- `CombinatorTab.jsx`: `savedAt: Date.now()` added to localStorage session save; on restore, elapsed wall-clock time is subtracted from `timeLeft` (clamped to 0) — timer no longer shows stale time after zone switch
+- `DefenseDocTab.jsx`: `@media print` replaced `body > * { display: none }` (breaks in Safari/Firefox when nested) with cross-browser `* { visibility: hidden }` + `.defense-doc-print { visibility: visible; position: fixed }` pattern; added `@page { margin: 1.2cm }`
+
+---
+
 ### v4.7 — Full contrast audit + mobile overflow fix (May 2026)
 
 **Full contrast audit (369 lines, 31 files):**

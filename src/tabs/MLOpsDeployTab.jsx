@@ -320,7 +320,8 @@ function ChampionChallenger() {
         <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 16px 8px', borderBottom: '1px solid var(--rim)' }}>
           Evaluation Report Card
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse', fontSize: '12px' }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
               {['Metric', 'Champion', 'Challenger', 'Delta', 'Status'].map(h => (
@@ -340,6 +341,7 @@ function ChampionChallenger() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Decision steps */}

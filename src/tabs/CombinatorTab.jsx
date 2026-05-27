@@ -945,7 +945,15 @@ function formatTime(seconds) {
 export default function CombinatorTab({ onNavigate }) {
   // ── Restore saved session from localStorage ──
   const _saved = (() => {
-    try { return JSON.parse(localStorage.getItem('msl_combinator_session') || 'null') } catch(_) { return null }
+    try {
+      const s = JSON.parse(localStorage.getItem('msl_combinator_session') || 'null')
+      if (!s) return null
+      if (s.savedAt) {
+        const elapsed = Math.floor((Date.now() - s.savedAt) / 1000)
+        s.timeLeft = Math.max(0, (s.timeLeft || 0) - elapsed)
+      }
+      return s
+    } catch(_) { return null }
   })()
 
   const [screen, setScreen] = useState(_saved?.screen || 'config')
@@ -1006,6 +1014,7 @@ export default function CombinatorTab({ onNavigate }) {
         screen, duration,
         questionIds: questions.map(q => q.id),
         currentIdx, userAnswers, timeLeft, timePerQuestion, selfRatings,
+        savedAt: Date.now(),
       }))
     } catch(_) {}
   }, [screen, currentIdx, userAnswers, timeLeft, selfRatings])

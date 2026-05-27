@@ -369,16 +369,16 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | `input[type="text"]` and `input[type="search"]` have `font-size: 15px` in `index.css` — iOS Safari auto-zooms the entire page on input focus when font-size < 16px | `index.css` | High | ⚠️ Open |
-| 2 | `TwoTowerArchitecture` (SystemDesignTab) and `MLServingArchitecture` (DLServingTab) SVGs have `width={SVG_W}` (fixed px, ~650px) and `style={{ minWidth: SVG_W }}` — these cannot shrink on mobile and will cause horizontal overflow past `overflow-x:hidden` | `SystemDesignTab.jsx`, `DLServingTab.jsx` | High | ⚠️ Open |
-| 3 | `MLOpsDeployTab` metrics table is inside a `.card` with `overflow: hidden` — table content is **clipped**, not scrollable, on narrow screens | `MLOpsDeployTab.jsx` | Medium | ⚠️ Open |
-| 4 | `VerbatimTab` SpeechRecognition has no iOS Safari detection — Web Speech API (`window.SpeechRecognition` / `webkitSpeechRecognition`) is unsupported on iOS Safari. No warning shown; microphone button appears functional but silently fails | `VerbatimTab.jsx` | Medium | ⚠️ Open |
-| 5 | Topbar back button: `padding: '4px 0'` — effective tap height ~22px, well below the 44px WCAG minimum for touch targets | `App.jsx` | Medium | ⚠️ Open |
-| 6 | `CombinatorTab` countdown timer continues running when user switches zones mid-session — timer state and interval behavior under zone navigation needs verification | `CombinatorTab.jsx` | Medium | ⚠️ Open |
-| 7 | Pyodide Python cells — cold start 3s+ on desktop; no mobile compatibility warning shown; low-end phones may OOM or time out silently on wasm load | `PythonCell.jsx`, `MathFoundationsTab.jsx` | Low | ⚠️ Open |
-| 8 | `VerbatimTab` `SpeechRecognition.onend` fires unexpectedly after silence on some Chrome/Android versions — auto-restart logic may double-fire | `VerbatimTab.jsx` | Low | ⚠️ Open |
-| 9 | `DefenseDocTab` PDF export via `window.print()` — `@media print` CSS untested on Safari and Firefox mobile; known cross-browser inconsistencies with print layouts | `DefenseDocTab.jsx` | Low | ⚠️ Open |
-| 10 | `InterviewPrepTab` long-form answer text has no `maxWidth` or `lineHeight` cap on mobile — walls of text at full viewport width are hard to read on phones | `InterviewPrepTab.jsx` | Low | ⚠️ Open |
+| 1 | `input[type="text"]` and `input[type="search"]` have `font-size: 15px` in `index.css` — iOS Safari auto-zooms the entire page on input focus when font-size < 16px | `index.css` | High | ✅ Fixed — 15px → 16px |
+| 2 | `TwoTowerArchitecture` (SystemDesignTab) and `MLServingArchitecture` (DLServingTab) SVGs have `width={SVG_W}` (fixed px, ~650px) and `style={{ minWidth: SVG_W }}` — these cannot shrink on mobile and will cause horizontal overflow past `overflow-x:hidden` | `SystemDesignTab.jsx`, `DLServingTab.jsx` | High | ✅ Fixed — added `maxWidth: '100%'` to both SVGs; container already had `overflowX: auto` |
+| 3 | `MLOpsDeployTab` metrics table is inside a `.card` with `overflow: hidden` — table content is **clipped**, not scrollable, on narrow screens | `MLOpsDeployTab.jsx` | Medium | ✅ Fixed — table wrapped in `overflowX: auto` div, `minWidth: 480px` on table |
+| 4 | `VerbatimTab` SpeechRecognition has no iOS Safari detection — Web Speech API (`window.SpeechRecognition` / `webkitSpeechRecognition`) is unsupported on iOS Safari. No warning shown; microphone button appears functional but silently fails | `VerbatimTab.jsx` | Medium | ✅ Fixed — UA detection for iOS; platform-specific fallback message |
+| 5 | Topbar back button: `padding: '4px 0'` — effective tap height ~22px, well below the 44px WCAG minimum for touch targets | `App.jsx` | Medium | ✅ Fixed — padding `10px 8px`, negative margin `-10px -8px` to expand tap target without layout shift |
+| 6 | `CombinatorTab` countdown timer continues running when user switches zones mid-session — timer state and interval behavior under zone navigation needs verification | `CombinatorTab.jsx` | Medium | ✅ Fixed — component unmounts on zone switch (timer stops); added `savedAt: Date.now()` to localStorage save and subtract elapsed time on restore |
+| 7 | Pyodide Python cells — cold start 3s+ on desktop; no mobile compatibility warning shown; low-end phones may OOM or time out silently on wasm load | `PythonCell.jsx`, `MathFoundationsTab.jsx` | Low | ⚠️ Open — deferred |
+| 8 | `VerbatimTab` `SpeechRecognition.onend` fires unexpectedly after silence on some Chrome/Android versions — auto-restart logic may double-fire | `VerbatimTab.jsx` | Low | ✅ Fixed — `isStoppingRef` guard; `onend` returns early when stop was intentional |
+| 9 | `DefenseDocTab` PDF export via `window.print()` — `@media print` CSS untested on Safari and Firefox mobile; known cross-browser inconsistencies with print layouts | `DefenseDocTab.jsx` | Low | ✅ Fixed — replaced `body > * { display: none }` with `* { visibility: hidden }` + `.defense-doc-print { visibility: visible; position: fixed }` pattern; added `@page { margin: 1.2cm }` |
+| 10 | `InterviewPrepTab` long-form answer text has no `maxWidth` or `lineHeight` cap on mobile — walls of text at full viewport width are hard to read on phones | `InterviewPrepTab.jsx` | Low | ⚠️ Open — deferred |
 
 **Finding 1 detail — iOS input zoom:**  
 iOS Safari fires a page-level zoom when the user taps any `<input>` with `font-size < 16px`. The CSS sets `font-size: 15px` on `input[type="text"]` and `input[type="search"]`. This affects `AskTab` (KB search), `JDPrepTab` (JD text input), `VerbatimTab`, and others. Fix: change to `font-size: 16px` in `index.css`. No visual change on desktop; eliminates the iOS zoom.
@@ -423,14 +423,14 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 | 012 | Low-brightness contrast pass 1 — ink-low/ink-ghost variables too conservative; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale and surfaces bumped |
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds (0.04–0.08 opacity) invisible at low brightness; affected all interactive states (selected MCQ, correct/wrong highlights, info boxes, domain cards) | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — 369 lines across 31 files: 0.04→0.10, 0.05→0.11, 0.06→0.13, 0.07→0.14, 0.08→0.15; ink scale more aggressive; nav inactive 0.35→0.62 |
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav 5 items overflow narrow viewports, dragging fixed nav off-screen left and clipping all content | 2026-05-27 | Mobile | ✅ Fixed — overflow-x:hidden + max-width:100vw on html/body; nav items shrink-safe with overflow:hidden, smaller icon container, whiteSpace:nowrap + textOverflow:ellipsis |
-| 015 | Mobile UI/UX comprehensive audit — 9 findings across layout, touch targets, platform support, and interactive bugs | 2026-05-27 | Mobile | See #015 detail below |
+| 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support, and interactive bugs | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred (#7, #10) |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| High | 2 | #015.1 (input zoom), #015.2 (SVG overflow) |
-| Medium | 4 | #008.2 (distractors), #015.3 (table clip), #015.4 (iOS speech), #015.5 (back button tap target) |
-| Low | 4 | #001 index keys, #015.6 (timer), #015.7 (Pyodide mobile), #015.8 (onend bug), #015.9 (print), #015.10 (line length) |
+| High | 0 | — |
+| Medium | 1 | #008.2 (distractors) |
+| Low | 3 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (line length) |
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

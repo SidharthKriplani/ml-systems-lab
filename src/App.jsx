@@ -726,7 +726,7 @@ export default function App() {
             <>
               <button
                 onClick={() => setZoneTab(prev => ({ ...prev, [activeZone]: null }))}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", padding: '4px 0' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", padding: '10px 8px', margin: '-10px -8px' }}>
                 ← <span>{activeZone === 'interview' ? 'Tools' : 'Domains'}</span>
               </button>
               {activeTabInfo && (

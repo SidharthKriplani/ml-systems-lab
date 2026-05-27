@@ -40,15 +40,17 @@ Last updated: May 2026
 - [ ] **Add numbered sequence labels to Interview zone hub cards** — intended flow JD Prep → Defense → Combinator → Verbal is not communicated. Add step numbers (①②③④) to the relevant tool cards in the hub grid. ~15 min.
 - [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
 
-### Mobile fixes (from Audit #015, 2026-05-27)
-- [ ] **iOS input zoom — `font-size: 15px` on inputs triggers full-page zoom on iOS Safari tap.** Fix: `font-size: 16px` in `index.css`. One-line change. (Source: Audit #015.1)
-- [ ] **SVG diagrams fixed-width overflow — TwoTowerArchitecture (SystemDesignTab) and MLServingArchitecture (DLServingTab) have `width={SVG_W}` (~660px fixed) with `minWidth`. Wrap in `overflow-x: auto`, remove minWidth inline style.** (Source: Audit #015.2)
-- [ ] **MLOpsDeployTab metrics table clipped — inside card with `overflow:hidden`, no scroll affordance. Wrap in `overflowX: auto` div.** (Source: Audit #015.3)
-- [ ] **VerbatimTab iOS Safari fallback — SpeechRecognition unsupported on iOS, no warning shown. Add UA detection + inline notice.** (Source: Audit #015.4)
-- [ ] **Topbar back button tap target ~22px — increase padding to `'10px 8px'`.** (Source: Audit #015.5)
-- [ ] CombinatorTab — countdown timer should pause or warn when user navigates to a different zone (Source: Audit #015.6)
-- [ ] VerbatimTab — test SpeechRecognition `onend` auto-restart on Chrome (fires unexpectedly after silence) (Source: Audit #015.8)
-- [ ] DefenseDocTab — verify `@media print` PDF export works correctly on Safari and Firefox (Source: Audit #015.9)
+### Mobile fixes (from Audit #015, 2026-05-27) — v4.8 sprint complete
+- [x] iOS input zoom — `font-size: 16px` in `index.css` ✅
+- [x] SVG diagrams fixed-width overflow — `maxWidth: '100%'` on both SVGs ✅
+- [x] MLOpsDeployTab metrics table clipped — wrapped in `overflowX: auto` ✅
+- [x] VerbatimTab iOS Safari fallback — UA detection + platform-specific message ✅
+- [x] Topbar back button tap target — padding `10px 8px`, negative margin ✅
+- [x] CombinatorTab timer drift after zone switch — `savedAt` timestamp, elapsed subtraction on restore ✅
+- [x] VerbatimTab onend double-fire — `isStoppingRef` guard ✅
+- [x] DefenseDocTab print CSS — visibility pattern, `@page` margins ✅
+- [ ] Pyodide mobile warning — cold start / OOM risk on low-end phones (Source: Audit #015.7) — deferred
+- [ ] InterviewPrepTab line length — `maxWidth` + `lineHeight` cap on mobile (Source: Audit #015.10) — deferred
 
 ### Modules
 - [ ] Behavioral question bank in Interview zone — ML-specific situations (disagreed with a metric, shipped despite uncertainty, stakeholder conflict over model decision)

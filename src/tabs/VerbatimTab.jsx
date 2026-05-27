@@ -107,12 +107,15 @@ export default function VerbatimTab({ onNavigate }) {
   const [filterCategory, setFilterCategory] = useState('All');
   const recognitionRef = useRef(null);
   const recordingStartRef = useRef(null);
+  const isStoppingRef = useRef(false); // guard against onend double-fire
   const [recordingDuration, setRecordingDuration] = useState(0);
 
   useEffect(() => {
     try {
+      // iOS Safari does not support Web Speech API
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) setSpeechSupported(false);
+      if (!SpeechRecognition || isIOS) setSpeechSupported(false);
     } catch {
       setSpeechSupported(false);
     }
@@ -124,6 +127,7 @@ export default function VerbatimTab({ onNavigate }) {
   }, []);
 
   const stopRecording = useCallback(() => {
+    isStoppingRef.current = true; // signal that this is an intentional stop
     try {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -136,6 +140,7 @@ export default function VerbatimTab({ onNavigate }) {
     }
     setIsRecording(false);
     setInterimTranscript('');
+    setTimeout(() => { isStoppingRef.current = false; }, 300); // reset after Chrome fires onend
   }, []);
 
   const startRecording = useCallback(() => {
@@ -173,6 +178,7 @@ export default function VerbatimTab({ onNavigate }) {
       };
 
       recognition.onend = () => {
+        if (isStoppingRef.current) return; // intentional stop — don't double-fire
         setIsRecording(false);
         setInterimTranscript('');
       };
@@ -351,7 +357,10 @@ export default function VerbatimTab({ onNavigate }) {
         {/* Speech not supported fallback */}
         {!speechSupported && (
           <div style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ember)' }}>
-            Web Speech API not supported in this browser. Use Chrome or Edge for voice input.
+            {/iPad|iPhone|iPod/.test(navigator.userAgent)
+              ? 'Voice recording is not supported on iOS Safari. Type your answer in the text box below instead.'
+              : 'Web Speech API not supported in this browser. Use Chrome or Edge for voice input.'
+            }
           </div>
         )}
 

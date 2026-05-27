@@ -397,10 +397,28 @@ export default function DefenseDocTab({ onNavigate }) {
       {/* Print styles injected */}
       <style>{`
         @media print {
-          body > * { display: none !important; }
-          .defense-doc-print { display: block !important; color: #000 !important; background: #fff !important; }
-          .defense-doc-print * { color: #000 !important; background: transparent !important; border-color: #ccc !important; }
-          .no-print { display: none !important; }
+          @page { margin: 1.2cm; size: A4; }
+          * { visibility: hidden !important; }
+          .defense-doc-print,
+          .defense-doc-print * { visibility: visible !important; }
+          .defense-doc-print {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important;
+            background: #fff !important;
+            color: #000 !important;
+            font-size: 12pt !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+          }
+          .defense-doc-print * {
+            color: #000 !important;
+            background: transparent !important;
+            border-color: #ccc !important;
+            box-shadow: none !important;
+          }
+          .defense-doc-print a::after { content: none !important; }
         }
         @media screen {
           .defense-doc-print { display: block; }
