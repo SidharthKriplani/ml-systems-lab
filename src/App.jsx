@@ -226,12 +226,16 @@ function PracticeCard({ tab, domain, onSelect, tabProgress }) {
       style={{
         textAlign: 'left', padding: '14px 16px',
         background: hov ? domain.bg : 'transparent',
-        borderTop:    `1px solid ${hov ? domain.accent + '50' : 'var(--rim)'}`,
-        borderRight:  `1px solid ${hov ? domain.accent + '50' : 'var(--rim)'}`,
-        borderBottom: `1px solid ${hov ? domain.accent + '50' : 'var(--rim)'}`,
+        borderTop:    `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
+        borderRight:  `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
+        borderBottom: `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
         borderLeft:   `3px solid ${domain.accent}`,
         borderRadius: '10px', cursor: 'pointer',
-        transition: 'all 0.14s', width: '100%',
+        transition: 'all 0.18s ease', width: '100%',
+        transform: hov ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hov
+          ? `0 10px 32px rgba(0,0,0,0.42), 0 0 0 1px ${domain.accent}18`
+          : 'none',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
@@ -302,12 +306,17 @@ function InterviewToolCard({ tool, onSelect }) {
       onMouseLeave={() => setHov(false)}
       style={{
         textAlign: 'left', padding: '16px 18px',
-        background: hov ? `color-mix(in srgb, ${tool.accent} 8%, transparent)` : 'transparent',
+        background: hov ? `color-mix(in srgb, ${tool.accent} 9%, transparent)` : 'transparent',
         borderTop:    `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
         borderRight:  `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
         borderBottom: `1px solid ${hov ? tool.accent + '70' : 'var(--rim)'}`,
         borderLeft:   `3px solid ${tool.accent}`,
-        borderRadius: '10px', cursor: 'pointer', transition: 'all 0.14s', width: '100%',
+        borderRadius: '10px', cursor: 'pointer',
+        transition: 'all 0.18s ease', width: '100%',
+        transform: hov ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hov
+          ? `0 10px 32px rgba(0,0,0,0.42), 0 0 0 1px ${tool.accent}18`
+          : 'none',
       }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
         <span style={{ fontSize: '16px', color: tool.accent }}>{tool.icon}</span>
@@ -369,27 +378,35 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
   const S = {
     aside: {
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-      background: 'rgba(8,6,4,0.99)', borderRight: '1px solid var(--rim)',
+      background: 'rgba(10,8,5,0.82)',
+      backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+      borderRight: '1px solid rgba(255,255,255,0.055)',
       flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'thin',
     },
     logo: {
-      padding: '14px 14px 12px', borderBottom: '1px solid var(--rim)',
+      padding: '14px 14px 12px',
+      borderBottom: '1px solid rgba(255,255,255,0.055)',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.055) 0%, transparent 100%)',
       flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px',
-      background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+      border: 'none', cursor: 'pointer', width: '100%',
     },
     logoIcon: {
-      width: '22px', height: '22px', borderRadius: '5px', flexShrink: 0,
+      width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
       background: 'linear-gradient(135deg, var(--prime), var(--violet))',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '8px', color: '#000',
+      fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
+      boxShadow: '0 0 14px rgba(240,165,0,0.32), 0 2px 8px rgba(0,0,0,0.5)',
     },
     zoneBtn: (isActive, accent) => ({
       width: '100%', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '6px 12px 6px 14px',
-      background: isActive ? `${accent}0d` : 'none', border: 'none', cursor: 'pointer',
+      justifyContent: 'space-between', padding: '7px 12px 7px 14px',
+      background: isActive
+        ? `linear-gradient(90deg, ${accent}18 0%, transparent 80%)`
+        : 'none',
+      border: 'none', cursor: 'pointer',
       borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
-      transition: 'background 0.12s',
+      transition: 'background 0.15s',
     }),
     domainBtn: {
       width: '100%', display: 'flex', alignItems: 'center',
@@ -509,9 +526,10 @@ function BottomNav({ activeZone, onZoneNav }) {
   return (
     <nav className="bottom-nav-safe" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'rgba(6,4,2,0.98)',
-      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-      borderTop: '1px solid var(--rim)',
+      background: 'rgba(6,4,2,0.80)',
+      backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
+      borderTop: 'none',
+      boxShadow: 'inset 0 1px 0 0 rgba(240,165,0,0.22), 0 -12px 48px rgba(0,0,0,0.55)',
       zIndex: 100,
     }}>
       <div style={{ height: '68px', display: 'flex', alignItems: 'stretch' }}>

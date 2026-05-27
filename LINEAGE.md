@@ -46,6 +46,58 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.3 — Learning quality sprint + visual overhaul (May 2026)
+
+Large session covering four parallel workstreams: learning quality, visual upgrades, content expansion, and code health.
+
+**Bug fixes:**
+- Mobile sidebar appeared alongside bottom nav — `display: 'flex'` inline style on `S.aside` overrode the `.desktop-sidebar { display: none }` CSS class (inline wins). Fixed by removing the inline `display` value.
+- Scroll on zone switch was smooth, causing disorienting partial-scroll states. Changed `window.scrollTo({ behavior: 'smooth' })` → `window.scrollTo(0, 0)` (instant) in both `goTo` and `handleZoneNav`.
+- Vercel build failure (apostrophes in `InterviewPrepTab.jsx`) — behavioral questions (IDs 101–115) used apostrophes inside single-quoted JS strings. Fixed via Python script converting `q:` / `answer:` fields to double-quoted strings.
+
+**Visual upgrades:**
+- Bottom nav: height 56→68px, icon 15→19px with glow pill active indicator, label 11px 500→700 weight, inactive tabs at 35% opacity.
+- Desktop sidebar: zone icons 15px with `drop-shadow` filter, labels 12px 700 weight, inactive at 40-45% opacity.
+- CombinatorTab question navigator pills: 32×32→40×40px touch targets, 0.7→0.8rem font.
+- `index.css` main content padding adjusted to 84px to clear the taller 68px nav.
+
+**Learning quality (Audit #008 response):**
+- 190 MCQ explanations expanded across `CombinatorTab` (130) and `TrainerTab` (60) with production failure mode + recognition signal pattern: "In production, this breaks as: [X]. The tell: [Y]." Ran as two parallel agents.
+- `StaffLayerTab` expanded 17 → 23 scenarios: Experiment Design ×4 (SRM, novelty effect, 12-simultaneous-tests mutual contamination, SUTVA/spillover), Feature Engineering ×2 (post-redesign covariate shift, offline-online correlation gap = leakage).
+- IC3 strawman fixes: s1 revised from "Ship it — p < 0.05" to competent-but-incomplete; s2 revised from "Retrain immediately" to pipeline-check-first.
+- "ML Necessity" domain tag added to `StaffLayerTab`; 4 existing scenarios (ml_need_1–4) tagged.
+- "↺ Reset reveals" button added to `StaffLayerTab`.
+
+**Content additions:**
+- `InterviewPrepTab`: 13 new questions (IDs 116–128) — Statistics, Evaluation, System Design/Staff, Trees, SQL, Features, Regression. Total 115 → 128.
+- `SystemDesignTab`: TwoTowerArchitecture SVG component (10 nodes, 9 edges, 4-panel detail).
+- `DLServingTab`: MLServingArchitecture SVG component (8 nodes, 9 edges, 4-panel detail).
+- `GradientTab`: YouTube IDs added to posts 26–30.
+- Related reading CTAs ("📖 Go deeper →") added to `FeatureEngTab`, `ModelEvalTab`, `MonitoringTab`.
+- `CombinatorTab`: debrief domain breakdown chart (horizontal bars, sorted weakest-first, mint/ember/rose coloring).
+- `VerbatimTab`: word count + WPM display in Review screen (120–160 wpm = good pace callout).
+
+**Session persistence:**
+- `CombinatorTab`: full session state saved to `msl_combinator_session` localStorage on every change; resume banner shown on config screen if session exists; cleared on `endSession` and `startSession`.
+
+**Pyodide UX:**
+- `PythonCell.jsx`: loading panel added — visible during ~3s Pyodide cold start, shows progress message + "First run takes ~3s" hint.
+
+**Keyboard nav:**
+- `ModelEvalTab`, `DeepLearningTab`: 1/2/3/4 key binding to select MCQ option, Enter to confirm, via `useEffect` on AccordionMCQ.
+
+**Code health:**
+- Hex color audit across `GradientTab`, `SystemDesignTab`, `SparkLabTab`, `AskTab`, `MonitoringTab` — `#000`/`#fff` replaced with CSS variables.
+- Font hardcoding fixed: `fontFamily` strings → `var(--font-sans)` / `var(--font-mono)` across remaining files.
+- Silent style bugs fixed in `SparkLabTab` and `SystemDesignTab` where `fontWeight`/`marginBottom`/`color` props were swallowed into `fontFamily` string values.
+- `PipelineBlogTab.jsx` deleted (was dead code — null-returning component, not imported).
+
+**Learning Path:**
+- `HomeTab` step completion tracking added: `msl_path_progress` localStorage, `markStepDone(pathId, stepIdx)` helper, checkmark/highlight on done steps, "X/N done" / "✓ Complete" badge in collapsed header.
+
+**Optimization objective established:**
+- Confirmed as learning quality (mental model transfer, production failure mode recognition) — not engagement. Documented in `DECISIONS.md` as a content rule.
+
 ### v4.2 — Audit sweep + StaffLayerTab expansion (May 2026)
 
 Full baseline audit pass (7 audits, #001–#007). All high and medium findings resolved in the same session. Key changes:

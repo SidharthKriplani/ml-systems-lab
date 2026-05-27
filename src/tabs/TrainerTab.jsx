@@ -83,13 +83,13 @@ const ALL_QUESTIONS = [
     id: 7, domain: 'ML Systems',
     q: 'A model trained monthly shows degraded performance in week 3. Which monitoring signal would detect this earliest?',
     options: [
-      'Model accuracy on a holdout set',
+      'SHAP value distribution shift between the training window and current serving period',
       'Input feature distribution shift (PSI)',
       'Prediction score distribution shift',
       'Business metric (CTR) drop',
     ],
     correct: 2,
-    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. Feature PSI is also early but doesn't capture model behavior directly. Production tell: score histogram compresses toward 0.5 for 3 days before CTR drops — a feature pipeline bug was flattening variance upstream, invisible to business dashboards.",
+    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. SHAP drift detection is expensive (requires running the explainer on live traffic), delayed (needs batch post-processing), and measures attribution rather than model output quality directly. Feature PSI catches input drift but not model behavior. Production tell: score histogram compresses toward 0.5 for 3 days before CTR drops — a feature pipeline bug was flattening variance upstream, invisible to business dashboards.",
   },
   {
     id: 8, domain: 'ML Systems',
@@ -395,11 +395,11 @@ const ALL_QUESTIONS = [
     options: [
       'Impute with mean days since last purchase from the training set',
       'Impute with a sentinel value (e.g., 9999) and add a binary "is_new_user" indicator feature',
-      'Drop rows with NULL in production',
+      'Impute with training mean and apply the is_new_user flag only during training, not at serving time',
       'Fill with zero — new users have zero days since last purchase',
     ],
     correct: 1,
-    explanation: "NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps. In production this breaks as: NULLs imputed with mean days_since_purchase (e.g., 45 days); new users look identical to average-lapsed users, suppressing a strong new-user conversion signal the model could have learned.",
+    explanation: "NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps. Applying the is_new_user flag only during training but not serving is training-serving skew — the model sees that feature at train time but receives no signal at inference, causing silent mispredictions for exactly the new users that matter most. In production this breaks as: NULLs imputed with mean days_since_purchase (e.g., 45 days); new users look identical to average-lapsed users, suppressing a strong new-user conversion signal the model could have learned.",
   },
   // Model Evaluation — questions 34-36
   {

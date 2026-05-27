@@ -279,10 +279,10 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | MCQ explanations in CombinatorTab and TrainerTab state the correct answer but don't explain the production failure mode — user can pass the question without building transferable judgment | `CombinatorTab.jsx`, `TrainerTab.jsx` | Medium | ⚠️ Open |
+| 1 | MCQ explanations in CombinatorTab and TrainerTab state the correct answer but don't explain the production failure mode — user can pass the question without building transferable judgment | `CombinatorTab.jsx`, `TrainerTab.jsx` | Medium | ✅ Fixed — all 190 explanations (130 CombinatorTab + 60 TrainerTab) expanded with "In production, this breaks as: [X]. The tell: [Y]." pattern (2026-05-27) |
 | 2 | Distractor quality is uneven — several wrong options are too obviously wrong (e.g., "Accuracy" in an imbalanced-class MCQ), reducing the judgment signal. A user who knows anything picks the right answer without reasoning through the tradeoff | `CombinatorTab.jsx`, `TrainerTab.jsx` | Medium | ⚠️ Open |
-| 3 | StaffLayerTab domain coverage is thin for high-value domains — Experiment Design (1 scenario), Feature Engineering (1), Ranking (1), Ethics/Fairness (1). These are the domains most likely to come up in Staff-level interviews and incidents | `StaffLayerTab.jsx` | Low | ⚠️ Open |
-| 4 | IC3 reveals in StaffLayerTab are occasionally strawman-level — "Ship it — p < 0.05" as IC3 is too obviously wrong. A real IC3 engineer knows more than that. Strawman IC3 makes the Staff reveal feel earned without being earned | `StaffLayerTab.jsx` | Low | ⚠️ Open |
+| 3 | StaffLayerTab domain coverage is thin for high-value domains — Experiment Design (1 scenario), Feature Engineering (1), Ranking (1), Ethics/Fairness (1). These are the domains most likely to come up in Staff-level interviews and incidents | `StaffLayerTab.jsx` | Low | ✅ Fixed — 6 new scenarios added: Experiment Design ×4 (SRM, novelty effect, 12 simultaneous tests, SUTVA/spillover), Feature Engineering ×2 (post-redesign covariate shift, offline-online correlation gap = leakage). Total 17 → 23 scenarios (2026-05-27) |
+| 4 | IC3 reveals in StaffLayerTab are occasionally strawman-level — "Ship it — p < 0.05" as IC3 is too obviously wrong. A real IC3 engineer knows more than that. Strawman IC3 makes the Staff reveal feel earned without being earned | `StaffLayerTab.jsx` | Low | ✅ Fixed — s1 IC3 revised from "Ship it — p < 0.05" to competent-but-incomplete response; s2 IC3 revised from "Retrain immediately" to pipeline-check-first approach (2026-05-27) |
 
 **Finding 1 detail — thin explanations:**
 
@@ -351,12 +351,12 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
 | 006 | Analytics — autocapture PII risk, event coverage gaps, undocumented taxonomy | 2026-05-26 | Analytics | ✅ All fixed |
 | 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | ✅ All resolved |
-| 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 4 open ⚠️ |
+| 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 2 | #008.1 thin MCQ explanations, #008.2 weak distractors |
-| Low | 3 | #001 index keys (deferred), #008.3 StaffLayer domain gaps, #008.4 IC3 strawman |
+| Medium | 1 | #008.2 weak distractors |
+| Low | 1 | #001 index keys (deferred) |

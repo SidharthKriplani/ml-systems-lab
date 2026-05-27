@@ -65,6 +65,9 @@ Every wrong option gets an explanation of why it's wrong. This is the core learn
 **Gradient posts end with a CTA linking to the practice module.**  
 Read → practice in one click. Every new Gradient post must identify its target tab and include the link.
 
+**Optimization objective for all content decisions: learning quality, not engagement.**  
+The metric is mental model transfer — can the user recognize and reason about this failure mode in a real codebase or incident? Not time-on-site, not question count, not session length. Concretely: every MCQ explanation must include (a) what breaks in production if you get this wrong, and (b) the signal that tells you you're in that situation. Every scenario reveal must model the reasoning process, not just the conclusion. When choosing between adding more content and deepening existing content, prefer depth.
+
 ---
 
 ## Code conventions
