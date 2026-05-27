@@ -373,6 +373,10 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
 | 009 | Visual Polish — "take my money" end-to-end audit: tab headers, icons, cards, interactive surfaces | 2026-05-27 | Visual Consistency / UX | ✅ All resolved |
 | 010 | TimeSeriesTab ForecastFailureZoo — `correct:` field was numeric index, code compared against string IDs; score never counted, correct answer never highlighted | 2026-05-27 | BUILD / Content Integrity | ✅ Fixed — all 8 scenarios updated to string IDs |
+| 011 | Mobile layout — hero two-column grid not responsive; ScenarioMockup clipped on phone viewports | 2026-05-27 | Mobile | ✅ Fixed — hero-grid CSS class, mockup hidden <700px |
+| 012 | Low-brightness contrast — ink-low/ink-ghost fail at reduced screen backlight; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale brightened, surfaces lightened, card borders raised |
+| 011 | Mobile: hero two-column grid not responsive — ScenarioMockup clipped on narrow viewports | 2026-05-27 | Mobile | ✅ Fixed — `.hero-grid` CSS class, mockup hidden below 700px |
+| 012 | Low-brightness contrast — `--ink-low`/`--ink-ghost` fail at reduced backlight; card surfaces blend into void | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale brightened, surfaces lightened, card border opacity raised |
 
 **Open findings by severity:**
 

@@ -46,6 +46,21 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.6 — Mobile layout + low-brightness contrast (May 2026)
+
+**Hero layout responsive fix:**
+- Two-column hero grid was a fixed `gridTemplateColumns` inline style — no media query path. Extracted to `.hero-grid` CSS class in `index.css`. Below 700px: single column, mockup hidden. Above 700px: unchanged.
+- `<ScenarioMockup />` wrapped in `<div className="hero-mockup">` — the class carries `display: none` on mobile.
+
+**Low-brightness contrast pass:**
+- All four ink variables brightened to maintain readability at reduced phone backlight:
+  - `--ink-mid` → `#cec3b9`, `--ink-low` → `#a09489`, `--ink-ghost` → `#756c62` (was `#4a433c`, ~2.3:1 WCAG fail)
+- Surface variables lightened for card/void separation: `--depth` → `#1c1916`, `--surface` → `#242119`, `--rim` → `#403930`
+- `.card` border opacity raised: `0.09` → `0.13`; hover border `0.15` → `0.22`
+- `--void` unchanged — dark aesthetic preserved
+
+**Audits logged:** #011 (mobile hero), #012 (low-brightness contrast) — both resolved.
+
 ### v4.5 — Bug fix + animation pass (May 2026)
 
 **Bug fix:**
