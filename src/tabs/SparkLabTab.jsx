@@ -243,7 +243,7 @@ function SkewDoctor() {
       <div className="card" style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Task duration (Stage: shuffle read → aggregate)</span>
-          <span style={{ fontSize: '13px', fontFamily: "'JetBrains Mono',monospace', fontWeight: 600, color: +skewRatio > 10 ? 'var(--rose)' : +skewRatio > 3 ? 'var(--gold)' : 'var(--mint)'" }}>
+          <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: +skewRatio > 10 ? 'var(--rose)' : +skewRatio > 3 ? 'var(--gold)' : 'var(--mint)' }}>
             max/median: {skewRatio}×
           </span>
         </div>

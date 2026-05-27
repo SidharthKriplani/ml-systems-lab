@@ -35,7 +35,7 @@ const INCIDENTS = [
     id: 'label_leak',
     title: 'Fraud Model Performance Cliff',
     severity: 'P0',
-    severityColor: '#ff3b3b',
+    severityColor: 'var(--rose)',
     tagline: 'Precision dropped from 0.91 to 0.43 in production overnight.',
     context: 'A gradient boosted fraud detection model was retrained last night on 60 days of data. Offline metrics were excellent: AUC 0.97, precision 0.91. It was promoted to production this morning. By noon, fraud operations is overwhelmed by false positives.',
     clues: [
@@ -505,7 +505,7 @@ function DSOwnershipChain() {
               {/* Spine */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '36px', flexShrink: 0 }}>
                 <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
-                  style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${isDone ? 'var(--mint)' : isOpen ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'var(--mint)' : 'var(--depth)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: isDone ? '#000' : 'var(--ink-low)', fontWeight: 700, zIndex: 1 }}>
+                  style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${isDone ? 'var(--mint)' : isOpen ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'var(--mint)' : 'var(--depth)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: isDone ? 'var(--void)' : 'var(--ink-low)', fontWeight: 700, zIndex: 1 }}>
                   {isDone ? '✓' : String(i + 1).padStart(2,'0').slice(-2)}
                 </button>
                 {i < DS_CHAIN.length - 1 && (
@@ -1485,7 +1485,7 @@ function ServingTradeoffLab() {
 
       {/* Requirements */}
       <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: "'JetBrains Mono',monospace', marginBottom: '4px" }}>Your requirements</div>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>Your requirements</div>
         <ConfigRow label="Latency budget" value={latency} onChange={setLatency}
           options={[{ value: '<50ms', label: '<50ms' }, { value: '<200ms', label: '<200ms' }, { value: '<1s', label: '<1s' }, { value: '<10s', label: '<10s' }]} />
         <ConfigRow label="Throughput" value={throughput} onChange={setThroughput}

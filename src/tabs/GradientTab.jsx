@@ -1857,7 +1857,7 @@ const CASES = [
 
 // ─── Case Library component ───────────────────────────────────────────────────
 const CASE_SECTORS = ['All', 'Recommendations', 'Fraud Detection', 'Search Ranking', 'Pricing', 'Content Ranking', 'Feature Engineering', 'Classification', 'NLP', 'Delivery Logistics', 'Ranking', 'Model Operations', 'Experimentation']
-const SEVERITY_COLORS = { P0: '#ff3b3b', P1: 'var(--rose)', P2: 'var(--ember)' }
+const SEVERITY_COLORS = { P0: 'var(--rose)', P1: 'var(--rose)', P2: 'var(--ember)' }
 
 function CaseDetail({ c, onBack }) {
   return (
@@ -1928,7 +1928,7 @@ function CaseLibrary() {
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: SEVERITY_COLORS[c.severity], color: 'var(--white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{c.severity}</span>
-              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace' "}}>{c.sector}</span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{c.sector}</span>
             </div>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px', lineHeight: 1.3 }}>{c.title}</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0, marginBottom: '12px' }}>{c.what.slice(0, 110)}…</p>
@@ -2229,7 +2229,7 @@ export default function GradientTab({ onNavigate }) {
         <div style={{ display: 'flex', gap: '6px' }}>
           {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
-              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>
           ))}
@@ -2258,7 +2258,7 @@ export default function GradientTab({ onNavigate }) {
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => setMode(m.k)}
-              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? '#000' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>
           ))}

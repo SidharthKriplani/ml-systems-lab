@@ -400,7 +400,7 @@ function KSTestExplorer() {
               <line x1={kx} y1={ky1} x2={kx} y2={ky2} stroke="var(--ember)" strokeWidth="1.5" strokeDasharray="3,2" />
               <circle cx={kx} cy={ky1} r="3" fill="var(--violet)" />
               <circle cx={kx} cy={ky2} r="3" fill="var(--sky)" />
-              <text x={kx + 4} y={Math.min(ky1, ky2) - 3} fontSize="7" fill="var(--ember)" fontFamily="JetBrains Mono, monospace">
+              <text x={kx + 4} y={Math.min(ky1, ky2) - 3} fontSize="7" fill="var(--ember)" fontFamily="var(--font-mono)">
                 D={result.ksStatistic.toFixed(3)}
               </text>
             </g>

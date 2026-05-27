@@ -355,7 +355,7 @@ function ResultCard({ item, faded, onNavigate }) {
       {faded && (
         <div style={{
           fontSize: 10,
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'var(--font-mono)',
           color: 'var(--ink-ghost)',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -367,7 +367,7 @@ function ResultCard({ item, faded, onNavigate }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{
           fontSize: 9,
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'var(--font-mono)',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
           color,
@@ -382,7 +382,7 @@ function ResultCard({ item, faded, onNavigate }) {
         <span style={{
           fontSize: 12,
           color: 'var(--ink-mid)',
-          fontFamily: 'Space Grotesk, sans-serif',
+          fontFamily: 'var(--font-sans)',
           fontWeight: 600,
         }}>
           {item.q}
@@ -406,7 +406,7 @@ function ResultCard({ item, faded, onNavigate }) {
               onClick={() => onNavigate(link.tab)}
               style={{
                 fontSize: 11,
-                fontFamily: 'JetBrains Mono, monospace',
+                fontFamily: 'var(--font-mono)',
                 color: 'var(--ink-mid)',
                 background: 'transparent',
                 border: '1px solid var(--rim)',
@@ -486,7 +486,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{
               fontSize: 9,
-              fontFamily: 'JetBrains Mono, monospace',
+              fontFamily: 'var(--font-mono)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               color: 'var(--prime)',
@@ -499,7 +499,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             </span>
             <span style={{
               fontSize: 13,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-sans)',
               fontWeight: 600,
               color: 'var(--ink-hi)',
             }}>
@@ -541,7 +541,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             onClick={() => setShowHint(h => !h)}
             style={{
               fontSize: 12,
-              fontFamily: 'JetBrains Mono, monospace',
+              fontFamily: 'var(--font-mono)',
               color: 'var(--sky)',
               background: 'transparent',
               border: '1px solid color-mix(in srgb, var(--sky) 30%, transparent)',
@@ -572,7 +572,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             onClick={() => setShowAnswer(a => !a)}
             style={{
               fontSize: 12,
-              fontFamily: 'JetBrains Mono, monospace',
+              fontFamily: 'var(--font-mono)',
               color: 'var(--mint)',
               background: 'transparent',
               border: '1px solid color-mix(in srgb, var(--mint) 30%, transparent)',
@@ -615,7 +615,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             onClick={onClose}
             style={{
               fontSize: 12,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-sans)',
               color: 'var(--ink-low)',
               background: 'transparent',
               border: 'none',
@@ -717,7 +717,7 @@ export default function AskTab({ onNavigate }) {
             alignItems: 'center',
             gap: 6,
             fontSize: 13,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-sans)',
             fontWeight: 600,
             color: 'var(--prime)',
             background: 'rgba(212,175,55,0.08)',
@@ -740,7 +740,7 @@ export default function AskTab({ onNavigate }) {
         <div>
           <div style={{
             fontSize: 11,
-            fontFamily: 'JetBrains Mono, monospace',
+            fontFamily: 'var(--font-mono)',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
             color: 'var(--ink-ghost)',
@@ -912,7 +912,7 @@ export default function AskTab({ onNavigate }) {
           disabled={!query.trim()}
           style={{
             fontSize: 13,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-sans)',
             fontWeight: 600,
             color: query.trim() ? 'var(--void)' : 'var(--ink-ghost)',
             background: query.trim() ? 'var(--prime)' : 'var(--surface)',
