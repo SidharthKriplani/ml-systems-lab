@@ -991,6 +991,16 @@ export default function FeatureEngTab({ onNavigate }) {
         ))}
       </div>
       <ActiveModule />
+      {onNavigate && (
+        <div style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+            📖 Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Feature Store Architecture: What the Tutorials Skip</strong> in Gradient
+          </span>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Read in Gradient →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

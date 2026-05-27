@@ -943,15 +943,23 @@ function formatTime(seconds) {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function CombinatorTab({ onNavigate }) {
-  const [screen, setScreen] = useState('config')
-  const [duration, setDuration] = useState(30)
-  const [questions, setQuestions] = useState([])
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const [userAnswers, setUserAnswers] = useState({})
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [timePerQuestion, setTimePerQuestion] = useState({})
-  const [sessionStarted, setSessionStarted] = useState(false)
-  const [selfRatings, setSelfRatings] = useState({})
+  // ── Restore saved session from localStorage ──
+  const _saved = (() => {
+    try { return JSON.parse(localStorage.getItem('msl_combinator_session') || 'null') } catch(_) { return null }
+  })()
+
+  const [screen, setScreen] = useState(_saved?.screen || 'config')
+  const [duration, setDuration] = useState(_saved?.duration || 30)
+  const [questions, setQuestions] = useState(() => {
+    if (!_saved?.questionIds) return []
+    return _saved.questionIds.map(id => QUESTIONS.find(q => q.id === id)).filter(Boolean)
+  })
+  const [currentIdx, setCurrentIdx] = useState(_saved?.currentIdx || 0)
+  const [userAnswers, setUserAnswers] = useState(_saved?.userAnswers || {})
+  const [timeLeft, setTimeLeft] = useState(_saved?.timeLeft || 0)
+  const [timePerQuestion, setTimePerQuestion] = useState(_saved?.timePerQuestion || {})
+  const [sessionStarted, setSessionStarted] = useState(_saved?.screen === 'session')
+  const [selfRatings, setSelfRatings] = useState(_saved?.selfRatings || {})
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [totalTimeUsed, setTotalTimeUsed] = useState(0)
 
@@ -970,6 +978,7 @@ export default function CombinatorTab({ onNavigate }) {
     setSessionStarted(true)
     setShowEndConfirm(false)
     questionStartRef.current = Date.now()
+    try { localStorage.removeItem('msl_combinator_session') } catch(_) {}
     setScreen('session')
   }
 
@@ -988,6 +997,18 @@ export default function CombinatorTab({ onNavigate }) {
     }, 1000)
     return () => clearInterval(timerRef.current)
   }, [screen])
+
+  // ── Persist session to localStorage ──
+  useEffect(() => {
+    if (screen !== 'session') return
+    try {
+      localStorage.setItem('msl_combinator_session', JSON.stringify({
+        screen, duration,
+        questionIds: questions.map(q => q.id),
+        currentIdx, userAnswers, timeLeft, timePerQuestion, selfRatings,
+      }))
+    } catch(_) {}
+  }, [screen, currentIdx, userAnswers, timeLeft, selfRatings])
 
   // ── Track time per question ──
   const recordQuestionTime = useCallback((idx) => {
@@ -1013,6 +1034,7 @@ export default function CombinatorTab({ onNavigate }) {
     const used = cfg.totalQ * 60 - (auto ? 0 : timeLeft) // fallback
     setTotalTimeUsed(duration * 60 - (auto ? 0 : timeLeft))
     setShowEndConfirm(false)
+    try { localStorage.removeItem('msl_combinator_session') } catch(_) {}
     saveToHistory()
     const mcqs = questions.filter(q => q.type === 'mcq')
     const correct = mcqs.filter((q) => userAnswers[questions.indexOf(q)] !== undefined && parseInt(userAnswers[questions.indexOf(q)]) === q.correct).length
@@ -1095,6 +1117,28 @@ export default function CombinatorTab({ onNavigate }) {
             Timed mock session — all answers locked until time ends
           </p>
         </div>
+
+        {_saved?.screen === 'session' && (
+          <div style={{
+            padding: '0.875rem 1rem', borderRadius: 8, marginBottom: '1.5rem',
+            background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
+          }}>
+            <div>
+              <div style={{ color: 'var(--prime)', fontWeight: 700, fontSize: '0.9rem' }}>Session in progress</div>
+              <div style={{ color: 'var(--ink-mid)', fontSize: '0.8rem', marginTop: '2px' }}>
+                {Math.floor(_saved.timeLeft / 60)}:{String(_saved.timeLeft % 60).padStart(2,'0')} remaining · {Object.keys(_saved.userAnswers || {}).length}/{_saved.questionIds?.length || 0} answered
+              </div>
+            </div>
+            <button onClick={() => {
+              setScreen('session')
+            }} style={{
+              padding: '0.5rem 1rem', borderRadius: 6, background: 'var(--prime)',
+              border: 'none', color: 'var(--void)', fontFamily: 'var(--font-sans)',
+              fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0,
+            }}>Resume →</button>
+          </div>
+        )}
 
         <div style={{ marginBottom: '1.5rem' }}>
           <p style={{ color: 'var(--ink-mid)', fontSize: '0.85rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>

@@ -12,6 +12,7 @@ const DOMAIN_COLORS = {
   'Ethics/Fairness': 'var(--rose)',
   'Feature Engineering': 'var(--mint)',
   'Problem Framing': 'var(--amber, #f59e0b)',
+  'ML Necessity': 'var(--gold)',
 }
 
 const SCENARIOS = [
@@ -150,6 +151,38 @@ const SCENARIOS = [
     ic3: 'Train a survival model or binary classifier on HR data — tenure, performance ratings, compensation bands, manager changes.',
     ic5: "What's the base attrition rate? What features are available without violating privacy norms? What action does a positive prediction trigger? Do we have enough runway to act on predictions?",
     staff: "HR managers already know which employees are flight risks — they talk to people. The real question: what intervention changes based on a model score that isn't already happening through manager judgment? If the action (compensation review, role change, 1:1 escalation) requires discretion anyway, the model just adds a bureaucratic layer. Where a model earns its place is scale — when a manager has 40 reports and can't have 40 meaningful conversations. Define the intervention precisely, then check if manager judgment already routes it. Build the model only where that breaks down.",
+  },
+  {
+    id: 'ml_need_1',
+    title: 'PM wants an ML churn model to decide who receives a retention email.',
+    domain: 'ML Necessity',
+    ic3: 'Build a churn classifier. Score users nightly, send retention email to the top-risk decile. Use logistic regression or gradient boosting on engagement features.',
+    ic5: "Counterfactual first: what happens if we send to everyone? Email is cheap — calculate send cost vs. churn revenue at stake. Model earns its place only if (a) channel is capacity-constrained, (b) emails annoy non-churners and drive unsubscribes, or (c) personalization materially changes conversion. Socratic questions: 'What's the cost per email vs. the LTV of a retained user?', 'Does emailing non-churners hurt us?', 'Does the message change based on churn risk, or is it one template?'",
+    staff: "Verdict: ML not justified unless you can answer yes to at least one of the three conditions above. The model only adds value if the action branches on the prediction. If the email is identical for everyone, you're training a classifier to sort a list you could just send in full. Start with a blanket send. A/B test the email itself. Measure unsubscribe rate on non-churners. If unsubscribes are material, now you have a business case for targeting. Until then, the model is cost and delay with no incremental upside. Revisit when personalization (different offer tiers, different channels) is on the table.",
+  },
+  {
+    id: 'ml_need_2',
+    title: 'Support team wants ML to auto-categorize tickets into 8 buckets. Current volume: 2 tickets/day.',
+    domain: 'ML Necessity',
+    ic3: 'Fine-tune a text classifier on historical tickets with a confidence threshold for human fallback. Deploy to the ticketing system via webhook.',
+    ic5: "Volume math first: 2 tickets/day = 730/year. Human triage at 30 seconds each = 6 hours of work per year. ML requires: label curation, training, deployment, monitoring, retraining on drift. Socratic questions: 'How many tickets per day?', 'What's the human triage time per ticket?', 'What miscategorization rate is acceptable?', 'Do categories change over time?'",
+    staff: "Verdict: ML not justified at this volume. Maintenance cost dominates benefit by a wide margin. Six hours of annual human work is not a bottleneck — it's a rounding error. Regex + keyword routing covers 90% of cases with zero ongoing cost and is fully auditable when a routing decision is disputed. Define the volume inflection point upfront: ML makes sense above roughly 500 tickets/day where human triage becomes a full-time role. Set that threshold in writing, track ticket growth, and revisit when you hit it. Don't build infrastructure for a problem that doesn't exist yet.",
+  },
+  {
+    id: 'ml_need_3',
+    title: 'Security wants an ML fraud detection model. Platform fraud rate: 0.001% (1 in 100,000 transactions).',
+    domain: 'ML Necessity',
+    ic3: 'Train a binary classifier with class imbalance handling — SMOTE, class weights, focal loss. Optimize for recall at a fixed false positive budget.',
+    ic5: "Base rate math: at 0.001% and 99% precision, false positives still outnumber true positives. Calculate expected FP volume at actual traffic before any modeling. Socratic questions: 'What's the false positive cost — blocked legitimate transaction, support ticket, chargeback dispute?', 'Can you enumerate the current fraud patterns?', 'What does a rules engine miss that ML would catch?'",
+    staff: "Verdict: ML as layer 2 only — not as the primary system. A rules engine (velocity checks, IP geolocation, device fingerprinting, card BIN patterns) catches 80–90% of fraud patterns explicitly, costs nothing to operate, and is fully explainable when a customer disputes a block. That matters: card network dispute processes require you to document the blocking reason. An ML model score is not a valid dispute reason. Build the rules layer first. Measure residual fraud that rules miss. That residual — the adversarial, adaptive, long-tail patterns — is where ML earns its place. Sequence matters: rules → measure residual → ML on the residual.",
+  },
+  {
+    id: 'ml_need_4',
+    title: 'PM wants an AI-powered recommendation engine to increase basket size. Catalog: 50 SKUs.',
+    domain: 'ML Necessity',
+    ic3: 'Build a collaborative filtering model or deploy a vector similarity recommender. Embed product features and user purchase history.',
+    ic5: "Interaction matrix density check: with 50 SKUs, how many user-item interactions do you have per SKU? Collaborative filtering needs hundreds of interactions per item to learn meaningful associations. Content-based filtering on 50 items degenerates to category affinity. Socratic questions: 'How many interactions per SKU?', 'Can a merchant write the cross-sell rules manually?', 'What's the catalog growth trajectory — will it still be 50 SKUs in 12 months?'",
+    staff: "Verdict: ML not justified at this catalog size. Collaborative filtering has no signal when the interaction matrix is near-empty per item — it will surface random or popularity-dominated results and look no better than a 'trending' list. Content-based filtering on 50 items is just category lookup dressed up as ML. A merchant can write 'frequently bought together' rules in an afternoon; those rules will match or beat any model you train. The engineering and maintenance cost is pure waste. Revisit when catalog exceeds 500 items with at least 100 interactions per item — at that scale, the interaction matrix has enough density for collaborative filtering to find non-obvious associations a human wouldn't write.",
   },
 ]
 

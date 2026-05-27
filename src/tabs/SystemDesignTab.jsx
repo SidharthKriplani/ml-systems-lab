@@ -1807,6 +1807,242 @@ function RAGArchitecture() {
   )
 }
 
+// ─── Two-Tower Architecture Diagram ──────────────────────────────────────────
+const TT_NODES = [
+  {
+    id: 'user_features', label: 'User Features', sub: 'activity, demographics, context',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    what: 'Raw user signals fed into the user tower: recent activity (clicks, watches, purchases), demographic attributes, and request context (time of day, device, location).',
+    decisions: 'Which features to include at query time vs pre-compute in batch. Real-time features (last-5-clicks) add freshness but increase serving latency.',
+    failures: 'Including future-leaking features during training (e.g., post-event engagement). Real-time feature retrieval fails under load, causing stale fallback or dropped requests.',
+    signal: 'Strong candidates ask: are user features computed at request time or fetched from a feature store? That distinction reveals serving architecture sophistication.',
+  },
+  {
+    id: 'item_features', label: 'Item Features', sub: 'content, metadata, popularity',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    what: 'Static and slowly-changing item attributes: content signals (text, image embeddings), metadata (category, price, age), and popularity signals (CTR, rating).',
+    decisions: 'How frequently to refresh item features. Popularity signals change hourly; content signals are stable. Mixing staleness tolerances complicates the pipeline.',
+    failures: 'Stale item features for trending content. New items have no popularity signal — cold-start problem requires a separate fallback strategy.',
+    signal: 'Ask: how do you handle items with no historical signal? The answer reveals whether the candidate has thought about cold-start.',
+  },
+  {
+    id: 'user_tower', label: 'User Tower', sub: 'DNN encoder',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Independent DNN that maps user context to a fixed-size embedding vector. Runs at query time on the online path — must be fast (typically <10ms).',
+    decisions: 'Embedding dimension (64–512), whether to include real-time features vs batch-only, staleness tolerance. Deeper towers capture more signal but add latency.',
+    failures: 'Tower learns popularity bias rather than preference signal; user embedding drifts when behavior shifts after major product changes.',
+    signal: 'Staff asks: are user and item towers trained jointly or separately? Joint training leaks future information through the item tower.',
+  },
+  {
+    id: 'item_tower', label: 'Item Tower', sub: 'DNN encoder',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Mirror DNN that maps item features to the same embedding space as the user tower. Runs offline to pre-compute embeddings for all items in the catalog.',
+    decisions: 'Same architecture as user tower (shared dim) to enable dot-product similarity. Separate towers allow independent feature sets for users vs items.',
+    failures: 'Architecture mismatch between user and item tower output dims breaks the ANN index at deployment. Schema changes in item features require full re-embedding.',
+    signal: 'The item tower runs offline — this is the key enabling constraint for billion-scale retrieval. Candidates who know this understand why two-tower works.',
+  },
+  {
+    id: 'user_emb', label: 'User Embedding', sub: 'd=256 vector',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    what: 'Fixed-dimension float vector representing the user in the shared embedding space. Computed at query time by the user tower. Used as the query vector for ANN search.',
+    decisions: 'Dimension tradeoff: higher dim = more expressiveness, but larger ANN index and more compute. 64–256 is typical; >512 rarely justified.',
+    failures: 'Embedding dimension changed after ANN index was built — requires full index rebuild. User embedding at training time differs from serving time due to feature pipeline divergence.',
+    signal: 'The user embedding is computed fresh per request. That freshness is the tradeoff against item embeddings being stale.',
+  },
+  {
+    id: 'item_emb', label: 'Item Embeddings', sub: 'pre-computed offline',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    what: 'All item embeddings pre-computed offline and loaded into the ANN index. This decoupling is the core architectural insight that makes billion-scale retrieval possible.',
+    decisions: 'Index rebuild frequency (hourly vs daily), handling new items not yet embedded (cold-start fallback to content-based or popularity-based retrieval).',
+    failures: 'Stale embeddings serve yesterday\'s catalog. New items invisible until next index rebuild. Deleted items remain in index until rebuild, causing dead links.',
+    signal: 'The pre-computation is what makes billion-scale retrieval possible — decoupled encoding is the architectural insight. Ask: how long until a new item appears in retrieval?',
+  },
+  {
+    id: 'ann', label: 'ANN Index', sub: 'FAISS / ScaNN',
+    color: 'var(--ember)', bg: 'rgba(249,115,22,0.08)',
+    what: 'Approximate Nearest Neighbor search index containing all pre-computed item embeddings. Returns top-K items by cosine or dot-product similarity to the user query vector.',
+    decisions: 'FAISS IVF vs HNSW vs ScaNN — latency vs recall tradeoff. K size (200–1000). Index must fit in memory; sharding required at billion-item scale.',
+    failures: 'ANN recall at 95% means 5% of true nearest neighbors are missed; higher K downstream compensates but adds ranker load. Index too large for single node requires distributed ANN.',
+    signal: 'Staff knows: ANN recall is tunable. The right K is determined by ranker capacity, not by "more is better".',
+  },
+  {
+    id: 'candidates', label: 'Top-K Candidates', sub: 'k=500',
+    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.04)',
+    what: 'The set of K approximately-nearest items returned by ANN. These are the candidates passed to the ranker for re-scoring with richer features.',
+    decisions: 'K size balances ranker load vs retrieval coverage. K=200 is cheap; K=1000 recovers more ANN misses but multiplies ranker cost by 5x.',
+    failures: 'K too small: genuine best items not retrieved, ranker cannot recover them. K too large: ranker becomes the bottleneck at high QPS.',
+    signal: 'K is the key tuning knob at the retrieval-ranking boundary. Candidates who know to measure recall@K vs ranker latency understand the system.',
+  },
+  {
+    id: 'ranker', label: 'Ranking Model', sub: 'pointwise or LTR',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    what: 'Pointwise or listwise model that re-scores the K candidates with richer features unavailable at retrieval time (e.g., user-item interaction features, business rules).',
+    decisions: 'Pointwise (independent scores) vs pairwise vs listwise loss. Whether to add interaction features unavailable at retrieval time. Budget for how many features are practical at K=500.',
+    failures: 'Ranker sees a biased candidate set — it can only rank what retrieval surfaced, so retrieval errors compound. Ranker overfits to popular items if training data is not debiased.',
+    signal: 'Two-stage is a latency tradeoff: cheap retrieval at scale, expensive ranking on a small set. The split is the design. Staff asks: how do you debias ranker training data?',
+  },
+  {
+    id: 'result', label: 'Final Results', sub: 'Top-10 served',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    what: 'The top-N items after ranking, subject to business rules (diversity constraints, exclusion lists, sponsored slots). What the user sees.',
+    decisions: 'Post-ranking business rules: deduplication, diversity enforcement, sponsored item injection. Caching strategy for identical requests.',
+    failures: 'Business rules applied inconsistently across platforms. Diversity logic reduces measured CTR in A/B but improves long-term retention — easy to misread.',
+    signal: 'Strong candidates mention that "final results" is not just top-N by score — it includes a post-processing layer for business constraints.',
+  },
+]
+
+const TT_EDGES = [
+  { from: 'user_features', to: 'user_tower' },
+  { from: 'item_features', to: 'item_tower' },
+  { from: 'user_tower',    to: 'user_emb' },
+  { from: 'item_tower',    to: 'item_emb' },
+  { from: 'item_emb',      to: 'ann',       label: 'offline index build' },
+  { from: 'user_emb',      to: 'ann',       label: 'online query' },
+  { from: 'ann',           to: 'candidates' },
+  { from: 'candidates',    to: 'ranker' },
+  { from: 'ranker',        to: 'result' },
+]
+
+const TT_LAYOUT = {
+  user_features: [0, 1],
+  item_features: [0, 3],
+  user_tower:    [1, 1],
+  item_tower:    [1, 3],
+  user_emb:      [2, 1],
+  item_emb:      [2, 3],
+  ann:           [3, 2],
+  candidates:    [4, 2],
+  ranker:        [5, 2],
+  result:        [6, 2],
+}
+
+function TwoTowerArchitecture() {
+  const [selected, setSelected] = useState(null)
+  const node = TT_NODES.find(n => n.id === selected)
+
+  const COL_W = 155
+  const ROW_H = 100
+  const NODE_W = 142
+  const NODE_H = 56
+  const PAD = 8
+  const COLS = 7
+  const ROWS = 5
+  const SVG_W = COLS * COL_W + PAD * 2
+  const SVG_H = ROWS * ROW_H + PAD * 2
+
+  function cx(col) { return PAD + col * COL_W + NODE_W / 2 }
+  function cy(row) { return PAD + row * ROW_H + NODE_H / 2 }
+  function nx(col) { return PAD + col * COL_W }
+  function ny(row) { return PAD + row * ROW_H }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+          Click any block to explore
+        </div>
+        <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <svg
+            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+            width={SVG_W}
+            height={SVG_H}
+            style={{ display: 'block', minWidth: SVG_W }}
+          >
+            <defs>
+              <marker id="tt-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="rgba(255,255,255,0.25)" />
+              </marker>
+            </defs>
+
+            {TT_EDGES.map((e, i) => {
+              const [fc, fr] = TT_LAYOUT[e.from]
+              const [tc, tr] = TT_LAYOUT[e.to]
+              const x1 = cx(fc) + (tc > fc ? NODE_W / 2 : tc < fc ? -NODE_W / 2 : 0)
+              const y1 = cy(fr) + (tc === fc ? (tr > fr ? NODE_H / 2 : -NODE_H / 2) : 0)
+              const x2 = cx(tc) - (tc > fc ? NODE_W / 2 : tc < fc ? -NODE_W / 2 : 0)
+              const y2 = cy(tr) - (tc === fc ? (tr > fr ? NODE_H / 2 : -NODE_H / 2) : 0)
+              const mx = (x1 + x2) / 2
+              const my = (y1 + y2) / 2
+              return (
+                <g key={i}>
+                  <path
+                    d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.12)"
+                    strokeWidth="1.5"
+                    markerEnd="url(#tt-arrow)"
+                  />
+                  {e.label && (
+                    <text x={mx} y={my - 5} textAnchor="middle"
+                      fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="var(--font-mono)">
+                      {e.label}
+                    </text>
+                  )}
+                </g>
+              )
+            })}
+
+            {TT_NODES.map(n => {
+              const [col, row] = TT_LAYOUT[n.id]
+              const x = nx(col)
+              const y = ny(row)
+              const isSel = selected === n.id
+              return (
+                <g key={n.id} onClick={() => setSelected(isSel ? null : n.id)} style={{ cursor: 'pointer' }}>
+                  <rect
+                    x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
+                    fill={isSel ? n.bg : 'rgba(255,255,255,0.03)'}
+                    stroke={isSel ? n.color : 'rgba(255,255,255,0.1)'}
+                    strokeWidth={isSel ? 2 : 1}
+                  />
+                  <text x={x + NODE_W / 2} y={y + 20} textAnchor="middle"
+                    fill={isSel ? n.color : 'rgba(255,255,255,0.75)'}
+                    fontSize="12" fontFamily="var(--font-sans)" fontWeight="600">
+                    {n.label}
+                  </text>
+                  <text x={x + NODE_W / 2} y={y + 36} textAnchor="middle"
+                    fill="rgba(255,255,255,0.35)" fontSize="9" fontFamily="var(--font-mono)">
+                    {n.sub}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {node ? (
+        <div style={{ padding: '20px', borderRadius: '10px', background: node.bg, border: `1px solid ${node.color}30` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '14px' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: node.color }}>{node.label}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{node.sub}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+            {[
+              { label: 'What it is',      text: node.what,      col: 'var(--ink-mid)' },
+              { label: 'Key decisions',   text: node.decisions, col: 'var(--sky)' },
+              { label: 'Failure modes',   text: node.failures,  col: 'var(--rose)' },
+              { label: 'Interview signal',text: node.signal,    col: 'var(--prime)' },
+            ].map(row => (
+              <div key={row.label}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: row.col, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{row.label}</div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{row.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Key insight</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+            Two-tower decouples user and item encoding so all item embeddings can be pre-computed offline. The online path is just one user tower forward pass + ANN lookup — that's why it scales to billions of items at sub-50ms latency.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'incident',   label: 'ML Incident Room',    component: IncidentRoom },
@@ -1816,6 +2052,7 @@ const MODULES = [
   { id: 'two_tower',  label: 'Two-Tower Explorer',   component: TwoTowerExplorer },
   { id: 'serving',    label: 'Serving Tradeoffs',    component: ServingTradeoffLab },
   { id: 'rag',        label: 'RAG Architecture',     component: RAGArchitecture },
+  { id: 'two_tower_arch', label: 'Two-Tower Diagram', component: TwoTowerArchitecture },
 ]
 
 export default function SystemDesignTab({ onNavigate }) {

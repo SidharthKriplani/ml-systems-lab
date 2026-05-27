@@ -809,11 +809,230 @@ function ServingModule() {
   )
 }
 
+// ─── ML Serving Pipeline Architecture Diagram ─────────────────────────────────
+const SRV_NODES = [
+  {
+    id: 'client', label: 'Client', sub: 'mobile/web request',
+    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.04)',
+    what: 'Mobile or web client initiating a prediction request. The client sends input features or entity IDs and expects a response within a latency SLA (typically <200ms P99).',
+    decisions: 'Synchronous vs async request pattern. Whether the client sends raw features or just entity IDs (fetching done server-side).',
+    failures: 'Client-side timeouts set too aggressively cause false errors when the serving stack is under load. Always measure and align client timeout with server P99.',
+    signal: 'Ask: does the client send features or IDs? Sending features means the client must match the training pipeline — a common source of skew.',
+  },
+  {
+    id: 'gateway', label: 'API Gateway', sub: 'auth, rate limit',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    what: 'Entry point that handles authentication, authorization, rate limiting, and request routing. Shields the model service from unauthenticated or malformed requests.',
+    decisions: 'Rate limit strategy: per-user vs per-service. Whether to add a request validation layer (schema check) before forwarding.',
+    failures: 'Rate limiting too strict blocks legitimate traffic spikes. No input validation allows malformed tensors to reach the model and cause cryptic errors.',
+    signal: 'The gateway is where you enforce SLAs and protect downstream services. Candidates who skip it in design reviews are thinking about the happy path only.',
+  },
+  {
+    id: 'feature_svc', label: 'Feature Service', sub: 'Redis / online store',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Online feature service retrieves pre-computed features from Redis or a similar low-latency store. Accepts entity keys, returns feature vectors in <5ms P99.',
+    decisions: 'Staleness tolerance (features computed every minute vs real-time). Fallback strategy when a feature key is missing: return zeros, a default vector, or error.',
+    failures: 'Training-serving skew: features computed differently offline vs online. Missing features return zero instead of erroring — model silently receives wrong input.',
+    signal: 'The feature service is where training-serving skew lives. Staff checks that the serving computation exactly matches the training pipeline.',
+  },
+  {
+    id: 'model_svc', label: 'Model Service', sub: 'TorchServe / Triton',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    what: 'Model serving framework (TorchServe, Triton Inference Server) that manages model loading, versioning, batching, and request routing to the inference engine.',
+    decisions: 'Model versioning strategy: blue/green vs canary rollout. Dynamic batching: batch multiple requests together to improve GPU utilization.',
+    failures: 'Model version mismatch between feature pipeline and model artifact. Dynamic batching increases average latency under low load — disable for latency-sensitive paths.',
+    signal: 'Triton supports multiple backends (TensorRT, ONNX, PyTorch) in one server. Candidates who know this understand the separation between model management and execution.',
+  },
+  {
+    id: 'cache', label: 'Prediction Cache', sub: 'TTL-based',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    what: 'Prediction cache stores recent inference results keyed by input hash or entity ID. Returns cached predictions for repeated identical requests, bypassing inference entirely.',
+    decisions: 'TTL length — too short defeats the purpose, too long serves stale predictions. Key design: hash input features exactly or use entity ID (entity ID is faster but coarser).',
+    failures: 'Cache poisoning: bad prediction gets served repeatedly until TTL expires. Key collision on input rounding causes different inputs to return the same cached result.',
+    signal: 'The cache is worth it only if the same input recurs. For personalized models, hit rate is often <5% — measure before caching.',
+  },
+  {
+    id: 'inference', label: 'Inference Engine', sub: 'ONNX / TensorRT',
+    color: 'var(--ember)', bg: 'rgba(249,115,22,0.08)',
+    what: 'ONNX or TensorRT engine executes the model forward pass on CPU or GPU. This is the actual computation step — everything else is orchestration around it.',
+    decisions: 'Batch size (1 for online, >1 for async), FP16 vs INT8 quantization, dynamic vs static shapes. Static shapes enable better TensorRT optimization but require padding.',
+    failures: 'Padding to fixed shapes wastes compute on short sequences. Dynamic shapes add overhead. FP16 overflow on activations causes NaN outputs silently.',
+    signal: 'Staff asks: what is the P99 latency budget and what is the model size? That determines whether you need quantization or a smaller model.',
+  },
+  {
+    id: 'monitor', label: 'Shadow Monitor', sub: 'logs + drift check',
+    color: 'var(--rose)', bg: 'rgba(244,63,94,0.08)',
+    what: 'Shadow monitor logs every prediction asynchronously for drift detection and performance tracking. Runs out of the critical path so it cannot add latency to the response.',
+    decisions: 'Sampling rate (log everything vs 1%). What to log: input features, output scores, latency, model version. Alerting thresholds for feature drift (PSI) and score distribution shift.',
+    failures: 'Async logging drops under load if the queue fills. Logged features do not match serving features if the pipeline diverges after the logging point.',
+    signal: 'Shadow logging is the only way to debug silent degradation. If you skip it, you are flying blind.',
+  },
+  {
+    id: 'response', label: 'Response', sub: 'prediction + metadata',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    what: 'Final response returned to the client: prediction score or label, optional metadata (model version, feature freshness timestamp), and latency breakdown for debugging.',
+    decisions: 'How much metadata to expose to the client. Including model version in the response enables client-side debugging but leaks internal architecture details.',
+    failures: 'Returning raw logits instead of calibrated probabilities confuses downstream consumers. Missing metadata makes post-incident debugging impossible.',
+    signal: 'Strong candidates include model version and feature staleness in the response contract. This enables debugging without access to server logs.',
+  },
+]
+
+const SRV_EDGES = [
+  { from: 'client',      to: 'gateway' },
+  { from: 'gateway',     to: 'feature_svc', label: 'fetch features' },
+  { from: 'gateway',     to: 'model_svc',   label: 'route request' },
+  { from: 'feature_svc', to: 'cache',        label: 'check cache' },
+  { from: 'cache',       to: 'inference',    label: 'cache miss' },
+  { from: 'model_svc',   to: 'inference' },
+  { from: 'inference',   to: 'monitor',      label: 'log prediction' },
+  { from: 'inference',   to: 'response' },
+  { from: 'monitor',     to: 'response',     label: 'async' },
+]
+
+const SRV_LAYOUT = {
+  client:      [0, 2],
+  gateway:     [1, 2],
+  feature_svc: [2, 1],
+  model_svc:   [2, 3],
+  cache:       [3, 1],
+  inference:   [3, 3],
+  monitor:     [4, 2],
+  response:    [5, 2],
+}
+
+function MLServingArchitecture() {
+  const [selected, setSelected] = useState(null)
+  const node = SRV_NODES.find(n => n.id === selected)
+
+  const COL_W = 160
+  const ROW_H = 105
+  const NODE_W = 148
+  const NODE_H = 58
+  const PAD = 8
+  const COLS = 6
+  const ROWS = 5
+  const SVG_W = COLS * COL_W + PAD * 2
+  const SVG_H = ROWS * ROW_H + PAD * 2
+
+  function cx(col) { return PAD + col * COL_W + NODE_W / 2 }
+  function cy(row) { return PAD + row * ROW_H + NODE_H / 2 }
+  function nx(col) { return PAD + col * COL_W }
+  function ny(row) { return PAD + row * ROW_H }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+          Click any block to explore
+        </div>
+        <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
+          <svg
+            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+            width={SVG_W}
+            height={SVG_H}
+            style={{ display: 'block', minWidth: SVG_W }}
+          >
+            <defs>
+              <marker id="srv-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="rgba(255,255,255,0.25)" />
+              </marker>
+            </defs>
+
+            {SRV_EDGES.map((e, i) => {
+              const [fc, fr] = SRV_LAYOUT[e.from]
+              const [tc, tr] = SRV_LAYOUT[e.to]
+              const x1 = cx(fc) + (tc > fc ? NODE_W / 2 : tc < fc ? -NODE_W / 2 : 0)
+              const y1 = cy(fr) + (tc === fc ? (tr > fr ? NODE_H / 2 : -NODE_H / 2) : 0)
+              const x2 = cx(tc) - (tc > fc ? NODE_W / 2 : tc < fc ? -NODE_W / 2 : 0)
+              const y2 = cy(tr) - (tc === fc ? (tr > fr ? NODE_H / 2 : -NODE_H / 2) : 0)
+              const mx = (x1 + x2) / 2
+              const my = (y1 + y2) / 2
+              return (
+                <g key={i}>
+                  <path
+                    d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.12)"
+                    strokeWidth="1.5"
+                    markerEnd="url(#srv-arrow)"
+                  />
+                  {e.label && (
+                    <text x={mx} y={my - 5} textAnchor="middle"
+                      fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="var(--font-mono)">
+                      {e.label}
+                    </text>
+                  )}
+                </g>
+              )
+            })}
+
+            {SRV_NODES.map(n => {
+              const [col, row] = SRV_LAYOUT[n.id]
+              const x = nx(col)
+              const y = ny(row)
+              const isSel = selected === n.id
+              return (
+                <g key={n.id} onClick={() => setSelected(isSel ? null : n.id)} style={{ cursor: 'pointer' }}>
+                  <rect
+                    x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
+                    fill={isSel ? n.bg : 'rgba(255,255,255,0.03)'}
+                    stroke={isSel ? n.color : 'rgba(255,255,255,0.1)'}
+                    strokeWidth={isSel ? 2 : 1}
+                  />
+                  <text x={x + NODE_W / 2} y={y + 21} textAnchor="middle"
+                    fill={isSel ? n.color : 'rgba(255,255,255,0.75)'}
+                    fontSize="12" fontFamily="var(--font-sans)" fontWeight="600">
+                    {n.label}
+                  </text>
+                  <text x={x + NODE_W / 2} y={y + 38} textAnchor="middle"
+                    fill="rgba(255,255,255,0.35)" fontSize="9" fontFamily="var(--font-mono)">
+                    {n.sub}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {node ? (
+        <div style={{ padding: '20px', borderRadius: '10px', background: node.bg, border: `1px solid ${node.color}30` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '14px' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: node.color }}>{node.label}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{node.sub}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+            {[
+              { label: 'What it is',       text: node.what,      col: 'var(--ink-mid)' },
+              { label: 'Key decisions',    text: node.decisions, col: 'var(--sky)' },
+              { label: 'Failure modes',    text: node.failures,  col: 'var(--rose)' },
+              { label: 'Interview signal', text: node.signal,    col: 'var(--prime)' },
+            ].map(row => (
+              <div key={row.label}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: row.col, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{row.label}</div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{row.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Key insight</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+            ML serving latency is dominated by whichever layer is slowest — usually feature retrieval, not inference. Profile the full request path before optimizing the model.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Module nav config ─────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'quant',   icon: '🔢', label: 'Quantization Tradeoff',  Component: QuantModule },
   { id: 'memory',  icon: '🧮', label: 'GPU Memory Calculator',  Component: MemoryModule },
   { id: 'serving', icon: '🏗',  label: 'Serving Architecture',   Component: ServingModule },
+  { id: 'pipeline_arch', icon: '◈', label: 'Pipeline Diagram', Component: MLServingArchitecture },
 ]
 
 // ─── Tab shell ─────────────────────────────────────────────────────────────────

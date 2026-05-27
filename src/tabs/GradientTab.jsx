@@ -1405,7 +1405,7 @@ Tecton, Feast, and Hopsworks all support this pattern. In Feast, it\'s called a 
 Take 100 rows from your training set. For each row, manually compute the feature using only data with timestamp <= event_timestamp. Compare to what the feature store returned. If the numbers don\'t match, you have a point-in-time bug. This is the most important data quality check in an ML pipeline.`,
     tags: ['Feature Engineering', 'Feature Store', 'Data Leakage', 'Production ML', 'Point-in-Time'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines — OpML 2020' }],
   },
   {
     id: 27,
@@ -1459,7 +1459,7 @@ For time series data: always split by time. Train on [day 1 → day 547], valida
 Wrong model selection. Hyperparameters tuned to a leaky metric. False confidence in a model that will perform poorly in production. And crucially: the production degradation looks like "model drift" when it was never as good as you thought.`,
     tags: ['Feature Engineering', 'Data Leakage', 'Validation', 'Cross-Validation', 'Model Selection'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'fE_25esn-5U', title: 'Data Leakage — StatQuest with Josh Starmer' }],
   },
   {
     id: 28,
@@ -1517,7 +1517,7 @@ Fix: run experiments for at least 2 full novelty cycles. For consumer products w
 Before you look at your treatment effect: run the SRM check. If there\'s an SRM, stop analysis. Fix the randomisation. Re-run the experiment. Reporting results from an experiment with known SRM is worse than no experiment at all.`,
     tags: ['A/B Testing', 'Statistics', 'Experimentation', 'Peeking', 'SRM', 'Data Science'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'DUNk4GPZ9bw', title: 'A/B Testing in Data Science Interviews — DataInterview' }],
   },
   {
     id: 29,
@@ -1584,7 +1584,7 @@ Before touching any model:
 Then — and only then — select the model. Fit it. Check residuals for white noise (Ljung-Box). If residuals have structure, your model hasn\'t captured all the signal.`,
     tags: ['Time Series', 'ARIMA', 'Prophet', 'LSTM', 'Forecasting', 'Model Selection'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'DeORzP0go5I', title: 'Time Series Talk: Autocorrelation and Partial Autocorrelation — ritvikmath' }],
   },
   {
     id: 30,
@@ -1657,7 +1657,7 @@ A calibration dataset that doesn\'t represent your production distribution will 
 TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantization. Using these tools correctly requires understanding which layers are quantization-sensitive (attention, layer norm) and may need to be kept in higher precision.`,
     tags: ['Deep Learning', 'Quantization', 'Serving', 'FP16', 'BF16', 'INT8', 'LLMs'],
     domain: 'dl',
-    youtube: [],
+    youtube: [{ id: 'IxrlHAJtqKE', title: '8-bit Optimizers via Block-wise Quantization — Tim Dettmers' }],
   },
 ]
 

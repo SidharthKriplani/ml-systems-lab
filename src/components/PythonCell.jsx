@@ -124,6 +124,21 @@ export default function PythonCell({
         />
       )}
 
+      {/* Loading panel — visible during Pyodide cold start */}
+      {status === 'loading' && (
+        <div style={{ background: '#030408', padding: '20px 16px', display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--rim)' }}>
+          <span style={{ fontSize: '18px', display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--violet)', fontWeight: 600 }}>
+              {progress || 'Loading Python runtime…'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', marginTop: '3px' }}>
+              First run takes ~3s to load Pyodide + numpy/sklearn
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Output */}
       {(stdout || imgSrc || errMsg) && (
         <div style={{ background: '#030408', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
