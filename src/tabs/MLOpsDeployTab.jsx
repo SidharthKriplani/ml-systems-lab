@@ -663,7 +663,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
         ))}
       </div>
 
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
     </div>
   )
 }

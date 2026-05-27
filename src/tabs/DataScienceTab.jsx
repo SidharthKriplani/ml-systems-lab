@@ -993,7 +993,7 @@ export default function DataScienceTab({ onNavigate }) {
       </div>
 
       {/* Active module */}
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
 
       {/* Roadmap */}
       <div>

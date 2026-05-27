@@ -14,7 +14,7 @@ const FORECAST_FAILURES = [
       { id: 'split', label: 'Wrong train/test split — random split allowed future data into training features' },
       { id: 'overfit', label: 'Overfitting — model memorized monthly patterns in training data' },
     ],
-    correct: 2,
+    correct: 'split',
     answer: 'The random 80/20 split is the root cause. With time-series data, a random split allows future observations into the training set. Your 30-day rolling feature at time T was computed using data that included future time points T+1, T+2, etc. — which were in the training set despite being temporally after the test point. In production, those future points don\'t exist, so the features look completely different.',
     fix: 'Always use a time-ordered split for time-series: train on first 80% of the timeline, test on last 20%. Never random-shuffle a time series before splitting.',
     lesson: 'Random splits are catastrophic for time-series. The 97% test accuracy was meaningless — you measured performance on future-contaminated features.',
@@ -30,7 +30,7 @@ const FORECAST_FAILURES = [
       { id: 'lag', label: 'The model\'s lag window doesn\'t reach back 52 weeks' },
       { id: 'scale', label: 'The forecast model doesn\'t scale predictions for high-demand periods' },
     ],
-    correct: 1,
+    correct: 'sparse',
     answer: 'One training example of Black Friday is statistically insufficient — the model has no reliable estimate of how extreme the holiday effect is. ARIMA\'s seasonal component learned from a single Black Friday is highly unstable. You need either: multiple years of holiday data, or an explicit holiday feature/regressor in the model.',
     fix: 'Add a binary holiday indicator as an external regressor. Use Prophet or a SARIMAX model with explicit holiday effects. Or use a hybrid: statistical model + holiday multipliers from business knowledge.',
     lesson: 'Rare high-magnitude events (Black Friday, Super Bowl, product launches) are underrepresented in any training set. Model them explicitly with calendar features, not from seasonal patterns.',
@@ -46,7 +46,7 @@ const FORECAST_FAILURES = [
       { id: 'feature', label: 'Missing feature — marketing spend is not in the model' },
       { id: 'all', label: 'All of the above — they describe the same root cause at different levels' },
     ],
-    correct: 3,
+    correct: 'all',
     answer: 'All three describe the same root cause: a regime change caused by the marketing campaign. This is concept drift (the relationship between features and target shifted), model decay (parameters trained on pre-campaign data are now biased), and a missing feature (marketing spend is a causal driver not in the model). The distinction matters for the fix: feature addition solves the problem permanently; retraining solves it temporarily until the next regime change.',
     fix: 'Add marketing spend as a feature. Retrain on recent data with the campaign period included. Implement drift monitoring (PSI on predictions vs actuals) to detect future regime changes earlier.',
     lesson: 'Forecast drift after a business change is almost always concept drift. The model learned patterns from a different regime. Monitoring prediction residuals with a control chart catches this 2–4 weeks earlier than waiting for stakeholder complaints.',
@@ -62,7 +62,7 @@ const FORECAST_FAILURES = [
       { id: 'hierarchy', label: 'Hierarchical reconciliation is needed — aggregate forecasts don\'t decompose to SKU level correctly' },
       { id: 'feature', label: 'Missing SKU-level features — the model doesn\'t have enough information to differentiate SKUs' },
     ],
-    correct: 2,
+    correct: 'hierarchy',
     answer: 'This is a hierarchical forecasting problem. When you sum up individual SKU forecasts they don\'t equal the category total (which is accurate), and vice versa — disaggregating the category total doesn\'t give accurate SKU forecasts. You need hierarchical reconciliation methods (bottom-up, top-down, or optimal reconciliation via MinT/WLS) to ensure forecasts are coherent across all levels of the hierarchy.',
     fix: 'Use hierarchical forecasting frameworks (statsforecast HierarchicalForecast, Prophet with hierarchies). Apply optimal reconciliation (MinT) to make SKU forecasts sum to category forecasts while minimizing error at each level.',
     lesson: 'Aggregate accuracy masks SKU-level accuracy. These are separate problems. Good category-level forecasts are often achieved by cancellation of errors — individual SKU errors cancel when summed. At the SKU level, every error matters.',
@@ -78,7 +78,7 @@ const FORECAST_FAILURES = [
       { id: 'model', label: 'The model is underfitting — residuals contain predictable signal' },
       { id: 'calibration', label: 'The σ estimate is too small — should use a larger multiplier than 1.96' },
     ],
-    correct: 0,
+    correct: 'autocorr',
     answer: 'Autocorrelated residuals are the root cause. IID (independent and identically distributed) residuals are an assumption for the ±1.96σ interval formula. When residuals are correlated across time — which is almost always true in time-series forecasts — the effective sample size is much smaller than the nominal sample size, and uncertainty is systematically underestimated. You need to account for serial correlation in your uncertainty model.',
     fix: 'Check autocorrelation with ACF/PACF of residuals. Use conformal prediction for valid intervals without distributional assumptions. Alternatively, use block bootstrap to compute intervals (preserves temporal structure). Or use a model that explicitly captures residual autocorrelation (ARIMA on residuals, GARCH for volatility).',
     lesson: 'Time-series residuals are almost never IID. Naive interval formulas that assume independence will always produce overconfident (too narrow) intervals. Correct uncertainty estimation requires explicitly modeling or testing for residual autocorrelation.',
@@ -94,7 +94,7 @@ const FORECAST_FAILURES = [
       { id: 'retrain', label: 'Model needs retraining on more recent data' },
       { id: 'feature', label: 'Need to add product bundle as a feature' },
     ],
-    correct: 0,
+    correct: 'structural',
     answer: 'This is a structural break — a permanent, irreversible change in the data-generating process. The old time series ended; a new one began. Retraining on pre-break data will not help. The model needs to be rebuilt on post-break data. Structural breaks cannot be handled by standard forecasting models — they require intervention modeling, Bayesian change-point detection, or manual regime detection.',
     fix: 'Detect the break point (CUSUM test, Bayesian change-point detection). Discard pre-break training data entirely or use it only as a prior. Rebuild the model on post-break regime data. Add operational event features (product launches/discontinuations) as external regressors.',
     lesson: 'Structural breaks are not concept drift — they\'re permanent regime changes. Retraining on old data is useless or harmful. You need a process to detect and respond to structural breaks in near-real-time, not just monitor accuracy after the fact.',
@@ -110,7 +110,7 @@ const FORECAST_FAILURES = [
       { id: 'features', label: 'Need leading indicators (orders in pipeline, sales calls) as features' },
       { id: 'all', label: 'Intermittent demand is genuinely hard — some combination of all approaches is needed' },
     ],
-    correct: 3,
+    correct: 'all',
     answer: 'Intermittent demand is a genuinely hard problem with no single clean solution. Croston\'s method and its variants (SBA, TSB, IMAPA) are designed for this and outperform ARIMA. A two-stage classifier (will we sell anything this week?) + regressor (how much?) is often more useful for business decisions. Leading indicators (pipeline data, customer orders) are the most valuable signal if available. In practice, the best approach combines all three.',
     fix: 'Try Croston\'s method or IMAPA as baseline. If you have pipeline data (purchase orders, quotes), use those as leading features. Consider framing as: what\'s the probability of a spike this week, and if so, what\'s the expected magnitude? Service-level optimization (stock to meet 95% demand) is often more useful than point forecasting for intermittent series.',
     lesson: 'Standard forecasting methods assume reasonably continuous demand. Intermittent demand (many zeros, occasional spikes) violates these assumptions. The business rarely needs an accurate point forecast — they need to know how much safety stock to hold.',
@@ -126,7 +126,7 @@ const FORECAST_FAILURES = [
       { id: 'curse', label: 'Curse of dimensionality — too many features relative to training samples' },
       { id: 'relevance', label: 'The macro features are not actually predictive of this specific product\'s sales' },
     ],
-    correct: 1,
+    correct: 'lag',
     answer: 'The fundamental problem is feature timestamp mismatch. Monthly macro indicators are typically released with a 4–6 week lag. If your model uses the "current month\'s" GDP growth but that figure won\'t be published until 6 weeks later, you have look-ahead bias. Even if the release timing is correct, treating a monthly value as weekly ignores the within-month variation and creates artificial precision in the feature.',
     fix: 'For all external features, check: when is this data actually available at prediction time? Use publication date, not reference date. Align macro features with their actual release schedule. If weekly macro data is unavailable, consider using daily/weekly proxies (stock indices, search trends) instead of lagged monthly series.',
     lesson: 'External features can introduce look-ahead bias if their availability isn\'t carefully audited. The question isn\'t "what does this feature measure?" but "when is this feature actually available in production?"',
@@ -572,7 +572,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
             </button>
 
             {it.open && (
-              <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -886,7 +886,7 @@ export default function TimeSeriesTab({ onNavigate }) {
         ))}
       </div>
 
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
     </div>
   )
 }

@@ -741,7 +741,7 @@ export default function ModelEvalTab({ onNavigate }) {
         ))}
       </div>
 
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
         <div style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>

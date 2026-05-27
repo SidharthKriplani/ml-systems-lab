@@ -874,7 +874,7 @@ export default function CausalInferenceTab({ onNavigate }) {
         ))}
       </div>
 
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
     </div>
   )
 }

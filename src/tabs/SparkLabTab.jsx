@@ -500,7 +500,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
 
             {/* Body */}
             {it.open && (
-              <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {/* Context */}
                 <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
@@ -814,7 +814,7 @@ export default function SparkLabTab({ onNavigate }) {
           </div>
         ))}
       </div>
-      <ActiveModule />
+      <div key={active} className="tab-enter"><ActiveModule /></div>
     </div>
   )
 }
