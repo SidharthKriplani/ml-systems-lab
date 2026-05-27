@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.7 — Full contrast audit + mobile overflow fix (May 2026)
+
+**Full contrast audit (369 lines, 31 files):**
+- Identified root cause of low-brightness illegibility: 200+ inline rgba backgrounds at 0.04–0.08 opacity. These are used for every interactive state — selected MCQ options, correct/wrong answer highlights, info boxes, domain cards. At low phone brightness they were invisible.
+- Python script raised all non-black rgba tints across all 31 tab files + App.jsx: `0.04→0.10`, `0.05→0.11`, `0.06→0.13`, `0.07→0.14`, `0.08→0.15`. Black shadows (`rgba(0,0,0,...)`) excluded.
+- Ink scale raised more aggressively (previous pass was not perceptible): `--ink-mid` → `#d8cfc6`, `--ink-low` → `#b8ada2`, `--ink-ghost` → `#8c8178`
+- Surfaces: `--depth` → `#201d19`, `--surface` → `#2a2620`, `--rim` → `#4a433a`
+- Bottom nav inactive state: `rgba(255,255,255,0.35/0.40/0.45)` → `0.62/0.62/0.65`
+
+**Mobile horizontal overflow fix:**
+- Root cause: no `overflow-x: hidden` on `html/body`. Any child element slightly wider than viewport caused horizontal scroll, dragging the fixed bottom nav off-screen left and clipping all page content.
+- Fix: `overflow-x: hidden; max-width: 100vw` on `html, body`.
+- Secondary fix: bottom nav 5 items were overflowing on ~360px phones. Nav row now has `overflow: hidden`, icon container shrunk (44→36px), labels use `whiteSpace: nowrap; textOverflow: ellipsis; maxWidth: 100%` so they truncate rather than push layout.
+
+**Audits logged:** #013 (full contrast), #014 (mobile overflow) — both resolved.
+
 ### v4.6 — Mobile layout + low-brightness contrast (May 2026)
 
 **Hero layout responsive fix:**
