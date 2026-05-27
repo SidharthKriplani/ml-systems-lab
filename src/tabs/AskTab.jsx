@@ -693,21 +693,26 @@ export default function AskTab({ onNavigate }) {
         <div>
           <h2 style={{
             margin: 0,
-            fontSize: 22,
+            fontSize: 28,
             fontFamily: 'var(--font-sans)',
-            fontWeight: 700,
-            color: 'var(--ink-hi)',
-            lineHeight: 1.2,
+            fontWeight: 900,
+            letterSpacing: '-0.05em',
+            lineHeight: 1.1,
+            background: 'linear-gradient(135deg, var(--sky) 0%, var(--ink-hi) 55%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
           }}>
             KB Search
           </h2>
           <p style={{
-            margin: '4px 0 0',
-            fontSize: 13,
-            color: 'var(--ink-low)',
+            margin: '6px 0 0',
+            fontSize: 14,
+            color: 'var(--ink-mid)',
             fontFamily: 'var(--font-sans)',
+            lineHeight: 1.6,
           }}>
-            Keyword search across the ML Systems KB — concepts, trade-offs, failure modes, production patterns.
+            Search the ML Systems KB — concepts, trade-offs, failure modes, production patterns.
           </p>
         </div>
         <button

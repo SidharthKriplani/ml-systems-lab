@@ -633,7 +633,7 @@ export default function InterviewPrepTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0, marginBottom: '6px' }}>Interview Prep</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--ink-hi) 0%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '6px' }}>Interview Prep</h1>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
           {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Plus 30 fluency drills for weak-to-strong vocabulary.
         </p>
