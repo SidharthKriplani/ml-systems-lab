@@ -291,7 +291,7 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Hero ── */}
       <section>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4.5vw, 52px)', fontWeight: 800, lineHeight: 1.07, letterSpacing: '-0.04em', marginBottom: '20px' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(30px, 5vw, 58px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
           You can train a model.<br />
           <span className="text-gradient">Can you debug it in production?</span>
         </h1>
@@ -315,7 +315,7 @@ export default function HomeTab({ onNavigate }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)} title={r.desc}
-                style={{ padding: '5px 12px', borderRadius: '7px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.10)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                style={{ padding: '5px 12px', borderRadius: '7px', border: `1px solid ${role === r.key ? 'var(--prime)' : 'var(--rim)'}`, background: role === r.key ? 'rgba(240,165,0,0.14)' : 'transparent', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 14px rgba(240,165,0,0.35)' : 'none' }}>
                 {r.label}
               </button>
             ))}
@@ -323,7 +323,7 @@ export default function HomeTab({ onNavigate }) {
         </div>
 
         {activeRole && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '14px 18px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', padding: '16px 20px', background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderLeft: '3px solid var(--prime)', borderRadius: '10px', boxShadow: '0 4px 24px rgba(0,0,0,0.50), 0 0 0 1px rgba(240,165,0,0.08)' }}>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{activeRole.desc}</p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
@@ -333,11 +333,11 @@ export default function HomeTab({ onNavigate }) {
         )}
 
         {/* ── Stats strip ── */}
-        <div style={{ display: 'flex', border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden' }}>
-          {STATS.map((s, i) => (
-            <div key={s.label} style={{ flex: 1, padding: '12px 16px', borderRight: i < STATS.length - 1 ? '1px solid var(--rim)' : 'none', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-sans)', lineHeight: 1 }} className="text-gradient">{s.n}</div>
-              <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '4px' }}>{s.label}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {STATS.map((s) => (
+            <div key={s.label} style={{ padding: '14px 12px', textAlign: 'center', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.50), 0 1px 4px rgba(0,0,0,0.4)' }}>
+              <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.04em', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
+              <div style={{ fontSize: '9px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '5px', fontFamily: 'var(--font-mono)' }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -345,7 +345,7 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Progress ── */}
       {nextUp && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '10px', cursor: 'pointer' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderLeft: `3px solid ${TAB_ACCENT[nextUp?.tab] ?? 'var(--prime)'}`, borderRadius: '10px', cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.50), 0 1px 4px rgba(0,0,0,0.3)', transition: 'transform 0.18s ease, box-shadow 0.18s' }}
           onClick={() => onNavigate(nextUp.tab)}>
           <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Continue</div>
           <div style={{ flex: 1, minWidth: 0 }}>
