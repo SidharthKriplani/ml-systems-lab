@@ -372,6 +372,7 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | ✅ All resolved |
 | 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
 | 009 | Visual Polish — "take my money" end-to-end audit: tab headers, icons, cards, interactive surfaces | 2026-05-27 | Visual Consistency / UX | ✅ All resolved |
+| 010 | TimeSeriesTab ForecastFailureZoo — `correct:` field was numeric index, code compared against string IDs; score never counted, correct answer never highlighted | 2026-05-27 | BUILD / Content Integrity | ✅ Fixed — all 8 scenarios updated to string IDs |
 
 **Open findings by severity:**
 
@@ -380,3 +381,5 @@ Better IC3: an answer that is competent but incomplete. Something a good enginee
 | High | 0 | — |
 | Medium | 1 | #008.2 weak distractors |
 | Low | 1 | #001 index keys (deferred) |
+
+**Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

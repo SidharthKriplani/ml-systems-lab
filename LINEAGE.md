@@ -46,6 +46,21 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.5 — Bug fix + animation pass (May 2026)
+
+**Bug fix:**
+- `ForecastFailureZoo` in `TimeSeriesTab.jsx`: all 8 scenarios had `correct: <number>` (index) but the reveal logic used `findIndex(o => o.id === s.correct)` — comparing a number to string IDs. `correctIdx` was always `-1`, so the correct answer never highlighted green and the score never incremented. Fixed all 8 to use the matching string ID (`'split'`, `'sparse'`, `'all'`, `'hierarchy'`, `'autocorr'`, `'structural'`, `'all'`, `'lag'`). Pre-existing bug, only caught now.
+
+**Animations — `index.css` + 15 tabs:**
+- Added keyframes to `index.css`: `fadeSlideUp`, `fadeSlideDown`, `scaleIn` (with cubic-bezier spring).
+- Added utility classes: `.tab-enter` (fade + slide up, 0.22s), `.accordion-enter` (fade + slide down, 0.18s), `.reveal-enter` (scale in with spring, 0.18s), `.fade-in` (plain fade), `.stagger-1` through `.stagger-5` (delay helpers).
+- Applied `.tab-enter` with `key={active}` on `<ActiveModule />` wrapper in 15 tabs: SparkLab, TimeSeries, SystemDesign, DeepLearning, FeatureEng, ModelEval, Airflow, dbt, DataModeling, DLFineTuning, DataScience, CausalInference, Monitoring, MLOpsDeploy, MLOpsPipelines. Every sub-tab switch now fades and slides up.
+- Applied `.accordion-enter` on accordion body divs in SparkLab, SystemDesign, TimeSeriesTab — panel slides down when opened.
+- Most other tabs already had `animate-slide-up` on their reveal panels from prior sessions.
+
+**Ideas logged from cross-repo audit (GenAI Systems Lab + PAL):**
+- 9 new items added to IDEAS.md: "Spot the Flaw" adversarial tab, Share Score button, 91-day heatmap, streak tracking, RSS feed, fidelity badges, React.lazy() splitting, Role Readiness Score, cross-domain Production Incident scenarios, PWA manifest.
+
 ### v4.3 — Learning quality sprint + visual overhaul (May 2026)
 
 Large session covering four parallel workstreams: learning quality, visual upgrades, content expansion, and code health.

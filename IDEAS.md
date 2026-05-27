@@ -83,9 +83,9 @@ Last updated: May 2026
 - [ ] **Role Readiness Score** — compute a Junior / Mid / Senior / Staff readiness label from cross-tab scores (CombinatorTab session score, TrainerTab accuracy, SparkLab completion, ModelEval, StaffLayerTab reveals). Aggregate into a single `msl_readiness_score` with per-domain breakdown. Show on HomeTab Progress section. (Source: PAL role readiness dashboard, May 2026)
 
 ### Design
-- [ ] VerbatimTab: add word count + speaking rate (words/min) in Review screen
-- [ ] CombinatorTab: per-domain breakdown chart in Debrief screen
-- [ ] StaffLayerTab: "Reset all reveals" button for re-study
+- [x] ~~VerbatimTab: add word count + speaking rate (words/min) in Review screen~~ — done (2026-05-27, word count + WPM with 120–160 wpm callout)
+- [x] ~~CombinatorTab: per-domain breakdown chart in Debrief screen~~ — done (2026-05-27, horizontal bars sorted weakest-first, mint/ember/rose coloring)
+- [x] ~~StaffLayerTab: "Reset all reveals" button for re-study~~ — done (2026-05-27, "↺ Reset reveals" button)
 - [ ] Practice zone: overall progress percentage on grid header
 - [ ] Interview zone: session history summary on hub grid (X sessions run, avg score)
 - [ ] Gradient: "Start here" sort option within each domain (beginner-first)
