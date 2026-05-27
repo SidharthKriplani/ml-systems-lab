@@ -381,16 +381,16 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
   const S = {
     aside: {
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.06) 0%, rgba(10,8,5,0.88) 120px, rgba(8,6,4,0.88) 100%)',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.92) 100px, rgba(8,6,4,0.94) 100%)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      borderRight: '1px solid rgba(255,255,255,0.055)',
+      borderRight: '1px solid rgba(255,255,255,0.08)',
       flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'thin',
     },
     logo: {
       padding: '14px 14px 12px',
-      borderBottom: '1px solid rgba(255,255,255,0.055)',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.055) 0%, transparent 100%)',
+      borderBottom: '1px solid rgba(240,165,0,0.18)',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.04) 100%)',
       flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px',
       border: 'none', cursor: 'pointer', width: '100%',
     },
@@ -399,7 +399,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       background: 'linear-gradient(135deg, var(--prime), var(--violet))',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
-      boxShadow: '0 0 14px rgba(240,165,0,0.32), 0 2px 8px rgba(0,0,0,0.5)',
+      boxShadow: '0 0 20px rgba(240,165,0,0.55), 0 2px 8px rgba(0,0,0,0.6)',
     },
     zoneBtn: (isActive, accent) => ({
       width: '100%', display: 'flex', alignItems: 'center',
@@ -557,8 +557,8 @@ function BottomNav({ activeZone, onZoneNav }) {
               <div style={{
                 position: 'absolute', top: 0, left: '18%', right: '18%',
                 height: '3px', background: zone.accent,
-                borderRadius: '0 0 3px 3px',
-                boxShadow: `0 0 8px ${zone.accent}`,
+                borderRadius: '0 0 4px 4px',
+                boxShadow: `0 0 16px ${zone.accent}, 0 0 4px ${zone.accent}`,
               }} />
             )}
             {/* Icon with active glow pill */}
@@ -572,7 +572,7 @@ function BottomNav({ activeZone, onZoneNav }) {
               boxShadow: isActive ? `0 0 18px ${zone.accent}50` : 'none',
               transition: 'all 0.20s ease',
             }}>
-              <span style={{ fontSize: '19px', lineHeight: 1 }}>{zone.icon}</span>
+              <span style={{ fontSize: '20px', lineHeight: 1, filter: isActive ? `drop-shadow(0 0 6px ${zone.accent})` : 'none', transition: 'filter 0.20s' }}>{zone.icon}</span>
             </div>
             <span style={{
               fontSize: '11px', fontFamily: 'var(--font-sans)',

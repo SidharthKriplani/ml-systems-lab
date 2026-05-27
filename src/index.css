@@ -71,12 +71,13 @@
 
   body {
     min-height: 100vh;
-    /* Bold ambient depth — amber top-left, violet bottom-right */
+    /* Atmosphere: center-top amber light source + corner accents + dot grid */
     background-image:
-      radial-gradient(ellipse 140% 80% at -10% -10%, rgba(240,165,0,0.18)   0%, transparent 55%),
-      radial-gradient(ellipse 120% 70% at 110% 110%, rgba(167,139,250,0.14)  0%, transparent 55%),
-      radial-gradient(circle, rgba(240,165,0,0.042) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 28px 28px;
+      radial-gradient(ellipse 70% 40% at 50% 0%,    rgba(240,165,0,0.22)   0%, transparent 60%),
+      radial-gradient(ellipse 120% 60% at -5% 0%,   rgba(240,165,0,0.14)   0%, transparent 55%),
+      radial-gradient(ellipse 100% 55% at 105% 100%, rgba(167,139,250,0.16) 0%, transparent 55%),
+      radial-gradient(circle, rgba(240,165,0,0.040) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
     background-attachment: fixed;
   }
 
@@ -104,17 +105,17 @@
 
   /* ── Cards ── */
   .card {
-    background: var(--depth);
-    border: 1px solid var(--rim);
+    background: linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 25%);
+    border: 1px solid rgba(255,255,255,0.09);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4);
-    transition: border-color 0.18s, box-shadow 0.20s, transform 0.20s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.60), 0 2px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: border-color 0.18s, box-shadow 0.22s, transform 0.22s ease;
   }
   .card:hover {
-    border-color: var(--rim-hi);
+    border-color: rgba(255,255,255,0.15);
     transform: translateY(-4px);
-    box-shadow: 0 20px 56px rgba(0,0,0,0.65), 0 6px 16px rgba(0,0,0,0.45);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.70), 0 8px 20px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08);
   }
 
   .card-glow:hover {
@@ -139,7 +140,7 @@
     position: absolute; inset: 0;
     border-radius: 12px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(240,165,0,0.50), rgba(167,139,250,0.30));
+    background: linear-gradient(135deg, rgba(240,165,0,0.70), rgba(167,139,250,0.50));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -222,7 +223,7 @@
     color: #fff;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700; font-size: 14px;
-    padding: 9px 20px; border-radius: 8px;
+    padding: 11px 24px; border-radius: 9px;
     border: none; cursor: pointer;
     transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
     box-shadow: 0 4px 24px rgba(240,165,0,0.45), 0 1px 4px rgba(0,0,0,0.4);
@@ -241,7 +242,7 @@
     color: var(--prime-hi);
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 500; font-size: 14px;
-    padding: 9px 20px; border-radius: 8px;
+    padding: 11px 24px; border-radius: 9px;
     border: 1px solid rgba(240,165,0,0.22);
     cursor: pointer; transition: all 0.15s;
     letter-spacing: -0.01em;

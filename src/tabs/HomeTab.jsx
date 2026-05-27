@@ -290,10 +290,13 @@ export default function HomeTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
 
       {/* ── Hero ── */}
-      <section>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(30px, 5vw, 58px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
+      <section style={{ position: 'relative' }}>
+        {/* Amber glow orb — lights up the hero from behind */}
+        <div style={{ position: 'absolute', top: '-80px', left: '-60px', width: '500px', height: '400px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.18) 0%, rgba(240,165,0,0.06) 40%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(32px, 5.5vw, 64px)', fontWeight: 900, lineHeight: 1.02, letterSpacing: '-0.05em', marginBottom: '20px' }}>
           You can train a model.<br />
-          <span className="text-gradient">Can you debug it in production?</span>
+          <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 50%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 30px rgba(240,165,0,0.40))' }}>Can you debug it in production?</span>
         </h1>
 
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', marginBottom: '24px' }}>
@@ -311,7 +314,7 @@ export default function HomeTab({ onNavigate }) {
 
         {/* ── Role selector ── */}
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Personalise by role →</div>
+          <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.10em', fontFamily: 'var(--font-mono)', marginBottom: '8px', textShadow: '0 0 12px rgba(240,165,0,0.50)' }}>Personalise by role →</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)} title={r.desc}
@@ -335,12 +338,13 @@ export default function HomeTab({ onNavigate }) {
         {/* ── Stats strip ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
           {STATS.map((s) => (
-            <div key={s.label} style={{ padding: '14px 12px', textAlign: 'center', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.50), 0 1px 4px rgba(0,0,0,0.4)' }}>
-              <div style={{ fontSize: '22px', fontWeight: 800, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.04em', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
+            <div key={s.label} style={{ padding: '18px 12px', textAlign: 'center', background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.07)' }}>
+              <div style={{ fontSize: '40px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 12px rgba(240,165,0,0.55))' }}>{s.n}</div>
               <div style={{ fontSize: '9px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '5px', fontFamily: 'var(--font-mono)' }}>{s.label}</div>
             </div>
           ))}
         </div>
+        </div>{/* end relative zIndex wrapper */}
       </section>
 
       {/* ── Progress ── */}
