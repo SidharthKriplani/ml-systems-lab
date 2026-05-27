@@ -354,7 +354,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
         const isCorrect = it.revealed && it.picked === s.correct
         const diffColor = diff === 'Easy' ? 'var(--mint)' : diff === 'Medium' ? 'var(--ember)' : 'var(--rose)'
         return (
-          <div key={s.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.08)'}`, borderRadius: '12px', overflow: 'hidden', background: it.open ? accentColor + '04' : 'transparent' }}>
+          <div key={s.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', background: it.open ? accentColor + '04' : 'transparent' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: diffColor + '18', color: diffColor, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{diff}</span>
               <span style={{ flex: 1, fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 500, lineHeight: 1.5 }}>{s.q}</span>
@@ -369,8 +369,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                     const isAns = oi === s.correct
                     let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
                     if (it.revealed) {
-                      if (isAns) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.06)'; color = 'var(--mint)' }
-                      else if (isOpt) { border = 'rgba(244,63,94,0.4)'; bg = 'rgba(244,63,94,0.06)'; color = 'var(--rose)' }
+                      if (isAns) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
+                      else if (isOpt) { border = 'rgba(244,63,94,0.4)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
                     } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
                     return (
                       <button key={oi} onClick={() => pick(i, oi)} disabled={it.revealed}
@@ -457,10 +457,10 @@ function CausalVsPredictive() {
           const isPicked = i === picked
           let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
           if (revealed) {
-            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.07)'; color = 'var(--mint)' }
-            else if (isPicked && !isCorrect) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.07)'; color = 'var(--rose)' }
+            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.14)'; color = 'var(--mint)' }
+            else if (isPicked && !isCorrect) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.14)'; color = 'var(--rose)' }
           } else if (isPicked) {
-            border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.07)'; color = 'var(--sky)'
+            border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.14)'; color = 'var(--sky)'
           }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
@@ -477,14 +477,14 @@ function CausalVsPredictive() {
 
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="card" style={{ padding: '20px', border: `1px solid ${picked === s.correct ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}`, background: picked === s.correct ? 'rgba(52,211,153,0.04)' : 'rgba(244,63,94,0.04)' }}>
+          <div className="card" style={{ padding: '20px', border: `1px solid ${picked === s.correct ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}`, background: picked === s.correct ? 'rgba(52,211,153,0.10)' : 'rgba(244,63,94,0.10)' }}>
             <div style={{ fontSize: '10px', color: picked === s.correct ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{picked === s.correct ? 'Correct' : 'Incorrect'}</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
               <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.method}</span>
             </div>
-            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(244,63,94,0.04)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
+            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(244,63,94,0.10)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
               <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.trap}</span>
             </div>
@@ -594,9 +594,9 @@ function ConfounderOrCollider() {
           const isPicked = i === picked
           let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
           if (revealed) {
-            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.06)'; color = 'var(--mint)' }
-            else if (isPicked) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.06)'; color = 'var(--rose)' }
-          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
+            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
+            else if (isPicked) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
+          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.13)'; color = 'var(--sky)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
               style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -611,7 +611,7 @@ function ConfounderOrCollider() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${TYPE_COLORS[s.type]}30`, background: TYPE_COLORS[s.type] + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -776,9 +776,9 @@ function BackdoorCriterion() {
           const isPicked = i === picked
           let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
           if (revealed) {
-            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.06)'; color = 'var(--mint)' }
-            else if (isPicked && !isCorrect) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.06)'; color = 'var(--rose)' }
-          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.06)'; color = 'var(--sky)' }
+            if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
+            else if (isPicked && !isCorrect) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
+          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.13)'; color = 'var(--sky)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
               style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -794,7 +794,7 @@ function BackdoorCriterion() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${accent}30`, background: accent + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>

@@ -109,7 +109,7 @@ A model can have 0.92 AUC and be completely uncalibrated. Uncalibrated means: wh
     slug: 'rec-system-design-framework',
     title: 'How to Design a Recommendation System (The MLE Interview Framework)',
     category: 'ML System Design',
-    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
+    catColor: { bg: 'rgba(240,165,0,0.15)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 15,
     featured: true,
     excerpt: 'Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monitoring, cold start, exploration. Here\'s the framework that works.',
@@ -281,7 +281,7 @@ Training run 42 used features_v3. Training run 57 used features_v5. When you inv
     slug: 'mle-interview-system-design-prep',
     title: 'The MLE Interview Framework: What Top Companies Actually Ask',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
+    catColor: { bg: 'rgba(240,165,0,0.15)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 7,
     featured: false,
     excerpt: 'After 200+ MLE interviews (as both candidate and interviewer), here\'s what I\'ve learned about what separates strong candidates from weak ones in the ML system design round. It\'s not about knowing more frameworks. It\'s about a specific sequence of reasoning that signals production ML experience.',
@@ -482,7 +482,7 @@ Start with DDP. Add ZeRO stages if you need memory relief. Only add model parall
     slug: 'ml-interview-mistakes',
     title: '10 ML Interview Mistakes Even Senior Engineers Make',
     category: 'Interview Prep',
-    catColor: { bg: 'rgba(240,165,0,0.08)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
+    catColor: { bg: 'rgba(240,165,0,0.15)', text: 'var(--violet)', border: 'rgba(240,165,0,0.18)' },
     readMin: 8,
     featured: false,
     excerpt: 'These aren\'t mistakes made by junior candidates who don\'t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they\'re talking about — but don\'t know how to show it in 45 minutes.',
@@ -2042,9 +2042,9 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
     }
 
     const CALLOUT_STYLES = {
-      tip:     { bg: 'rgba(240,165,0,0.07)',  border: 'rgba(240,165,0,0.25)',  text: 'var(--prime)', label: 'TIP' },
-      warning: { bg: 'rgba(244,63,94,0.07)',  border: 'rgba(244,63,94,0.25)', text: 'var(--rose)',  label: 'WARNING' },
-      lesson:  { bg: 'rgba(34,211,238,0.07)', border: 'rgba(34,211,238,0.25)',text: 'var(--sky)',   label: 'LESSON' },
+      tip:     { bg: 'rgba(240,165,0,0.14)',  border: 'rgba(240,165,0,0.25)',  text: 'var(--prime)', label: 'TIP' },
+      warning: { bg: 'rgba(244,63,94,0.14)',  border: 'rgba(244,63,94,0.25)', text: 'var(--rose)',  label: 'WARNING' },
+      lesson:  { bg: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.25)',text: 'var(--sky)',   label: 'LESSON' },
     }
 
     return blocks.map((block, idx) => {
@@ -2095,7 +2095,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
           ← Back to Gradient
         </button>
-        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.08)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
+        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.15)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
           {isRead ? '✓ Read' : 'Mark as read'}
         </button>
       </div>
@@ -2133,13 +2133,13 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
           {post.tags.map(t => (
-            <span key={t} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
+            <span key={t} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.10)', border: '1px solid var(--rim)', color: 'var(--ink-low)', borderRadius: '5px', padding: '3px 10px' }}>{t}</span>
           ))}
         </div>
 
         {/* Practice CTA */}
         {POST_PRACTICE[post.id] && onNavigate && (
-          <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-mid)' }}>{POST_PRACTICE[post.id].label}</div>
@@ -2166,11 +2166,11 @@ function PostCard({ post, featured, onClick, isRead }) {
         style={{
           textAlign: 'left', cursor: 'pointer', gridColumn: '1 / -1',
           padding: '32px 36px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, var(--depth) 40%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, var(--depth) 40%)',
           border: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.09)'}`,
           borderTop: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.13)'}`,
           borderRadius: '16px',
-          boxShadow: hov ? '0 24px 72px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.09)' : '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+          boxShadow: hov ? '0 24px 72px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.09)' : '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.13)',
           transform: hov ? 'translateY(-3px)' : 'translateY(0)',
           transition: 'all 0.18s ease',
           display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,0.6fr)', gap: '40px', alignItems: 'center',
@@ -2187,7 +2187,7 @@ function PostCard({ post, featured, onClick, isRead }) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {post.tags.slice(0, 4).map(t => (
-            <div key={t} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '7px', padding: '8px 14px' }}>{t}</div>
+            <div key={t} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '7px', padding: '8px 14px' }}>{t}</div>
           ))}
         </div>
       </button>
@@ -2201,10 +2201,10 @@ function PostCard({ post, featured, onClick, isRead }) {
       style={{
         textAlign: 'left', cursor: 'pointer', padding: '20px 22px',
         background: hov ? 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)' : 'linear-gradient(160deg, rgba(255,255,255,0.025) 0%, var(--depth) 40%)',
-        border: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.08)'}`,
+        border: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.15)'}`,
         borderTop: `1px solid ${hov ? post.catColor.border : 'rgba(255,255,255,0.11)'}`,
         borderRadius: '14px',
-        boxShadow: hov ? '0 16px 48px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.08)' : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+        boxShadow: hov ? '0 16px 48px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.15)' : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.11)',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
         transition: 'all 0.18s ease',
       }}>
@@ -2293,7 +2293,7 @@ export default function GradientTab({ onNavigate }) {
 
       {/* Start here — only visible on All Posts, no filter active */}
       {activeDomain === 'all' && (
-        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)' }}>
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)' }}>
           <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>New here? Start with these</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {[1, 3, 27, 9].map(id => {
@@ -2322,7 +2322,7 @@ export default function GradientTab({ onNavigate }) {
             style={{
               padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
               fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
-              background: activeDomain === d.id ? (d.color ? `${d.color}20` : 'rgba(255,255,255,0.08)') : 'rgba(0,0,0,0.25)',
+              background: activeDomain === d.id ? (d.color ? `${d.color}20` : 'rgba(255,255,255,0.15)') : 'rgba(0,0,0,0.25)',
               color: activeDomain === d.id ? (d.color ?? 'var(--ink-hi)') : 'var(--ink-low)',
               border: activeDomain === d.id ? `1px solid ${d.color ?? 'var(--rim)'}40` : '1px solid var(--rim)',
             }}>

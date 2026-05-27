@@ -16,10 +16,10 @@
 :root {
   /* ── Surfaces — warm near-black ──────────────────── */
   --void:    #0c0a08;   /* page bg — faintest warm undertone  */
-  --depth:   #1c1916;   /* card / panel background            */
-  --surface: #242119;   /* elevated cards, code blocks        */
-  --rim:     #403930;   /* default border — visible on depth  */
-  --rim-hi:  #564e45;   /* hovered / active border            */
+  --depth:   #201d19;   /* card / panel background            */
+  --surface: #2a2620;   /* elevated cards, code blocks        */
+  --rim:     #4a433a;   /* default border — visible on depth  */
+  --rim-hi:  #615950;   /* hovered / active border            */
 
   /* ── Primary accent: burnished amber ────────────── */
   --prime:       #f0a500;                  /* the signature colour   */
@@ -44,9 +44,9 @@
 
   /* ── Typography — warm neutrals ─────────────────── */
   --ink-hi:    #f5f1ea;   /* primary — warm off-white  ~17:1    */
-  --ink-mid:   #cec3b9;   /* secondary — body text     ~11:1    */
-  --ink-low:   #a09489;   /* tertiary — labels/meta    ~7:1     */
-  --ink-ghost: #756c62;   /* disabled / ghost          ~4:1     */
+  --ink-mid:   #d8cfc6;   /* secondary — body text     ~13:1    */
+  --ink-low:   #b8ada2;   /* tertiary — labels/meta    ~9:1     */
+  --ink-ghost: #8c8178;   /* disabled / ghost          ~5.5:1   */
 
   /* ── Utility ─────────────────────────────────────── */
   --white:     #ffffff;   /* contrast text on colored badge backgrounds */

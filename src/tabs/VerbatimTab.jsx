@@ -54,7 +54,7 @@ const RATING_CRITERIA = [
 function CategoryBadge({ category }) {
   return (
     <span style={{
-      background: CATEGORY_BG[category] || 'rgba(255,255,255,0.08)',
+      background: CATEGORY_BG[category] || 'rgba(255,255,255,0.15)',
       color: CATEGORY_COLORS[category] || 'var(--ink-mid)',
       border: `1px solid ${CATEGORY_COLORS[category] || 'var(--rim)'}33`,
       borderRadius: 20,

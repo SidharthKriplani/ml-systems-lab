@@ -725,7 +725,7 @@ export default function AskTab({ onNavigate }) {
             fontFamily: 'var(--font-sans)',
             fontWeight: 600,
             color: 'var(--prime)',
-            background: 'rgba(212,175,55,0.08)',
+            background: 'rgba(212,175,55,0.15)',
             border: '1px solid rgba(212,175,55,0.28)',
             borderRadius: 8,
             padding: '8px 14px',
@@ -734,7 +734,7 @@ export default function AskTab({ onNavigate }) {
             transition: 'background 0.15s',
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.14)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,55,0.08)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,55,0.15)'}
         >
           <span style={{ fontSize: 15 }}>∿</span> Surprise me
         </button>

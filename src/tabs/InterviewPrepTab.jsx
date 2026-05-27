@@ -185,17 +185,17 @@ const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netfl
 const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
 
 const CAT_COLORS = {
-  'System Design':      { bg: 'rgba(240,165,0,0.07)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
-  'Features':           { bg: 'rgba(34,211,238,0.07)',  text: 'var(--sky)',       border: 'rgba(34,211,238,0.20)' },
-  'Evaluation':         { bg: 'rgba(52,211,153,0.07)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
-  'Spark':              { bg: 'rgba(249,115,22,0.07)',  text: 'var(--ember)',     border: 'rgba(249,115,22,0.20)' },
-  'Statistics':         { bg: 'rgba(167,139,250,0.07)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
-  'Trees & Ensembles':  { bg: 'rgba(74,222,128,0.07)',  text: 'var(--green)',     border: 'rgba(74,222,128,0.20)' },
-  'SQL':                { bg: 'rgba(251,191,36,0.07)',  text: 'var(--gold)',      border: 'rgba(251,191,36,0.20)' },
-  'Regression':         { bg: 'rgba(240,165,0,0.07)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
-  'Coding':             { bg: 'rgba(167,139,250,0.07)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
-  'Architecture':       { bg: 'rgba(244,63,94,0.07)',   text: 'var(--rose)',      border: 'rgba(244,63,94,0.20)' },
-  'Behavioral':         { bg: 'rgba(52,211,153,0.07)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
+  'System Design':      { bg: 'rgba(240,165,0,0.14)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
+  'Features':           { bg: 'rgba(34,211,238,0.14)',  text: 'var(--sky)',       border: 'rgba(34,211,238,0.20)' },
+  'Evaluation':         { bg: 'rgba(52,211,153,0.14)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
+  'Spark':              { bg: 'rgba(249,115,22,0.14)',  text: 'var(--ember)',     border: 'rgba(249,115,22,0.20)' },
+  'Statistics':         { bg: 'rgba(167,139,250,0.14)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
+  'Trees & Ensembles':  { bg: 'rgba(74,222,128,0.14)',  text: 'var(--green)',     border: 'rgba(74,222,128,0.20)' },
+  'SQL':                { bg: 'rgba(251,191,36,0.14)',  text: 'var(--gold)',      border: 'rgba(251,191,36,0.20)' },
+  'Regression':         { bg: 'rgba(240,165,0,0.14)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
+  'Coding':             { bg: 'rgba(167,139,250,0.14)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
+  'Architecture':       { bg: 'rgba(244,63,94,0.14)',   text: 'var(--rose)',      border: 'rgba(244,63,94,0.20)' },
+  'Behavioral':         { bg: 'rgba(52,211,153,0.14)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
 }
 
 // ─── Fluency Drills ──────────────────────────────────────────────────────────
@@ -256,7 +256,7 @@ function FluencyDrills() {
       </div>
 
       {/* Weak phrase card */}
-      <div style={{ padding: '24px 28px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: '12px' }}>
+      <div style={{ padding: '24px 28px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: '12px' }}>
         <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Weak phrase</div>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', color: 'var(--ink-mid)', lineHeight: 1.5, margin: 0 }}>"{drill.weak}"</p>
       </div>
@@ -265,7 +265,7 @@ function FluencyDrills() {
         <button className="btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => setRevealed(true)}>Reveal strong phrase →</button>
       ) : (
         <>
-          <div style={{ padding: '24px 28px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: '12px' }}>
+          <div style={{ padding: '24px 28px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: '12px' }}>
             <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Strong phrase</div>
             <p style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
             <div style={{ paddingTop: '14px', borderTop: '1px solid rgba(52,211,153,0.15)' }}>
@@ -333,7 +333,7 @@ function TimedPractice({ questions, onExit }) {
     const topTierObj = TIER_LEVELS.slice().reverse().find(t => tierHistory.some(h => h.tier === t.key))
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ padding: '28px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '12px' }}>
+        <div style={{ padding: '28px', background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '12px' }}>
           <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Session complete</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {questions.length} questions · {Math.floor(elapsed/60)}m {elapsed%60}s
@@ -342,7 +342,7 @@ function TimedPractice({ questions, onExit }) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px' }}>
           {counts.map(t => (
-            <div key={t.key} style={{ padding: '16px 18px', background: 'linear-gradient(160deg, rgba(255,255,255,0.04) 0%, var(--depth) 50%)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+            <div key={t.key} style={{ padding: '16px 18px', background: 'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, var(--depth) 50%)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.13)' }}>
               <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: t.color, fontWeight: 700, marginBottom: '4px' }}>{t.label.toUpperCase()}</div>
               <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: t.n > 0 ? t.color : 'var(--ink-low)' }}>{t.n}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
@@ -544,7 +544,7 @@ function SystemDesignJudgment() {
         </div>
       </div>
 
-      <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '12px', padding: '20px 24px' }}>
+      <div style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '12px', padding: '20px 24px' }}>
         <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>System Brief</div>
         <div style={{ fontSize: '15px', color: 'var(--ink-hi)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '12px' }}>{sc.brief}</div>
         <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{sc.context}</div>
@@ -557,9 +557,9 @@ function SystemDesignJudgment() {
           const isChosen  = chosen === i
           const isCorrect = i === sc.correct
           let bg = 'rgba(0,0,0,0.2)', border = 'var(--rim)', color = 'var(--ink-mid)'
-          if (isChosen && !revealed)              { bg = 'rgba(251,191,36,0.08)'; border = 'rgba(251,191,36,0.4)';  color = 'var(--ink-hi)' }
-          if (revealed && isCorrect)              { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.4)';  color = 'var(--ink-hi)' }
-          if (revealed && isChosen && !isCorrect) { bg = 'rgba(244,63,94,0.08)';  border = 'rgba(244,63,94,0.4)';   color = 'var(--ink-hi)' }
+          if (isChosen && !revealed)              { bg = 'rgba(251,191,36,0.15)'; border = 'rgba(251,191,36,0.4)';  color = 'var(--ink-hi)' }
+          if (revealed && isCorrect)              { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.4)';  color = 'var(--ink-hi)' }
+          if (revealed && isChosen && !isCorrect) { bg = 'rgba(244,63,94,0.15)';  border = 'rgba(244,63,94,0.4)';   color = 'var(--ink-hi)' }
           return (
             <button key={i} disabled={revealed} onClick={() => setChosen(i)}
               style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-sans)', fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
@@ -577,15 +577,15 @@ function SystemDesignJudgment() {
 
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+          <div style={{ background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
             <div style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Why this step</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.answer}</div>
           </div>
-          <div style={{ background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+          <div style={{ background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
             <div style={{ fontSize: '10px', color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Common trap</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.trap}</div>
           </div>
-          <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+          <div style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
             <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Framework move</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.method}</div>
           </div>

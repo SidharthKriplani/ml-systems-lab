@@ -85,7 +85,7 @@ function ShuffleHell() {
     if (r.healthy) trackModuleComplete('Shuffle Hell', 'spark', 100)
   }
 
-  const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.08)'    : result?.spillRisk ? 'rgba(245,158,11,0.08)'  : result?.healthy ? 'rgba(16,185,129,0.08)'    : 'rgba(255,255,255,0.03)'
+  const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.15)'    : result?.spillRisk ? 'rgba(245,158,11,0.15)'  : result?.healthy ? 'rgba(16,185,129,0.15)'    : 'rgba(255,255,255,0.07)'
   const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : 'var(--rim)'
   const statusMsg    = result?.oomRisk ? '💥 JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '⚠ Significant spill to disk' : result?.healthy ? '✅ Job looks healthy' : '🟡 Suboptimal — will run'
 
@@ -131,7 +131,7 @@ function ShuffleHell() {
             { val: 'broadcast',  label: 'Broadcast Hash', desc: 'No shuffle. Right table must fit in memory.' },
           ].map(opt => (
             <button key={opt.val} onClick={() => { setJoinStrategy(opt.val); setResult(null) }}
-              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(240,165,0,0.07)' : 'var(--void)', transition: 'all 0.15s' }}>
+              style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', border: `1px solid ${joinStrategy === opt.val ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: joinStrategy === opt.val ? 'rgba(240,165,0,0.14)' : 'var(--void)', transition: 'all 0.15s' }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{opt.label}</div>
               <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{opt.desc}</div>
             </button>
@@ -264,7 +264,7 @@ function SkewDoctor() {
           {Object.entries(FIXES).map(([k, v]) => (
             <button key={k} onClick={() => { setFix(k); setRevealed(true) }}
               className="card"
-              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(240,165,0,0.07)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
+              style={{ textAlign: 'left', cursor: 'pointer', border: `1px solid ${fix === k ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: fix === k ? 'rgba(240,165,0,0.14)' : 'var(--depth)', transition: 'all 0.15s', padding: '14px' }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{v.label}</div>
               <div className="code-block" style={{ fontSize: '11px', padding: '8px', whiteSpace: 'pre-wrap' }}>{v.code}</div>
             </button>
@@ -273,7 +273,7 @@ function SkewDoctor() {
       </div>
 
       {revealed && fix && fixedDist && (
-        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(16,185,129,0.11)', border: '1px solid rgba(16,185,129,0.2)' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--mint)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '60px', marginBottom: '8px' }}>
             {fixedDist.tasks.map((t, i) => {
@@ -345,7 +345,7 @@ function PartitionTuner() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
 
-          <div style={{ padding: '16px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', textAlign: 'center' }}>
+          <div style={{ padding: '16px', background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '4px' }}>
               spark.sql.shuffle.partitions
             </div>
@@ -394,7 +394,7 @@ function PartitionTuner() {
       </div>
 
       {/* Tips */}
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(249,115,22,0.04)', borderColor: 'rgba(249,115,22,0.2)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(249,115,22,0.10)', borderColor: 'rgba(249,115,22,0.2)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
           <strong style={{ color: 'var(--ember)' }}>Rules of thumb:</strong><br />
           • Default is 200 — fine for small jobs, catastrophic for large datasets.<br />
@@ -477,7 +477,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
       </div>
 
       {/* Score strip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
         {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
@@ -489,7 +489,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
         const it = items[i]
         const isCorrect = it.revealed && it.picked === sc.answer
         return (
-          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.08)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
             {/* Header row */}
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
@@ -502,7 +502,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
             {it.open && (
               <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {/* Context */}
-                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
+                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
@@ -521,8 +521,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                     const isAns    = sc.answer === oi
                     let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
                     if (it.revealed) {
-                      if (isAns)          { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
-                      else if (isPicked)  { bg = 'rgba(239,68,68,0.08)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
+                      if (isAns)          { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
+                      else if (isPicked)  { bg = 'rgba(239,68,68,0.15)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
                     } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
@@ -538,11 +538,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                 {/* Explanation */}
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
-                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>

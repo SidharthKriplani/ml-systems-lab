@@ -688,7 +688,7 @@ function BugCard({ bug, answer, onAnswer }) {
     if (key === bug.correct) {
       return {
         ...base,
-        background: 'rgba(52, 211, 153, 0.08)',
+        background: 'rgba(52,211,153,0.15)',
         border: '1px solid var(--mint)',
         color: 'var(--ink-hi)',
       }
@@ -696,7 +696,7 @@ function BugCard({ bug, answer, onAnswer }) {
     if (key === answer) {
       return {
         ...base,
-        background: 'rgba(244, 63, 94, 0.08)',
+        background: 'rgba(244,63,94,0.15)',
         border: '1px solid var(--rose)',
         color: 'var(--ink-hi)',
       }
@@ -831,7 +831,7 @@ function BugCard({ bug, answer, onAnswer }) {
               </div>
 
               <div style={{
-                background: 'rgba(249, 115, 22, 0.07)',
+                background: 'rgba(249,115,22,0.14)',
                 border: '1px solid rgba(249, 115, 22, 0.25)',
                 borderRadius: 6,
                 padding: '10px 12px',
@@ -860,7 +860,7 @@ function BugCard({ bug, answer, onAnswer }) {
               </div>
 
               <div style={{
-                background: 'rgba(52, 211, 153, 0.06)',
+                background: 'rgba(52,211,153,0.13)',
                 border: '1px solid rgba(52, 211, 153, 0.2)',
                 borderRadius: 6,
                 padding: '10px 12px',

@@ -106,7 +106,7 @@ function PCAExplorer() {
 
       <PythonCell key={key} initialCode={code} withPlot height={260} label="PCA · sklearn + matplotlib" />
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.04)', border: '1px solid rgba(240,165,0,0.15)' }}>
+      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--violet)' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
           Add more features with the same info → most variance concentrates in early PCs.
@@ -194,7 +194,7 @@ function SVDDecomposer() {
 
       <PythonCell key={rank} initialCode={SVD_CODE(rank)} withPlot height={200} label="SVD · numpy" />
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)' }}>
+      <div className="card" style={{ padding: '16px', background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--violet)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
           A rank-4 approximation of a 20×25 matrix needs only {20*rank + rank + rank*25} numbers instead of {20*25}.
@@ -306,7 +306,7 @@ function PreprocessingLab() {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.15)' }}>
+      <div className="card" style={{ padding: '16px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--rose)' }}>The bug:</strong> When you <code style={{ color: 'var(--rose)' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
           test-set statistics leak into the transforms. Your reported metrics will be optimistically biased —
@@ -563,7 +563,7 @@ function NumPyInternals() {
         <PythonCell initialCode={NUMPY_BENCH_CODE} height={180} withPlot={false} label="vectorisation + strides" />
       </div>
 
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7 }}>
           <strong style={{ color: 'var(--mint)' }}>Key rules to remember:</strong><br />
           • <code style={{ color: 'var(--sky)' }}>x[::2]</code> returns a view; <code style={{ color: 'var(--sky)' }}>x[[0,2,4]]</code> (fancy indexing) returns a copy.<br />
@@ -720,7 +720,7 @@ export default function ModelsMathTab({ onNavigate }) {
       </div>
 
       {/* Python runtime notice */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '8px' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>
           First run loads the Python runtime (~8 MB). Subsequent runs are instant.
           Everything executes locally — your data never leaves the browser.

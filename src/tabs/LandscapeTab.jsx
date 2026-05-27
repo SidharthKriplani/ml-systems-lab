@@ -10,7 +10,7 @@ const ROLES = [
     level: 'Core',
     accentColor: 'var(--mint)',
     borderColor: 'rgba(52,211,153,0.25)',
-    bgColor: 'rgba(52,211,153,0.04)',
+    bgColor: 'rgba(52,211,153,0.10)',
     demand: 'Very High',
     salaryUS: '$170k – $500k TC',
     salaryUK: '£80k – £200k',
@@ -27,7 +27,7 @@ const ROLES = [
     level: 'Infra',
     accentColor: 'var(--sky)',
     borderColor: 'rgba(56,189,248,0.25)',
-    bgColor: 'rgba(56,189,248,0.04)',
+    bgColor: 'rgba(56,189,248,0.10)',
     demand: 'High',
     salaryUS: '$160k – $420k TC',
     salaryUK: '£75k – £180k',
@@ -44,7 +44,7 @@ const ROLES = [
     level: 'Research',
     accentColor: 'var(--violet)',
     borderColor: 'rgba(168,85,247,0.25)',
-    bgColor: 'rgba(168,85,247,0.04)',
+    bgColor: 'rgba(168,85,247,0.10)',
     demand: 'Moderate',
     salaryUS: '$200k – $700k TC',
     salaryUK: '£90k – £250k',
@@ -61,7 +61,7 @@ const ROLES = [
     level: 'Applied Research',
     accentColor: 'var(--ember)',
     borderColor: 'rgba(249,115,22,0.25)',
-    bgColor: 'rgba(249,115,22,0.04)',
+    bgColor: 'rgba(249,115,22,0.10)',
     demand: 'High',
     salaryUS: '$180k – $550k TC',
     salaryUK: '£85k – £220k',
@@ -78,7 +78,7 @@ const ROLES = [
     level: 'Analytics',
     accentColor: 'var(--gold)',
     borderColor: 'rgba(251,191,36,0.25)',
-    bgColor: 'rgba(251,191,36,0.04)',
+    bgColor: 'rgba(251,191,36,0.10)',
     demand: 'High',
     salaryUS: '$120k – $280k TC',
     salaryUK: '£55k – £130k',
@@ -95,7 +95,7 @@ const ROLES = [
     level: 'Specialist',
     accentColor: 'var(--rose)',
     borderColor: 'rgba(244,63,94,0.25)',
-    bgColor: 'rgba(244,63,94,0.04)',
+    bgColor: 'rgba(244,63,94,0.10)',
     demand: 'Very High',
     salaryUS: '$200k – $600k TC',
     salaryUK: '£100k – £250k',
@@ -119,7 +119,7 @@ const STAGES = [
   {
     stage: 'Seed / Pre-seed',
     size: '1–5 engineers',
-    bgColor: 'rgba(52,211,153,0.04)',
+    bgColor: 'rgba(52,211,153,0.10)',
     borderColor: 'rgba(240,165,0,0.18)',
     accentColor: 'var(--mint)',
     stack: [
@@ -135,7 +135,7 @@ const STAGES = [
   {
     stage: 'Series A / B',
     size: '3–10 ML engineers',
-    bgColor: 'rgba(56,189,248,0.04)',
+    bgColor: 'rgba(56,189,248,0.10)',
     borderColor: 'rgba(56,189,248,0.2)',
     accentColor: 'var(--sky)',
     stack: [
@@ -151,7 +151,7 @@ const STAGES = [
   {
     stage: 'Series C / Growth',
     size: '10–40 ML engineers',
-    bgColor: 'rgba(168,85,247,0.04)',
+    bgColor: 'rgba(168,85,247,0.10)',
     borderColor: 'rgba(168,85,247,0.2)',
     accentColor: 'var(--violet)',
     stack: [
@@ -168,7 +168,7 @@ const STAGES = [
   {
     stage: 'FAANG / Hyperscaler',
     size: '100+ ML engineers',
-    bgColor: 'rgba(249,115,22,0.04)',
+    bgColor: 'rgba(249,115,22,0.10)',
     borderColor: 'rgba(249,115,22,0.2)',
     accentColor: 'var(--ember)',
     stack: [
@@ -305,12 +305,12 @@ const TIMELINE = [
 ]
 
 const MARKETS = [
-  { country: 'United States', flag: '🇺🇸', hubs: 'San Francisco, Seattle, New York, Austin', seniors: '$320k–500k TC', gradient: 'linear-gradient(135deg, rgba(240,165,0,0.18), rgba(52,211,153,0.05))', border: 'rgba(52,211,153,0.30)', strengths: 'Highest compensation globally. World-class equity culture. Deepest talent networks. Best access to cutting-edge research.', watch: 'H-1B visa lottery. Very high cost of living in major hubs. Working culture intensity.' },
-  { country: 'United Kingdom', flag: '🇬🇧', hubs: 'London, Edinburgh, Cambridge', seniors: '£120k–180k base', gradient: 'linear-gradient(135deg, rgba(56,189,248,0.2), rgba(56,189,248,0.05))', border: 'rgba(56,189,248,0.3)', strengths: 'Strong equity via Global Talent Visa. DeepMind, Stability AI heritage. Excellent work-life balance. Strong academic pipeline.', watch: 'Equity culture weaker than US. High income tax (45% top bracket). Post-Brexit talent friction.' },
-  { country: 'Germany', flag: '🇩🇪', hubs: 'Berlin, Munich, Hamburg', seniors: '€120k–160k base', gradient: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(168,85,247,0.05))', border: 'rgba(168,85,247,0.3)', strengths: 'EU AI Act expertise becoming premium skillset. Strong research institutions. Excellent engineering culture. Growing startup scene.', watch: 'High tax burden (42%+ effective). Lower equity culture. Language can be a barrier outside tech companies.' },
-  { country: 'Canada', flag: '🇨🇦', hubs: 'Toronto, Montreal, Vancouver', seniors: 'CAD $170k–220k base', gradient: 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.05))', border: 'rgba(249,115,22,0.3)', strengths: 'Hinton (Toronto), Bengio (Montreal) academic lineage. Strong immigration pathways. Good quality of life. US company outposts.', watch: 'CAD currency discount (~27%). Cold winters. Most top companies are US offices, limiting equity upside.' },
-  { country: 'India', flag: '🇮🇳', hubs: 'Bangalore, Hyderabad, Chennai', seniors: '₹60L–120L ($72k–145k)', gradient: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.05))', border: 'rgba(251,191,36,0.3)', strengths: 'Rapidly growing compensation at top tier. Massive talent pool from IITs/IISc. Global company offices accelerating. PPP-adjusted salaries competitive.', watch: 'Absolute numbers still lower than Western markets. Varies enormously by company tier. Visa required for most Western opportunities.' },
-  { country: 'Singapore', flag: '🇸🇬', hubs: 'Singapore city', seniors: 'SGD $180k–250k ($133k–185k)', gradient: 'linear-gradient(135deg, rgba(244,63,94,0.2), rgba(244,63,94,0.05))', border: 'rgba(244,63,94,0.3)', strengths: 'Low income tax (22% top bracket). APAC hub for Google, Meta, ByteDance. Gateway between India and East Asia talent pools. English-speaking.', watch: 'Small market. Equity culture weaker than US. Very high cost of living. Limited local startup ecosystem.' },
+  { country: 'United States', flag: '🇺🇸', hubs: 'San Francisco, Seattle, New York, Austin', seniors: '$320k–500k TC', gradient: 'linear-gradient(135deg, rgba(240,165,0,0.18), rgba(52,211,153,0.11))', border: 'rgba(52,211,153,0.30)', strengths: 'Highest compensation globally. World-class equity culture. Deepest talent networks. Best access to cutting-edge research.', watch: 'H-1B visa lottery. Very high cost of living in major hubs. Working culture intensity.' },
+  { country: 'United Kingdom', flag: '🇬🇧', hubs: 'London, Edinburgh, Cambridge', seniors: '£120k–180k base', gradient: 'linear-gradient(135deg, rgba(56,189,248,0.2), rgba(56,189,248,0.11))', border: 'rgba(56,189,248,0.3)', strengths: 'Strong equity via Global Talent Visa. DeepMind, Stability AI heritage. Excellent work-life balance. Strong academic pipeline.', watch: 'Equity culture weaker than US. High income tax (45% top bracket). Post-Brexit talent friction.' },
+  { country: 'Germany', flag: '🇩🇪', hubs: 'Berlin, Munich, Hamburg', seniors: '€120k–160k base', gradient: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(168,85,247,0.11))', border: 'rgba(168,85,247,0.3)', strengths: 'EU AI Act expertise becoming premium skillset. Strong research institutions. Excellent engineering culture. Growing startup scene.', watch: 'High tax burden (42%+ effective). Lower equity culture. Language can be a barrier outside tech companies.' },
+  { country: 'Canada', flag: '🇨🇦', hubs: 'Toronto, Montreal, Vancouver', seniors: 'CAD $170k–220k base', gradient: 'linear-gradient(135deg, rgba(249,115,22,0.2), rgba(249,115,22,0.11))', border: 'rgba(249,115,22,0.3)', strengths: 'Hinton (Toronto), Bengio (Montreal) academic lineage. Strong immigration pathways. Good quality of life. US company outposts.', watch: 'CAD currency discount (~27%). Cold winters. Most top companies are US offices, limiting equity upside.' },
+  { country: 'India', flag: '🇮🇳', hubs: 'Bangalore, Hyderabad, Chennai', seniors: '₹60L–120L ($72k–145k)', gradient: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.11))', border: 'rgba(251,191,36,0.3)', strengths: 'Rapidly growing compensation at top tier. Massive talent pool from IITs/IISc. Global company offices accelerating. PPP-adjusted salaries competitive.', watch: 'Absolute numbers still lower than Western markets. Varies enormously by company tier. Visa required for most Western opportunities.' },
+  { country: 'Singapore', flag: '🇸🇬', hubs: 'Singapore city', seniors: 'SGD $180k–250k ($133k–185k)', gradient: 'linear-gradient(135deg, rgba(244,63,94,0.2), rgba(244,63,94,0.11))', border: 'rgba(244,63,94,0.3)', strengths: 'Low income tax (22% top bracket). APAC hub for Google, Meta, ByteDance. Gateway between India and East Asia talent pools. English-speaking.', watch: 'Small market. Equity culture weaker than US. Very high cost of living. Limited local startup ecosystem.' },
 ]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -457,7 +457,7 @@ function SalarySection() {
         })}
       </div>
 
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
           <strong style={{ color: 'var(--mint)' }}>Reading this chart:</strong> The mint bar is base salary. The full bar (light green) includes equity (RSUs) and bonus. At senior US levels, equity can be 2–3× base. UK/EU equity culture is weaker — most of the bar is base.
           At FAANG, annual refresh grants (new equity each year) compound significantly over a multi-year tenure — not shown here.
@@ -507,7 +507,7 @@ function StackSection() {
             <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Philosophy</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{s.philosophy}</p>
           </div>
-          <div className="card" style={{ padding: '16px 20px', background: 'rgba(244,63,94,0.04)', borderColor: 'rgba(244,63,94,0.25)' }}>
+          <div className="card" style={{ padding: '16px 20px', background: 'rgba(244,63,94,0.10)', borderColor: 'rgba(244,63,94,0.25)' }}>
             <div style={{ fontSize: '12px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{s.antipattern}</p>
           </div>
@@ -568,11 +568,11 @@ function CompaniesSection() {
             <div style={{ fontSize: '12px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Tech highlights</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {c.techHighlights.map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: 'var(--sky)', fontFamily: 'var(--font-mono)' }}>{t}</span>
+                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.2)', color: 'var(--sky)', fontFamily: 'var(--font-mono)' }}>{t}</span>
               ))}
             </div>
           </div>
-          <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.04)', borderColor: 'rgba(240,165,0,0.18)' }}>
+          <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
             <div style={{ fontSize: '12px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Key insight</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{c.insight}</p>
           </div>

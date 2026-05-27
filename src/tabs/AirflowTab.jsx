@@ -175,7 +175,7 @@ function DAGFailureRoom() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.symptoms.map((s, i) => (
-            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }}>
               {s}
             </div>
           ))}
@@ -186,10 +186,10 @@ function DAGFailureRoom() {
         {scenario.options.map((opt, i) => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (i === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (i === picked) { bg = 'rgba(244,63,94,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
+            if (i === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (i === picked) { bg = 'rgba(244,63,94,0.15)'; border = 'var(--rose)'; color = 'var(--rose)' }
           } else if (i === picked) {
-            bg = 'rgba(249,115,22,0.08)'; border = 'var(--ember)'; color = 'var(--ember)'
+            bg = 'rgba(249,115,22,0.15)'; border = 'var(--ember)'; color = 'var(--ember)'
           }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
@@ -208,7 +208,7 @@ function DAGFailureRoom() {
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
-          <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.13)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
             <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Airflow Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>
@@ -374,10 +374,10 @@ function BackfillDecisionLab() {
         {scenario.options.map((opt, i) => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (i === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (i === picked) { bg = 'rgba(244,63,94,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
+            if (i === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (i === picked) { bg = 'rgba(244,63,94,0.15)'; border = 'var(--rose)'; color = 'var(--rose)' }
           } else if (i === picked) {
-            bg = 'rgba(249,115,22,0.08)'; border = 'var(--ember)'; color = 'var(--ember)'
+            bg = 'rgba(249,115,22,0.15)'; border = 'var(--ember)'; color = 'var(--ember)'
           }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
@@ -512,7 +512,7 @@ function LateDataHandler() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {ARRIVAL_PATTERNS.map(p => (
               <button key={p.id} onClick={() => setArrival(p.id)}
-                style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${arrival === p.id ? 'var(--ember)' : 'var(--rim)'}`, background: arrival === p.id ? 'rgba(249,115,22,0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${arrival === p.id ? 'var(--ember)' : 'var(--rim)'}`, background: arrival === p.id ? 'rgba(249,115,22,0.15)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                 <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: arrival === p.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{p.label}</div>
                 <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginTop: '2px' }}>{p.desc}</div>
               </button>
@@ -526,7 +526,7 @@ function LateDataHandler() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {REPROCESS_TOLERANCES.map(t => (
               <button key={t.id} onClick={() => setReprocess(t.id)}
-                style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${reprocess === t.id ? 'var(--ember)' : 'var(--rim)'}`, background: reprocess === t.id ? 'rgba(249,115,22,0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${reprocess === t.id ? 'var(--ember)' : 'var(--rim)'}`, background: reprocess === t.id ? 'rgba(249,115,22,0.15)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                 <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: reprocess === t.id ? 'var(--ember)' : 'var(--ink-mid)' }}>{t.label}</div>
                 <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginTop: '2px' }}>{t.desc}</div>
               </button>
@@ -542,7 +542,7 @@ function LateDataHandler() {
               const active = consumers.includes(d.id)
               return (
                 <button key={d.id} onClick={() => toggleConsumer(d.id)}
-                  style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${active ? 'var(--ember)' : 'var(--rim)'}`, background: active ? 'rgba(249,115,22,0.08)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                  style={{ padding: '9px 12px', borderRadius: '6px', border: `1px solid ${active ? 'var(--ember)' : 'var(--rim)'}`, background: active ? 'rgba(249,115,22,0.15)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '14px', height: '14px', borderRadius: '3px', border: `2px solid ${active ? 'var(--ember)' : 'var(--rim)'}`, background: active ? 'var(--ember)' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {active && <span style={{ color: 'white', fontSize: '9px', fontWeight: 700 }}>✓</span>}
@@ -572,7 +572,7 @@ function LateDataHandler() {
           <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{strat.config}</pre>
         </div>
 
-        <div style={{ padding: '12px 14px', background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: '8px' }}>
+        <div style={{ padding: '12px 14px', background: 'rgba(244,63,94,0.13)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: '8px' }}>
           <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Risks</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{strat.risks}</p>
         </div>
@@ -640,7 +640,7 @@ export default function AirflowTab({ onNavigate }) {
                 
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
                 {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
-                {m.status === 'soon' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>soon</span>}
+                {m.status === 'soon' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.11)', color: 'var(--ink-low)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>soon</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

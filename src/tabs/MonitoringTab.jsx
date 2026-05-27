@@ -161,7 +161,7 @@ function DriftDashboard() {
       </div>
 
       {revealed && (
-        <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.2)' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '10px' }}>📊 Post-mortem</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
             Drift started on <strong style={{ color: 'var(--rose)' }}>Day {driftDay}</strong>.
@@ -368,7 +368,7 @@ function KSTestExplorer() {
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: significant ? 'var(--rose)' : 'var(--mint)' }}>{result.pValue.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>threshold: 0.05</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.05)' : 'rgba(52,211,153,0.05)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
+        <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.11)' : 'rgba(52,211,153,0.11)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verdict</div>
           <div style={{ fontSize: '12px', color: statusColor, fontWeight: 600, lineHeight: 1.4 }}>
             {significant ? 'Significant difference — reject H₀' : 'No significant difference — fail to reject H₀'}
@@ -381,7 +381,7 @@ function KSTestExplorer() {
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '12px', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Empirical CDFs — reference vs current distribution</div>
         <svg viewBox={`0 0 ${W} ${H + 4}`} style={{ width: '100%', height: '160px', overflow: 'visible' }}>
           {[0.25, 0.5, 0.75].map(v => (
-            <line key={v} x1="0" y1={H - v * H} x2={W} y2={H - v * H} stroke="rgba(255,255,255,0.04)" strokeWidth="0.8" />
+            <line key={v} x1="0" y1={H - v * H} x2={W} y2={H - v * H} stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" />
           ))}
           {/* Shaded gap area between CDFs */}
           <path
@@ -390,7 +390,7 @@ function KSTestExplorer() {
               const y = H - p.f2 * H
               return `${x.toFixed(1)},${y.toFixed(1)}`
             }).join(' L')} Z`}
-            fill="rgba(245,158,11,0.07)" stroke="none"
+            fill="rgba(245,158,11,0.14)" stroke="none"
           />
           <path d={pathD('f1')} fill="none" stroke="var(--violet)" strokeWidth="1.8" />
           <path d={pathD('f2')} fill="none" stroke="var(--sky)"    strokeWidth="1.8" />
@@ -448,7 +448,7 @@ function KSTestExplorer() {
       </div>
 
       {/* Insight: n matters */}
-      <div className="card" style={{ padding: '14px', background: 'rgba(129,140,248,0.04)', border: '1px solid rgba(129,140,248,0.15)' }}>
+      <div className="card" style={{ padding: '14px', background: 'rgba(129,140,248,0.10)', border: '1px solid rgba(129,140,248,0.15)' }}>
         <span style={{ fontSize: '12px', color: 'var(--violet)', fontWeight: 600 }}>Key insight — sample size matters: </span>
         <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>
           The KS test is sensitive to n. With n = 50, a 0.5σ mean shift may not reach significance. With n = 5,000, even a 0.1σ shift will. In production with millions of predictions, almost any real drift will be statistically significant — the practical question is whether D is large enough to matter.
@@ -590,7 +590,7 @@ function AlertTuner() {
       <div className="card" style={{ padding: '16px' }}>
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Alert timeline — 30 days</div>
         <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${((driftDay - 1) / 30) * 100}%`, right: 0, background: 'rgba(244,63,94,0.05)', borderLeft: '1px dashed rgba(244,63,94,0.3)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${((driftDay - 1) / 30) * 100}%`, right: 0, background: 'rgba(244,63,94,0.11)', borderLeft: '1px dashed rgba(244,63,94,0.3)', pointerEvents: 'none' }} />
           <div style={{ display: 'flex', gap: '2px', position: 'relative' }}>
             {sim.days.map(d => {
               const dayAlerts = sim.alerts.filter(a => a.day === d.day)
@@ -619,7 +619,7 @@ function AlertTuner() {
       </div>
 
       {/* Recommendation */}
-      <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.04)' : sim.delay === null ? 'rgba(245,158,11,0.04)' : 'rgba(52,211,153,0.04)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
+      <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.10)' : sim.delay === null ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px' }}>📋 Recommendation</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
           {sim.delay === null
@@ -808,7 +808,7 @@ function IncidentTriage() {
 
           {!revealed ? (
             <button onClick={() => setRevealed(true)} className="card"
-              style={{ cursor: 'pointer', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.4)', padding: '12px', textAlign: 'center', width: '100%' }}>
+              style={{ cursor: 'pointer', background: 'rgba(240,165,0,0.15)', border: '1px dashed rgba(240,165,0,0.4)', padding: '12px', textAlign: 'center', width: '100%' }}>
               <span style={{ color: 'var(--prime)', fontWeight: 600, fontSize: '13px' }}>Reveal Triage Protocol + Anti-pattern →</span>
             </button>
           ) : (
@@ -824,7 +824,7 @@ function IncidentTriage() {
                   ))}
                 </div>
               </div>
-              <div style={{ background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
+              <div style={{ background: 'rgba(244,63,94,0.14)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
                 <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Anti-pattern to Avoid</div>
                 <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{incident.antipattern}</div>
               </div>
@@ -914,7 +914,7 @@ function MonitorCoverageAudit() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                 padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
                 border: `1px solid ${selected === s.id ? 'var(--prime)' : 'var(--rim)'}`,
-                background: selected === s.id ? 'rgba(240,165,0,0.08)' : 'var(--depth)',
+                background: selected === s.id ? 'rgba(240,165,0,0.15)' : 'var(--depth)',
                 transition: 'all 0.15s', minWidth: '80px',
               }}>
               <span style={{ fontSize: '18px' }}>{s.icon}</span>
@@ -930,7 +930,7 @@ function MonitorCoverageAudit() {
       {stage && (
         <div style={{ display: 'grid', gap: '12px' }}>
           {/* What's monitored */}
-          <div className="card" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.04)' }}>
+          <div className="card" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.10)' }}>
             <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>Typically Monitored</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {stage.monitored.map((m, i) => (
@@ -943,7 +943,7 @@ function MonitorCoverageAudit() {
           </div>
 
           {/* Blind spots */}
-          <div className="card" style={{ border: '1px solid rgba(244,63,94,0.3)', background: 'rgba(244,63,94,0.04)' }}>
+          <div className="card" style={{ border: '1px solid rgba(244,63,94,0.3)', background: 'rgba(244,63,94,0.10)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Blind Spots ({stage.blind_spots.length})</div>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -966,7 +966,7 @@ function MonitorCoverageAudit() {
                   <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Failure Signal</div>
                   <div style={{ fontSize: '12px', color: 'var(--ember)', lineHeight: 1.5 }}>{blind.signal}</div>
                 </div>
-                <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '6px', padding: '10px' }}>
+                <div style={{ background: 'rgba(99,102,241,0.13)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '6px', padding: '10px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Fix</div>
                   <div style={{ fontSize: '12px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{blind.fix}</div>
                 </div>
@@ -1011,7 +1011,7 @@ export default function MonitoringTab({ onNavigate }) {
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
-        <div style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
             📖 Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Concept Drift: How to Detect It Before It Destroys Your Model</strong> in Gradient
           </span>

@@ -280,7 +280,7 @@ function FreezeLoRAModule() {
           </div>
 
           {/* Risk callout */}
-          <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.22)', borderRadius: '8px' }}>
+          <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.14)', border: '1px solid rgba(240,165,0,0.22)', borderRadius: '8px' }}>
             <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '6px' }}>
               Risk: if you used full fine-tune instead
             </div>
@@ -445,7 +445,7 @@ function LRStrategyModule() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.details.map((d, i) => (
-            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }}>
               {d}
             </div>
           ))}
@@ -457,10 +457,10 @@ function LRStrategyModule() {
         {LR_OPTIONS.map(opt => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (opt.id === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (opt.id === picked)     { bg = 'rgba(244,63,94,0.08)';  border = 'var(--rose)'; color = 'var(--rose)' }
+            if (opt.id === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (opt.id === picked)     { bg = 'rgba(244,63,94,0.15)';  border = 'var(--rose)'; color = 'var(--rose)' }
           } else if (opt.id === picked) {
-            bg = 'rgba(99,102,241,0.08)'; border = 'var(--violet)'; color = 'var(--violet)'
+            bg = 'rgba(99,102,241,0.15)'; border = 'var(--violet)'; color = 'var(--violet)'
           }
           return (
             <button key={opt.id} onClick={() => choose(opt.id)} disabled={revealed}
@@ -480,7 +480,7 @@ function LRStrategyModule() {
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{LR_OPTIONS.find(o => o.id === scenario.answer)?.label}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
-          <div style={{ padding: '12px 14px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(99,102,241,0.13)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
             <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Practical note</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.note}</p>
           </div>
@@ -624,7 +624,7 @@ function PEFTComparisonModule() {
         {ranked.map((method, rank) => {
           const isTop    = constraint && method.scores[constraint] === topScore
           const accent   = isTop ? 'var(--violet)' : 'var(--rim)'
-          const bgBoost  = isTop ? 'rgba(99,102,241,0.04)' : 'transparent'
+          const bgBoost  = isTop ? 'rgba(99,102,241,0.10)' : 'transparent'
           return (
             <div key={method.id} className="card" style={{ padding: '18px 20px', borderLeft: `3px solid ${accent}`, background: bgBoost, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap' }}>

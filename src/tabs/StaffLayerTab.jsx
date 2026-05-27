@@ -375,7 +375,7 @@ export default function StaffLayerTab({ onNavigate }) {
                     <LevelBlock
                       label="Staff"
                       text={s.staff}
-                      bgColor="rgba(240,165,0,0.05)"
+                      bgColor="rgba(240,165,0,0.11)"
                       borderColor="var(--prime)"
                       labelColor="var(--prime)"
                       borderWidth="3px"
@@ -408,7 +408,7 @@ function LevelBlock({ label, text, bgColor, borderColor, labelColor, borderWidth
 function RevealButton({ level, onReveal }) {
   const configs = {
     0: { label: 'Reveal IC3', bg: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)' },
-    1: { label: 'Reveal IC5', bg: 'rgba(34,211,238,0.08)', color: 'var(--sky)', border: '1px solid var(--sky)' },
+    1: { label: 'Reveal IC5', bg: 'rgba(34,211,238,0.15)', color: 'var(--sky)', border: '1px solid var(--sky)' },
     2: { label: 'Reveal Staff', bg: 'rgba(240,165,0,0.15)', color: 'var(--prime)', border: '1px solid var(--prime)' },
   }
   const cfg = configs[level]

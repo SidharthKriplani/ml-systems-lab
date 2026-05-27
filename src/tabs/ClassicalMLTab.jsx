@@ -360,7 +360,7 @@ function ModelFailureZoo() {
 
           {/* Production note */}
           <div style={{
-            background: 'rgba(52,211,153,0.05)',
+            background: 'rgba(52,211,153,0.11)',
             border: '1px solid rgba(52,211,153,0.15)',
             borderRadius: '8px',
             padding: '12px 14px',
@@ -463,7 +463,7 @@ function EnsembleDecisionLab() {
 
                 if (isRevealed) {
                   if (isCorrectOpt) { borderColor = 'var(--mint)'; bgColor = 'rgba(52,211,153,0.1)'; textColor = 'var(--mint)' }
-                  else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.08)'; textColor = 'var(--rose)' }
+                  else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.15)'; textColor = 'var(--rose)' }
                 } else if (isSelected) {
                   borderColor = 'var(--violet)'; bgColor = 'rgba(139,92,246,0.1)'; textColor = 'var(--violet)'
                 }
@@ -617,7 +617,7 @@ function HyperparamPriority() {
 
                 if (isRevealed) {
                   if (isCorrectOpt) { borderColor = 'var(--mint)'; bgColor = 'rgba(52,211,153,0.1)'; textColor = 'var(--mint)' }
-                  else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.08)'; textColor = 'var(--rose)' }
+                  else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.15)'; textColor = 'var(--rose)' }
                 } else if (isSelected) {
                   borderColor = 'var(--violet)'; bgColor = 'rgba(139,92,246,0.1)'; textColor = 'var(--violet)'
                 }

@@ -127,7 +127,7 @@ function CiCdGates() {
             <div key={g.id} className="card" style={{
               padding: '14px 16px',
               border: matchExpert ? '1px solid rgba(34,197,94,0.3)' : mismatch ? '1px solid rgba(244,63,94,0.3)' : '1px solid var(--rim)',
-              background: matchExpert ? 'rgba(34,197,94,0.04)' : mismatch ? 'rgba(244,63,94,0.04)' : 'transparent',
+              background: matchExpert ? 'rgba(34,197,94,0.10)' : mismatch ? 'rgba(244,63,94,0.10)' : 'transparent',
               transition: 'all 0.15s',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -175,7 +175,7 @@ function CiCdGates() {
           Compare to expert recommendation
         </button>
       ) : (
-        <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
           <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>
             {matches}/{GATES.length} gates matched expert config
           </div>
@@ -326,7 +326,7 @@ function InfraDecision() {
                   style={{
                     border: `1.5px solid ${params[key] === opt.id ? 'var(--rose)' : 'var(--rim)'}`,
                     borderRadius: '7px', padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
-                    background: params[key] === opt.id ? 'rgba(244,63,94,0.08)' : 'transparent',
+                    background: params[key] === opt.id ? 'rgba(244,63,94,0.15)' : 'transparent',
                     transition: 'all 0.12s',
                   }}>
                   <div style={{ ...grotesk, fontSize: '12px', fontWeight: 600, color: params[key] === opt.id ? 'var(--rose)' : 'var(--ink-hi)' }}>
@@ -343,7 +343,7 @@ function InfraDecision() {
       </div>
 
       {/* Top recommendation */}
-      <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.25)' }}>
+      <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.25)' }}>
         <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Recommended
         </div>
@@ -485,7 +485,7 @@ function RegistryPatterns() {
               style={{
                 ...mono, fontSize: '12px', padding: '5px 10px', borderRadius: '6px',
                 border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.08)' : done ? (correct ? 'rgba(34,197,94,0.07)' : 'rgba(244,63,94,0.07)') : 'transparent',
+                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
                 color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
@@ -520,9 +520,9 @@ function RegistryPatterns() {
           const isCorrect = opt.id === scenario.correct
           let borderColor = 'var(--rim)'
           let bg = 'transparent'
-          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.08)' }
-          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.08)' }
-          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.05)' }
+          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.15)' }
+          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.15)' }
+          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.11)' }
           return (
             <button key={opt.id} onClick={() => choose(opt.id)}
               style={{
@@ -544,7 +544,7 @@ function RegistryPatterns() {
       {isRevealed && (
         <div className="card animate-slide-up" style={{
           padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.06)' : 'rgba(244,63,94,0.06)',
+          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
           border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
         }}>
           <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
@@ -604,7 +604,7 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>{m.label}
+            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.15)' } : {}}>{m.label}
           </button>
         ))}
       </div>

@@ -183,7 +183,7 @@ function IncidentRoom() {
                 style={{
                   textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: selected ? (isSelected ? 'default' : 'not-allowed') : 'pointer',
                   border: `1px solid ${isRight ? 'rgba(52,211,153,0.50)' : isWrong ? 'rgba(244,63,94,0.5)' : 'var(--rim)'}`,
-                  background: isRight ? 'rgba(240,165,0,0.07)' : isWrong ? 'rgba(244,63,94,0.08)' : 'var(--depth)',
+                  background: isRight ? 'rgba(240,165,0,0.14)' : isWrong ? 'rgba(244,63,94,0.15)' : 'var(--depth)',
                   color: isRight ? 'var(--mint)' : isWrong ? 'var(--rose)' : isSelected ? 'var(--ink-hi)' : 'var(--ink-low)',
                   fontFamily: "'Inter',sans-serif", fontSize: '13.5px', opacity: selected && !isSelected ? 0.4 : 1,
                   transition: 'all 0.15s',
@@ -195,7 +195,7 @@ function IncidentRoom() {
         </div>
 
         {selected && !isCorrect && (
-          <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '8px', fontSize: '13px', color: 'var(--rose)' }}>
+          <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(244,63,94,0.14)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '8px', fontSize: '13px', color: 'var(--rose)' }}>
             Not quite. Review the evidence again — particularly the feature pipeline logs and freshness data.
             <button onClick={() => { setSelected(null); setShowFix(false) }}
               style={{ marginLeft: '12px', background: 'none', border: '1px solid rgba(244,63,94,0.4)', color: 'var(--rose)', borderRadius: '6px', padding: '2px 10px', cursor: 'pointer', fontSize: '12px' }}>
@@ -208,11 +208,11 @@ function IncidentRoom() {
       {/* Fix + lesson */}
       {showFix && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="card" style={{ borderColor: 'rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.04)' }}>
+          <div className="card" style={{ borderColor: 'rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.10)' }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--mint)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.fix}</p>
           </div>
-          <div className="card" style={{ borderColor: 'rgba(56,189,248,0.25)', background: 'rgba(56,189,248,0.04)' }}>
+          <div className="card" style={{ borderColor: 'rgba(56,189,248,0.25)', background: 'rgba(56,189,248,0.10)' }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--sky)', marginBottom: '8px' }}>Lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.lesson}</p>
           </div>
@@ -516,7 +516,7 @@ function DSOwnershipChain() {
               {/* Node card */}
               <div style={{ flex: 1, marginBottom: i < DS_CHAIN.length - 1 ? '6px' : '0', marginLeft: '10px' }}>
                 <button onClick={() => setOpenId(isOpen ? null : node.id)}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: isOpen ? 'rgba(240,165,0,0.05)' : 'transparent', border: `1px solid ${isOpen ? 'rgba(240,165,0,0.20)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: isOpen ? 'rgba(240,165,0,0.11)' : 'transparent', border: `1px solid ${isOpen ? 'rgba(240,165,0,0.20)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div>
                       <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--mint)' : 'var(--ink-hi)' }}>{node.title}</span>
@@ -545,7 +545,7 @@ function DSOwnershipChain() {
                       <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{node.own}</p>
                     </div>
                     <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
-                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim)'}`, background: isDone ? 'rgba(52,211,153,0.08)' : 'transparent', color: isDone ? 'var(--mint)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim)'}`, background: isDone ? 'rgba(52,211,153,0.15)' : 'transparent', color: isDone ? 'var(--mint)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                       {isDone ? '✓ Marked as reviewed' : 'Mark as reviewed'}
                     </button>
                   </div>
@@ -688,7 +688,7 @@ function IncidentScenarios() {
       </div>
 
       {/* Pressure card */}
-      <div style={{ padding: '20px 24px', background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.22)', borderRadius: '12px' }}>
+      <div style={{ padding: '20px 24px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.22)', borderRadius: '12px' }}>
         <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Business pressure</div>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 500, color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0 }}>"{sc.pressure}"</p>
       </div>
@@ -722,7 +722,7 @@ function IncidentScenarios() {
           ))}
 
           {/* Lesson */}
-          <div style={{ marginTop: '4px', padding: '14px 18px', background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: '10px' }}>
+          <div style={{ marginTop: '4px', padding: '14px 18px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: '10px' }}>
             <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Key lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.lesson}</p>
           </div>
@@ -1541,7 +1541,7 @@ function ServingTradeoffLab() {
       </div>
 
       {/* Recommendation */}
-      <div style={{ padding: '20px 22px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ padding: '20px 22px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Recommended architecture</div>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--prime)' }}>{recommended.name}</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{recommended.reason}</p>
@@ -1627,7 +1627,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
         {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
@@ -1639,7 +1639,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
         const it = items[i]
         const isCorrect = it.revealed && it.picked === sc.answer
         return (
-          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.08)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
@@ -1649,7 +1649,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
 
             {it.open && (
               <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
+                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
@@ -1667,8 +1667,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                     const isAns    = sc.answer === oi
                     let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
                     if (it.revealed) {
-                      if (isAns)          { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
-                      else if (isPicked)  { bg = 'rgba(239,68,68,0.08)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
+                      if (isAns)          { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
+                      else if (isPicked)  { bg = 'rgba(239,68,68,0.15)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
                     } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
@@ -1683,11 +1683,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
 
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
-                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
@@ -1811,7 +1811,7 @@ function RAGArchitecture() {
 const TT_NODES = [
   {
     id: 'user_features', label: 'User Features', sub: 'activity, demographics, context',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
     what: 'Raw user signals fed into the user tower: recent activity (clicks, watches, purchases), demographic attributes, and request context (time of day, device, location).',
     decisions: 'Which features to include at query time vs pre-compute in batch. Real-time features (last-5-clicks) add freshness but increase serving latency.',
     failures: 'Including future-leaking features during training (e.g., post-event engagement). Real-time feature retrieval fails under load, causing stale fallback or dropped requests.',
@@ -1819,7 +1819,7 @@ const TT_NODES = [
   },
   {
     id: 'item_features', label: 'Item Features', sub: 'content, metadata, popularity',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
     what: 'Static and slowly-changing item attributes: content signals (text, image embeddings), metadata (category, price, age), and popularity signals (CTR, rating).',
     decisions: 'How frequently to refresh item features. Popularity signals change hourly; content signals are stable. Mixing staleness tolerances complicates the pipeline.',
     failures: 'Stale item features for trending content. New items have no popularity signal — cold-start problem requires a separate fallback strategy.',
@@ -1827,7 +1827,7 @@ const TT_NODES = [
   },
   {
     id: 'user_tower', label: 'User Tower', sub: 'DNN encoder',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
     what: 'Independent DNN that maps user context to a fixed-size embedding vector. Runs at query time on the online path — must be fast (typically <10ms).',
     decisions: 'Embedding dimension (64–512), whether to include real-time features vs batch-only, staleness tolerance. Deeper towers capture more signal but add latency.',
     failures: 'Tower learns popularity bias rather than preference signal; user embedding drifts when behavior shifts after major product changes.',
@@ -1835,7 +1835,7 @@ const TT_NODES = [
   },
   {
     id: 'item_tower', label: 'Item Tower', sub: 'DNN encoder',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
     what: 'Mirror DNN that maps item features to the same embedding space as the user tower. Runs offline to pre-compute embeddings for all items in the catalog.',
     decisions: 'Same architecture as user tower (shared dim) to enable dot-product similarity. Separate towers allow independent feature sets for users vs items.',
     failures: 'Architecture mismatch between user and item tower output dims breaks the ANN index at deployment. Schema changes in item features require full re-embedding.',
@@ -1843,7 +1843,7 @@ const TT_NODES = [
   },
   {
     id: 'user_emb', label: 'User Embedding', sub: 'd=256 vector',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
     what: 'Fixed-dimension float vector representing the user in the shared embedding space. Computed at query time by the user tower. Used as the query vector for ANN search.',
     decisions: 'Dimension tradeoff: higher dim = more expressiveness, but larger ANN index and more compute. 64–256 is typical; >512 rarely justified.',
     failures: 'Embedding dimension changed after ANN index was built — requires full index rebuild. User embedding at training time differs from serving time due to feature pipeline divergence.',
@@ -1851,7 +1851,7 @@ const TT_NODES = [
   },
   {
     id: 'item_emb', label: 'Item Embeddings', sub: 'pre-computed offline',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
     what: 'All item embeddings pre-computed offline and loaded into the ANN index. This decoupling is the core architectural insight that makes billion-scale retrieval possible.',
     decisions: 'Index rebuild frequency (hourly vs daily), handling new items not yet embedded (cold-start fallback to content-based or popularity-based retrieval).',
     failures: 'Stale embeddings serve yesterday\'s catalog. New items invisible until next index rebuild. Deleted items remain in index until rebuild, causing dead links.',
@@ -1859,7 +1859,7 @@ const TT_NODES = [
   },
   {
     id: 'ann', label: 'ANN Index', sub: 'FAISS / ScaNN',
-    color: 'var(--ember)', bg: 'rgba(249,115,22,0.08)',
+    color: 'var(--ember)', bg: 'rgba(249,115,22,0.15)',
     what: 'Approximate Nearest Neighbor search index containing all pre-computed item embeddings. Returns top-K items by cosine or dot-product similarity to the user query vector.',
     decisions: 'FAISS IVF vs HNSW vs ScaNN — latency vs recall tradeoff. K size (200–1000). Index must fit in memory; sharding required at billion-item scale.',
     failures: 'ANN recall at 95% means 5% of true nearest neighbors are missed; higher K downstream compensates but adds ranker load. Index too large for single node requires distributed ANN.',
@@ -1867,7 +1867,7 @@ const TT_NODES = [
   },
   {
     id: 'candidates', label: 'Top-K Candidates', sub: 'k=500',
-    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.04)',
+    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.10)',
     what: 'The set of K approximately-nearest items returned by ANN. These are the candidates passed to the ranker for re-scoring with richer features.',
     decisions: 'K size balances ranker load vs retrieval coverage. K=200 is cheap; K=1000 recovers more ANN misses but multiplies ranker cost by 5x.',
     failures: 'K too small: genuine best items not retrieved, ranker cannot recover them. K too large: ranker becomes the bottleneck at high QPS.',
@@ -1875,7 +1875,7 @@ const TT_NODES = [
   },
   {
     id: 'ranker', label: 'Ranking Model', sub: 'pointwise or LTR',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'Pointwise or listwise model that re-scores the K candidates with richer features unavailable at retrieval time (e.g., user-item interaction features, business rules).',
     decisions: 'Pointwise (independent scores) vs pairwise vs listwise loss. Whether to add interaction features unavailable at retrieval time. Budget for how many features are practical at K=500.',
     failures: 'Ranker sees a biased candidate set — it can only rank what retrieval surfaced, so retrieval errors compound. Ranker overfits to popular items if training data is not debiased.',
@@ -1883,7 +1883,7 @@ const TT_NODES = [
   },
   {
     id: 'result', label: 'Final Results', sub: 'Top-10 served',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'The top-N items after ranking, subject to business rules (diversity constraints, exclusion lists, sponsored slots). What the user sees.',
     decisions: 'Post-ranking business rules: deduplication, diversity enforcement, sponsored item injection. Caching strategy for identical requests.',
     failures: 'Business rules applied inconsistently across platforms. Diversity logic reduces measured CTR in A/B but improves long-term retention — easy to misread.',
@@ -1991,7 +1991,7 @@ function TwoTowerArchitecture() {
                 <g key={n.id} onClick={() => setSelected(isSel ? null : n.id)} style={{ cursor: 'pointer' }}>
                   <rect
                     x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
-                    fill={isSel ? n.bg : 'rgba(255,255,255,0.03)'}
+                    fill={isSel ? n.bg : 'rgba(255,255,255,0.07)'}
                     stroke={isSel ? n.color : 'rgba(255,255,255,0.1)'}
                     strokeWidth={isSel ? 2 : 1}
                   />
@@ -2032,7 +2032,7 @@ function TwoTowerArchitecture() {
           </div>
         </div>
       ) : (
-        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)' }}>
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.15)' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Key insight</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
             Two-tower decouples user and item encoding so all item embeddings can be pre-computed offline. The online path is just one user tower forward pass + ANN lookup — that's why it scales to billions of items at sub-50ms latency.

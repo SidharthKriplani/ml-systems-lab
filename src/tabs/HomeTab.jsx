@@ -40,15 +40,15 @@ function ScenarioMockup() {
   return (
     <div className="mockup-float" style={{ position: 'relative' }}>
       <div style={{ position: 'absolute', inset: '-40px', background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(240,165,0,0.14) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(160deg, rgba(255,255,255,0.055) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+      <div style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(160deg, rgba(255,255,255,0.055) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.11), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
         {/* Browser chrome */}
-        <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.035)', borderBottom: '1px solid rgba(255,255,255,0.14)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ display: 'flex', gap: '5px' }}>
             {['rgba(244,63,94,0.7)','rgba(249,115,22,0.7)','rgba(52,211,153,0.7)'].map((c,i) => (
               <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: c }} />
             ))}
           </div>
-          <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: '5px', height: '18px', maxWidth: '180px', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.13)', borderRadius: '5px', height: '18px', maxWidth: '180px', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
             <span style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>ml-systems-lab.vercel.app</span>
           </div>
         </div>
@@ -63,14 +63,14 @@ function ScenarioMockup() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '11px' }}>
             {opts.map(opt => (
-              <div key={opt.l} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 10px', background: opt.selected ? 'rgba(52,211,153,0.10)' : 'rgba(255,255,255,0.025)', border: `1px solid ${opt.selected ? 'rgba(52,211,153,0.38)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '7px' }}>
+              <div key={opt.l} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 10px', background: opt.selected ? 'rgba(52,211,153,0.10)' : 'rgba(255,255,255,0.025)', border: `1px solid ${opt.selected ? 'rgba(52,211,153,0.38)' : 'rgba(255,255,255,0.14)'}`, borderRadius: '7px' }}>
                 <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: opt.selected ? 'var(--mint)' : 'var(--ink-ghost)', fontWeight: 700, flexShrink: 0, paddingTop: '1px' }}>{opt.l}</span>
                 <span style={{ fontSize: '10px', color: opt.selected ? 'var(--ink-hi)' : 'var(--ink-mid)', lineHeight: 1.45, fontFamily: 'var(--font-sans)' }}>{opt.text}</span>
                 {opt.selected && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '11px', flexShrink: 0 }}>✓</span>}
               </div>
             ))}
           </div>
-          <div style={{ padding: '10px 12px', background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.18)', borderRadius: '8px' }}>
+          <div style={{ padding: '10px 12px', background: 'rgba(52,211,153,0.14)', border: '1px solid rgba(52,211,153,0.18)', borderRadius: '8px' }}>
             <div style={{ fontSize: '9px', color: 'var(--mint)', fontWeight: 700, marginBottom: '4px', fontFamily: 'var(--font-sans)' }}>✓ Correct — Feature store time-travel bug</div>
             <div style={{ fontSize: '9px', color: 'var(--ink-mid)', lineHeight: 1.55, fontFamily: 'var(--font-sans)' }}>In production, this breaks as: silent drift, no pipeline errors. The tell: feature timestamps stop advancing while serving still returns HTTP 200.</div>
           </div>
@@ -113,7 +113,7 @@ const LEARNING_PATHS = [
     name: 'MLE Interview Ready',
     duration: '2 weeks',
     outcome: 'Confident across system design, evaluation, and ML rounds at Meta, Spotify, Google, or Airbnb.',
-    accent: 'var(--gold)', border: 'rgba(251,191,36,0.22)', bg: 'rgba(251,191,36,0.04)',
+    accent: 'var(--gold)', border: 'rgba(251,191,36,0.22)', bg: 'rgba(251,191,36,0.10)',
     steps: [
       { tab: 'interview',  label: 'Question Bank — System Design',  desc: 'Work through all system design questions. Build a reusable 6-step framework.' },
       { tab: 'interview',  label: 'Fluency Drills',                 desc: '30 weak→strong vocabulary pairs. Replace vague phrases with production-grade ones.' },
@@ -129,7 +129,7 @@ const LEARNING_PATHS = [
     name: 'Data Engineering Track',
     duration: '3 weeks',
     outcome: 'Design, debug, and operate production data pipelines — from Spark to orchestration to storage.',
-    accent: 'var(--ember)', border: 'rgba(249,115,22,0.22)', bg: 'rgba(249,115,22,0.04)',
+    accent: 'var(--ember)', border: 'rgba(249,115,22,0.22)', bg: 'rgba(249,115,22,0.10)',
     steps: [
       { tab: 'spark',    label: 'Shuffle Hell + Skew Doctor',      desc: 'Understand Spark execution mechanics. Diagnose and fix data skew.' },
       { tab: 'airflow',  label: 'DAG Failure Room',                desc: 'Diagnose 8 types of broken DAGs. Trigger rules, timezone bugs, zombie tasks.' },
@@ -144,7 +144,7 @@ const LEARNING_PATHS = [
     name: 'Deep Learning for Production',
     duration: '2 weeks',
     outcome: 'Debug training failures, make fine-tuning decisions, and serve models at p99 without an oncall incident.',
-    accent: 'var(--violet)', border: 'rgba(99,102,241,0.22)', bg: 'rgba(99,102,241,0.04)',
+    accent: 'var(--violet)', border: 'rgba(99,102,241,0.22)', bg: 'rgba(99,102,241,0.10)',
     steps: [
       { tab: 'dl',          label: 'Training Failure Diagnosis',     desc: '8 scenarios: NaN loss, vanishing gradients, dead ReLUs, data leakage.' },
       { tab: 'dl',          label: 'Backprop Debugging',             desc: 'Per-layer gradient norms. Which layers are learning, which are dead.' },
@@ -159,7 +159,7 @@ const LEARNING_PATHS = [
     name: 'Production ML Fundamentals',
     duration: '3 weeks',
     outcome: 'Build, debug, and monitor an ML pipeline end-to-end. Know what breaks and why before it pages you.',
-    accent: 'var(--mint)', border: 'rgba(52,211,153,0.22)', bg: 'rgba(52,211,153,0.04)',
+    accent: 'var(--mint)', border: 'rgba(52,211,153,0.22)', bg: 'rgba(52,211,153,0.10)',
     steps: [
       { tab: 'features',    label: 'Skew Simulator',                 desc: 'Break features intentionally. Build intuition for training-serving skew.' },
       { tab: 'features',    label: 'Feature Store Designer',         desc: 'Point-in-time correct joins. Dual-layer feature store design.' },
@@ -175,7 +175,7 @@ const LEARNING_PATHS = [
     name: 'Staff-Level System Design',
     duration: '4 weeks',
     outcome: 'Design and defend end-to-end ML platforms. Trade-off reasoning at the Staff/Principal level.',
-    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.04)',
+    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.10)',
     steps: [
       { tab: 'design',     label: 'Design Canvas',                  desc: 'Full ML system design: rec systems, fraud detection, search ranking.' },
       { tab: 'design',     label: 'Two-Tower Explorer',             desc: 'The retrieval architecture behind every major recommendation system.' },
@@ -191,7 +191,7 @@ const LEARNING_PATHS = [
     name: 'Data Scientist Track',
     duration: '2 weeks',
     outcome: 'Model selection, causal identification, and time series judgment — the three areas that separate good DS from great DS.',
-    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.04)',
+    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.10)',
     steps: [
       { tab: 'ds',     label: 'Model Selection Oracle',    desc: 'When linear vs tree vs neural — the defaults that get you 80% of the way.' },
       { tab: 'ds',     label: 'Analysis Mistakes',         desc: '8 antipatterns: p-hacking, Simpson\'s paradox, survivorship bias, Goodhart\'s Law.' },
@@ -206,7 +206,7 @@ const LEARNING_PATHS = [
     name: 'MLOps & Deployment',
     duration: '2 weeks',
     outcome: 'Ship models safely, monitor them continuously, and respond to production degradation without panic.',
-    accent: 'var(--rose)', border: 'rgba(244,63,94,0.22)', bg: 'rgba(244,63,94,0.04)',
+    accent: 'var(--rose)', border: 'rgba(244,63,94,0.22)', bg: 'rgba(244,63,94,0.10)',
     steps: [
       { tab: 'mlops_deploy', label: 'Deployment Strategy',          desc: 'Blue-green, canary, shadow, feature flag — which for which situation.' },
       { tab: 'mlops_deploy', label: 'Champion-Challenger',          desc: 'The 4-decision promotion framework. Metrics, SLA, rollback triggers.' },
@@ -221,31 +221,31 @@ const LEARNING_PATHS = [
 // ── Track grid ────────────────────────────────────────────────────────────────
 const TRACKS = [
   // ML Engineering
-  { id: 'models',       label: 'Math Foundations',    type: 'sandbox',  accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'The math behind the decisions — PCA, SVD, calibration, regularization. Python cells for hands-on exploration.' },
-  { id: 'features',     label: 'Feature Engineering', type: 'judgment', accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.04)', modules: ['Skew Simulator', 'Feature Store Designer', 'Leakage Zoo', 'Online/Offline Decider'], description: 'Training-serving skew, feature stores, leakage patterns. The bugs that silently corrupt production models.' },
-  { id: 'eval',         label: 'Model Evaluation',    type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
-  { id: 'design',       label: 'System Design',       type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production incident diagnosis, ML platform design, two-tower retrieval, serving architecture decisions.' },
-  { id: 'classical',    label: 'Classical ML',         type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.04)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
+  { id: 'models',       label: 'Math Foundations',    type: 'sandbox',  accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.10)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'The math behind the decisions — PCA, SVD, calibration, regularization. Python cells for hands-on exploration.' },
+  { id: 'features',     label: 'Feature Engineering', type: 'judgment', accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.10)', modules: ['Skew Simulator', 'Feature Store Designer', 'Leakage Zoo', 'Online/Offline Decider'], description: 'Training-serving skew, feature stores, leakage patterns. The bugs that silently corrupt production models.' },
+  { id: 'eval',         label: 'Model Evaluation',    type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.10)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
+  { id: 'design',       label: 'System Design',       type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production incident diagnosis, ML platform design, two-tower retrieval, serving architecture decisions.' },
+  { id: 'classical',    label: 'Classical ML',         type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.10)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
   // Data Engineering
-  { id: 'spark',        label: 'Spark Lab',            type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Diagnose shuffle bottlenecks, fix data skew, read execution DAGs.' },
-  { id: 'airflow',      label: 'Airflow',              type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
-  { id: 'dbt',          label: 'dbt',                  type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
-  { id: 'modeling',     label: 'Data Modeling',        type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.04)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
+  { id: 'spark',        label: 'Spark Lab',            type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Diagnose shuffle bottlenecks, fix data skew, read execution DAGs.' },
+  { id: 'airflow',      label: 'Airflow',              type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
+  { id: 'dbt',          label: 'dbt',                  type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
+  { id: 'modeling',     label: 'Data Modeling',        type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
   // Deep Learning
-  { id: 'dl',           label: 'Training Lab',         type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
-  { id: 'dl_finetune',  label: 'Fine-tuning',          type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
-  { id: 'dl_serving',   label: 'DL Serving',           type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.04)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
+  { id: 'dl',           label: 'Training Lab',         type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
+  { id: 'dl_finetune',  label: 'Fine-tuning',          type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
+  { id: 'dl_serving',   label: 'DL Serving',           type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
   // MLOps
-  { id: 'monitor',      label: 'Monitoring',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Drift Dashboard', 'PSI Lab', 'Incident Triage', 'Coverage Audit'], description: 'Drift detection, PSI/KS thresholds, incident triage, monitoring blind spots.' },
-  { id: 'mlops_deploy', label: 'Deployment',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
-  { id: 'mlops_pipes',  label: 'CI/CD & Infra',        type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.04)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
+  { id: 'monitor',      label: 'Monitoring',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['Drift Dashboard', 'PSI Lab', 'Incident Triage', 'Coverage Audit'], description: 'Drift detection, PSI/KS thresholds, incident triage, monitoring blind spots.' },
+  { id: 'mlops_deploy', label: 'Deployment',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
+  { id: 'mlops_pipes',  label: 'CI/CD & Infra',        type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
   // Data Science
-  { id: 'ds',           label: 'DS Fundamentals',      type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Model Selection Oracle', 'Analysis Mistakes', 'Calibration', 'Metric Design Pitfalls'], description: 'Model selection, statistical testing pitfalls, calibration, and metric design under Goodhart\'s Law.' },
-  { id: 'causal',       label: 'Causal Inference',     type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Causal vs Predictive', 'Identification Strategies', 'Confounder or Collider'], description: 'When prediction isn\'t enough. Identification strategies, confounders vs colliders, uplift modeling.' },
-  { id: 'ts',           label: 'Time Series',          type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Forecast Failure Zoo', 'Stationarity & Transforms', 'Anomaly Detection Tiers'], description: 'Why forecasts fail in production. Stationarity decisions, anomaly detection tier selection.' },
+  { id: 'ds',           label: 'DS Fundamentals',      type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Model Selection Oracle', 'Analysis Mistakes', 'Calibration', 'Metric Design Pitfalls'], description: 'Model selection, statistical testing pitfalls, calibration, and metric design under Goodhart\'s Law.' },
+  { id: 'causal',       label: 'Causal Inference',     type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Causal vs Predictive', 'Identification Strategies', 'Confounder or Collider'], description: 'When prediction isn\'t enough. Identification strategies, confounders vs colliders, uplift modeling.' },
+  { id: 'ts',           label: 'Time Series',          type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Forecast Failure Zoo', 'Stationarity & Transforms', 'Anomaly Detection Tiers'], description: 'Why forecasts fail in production. Stationarity decisions, anomaly detection tier selection.' },
   // Resources
-  { id: 'interview',    label: 'Interview Prep',       type: 'reference', accent: 'var(--gold)',  border: 'rgba(251,191,36,0.2)', bg: 'rgba(251,191,36,0.04)', modules: ['52 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
-  { id: 'gradient',     label: 'Gradient',             type: 'reading',  accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.04)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
+  { id: 'interview',    label: 'Interview Prep',       type: 'reference', accent: 'var(--gold)',  border: 'rgba(251,191,36,0.2)', bg: 'rgba(251,191,36,0.10)', modules: ['52 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
+  { id: 'gradient',     label: 'Gradient',             type: 'reading',  accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
 ]
 
 const TAB_ACCENT = {
@@ -287,7 +287,7 @@ const TYPE_BADGE = {
   judgment:  { label: 'judgment',  color: 'var(--sky)',    bg: 'rgba(34,211,238,0.1)',  border: 'rgba(34,211,238,0.25)' },
   sandbox:   { label: 'sandbox',   color: 'var(--violet)', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
   reference: { label: 'reference', color: 'var(--gold)',   bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' },
-  reading:   { label: 'reading',   color: 'var(--ink-low)',bg: 'rgba(255,255,255,0.04)',border: 'var(--rim)' },
+  reading:   { label: 'reading',   color: 'var(--ink-low)',bg: 'rgba(255,255,255,0.10)',border: 'var(--rim)' },
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -351,7 +351,7 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Hero ── */}
       <section style={{ position: 'relative' }}>
         {/* Ambient orb */}
-        <div className="orb-pulse" style={{ position: 'absolute', top: '-100px', left: '-80px', width: '600px', height: '500px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.05) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+        <div className="orb-pulse" style={{ position: 'absolute', top: '-100px', left: '-80px', width: '600px', height: '500px', background: 'radial-gradient(ellipse at 40% 40%, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.11) 45%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
         {/* Two-column grid: text left, mockup right */}
         <div className="hero-grid">
 
@@ -392,7 +392,7 @@ export default function HomeTab({ onNavigate }) {
       {/* ── Feature cards ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '10px' }}>
         {FEATURES.map(f => (
-          <div key={f.label} style={{ padding: '22px', background: 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+          <div key={f.label} style={{ padding: '22px', background: 'linear-gradient(160deg, rgba(255,255,255,0.045) 0%, var(--depth) 30%)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.13)' }}>
             <div style={{ color: f.accent, marginBottom: '14px', opacity: 0.90 }}>{f.svg}</div>
             <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'var(--font-sans)', lineHeight: 1, letterSpacing: '-0.05em', background: `linear-gradient(135deg, ${f.accent} 0%, var(--ink-hi) 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '5px' }}>{f.n}</div>
             <div style={{ fontSize: '12px', color: 'var(--ink-hi)', fontWeight: 700, fontFamily: 'var(--font-sans)', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{f.label}</div>
@@ -402,7 +402,7 @@ export default function HomeTab({ onNavigate }) {
       </div>
 
       {/* ── Role selector ── */}
-      <section style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '28px', boxShadow: '0 8px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+      <section style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', padding: '28px', boxShadow: '0 8px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <div style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Personalise by role</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em' }}>What brings you here today?</div>
@@ -410,13 +410,13 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: activeRole ? '20px' : '0' }}>
           {ROLES.map(r => (
             <button key={r.key} onClick={() => pickRole(r.key)}
-              style={{ padding: '7px 16px', borderRadius: '8px', border: `1px solid ${role === r.key ? 'rgba(240,165,0,0.55)' : 'rgba(255,255,255,0.10)'}`, background: role === r.key ? 'rgba(240,165,0,0.16)' : 'rgba(255,255,255,0.04)', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 16px rgba(240,165,0,0.30)' : 'none' }}>
+              style={{ padding: '7px 16px', borderRadius: '8px', border: `1px solid ${role === r.key ? 'rgba(240,165,0,0.55)' : 'rgba(255,255,255,0.10)'}`, background: role === r.key ? 'rgba(240,165,0,0.16)' : 'rgba(255,255,255,0.10)', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 16px rgba(240,165,0,0.30)' : 'none' }}>
               {r.label}
             </button>
           ))}
         </div>
         {activeRole && (
-          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0, flex: 1, minWidth: '200px' }}>{activeRole.desc}</p>
             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>

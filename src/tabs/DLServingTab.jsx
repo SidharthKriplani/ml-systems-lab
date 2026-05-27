@@ -813,7 +813,7 @@ function ServingModule() {
 const SRV_NODES = [
   {
     id: 'client', label: 'Client', sub: 'mobile/web request',
-    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.04)',
+    color: 'var(--ink-mid)', bg: 'rgba(255,255,255,0.10)',
     what: 'Mobile or web client initiating a prediction request. The client sends input features or entity IDs and expects a response within a latency SLA (typically <200ms P99).',
     decisions: 'Synchronous vs async request pattern. Whether the client sends raw features or just entity IDs (fetching done server-side).',
     failures: 'Client-side timeouts set too aggressively cause false errors when the serving stack is under load. Always measure and align client timeout with server P99.',
@@ -821,7 +821,7 @@ const SRV_NODES = [
   },
   {
     id: 'gateway', label: 'API Gateway', sub: 'auth, rate limit',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.08)',
+    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
     what: 'Entry point that handles authentication, authorization, rate limiting, and request routing. Shields the model service from unauthenticated or malformed requests.',
     decisions: 'Rate limit strategy: per-user vs per-service. Whether to add a request validation layer (schema check) before forwarding.',
     failures: 'Rate limiting too strict blocks legitimate traffic spikes. No input validation allows malformed tensors to reach the model and cause cryptic errors.',
@@ -829,7 +829,7 @@ const SRV_NODES = [
   },
   {
     id: 'feature_svc', label: 'Feature Service', sub: 'Redis / online store',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
     what: 'Online feature service retrieves pre-computed features from Redis or a similar low-latency store. Accepts entity keys, returns feature vectors in <5ms P99.',
     decisions: 'Staleness tolerance (features computed every minute vs real-time). Fallback strategy when a feature key is missing: return zeros, a default vector, or error.',
     failures: 'Training-serving skew: features computed differently offline vs online. Missing features return zero instead of erroring — model silently receives wrong input.',
@@ -837,7 +837,7 @@ const SRV_NODES = [
   },
   {
     id: 'model_svc', label: 'Model Service', sub: 'TorchServe / Triton',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.08)',
+    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
     what: 'Model serving framework (TorchServe, Triton Inference Server) that manages model loading, versioning, batching, and request routing to the inference engine.',
     decisions: 'Model versioning strategy: blue/green vs canary rollout. Dynamic batching: batch multiple requests together to improve GPU utilization.',
     failures: 'Model version mismatch between feature pipeline and model artifact. Dynamic batching increases average latency under low load — disable for latency-sensitive paths.',
@@ -845,7 +845,7 @@ const SRV_NODES = [
   },
   {
     id: 'cache', label: 'Prediction Cache', sub: 'TTL-based',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.08)',
+    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
     what: 'Prediction cache stores recent inference results keyed by input hash or entity ID. Returns cached predictions for repeated identical requests, bypassing inference entirely.',
     decisions: 'TTL length — too short defeats the purpose, too long serves stale predictions. Key design: hash input features exactly or use entity ID (entity ID is faster but coarser).',
     failures: 'Cache poisoning: bad prediction gets served repeatedly until TTL expires. Key collision on input rounding causes different inputs to return the same cached result.',
@@ -853,7 +853,7 @@ const SRV_NODES = [
   },
   {
     id: 'inference', label: 'Inference Engine', sub: 'ONNX / TensorRT',
-    color: 'var(--ember)', bg: 'rgba(249,115,22,0.08)',
+    color: 'var(--ember)', bg: 'rgba(249,115,22,0.15)',
     what: 'ONNX or TensorRT engine executes the model forward pass on CPU or GPU. This is the actual computation step — everything else is orchestration around it.',
     decisions: 'Batch size (1 for online, >1 for async), FP16 vs INT8 quantization, dynamic vs static shapes. Static shapes enable better TensorRT optimization but require padding.',
     failures: 'Padding to fixed shapes wastes compute on short sequences. Dynamic shapes add overhead. FP16 overflow on activations causes NaN outputs silently.',
@@ -861,7 +861,7 @@ const SRV_NODES = [
   },
   {
     id: 'monitor', label: 'Shadow Monitor', sub: 'logs + drift check',
-    color: 'var(--rose)', bg: 'rgba(244,63,94,0.08)',
+    color: 'var(--rose)', bg: 'rgba(244,63,94,0.15)',
     what: 'Shadow monitor logs every prediction asynchronously for drift detection and performance tracking. Runs out of the critical path so it cannot add latency to the response.',
     decisions: 'Sampling rate (log everything vs 1%). What to log: input features, output scores, latency, model version. Alerting thresholds for feature drift (PSI) and score distribution shift.',
     failures: 'Async logging drops under load if the queue fills. Logged features do not match serving features if the pipeline diverges after the logging point.',
@@ -869,7 +869,7 @@ const SRV_NODES = [
   },
   {
     id: 'response', label: 'Response', sub: 'prediction + metadata',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.08)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'Final response returned to the client: prediction score or label, optional metadata (model version, feature freshness timestamp), and latency breakdown for debugging.',
     decisions: 'How much metadata to expose to the client. Including model version in the response enables client-side debugging but leaks internal architecture details.',
     failures: 'Returning raw logits instead of calibrated probabilities confuses downstream consumers. Missing metadata makes post-incident debugging impossible.',
@@ -975,7 +975,7 @@ function MLServingArchitecture() {
                 <g key={n.id} onClick={() => setSelected(isSel ? null : n.id)} style={{ cursor: 'pointer' }}>
                   <rect
                     x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
-                    fill={isSel ? n.bg : 'rgba(255,255,255,0.03)'}
+                    fill={isSel ? n.bg : 'rgba(255,255,255,0.07)'}
                     stroke={isSel ? n.color : 'rgba(255,255,255,0.1)'}
                     strokeWidth={isSel ? 2 : 1}
                   />
@@ -1016,7 +1016,7 @@ function MLServingArchitecture() {
           </div>
         </div>
       ) : (
-        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)' }}>
+        <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.15)' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Key insight</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
             ML serving latency is dominated by whichever layer is slowest — usually feature retrieval, not inference. Profile the full request path before optimizing the model.

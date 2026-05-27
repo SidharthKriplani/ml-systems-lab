@@ -98,7 +98,7 @@ const NAV_ZONES = [
 // ── Practice domain config ────────────────────────────────────────────────────
 const PRACTICE_DOMAINS = [
   {
-    id: 'mle', label: 'ML Engineering', accent: 'var(--mint)', bg: 'rgba(52,211,153,0.06)',
+    id: 'mle', label: 'ML Engineering', accent: 'var(--mint)', bg: 'rgba(52,211,153,0.13)',
     tabs: [
       { id: 'models',    label: 'Math Foundations',    desc: 'PCA, SVD, calibration — Python in browser' },
       { id: 'features',  label: 'Feature Engineering', desc: 'Skew, leakage, feature stores' },
@@ -108,7 +108,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'de', label: 'Data Engineering', accent: 'var(--ember)', bg: 'rgba(249,115,22,0.06)',
+    id: 'de', label: 'Data Engineering', accent: 'var(--ember)', bg: 'rgba(249,115,22,0.13)',
     tabs: [
       { id: 'spark',    label: 'Spark Lab',     desc: 'Shuffle, skew, broadcast join decisions' },
       { id: 'airflow',  label: 'Airflow',       desc: 'DAG failures, backfill, late data' },
@@ -117,7 +117,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'dl', label: 'Deep Learning', accent: 'var(--violet)', bg: 'rgba(99,102,241,0.06)',
+    id: 'dl', label: 'Deep Learning', accent: 'var(--violet)', bg: 'rgba(99,102,241,0.13)',
     tabs: [
       { id: 'dl',          label: 'Training Lab', desc: 'Loss spikes, gradients, debugging' },
       { id: 'dl_finetune', label: 'Fine-tuning',  desc: 'LoRA, freeze, LR strategy' },
@@ -125,7 +125,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'ds', label: 'Data Science', accent: 'var(--sky)', bg: 'rgba(34,211,238,0.06)',
+    id: 'ds', label: 'Data Science', accent: 'var(--sky)', bg: 'rgba(34,211,238,0.13)',
     tabs: [
       { id: 'ds',     label: 'DS Fundamentals',  desc: 'Model selection, calibration, metrics' },
       { id: 'causal', label: 'Causal Inference', desc: 'Identification, uplift, obs vs exp' },
@@ -133,7 +133,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'mlops', label: 'MLOps', accent: 'var(--rose)', bg: 'rgba(244,63,94,0.06)',
+    id: 'mlops', label: 'MLOps', accent: 'var(--rose)', bg: 'rgba(244,63,94,0.13)',
     tabs: [
       { id: 'monitor',      label: 'Monitoring',    desc: 'Drift, PSI, incident triage' },
       { id: 'mlops_deploy', label: 'Deployment',    desc: 'Strategies, champion-challenger, rollback' },
@@ -141,7 +141,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.06)',
+    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.13)',
     tabs: [
       { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
       { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
@@ -210,7 +210,7 @@ function ProgressRing({ attempted, total, accent }) {
   const dash = total > 0 ? Math.min(attempted / total, 1) * circ : 0
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
-      <circle cx="8" cy="8" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
+      <circle cx="8" cy="8" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
       <circle cx="8" cy="8" r={r} fill="none" stroke={accent} strokeWidth="2"
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform="rotate(-90 8 8)" opacity={0.8} />
@@ -319,16 +319,16 @@ function InterviewToolCard({ tool, onSelect }) {
       style={{
         textAlign: 'left', padding: '20px 22px',
         background: hov
-          ? `linear-gradient(160deg, rgba(255,255,255,0.06) 0%, var(--depth) 30%)`
-          : `linear-gradient(160deg, rgba(255,255,255,0.03) 0%, var(--depth) 40%)`,
-        border: `1px solid ${hov ? tool.accent + '55' : 'rgba(255,255,255,0.08)'}`,
+          ? `linear-gradient(160deg, rgba(255,255,255,0.13) 0%, var(--depth) 30%)`
+          : `linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)`,
+        border: `1px solid ${hov ? tool.accent + '55' : 'rgba(255,255,255,0.15)'}`,
         borderTop: `1px solid ${hov ? tool.accent + '80' : 'rgba(255,255,255,0.11)'}`,
         borderRadius: '14px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: hov
           ? `0 20px 56px rgba(0,0,0,0.65), 0 0 0 1px ${tool.accent}22, inset 0 1px 0 rgba(255,255,255,0.09)`
-          : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+          : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.11)',
       }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ color: tool.accent, opacity: hov ? 1 : 0.75, transition: 'opacity 0.15s' }}>{tool.svg}</div>
@@ -400,14 +400,14 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
       background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.92) 100px, rgba(8,6,4,0.94) 100%)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      borderRight: '1px solid rgba(255,255,255,0.08)',
+      borderRight: '1px solid rgba(255,255,255,0.15)',
       flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'thin',
     },
     logo: {
       padding: '14px 14px 12px',
       borderBottom: '1px solid rgba(240,165,0,0.18)',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.04) 100%)',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.10) 100%)',
       flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px',
       border: 'none', cursor: 'pointer', width: '100%',
     },
@@ -447,7 +447,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       transition: 'background 0.1s',
     }),
     chevron: (open) => ({
-      fontSize: '9px', color: 'rgba(255,255,255,0.3)', display: 'inline-block',
+      fontSize: '9px', color: 'rgba(255,255,255,0.55)', display: 'inline-block',
       transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
     }),
   }
@@ -471,8 +471,8 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
               <button style={S.zoneBtn(isZoneActive, zone.accent)}
                 onClick={() => { toggleZone(zone.id); onZoneNav(zone.id) }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                  <span style={{ fontSize: '15px', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.4)', filter: isZoneActive ? `drop-shadow(0 0 4px ${zone.accent})` : 'none', transition: 'all 0.15s' }}>{zone.icon}</span>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.45)', transition: 'color 0.15s' }}>{zone.label}</span>
+                  <span style={{ fontSize: '15px', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.62)', filter: isZoneActive ? `drop-shadow(0 0 4px ${zone.accent})` : 'none', transition: 'all 0.15s' }}>{zone.icon}</span>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.65)', transition: 'color 0.15s' }}>{zone.label}</span>
                 </div>
                 <span style={S.chevron(isOpen)}>▶</span>
               </button>
@@ -562,7 +562,7 @@ function BottomNav({ activeZone, onZoneNav }) {
               flex: 1, display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: '5px',
               background: 'none', border: 'none', cursor: 'pointer',
-              color: isActive ? zone.accent : 'rgba(255,255,255,0.35)',
+              color: isActive ? zone.accent : 'rgba(255,255,255,0.62)',
               transition: 'color 0.15s',
               padding: '8px 4px 10px',
               position: 'relative',
@@ -745,7 +745,7 @@ export default function App() {
           {!showBackBtn && (
             <a href="https://github.com/SidharthKriplani/ml-systems-lab" target="_blank" rel="noopener noreferrer"
               className="hide-mobile"
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2.02c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.83.57C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
               GitHub
             </a>
@@ -755,7 +755,7 @@ export default function App() {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif" }}>
             <span style={{ fontSize: '13px' }}>⌕</span>
             <span style={{ display: 'inline' }}>Search</span>
-            <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
+            <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.14)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
           </button>
         </div>
       </header>

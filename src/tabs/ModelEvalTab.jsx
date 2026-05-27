@@ -72,7 +72,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
         </span>
       </div>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}
@@ -98,7 +98,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
-              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
+              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.11)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
               {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
               {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
               <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
@@ -122,10 +122,10 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                   {sc.options.map((opt, j) => {
                     let bg = 'transparent', border = 'var(--rim)', color = 'var(--ink-mid)'
                     if (item.revealed) {
-                      if (j === sc.answer)                   { bg = 'rgba(52,211,153,0.08)';  border = 'var(--mint)'; color = 'var(--mint)' }
-                      else if (j === item.picked)            { bg = 'rgba(244,63,94,0.08)';   border = 'var(--rose)'; color = 'var(--rose)' }
+                      if (j === sc.answer)                   { bg = 'rgba(52,211,153,0.15)';  border = 'var(--mint)'; color = 'var(--mint)' }
+                      else if (j === item.picked)            { bg = 'rgba(244,63,94,0.15)';   border = 'var(--rose)'; color = 'var(--rose)' }
                     } else if (j === item.picked) {
-                      bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)'
+                      bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
@@ -141,13 +141,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
 
                 {/* Reveal */}
                 {item.revealed && (
-                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.05)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(244,63,94,0.11)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
                       {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.explanation}</p>
                     {sc.fix && (
-                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
+                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
                         <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
                         <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                       </div>
@@ -235,7 +235,7 @@ function MetricSelector() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
           {METRICS.map(m => (
             <button key={m.id} onClick={() => { setPicked(m.id); setRevealed(true) }}
-              style={{ padding: '14px', borderRadius: '10px', border: `1px solid ${picked === m.id ? (m.good ? 'var(--mint)' : 'var(--rose)') : 'var(--rim)'}`, background: picked === m.id ? (m.good ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)') : 'var(--void)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+              style={{ padding: '14px', borderRadius: '10px', border: `1px solid ${picked === m.id ? (m.good ? 'var(--mint)' : 'var(--rose)') : 'var(--rim)'}`, background: picked === m.id ? (m.good ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)') : 'var(--void)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
               <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{m.name}</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: m.good ? 'var(--mint)' : 'var(--rose)', fontWeight: 700 }}>{m.value}</div>
             </button>
@@ -243,7 +243,7 @@ function MetricSelector() {
         </div>
       </div>
       {revealed && picked && (
-        <div className="card animate-slide-up" style={{ padding: '18px', background: METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)', border: `1px solid ${METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}` }}>
+        <div className="card animate-slide-up" style={{ padding: '18px', background: METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.13)' : 'rgba(244,63,94,0.13)', border: `1px solid ${METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}` }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: METRICS.find(m => m.id === picked)?.good ? 'var(--mint)' : 'var(--rose)', marginBottom: '8px' }}>
             {METRICS.find(m => m.id === picked)?.good ? '✓ Good choice' : '⚠ Think again'}
           </div>
@@ -304,7 +304,7 @@ function ShadowModeSim() {
         </div>
       )}
       {phase === 'complete' && (
-        <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.25)' }}>
+        <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp</p>
@@ -743,7 +743,7 @@ export default function ModelEvalTab({ onNavigate }) {
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
-        <div style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
             📖 Go deeper → Read <strong style={{ color: 'var(--sky)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
           </span>

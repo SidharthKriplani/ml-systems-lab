@@ -415,8 +415,8 @@ function MCQOptions({ q, state, onChange }) {
         let color = 'var(--ink-mid)'
 
         if (revealed) {
-          if (isCorrect) { bg = 'rgba(52,211,153,0.08)'; border = '1px solid var(--mint)'; color = 'var(--mint)' }
-          else if (isPicked && !isCorrect) { bg = 'rgba(244,63,94,0.08)'; border = '1px solid var(--rose)'; color = 'var(--rose)' }
+          if (isCorrect) { bg = 'rgba(52,211,153,0.15)'; border = '1px solid var(--mint)'; color = 'var(--mint)' }
+          else if (isPicked && !isCorrect) { bg = 'rgba(244,63,94,0.15)'; border = '1px solid var(--rose)'; color = 'var(--rose)' }
         } else if (isPicked) {
           border = '1px solid var(--prime)'
         }
@@ -434,7 +434,7 @@ function MCQOptions({ q, state, onChange }) {
         )
       })}
       {state.revealed && (
-        <div style={{ marginTop: '8px', background: 'rgba(52,211,153,0.06)', borderLeft: '3px solid var(--mint)', borderRadius: '4px', padding: '10px 12px', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>
+        <div style={{ marginTop: '8px', background: 'rgba(52,211,153,0.13)', borderLeft: '3px solid var(--mint)', borderRadius: '4px', padding: '10px 12px', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>
           <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.08em' }}>EXPLANATION — </span>
           {q.explanation}
         </div>
@@ -481,7 +481,7 @@ function OpenQuestion({ q, state, caseColor, onChange }) {
       </div>
 
       {state.revealed && (
-        <div style={{ marginTop: '10px', background: 'rgba(240,165,0,0.05)', borderLeft: '3px solid var(--prime)', borderRadius: '4px', padding: '12px 14px' }}>
+        <div style={{ marginTop: '10px', background: 'rgba(240,165,0,0.11)', borderLeft: '3px solid var(--prime)', borderRadius: '4px', padding: '12px 14px' }}>
           <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--prime)', letterSpacing: '0.08em', marginBottom: '6px' }}>MODEL ANSWER</div>
           <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{q.modelAnswer}</p>
         </div>

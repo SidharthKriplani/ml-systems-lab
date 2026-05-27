@@ -1030,7 +1030,7 @@ function DrillScreen({ questions, onFinish, onAbort }) {
         {answered !== null && (
           <div style={{
             marginTop: '1.25rem', padding: '1rem 1.1rem',
-            background: isCorrect ? 'rgba(52,211,153,0.08)' : 'rgba(244,63,94,0.08)',
+            background: isCorrect ? 'rgba(52,211,153,0.15)' : 'rgba(244,63,94,0.15)',
             border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}`,
             borderRadius: 10,
           }}>

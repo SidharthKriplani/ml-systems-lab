@@ -72,7 +72,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
         </span>
       </div>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}
@@ -97,7 +97,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
-              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
+              {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.11)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
               {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
               {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
               <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
@@ -118,10 +118,10 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                   {sc.options.map((opt, j) => {
                     let bg = 'transparent', border = 'var(--rim)', color = 'var(--ink-mid)'
                     if (item.revealed) {
-                      if (j === sc.answer)                            { bg = 'rgba(52,211,153,0.08)';  border = 'var(--mint)'; color = 'var(--mint)' }
-                      else if (j === item.picked)                     { bg = 'rgba(244,63,94,0.08)';   border = 'var(--rose)'; color = 'var(--rose)' }
+                      if (j === sc.answer)                            { bg = 'rgba(52,211,153,0.15)';  border = 'var(--mint)'; color = 'var(--mint)' }
+                      else if (j === item.picked)                     { bg = 'rgba(244,63,94,0.15)';   border = 'var(--rose)'; color = 'var(--rose)' }
                     } else if (j === item.picked) {
-                      bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)'
+                      bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
@@ -136,13 +136,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                 </div>
 
                 {item.revealed && (
-                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.05)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(244,63,94,0.11)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
                       {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.explanation}</p>
                     {sc.fix && (
-                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
+                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
                         <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
                         <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                       </div>
@@ -209,16 +209,16 @@ function TrainingFailureDiagnosis() {
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
           <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{scenario.tier}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
         {scenario.options.map((opt, i) => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (i === scenario.answer)             { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (i === picked)                 { bg = 'rgba(244,63,94,0.08)';  border = 'var(--rose)'; color = 'var(--rose)' }
-          } else if (i === picked) { bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)' }
+            if (i === scenario.answer)             { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (i === picked)                 { bg = 'rgba(244,63,94,0.15)';  border = 'var(--rose)'; color = 'var(--rose)' }
+          } else if (i === picked) { bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
               style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -236,7 +236,7 @@ function TrainingFailureDiagnosis() {
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
-          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
             <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>
@@ -296,16 +296,16 @@ function GradientDebugger() {
           <span style={{ fontSize: '18px' }}>📉</span>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
         {scenario.options.map((opt, i) => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (i === scenario.answer)         { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (i === picked)             { bg = 'rgba(244,63,94,0.08)';  border = 'var(--rose)'; color = 'var(--rose)' }
-          } else if (i === picked) { bg = 'rgba(240,165,0,0.08)'; border = 'var(--prime)'; color = 'var(--prime)' }
+            if (i === scenario.answer)         { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (i === picked)             { bg = 'rgba(244,63,94,0.15)';  border = 'var(--rose)'; color = 'var(--rose)' }
+          } else if (i === picked) { bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
               style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -323,7 +323,7 @@ function GradientDebugger() {
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{scenario.diagnosis}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
-          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
             <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production Fix</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.fix}</p>
           </div>

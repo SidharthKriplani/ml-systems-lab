@@ -112,7 +112,7 @@ function DeployStrategy() {
                 padding: '5px 10px',
                 borderRadius: '6px',
                 border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.08)' : done ? (correct ? 'rgba(34,197,94,0.07)' : 'rgba(244,63,94,0.07)') : 'transparent',
+                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
                 color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
@@ -147,9 +147,9 @@ function DeployStrategy() {
           const isCorrect = s.id === scenario.correct
           let borderColor = 'var(--rim)'
           let bg = 'transparent'
-          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.07)' }
-          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.07)' }
-          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.05)' }
+          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.14)' }
+          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.14)' }
+          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.11)' }
           return (
             <button key={s.id} onClick={() => choose(s.id)}
               style={{
@@ -177,7 +177,7 @@ function DeployStrategy() {
       {isRevealed && (
         <div className="card animate-slide-up" style={{
           padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.06)' : 'rgba(244,63,94,0.06)',
+          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
           border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
         }}>
           <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
@@ -370,9 +370,9 @@ function ChampionChallenger() {
                 const isCorrect = opt.id === CC_QUESTIONS[step].correct
                 let borderColor = 'var(--rim)'
                 let bg = 'transparent'
-                if (revealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.08)' }
-                else if (revealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.08)' }
-                else if (revealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.05)' }
+                if (revealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.15)' }
+                else if (revealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.15)' }
+                else if (revealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.11)' }
                 return (
                   <button key={opt.id} onClick={() => answer(opt.id)}
                     style={{
@@ -394,7 +394,7 @@ function ChampionChallenger() {
           {revealed && (
             <div className="card animate-slide-up" style={{
               padding: '16px',
-              background: currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.06)' : 'rgba(244,63,94,0.06)',
+              background: currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
               border: `1px solid ${currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
             }}>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: '0 0 12px' }}>
@@ -410,7 +410,7 @@ function ChampionChallenger() {
 
       {/* Summary */}
       {done && (
-        <div className="card animate-slide-up" style={{ padding: '22px', background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: '22px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
           <div style={{ ...grotesk, fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
             {score}/4 correct
           </div>
@@ -540,7 +540,7 @@ function RollbackDecision() {
               style={{
                 ...mono, fontSize: '12px', padding: '5px 10px', borderRadius: '6px',
                 border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.08)' : done ? (correct ? 'rgba(34,197,94,0.07)' : 'rgba(244,63,94,0.07)') : 'transparent',
+                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
                 color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
@@ -577,9 +577,9 @@ function RollbackDecision() {
           const isCorrect = opt.id === scenario.correct
           let borderColor = 'var(--rim)'
           let bg = 'transparent'
-          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.08)' }
-          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.08)' }
-          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.05)' }
+          if (isRevealed && isPicked && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.15)' }
+          else if (isRevealed && isPicked && !isCorrect) { borderColor = 'var(--rose)'; bg = 'rgba(244,63,94,0.15)' }
+          else if (isRevealed && isCorrect) { borderColor = 'var(--mint)'; bg = 'rgba(34,197,94,0.11)' }
           return (
             <button key={opt.id} onClick={() => choose(opt.id)}
               style={{
@@ -601,7 +601,7 @@ function RollbackDecision() {
       {isRevealed && (
         <div className="card animate-slide-up" style={{
           padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.06)' : 'rgba(244,63,94,0.06)',
+          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
           border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
         }}>
           <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
@@ -658,7 +658,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.08)' } : {}}>{m.label}
+            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.15)' } : {}}>{m.label}
           </button>
         ))}
       </div>

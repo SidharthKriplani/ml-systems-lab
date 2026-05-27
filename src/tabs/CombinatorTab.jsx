@@ -1121,7 +1121,7 @@ export default function CombinatorTab({ onNavigate }) {
         {_saved?.screen === 'session' && (
           <div style={{
             padding: '0.875rem 1rem', borderRadius: 8, marginBottom: '1.5rem',
-            background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.3)',
+            background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
           }}>
             <div>
@@ -1154,7 +1154,7 @@ export default function CombinatorTab({ onNavigate }) {
                   padding: '1.25rem 1rem',
                   borderRadius: 10,
                   border: `2px solid ${duration === parseInt(mins) ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: duration === parseInt(mins) ? 'rgba(240,165,0,0.08)' : 'var(--surface)',
+                  background: duration === parseInt(mins) ? 'rgba(240,165,0,0.15)' : 'var(--surface)',
                   cursor: 'pointer',
                   color: duration === parseInt(mins) ? 'var(--prime)' : 'var(--ink-mid)',
                   fontFamily: 'var(--font-sans)',
@@ -1171,7 +1171,7 @@ export default function CombinatorTab({ onNavigate }) {
         <div style={{
           padding: '0.875rem 1rem',
           borderRadius: 8,
-          background: 'rgba(249,115,22,0.08)',
+          background: 'rgba(249,115,22,0.15)',
           border: '1px solid rgba(249,115,22,0.25)',
           marginBottom: '1.75rem',
           fontSize: '0.875rem',
@@ -1633,7 +1633,7 @@ export default function CombinatorTab({ onNavigate }) {
                     {userAns && (
                       <div style={{
                         padding: '0.65rem 0.75rem',
-                        background: 'rgba(34,211,238,0.04)',
+                        background: 'rgba(34,211,238,0.10)',
                         border: '1px solid rgba(34,211,238,0.15)',
                         borderRadius: 8,
                         fontSize: '0.85rem',
@@ -1649,7 +1649,7 @@ export default function CombinatorTab({ onNavigate }) {
 
                     <div style={{
                       padding: '0.65rem 0.75rem',
-                      background: 'rgba(52,211,153,0.04)',
+                      background: 'rgba(52,211,153,0.10)',
                       border: '1px solid rgba(52,211,153,0.15)',
                       borderRadius: 8,
                       fontSize: '0.82rem',

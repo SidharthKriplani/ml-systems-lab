@@ -349,7 +349,7 @@ export default function DefenseDocTab({ onNavigate }) {
             {topic.checklist.map((item, i) => (
               <label
                 key={i}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '10px 14px', background: item.done ? 'rgba(52,211,153,0.08)' : 'var(--depth)', borderRadius: 8, border: `1px solid ${item.done ? 'rgba(52,211,153,0.3)' : 'var(--rim)'}`, transition: 'all 0.15s' }}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '10px 14px', background: item.done ? 'rgba(52,211,153,0.15)' : 'var(--depth)', borderRadius: 8, border: `1px solid ${item.done ? 'rgba(52,211,153,0.3)' : 'var(--rim)'}`, transition: 'all 0.15s' }}
               >
                 <input
                   type="checkbox"

@@ -172,7 +172,7 @@ function ModelSelectionOracle() {
                       {m.risks.map((r, j) => <div key={j} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '3px' }}>⚠ {r}</div>)}
                     </div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+                  <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
                     <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>Production note</div>
                     <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.prodNote}</p>
                   </div>
@@ -379,9 +379,9 @@ function StatisticalTestingPitfalls() {
             let borderColor = 'var(--rim)'
             let bg = 'transparent'
             let textColor = 'var(--ink-mid)'
-            if (selected === idx && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.07)'; textColor = 'var(--sky)' }
-            if (revealed && idx === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.08)'; textColor = 'var(--mint)' }
-            if (revealed && selected === idx && idx !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.08)'; textColor = 'var(--rose)' }
+            if (selected === idx && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.14)'; textColor = 'var(--sky)' }
+            if (revealed && idx === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.15)'; textColor = 'var(--mint)' }
+            if (revealed && selected === idx && idx !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.15)'; textColor = 'var(--rose)' }
             return (
               <button key={idx} onClick={() => handleSelect(idx)}
                 style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -411,7 +411,7 @@ function StatisticalTestingPitfalls() {
               {isCorrect ? 'Correct — ' : 'Incorrect — '}{s.mistake}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 10px' }}>{s.explanation}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(34,211,238,0.06)', borderRadius: '6px', border: '1px solid rgba(34,211,238,0.15)' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(34,211,238,0.13)', borderRadius: '6px', border: '1px solid rgba(34,211,238,0.15)' }}>
               <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</span>
             </div>
@@ -608,9 +608,9 @@ function CalibrationInPractice() {
             let borderColor = 'var(--rim)'
             let bg = 'transparent'
             let textColor = 'var(--ink-mid)'
-            if (selected === opt.id && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.07)'; textColor = 'var(--sky)' }
-            if (revealed && opt.id === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.08)'; textColor = 'var(--mint)' }
-            if (revealed && selected === opt.id && opt.id !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.08)'; textColor = 'var(--rose)' }
+            if (selected === opt.id && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.14)'; textColor = 'var(--sky)' }
+            if (revealed && opt.id === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.15)'; textColor = 'var(--mint)' }
+            if (revealed && selected === opt.id && opt.id !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.15)'; textColor = 'var(--rose)' }
             return (
               <button key={opt.id} onClick={() => { if (!revealed) setSelected(opt.id) }}
                 style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s' }}>
@@ -636,7 +636,7 @@ function CalibrationInPractice() {
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px' }}>{s.explanation}</p>
             {selected !== s.correct && s.wrong[selected] && (
-              <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.05)', borderRadius: '6px', border: '1px solid rgba(251,113,133,0.15)', marginBottom: '10px' }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.11)', borderRadius: '6px', border: '1px solid rgba(251,113,133,0.15)', marginBottom: '10px' }}>
                 <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Why {CALIB_OPTIONS.find(o => o.id === selected)?.label} is wrong: </span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.wrong[selected]}</span>
               </div>
@@ -898,9 +898,9 @@ function MetricDesign() {
           const isRight = i === s.correct
           let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-hi)'
           if (revealed) {
-            if (isRight) { bg = 'rgba(52,211,153,0.08)'; border = 'rgba(52,211,153,0.4)'; color = 'var(--mint)' }
-            else if (isSelected && !isRight) { bg = 'rgba(244,63,94,0.08)'; border = 'rgba(244,63,94,0.4)'; color = 'var(--rose)' }
-          } else if (isSelected) { bg = 'rgba(240,165,0,0.08)'; border = 'rgba(240,165,0,0.4)' }
+            if (isRight) { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.4)'; color = 'var(--mint)' }
+            else if (isSelected && !isRight) { bg = 'rgba(244,63,94,0.15)'; border = 'rgba(244,63,94,0.4)'; color = 'var(--rose)' }
+          } else if (isSelected) { bg = 'rgba(240,165,0,0.15)'; border = 'rgba(240,165,0,0.4)' }
           return (
             <button key={i} onClick={() => handleAnswer(i)}
               style={{

@@ -205,7 +205,7 @@ function MaterializationOracle() {
                     <div key={j} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>&#10003; {r}</div>
                   ))}
                 </div>
-                <div style={{ padding: '12px 14px', background: 'rgba(251,113,133,0.05)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: '8px' }}>
+                <div style={{ padding: '12px 14px', background: 'rgba(251,113,133,0.11)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: '8px' }}>
                   <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Production gotcha</div>
                   <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.gotcha}</p>
                 </div>
@@ -522,7 +522,7 @@ function SchemaDriftClinic() {
           <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.4 }}>{scenario.title}</h4>
           <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: DANGER_COLORS[scenario.danger] + '18', color: DANGER_COLORS[scenario.danger], fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', flexShrink: 0 }}>{scenario.danger}</span>
         </div>
-        <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+        <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Scenario</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.context}</p>
         </div>
@@ -533,9 +533,9 @@ function SchemaDriftClinic() {
             let bg = 'transparent'
             let border = 'var(--rim)'
             let color = 'var(--ink-mid)'
-            if (selected === i && !revealed) { bg = 'rgba(255,160,50,0.08)'; border = 'var(--ember)'; color = 'var(--ember)' }
-            if (revealed && i === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            if (revealed && selected === i && i !== scenario.answer) { bg = 'rgba(251,113,133,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
+            if (selected === i && !revealed) { bg = 'rgba(255,160,50,0.15)'; border = 'var(--ember)'; color = 'var(--ember)' }
+            if (revealed && i === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            if (revealed && selected === i && i !== scenario.answer) { bg = 'rgba(251,113,133,0.15)'; border = 'var(--rose)'; color = 'var(--rose)' }
             return (
               <button key={i} onClick={() => handleSelect(i)}
                 style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', textAlign: 'left', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.12s', lineHeight: 1.5 }}>
@@ -554,7 +554,7 @@ function SchemaDriftClinic() {
 
         {revealed && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ padding: '14px 16px', background: selected === scenario.answer ? 'rgba(52,211,153,0.06)' : 'rgba(251,113,133,0.06)', border: `1px solid ${selected === scenario.answer ? 'rgba(52,211,153,0.25)' : 'rgba(251,113,133,0.25)'}`, borderRadius: '8px' }}>
+            <div style={{ padding: '14px 16px', background: selected === scenario.answer ? 'rgba(52,211,153,0.13)' : 'rgba(251,113,133,0.13)', border: `1px solid ${selected === scenario.answer ? 'rgba(52,211,153,0.25)' : 'rgba(251,113,133,0.25)'}`, borderRadius: '8px' }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', color: selected === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '6px' }}>
                 {selected === scenario.answer ? 'Correct' : 'Incorrect — here is why'}
               </div>

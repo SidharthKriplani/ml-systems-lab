@@ -403,10 +403,10 @@ function SCDSelector() {
         {SCD_OPTIONS.map(type => {
           let bg = 'var(--surface)', border = 'var(--rim)', color = 'var(--ink-mid)'
           if (revealed) {
-            if (type === scenario.answer) { bg = 'rgba(52,211,153,0.08)'; border = 'var(--mint)'; color = 'var(--mint)' }
-            else if (type === picked) { bg = 'rgba(244,63,94,0.08)'; border = 'var(--rose)'; color = 'var(--rose)' }
+            if (type === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
+            else if (type === picked) { bg = 'rgba(244,63,94,0.15)'; border = 'var(--rose)'; color = 'var(--rose)' }
           } else if (type === picked) {
-            bg = 'rgba(249,115,22,0.08)'; border = 'var(--ember)'; color = 'var(--ember)'
+            bg = 'rgba(249,115,22,0.15)'; border = 'var(--ember)'; color = 'var(--ember)'
           }
           return (
             <button key={type} onClick={() => choose(type)} disabled={revealed}
@@ -432,7 +432,7 @@ function SCDSelector() {
               {picked === scenario.answer ? '✓ Correct — ' : `✗ Wrong — `}Type {scenario.answer} is correct
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px 0' }}>{scenario.reasoning}</p>
-            <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
+            <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,0.13)', border: '1px solid rgba(249,115,22,0.20)', borderRadius: '8px' }}>
               <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Production tradeoff</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.tradeoff}</p>
             </div>
@@ -661,7 +661,7 @@ function OLAPShowdown() {
                 </table>
               </div>
 
-              <div style={{ padding: '10px 12px', background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: '6px' }}>
+              <div style={{ padding: '10px 12px', background: 'rgba(249,115,22,0.11)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: '6px' }}>
                 <div style={{ fontSize: '10px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '5px' }}>Production note</div>
                 <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{fmt.prodNote}</p>
               </div>
