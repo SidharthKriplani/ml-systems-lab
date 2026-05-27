@@ -362,9 +362,9 @@ export default function HomeTab({ onNavigate }) {
               <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>200+ production scenarios · Free</span>
             </div>
 
-            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 3.6vw, 52px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
+            <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 3.2vw, 48px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
               You can train a model.<br />
-              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))', whiteSpace: 'nowrap' }}>Can you debug it in production?</span>
+              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))' }}>Can you debug it<br />in production?</span>
             </h1>
 
             <p style={{ fontSize: '17px', color: 'var(--ink-hi)', lineHeight: 1.7, maxWidth: '500px', marginBottom: '28px', opacity: 0.80 }}>
