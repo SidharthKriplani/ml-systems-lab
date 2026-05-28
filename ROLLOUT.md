@@ -71,12 +71,44 @@ Each batch entry states what pass looks like before a single tester is invited. 
 
 **User profile:** ML engineer or data scientist actively prepping for interviews, 2–4 weeks out from an interview. Uses the product on mobile during commute or on laptop at home. Has no prior knowledge of the tool — arrives via a direct link, no walkthrough given.
 
-**Scope:** The three most polished, self-explanatory features:
-1. **CombinatorTab** — timed mock exam (30-min session, full debrief)
-2. **TrainerTab** — MCQ drill with weakness heatmap
-3. **JDPrepTab** — paste JD → ranked skill extraction → nav to modules
+**Scope:** The three most polished, self-explanatory features. Each has specific test items below.
 
-These three cover the core "practice and study" loop without requiring testers to understand the full Interview zone simulation layer.
+---
+
+### 1. CombinatorTab — Timed Mock Exam
+
+What to test:
+- Start a 30-min session → pick mixed domains → confirm questions lock (no peeking at answers mid-session)
+- Answer ~10 questions, skip 3, end session early → verify debrief renders: score, domain breakdown bars, per-question review
+- Start a second session, switch to a different zone mid-session, come back → confirm timer has correctly deducted elapsed time (v4.8 fix)
+- On mobile: timer readable, question text not truncated, MCQ options tappable without mis-fires
+
+What we're listening for: Did the timed pressure feel real or artificial? Did the debrief feel useful or just a number? Did any question feel out of place or too easy to eliminate without judgment?
+
+---
+
+### 2. TrainerTab — MCQ Drill + Weakness Heatmap
+
+What to test:
+- Complete a full session (all questions in one domain) → confirm score saves → heatmap updates with correct domain weakness
+- Complete a second session in a different domain → confirm heatmap shows both, weakest domain surfaces correctly
+- On mobile: heatmap renders without overflow, domain labels readable, history section scrollable
+
+What we're listening for: Did the heatmap surface something the tester didn't already know about their own gaps? Did they feel like they wanted to drill again immediately, or did they feel done?
+
+---
+
+### 3. JDPrepTab — JD Analysis + Module Navigation
+
+What to test:
+- Paste a dense JD (FAANG MLE) → confirm Must/Important/Good to Have tier extraction looks accurate → click a module nav link → confirm it navigates to the right tab
+- Paste a sparse JD (startup, 3 bullet points) → confirm graceful output, not a crash or empty page
+- Paste a non-ML JD (wrong paste) → confirm output is still coherent, doesn't hallucinate skills
+- On mobile: JD textarea usable (no zoom on tap — v4.8 fix), output renders without horizontal overflow
+
+What we're listening for: Did the tier ranking feel accurate to the JD they pasted, or did it feel like it could have been anyone's JD? Did the nav links feel useful — did they actually click through?
+
+---
 
 ### Self-vet checklist (before opening Batch 1)
 
