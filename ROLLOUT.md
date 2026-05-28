@@ -57,6 +57,68 @@ Each batch entry states what pass looks like before a single tester is invited. 
 | **No horizontal overflow** | Scroll every tab — nothing bleeds past the right edge | ✓ required | — |
 | **Low brightness readability** | Drop phone brightness to ~20% — all text still readable, no invisible elements | ✓ required | — |
 
+---
+
+### Specific test items per area
+
+**1. Onboarding / first impression**
+- Open the live URL on a fresh incognito tab (no localStorage). Read only what's on screen — does it communicate what the product is within 10 seconds without scrolling?
+- Scroll HomeTab fully — do the learning paths make sense without explanation? Click one step — does it navigate to the right module?
+- Check the role selector if present — does picking a role change anything visible?
+
+**2. Practice zone core loop**
+- ML Engineering → Feature Engineering → open any scenario → select a wrong answer → confirm explanation appears with production failure mode
+- ML Engineering → System Design → open TwoTowerArchitecture SVG → on mobile, confirm it scrolls horizontally inside its container and doesn't blow out the page
+- Data Engineering → Spark Lab → open a Python cell → run it → confirm output appears (Pyodide cold start — note time taken)
+- Complete 3 modules across 2 domains → check that scores are independently tracked per tab
+
+**3. CombinatorTab**
+- Start 30-min session → answer 5 questions → switch to Practice zone → come back → confirm timer shows correct remaining time (not stale)
+- Complete full session → check debrief: domain breakdown bars visible, per-question correct/wrong review, MCQ score shown
+- Start session → end early via "End Session" → confirm warning dialog appears and debrief still renders
+
+**4. TrainerTab**
+- Run a session → confirm heatmap shows weakest domain at top
+- Run a second session in a different domain → confirm history table shows both, sorted by date
+- On mobile: confirm heatmap bars don't overflow the card width
+
+**5. JDPrepTab**
+- Paste a dense FAANG MLE JD → confirm tier extraction — does Must Know match what you'd expect?
+- Paste a 3-line startup JD → confirm output doesn't crash, shows something useful
+- Click a nav link in the output → confirm it lands on the correct module tab
+
+**6. DefenseDocTab**
+- Paste a JD → generate brief → confirm topics are weighted correctly
+- Switch to checklist mode → check off 3 items → refresh page → confirm state persists
+- Print on Chrome → confirm printout is readable black-on-white, no dark background, no UI chrome
+
+**7. VerbatimTab**
+- Android Chrome: tap mic → speak 3 sentences → stop → confirm transcript appears verbatim → self-rate → confirm session saves to history
+- iOS Safari: open tab → confirm fallback message visible immediately, mic button either hidden or clearly disabled, no broken UI
+
+**8. GradientTab**
+- Filter by one domain → confirm posts filter correctly
+- Open a post → read to the bottom → click the CTA practice link → confirm it navigates to the right tab
+- Mark a post as read (if that feature is live) → refresh → confirm read state persists
+
+**9. Global search**
+- Search "feature store" → results appear → click one → correct tab opens
+- Search a term with no results → confirm graceful empty state, not a crash
+- On mobile: search input does not trigger iOS page zoom (v4.8 fix)
+
+**10. Navigation and persistence**
+- Tap each bottom nav zone → confirm each loads its grid or default tab
+- Tap the active zone again → confirm it resets to grid
+- Navigate deep into a tab → tap back button → confirm breadcrumb returns to correct level
+- Complete a module → close browser entirely → reopen → confirm score is still there
+
+**11. Low brightness + contrast**
+- Set phone brightness to lowest readable level (~15–20%)
+- Open: HomeTab, a Practice module mid-answer, CombinatorTab timer, TrainerTab heatmap
+- Confirm: all text readable, selected MCQ option visible (not invisible tint), correct/wrong highlights visible
+
+---
+
 **Pass criteria:** Every checklist row green on both desktop and real mobile. No broken nav paths. No invisible content at low brightness. Print export produces readable output on at least Chrome.
 
 **Feedback collected:** N/A — founder self-vet only.
