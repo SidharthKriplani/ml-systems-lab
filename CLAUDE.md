@@ -158,3 +158,4 @@ The goal is a high-signal IDEAS.md backlog, not a long one.
 | `AUDITS.md` | Health log — findings, resolved/open | Before touching anything; after any audit |
 | `METRICS.md` | Analytics & storage taxonomy — PostHog events, localStorage key registry | Before adding any new event or localStorage key |
 | `README.md` | External-facing project overview | For new visitors / contributors |
+| `ROLLOUT.md` | Beta rollout plan — batches, self-vet checklists, tester briefs, feedback tracking. Operational only; not a backlog. | Before opening any batch to testers |
