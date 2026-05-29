@@ -205,7 +205,7 @@ You can observe data drift immediately (compare feature distributions). Concept 
     slug: 'pca-intuition',
     title: 'PCA: The Intuition No One Teaches',
     category: 'Models & Math',
-    catColor: { bg: 'rgba(168,85,247,0.1)', text: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 11,
     featured: false,
     excerpt: 'Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does "variance explained" actually mean? Why does the first principal component always capture the most variance? And when should you NOT use PCA?',
@@ -241,7 +241,7 @@ Plot eigenvalues in descending order. The "elbow" — where the curve flattens �
     slug: 'feature-store-architecture',
     title: 'Feature Store Architecture: What the Tutorials Skip',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(34,211,238,0.1)', text: 'var(--sky)', border: 'rgba(34,211,238,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 13,
     featured: false,
     excerpt: 'Every feature store has an offline layer and an online layer. The tutorial stops there. What it doesn\'t cover: how to keep them in sync, how to handle late-arriving data, how to version features across training runs, and what happens when the online store falls over at 2am.',
@@ -317,7 +317,7 @@ Weak: Jumps to neural network architecture before understanding the problem. Use
     slug: 'gradient-descent-intuition',
     title: 'Gradient Descent: What Your Intuition Gets Wrong',
     category: 'Models & Math',
-    catColor: { bg: 'rgba(168,85,247,0.1)', text: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 11,
     featured: false,
     excerpt: 'The "ball rolling down a hill" analogy is everywhere. It\'s also subtly wrong in ways that matter. Loss landscapes for neural networks are not convex bowls. They have saddle points, flat regions, and narrow ravines — and the optimiser you choose determines whether you escape them or get stuck.',
@@ -440,7 +440,7 @@ The mistake is trying to jump to phase 3 too early. A collaborative model traine
     slug: 'distributed-training-patterns',
     title: 'Distributed Training: Data Parallel vs Model Parallel',
     category: 'Models & Math',
-    catColor: { bg: 'rgba(168,85,247,0.1)', text: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 12,
     featured: false,
     excerpt: 'When your model doesn\'t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it\'s both, you need pipeline parallelism or tensor parallelism — and the choices interact in non-obvious ways.',
@@ -536,7 +536,7 @@ Spending 20 minutes designing a batch inference system when the interviewer had 
     slug: 'ml-engineer-salary-map-2025',
     title: 'The ML Engineer Salary Map 2025: Where the Money Is, and Why It\'s There',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 14,
     featured: true,
     excerpt: 'In 2025, a Staff ML Engineer at a Bay Area hyperscaler earns more in total compensation than a mid-stage startup\'s entire monthly burn rate. A senior MLE in London earns roughly 60% of that. Bangalore, 25%. The gap isn\'t random — it traces the precise contour of where ML creates economic value, who controls compute, and which cities built the institutional density that attracts ML talent. This is the map.',
@@ -610,7 +610,7 @@ The map is not the territory. These are medians and ranges. The engineer who dep
     slug: 'how-netflix-became-an-ml-company',
     title: 'How Netflix Became an ML Company (and What Every Engineer Can Learn From It)',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 16,
     featured: false,
     excerpt: 'In 2006, Netflix offered $1 million to anyone who could improve its recommendation algorithm by 10%. Three years and 40,000 teams later, they awarded the prize — and never deployed the winning algorithm. The model was technically superior. It was also incompatible with the infrastructure Netflix had built while waiting. The story of how Netflix became one of the most sophisticated ML companies on earth begins not with brilliant engineering but with that particular failure, and what they learned from it.',
@@ -678,7 +678,7 @@ This is the third and most important lesson from Netflix: find the one number, i
     slug: 'real-ml-stack-seed-to-scale',
     title: 'The Real ML Stack: From Jupyter Notebook to $10B Infrastructure',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 13,
     featured: false,
     excerpt: 'Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don\'t laugh. Twitter\'s early recommendation system was basically this. The graveyard of failed ML projects is full of teams who tried to deploy Kubernetes-orchestrated, feature-store-backed, model-registry-managed systems before they\'d shipped a single prediction to a single user. This is the honest guide to what the stack looks like at every stage — and when to graduate from each one.',
@@ -746,7 +746,7 @@ Stack complexity is technical debt that compounds. Build for the problems you ha
     slug: 'alexnet-to-agents-ml-decade',
     title: 'AlexNet to Agents: The Twelve Years That Rewrote Everything',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 18,
     featured: false,
     excerpt: 'On September 30, 2012, Geoffrey Hinton\'s students submitted a paper to NIPS. The model was called AlexNet. The top-5 error rate on ImageNet was 15.3%, against the second-place team\'s 26.2%. The gap wasn\'t close. It wasn\'t incremental improvement. It was a discontinuity — the moment deep learning stopped being an academic curiosity and started being an industrial force. What followed in the next twelve years rewrote every assumption about what machines could do.',
@@ -824,7 +824,7 @@ The field that was a niche within data science in 2012 is now a primary driver o
     slug: 'where-in-the-world-to-be-mle',
     title: 'Where in the World to Be an ML Engineer in 2025',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 12,
     featured: false,
     excerpt: 'British ML engineers earn about 60% of what their San Francisco counterparts make. Berlin is 50%. Bangalore is 20%. But salary is only one variable. Tax rates, cost of living, work culture, visa pathways, research ecosystems, startup density, and the quality of the ML community around you all shape what a city actually offers an ML career. Here is the honest, un-romanticised picture of every major ML hub in 2025.',
@@ -906,7 +906,7 @@ Geography is not destiny. But it is the context in which everything else happens
     slug: 'mle-career-ladder-l3-to-l7',
     title: 'The MLE Career Ladder: What L3 to L7 Actually Means in Practice',
     category: 'ML Careers',
-    catColor: { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 15,
     featured: false,
     excerpt: 'The job title says "Senior Machine Learning Engineer." The levelling document says "demonstrates technical leadership and influences cross-functional teams." What does any of this mean in practice — on a Tuesday afternoon when there\'s a production incident, a model retraining decision to make, and a junior engineer asking for a design review? Here is what each level actually looks like from the inside, and what it takes to move between them.',
@@ -1027,7 +1027,7 @@ The question to ask for every feature: "At prediction time in production, is thi
     slug: 'feature-store-time-travel-bug',
     title: 'The Feature Store Time-Travel Bug That Quietly Corrupts Your Models',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(34,211,238,0.1)', text: 'var(--sky)', border: 'rgba(34,211,238,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 10,
     featured: false,
     excerpt: 'You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn\'t. The time-travel bug is the most insidious failure mode in ML data infrastructure, and it exists in almost every feature store deployment that hasn\'t explicitly tested for it.',
@@ -1362,7 +1362,7 @@ Six of these eight failures are detectable before you train any model: by auditi
     slug: 'feature-store-time-travel-bug',
     title: 'The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 9,
     featured: false,
     excerpt: 'Your feature store has a bug that doesn\'t show up in unit tests, doesn\'t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that didn\'t exist at the time of the event you\'re training on. This is the point-in-time correctness problem, and it silently inflates your offline metrics by 5–20% while doing nothing for your production model.',
@@ -1412,7 +1412,7 @@ Take 100 rows from your training set. For each row, manually compute the feature
     slug: 'validation-set-leakage',
     title: 'Validation Set Leakage: Why Your Offline Metrics Are Lying to You',
     category: 'Feature Engineering',
-    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 8,
     featured: false,
     excerpt: 'Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn\'t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap between offline and online metrics is the cost of that mistake. This happens more often than the industry admits.',
@@ -1466,7 +1466,7 @@ Wrong model selection. Hyperparameters tuned to a leaky metric. False confidence
     slug: 'ab-test-failure-modes',
     title: 'The Two Failure Modes of A/B Tests (And How to Catch Them)',
     category: 'Data Science',
-    catColor: { bg: 'rgba(52,211,153,0.1)', text: 'var(--mint)', border: 'rgba(52,211,153,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 11,
     featured: false,
     excerpt: 'Most A/B testing mistakes aren\'t statistical errors — they\'re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to detect a sample ratio mismatch (makes all your metrics untrustworthy). Both are invisible unless you know where to look.',
@@ -1591,7 +1591,7 @@ Then — and only then — select the model. Fit it. Check residuals for white n
     slug: 'fp16-quantization-first-principles',
     title: 'Quantization from First Principles: What FP16 Actually Throws Away',
     category: 'Deep Learning',
-    catColor: { bg: 'rgba(139,92,246,0.1)', text: 'var(--violet)', border: 'rgba(139,92,246,0.2)' },
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 13,
     featured: false,
     excerpt: 'Every DL serving tutorial tells you to use FP16 to halve your memory and double your throughput. Few explain what you\'re actually sacrificing — and when that sacrifice breaks your model. Quantization isn\'t free. Here\'s the bit-level mental model that lets you reason about when it\'s safe and when it\'s not.',
@@ -1665,21 +1665,21 @@ const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation',
 
 const GRADIENT_DOMAINS = [
   { id: 'all',       label: 'All Posts' },
-  { id: 'features',  label: 'Feature Eng',   color: 'var(--violet)' },
-  { id: 'spark',     label: 'Spark / DE',    color: 'var(--ember)' },
-  { id: 'eval',      label: 'Evaluation',    color: 'var(--mint)' },
-  { id: 'design',    label: 'System Design', color: 'var(--sky)' },
-  { id: 'monitor',   label: 'Monitoring',    color: 'var(--rose)' },
-  { id: 'math',      label: 'Math & DS',     color: 'var(--sky)' },
-  { id: 'dl',        label: 'Deep Learning', color: 'var(--violet)' },
-  { id: 'interview', label: 'Interview',     color: 'var(--gold)' },
-  { id: 'career',    label: 'Career',        color: 'var(--gold)' },
+  { id: 'features',  label: 'Feature Eng',   color: 'var(--prime)' },
+  { id: 'spark',     label: 'Spark / DE',    color: 'var(--prime)' },
+  { id: 'eval',      label: 'Evaluation',    color: 'var(--prime)' },
+  { id: 'design',    label: 'System Design', color: 'var(--prime)' },
+  { id: 'monitor',   label: 'Monitoring',    color: 'var(--prime)' },
+  { id: 'math',      label: 'Math & DS',     color: 'var(--prime)' },
+  { id: 'dl',        label: 'Deep Learning', color: 'var(--prime)' },
+  { id: 'interview', label: 'Interview',     color: 'var(--prime)' },
+  { id: 'career',    label: 'Career',        color: 'var(--prime)' },
 ]
 
 const DOMAIN_COLOR = {
-  features: 'var(--violet)', spark: 'var(--ember)', eval: 'var(--mint)',
-  design: 'var(--sky)', monitor: 'var(--rose)', math: 'var(--sky)',
-  dl: 'var(--violet)', interview: 'var(--gold)', career: 'var(--gold)',
+  features: 'var(--prime)', spark: 'var(--prime)', eval: 'var(--prime)',
+  design: 'var(--prime)', monitor: 'var(--prime)', math: 'var(--prime)',
+  dl: 'var(--prime)', interview: 'var(--prime)', career: 'var(--prime)',
 }
 
 function YouTubeEmbed({ videoId, title }) {
@@ -1874,10 +1874,10 @@ function CaseDetail({ c, onBack }) {
       <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '32px', lineHeight: 1.2 }}>{c.title}</h1>
 
       {[
-        { label: 'What happened',  color: 'var(--rose)',  content: c.what },
-        { label: 'Root cause',     color: 'var(--ember)', content: c.rootCause },
-        { label: 'Timeline',       color: 'var(--sky)',   content: c.timeline },
-        { label: 'Fix applied',    color: 'var(--mint)',  content: c.fix },
+        { label: 'What happened',  color: 'var(--prime)', content: c.what },
+        { label: 'Root cause',     color: 'var(--prime)', content: c.rootCause },
+        { label: 'Timeline',       color: 'var(--ink-low)', content: c.timeline },
+        { label: 'Fix applied',    color: 'var(--prime)', content: c.fix },
         { label: 'Key lesson',     color: 'var(--prime)', content: c.lesson },
       ].map(section => (
         <div key={section.label} style={{ marginBottom: '28px', paddingLeft: '16px', borderLeft: `3px solid ${section.color}40` }}>
@@ -2044,13 +2044,13 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
     const CALLOUT_STYLES = {
       tip:     { bg: 'rgba(240,165,0,0.14)',  border: 'rgba(240,165,0,0.25)',  text: 'var(--prime)', label: 'TIP' },
       warning: { bg: 'rgba(244,63,94,0.14)',  border: 'rgba(244,63,94,0.25)', text: 'var(--rose)',  label: 'WARNING' },
-      lesson:  { bg: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.25)',text: 'var(--sky)',   label: 'LESSON' },
+      lesson:  { bg: 'rgba(240,165,0,0.10)',   border: 'rgba(240,165,0,0.20)', text: 'var(--prime)', label: 'LESSON' },
     }
 
     return blocks.map((block, idx) => {
       if (block.type === 'code') return (
         <pre key={idx} style={{ fontFamily: 'var(--font-mono)', fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.8, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '16px 20px', margin: '20px 0', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
-          {block.lang && <div style={{ fontSize: '10px', color: 'var(--sky)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.lang}</div>}
+          {block.lang && <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.lang}</div>}
           <code>{block.content}</code>
         </pre>
       )
@@ -2087,7 +2087,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
     <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0' }}>
       {/* Reading progress bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '2px', background: 'var(--rim)', zIndex: 100 }}>
-        <div style={{ height: '100%', background: 'linear-gradient(90deg,#6366f1,#22d3ee)', width: `${scrollPct}%`, transition: 'width 0.1s', borderRadius: '1px' }} />
+        <div style={{ height: '100%', background: 'var(--prime)', width: `${scrollPct}%`, transition: 'width 0.1s', borderRadius: '1px' }} />
       </div>
 
       {/* Back + mark read */}
@@ -2095,7 +2095,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
           ← Back to Gradient
         </button>
-        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(52,211,153,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(52,211,153,0.15)' : 'transparent', color: isRead ? 'var(--mint)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
+        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(240,165,0,0.12)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
           {isRead ? '✓ Read' : 'Mark as read'}
         </button>
       </div>
@@ -2139,9 +2139,9 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
 
         {/* Practice CTA */}
         {POST_PRACTICE[post.id] && onNavigate && (
-          <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ marginTop: '32px', padding: '20px 24px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
+              <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Apply what you just read</div>
               <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-mid)' }}>{POST_PRACTICE[post.id].label}</div>
             </div>
             <button onClick={() => onNavigate(POST_PRACTICE[post.id].tab)} className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px', whiteSpace: 'nowrap' }}>

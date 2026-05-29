@@ -22,7 +22,7 @@ function getRecommendation(modelSize, taskSim, dataSize, hw) {
     return {
       method: 'QLoRA',
       tagline: 'Quantized base + low-rank adapters — the only viable path for 13B+ on consumer hardware',
-      color: 'var(--violet)',
+      color: 'var(--prime)',
       reasons: [
         'Large model (>13B params) exceeds single-GPU VRAM even in fp16 — 4-bit quantization is mandatory.',
         'QLoRA keeps the base frozen in 4-bit NF4 format; only LoRA adapter weights are trained in bf16.',
@@ -63,7 +63,7 @@ model = get_peft_model(model, lora_config)
     return {
       method: 'LoRA',
       tagline: 'Low-rank adapters on attention weights — best VRAM efficiency, near-full-FT performance',
-      color: 'var(--violet)',
+      color: 'var(--prime)',
       reasons: [
         'Large model benefits from the 0.1–1% trainable parameter count — gradients only flow through adapter matrices.',
         'Medium dataset (10k–100k) is large enough for LoRA to learn task-specific patterns without overfitting.',
@@ -91,7 +91,7 @@ model.print_trainable_parameters()
     return {
       method: 'Prefix Tuning / Adapters',
       tagline: 'Lightweight, task-switchable — ideal when swapping between tasks at inference',
-      color: 'var(--sky)',
+      color: 'var(--prime)',
       reasons: [
         'Moderate task similarity means the base model already has useful representations — minimal updates needed.',
         'Tiny/small data heavily limits how many parameters you can reliably optimize.',
@@ -118,7 +118,7 @@ model = get_peft_model(base_model, prefix_config)
     return {
       method: 'Freeze (Head-only)',
       tagline: 'Fine-tune only the classification head — the model already knows the representations',
-      color: 'var(--mint)',
+      color: 'var(--prime)',
       reasons: [
         'Very similar task means the pretrained backbone already extracts the exact features you need.',
         'Tiny/small dataset means updating trunk weights will cause overfitting almost immediately.',
@@ -148,7 +148,7 @@ optimizer = torch.optim.AdamW(
     return {
       method: 'Full Fine-tune',
       tagline: 'Update all weights — justified only with large data, very different task, and compute to match',
-      color: 'var(--ember)',
+      color: 'var(--prime)',
       reasons: [
         'Very different task means pretrained representations may not transfer well — you need the whole network to adapt.',
         'Large dataset (>100k examples) provides enough signal to update all weights without catastrophic overfitting.',
@@ -181,7 +181,7 @@ trainer.train()`,
   return {
     method: 'LoRA',
     tagline: 'Low-rank adapters — safe default balancing efficiency and performance',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
     reasons: [
       'LoRA covers most fine-tuning scenarios: good efficiency, strong performance, works on any hardware tier.',
       'Adapter weights can be merged at inference for zero latency overhead.',
@@ -225,9 +225,9 @@ function FreezeLoRAModule() {
               style={{
                 padding: '7px 14px', borderRadius: '20px', fontSize: '12px',
                 fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
-                border: `1px solid ${value === i ? 'var(--violet)' : 'var(--rim)'}`,
-                background: value === i ? 'rgba(99,102,241,0.12)' : 'transparent',
-                color: value === i ? 'var(--violet)' : 'var(--ink-low)',
+                border: `1px solid ${value === i ? 'var(--prime)' : 'var(--rim)'}`,
+                background: value === i ? 'rgba(240,165,0,0.12)' : 'transparent',
+                color: value === i ? 'var(--prime)' : 'var(--ink-low)',
                 transition: 'all 0.15s',
               }}>
               {opt}
@@ -241,7 +241,7 @@ function FreezeLoRAModule() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
           Freeze vs Fine-tune vs LoRA
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
@@ -281,7 +281,7 @@ function FreezeLoRAModule() {
 
           {/* Risk callout */}
           <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.14)', border: '1px solid rgba(240,165,0,0.22)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '6px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '6px' }}>
               Risk: if you used full fine-tune instead
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{rec.risk}</p>

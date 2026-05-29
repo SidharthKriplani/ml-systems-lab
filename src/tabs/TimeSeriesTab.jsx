@@ -292,7 +292,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'PSI/KS statistical test is the correct approach. Prediction drift is fundamentally a distribution comparison problem — you\'re asking whether the distribution of scores today matches the training distribution. PSI (Population Stability Index) and KS test are purpose-built for this. A fixed threshold on mean prediction is too crude (distribution can shift in shape without changing mean). Training a separate drift detection model is circular and fragile.',
     when_to_upgrade: 'Use multivariate drift detection (MMD, Maximum Mean Discrepancy) when you want to detect drift across the joint feature distribution, not just the marginals or predictions.',
-    accent: 'var(--gold)',
+    accent: 'var(--prime)',
   },
 ]
 
@@ -442,16 +442,12 @@ function AnomalyDetectionTiers() {
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-        {['Rule-based', 'Statistical', 'ML-based'].map((tier, i) => {
-          const colors = ['var(--mint)', 'var(--sky)', 'var(--violet)']
-          const bgs = ['rgba(52,211,153,0.10)', 'rgba(34,211,238,0.10)', 'rgba(99,102,241,0.10)']
-          return (
-            <div key={tier} style={{ padding: '14px', borderRadius: '10px', background: bgs[i], border: `1px solid ${colors[i]}25`, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: colors[i] }}>{tier}</div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{['fast, explicit', 'distributional', 'correlational'][i]}</div>
-            </div>
-          )
-        })}
+        {['Rule-based', 'Statistical', 'ML-based'].map((tier, i) => (
+          <div key={tier} style={{ padding: '14px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--prime)' }}>{tier}</div>
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{['fast, explicit', 'distributional', 'correlational'][i]}</div>
+          </div>
+        ))}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -474,7 +470,7 @@ function AnomalyDetectionTiers() {
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.when_to_upgrade}</span>
             </div>
           </div>
@@ -485,7 +481,7 @@ function AnomalyDetectionTiers() {
 }
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -612,7 +608,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -726,7 +722,7 @@ function TSModelSelector() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         ARIMA vs Prophet vs ML vs Neural — the right model depends on data volume, seasonality structure, and series count. Each scenario tests model selection judgment.
       </p>
-      <AccordionMCQ scenarios={TS_MODEL_SCENARIOS} accentColor="var(--sky)" storageKey="ts_model" />
+      <AccordionMCQ scenarios={TS_MODEL_SCENARIOS} accentColor="var(--prime)" storageKey="ts_model" />
     </div>
   )
 }
@@ -831,7 +827,7 @@ function TSFeatureEngineering() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         Lag selection, cyclical encoding, leakage prevention, and cross-series embeddings — the feature engineering decisions that separate good TS models from broken ones.
       </p>
-      <AccordionMCQ scenarios={TS_FEAT_SCENARIOS} accentColor="var(--violet)" storageKey="ts_features" />
+      <AccordionMCQ scenarios={TS_FEAT_SCENARIOS} accentColor="var(--prime)" storageKey="ts_features" />
     </div>
   )
 }
@@ -866,7 +862,7 @@ export default function TimeSeriesTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Time Series</h2>
-          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
+          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(240,165,0,0.1)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
           Why good forecasts fail in production — and how to diagnose it. Stationarity decisions, anomaly detection tier selection, and the failure modes that look fine in testing but break in the field.
