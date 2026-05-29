@@ -1,4 +1,4 @@
-# TOMORROW.md — Next Session Queue
+# NEXT.md — Next Session Queue
 
 **Rule:** Max 5 items. Specific enough to start without re-reading IDEAS.md.  
 Updated at the END of every session. Wiped and rewritten — not appended.  

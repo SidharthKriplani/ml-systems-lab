@@ -152,7 +152,7 @@ The goal is a high-signal IDEAS.md backlog, not a long one.
 | File | Purpose | Read when |
 |------|---------|-----------|
 | `CLAUDE.md` | This file — session briefing | Start of every session |
-| `TOMORROW.md` | Next session queue — max 5 items, specific, ordered. Updated at end of every session. | Immediately after CLAUDE.md, every session |
+| `NEXT.md` | Next session queue — max 5 items, specific, ordered. Updated at end of every session. | Immediately after CLAUDE.md, every session |
 | `DECISIONS.md` | Architectural rulebook — prescriptive, present-tense | Before making any architectural choice |
 | `LINEAGE.md` | Build history — narrative, past-tense | Understanding why something exists |
 | `IDEAS.md` | Build backlog — Tier 1/2/3 + In Progress + Retired | Planning what to build next |
