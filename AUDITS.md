@@ -540,6 +540,29 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 ---
 
+### #018 — 2026-05-29 · Mobile Hover Sticky Bug Sweep (PAL Fix Pattern)
+
+**Scope:** Automated grep for `e.currentTarget.style` in `onMouseEnter` handlers across all `src/tabs/*.jsx`  
+**Trigger:** Follow-on to Audit #017 — the same sticky-hover bug class fixed in PAL v4.33.5–v4.33.6 had never been audited in this codebase  
+**Output:** 6 findings — 1 High, 4 Medium (incl. 1 logic bug), 1 Medium crash guard — all fixed same session
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `TimedPractice` tier rating buttons — `onMouseEnter` imperatively sets `background`; `onMouseLeave` never fires on touch; selected-looking button stuck highlighted | `InterviewPrepTab.jsx` 416–417 | High | ✅ Fixed — `hoveredTier` useState, background computed in style object |
+| 2 | Question select buttons in `filteredQuestions.map()` — stuck border color after touch | `VerbatimTab.jsx` 305–306 | Medium | ✅ Fixed — `hoveredQId` useState, border computed via template literal |
+| 3 | `ResultCard` link buttons — imperative color + borderColor mutation; standalone component required adding useState inside it | `AskTab.jsx` 418–424 | Medium | ✅ Fixed — `hoveredLink` useState inside `ResultCard` |
+| 4 | "Surprise me" button — logic bug: base `rgba(212,175,55,0.15)`, hover `rgba(212,175,55,0.14)` — lower opacity than rest state (inverted, imperceptible) | `AskTab.jsx` 736–737 | Medium (logic) | ✅ Fixed — `surpriseHovered` useState, hover correctly raised to `0.25` |
+| 5 | Suggestion chip buttons — imperative borderColor + color mutation in SUGGESTIONS.map() | `AskTab.jsx` 778–784 | Medium | ✅ Fixed — `hoveredSugg` useState indexed by position |
+| 6 | `msl_read` JSON.parse without try/catch — null handled (`\|\| '[]'`) but corrupted JSON crashes GradientTab on mount | `GradientTab.jsx` 2230 | Medium (crash) | ✅ Fixed — lazy initializer wrapped in try/catch, falls back to `new Set()` |
+
+**Root cause:** On mobile, touch events fire `onMouseEnter` when components render after navigation. `onMouseLeave` never fires on touch. Any `e.currentTarget.style.*` write in an `onMouseEnter` handler sticks until the component unmounts.
+
+**Canonical fix pattern (PAL v4.33.5–v4.33.6):** `useState(null)` for hoveredId, compute hover value in the style object, no imperative DOM writes. All future hover effects must follow this pattern — never write to `e.currentTarget.style` in event handlers.
+
+**Brace balance:** All 4 modified files verified at `0` post-fix.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -561,6 +584,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
 | 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | 3 open ⚠️ |
 | 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | 3 open ⚠️ |
+| 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 
 **Open findings by severity:**
 

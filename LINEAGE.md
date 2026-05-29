@@ -46,6 +46,26 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.20 — Mobile hover sticky fix — PAL pattern applied (2026-05-29)
+
+**The bug class:**
+On mobile, `onMouseEnter` can fire from lingering touch events when new components render after navigation. If the handler writes to `e.currentTarget.style.*` imperatively and `onMouseLeave` never fires (touch events don't reliably fire `mouseleave`), the DOM mutation sticks until the component unmounts. The same pattern was identified and fixed in PAL (Product Analytics Lab) v4.33.5–v4.33.6 — now applied here via Audit #018.
+
+**Why this class of bug is easy to miss:** The hover works perfectly on desktop, and mobile testing typically happens at rest state rather than in a navigate-then-touch sequence. The bug only manifests when you touch a hover-interactive element, navigate away, then return — the component remounts but the last-touched element renders with its hover style already baked into the DOM because the imperative mutation survived the prior render.
+
+**What was fixed (6 instances across 4 files, found by grep):**
+
+- `InterviewPrepTab.jsx` — `TimedPractice` tier rating buttons (HIGH). The Weak/Okay/Strong/Excellent self-assessment buttons would appear highlighted when they weren't. `hoveredTier` state added to `TimedPractice`, background computed in style object.
+- `VerbatimTab.jsx` — question select buttons. Border color would stay at the category accent after a touch. `hoveredQId` state added, border computed as a template literal in the style object.
+- `AskTab.jsx` — three separate fixes: (1) `ResultCard` link buttons — `hoveredLink` state added inside the standalone component (could not share with parent); (2) "Surprise me" button — logic bug: hover value was `rgba(212,175,55,0.14)` vs base `rgba(212,175,55,0.15)` — imperceptibly dimmer, fully inverted; fixed to `0.25` so hover is actually visible; (3) suggestion chips — `hoveredSugg` state, position index as ID.
+- `GradientTab.jsx` — `msl_read` JSON.parse crash guard. Not a hover bug but caught in the same sweep: the lazy `useState` initializer parsed `msl_read` without try/catch. Null-handled (`|| '[]'`) but not corrupted-JSON-handled. Wrapped in try/catch, falls back to `new Set()`.
+
+**Why not patch `onMouseLeave` instead:** Adding `onTouchEnd` guards is fragile — touch events don't map 1:1 to mouse events and the sequence varies by browser/version. React state is the correct model: hover is derived from state, state is always consistent with React's rendering cycle, no imperative DOM writes exist to get stuck.
+
+**Scope:** 4 files, 23 lines net change. Brace balance verified (`0`) on all 4 before commit.
+
+---
+
 ### v4.19 — Audit #017 codebase sweep + new audit types (2026-05-29)
 
 **Why this audit was run:** Routine health check triggered after a large session (v4.17/v4.18) that touched many files. The specific concern going in: session summaries reference tab names, and if those names are wrong in CLAUDE.md, every future session starts with a broken mental model of the codebase.
