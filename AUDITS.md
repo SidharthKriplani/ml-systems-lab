@@ -70,10 +70,10 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
 | 1 | Brace balance clean across all tab files | All tabs | — | ✅ Clean |
-| 2 | Hardcoded hex/rgb colors in 5 component files | See detail | Medium | ⚠️ Open |
+| 2 | Hardcoded hex/rgb colors in 5 component files | See detail | Medium | ✅ Partially fixed — most cleaned in v4.3/v4.4. Residual in GradientTab catColor data, ModelEvalTab progress bar, InterviewPrepTab mode tab, dbtTab DANGER_COLORS. See #017. |
 | 3 | `DefenseDocTab` hex in print stylesheet | `DefenseDocTab` 401–402 | — | ✅ Exempt — print resets need absolute values |
 | 4 | All localStorage key constants properly `msl_`-prefixed | All tabs | — | ✅ Clean |
-| 5 | 26 tabs missing `onNavigate` prop in export signature | See detail | Medium | ⚠️ Open |
+| 5 | 26 tabs missing `onNavigate` prop in export signature | See detail | Medium | ✅ Fixed v4.2 — confirmed by grep; zero tabs missing onNavigate |
 | 6 | 56 instances of array index used as React `key` prop | See detail | Low | ⚠️ Open |
 | 7 | No `console.error` / `console.warn` in any tab | All tabs | — | ✅ Clean |
 | 8 | `className=` in 25 tabs — all are custom CSS classes (`card`, `btn-primary`, etc.) defined in `index.css`, not Tailwind utilities | All tabs | — | ✅ Acceptable — rule prohibits Tailwind utilities, not custom CSS classes |
@@ -109,8 +109,8 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | Hardcoded `fontFamily` strings in 30+ tab files | Widespread — see detail | Medium | ⚠️ Open |
-| 2 | `PipelineBlogTab.jsx` is dead code — `export default function PipelineBlogTab() { return null }`, not imported in `App.jsx` | `src/tabs/PipelineBlogTab.jsx` | Low | ⚠️ Open |
+| 1 | Hardcoded `fontFamily` strings in 30+ tab files | Widespread — see detail | Medium | ✅ Partially fixed — `--font-sans` / `--font-mono` vars added to `:root`; tab files updated v4.2/v4.3. App.jsx still has 8+ hardcoded literal strings (see #017). |
+| 2 | `PipelineBlogTab.jsx` is dead code — `export default function PipelineBlogTab() { return null }`, not imported in `App.jsx` | `src/tabs/PipelineBlogTab.jsx` | Low | ✅ Fixed — deleted v4.3 |
 
 **Finding 1 detail — font hardcoding:**  
 No CSS custom properties exist for fonts in `index.css` (fonts are set on `body` and element selectors, not as `--font-sans` / `--font-mono` variables). As a result, tabs hardcode `fontFamily: "'Space Grotesk', sans-serif"` and `fontFamily: "'JetBrains Mono', monospace"` inline. Worst offender: `SystemDesignTab.jsx` (72 instances).
@@ -267,7 +267,7 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 ---
 
-### #009 — 2026-05-29 · Visual Consistency — Emoji residue + Mobile layout
+### #016 — 2026-05-29 · Visual Consistency — Emoji residue + Mobile layout
 
 **Scope:** Post-v4.14 emoji audit follow-up + post-v4.16 HomeTab layout mobile check  
 **Trigger:** v4.14 cleaned `icon:` fields and decorative prefix emoji across 18 tabs. User confirmed residual emoji still present in multiple places. Mobile audit overdue after HomeTab layout redesign (per audit type reference: run Mobile after any CSS/layout change).  
@@ -430,12 +430,36 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 
 ---
 
+### #017 — 2026-05-29 · Codebase Health Sweep
+
+**Scope:** Full static scan of all `src/tabs/*.jsx`, `src/App.jsx`, `src/index.css`, and all MD spine files  
+**Trigger:** Routine audit run to establish current health baseline  
+**Output:** 5 findings — 0 High, 2 Medium, 3 Low
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `CLAUDE.md` file structure had 3 wrong filenames (`MathFoundationsTab.jsx` → `ModelsMathTab.jsx`, `DeploymentTab.jsx` → `MLOpsDeployTab.jsx`, `CICDTab.jsx` → `MLOpsPipelinesTab.jsx`) and `LandscapeTab.jsx` completely absent | `CLAUDE.md` | High | ✅ Fixed — corrected in this session |
+| 2 | Hardcoded font literal strings in `App.jsx` — 8+ instances of `"'Space Grotesk',sans-serif"` and `"'JetBrains Mono',monospace"` instead of `var(--font-sans)` / `var(--font-mono)`. Tab files were cleaned in v4.2/v4.3; App.jsx was not updated. Also 3 instances of `'Inter, sans-serif'` in `AskTab.jsx`. | `App.jsx`, `AskTab.jsx` | Medium | ⚠️ Open |
+| 3 | Residual hardcoded hex in 4 files: `color: '#000'`/`'#fff'` in `App.jsx` (lines 441, 781), `#f97316` in `dbtTab.jsx` DANGER_COLORS (should be `var(--ember)`), `color: '#000'` in `InterviewPrepTab.jsx` (line 649), `#6366f1`/`#22d3ee` in `ModelEvalTab.jsx` progress bar gradient. | `App.jsx`, `dbtTab.jsx`, `InterviewPrepTab.jsx`, `ModelEvalTab.jsx` | Low | ⚠️ Open |
+| 4 | `LandscapeTab.jsx` has no entry in `LINEAGE.md` — 684-line career intelligence tab (roles, salaries, market data, ML timeline) in `today` zone with no documented build history | `LINEAGE.md` | Medium | ⚠️ Open |
+| 5 | Bundle size risk — 28,757 total lines across all tab files + App.jsx, no lazy loading. At current growth rate, will exceed 1.5MB bundle threshold within ~3 content sprints. Already tracked in IDEAS.md/NEXT.md. | — | Low | ⚠️ Tracked — deferred pending bundle audit |
+
+**Note — AUDITS.md numbering fix (this session):**  
+The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Polish audit). Renumbered to `#016`. The summary table had a duplicate `#010` row (TimeSeriesTab bug fix). Deduplicated: TimeSeriesTab fix stays as `#010`, Interaction Guidance promoted to its own row with the correct next sequential number.
+
+**Priority actions:**
+1. *(Medium)* Replace hardcoded font strings in `App.jsx` with `var(--font-sans)` / `var(--font-mono)`. ~15 min. Do in a housekeeping pass alongside the AskTab `'Inter, sans-serif'` instances.
+2. *(Low)* Replace `#000`/`#fff`/`#f97316`/`#6366f1`/`#22d3ee` hex literals with CSS variables (`var(--void)`, `var(--white)`, `var(--ember)`, `var(--violet)`, `var(--sky)`). ~10 min.
+3. *(Medium)* Add `LandscapeTab` build history to `LINEAGE.md`.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
 |---|-------|------|------|--------|
-| 001 | BUILD baseline — brace balance, colors, localStorage, onNavigate, index keys | 2026-05-26 | BUILD / Visual Consistency | 3 open ⚠️ |
-| 002 | Font hardcoding, dead PipelineBlogTab | 2026-05-26 | BUILD / Visual Consistency | 2 open ⚠️ |
+| 001 | BUILD baseline — brace balance, colors, localStorage, onNavigate, index keys | 2026-05-26 | BUILD / Visual Consistency | 1 open ⚠️ (index keys) |
+| 002 | Font hardcoding, dead PipelineBlogTab | 2026-05-26 | BUILD / Visual Consistency | ✅ Both resolved |
 | 003 | Security baseline — gitignore, env vars, secrets | 2026-05-26 | Security | ✅ All clean |
 | 004 | SEO baseline — og-image missing, sitemap missing | 2026-05-26 | SEO / Social | ✅ Both fixed |
 | 005 | Build Safety — apostrophes, template literals, Vite parse risk | 2026-05-26 | Build Safety | ✅ All clean |
@@ -443,20 +467,21 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 | 007 | First-Time User — Ask label mismatch, zone split confusion, changelog visibility, Gradient cold entry, Interview sequencing | 2026-05-26 | First-Time User / UX | ✅ All resolved |
 | 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
 | 009 | Visual Polish — "take my money" end-to-end audit: tab headers, icons, cards, interactive surfaces | 2026-05-27 | Visual Consistency / UX | ✅ All resolved |
-| 010 | TimeSeriesTab ForecastFailureZoo — `correct:` field was numeric index, code compared against string IDs; score never counted, correct answer never highlighted | 2026-05-27 | BUILD / Content Integrity | ✅ Fixed — all 8 scenarios updated to string IDs |
-| 010 | Interaction Guidance — 23 interactive tabs had domain descriptions but no user-facing instruction on how to interact; MCQ reveal mechanic, simulation controls, and specialized formats entirely unexplained | 2026-05-29 | UX / First-Time User | ✅ Resolved v4.17 — guidance added to all 23 tabs |
-| 011 | Mobile layout — hero two-column grid not responsive; ScenarioMockup clipped on phone viewports | 2026-05-27 | Mobile | ✅ Fixed — hero-grid CSS class, mockup hidden <700px |
-| 012 | Low-brightness contrast pass 1 — ink-low/ink-ghost variables too conservative; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale and surfaces bumped |
-| 013 | Full contrast audit — 200+ inline rgba tint backgrounds (0.04–0.08 opacity) invisible at low brightness; affected all interactive states (selected MCQ, correct/wrong highlights, info boxes, domain cards) | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — 369 lines across 31 files: 0.04→0.10, 0.05→0.11, 0.06→0.13, 0.07→0.14, 0.08→0.15; ink scale more aggressive; nav inactive 0.35→0.62 |
-| 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav 5 items overflow narrow viewports, dragging fixed nav off-screen left and clipping all content | 2026-05-27 | Mobile | ✅ Fixed — overflow-x:hidden + max-width:100vw on html/body; nav items shrink-safe with overflow:hidden, smaller icon container, whiteSpace:nowrap + textOverflow:ellipsis |
-| 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support, and interactive bugs | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred (#7, #10) |
+| 010 | TimeSeriesTab ForecastFailureZoo — `correct:` field was numeric index, compared against string IDs; score never counted | 2026-05-27 | BUILD / Content Integrity | ✅ Fixed |
+| 011 | Mobile layout — hero two-column grid not responsive; ScenarioMockup clipped on phone viewports | 2026-05-27 | Mobile | ✅ Fixed |
+| 012 | Low-brightness contrast pass 1 — ink-low/ink-ghost variables too conservative; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed |
+| 013 | Full contrast audit — 200+ inline rgba tint backgrounds invisible at low brightness | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed |
+| 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav overflow narrow viewports | 2026-05-27 | Mobile | ✅ Fixed |
+| 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
+| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | 3 open ⚠️ |
+| 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | 3 open ⚠️ |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 1 | #008.2 (distractors) |
-| Low | 3 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (line length) |
+| Medium | 3 | #008.2 (distractors), #017.1 (hardcoded fonts App.jsx), #017.3 (LandscapeTab undocumented in LINEAGE) |
+| Low | 5 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex in App/dbt/ModelEval/InterviewPrep), #016.1-3 (emoji + mobile TODAY row) |
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

@@ -27,7 +27,7 @@ Every tab/module currently ends silently. After the guidance pass (which added h
 Start with the highest-traffic tabs: SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab. Use the existing "Go deeper → Read X in Gradient" CTA pattern — it's already in FeatureEngTab and MonitoringTab. Standardise it and add to the rest. Don't invent new CTAs, just make the existing pattern consistent.
 
 ### 4. Emoji → SVG — highest-traffic tabs only (1 hour)
-Don't do the full sweep yet (that's a longer audit session). Target the 4 tabs users land on most: HomeTab, CombinatorTab, TrainerTab, StaffLayerTab. Grep each for emoji codepoints, replace decorative ones with inline SVG using `currentColor`. Functional glyphs (✓ ✗ →) stay. Reference Audit #009 in AUDITS.md for the full list when doing the complete pass.
+Don't do the full sweep yet (that's a longer audit session). Target the 4 tabs users land on most: HomeTab, CombinatorTab, TrainerTab, StaffLayerTab. Grep each for emoji codepoints, replace decorative ones with inline SVG using `currentColor`. Functional glyphs (✓ ✗ →) stay. Reference Audit #016 in AUDITS.md for the full list when doing the complete pass.
 
 ### 5. Spot the Flaw tab — full build (3–4 hours)
 Interview zone, 12 scenarios. See IDEAS.md Tier 1 for full spec. Each scenario: a real ML code block or metric summary with exactly one subtle flaw — user picks the flaw category from 5 options, then sees the breakdown. Flaw taxonomy: Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact. Routing: `tabId: 'spottheflaw'`, zone: `interview`.
@@ -42,8 +42,9 @@ Nothing currently blocked.
 
 ## Done this session
 
-- ~~Footer cross-links — added to App.jsx, copy "Also by the same team:", LINEAGE.md v4.18 entry added, committed~~
+- ~~Footer cross-links — added to App.jsx, copy "Also by the same team:", LINEAGE.md v4.18, committed~~
 - ~~Interaction guidance pass — all 23 tabs, LINEAGE.md v4.17, AUDITS.md #010~~
+- ~~Audit #017 — full codebase health sweep; CLAUDE.md filenames fixed, AUDITS.md numbering fixed, 5 new findings logged, LINEAGE.md v4.19~~
 
 ---
 

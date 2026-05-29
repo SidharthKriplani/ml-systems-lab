@@ -42,7 +42,8 @@ src/
     GradientTab.jsx
     AskTab.jsx
     InterviewPrepTab.jsx
-    MathFoundationsTab.jsx
+    LandscapeTab.jsx
+    ModelsMathTab.jsx
     FeatureEngTab.jsx
     ModelEvalTab.jsx
     SystemDesignTab.jsx
@@ -58,8 +59,8 @@ src/
     CausalInferenceTab.jsx
     TimeSeriesTab.jsx
     MonitoringTab.jsx
-    DeploymentTab.jsx
-    CICDTab.jsx
+    MLOpsDeployTab.jsx
+    MLOpsPipelinesTab.jsx
     TakeHomeTab.jsx
     TrainerTab.jsx
     CombinatorTab.jsx

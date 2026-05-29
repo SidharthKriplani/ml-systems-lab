@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.19 — Audit #017 codebase sweep (2026-05-29)
+
+**CLAUDE.md file structure corrected:** 3 wrong filenames fixed (`MathFoundationsTab` → `ModelsMathTab`, `DeploymentTab` → `MLOpsDeployTab`, `CICDTab` → `MLOpsPipelinesTab`). `LandscapeTab.jsx` added to the list — it was missing entirely.
+
+**AUDITS.md numbering fixed:** Duplicate #009 section header (emoji/mobile audit) renumbered to #016. Duplicate #010 summary row (TimeSeriesTab bug fix) deduplicated. Stale open findings for #001.5 (onNavigate — fixed v4.2) and #002.1/2 (font hardcoding, dead file — fixed v4.3) updated to resolved. New audit #017 logged with 5 findings.
+
+**LandscapeTab origin (retroactive):** `LandscapeTab.jsx` is a 684-line career intelligence tab in the `today` zone. Content: 6 ML role profiles (MLE, MLOps, DE, DS, Research, Applied Scientist) with day-in-life descriptions, skills, and hiring companies; ML market data for 6 geographies (US, UK, DE, CA, IN, SG) with compensation ranges; ML technology timeline (2017–2025); interactive role detail panels. Built at some point before v4.14 (Satoshi font swap touched it). Added to CLAUDE.md file list in v4.19.
+
+---
+
 ### v4.18 — Footer cross-links (2026-05-29)
 
 **Problem:** ML Systems Lab, GenAI Systems Lab, and Product Analytics Lab had no awareness of each other. Users who found one lab had no path to the other two.
