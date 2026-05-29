@@ -179,7 +179,7 @@ export default function HomeTab({ onNavigate }) {
     setActivityGrid(grid)
     // Jump Back In
     const lastTab = localStorage.getItem('msl_tab')
-    if (lastTab) setJumpBackTab(lastTab)
+    if (lastTab && lastTab !== 'home') setJumpBackTab(lastTab)
 
     return () => {
       window.removeEventListener('msl_progress', refresh)
@@ -207,7 +207,7 @@ export default function HomeTab({ onNavigate }) {
   const jumpBackLabel = jumpBackTab ? (TRACKS.find(t => t.id === jumpBackTab)?.label ?? jumpBackTab) : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
       {/* ── Jump Back In ── */}
       {jumpBackLabel && (
@@ -221,54 +221,67 @@ export default function HomeTab({ onNavigate }) {
       )}
 
 
-      {/* ── Today's Case ── */}
+      {/* ── TODAY ── */}
       <section>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <div className="eyebrow" style={{ marginBottom: 0 }}>Today's case</div>
-          <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{new Date().toISOString().slice(0, 10)}</div>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>
+          Today · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>
-        <div
-          onClick={() => onNavigate(todayCase.tab)}
-          style={{ background: 'var(--depth)', border: `1px solid var(--rim)`, borderLeft: `3px solid ${todayCase.accent}`, borderRadius: '12px', padding: '18px 20px', cursor: 'pointer', transition: 'border-color 0.15s' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: todayCase.accent, textTransform: 'uppercase', letterSpacing: '0.08em', background: `${todayCase.accent}18`, border: `1px solid ${todayCase.accent}40`, borderRadius: '4px', padding: '2px 8px' }}>{todayCase.domain}</span>
-            <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Try it →</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '10px', alignItems: 'stretch' }}>
+          {/* Case */}
+          <div onClick={() => onNavigate(todayCase.tab)} style={{ background: 'var(--depth)', border: `1px solid var(--rim)`, borderLeft: `3px solid ${todayCase.accent}`, borderRadius: '12px', padding: '16px 18px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: todayCase.accent, textTransform: 'uppercase', letterSpacing: '0.08em', background: `${todayCase.accent}18`, border: `1px solid ${todayCase.accent}40`, borderRadius: '4px', padding: '2px 8px' }}>{todayCase.domain}</span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Try it →</span>
+            </div>
+            <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.65, margin: 0, fontFamily: 'var(--font-sans)' }}>{todayCase.q}</p>
           </div>
-          <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.65, margin: 0, fontFamily: 'var(--font-sans)' }}>{todayCase.q}</p>
+          {/* Activity */}
+          {activityGrid.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '14px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
+              {streak > 0 && (
+                <>
+                  <div style={{ fontSize: '22px', fontWeight: 900, color: 'var(--prime)', fontFamily: 'var(--font-mono)', lineHeight: 1 }}>{streak}</div>
+                  <div style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>day streak</div>
+                </>
+              )}
+              <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 8px)', gridAutoFlow: 'column', gridAutoColumns: '8px', gap: '2px', marginTop: '4px' }}>
+                {activityGrid.slice(-28).map(({ date, count }) => (
+                  <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '8px', height: '8px', borderRadius: '1px', background: count > 0 ? 'var(--prime)' : 'rgba(255,255,255,0.06)', opacity: count > 0 ? Math.min(0.4 + count * 0.2, 1) : 1 }} />
+                ))}
+              </div>
+              <div style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>4 weeks</div>
+            </div>
+          )}
         </div>
       </section>
 
       {/* ── Role selector ── */}
-      <section style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', padding: '28px', boxShadow: '0 8px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Personalise by role</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em' }}>What brings you here today?</div>
-        </div>
+      <section>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Role</div>
         {role ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <span style={{ padding: '6px 16px', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.55)', background: 'rgba(240,165,0,0.16)', color: 'var(--prime)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 700 }}>{activeRole.label}</span>
-            <button onClick={() => pickRole(role)} style={{ fontSize: '11px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', textDecoration: 'underline', padding: 0 }}>Change</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: activeRole ? '12px' : 0 }}>
+            <span style={{ padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.50)', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 700 }}>{activeRole.label}</span>
+            <button onClick={() => pickRole(role)} style={{ fontSize: '11px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', textDecoration: 'underline', padding: 0 }}>change</button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)}
-                style={{ padding: '7px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.10)', color: 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--rim)', background: 'transparent', color: 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s' }}>
                 {r.label}
               </button>
             ))}
           </div>
         )}
         {activeRole && (
-          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px' }}>
-            <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: '0 0 14px' }}>{activeRole.desc}</p>
+          <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.16)', borderRadius: '10px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: '0 0 12px' }}>{activeRole.desc}</p>
             {ROLE_SEQUENCES[activeRole.key] && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Your path:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Path:</span>
                 {ROLE_SEQUENCES[activeRole.key].map((step, i) => (
                   <span key={step.tab} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <button onClick={() => onNavigate(step.tab)} style={{ background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 700, cursor: 'pointer' }}>
+                    <button onClick={() => onNavigate(step.tab)} style={{ background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer' }}>
                       {`${String(i + 1).padStart(2, '0')} ${step.label}`}
                     </button>
                     {i < ROLE_SEQUENCES[activeRole.key].length - 1 && <span style={{ color: 'var(--ink-ghost)', fontSize: '10px' }}>→</span>}
@@ -276,7 +289,7 @@ export default function HomeTab({ onNavigate }) {
                 ))}
               </div>
             )}
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
               <button className="btn-secondary" onClick={() => onNavigate(activeRole.cta2.tab)}>{activeRole.cta2.label}</button>
             </div>
@@ -302,25 +315,6 @@ export default function HomeTab({ onNavigate }) {
         </div>
       )}
 
-      {/* ── Streak + Heatmap ── */}
-      {activityGrid.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-          {streak > 0 && (
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ fontSize: '26px', fontWeight: 900, color: 'var(--prime)', fontFamily: 'var(--font-mono)', lineHeight: 1 }}>{streak}</div>
-              <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginTop: '3px' }}>day streak</div>
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 10px)', gridAutoFlow: 'column', gridAutoColumns: '10px', gap: '2px' }}>
-              {activityGrid.map(({ date, count }) => (
-                <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '10px', height: '10px', borderRadius: '2px', background: count > 0 ? 'var(--prime)' : 'var(--depth)', border: '1px solid var(--rim)', opacity: count > 0 ? Math.min(0.5 + count * 0.15, 1) : 1 }} />
-              ))}
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>last 91 days</div>
-          </div>
-        </div>
-      )}
 
       {/* ── Bookmarks ── */}
       {bookmarks.length > 0 && (
@@ -347,10 +341,7 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Track grid ── */}
       <section>
-        <div className="eyebrow">All tracks</div>
-        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '20px' }}>
-          7 domains · 100+ scenarios · all free
-        </h2>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '16px' }}>All tracks</div>
         {DOMAIN_LABELS.map(domain => {
           const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))
           return (
