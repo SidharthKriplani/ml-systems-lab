@@ -46,6 +46,23 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.26 — Systematic design-system pass across all 30 tabs (2026-05-29)
+
+**Goal:** complete the application of `.section-eyebrow`, `.msl-option-btn`, and `.msl-reveal-panel` to every qualifying location across all tabs — not just the 6 touched in v4.25. MSL should be able to stand next to PAL and not feel inconsistent.
+
+**Scope:** all 30 tabs audited; 14 had qualifying replacements.
+
+**Replacements made:**
+- `.section-eyebrow` — ~44 inline instances replaced across: `dbtTab`, `AirflowTab`, `DLFineTuningTab`, `DLServingTab`, `DataScienceTab`, `TimeSeriesTab`, `MLOpsPipelinesTab`, `VerbatimTab`, `InterviewPrepTab`, `LandscapeTab`, `GradientTab`, `DefenseDocTab`
+- `.msl-reveal-panel` — applied in `SparkLabTab`, `CodeBugsTab`, `InterviewPrepTab`, `DefenseDocTab`
+- `.msl-option-btn` — applied in `CodeBugsTab`, `InterviewPrepTab`
+
+**16 tabs with zero qualifying candidates** (already using non-`ink-low` colour overrides, or no matching inline eyebrow patterns): `ClassicalMLTab`, `DataModelingTab`, `ModelsMathTab`, `CausalInferenceTab`, `MLOpsDeployTab`, `TrainerTab`, `TakeHomeTab`, `StaffLayerTab`, `CaseStudiesTab`, `AskTab`, `ModelEvalTab`, `DeepLearningTab`, `HomeTab`, `SystemDesignTab`, `FeatureEngTab`, `MonitoringTab`.
+
+All 14 edited files brace-balanced at 0. One commit.
+
+---
+
 ### v4.25 — PAL-modeled polish sprint (2026-05-29)
 
 **Guiding question:** does MSL feel as crafted as PAL?

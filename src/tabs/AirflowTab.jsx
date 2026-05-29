@@ -568,7 +568,7 @@ function LateDataHandler() {
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 16px' }}>{strat.why({ arrival, reprocess, consumers })}</p>
 
         <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '8px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Production config</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Production config</div>
           <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{strat.config}</pre>
         </div>
 

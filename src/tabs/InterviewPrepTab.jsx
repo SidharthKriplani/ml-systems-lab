@@ -249,7 +249,7 @@ function FluencyDrills() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>Fluency Drills</div>
+          <div className="section-eyebrow" style={{ marginBottom: '4px' }}>Fluency Drills</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, lineHeight: 1.5 }}>Replace weak phrases with the production-grade equivalent. {FLUENCY_DRILLS.length} drills.</p>
         </div>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', paddingTop: '4px' }}>{idx + 1} / {FLUENCY_DRILLS.length}</span>
@@ -265,8 +265,8 @@ function FluencyDrills() {
         <button className="btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => setRevealed(true)}>Reveal strong phrase →</button>
       ) : (
         <>
-          <div style={{ padding: '24px 28px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: '12px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Strong phrase</div>
+          <div className="msl-reveal-panel" style={{ padding: '24px 28px' }}>
+            <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Strong phrase</div>
             <p style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
             <div style={{ paddingTop: '14px', borderTop: '1px solid rgba(52,211,153,0.15)' }}>
               <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Why it matters</div>
@@ -335,7 +335,7 @@ function TimedPractice({ questions, onExit }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ padding: '28px', background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '12px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Session complete</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Session complete</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {questions.length} questions · {Math.floor(elapsed/60)}m {elapsed%60}s
           </div>
@@ -408,7 +408,7 @@ function TimedPractice({ questions, onExit }) {
           {/* 4-tier self-assessment */}
           {!tierSelected ? (
             <div style={{ padding: '16px 20px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>How did you do?</div>
+              <div className="section-eyebrow" style={{ marginBottom: '12px' }}>How did you do?</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {TIER_LEVELS.map(t => (
                   <button key={t.key}
@@ -557,13 +557,11 @@ function SystemDesignJudgment() {
         {STEP_LABELS.map((label, i) => {
           const isChosen  = chosen === i
           const isCorrect = i === sc.correct
-          let bg = 'rgba(0,0,0,0.2)', border = 'var(--rim)', color = 'var(--ink-mid)'
-          if (isChosen && !revealed)              { bg = 'rgba(251,191,36,0.15)'; border = 'rgba(251,191,36,0.4)';  color = 'var(--ink-hi)' }
-          if (revealed && isCorrect)              { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.4)';  color = 'var(--ink-hi)' }
-          if (revealed && isChosen && !isCorrect) { bg = 'rgba(244,63,94,0.15)';  border = 'rgba(244,63,94,0.4)';   color = 'var(--ink-hi)' }
+          const stateClass = revealed && isCorrect ? ' correct' : (revealed && isChosen && !isCorrect) ? ' wrong' : (!revealed && isChosen) ? ' selected' : ''
           return (
             <button key={i} disabled={revealed} onClick={() => setChosen(i)}
-              style={{ textAlign: 'left', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-sans)', fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
+              className={`msl-option-btn${stateClass}`}
+              style={{ cursor: revealed ? 'default' : 'pointer', fontWeight: (isChosen || (revealed && isCorrect)) ? 600 : 400 }}>
               {label}
               {revealed && isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--mint)' }}>correct</span>}
               {revealed && isChosen && !isCorrect && <span style={{ marginLeft: '8px', fontSize: '11px', color: 'var(--rose)' }}>your pick</span>}
@@ -578,8 +576,8 @@ function SystemDesignJudgment() {
 
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Why this step</div>
+          <div className="msl-reveal-panel">
+            <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Why this step</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.answer}</div>
           </div>
           <div style={{ background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '10px', padding: '16px 20px' }}>

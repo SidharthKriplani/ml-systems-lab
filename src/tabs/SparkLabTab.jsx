@@ -538,7 +538,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                 {/* Explanation */}
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
+                    <div className="msl-reveal-panel" style={{ padding: '12px 16px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>

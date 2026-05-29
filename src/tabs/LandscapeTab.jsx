@@ -359,12 +359,12 @@ function RolesSection({ onNavigate }) {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>A Tuesday afternoon</div>
+            <div className="section-eyebrow">A Tuesday afternoon</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, fontStyle: 'italic', margin: 0 }}>{role.dayInLife}</p>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Core skills</div>
+            <div className="section-eyebrow">Core skills</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {role.skills.map(s => (
                 <span key={s} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>{s}</span>
@@ -373,7 +373,7 @@ function RolesSection({ onNavigate }) {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Who hires for this</div>
+            <div className="section-eyebrow">Who hires for this</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {role.hires.map(h => (
                 <span key={h} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: role.bgColor, border: `1px solid ${role.borderColor}`, color: role.accentColor, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{h}</span>
@@ -491,7 +491,7 @@ function StackSection() {
           <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '16px' }}>{s.size}</div>
           {s.stack.map(cat => (
             <div key={cat.cat} style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>{cat.cat}</div>
+              <div className="section-eyebrow" style={{ marginBottom: '6px' }}>{cat.cat}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {cat.tools.map(t => (
                   <span key={t} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: `1px solid ${s.borderColor}`, color: s.accentColor, fontFamily: 'var(--font-mono)' }}>{t}</span>
@@ -502,7 +502,7 @@ function StackSection() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '16px 20px', borderColor: s.borderColor, background: s.bgColor }}>
-            <div style={{ fontSize: '12px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Philosophy</div>
+            <div className="section-eyebrow">Philosophy</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{s.philosophy}</p>
           </div>
           <div className="card" style={{ padding: '16px 20px', background: 'rgba(244,63,94,0.10)', borderColor: 'rgba(244,63,94,0.25)' }}>

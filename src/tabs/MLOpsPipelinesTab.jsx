@@ -371,7 +371,7 @@ function InfraDecision() {
 
       {/* Other options */}
       <div>
-        <div style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>
+        <div className="section-eyebrow" style={{ marginBottom: '10px' }}>
           Other options
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

@@ -363,7 +363,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
 
       {/* Skill gap bars */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Skill gap map</div>
+        <div className="section-eyebrow" style={{ marginBottom: 12 }}>Skill gap map</div>
         {sortedSkills.map((sk, i) => {
           const r = RATINGS.find(r => r.id === sk.rating)
           const barPct = Math.round((sk.gapScore / maxGap) * 100)
@@ -383,7 +383,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
 
       {/* Round exposure */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Round-by-round exposure</div>
+        <div className="section-eyebrow" style={{ marginBottom: 12 }}>Round-by-round exposure</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
           {Object.entries(ROUND_SKILLS).map(([round, topicNames]) => {
             const roundSkills = topicNames.length === 0
@@ -414,7 +414,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
 
       {/* Day plan sections */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+        <div className="section-eyebrow" style={{ marginBottom: 16 }}>
           Your {HORIZONS.find(h => h.id === horizon)?.label} plan
         </div>
 
@@ -486,7 +486,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
                   </div>
                 ))}
                 {section.bonus && (
-                  <div style={{ marginTop: section.items.length > 0 ? 10 : 0, padding: '7px 10px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: 6, fontSize: 11, color: 'var(--mint)', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
+                  <div className="msl-reveal-panel" style={{ marginTop: section.items.length > 0 ? 10 : 0, padding: '7px 10px', fontSize: 11, color: 'var(--mint)', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
                     {section.bonus}
                   </div>
                 )}

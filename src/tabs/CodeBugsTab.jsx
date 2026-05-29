@@ -663,50 +663,11 @@ function BugCard({ bug, answer, onAnswer }) {
   const answered = answer !== undefined
   const isCorrect = answered && answer === bug.correct
 
-  const optionStyle = (key) => {
-    const base = {
-      display: 'block',
-      width: '100%',
-      textAlign: 'left',
-      padding: '9px 14px',
-      borderRadius: 6,
-      fontFamily: 'var(--font-sans)',
-      fontSize: 13,
-      cursor: answered ? 'default' : 'pointer',
-      marginBottom: 6,
-      transition: 'border-color 0.15s, background 0.15s',
-      lineHeight: 1.5,
-    }
-    if (!answered) {
-      return {
-        ...base,
-        background: 'var(--depth)',
-        border: '1px solid var(--rim)',
-        color: 'var(--ink-mid)',
-      }
-    }
-    if (key === bug.correct) {
-      return {
-        ...base,
-        background: 'rgba(52,211,153,0.15)',
-        border: '1px solid var(--mint)',
-        color: 'var(--ink-hi)',
-      }
-    }
-    if (key === answer) {
-      return {
-        ...base,
-        background: 'rgba(244,63,94,0.15)',
-        border: '1px solid var(--rose)',
-        color: 'var(--ink-hi)',
-      }
+  const optionExtraStyle = (key) => {
+    if (answered && key !== bug.correct && key !== answer) {
+      return { opacity: 0.6 }
     }
     return {
-      ...base,
-      background: 'var(--depth)',
-      border: '1px solid var(--rim)',
-      color: 'var(--ink-low)',
-      opacity: 0.6,
     }
   }
 
@@ -789,7 +750,8 @@ function BugCard({ bug, answer, onAnswer }) {
             {Object.entries(bug.options).map(([key, text]) => (
               <button
                 key={key}
-                style={optionStyle(key)}
+                className={`msl-option-btn${answered && key === bug.correct ? ' correct' : answered && key === answer ? ' wrong' : ''}`}
+                style={{ marginBottom: 6, cursor: answered ? 'default' : 'pointer', ...optionExtraStyle(key) }}
                 onClick={() => !answered && onAnswer(bug.id, key)}
                 disabled={answered}
               >
@@ -859,12 +821,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 </p>
               </div>
 
-              <div style={{
-                background: 'rgba(52,211,153,0.13)',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
-                borderRadius: 6,
-                padding: '10px 12px',
-              }}>
+              <div className="msl-reveal-panel">
                 <div style={{
                   fontSize: 11,
                   fontWeight: 700,

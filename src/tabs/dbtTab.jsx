@@ -175,7 +175,7 @@ function MaterializationOracle() {
           { label: 'Downstream consumers',  items: CONSUMER_OPTIONS,   val: consumer,  set: setConsumer,  color: 'var(--violet)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
+            <div className="section-eyebrow" style={{ marginBottom: '10px' }}>{g.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
             </div>
@@ -210,7 +210,7 @@ function MaterializationOracle() {
                   <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.gotcha}</p>
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config block</div>
+                  <div className="section-eyebrow">Config block</div>
                   <CodeBlock>{m.config}</CodeBlock>
                 </div>
               </div>
@@ -523,7 +523,7 @@ function SchemaDriftClinic() {
           <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: DANGER_COLORS[scenario.danger] + '18', color: DANGER_COLORS[scenario.danger], fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', flexShrink: 0 }}>{scenario.danger}</span>
         </div>
         <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Scenario</div>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Scenario</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.context}</p>
         </div>
 
@@ -769,12 +769,12 @@ function IncrementalModelDecisions() {
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Why this pattern</div>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Why this pattern</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{rec.explanation}</p>
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Config</div>
+          <div className="section-eyebrow">Config</div>
           <CodeBlock>{rec.config}</CodeBlock>
         </div>
 

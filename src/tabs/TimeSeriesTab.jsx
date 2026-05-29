@@ -347,7 +347,7 @@ function ForecastFailureZoo() {
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.clue}</span>
         </div>
       </div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Root cause?</div>
+      <div className="section-eyebrow">Root cause?</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {s.options.map((opt, i) => {
           const isCorrect = i === correctIdx

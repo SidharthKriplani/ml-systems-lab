@@ -126,7 +126,7 @@ function ModelSelectionOracle() {
           { label: 'Feature type', items: FEAT_TYPES, val: featType, set: setFeatType, color: 'var(--mint)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
+            <div className="section-eyebrow" style={{ marginBottom: '10px' }}>{g.label}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {g.items.map(item => pill(item.l, g.val === item.v, () => g.set(item.v), g.color))}
             </div>

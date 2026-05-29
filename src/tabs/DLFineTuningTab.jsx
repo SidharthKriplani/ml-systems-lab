@@ -218,7 +218,7 @@ function FreezeLoRAModule() {
   function PillGroup({ label, options, value, onChange }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</div>
+        <div className="section-eyebrow">{label}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {options.map((opt, i) => (
             <button key={i} onClick={() => onChange(i)}
@@ -268,7 +268,7 @@ function FreezeLoRAModule() {
 
           {/* Why it fits */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Why this fits</div>
+            <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Why this fits</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               {rec.reasons.map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
@@ -601,7 +601,7 @@ function PEFTComparisonModule() {
 
       {/* Constraint selector */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Primary constraint</div>
+        <div className="section-eyebrow">Primary constraint</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {PEFT_CONSTRAINTS.map(c => (
             <button key={c.id} onClick={() => setConstraint(c.id)}

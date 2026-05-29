@@ -505,13 +505,13 @@ export default function VerbatimTab({ onNavigate }) {
 
         {/* Question recap */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Question</div>
+          <div className="section-eyebrow" style={{ marginBottom: 6 }}>Question</div>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.55 }}>{selectedQ.text}</p>
         </div>
 
         {/* Transcript */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: '14px 18px', marginBottom: 24 }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Your Answer</div>
+          <div className="section-eyebrow">Your Answer</div>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{transcript || '(no transcript)'}</p>
           {transcript && (() => {
             const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;

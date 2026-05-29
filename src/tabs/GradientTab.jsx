@@ -1685,7 +1685,7 @@ const DOMAIN_COLOR = {
 function YouTubeEmbed({ videoId, title }) {
   return (
     <div style={{ margin: '28px 0' }}>
-      <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Watch</div>
+      <div className="section-eyebrow">Watch</div>
       <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', border: '1px solid var(--rim)' }}>
         <iframe
           src={'https://www.youtube-nocookie.com/embed/' + videoId}

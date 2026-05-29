@@ -15,13 +15,13 @@ The current README leads with domain breadth ("6 engineering domains, 200+ scena
 The two-column `gridTemplateColumns: 'minmax(0, 1fr) auto'` TODAY row was never tested on narrow screens. Open DevTools → 375px and 320px. If the case card text is unreadably compressed, add `@media (max-width: 480px)` to stack columns vertically (`gridTemplateColumns: '1fr'`, activity widget full width below case card). Fix in `HomeTab.jsx` inline with a `<style>` tag or conditional style object.
 
 ### 3. Apply .msl-option-btn to MCQ tabs (1–2 hours)
-The `.msl-option-btn` class was defined in index.css this session but not yet applied to the actual MCQ option buttons across tabs. Target: FeatureEngTab, ModelEvalTab, MonitoringTab, ClassicalMLTab, DataScienceTab. Each has 4-option MCQ buttons rendered with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` class. This unifies the most user-facing interactive element across all practice tabs.
+The `.msl-option-btn` class is defined in index.css and was applied to CodeBugsTab and InterviewPrepTab last session. Extend to the core MCQ practice tabs: FeatureEngTab, ModelEvalTab, MonitoringTab, ClassicalMLTab, DataScienceTab. Each has 4-option MCQ buttons rendered with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` class. This unifies the most user-facing interactive element across all practice tabs.
 
 ### 4. Module forward pointers — remaining tabs (1 hour)
 SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab are done. Extend to: ClassicalMLTab, MLOpsDeployTab, SparkLabTab, DataScienceTab, CombinatorTab. Same `ForwardPointer` component pattern. Guard with `{onNavigate && ...}`.
 
-### 5. Apply .section-eyebrow to remaining 20 tabs (1–2 hours)
-This session applied `.section-eyebrow` to 4 of 6 target tabs (17 instances). ModelEvalTab and DeepLearningTab had no qualifying candidates. Extend the pass to the remaining high-traffic tabs: ClassicalMLTab, MLOpsDeployTab, TrainerTab, CombinatorTab, StaffLayerTab, CodeBugsTab. Same rule: only replace when `color: var(--ink-low)` + uppercase + letterSpacing. Colour overrides stay inline.
+### 5. Spot the Flaw tab — full build (3–4 hours)
+Interview zone, 12 scenarios. Each scenario: a real ML code block or metric summary with exactly one subtle flaw — user picks the flaw category from 5 options, then sees the breakdown. Flaw taxonomy: Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact. Routing: `tabId: 'spottheflaw'`, zone: `interview`. See IDEAS.md Tier 1 for full spec.
 
 ---
 
@@ -42,12 +42,12 @@ Nothing currently blocked.
 - ~~Skeleton mode — COMING_SOON stubs across 16 tabs (24 new + 11 upgraded); userBrief rendered to users, devBrief{micro,macro} in-code dev guidance; LINEAGE.md v4.22~~
 - ~~Nav + progress overhaul — flat sidebar, guided paths, domain bars, HomeTab polish, ForwardPointer CTAs on 5 tabs; LINEAGE.md v4.23~~
 - ~~PAL-modeled polish (v4.24+v4.25) — transition/shadow/radius tokens, sidebar-item-active left-border, lock icons removed, role pills collapsed, progress bar animations, Space Grotesk dropped, shared utility classes (.msl-option-btn, .msl-reveal-panel, .msl-scenario-card, .msl-hint), .section-eyebrow applied to 17 instances across 4 tabs, dark theme token audit (6 replacements)~~
+- ~~Systematic design-system pass (v4.26) — .section-eyebrow (~44 instances), .msl-option-btn, .msl-reveal-panel applied across remaining 14 tabs; all 30 tabs brace-balanced~~
 
 ---
 
 ## What comes after (not for this session)
 
-- **Spot the Flaw tab — full build** — 3–4 hours. Interview zone, 12 scenarios. Each scenario: a real ML code block or metric summary with exactly one subtle flaw — user picks the flaw category from 5 options, then sees the breakdown. Flaw taxonomy: Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact. Routing: `tabId: 'spottheflaw'`, zone: `interview`. See IDEAS.md Tier 1 for full spec.
 - **Emoji → SVG — highest-traffic tabs only** — 1 hour. Target HomeTab, CombinatorTab, TrainerTab, StaffLayerTab. Grep for emoji codepoints, replace decorative ones with inline SVG using `currentColor`. Functional glyphs (✓ ✗ →) stay. Reference Audit #016 in AUDITS.md for the full list.
 - **New user cold-state banner** — 45 min. Detect first visit (no `msl_tab`/`msl_score`/`msl_access`), show one-time "start here" orientation. Disappears after first tab visit. See IDEAS.md Tier 1.
 - Pre-Eval Callout pattern — 5 target tabs (SystemDesign, ModelEval, Monitoring, MLOpsDeploy, CausalInference). Content work-heavy.

@@ -280,7 +280,7 @@ function QuantModule() {
 
       {/* Code snippet */}
       <div>
-        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div className="section-eyebrow">
           Implementation ({topLabel})
         </div>
         <CodeBlock code={CODE_SNIPPETS[topMeta.codeKey]} />
@@ -922,7 +922,7 @@ function MLServingArchitecture() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div className="section-eyebrow">
           Click any block to explore
         </div>
         <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
