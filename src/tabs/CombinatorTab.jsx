@@ -1126,7 +1126,10 @@ export default function CombinatorTab({ onNavigate }) {
           <p style={{ color: 'var(--ink-mid)', marginTop: '0.25rem', fontSize: '0.95rem' }}>
             Timed mock session — all answers locked until time ends
           </p>
-          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>~ Simulated</span>
+          <p style={{ color: 'var(--ink-low)', marginTop: '0.5rem', fontSize: '0.825rem', lineHeight: 1.55, fontFamily: 'var(--font-sans)', maxWidth: '520px' }}>
+            Choose a duration, then start the session. Questions are served one at a time — you can't change a submitted answer. When time runs out (or you end early), review your domain breakdown in the debrief.
+          </p>
+          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.25rem', letterSpacing: '0.04em' }}>~ Simulated</span>
         </div>
 
         {_saved?.screen === 'session' && (

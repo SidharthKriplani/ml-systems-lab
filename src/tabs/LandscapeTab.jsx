@@ -667,6 +667,9 @@ export default function LandscapeTab({ onNavigate }) {
           The full picture of ML as a career and industry — roles, salaries, tech stacks, how top companies use ML,
           the history that got us here, and where in the world the jobs are.
         </p>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.55, margin: '6px 0 0', fontFamily: 'var(--font-sans)', maxWidth: '620px' }}>
+          Use the section tabs to navigate — Roles covers day-in-life and demand signals, Salary shows L3–L7 TC benchmarks, Stack shows how tooling choices change with company stage.
+        </p>
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

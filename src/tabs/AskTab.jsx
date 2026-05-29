@@ -711,6 +711,16 @@ export default function AskTab({ onNavigate }) {
           }}>
             Search the ML Systems KB — concepts, trade-offs, failure modes, production patterns.
           </p>
+          <p style={{
+            margin: '6px 0 0',
+            fontSize: 13,
+            color: 'var(--ink-low)',
+            fontFamily: 'var(--font-sans)',
+            lineHeight: 1.55,
+            maxWidth: '500px',
+          }}>
+            Type a question or pick from the suggestions below. Use "Surprise me" for a random challenge question with a hint and worked answer.
+          </p>
         </div>
         <button
           onClick={handleSurprise}

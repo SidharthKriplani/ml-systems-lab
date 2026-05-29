@@ -229,6 +229,9 @@ export default function TakeHomeTab({ onNavigate }) {
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>
             15 open-ended questions · self-scored · export your answers
           </p>
+          <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-low)', lineHeight: 1.55, fontFamily: 'var(--font-sans)', maxWidth: '560px' }}>
+            Expand a question, write your answer in the text box, then reveal the model response to compare. Self-score on four dimensions when done. Export your answers as JSON to review later.
+          </p>
         </div>
         <button
           onClick={handleExport}
