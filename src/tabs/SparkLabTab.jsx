@@ -92,7 +92,7 @@ function ShuffleHell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shuffle Hell</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           You're joining a {dataGB}GB fact table to a 512MB dimension table. Configure the job — then run it.
         </p>
@@ -115,7 +115,7 @@ function ShuffleHell() {
         ].map(c => (
           <div key={c.label} className="card" style={{ padding: '16px' }}>
             <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-              {c.label}: <span style={{ color: c.warn ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{c.value}{c.unit}</span>
+              {c.label}: <span style={{ color: c.warn ? 'var(--rose)' : 'var(--ink-hi)', fontWeight: 600 }}>{c.value}{c.unit}</span>
             </label>
             <input type="range" min={c.min} max={c.max} step={c.step} value={c.value} onChange={e => { c.set(+e.target.value); setResult(null) }} />
           </div>
@@ -223,7 +223,7 @@ function SkewDoctor() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Skew Doctor</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Select a skew scenario. Diagnose it via the task duration chart. Then apply a fix and see the result.
         </p>
@@ -273,12 +273,12 @@ function SkewDoctor() {
       </div>
 
       {revealed && fix && fixedDist && (
-        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(16,185,129,0.11)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--mint)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
+        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--prime)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '60px', marginBottom: '8px' }}>
             {fixedDist.tasks.map((t, i) => {
               const max2 = Math.max(...fixedDist.tasks)
-              return <div key={i} style={{ flex: 1, background: 'var(--mint)', opacity: 0.7, height: `${(t/max2)*100}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
+              return <div key={i} style={{ flex: 1, background: 'var(--prime)', opacity: 0.7, height: `${(t/max2)*100}%`, borderRadius: '2px 2px 0 0', minHeight: '3px', transition: 'height 0.4s' }} />
             })}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{FIXES[fix].desc}</p>
@@ -315,9 +315,9 @@ function PartitionTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Partition Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Partition Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
-          Find the optimal <code style={{ color: 'var(--sky)' }}>spark.sql.shuffle.partitions</code> value for your cluster and dataset.
+          Find the optimal <code style={{ color: 'var(--prime)' }}>spark.sql.shuffle.partitions</code> value for your cluster and dataset.
           Tune until partition size hits the 128–256 MB sweet spot and parallelism matches your slots.
         </p>
       </div>
@@ -345,11 +345,11 @@ function PartitionTuner() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
 
-          <div style={{ padding: '16px', background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', textAlign: 'center' }}>
+          <div style={{ padding: '16px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '4px' }}>
               spark.sql.shuffle.partitions
             </div>
-            <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--mint)' }}>
+            <div style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: 'var(--prime)' }}>
               {roundedRec}
             </div>
           </div>
@@ -394,9 +394,9 @@ function PartitionTuner() {
       </div>
 
       {/* Tips */}
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(249,115,22,0.10)', borderColor: 'rgba(249,115,22,0.2)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.10)', borderColor: 'rgba(240,165,0,0.2)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
-          <strong style={{ color: 'var(--ember)' }}>Rules of thumb:</strong><br />
+          <strong style={{ color: 'var(--prime)' }}>Rules of thumb:</strong><br />
           • Default is 200 — fine for small jobs, catastrophic for large datasets.<br />
           • Target 128–200 MB per partition after shuffle (tune with AQE if on Spark 3+).<br />
           • Keep partitions as a multiple of total executor slots to avoid stragglers.<br />
@@ -409,7 +409,7 @@ function PartitionTuner() {
 }
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -543,7 +543,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -657,7 +657,7 @@ function BroadcastJoinDecisions() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         Broadcast joins eliminate shuffles but carry memory risks. Each scenario tests when to broadcast, when to avoid it, and what Spark chooses at runtime.
       </p>
-      <AccordionMCQ scenarios={BROADCAST_SCENARIOS} accentColor="var(--ember)" storageKey="spark_broadcast" />
+      <AccordionMCQ scenarios={BROADCAST_SCENARIOS} accentColor="var(--prime)" storageKey="spark_broadcast" />
     </div>
   )
 }
@@ -762,7 +762,7 @@ function OOMDiagnosis() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         OOM errors in Spark have distinct signatures. Each scenario presents a real failure mode — diagnose the cause and pick the correct fix.
       </p>
-      <AccordionMCQ scenarios={OOM_SCENARIOS} accentColor="var(--rose)" storageKey="spark_oom" />
+      <AccordionMCQ scenarios={OOM_SCENARIOS} accentColor="var(--prime)" storageKey="spark_oom" />
     </div>
   )
 }
@@ -898,7 +898,7 @@ function MemoryPressureSimulator() {
               {[['sort_merge', 'Sort-Merge'], ['broadcast', 'Broadcast'], ['shuffle_hash', 'Shuffle Hash']].map(([val, label]) => (
                 <button key={val} onClick={() => setJoinType(val)} style={{
                   padding: '5px 12px', borderRadius: '6px', border: `1px solid ${joinType === val ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: joinType === val ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  background: joinType === val ? 'rgba(240,165,0,0.12)' : 'transparent',
                   color: joinType === val ? 'var(--prime)' : 'var(--ink-low)',
                   fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                 }}>{label}</button>
@@ -1020,7 +1020,7 @@ function StreamingStabilityLab() {
                 <button key={i} onClick={() => setInputRateIdx(i)} style={{
                   padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                   border: `1px solid ${inputRateIdx === i ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: inputRateIdx === i ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  background: inputRateIdx === i ? 'rgba(240,165,0,0.12)' : 'transparent',
                   color: inputRateIdx === i ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{label}</button>
               ))}
@@ -1048,7 +1048,7 @@ function StreamingStabilityLab() {
                 <button key={opt} onClick={() => setTriggerInterval(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                   border: `1px solid ${triggerInterval === opt ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: triggerInterval === opt ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  background: triggerInterval === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
                   color: triggerInterval === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
@@ -1066,9 +1066,9 @@ function StreamingStabilityLab() {
               {WATERMARK_OPTIONS.map(opt => (
                 <button key={opt} onClick={() => setWatermark(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
-                  border: `1px solid ${watermark === opt ? 'var(--sky)' : 'var(--rim)'}`,
-                  background: watermark === opt ? 'rgba(56,189,248,0.12)' : 'transparent',
-                  color: watermark === opt ? 'var(--sky)' : 'var(--ink-low)',
+                  border: `1px solid ${watermark === opt ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: watermark === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  color: watermark === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
             </div>
@@ -1080,9 +1080,9 @@ function StreamingStabilityLab() {
               {STATE_OPTIONS.map(opt => (
                 <button key={opt} onClick={() => setStateOp(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
-                  border: `1px solid ${stateOp === opt ? 'var(--violet)' : 'var(--rim)'}`,
-                  background: stateOp === opt ? 'rgba(139,92,246,0.12)' : 'transparent',
-                  color: stateOp === opt ? 'var(--violet)' : 'var(--ink-low)',
+                  border: `1px solid ${stateOp === opt ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: stateOp === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  color: stateOp === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
             </div>
@@ -1094,9 +1094,9 @@ function StreamingStabilityLab() {
               {CHECKPOINT_OPTIONS.map(opt => (
                 <button key={opt} onClick={() => setCheckpointStorage(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
-                  border: `1px solid ${checkpointStorage === opt ? 'var(--ember)' : 'var(--rim)'}`,
-                  background: checkpointStorage === opt ? 'rgba(249,115,22,0.12)' : 'transparent',
-                  color: checkpointStorage === opt ? 'var(--ember)' : 'var(--ink-low)',
+                  border: `1px solid ${checkpointStorage === opt ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: checkpointStorage === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  color: checkpointStorage === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
             </div>
@@ -1193,13 +1193,13 @@ export default function SparkLabTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--ember) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Spark Lab</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Spark Lab</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module has interactive controls. Adjust the parameters, pick a strategy, and observe the outcome — build intuition for configurations that fail before you hit them in production.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--mint)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
@@ -1214,7 +1214,7 @@ export default function SparkLabTab({ onNavigate }) {
         ))}
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
-      {onNavigate && <ForwardPointer label="Practice Spark scenarios in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--ember)" />}
+      {onNavigate && <ForwardPointer label="Practice Spark scenarios in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

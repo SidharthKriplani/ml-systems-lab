@@ -4,17 +4,17 @@ import { trackModuleComplete } from '../analytics'
 const REVEALS_KEY = 'msl_staff_reveals'
 
 const DOMAIN_COLORS = {
-  'Experiment Design': 'var(--sky)',
-  'MLOps': 'var(--rose)',
-  'Architecture': 'var(--violet)',
+  'Experiment Design': 'var(--prime)',
+  'MLOps': 'var(--prime)',
+  'Architecture': 'var(--prime)',
   'Ranking': 'var(--prime)',
-  'Systems': 'var(--sky)',
-  'Ethics/Fairness': 'var(--rose)',
-  'Feature Engineering': 'var(--mint)',
-  'Problem Framing': 'var(--amber, #f59e0b)',
-  'ML Necessity': 'var(--gold)',
-  'Incident Response': 'var(--rose)',
-  'Platform Decisions': 'var(--violet)',
+  'Systems': 'var(--prime)',
+  'Ethics/Fairness': 'var(--prime)',
+  'Feature Engineering': 'var(--prime)',
+  'Problem Framing': 'var(--prime)',
+  'ML Necessity': 'var(--prime)',
+  'Incident Response': 'var(--prime)',
+  'Platform Decisions': 'var(--prime)',
 }
 
 const SCENARIOS = [
@@ -362,9 +362,9 @@ export default function StaffLayerTab({ onNavigate }) {
                         style={{
                           width: '9px', height: '9px', borderRadius: '50%',
                           background: level >= dot
-                            ? dot === 3 ? 'var(--prime)' : dot === 2 ? 'var(--sky)' : 'var(--ink-ghost)'
+                            ? dot === 3 ? 'var(--prime)' : dot === 2 ? 'var(--ink-low)' : 'var(--ink-ghost)'
                             : 'transparent',
-                          border: `2px solid ${level >= dot ? (dot === 3 ? 'var(--prime)' : dot === 2 ? 'var(--sky)' : 'var(--ink-ghost)') : 'var(--rim)'}`,
+                          border: `2px solid ${level >= dot ? (dot === 3 ? 'var(--prime)' : dot === 2 ? 'var(--ink-low)' : 'var(--ink-ghost)') : 'var(--rim)'}`,
                           transition: 'all 0.2s',
                         }}
                       />
@@ -396,8 +396,8 @@ export default function StaffLayerTab({ onNavigate }) {
                       label="IC5"
                       text={s.ic5}
                       bgColor="var(--depth)"
-                      borderColor="var(--sky)"
-                      labelColor="var(--sky)"
+                      borderColor="var(--ink-low)"
+                      labelColor="var(--ink-low)"
                       borderWidth="2px"
                     />
                   )}
@@ -455,7 +455,7 @@ function LevelBlock({ label, text, bgColor, borderColor, labelColor, borderWidth
 function RevealButton({ level, onReveal }) {
   const configs = {
     0: { label: 'Reveal IC3', bg: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)' },
-    1: { label: 'Reveal IC5', bg: 'rgba(34,211,238,0.15)', color: 'var(--sky)', border: '1px solid var(--sky)' },
+    1: { label: 'Reveal IC5', bg: 'rgba(240,165,0,0.10)', color: 'var(--ink-low)', border: '1px solid var(--rim)' },
     2: { label: 'Reveal Staff', bg: 'rgba(240,165,0,0.15)', color: 'var(--prime)', border: '1px solid var(--prime)' },
   }
   const cfg = configs[level]

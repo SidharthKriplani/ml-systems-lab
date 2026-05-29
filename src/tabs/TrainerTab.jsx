@@ -806,7 +806,7 @@ function SetupScreen({ onStart }) {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '2rem 1rem' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--violet) 0%, var(--ink-hi) 55%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 55%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
           ML Trainer
         </h1>
         <p style={{ color: 'var(--ink-mid)', marginTop: '0.4rem', fontSize: '0.95rem' }}>
@@ -820,9 +820,9 @@ function SetupScreen({ onStart }) {
       <div style={{
         background: 'var(--surface)', border: '1px solid var(--rim)',
         borderRadius: 12, padding: '1.1rem 1.35rem', marginBottom: '1.25rem',
-        borderLeft: hasHistory && weakestDomain ? '3px solid var(--rose)' : '1px solid var(--rim)',
+        borderLeft: hasHistory && weakestDomain ? '3px solid var(--prime)' : '1px solid var(--rim)',
       }}>
-        <p className="section-eyebrow" style={{ marginBottom: '0.75rem', color: hasHistory && weakestDomain ? 'var(--rose)' : 'var(--ink-ghost)' }}>
+        <p className="section-eyebrow" style={{ marginBottom: '0.75rem', color: hasHistory && weakestDomain ? 'var(--prime)' : 'var(--ink-ghost)' }}>
           Your Weak Spots
         </p>
         {!hasHistory || sortedDomains.length === 0 ? (
@@ -835,17 +835,17 @@ function SetupScreen({ onStart }) {
               {sortedDomains.slice(0, 4).map(({ domain, pct }) => (
                 <div key={domain}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: pct < 50 ? 'var(--rose)' : 'var(--ink-mid)' }}>{domain}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ink-mid)' }}>{domain}</span>
                     <span style={{
                       fontSize: '0.75rem', fontFamily: 'var(--font-mono)',
-                      color: pct < 50 ? 'var(--rose)' : pct < 70 ? 'var(--ember)' : 'var(--mint)',
+                      color: 'var(--prime)',
                       fontWeight: 600,
                     }}>{pct}%</span>
                   </div>
                   <div style={{ background: 'var(--rim)', borderRadius: 99, height: 5 }}>
                     <div style={{
                       width: `${pct}%`, height: '100%', borderRadius: 99,
-                      background: pct < 50 ? 'var(--rose)' : pct < 70 ? 'var(--ember)' : 'var(--mint)',
+                      background: 'var(--prime)',
                       transition: 'width 0.5s',
                     }} />
                   </div>
@@ -862,10 +862,10 @@ function SetupScreen({ onStart }) {
                   if (final.length > 0) onStart(final)
                 }}
                 style={{
-                  background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)',
+                  background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.3)',
                   borderRadius: 8, padding: '0.5rem 1.1rem',
                   fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
-                  color: 'var(--rose)', fontFamily: 'var(--font-sans)',
+                  color: 'var(--prime)', fontFamily: 'var(--font-sans)',
                   transition: 'all 0.15s',
                 }}
               >
@@ -911,9 +911,9 @@ function SetupScreen({ onStart }) {
                   {weakRecent.map(({ domain, pct }) => (
                     <span key={domain} style={{
                       padding: '0.25rem 0.65rem', borderRadius: 99,
-                      background: 'rgba(167,139,250,0.12)',
-                      border: '1px solid rgba(167,139,250,0.25)',
-                      fontSize: '0.78rem', color: 'var(--violet)',
+                      background: 'rgba(240,165,0,0.12)',
+                      border: '1px solid rgba(240,165,0,0.25)',
+                      fontSize: '0.78rem', color: 'var(--prime)',
                       fontFamily: 'var(--font-mono)',
                     }}>
                       {domain} · {pct}%
@@ -928,10 +928,10 @@ function SetupScreen({ onStart }) {
                     if (final.length > 0) onStart(final)
                   }}
                   style={{
-                    background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)',
+                    background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
                     borderRadius: 8, padding: '0.5rem 1.1rem',
                     fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
-                    color: 'var(--violet)', fontFamily: 'var(--font-sans)',
+                    color: 'var(--prime)', fontFamily: 'var(--font-sans)',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -953,7 +953,7 @@ function SetupScreen({ onStart }) {
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               onClick={() => setSelectedDomains(new Set(ALL_DOMAINS))}
-              style={{ background: 'none', border: 'none', color: 'var(--sky)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: 'var(--prime)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
             >Select all</button>
             <button
               onClick={() => setSelectedDomains(new Set())}
@@ -1035,16 +1035,16 @@ function SetupScreen({ onStart }) {
 // ─── Drill Screen ────────────────────────────────────────────────────────────
 
 const DOMAIN_COLORS = {
-  'Feature Engineering': 'var(--sky)',
-  'Model Evaluation': 'var(--mint)',
-  'ML Systems': 'var(--violet)',
+  'Feature Engineering': 'var(--prime)',
+  'Model Evaluation': 'var(--prime)',
+  'ML Systems': 'var(--prime)',
   'Statistics & Probability': 'var(--prime)',
-  'Deep Learning': 'var(--ember)',
-  'MLOps': 'var(--rose)',
-  'Ranking & Retrieval': 'var(--sky)',
-  'Experiment Design': 'var(--mint)',
+  'Deep Learning': 'var(--prime)',
+  'MLOps': 'var(--prime)',
+  'Ranking & Retrieval': 'var(--prime)',
+  'Experiment Design': 'var(--prime)',
   'SQL & Data': 'var(--prime)',
-  'Optimization': 'var(--violet)',
+  'Optimization': 'var(--prime)',
 }
 
 function DrillScreen({ questions, onFinish, onAbort }) {
@@ -1123,7 +1123,7 @@ function DrillScreen({ questions, onFinish, onAbort }) {
         </button>
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: '0.9rem',
-          color: 'var(--mint)', fontWeight: 600,
+          color: 'var(--prime)', fontWeight: 600,
         }}>
           {score} / {idx + (answered !== null ? 1 : 0)} correct
         </span>
@@ -1236,7 +1236,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
   const pct = total > 0 ? Math.round((score / total) * 100) : 0
   const [copied, setCopied] = useState(false)
 
-  const scoreColor = pct >= 80 ? 'var(--mint)' : pct >= 60 ? 'var(--prime)' : 'var(--rose)'
+  const scoreColor = 'var(--prime)'
 
   // All domains that appeared
   const domains = Object.keys(domainStats)
@@ -1260,9 +1260,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
   })
 
   function domainBarColor(acc) {
-    if (acc >= 0.8) return 'var(--mint)'
-    if (acc >= 0.5) return 'var(--prime)'
-    return 'var(--rose)'
+    return 'var(--prime)'
   }
 
   return (
@@ -1395,7 +1393,7 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
             background: 'none', border: '1px solid var(--rim)',
             borderRadius: 10, padding: '0.8rem 1.75rem',
             fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
-            fontFamily: 'var(--font-mono)', color: copied ? 'var(--mint)' : 'var(--ink-mid)',
+            fontFamily: 'var(--font-mono)', color: copied ? 'var(--prime)' : 'var(--ink-mid)',
             transition: 'color 0.2s',
           }}
         >

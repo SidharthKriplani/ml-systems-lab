@@ -89,7 +89,7 @@ const INCIDENTS = [
 
 function ClueCard({ clue, isOpen, onToggle }) {
   return (
-    <div className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', borderColor: isOpen ? 'rgba(52,211,153,0.35)' : undefined }}
+    <div className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', borderColor: isOpen ? 'rgba(240,165,0,0.35)' : undefined }}
       onClick={onToggle}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -147,7 +147,7 @@ function IncidentRoom() {
       <div className="card" style={{ borderColor: inc.severityColor + '66', background: `linear-gradient(135deg, var(--depth), rgba(0,0,0,0.1))` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: inc.severityColor, color: 'var(--white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{inc.severity}</span>
-          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '18px', color: 'var(--mint)' }}>{inc.title}</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '18px', color: 'var(--prime)' }}>{inc.title}</span>
         </div>
         <p style={{ fontSize: '14px', color: inc.severityColor, fontWeight: 600, marginBottom: '10px' }}>"{inc.tagline}"</p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{inc.context}</p>
@@ -208,12 +208,12 @@ function IncidentRoom() {
       {/* Fix + lesson */}
       {showFix && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="card" style={{ borderColor: 'rgba(52,211,153,0.30)', background: 'rgba(52,211,153,0.10)' }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--mint)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
+          <div className="card" style={{ borderColor: 'rgba(240,165,0,0.30)', background: 'rgba(240,165,0,0.10)' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--prime)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.fix}</p>
           </div>
-          <div className="card" style={{ borderColor: 'rgba(56,189,248,0.25)', background: 'rgba(56,189,248,0.10)' }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--sky)', marginBottom: '8px' }}>Lesson</div>
+          <div className="card" style={{ borderColor: 'rgba(240,165,0,0.20)', background: 'rgba(240,165,0,0.07)' }}>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--prime)', marginBottom: '8px' }}>Lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.lesson}</p>
           </div>
         </div>
@@ -465,7 +465,7 @@ const DS_CHAIN = [
   },
 ]
 
-const TIER_COLORS = { junior: 'var(--ink-mid)', analyst: 'var(--sky)', senior: 'var(--mint)', staff: 'var(--prime)' }
+const TIER_COLORS = { junior: 'var(--ink-mid)', analyst: 'var(--ink-low)', senior: 'var(--prime)', staff: 'var(--prime)' }
 
 function DSOwnershipChain() {
   const [openId,    setOpenId]    = useState(null)
@@ -505,7 +505,7 @@ function DSOwnershipChain() {
               {/* Spine */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '36px', flexShrink: 0 }}>
                 <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
-                  style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${isDone ? 'var(--mint)' : isOpen ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'var(--mint)' : 'var(--depth)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: isDone ? 'var(--void)' : 'var(--ink-low)', fontWeight: 700, zIndex: 1 }}>
+                  style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${isDone ? 'var(--prime)' : isOpen ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'var(--prime)' : 'var(--depth)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: isDone ? 'var(--void)' : 'var(--ink-low)', fontWeight: 700, zIndex: 1 }}>
                   {isDone ? '✓' : String(i + 1).padStart(2,'0').slice(-2)}
                 </button>
                 {i < DS_CHAIN.length - 1 && (
@@ -519,7 +519,7 @@ function DSOwnershipChain() {
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: isOpen ? 'rgba(240,165,0,0.11)' : 'transparent', border: `1px solid ${isOpen ? 'var(--prime-glow)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--mint)' : 'var(--ink-hi)' }}>{node.title}</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--prime)' : 'var(--ink-hi)' }}>{node.title}</span>
                       <span style={{ fontSize: '12px', color: 'var(--ink-low)', marginLeft: '10px' }}>{node.short}</span>
                     </div>
                     <span style={{ color: 'var(--ink-low)', fontSize: '11px', flexShrink: 0 }}>{isOpen ? '▲' : '▼'}</span>
@@ -529,11 +529,11 @@ function DSOwnershipChain() {
                 {isOpen && (
                   <div style={{ margin: '4px 0 6px', padding: '16px 18px', background: 'var(--depth)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>What it means</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>What it means</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{node.what}</p>
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Common failure if skipped</div>
+                      <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Common failure if skipped</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{node.failure}</p>
                     </div>
                     <div>
@@ -545,7 +545,7 @@ function DSOwnershipChain() {
                       <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{node.own}</p>
                     </div>
                     <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
-                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim)'}`, background: isDone ? 'rgba(52,211,153,0.15)' : 'transparent', color: isDone ? 'var(--mint)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'rgba(240,165,0,0.15)' : 'transparent', color: isDone ? 'var(--prime)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                       {isDone ? '✓ Marked as reviewed' : 'Mark as reviewed'}
                     </button>
                   </div>
@@ -650,8 +650,8 @@ const SCENARIOS = [
 
 const SCENARIO_TIERS = [
   { key: 'junior',  label: 'Junior',  color: 'var(--ink-mid)' },
-  { key: 'analyst', label: 'Analyst', color: 'var(--sky)' },
-  { key: 'senior',  label: 'Senior',  color: 'var(--mint)' },
+  { key: 'analyst', label: 'Analyst', color: 'var(--ink-low)' },
+  { key: 'senior',  label: 'Senior',  color: 'var(--prime)' },
   { key: 'staff',   label: 'Staff',   color: 'var(--prime)' },
 ]
 
@@ -689,13 +689,13 @@ function IncidentScenarios() {
 
       {/* Pressure card */}
       <div style={{ padding: '20px 24px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.22)', borderRadius: '12px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Business pressure</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Business pressure</div>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 500, color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0 }}>"{sc.pressure}"</p>
       </div>
 
       {/* Context */}
       <div style={{ padding: '16px 20px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Context</div>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Context</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.context}</p>
       </div>
 
@@ -722,8 +722,8 @@ function IncidentScenarios() {
           ))}
 
           {/* Lesson */}
-          <div style={{ marginTop: '4px', padding: '14px 18px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.20)', borderRadius: '10px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Key lesson</div>
+          <div style={{ marginTop: '4px', padding: '14px 18px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '10px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Key lesson</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.lesson}</p>
           </div>
 
@@ -738,7 +738,7 @@ function IncidentScenarios() {
       <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
         {SCENARIOS.map((_, i) => (
           <button key={i} onClick={() => { setIdx(i); setShowTiers(false); setSelfAssessed(null) }}
-            style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--mint)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0 }} />
+            style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--prime)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0 }} />
         ))}
       </div>
     </div>
@@ -888,8 +888,8 @@ const DESIGN_REVIEW_SECTIONS = [
 
 const TIER_META = {
   junior:  { color: 'var(--ink-mid)', label: 'Junior' },
-  analyst: { color: 'var(--sky)',     label: 'Analyst' },
-  senior:  { color: 'var(--mint)',    label: 'Senior' },
+  analyst: { color: 'var(--ink-low)', label: 'Analyst' },
+  senior:  { color: 'var(--prime)',   label: 'Senior' },
   staff:   { color: 'var(--prime)',   label: 'Staff' },
 }
 
@@ -923,8 +923,8 @@ function DesignCanvas() {
     tiers.forEach(t => counts[t]++)
     const seniorStaffCount = (counts.senior || 0) + (counts.staff || 0)
     if (seniorStaffCount === totalSections) return { text: 'Production-ready thinking.', color: 'var(--prime)' }
-    if (seniorStaffCount >= 3) return { text: 'Solid foundations — gaps in a few critical areas.', color: 'var(--mint)' }
-    if (seniorStaffCount >= 1) return { text: 'Developing — needs deeper production experience.', color: 'var(--sky)' }
+    if (seniorStaffCount >= 3) return { text: 'Solid foundations — gaps in a few critical areas.', color: 'var(--prime)' }
+    if (seniorStaffCount >= 1) return { text: 'Developing — needs deeper production experience.', color: 'var(--ink-low)' }
     return { text: 'Junior level — strong fundamentals, but production patterns need work.', color: 'var(--ink-mid)' }
   }
 
@@ -964,7 +964,7 @@ function DesignCanvas() {
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', minWidth: '18px' }}>0{si + 1}</span>
               <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)' }}>{section.title}</span>
               {hasAnswer && !submitted && (
-                <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>answered</span>
+                <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>answered</span>
               )}
               {submitted && hasAnswer && (
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: `${TIER_META[section.options[chosen].tier].color}18`, color: TIER_META[section.options[chosen].tier].color, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
@@ -1039,7 +1039,7 @@ function DesignCanvas() {
       {/* Verdict */}
       {submitted && (
         <div style={{ padding: '22px 24px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Design review verdict</div>
+          <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Design review verdict</div>
 
           {/* Tier breakdown */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1105,13 +1105,13 @@ function computeTradeoffs(embDim, negSampling, annIndex, cadence) {
   if (annIndex === 'ivf') memScore += 0.5
 
   const memLabel = memScore <= 1.5 ? 'Low' : memScore <= 3 ? 'Moderate' : memScore <= 5 ? 'High' : 'Very High'
-  const memColor = memScore <= 1.5 ? 'var(--mint)' : memScore <= 3 ? 'var(--sky)' : memScore <= 5 ? 'var(--ember)' : 'var(--rose)'
+  const memColor = memScore <= 1.5 ? 'var(--prime)' : memScore <= 3 ? 'var(--ink-low)' : memScore <= 5 ? 'var(--ink-low)' : 'var(--rose)'
 
   // Freshness
   const freshnessMap = {
-    hourly:  { label: 'Hourly', color: 'var(--mint)' },
-    daily:   { label: 'Daily',  color: 'var(--sky)' },
-    weekly:  { label: 'Weekly', color: 'var(--ember)' },
+    hourly:  { label: 'Hourly', color: 'var(--prime)' },
+    daily:   { label: 'Daily',  color: 'var(--ink-low)' },
+    weekly:  { label: 'Weekly', color: 'var(--ink-low)' },
   }
 
   // Training stability
@@ -1122,13 +1122,13 @@ function computeTradeoffs(embDim, negSampling, annIndex, cadence) {
   stability = Math.max(stability, 40)
 
   const stabilityLabel = stability >= 85 ? 'Stable' : stability >= 65 ? 'Moderate' : 'Unstable'
-  const stabilityColor = stability >= 85 ? 'var(--mint)' : stability >= 65 ? 'var(--sky)' : 'var(--rose)'
+  const stabilityColor = stability >= 85 ? 'var(--prime)' : stability >= 65 ? 'var(--ink-low)' : 'var(--rose)'
 
   // Recall color
-  const recallColor = recall >= 85 ? 'var(--mint)' : recall >= 70 ? 'var(--sky)' : 'var(--ember)'
+  const recallColor = recall >= 85 ? 'var(--prime)' : recall >= 70 ? 'var(--ink-low)' : 'var(--ink-low)'
 
   // Latency color
-  const latencyColor = latency <= 30 ? 'var(--mint)' : latency <= 60 ? 'var(--sky)' : 'var(--ember)'
+  const latencyColor = latency <= 30 ? 'var(--prime)' : latency <= 60 ? 'var(--ink-low)' : 'var(--ink-low)'
 
   return {
     recall, recallColor,
@@ -1142,41 +1142,51 @@ function computeTradeoffs(embDim, negSampling, annIndex, cadence) {
 function getStressTests(embDim, negSampling, annIndex, cadence) {
   // Cold start
   let coldStart, coldColor
+  let coldRating
   if (negSampling === 'hard') {
     coldStart = 'Hard negatives make cold-start worse — items with no interactions won\'t surface as hard negatives, so the model sees them rarely during training.'
     coldColor = 'var(--rose)'
+    coldRating = 'POOR'
   } else if (embDim === 256) {
     coldStart = 'Large embedding dim helps with representation quality but cold-start items have sparse signal — content-based fallback still needed.'
-    coldColor = 'var(--ember)'
+    coldColor = 'var(--ink-low)'
+    coldRating = 'PARTIAL'
   } else {
     coldStart = 'In-batch or random negatives are relatively neutral for cold-start. A content-based metadata tower would be needed to handle new items properly.'
-    coldColor = 'var(--sky)'
+    coldColor = 'var(--prime)'
+    coldRating = 'FAIR'
   }
 
   // Popularity bias
-  let popBias, popColor
+  let popBias, popColor, popRating
   if (negSampling === 'random') {
     popBias = 'Random negatives heavily sample popular items — your model learns to push popular items up even more, amplifying popularity bias.'
     popColor = 'var(--rose)'
+    popRating = 'POOR'
   } else if (negSampling === 'in_batch') {
     popBias = 'In-batch negatives are correlated with popularity (popular items appear more in batches). Moderate popularity bias expected.'
-    popColor = 'var(--ember)'
+    popColor = 'var(--ink-low)'
+    popRating = 'PARTIAL'
   } else {
     popBias = 'Hard negatives help reduce popularity bias — the model is forced to distinguish between similar but less popular items. Best option for this stress test.'
-    popColor = 'var(--mint)'
+    popColor = 'var(--prime)'
+    popRating = 'GOOD'
   }
 
   // Embedding drift
-  let drift, driftColor
+  let drift, driftColor, driftRating
   if (cadence === 'weekly') {
     drift = 'Weekly retraining is slow — after 3 weeks of distribution shift, your embeddings will be severely out of date before the next cycle catches up.'
     driftColor = 'var(--rose)'
+    driftRating = 'POOR'
   } else if (cadence === 'daily') {
     drift = 'Daily retraining picks up drift within 24 hours. Good for moderate drift, but rapid behavioral shifts can still cause a 1-day window of degraded recommendations.'
-    driftColor = 'var(--sky)'
+    driftColor = 'var(--ink-low)'
+    driftRating = 'PARTIAL'
   } else {
     drift = 'Hourly retraining minimizes embedding staleness. Handles moderate drift well. Rapid catalog changes (new items) still require ANN index rebuild to take effect.'
-    driftColor = 'var(--mint)'
+    driftColor = 'var(--prime)'
+    driftRating = 'GOOD'
   }
 
   return [
@@ -1185,21 +1195,21 @@ function getStressTests(embDim, negSampling, annIndex, cadence) {
       desc: 'New item added with zero interaction history',
       text: coldStart,
       color: coldColor,
-      rating: coldColor === 'var(--rose)' ? 'POOR' : coldColor === 'var(--ember)' ? 'PARTIAL' : 'FAIR',
+      rating: coldRating,
     },
     {
       title: 'Popularity Bias',
       desc: 'Top 1% of items account for 80% of recommendations',
       text: popBias,
       color: popColor,
-      rating: popColor === 'var(--rose)' ? 'POOR' : popColor === 'var(--ember)' ? 'PARTIAL' : 'GOOD',
+      rating: popRating,
     },
     {
       title: 'Embedding Drift',
       desc: 'Feature distribution shifts over 3 weeks',
       text: drift,
       color: driftColor,
-      rating: driftColor === 'var(--rose)' ? 'POOR' : driftColor === 'var(--sky)' ? 'PARTIAL' : 'GOOD',
+      rating: driftRating,
     },
   ]
 }
@@ -1255,7 +1265,7 @@ function TwoTowerExplorer() {
 
       {/* Config panel */}
       <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>System configuration</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>System configuration</div>
         <ConfigRow label="Embedding dim" value={embDim} onChange={setEmbDim}
           options={[{ value: 64, label: '64d' }, { value: 128, label: '128d' }, { value: 256, label: '256d' }]} />
         <ConfigRow label="Negative sampling" value={negSampling} onChange={setNegSampling}
@@ -1268,7 +1278,7 @@ function TwoTowerExplorer() {
 
       {/* Tradeoff matrix */}
       <div className="card" style={{ padding: '20px 22px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '14px' }}>Production tradeoff matrix</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '14px' }}>Production tradeoff matrix</div>
         <TradeoffRow label="Retrieval recall@100" raw={t.recall} unit="%" color={t.recallColor} />
         <TradeoffRow label="P99 serving latency" raw={t.latency} unit=" ms" color={t.latencyColor} />
         <TradeoffRow label="Memory footprint" value={t.memLabel} color={t.memColor} />
@@ -1278,7 +1288,7 @@ function TwoTowerExplorer() {
 
       {/* Stress tests */}
       <div>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>Production stress tests</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>Production stress tests</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {st.map(s => (
             <div key={s.title} style={{ padding: '16px 18px', background: 'var(--depth)', border: `1px solid ${s.color}30`, borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1485,7 +1495,7 @@ function ServingTradeoffLab() {
 
       {/* Requirements */}
       <div className="card" style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>Your requirements</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>Your requirements</div>
         <ConfigRow label="Latency budget" value={latency} onChange={setLatency}
           options={[{ value: '<50ms', label: '<50ms' }, { value: '<200ms', label: '<200ms' }, { value: '<1s', label: '<1s' }, { value: '<10s', label: '<10s' }]} />
         <ConfigRow label="Throughput" value={throughput} onChange={setThroughput}
@@ -1498,7 +1508,7 @@ function ServingTradeoffLab() {
 
       {/* Architecture evaluation table */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Architecture evaluation</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Architecture evaluation</div>
         {ARCHITECTURES.map(arch => {
           const results = evalArch(arch.id, latency, throughput, freshness, depth)
           const isRec   = recommended.id === arch.id
@@ -1549,7 +1559,7 @@ function ServingTradeoffLab() {
 
       {/* Why your choice matters */}
       <div style={{ padding: '18px 20px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Why your choice matters</div>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)' }}>Why your choice matters</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
           Getting the serving architecture wrong creates compounding problems. <strong style={{ color: 'var(--ink-hi)' }}>Batch offline with a real-time requirement</strong> means serving stale scores to users who just changed their preferences — a user who just bought a camera still sees camera ads. <strong style={{ color: 'var(--ink-hi)' }}>Online inference when batch suffices</strong> costs 5–20x more in infrastructure and adds latency variance. <strong style={{ color: 'var(--ink-hi)' }}>Choosing online at {'>'}10k QPS</strong> without careful model optimization will breach your latency SLA under load when you can least afford it. The right architecture is the simplest one that meets your actual requirements — not the most sophisticated one you can build.
         </p>
@@ -1561,7 +1571,7 @@ function ServingTradeoffLab() {
 
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = React.useState(() => {
     if (storageKey) {
       try {
@@ -1684,7 +1694,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -1798,7 +1808,7 @@ function RAGArchitecture() {
       <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
         RAG system design requires judgment at every stage: chunking, retrieval strategy, reranking, evaluation, and hallucination prevention. Each scenario tests a critical production decision.
       </p>
-      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--violet)" storageKey="sysdesign_rag" />
+      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--prime)" storageKey="sysdesign_rag" />
     </div>
   )
 }
@@ -1807,7 +1817,7 @@ function RAGArchitecture() {
 const TT_NODES = [
   {
     id: 'user_features', label: 'User Features', sub: 'activity, demographics, context',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'Raw user signals fed into the user tower: recent activity (clicks, watches, purchases), demographic attributes, and request context (time of day, device, location).',
     decisions: 'Which features to include at query time vs pre-compute in batch. Real-time features (last-5-clicks) add freshness but increase serving latency.',
     failures: 'Including future-leaking features during training (e.g., post-event engagement). Real-time feature retrieval fails under load, causing stale fallback or dropped requests.',
@@ -1815,7 +1825,7 @@ const TT_NODES = [
   },
   {
     id: 'item_features', label: 'Item Features', sub: 'content, metadata, popularity',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'Static and slowly-changing item attributes: content signals (text, image embeddings), metadata (category, price, age), and popularity signals (CTR, rating).',
     decisions: 'How frequently to refresh item features. Popularity signals change hourly; content signals are stable. Mixing staleness tolerances complicates the pipeline.',
     failures: 'Stale item features for trending content. New items have no popularity signal — cold-start problem requires a separate fallback strategy.',
@@ -1823,7 +1833,7 @@ const TT_NODES = [
   },
   {
     id: 'user_tower', label: 'User Tower', sub: 'DNN encoder',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Independent DNN that maps user context to a fixed-size embedding vector. Runs at query time on the online path — must be fast (typically <10ms).',
     decisions: 'Embedding dimension (64–512), whether to include real-time features vs batch-only, staleness tolerance. Deeper towers capture more signal but add latency.',
     failures: 'Tower learns popularity bias rather than preference signal; user embedding drifts when behavior shifts after major product changes.',
@@ -1831,7 +1841,7 @@ const TT_NODES = [
   },
   {
     id: 'item_tower', label: 'Item Tower', sub: 'DNN encoder',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Mirror DNN that maps item features to the same embedding space as the user tower. Runs offline to pre-compute embeddings for all items in the catalog.',
     decisions: 'Same architecture as user tower (shared dim) to enable dot-product similarity. Separate towers allow independent feature sets for users vs items.',
     failures: 'Architecture mismatch between user and item tower output dims breaks the ANN index at deployment. Schema changes in item features require full re-embedding.',
@@ -1839,7 +1849,7 @@ const TT_NODES = [
   },
   {
     id: 'user_emb', label: 'User Embedding', sub: 'd=256 vector',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'Fixed-dimension float vector representing the user in the shared embedding space. Computed at query time by the user tower. Used as the query vector for ANN search.',
     decisions: 'Dimension tradeoff: higher dim = more expressiveness, but larger ANN index and more compute. 64–256 is typical; >512 rarely justified.',
     failures: 'Embedding dimension changed after ANN index was built — requires full index rebuild. User embedding at training time differs from serving time due to feature pipeline divergence.',
@@ -1847,7 +1857,7 @@ const TT_NODES = [
   },
   {
     id: 'item_emb', label: 'Item Embeddings', sub: 'pre-computed offline',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'All item embeddings pre-computed offline and loaded into the ANN index. This decoupling is the core architectural insight that makes billion-scale retrieval possible.',
     decisions: 'Index rebuild frequency (hourly vs daily), handling new items not yet embedded (cold-start fallback to content-based or popularity-based retrieval).',
     failures: 'Stale embeddings serve yesterday\'s catalog. New items invisible until next index rebuild. Deleted items remain in index until rebuild, causing dead links.',
@@ -1855,7 +1865,7 @@ const TT_NODES = [
   },
   {
     id: 'ann', label: 'ANN Index', sub: 'FAISS / ScaNN',
-    color: 'var(--ember)', bg: 'rgba(249,115,22,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'Approximate Nearest Neighbor search index containing all pre-computed item embeddings. Returns top-K items by cosine or dot-product similarity to the user query vector.',
     decisions: 'FAISS IVF vs HNSW vs ScaNN — latency vs recall tradeoff. K size (200–1000). Index must fit in memory; sharding required at billion-item scale.',
     failures: 'ANN recall at 95% means 5% of true nearest neighbors are missed; higher K downstream compensates but adds ranker load. Index too large for single node requires distributed ANN.',
@@ -2016,8 +2026,8 @@ function TwoTowerArchitecture() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
             {[
               { label: 'What it is',      text: node.what,      col: 'var(--ink-mid)' },
-              { label: 'Key decisions',   text: node.decisions, col: 'var(--sky)' },
-              { label: 'Failure modes',   text: node.failures,  col: 'var(--rose)' },
+              { label: 'Key decisions',   text: node.decisions, col: 'var(--prime)' },
+              { label: 'Failure modes',   text: node.failures,  col: 'var(--ink-low)' },
               { label: 'Interview signal',text: node.signal,    col: 'var(--prime)' },
             ].map(row => (
               <div key={row.label}>
@@ -2098,7 +2108,7 @@ function DoWeNeedML() {
           The most senior judgment call: the counterfactual test. Before scoping any ML project, decide whether a model creates more value than the baseline action. Most ML projects fail this test.
         </p>
       </div>
-      <AccordionMCQ scenarios={DO_WE_NEED_ML_SCENARIOS} accentColor="var(--violet)" storageKey="sysdesign_dwml" />
+      <AccordionMCQ scenarios={DO_WE_NEED_ML_SCENARIOS} accentColor="var(--prime)" storageKey="sysdesign_dwml" />
     </div>
   )
 }
@@ -2165,7 +2175,7 @@ function RetrievalFailures() {
           Your embedding similarity returns results that are semantically plausible but contextually wrong. Diagnose the real failure: embedding drift, index staleness, or domain mismatch.
         </p>
       </div>
-      <AccordionMCQ scenarios={RETRIEVAL_SCENARIOS} accentColor="var(--sky)" storageKey="sysdesign_retrieval" />
+      <AccordionMCQ scenarios={RETRIEVAL_SCENARIOS} accentColor="var(--prime)" storageKey="sysdesign_retrieval" />
     </div>
   )
 }
@@ -2223,7 +2233,7 @@ export default function SystemDesignTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ML System Design</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ML System Design</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Production judgment for ML systems — rec system design, deployment failures, ownership decisions, and the tradeoffs that separate junior from staff-level thinking.
@@ -2246,7 +2256,7 @@ export default function SystemDesignTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
-      {onNavigate && <ForwardPointer label="Test this domain in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--sky)" />}
+      {onNavigate && <ForwardPointer label="Test this domain in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

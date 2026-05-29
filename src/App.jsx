@@ -109,16 +109,16 @@ function getZoneForTab(id) { return TAB_TO_ZONE[id] ?? 'practice' }
 // ── Bottom nav zones ──────────────────────────────────────────────────────────
 const NAV_ZONES = [
   { id: 'today',     label: 'Today',     icon: '◎', accent: 'var(--prime)' },
-  { id: 'practice',  label: 'Practice',  icon: '⊞', accent: 'var(--mint)' },
-  { id: 'read',      label: 'Read',      icon: '∇', accent: 'var(--sky)' },
-  { id: 'interview', label: 'Interview', icon: '◈', accent: 'var(--gold)' },
-  { id: 'ask',       label: 'Search',    icon: '✦', accent: 'var(--violet)' },
+  { id: 'practice',  label: 'Practice',  icon: '⊞', accent: 'var(--prime)' },
+  { id: 'read',      label: 'Read',      icon: '∇', accent: 'var(--prime)' },
+  { id: 'interview', label: 'Interview', icon: '◈', accent: 'var(--prime)' },
+  { id: 'ask',       label: 'Search',    icon: '✦', accent: 'var(--prime)' },
 ]
 
 // ── Practice domain config ────────────────────────────────────────────────────
 const PRACTICE_DOMAINS = [
   {
-    id: 'mle', label: 'ML Engineering', accent: 'var(--mint)', bg: 'rgba(52,211,153,0.13)',
+    id: 'mle', label: 'ML Engineering', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'models',    label: 'Math Foundations',    desc: 'PCA, SVD, calibration — Python in browser' },
       { id: 'features',  label: 'Feature Engineering', desc: 'Skew, leakage, feature stores' },
@@ -128,7 +128,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'de', label: 'Data Engineering', accent: 'var(--ember)', bg: 'rgba(249,115,22,0.13)',
+    id: 'de', label: 'Data Engineering', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'spark',    label: 'Spark Lab',     desc: 'Shuffle, skew, broadcast join decisions' },
       { id: 'airflow',  label: 'Airflow',       desc: 'DAG failures, backfill, late data' },
@@ -137,7 +137,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'dl', label: 'Deep Learning', accent: 'var(--violet)', bg: 'rgba(99,102,241,0.13)',
+    id: 'dl', label: 'Deep Learning', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'dl',          label: 'Training Lab', desc: 'Loss spikes, gradients, debugging' },
       { id: 'dl_finetune', label: 'Fine-tuning',  desc: 'LoRA, freeze, LR strategy' },
@@ -145,7 +145,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'ds', label: 'Data Science', accent: 'var(--sky)', bg: 'rgba(34,211,238,0.13)',
+    id: 'ds', label: 'Data Science', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'ds',     label: 'DS Fundamentals',  desc: 'Model selection, calibration, metrics' },
       { id: 'causal', label: 'Causal Inference', desc: 'Identification, uplift, obs vs exp' },
@@ -153,7 +153,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'mlops', label: 'MLOps', accent: 'var(--rose)', bg: 'rgba(244,63,94,0.13)',
+    id: 'mlops', label: 'MLOps', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'monitor',      label: 'Monitoring',    desc: 'Drift, PSI, incident triage' },
       { id: 'mlops_deploy', label: 'Deployment',    desc: 'Strategies, champion-challenger, rollback' },
@@ -161,7 +161,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.13)',
+    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
     tabs: [
       { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
       { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
@@ -173,17 +173,17 @@ const PRACTICE_DOMAINS = [
 
 // ── Interview zone tools ──────────────────────────────────────────────────────
 const INTERVIEW_TOOLS = [
-  { id: 'interview',  label: 'Interview Q&A',    desc: '128 curated questions with model answers across system design, ML fundamentals, and behavioural.', step: null, accent: 'var(--sky)',
+  { id: 'interview',  label: 'Interview Q&A',    desc: '128 curated questions with model answers across system design, ML fundamentals, and behavioural.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
-  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions. No time limit. Write your answer, then compare against a senior model response.', step: null, accent: 'var(--mint)',
+  { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions. No time limit. Write your answer, then compare against a senior model response.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-  { id: 'defense',    label: 'Defense Plan',     desc: 'Paste your JD, self-rate your gaps, get a day-by-day study plan with round-by-round coverage. The strategic core of your prep.', step: '01', accent: 'var(--ember)',
+  { id: 'defense',    label: 'Defense Plan',     desc: 'Paste your JD, self-rate your gaps, get a day-by-day study plan with round-by-round coverage. The strategic core of your prep.', step: '01', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '02', accent: 'var(--rose)',
+  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '02', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--violet)',
+  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
-  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '10 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--violet)',
+  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '10 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> },
 ]
 
@@ -293,8 +293,8 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
   return (
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '6px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
-        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', color: 'var(--ink-hi)' }}>
           200+ production scenarios.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '6px' }}>
@@ -305,9 +305,9 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Your progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(52,211,153,0.60)' }} />
+            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(240,165,0,0.45)' }} />
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
             {totalAttempted}/{totalScenarios}
           </span>
         </div>
@@ -380,7 +380,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '28px' }}>
         <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
-        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', color: 'var(--ink-hi)' }}>
           Nine tools. One loop.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
@@ -478,7 +478,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
       >
         <div style={{
           width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
-          background: 'linear-gradient(135deg, var(--prime), var(--violet))',
+          background: 'var(--prime)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
           boxShadow: '0 0 18px rgba(240,165,0,0.50), 0 2px 8px rgba(0,0,0,0.6)',
@@ -585,8 +585,8 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
         <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Read</div>
 
         {[
-          { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--sky)',  zone: 'read' },
-          { id: 'landscape', label: 'Landscape',   accent: 'var(--gold)', zone: 'today' },
+          { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--prime)', zone: 'read' },
+          { id: 'landscape', label: 'Landscape',   accent: 'var(--prime)', zone: 'today' },
         ].map(item => {
           const isActive = activeTabId === item.id && activeZone === item.zone
           return <NavBtn key={item.id} id={item.id} label={item.label} accent={item.accent} isActive={isActive} indent />
@@ -847,7 +847,7 @@ export default function App() {
             </>
           ) : (
             <button onClick={() => handleZoneNav('today')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'linear-gradient(135deg, var(--prime), var(--violet))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff', flexShrink: 0 }}>ML</div>
+              <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'var(--prime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff', flexShrink: 0 }}>ML</div>
               <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
             </button>
           )}

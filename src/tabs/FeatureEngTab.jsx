@@ -47,7 +47,7 @@ function SkewSimulator() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Training-Serving Skew Simulator</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Four real skew bugs. Pick the one you think will hurt model performance the most. Then see the impact.
         </p>
@@ -68,11 +68,11 @@ function SkewSimulator() {
             </div>
             <div style={{ marginBottom: '6px' }}>
               <div className="section-eyebrow" style={{ marginBottom: '3px' }}>Training</div>
-              <code style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.training}</code>
+              <code style={{ fontSize: '11px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.training}</code>
             </div>
             <div>
               <div className="section-eyebrow" style={{ marginBottom: '3px' }}>Serving</div>
-              <code style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.serving}</code>
+              <code style={{ fontSize: '11px', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.serving}</code>
             </div>
           </button>
         ))}
@@ -130,7 +130,7 @@ function FeatureStoreDesigner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Store Designer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Design an online feature store for a real-time recommendation system. Choose feature type, freshness SLA, and storage backend.
         </p>
@@ -151,7 +151,7 @@ function FeatureStoreDesigner() {
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Example features for this type</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {s.examples.map(ex => (
-            <code key={ex} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.18)', color: 'var(--violet)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
+            <code key={ex} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.18)', color: 'var(--prime)', borderRadius: '5px', padding: '4px 10px' }}>{ex}</code>
           ))}
         </div>
       </div>
@@ -162,7 +162,7 @@ function FeatureStoreDesigner() {
           {Object.entries(storageOptions).map(([k, v]) => (
             <button key={k} onClick={() => setStorage(k)} className="card"
               style={{ textAlign: 'center', cursor: 'pointer', border: `1px solid ${storage === k ? 'rgba(34,211,238,0.4)' : 'var(--rim)'}`, background: storage === k ? 'rgba(34,211,238,0.13)' : 'var(--depth)', transition: 'all 0.15s', padding: '12px' }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--sky)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: storage === k ? 'var(--prime)' : 'var(--ink-hi)', marginBottom: '4px' }}>{v.label}</div>
               <div style={{ fontSize: '11px', color: 'var(--ink-low)' }}>P50: {v.latency}</div>
             </button>
           ))}
@@ -170,7 +170,7 @@ function FeatureStoreDesigner() {
       </div>
 
       <div className="card" style={{ padding: '18px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.15)' }}>
-        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--sky)', marginBottom: '10px' }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--prime)', marginBottom: '10px' }}>
           {st.label} for {s.label}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -178,7 +178,7 @@ function FeatureStoreDesigner() {
           <div><div style={{ fontSize: '11px', color: 'var(--rose)', fontWeight: 600, marginBottom: '4px' }}>✗ CONS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.cons}</div></div>
         </div>
         {featureType === 'session' && storage !== 'redis' && (
-          <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>Note: For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
+          <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>Note: For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
         )}
       </div>
     </div>
@@ -302,7 +302,7 @@ result = (df
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Window Aggregation Builder</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Window Aggregation Builder</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Configure a time-window feature and get production-ready SQL and PySpark — plus the gotchas that get teams in trouble.
         </p>
@@ -315,7 +315,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(ENTITIES).map(([k, v]) => (
               <button key={k} onClick={() => { setEntity(k); setMetric(v.metrics[0]) }}
-                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(240,165,0,0.35)' : 'transparent'}`, background: entity === k ? 'rgba(240,165,0,0.14)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--mint)' : 'var(--ink-mid)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
+                style={{ textAlign: 'left', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${entity === k ? 'rgba(240,165,0,0.35)' : 'transparent'}`, background: entity === k ? 'rgba(240,165,0,0.14)' : 'transparent', cursor: 'pointer', fontSize: '13px', color: entity === k ? 'var(--prime)' : 'var(--ink-mid)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                 {v.icon} {v.label}
               </button>
             ))}
@@ -328,7 +328,7 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {e.metrics.map(m => (
               <button key={m} onClick={() => setMetric(m)}
-                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${metric === m ? 'rgba(129,140,248,0.4)' : 'transparent'}`, background: metric === m ? 'rgba(129,140,248,0.15)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: metric === m ? 'var(--violet)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${metric === m ? 'rgba(240,165,0,0.4)' : 'transparent'}`, background: metric === m ? 'rgba(240,165,0,0.13)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: metric === m ? 'var(--prime)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                 {m}
               </button>
             ))}
@@ -341,9 +341,9 @@ result = (df
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(AGGS).map(([k, v]) => (
               <button key={k} onClick={() => setAgg(k)}
-                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(34,211,238,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(34,211,238,0.13)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--sky)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
+                style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(240,165,0,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(240,165,0,0.13)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--prime)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                 {v.label}
-                {v.warn && <span style={{ fontSize: '9px', color: 'var(--ember)', marginLeft: '4px' }}>⚠</span>}
+                {v.warn && <span style={{ fontSize: '9px', color: 'var(--ink-low)', marginLeft: '4px' }}>⚠</span>}
               </button>
             ))}
           </div>
@@ -356,7 +356,7 @@ result = (df
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {Object.entries(WINDOW_TYPES).map(([k, v]) => (
                 <button key={k} onClick={() => setWindowType(k)}
-                  style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${windowType === k ? 'rgba(245,158,11,0.4)' : 'transparent'}`, background: windowType === k ? 'rgba(245,158,11,0.13)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowType === k ? 'var(--gold)' : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
+                  style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${windowType === k ? 'rgba(240,165,0,0.4)' : 'transparent'}`, background: windowType === k ? 'rgba(240,165,0,0.13)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowType === k ? 'var(--prime)' : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                   {v.label}
                 </button>
               ))}
@@ -367,7 +367,7 @@ result = (df
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {SIZES.map(s => (
                 <button key={s} onClick={() => setWindowSize(s)}
-                  style={{ padding: '4px 10px', borderRadius: '5px', border: `1px solid ${windowSize === s ? 'rgba(245,158,11,0.4)' : 'var(--rim)'}`, background: windowSize === s ? 'rgba(245,158,11,0.15)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowSize === s ? 'var(--gold)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
+                  style={{ padding: '4px 10px', borderRadius: '5px', border: `1px solid ${windowSize === s ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: windowSize === s ? 'rgba(240,165,0,0.15)' : 'transparent', cursor: 'pointer', fontSize: '12px', color: windowSize === s ? 'var(--prime)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                   {s}
                 </button>
               ))}
@@ -378,14 +378,14 @@ result = (df
 
       {/* Window type note */}
       <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.15)' }}>
-        <span style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 600 }}>{wt.label}: </span>
+        <span style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600 }}>{wt.label}: </span>
         <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{wt.desc}</span>
       </div>
 
       {/* Agg warning */}
       {a.warn && (
         <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.2)' }}>
-          <span style={{ fontSize: '12px', color: 'var(--ember)', fontWeight: 600 }}>{a.label}: </span>
+          <span style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600 }}>{a.label}: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{a.warn}</span>
         </div>
       )}
@@ -393,7 +393,7 @@ result = (df
       {/* Feature name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>Feature name:</span>
-        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--mint)', background: 'rgba(240,165,0,0.14)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px', padding: '4px 12px' }}>
+        <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--prime)', background: 'rgba(240,165,0,0.14)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px', padding: '4px 12px' }}>
           {feat}
         </code>
       </div>
@@ -417,11 +417,11 @@ result = (df
 
       {/* Gotchas */}
       <div>
-        <div style={{ fontSize: '13px', color: 'var(--ember)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>⚠ Gotchas for this configuration</div>
+        <div style={{ fontSize: '13px', color: 'var(--prime)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>⚠ Gotchas for this configuration</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {GOTCHAS.map((g, i) => (
             <div key={i} style={{ display: 'flex', gap: '10px', padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--ember)', flexShrink: 0 }}>→</span>
+              <span style={{ fontSize: '13px', color: 'var(--ink-low)', flexShrink: 0 }}>→</span>
               <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{g}</span>
             </div>
           ))}
@@ -525,7 +525,7 @@ function FeatureLeakageZoo() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Leakage Zoo</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Feature Leakage Zoo</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           8 leakage patterns that silently inflate offline metrics. Pick one — identify the silent failure before reading the diagnosis.
         </p>
@@ -578,12 +578,12 @@ function FeatureLeakageZoo() {
               </button>
             ) : (
               <>
-                <div style={{ background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Detection</div>
+                <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Detection</div>
                   <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.detection}</div>
                 </div>
-                <div style={{ background: 'rgba(99,102,241,0.13)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Fix</div>
+                <div style={{ background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Fix</div>
                   <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.fix}</div>
                 </div>
               </>
@@ -666,7 +666,7 @@ function OnlineOfflineDecider() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Online vs Offline Feature Decision</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Online vs Offline Feature Decision</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           The most expensive mistake in MLOps: over-engineering feature serving. Choose a scenario — decide the architecture before reading the answer.
         </p>
@@ -678,8 +678,8 @@ function OnlineOfflineDecider() {
             className="card"
             style={{
               textAlign: 'left', cursor: 'pointer',
-              border: `1px solid ${selected === s.id ? 'var(--mint)' : 'var(--rim)'}`,
-              background: selected === s.id ? 'rgba(52,211,153,0.13)' : 'var(--depth)',
+              border: `1px solid ${selected === s.id ? 'var(--prime)' : 'var(--rim)'}`,
+              background: selected === s.id ? 'rgba(240,165,0,0.10)' : 'var(--depth)',
               transition: 'all 0.15s',
             }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '10px' }}>{s.label}</div>
@@ -699,11 +699,11 @@ function OnlineOfflineDecider() {
       </div>
 
       {scenario && (
-        <div className="card" style={{ border: '1px solid var(--mint)', background: 'rgba(52,211,153,0.10)' }}>
+        <div className="card" style={{ border: '1px solid rgba(240,165,0,0.35)', background: 'rgba(240,165,0,0.07)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
             <h4 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', margin: 0 }}>{scenario.label}</h4>
-            <div style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '6px', padding: '4px 10px' }}>
-              <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '13px' }}>{scenario.verdict}</span>
+            <div style={{ background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', padding: '4px 10px' }}>
+              <span style={{ color: 'var(--prime)', fontWeight: 700, fontSize: '13px' }}>{scenario.verdict}</span>
             </div>
           </div>
 
@@ -718,7 +718,7 @@ function OnlineOfflineDecider() {
             </div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {scenario.tags.map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(99,102,241,0.1)', color: 'var(--violet)', fontWeight: 600 }}>{t}</span>
+                <span key={t} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(240,165,0,0.1)', color: 'var(--prime)', fontWeight: 600 }}>{t}</span>
               ))}
             </div>
           </div>
@@ -741,7 +741,7 @@ const ARCH_NODES = [
   },
   {
     id: 'batch', label: 'Batch ETL', sub: 'Spark · dbt · hourly/daily jobs',
-    color: 'var(--ember)', bg: 'rgba(249,115,22,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Scheduled jobs (Spark, dbt, SQL) that compute aggregated features over historical data windows. Example: "user\'s 30-day purchase count", "listing\'s 90-day average review score."',
     decisions: 'Materialization strategy: full recompute vs incremental. Full is safe and simple; incremental is cheaper but requires a reliable watermark. Partition by entity + date for efficient backfill.',
     failures: 'Recomputing on every run without partitioning scans the full table daily. At scale, this becomes the most expensive job in your org. Incremental updates with proper partitioning are non-negotiable.',
@@ -749,7 +749,7 @@ const ARCH_NODES = [
   },
   {
     id: 'stream', label: 'Streaming Ingest', sub: 'Kafka → Flink / Spark Streaming',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Real-time event processing pipeline that computes features as events arrive. Example: "session click count in last 10 minutes", "transaction velocity in last 60 seconds."',
     decisions: 'Exactly-once vs at-least-once semantics. Windowing strategy: tumbling (non-overlapping), sliding (overlapping), session (gap-based). Late data handling: watermarks define how long to wait.',
     failures: 'Watermark too tight → late events dropped silently. Watermark too wide → high latency. No exactly-once → duplicate feature updates corrupt aggregates. Test late-data scenarios explicitly.',
@@ -757,7 +757,7 @@ const ARCH_NODES = [
   },
   {
     id: 'offline', label: 'Offline Store', sub: 'S3 / Hive / BigQuery / Iceberg',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Columnar storage of historical feature values, partitioned by entity and timestamp. This is the source of truth for generating training datasets via point-in-time correct joins.',
     decisions: 'File format: Parquet or Iceberg (prefer Iceberg for time-travel). Partitioning: by entity_id + date is most common. Retention: keep enough history for retraining windows (typically 1–2 years).',
     failures: 'Storing only the latest feature value (no history) makes point-in-time correct retrieval impossible. This is the most common feature store implementation mistake.',
@@ -765,7 +765,7 @@ const ARCH_NODES = [
   },
   {
     id: 'online', label: 'Online Store', sub: 'Redis · Cassandra · DynamoDB · <5ms',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Low-latency key-value store holding the most recent pre-computed feature values for each entity. Queried at request time during model inference. Must return values in <5ms P99.',
     decisions: 'Storage system: Redis for <1ms latency + small data; Cassandra/DynamoDB for >10M entities or higher durability requirements. TTL per feature type (session features: 30min; user profile: 24h).',
     failures: 'No TTL on features → stale values served indefinitely. Cache stampede under load when many keys expire simultaneously. Hot partitions for popular entities in Cassandra.',
@@ -773,7 +773,7 @@ const ARCH_NODES = [
   },
   {
     id: 'pit', label: 'Point-in-Time Join', sub: 'as-of query · training data gen',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'For each (entity, label_timestamp) pair in your training dataset, retrieves the feature value that was valid at label_timestamp — not the current value. Prevents future data leakage into training.',
     decisions: 'Implementation: range join on (entity_id, feature_ts <= label_ts ORDER BY feature_ts DESC LIMIT 1). Feast calls this a point-in-time join. Without this, your offline metrics are inflated.',
     failures: 'Using latest-value join for training data is the single most common cause of inflated offline metrics that don\'t hold up in production. The gap can be 5–20% AUC.',
@@ -781,7 +781,7 @@ const ARCH_NODES = [
   },
   {
     id: 'servapi', label: 'Feature Serving API', sub: 'batch lookup · entity keys',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'The API layer that retrieves pre-computed features from the online store at inference time. Accepts entity keys (user_id, item_id), returns feature vectors. Must be sub-5ms P99.',
     decisions: 'Batch vs single lookup: fetch all features for an entity in one call to minimize round trips. Fallback strategy: what to return if a feature is missing (default value, or flag the request).',
     failures: 'Fallback to recompute on cache miss is a latency timebomb — works fine at low QPS, blows P99 at 10K+ QPS. Design explicit fallback values and test the miss path under load.',
@@ -805,7 +805,7 @@ const ARCH_NODES = [
   },
   {
     id: 'monitor', label: 'Feature Monitoring', sub: 'PSI · freshness · null rates',
-    color: 'var(--rose)', bg: 'rgba(244,63,94,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Continuous monitoring of feature health across both stores: PSI to detect distribution drift, null rate tracking, freshness lag monitoring (how stale are online store values?), and schema drift alerts.',
     decisions: 'Monitor at the feature level, not just model level. PSI > 0.2 on any feature triggers investigation before it affects model performance. Set separate alerts for offline store freshness vs online store TTL.',
     failures: 'Monitoring only model output metrics (CTR, conversion) catches problems too late. Feature-level monitoring catches upstream data issues hours before they impact model performance.',
@@ -938,8 +938,8 @@ function FeatureStoreArchitecture() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
             {[
               { label: 'What it is', text: node.what, col: 'var(--ink-mid)' },
-              { label: 'Key decisions', text: node.decisions, col: 'var(--sky)' },
-              { label: 'Failure modes', text: node.failures, col: 'var(--rose)' },
+              { label: 'Key decisions', text: node.decisions, col: 'var(--prime)' },
+              { label: 'Failure modes', text: node.failures, col: 'var(--ink-low)' },
               { label: 'Interview signal', text: node.signal, col: 'var(--prime)' },
             ].map(row => (
               <div key={row.label}>
@@ -962,7 +962,7 @@ function FeatureStoreArchitecture() {
 }
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--mint)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -1075,11 +1075,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--mint)', storageKey = nul
                 {it.revealed && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div className="msl-reveal-panel" style={{ padding: '12px 16px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                   </div>
@@ -1152,7 +1152,7 @@ function FeatureStoreTimeTravelBug() {
           Your feature store claims to return point-in-time correct features. It doesn't. Trace the leakage, the staleness, and the backfill violation — the three ways temporal correctness breaks in production.
         </p>
       </div>
-      <AccordionMCQ scenarios={FEATURE_STORE_SCENARIOS} accentColor="var(--mint)" storageKey="featureeng_featstore" />
+      <AccordionMCQ scenarios={FEATURE_STORE_SCENARIOS} accentColor="var(--prime)" storageKey="featureeng_featstore" />
     </div>
   )
 }
@@ -1216,7 +1216,7 @@ function InteractionLeakage() {
           When to manually engineer interaction features, when to let the model learn them, and when manually engineering interactions introduces the leakage you were trying to prevent.
         </p>
       </div>
-      <AccordionMCQ scenarios={INTERACTION_LEAKAGE_SCENARIOS} accentColor="var(--ember)" storageKey="featureeng_interaction" />
+      <AccordionMCQ scenarios={INTERACTION_LEAKAGE_SCENARIOS} accentColor="var(--prime)" storageKey="featureeng_interaction" />
     </div>
   )
 }
@@ -1259,7 +1259,7 @@ export default function FeatureEngTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Feature Engineering</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Feature Engineering</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           The gap between a model that works in a notebook and one that works in production is almost always a feature engineering problem.
@@ -1274,16 +1274,16 @@ export default function FeatureEngTab({ onNavigate }) {
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
-        <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-            Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Feature Store Architecture: What the Tutorials Skip</strong> in Gradient
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>Feature Store Architecture: What the Tutorials Skip</strong> in Gradient
           </span>
-          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →
           </button>
         </div>
       )}
-      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--violet)" />}
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

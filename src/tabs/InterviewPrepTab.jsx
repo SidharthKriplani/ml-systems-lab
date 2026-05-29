@@ -185,17 +185,17 @@ const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netfl
 const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
 
 const CAT_COLORS = {
-  'System Design':      { bg: 'rgba(240,165,0,0.14)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
-  'Features':           { bg: 'rgba(34,211,238,0.14)',  text: 'var(--sky)',       border: 'rgba(34,211,238,0.20)' },
-  'Evaluation':         { bg: 'rgba(52,211,153,0.14)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
-  'Spark':              { bg: 'rgba(249,115,22,0.14)',  text: 'var(--ember)',     border: 'rgba(249,115,22,0.20)' },
-  'Statistics':         { bg: 'rgba(167,139,250,0.14)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
-  'Trees & Ensembles':  { bg: 'rgba(74,222,128,0.14)',  text: 'var(--green)',     border: 'rgba(74,222,128,0.20)' },
-  'SQL':                { bg: 'rgba(251,191,36,0.14)',  text: 'var(--gold)',      border: 'rgba(251,191,36,0.20)' },
-  'Regression':         { bg: 'rgba(240,165,0,0.14)',   text: 'var(--prime-hi)',  border: 'rgba(240,165,0,0.20)' },
-  'Coding':             { bg: 'rgba(167,139,250,0.14)', text: 'var(--violet)',    border: 'rgba(167,139,250,0.20)' },
-  'Architecture':       { bg: 'rgba(244,63,94,0.14)',   text: 'var(--rose)',      border: 'rgba(244,63,94,0.20)' },
-  'Behavioral':         { bg: 'rgba(52,211,153,0.14)',  text: 'var(--mint)',      border: 'rgba(52,211,153,0.20)' },
+  'System Design':      { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Features':           { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Evaluation':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Spark':              { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Statistics':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Trees & Ensembles':  { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'SQL':                { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Regression':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Coding':             { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Architecture':       { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Behavioral':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
 }
 
 // ─── Fluency Drills ──────────────────────────────────────────────────────────
@@ -234,8 +234,8 @@ const FLUENCY_DRILLS = [
 
 const TIER_LEVELS = [
   { key: 'junior',  label: 'Junior',  desc: 'Named the concept',                      color: 'var(--ink-mid)' },
-  { key: 'analyst', label: 'Analyst', desc: 'Understood the mechanism',                color: 'var(--sky)' },
-  { key: 'senior',  label: 'Senior',  desc: 'Covered tradeoffs & failure modes',       color: 'var(--mint)' },
+  { key: 'analyst', label: 'Analyst', desc: 'Understood the mechanism',                color: 'var(--ink-low)' },
+  { key: 'senior',  label: 'Senior',  desc: 'Covered tradeoffs & failure modes',       color: 'var(--prime)' },
   { key: 'staff',   label: 'Staff',   desc: 'Systemic thinking + downstream impact',   color: 'var(--prime)' },
 ]
 
@@ -256,8 +256,8 @@ function FluencyDrills() {
       </div>
 
       {/* Weak phrase card */}
-      <div style={{ padding: '24px 28px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.20)', borderRadius: '12px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Weak phrase</div>
+      <div style={{ padding: '24px 28px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>Weak phrase</div>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', color: 'var(--ink-mid)', lineHeight: 1.5, margin: 0 }}>"{drill.weak}"</p>
       </div>
 
@@ -269,7 +269,7 @@ function FluencyDrills() {
             <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Strong phrase</div>
             <p style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.55, margin: 0, marginBottom: '16px' }}>"{drill.strong}"</p>
             <div style={{ paddingTop: '14px', borderTop: '1px solid rgba(52,211,153,0.15)' }}>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Why it matters</div>
+              <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Why it matters</div>
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{drill.why}</p>
             </div>
           </div>
@@ -289,7 +289,7 @@ function FluencyDrills() {
         {FLUENCY_DRILLS.map((_, i) => (
           <button key={i} onClick={() => { setIdx(i); setRevealed(false) }}
             title={`Drill ${i + 1}`}
-            style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--mint)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+            style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--prime)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
         ))}
       </div>
     </div>
@@ -364,7 +364,7 @@ function TimedPractice({ questions, onExit }) {
           <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{q?.cat}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: 700, color: overtime ? 'var(--rose)' : remaining < 300 ? 'var(--ember)' : 'var(--mint)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: 700, color: overtime ? 'var(--prime)' : 'var(--prime)' }}>
             {overtime ? '+' : ''}{mins}:{String(secs).padStart(2, '0')}
           </span>
           <button onClick={onExit} className="btn-ghost" style={{ fontSize: '12px' }}>✕ Exit</button>
@@ -373,7 +373,7 @@ function TimedPractice({ questions, onExit }) {
 
       {/* Progress bar */}
       <div style={{ height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-        <div style={{ height: '100%', width: `${Math.min(100, (elapsed / DURATION) * 100)}%`, background: overtime ? 'var(--rose)' : 'linear-gradient(90deg, var(--mint), var(--sky))', borderRadius: '2px', transition: 'width 1s linear' }} />
+        <div style={{ height: '100%', width: `${Math.min(100, (elapsed / DURATION) * 100)}%`, background: 'var(--prime)', borderRadius: '2px', transition: 'width 1s linear' }} />
       </div>
 
       {/* Question */}
@@ -541,12 +541,12 @@ function SystemDesignJudgment() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{idx + 1} / {DESIGN_SCENARIOS.length}</span>
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-          <div style={{ width: `${((idx + 1) / DESIGN_SCENARIOS.length) * 100}%`, height: '100%', background: 'var(--gold)', borderRadius: '2px', transition: 'width 0.3s' }} />
+          <div style={{ width: `${((idx + 1) / DESIGN_SCENARIOS.length) * 100}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
       </div>
 
-      <div style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '12px', padding: '20px 24px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>System Brief</div>
+      <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '12px', padding: '20px 24px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>System Brief</div>
         <div style={{ fontSize: '15px', color: 'var(--ink-hi)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '12px' }}>{sc.brief}</div>
         <div style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{sc.context}</div>
       </div>
@@ -580,12 +580,12 @@ function SystemDesignJudgment() {
             <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Why this step</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.answer}</div>
           </div>
-          <div style={{ background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Common trap</div>
+          <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Common trap</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.trap}</div>
           </div>
-          <div style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Framework move</div>
+          <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Framework move</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65 }}>{sc.method}</div>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start', padding: '10px 20px' }}>
@@ -632,7 +632,7 @@ export default function InterviewPrepTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--sky) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '6px' }}>Interview Prep</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '6px' }}>Interview Prep</h1>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: '0 0 4px' }}>
           {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Plus 30 fluency drills for weak-to-strong vocabulary.
         </p>
@@ -696,7 +696,7 @@ export default function InterviewPrepTab({ onNavigate }) {
                     </div>
                     <button
                       onClick={e => { e.stopPropagation(); toggleBookmark('interview', String(q.id), q.q.slice(0,40)); forceUpdate(n => n+1) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '0 4px', color: isBookmarked('interview', String(q.id)) ? 'var(--gold)' : 'var(--ink-ghost)', flexShrink: 0, lineHeight: 1 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '0 4px', color: isBookmarked('interview', String(q.id)) ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0, lineHeight: 1 }}
                       title={isBookmarked('interview', String(q.id)) ? 'Remove bookmark' : 'Bookmark'}
                     >{isBookmarked('interview', String(q.id)) ? <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg> : <svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}</button>
                     <span style={{ color: 'var(--ink-low)', fontSize: '13px', paddingTop: '2px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>

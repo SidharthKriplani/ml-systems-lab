@@ -8,9 +8,9 @@ const ROLES = [
     pathId: 'production_ml',
     icon: '',
     level: 'Core',
-    accentColor: 'var(--mint)',
-    borderColor: 'rgba(52,211,153,0.25)',
-    bgColor: 'rgba(52,211,153,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'Very High',
     salaryUS: '$170k – $500k TC',
     salaryUK: '£80k – £200k',
@@ -25,9 +25,9 @@ const ROLES = [
     pathId: 'mlops_track',
     icon: '',
     level: 'Infra',
-    accentColor: 'var(--sky)',
-    borderColor: 'rgba(56,189,248,0.25)',
-    bgColor: 'rgba(56,189,248,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'High',
     salaryUS: '$160k – $420k TC',
     salaryUK: '£75k – £180k',
@@ -42,9 +42,9 @@ const ROLES = [
     pathId: 'staff_design',
     icon: '',
     level: 'Research',
-    accentColor: 'var(--violet)',
-    borderColor: 'rgba(168,85,247,0.25)',
-    bgColor: 'rgba(168,85,247,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'Moderate',
     salaryUS: '$200k – $700k TC',
     salaryUK: '£90k – £250k',
@@ -59,9 +59,9 @@ const ROLES = [
     pathId: 'mle_interview',
     icon: '',
     level: 'Applied Research',
-    accentColor: 'var(--ember)',
-    borderColor: 'rgba(249,115,22,0.25)',
-    bgColor: 'rgba(249,115,22,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'High',
     salaryUS: '$180k – $550k TC',
     salaryUK: '£85k – £220k',
@@ -76,9 +76,9 @@ const ROLES = [
     pathId: 'ds_track',
     icon: '',
     level: 'Analytics',
-    accentColor: 'var(--gold)',
-    borderColor: 'rgba(251,191,36,0.25)',
-    bgColor: 'rgba(251,191,36,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'High',
     salaryUS: '$120k – $280k TC',
     salaryUK: '£55k – £130k',
@@ -93,9 +93,9 @@ const ROLES = [
     pathId: 'deep_learning_prod',
     icon: '',
     level: 'Specialist',
-    accentColor: 'var(--rose)',
-    borderColor: 'rgba(244,63,94,0.25)',
-    bgColor: 'rgba(244,63,94,0.10)',
+    accentColor: 'var(--prime)',
+    borderColor: 'rgba(240,165,0,0.25)',
+    bgColor: 'rgba(240,165,0,0.08)',
     demand: 'Very High',
     salaryUS: '$200k – $600k TC',
     salaryUK: '£100k – £250k',
@@ -119,9 +119,9 @@ const STAGES = [
   {
     stage: 'Seed / Pre-seed',
     size: '1–5 engineers',
-    bgColor: 'rgba(52,211,153,0.10)',
+    bgColor: 'rgba(240,165,0,0.06)',
     borderColor: 'rgba(240,165,0,0.18)',
-    accentColor: 'var(--mint)',
+    accentColor: 'var(--prime)',
     stack: [
       { cat: 'Experimentation',  tools: ['Jupyter', 'pandas', 'scikit-learn', 'Matplotlib'] },
       { cat: 'Training',         tools: ['Local GPU / Colab', 'pickle', 'manual logging'] },
@@ -135,9 +135,9 @@ const STAGES = [
   {
     stage: 'Series A / B',
     size: '3–10 ML engineers',
-    bgColor: 'rgba(56,189,248,0.10)',
-    borderColor: 'rgba(56,189,248,0.2)',
-    accentColor: 'var(--sky)',
+    bgColor: 'rgba(240,165,0,0.06)',
+    borderColor: 'rgba(240,165,0,0.18)',
+    accentColor: 'var(--prime)',
     stack: [
       { cat: 'Experimentation',  tools: ['Jupyter', 'MLflow / W&B', 'DVC'] },
       { cat: 'Training',         tools: ['SageMaker / Vertex AI', 'Docker', 'Spot instances'] },
@@ -151,9 +151,9 @@ const STAGES = [
   {
     stage: 'Series C / Growth',
     size: '10–40 ML engineers',
-    bgColor: 'rgba(168,85,247,0.10)',
-    borderColor: 'rgba(168,85,247,0.2)',
-    accentColor: 'var(--violet)',
+    bgColor: 'rgba(240,165,0,0.06)',
+    borderColor: 'rgba(240,165,0,0.18)',
+    accentColor: 'var(--prime)',
     stack: [
       { cat: 'Experimentation',  tools: ['Weights & Biases', 'internal experiment platform'] },
       { cat: 'Training',         tools: ['Ray / Kubeflow', 'Metaflow', 'dedicated GPU cluster'] },
@@ -168,9 +168,9 @@ const STAGES = [
   {
     stage: 'FAANG / Hyperscaler',
     size: '100+ ML engineers',
-    bgColor: 'rgba(249,115,22,0.10)',
-    borderColor: 'rgba(249,115,22,0.2)',
-    accentColor: 'var(--ember)',
+    bgColor: 'rgba(240,165,0,0.06)',
+    borderColor: 'rgba(240,165,0,0.18)',
+    accentColor: 'var(--prime)',
     stack: [
       { cat: 'Training',         tools: ['Custom training infra', 'TFX / FBLearner / SageMaker'] },
       { cat: 'Features',         tools: ['Custom feature store (Feast-inspired)', 'stream + batch'] },
@@ -290,18 +290,18 @@ const COMPANIES = [
 ]
 
 const TIMELINE = [
-  { year: '2012', title: 'AlexNet', color: 'var(--mint)', desc: 'Deep learning wins ImageNet by a 10-point margin. The field pivots. GPU training becomes the new normal.' },
-  { year: '2014', title: 'GANs + DeepFace', color: 'var(--sky)', desc: 'Goodfellow invents GANs in a bar. Meta\'s DeepFace achieves near-human face recognition accuracy. Deep learning goes commercial.' },
-  { year: '2015', title: 'ResNet + TensorFlow', color: 'var(--mint)', desc: 'ResNet enables 152-layer networks with skip connections. Google open-sources TensorFlow, democratising deep learning implementation.' },
-  { year: '2016', title: 'AlphaGo + PyTorch', color: 'var(--sky)', desc: 'AlphaGo beats Lee Sedol 4–1. Facebook releases PyTorch. The RL + deep learning combination becomes industrially viable.' },
-  { year: '2017', title: '"Attention Is All You Need"', color: 'var(--violet)', desc: 'The Transformer architecture replaces RNNs for sequence modelling. The paper that triggers everything that follows.' },
-  { year: '2018', title: 'BERT + GPT-1', color: 'var(--violet)', desc: 'Pre-training on large corpora + fine-tuning on tasks replaces every previous NLP approach simultaneously. Transfer learning arrives for text.' },
-  { year: '2020', title: 'GPT-3 + Scaling Laws', color: 'var(--ember)', desc: 'GPT-3 demonstrates emergent few-shot learning. The scaling laws paper quantifies the compute-capability relationship. "Just scale it" becomes a research strategy.' },
-  { year: '2021', title: 'GitHub Copilot', color: 'var(--ember)', desc: 'First mass-market ML product that changes how a professional skill is practised. 40% of Copilot-generated code is accepted. Code generation is real.' },
-  { year: '2022', title: 'ChatGPT + Diffusion', color: 'var(--rose)', desc: 'ChatGPT reaches 100M users in 60 days. Stable Diffusion, DALL-E 2, and Midjourney cross the quality threshold for image generation. Consumer AI begins.' },
-  { year: '2023', title: 'GPT-4 + Open Models', color: 'var(--rose)', desc: 'GPT-4 sets a new capability bar. Meta releases Llama, triggering an open-source LLM ecosystem. Enterprise AI adoption reaches escape velocity.' },
-  { year: '2024', title: 'Reasoning + Agents', color: 'var(--gold)', desc: 'o1 introduces chain-of-thought at inference time. Agent frameworks (LangChain, AutoGen, Claude agents) enable multi-step task execution. Multimodal becomes standard.' },
-  { year: '2025', title: 'Production AI', color: 'var(--gold)', desc: 'The question shifts from "can it work?" to "can we deploy it reliably and cheaply?". Inference efficiency, RAG systems, and ML ops mature. AI regulation goes live in the EU.' },
+  { year: '2012', title: 'AlexNet', color: 'var(--prime)', desc: 'Deep learning wins ImageNet by a 10-point margin. The field pivots. GPU training becomes the new normal.' },
+  { year: '2014', title: 'GANs + DeepFace', color: 'var(--prime)', desc: 'Goodfellow invents GANs in a bar. Meta\'s DeepFace achieves near-human face recognition accuracy. Deep learning goes commercial.' },
+  { year: '2015', title: 'ResNet + TensorFlow', color: 'var(--prime)', desc: 'ResNet enables 152-layer networks with skip connections. Google open-sources TensorFlow, democratising deep learning implementation.' },
+  { year: '2016', title: 'AlphaGo + PyTorch', color: 'var(--prime)', desc: 'AlphaGo beats Lee Sedol 4–1. Facebook releases PyTorch. The RL + deep learning combination becomes industrially viable.' },
+  { year: '2017', title: '"Attention Is All You Need"', color: 'var(--prime)', desc: 'The Transformer architecture replaces RNNs for sequence modelling. The paper that triggers everything that follows.' },
+  { year: '2018', title: 'BERT + GPT-1', color: 'var(--prime)', desc: 'Pre-training on large corpora + fine-tuning on tasks replaces every previous NLP approach simultaneously. Transfer learning arrives for text.' },
+  { year: '2020', title: 'GPT-3 + Scaling Laws', color: 'var(--prime)', desc: 'GPT-3 demonstrates emergent few-shot learning. The scaling laws paper quantifies the compute-capability relationship. "Just scale it" becomes a research strategy.' },
+  { year: '2021', title: 'GitHub Copilot', color: 'var(--prime)', desc: 'First mass-market ML product that changes how a professional skill is practised. 40% of Copilot-generated code is accepted. Code generation is real.' },
+  { year: '2022', title: 'ChatGPT + Diffusion', color: 'var(--prime)', desc: 'ChatGPT reaches 100M users in 60 days. Stable Diffusion, DALL-E 2, and Midjourney cross the quality threshold for image generation. Consumer AI begins.' },
+  { year: '2023', title: 'GPT-4 + Open Models', color: 'var(--prime)', desc: 'GPT-4 sets a new capability bar. Meta releases Llama, triggering an open-source LLM ecosystem. Enterprise AI adoption reaches escape velocity.' },
+  { year: '2024', title: 'Reasoning + Agents', color: 'var(--prime)', desc: 'o1 introduces chain-of-thought at inference time. Agent frameworks (LangChain, AutoGen, Claude agents) enable multi-step task execution. Multimodal becomes standard.' },
+  { year: '2025', title: 'Production AI', color: 'var(--prime)', desc: 'The question shifts from "can it work?" to "can we deploy it reliably and cheaply?". Inference efficiency, RAG systems, and ML ops mature. AI regulation goes live in the EU.' },
 ]
 
 const MARKETS = [
@@ -439,15 +439,15 @@ function SalarySection() {
                 </div>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
                   <span style={{ color: 'var(--ink-low)' }}>Base: <span style={{ color: 'var(--ink-mid)' }}>{d.base}k</span></span>
-                  <span style={{ color: 'var(--mint)', fontWeight: 700 }}>TC: {d.tc}k</span>
+                  <span style={{ color: 'var(--prime)', fontWeight: 700 }}>TC: {d.tc}k</span>
                 </div>
               </div>
               <div style={{ position: 'relative', height: '20px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${tcPct}%`, background: 'rgba(240,165,0,0.18)', borderRadius: '4px', transition: 'width 0.4s' }} />
-                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${basePct}%`, background: 'var(--mint)', borderRadius: '4px', transition: 'width 0.4s' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${basePct}%`, background: 'var(--prime)', borderRadius: '4px', transition: 'width 0.4s' }} />
               </div>
               <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: 'var(--ink-ghost)' }}>
-                <span style={{ color: 'var(--mint)' }}>■ Base</span>
+                <span style={{ color: 'var(--prime)' }}>■ Base</span>
                 <span style={{ color: 'rgba(240,165,0,0.35)' }}>■ Equity + Bonus</span>
               </div>
             </div>
@@ -455,9 +455,9 @@ function SalarySection() {
         })}
       </div>
 
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.06)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75 }}>
-          <strong style={{ color: 'var(--mint)' }}>Reading this chart:</strong> The mint bar is base salary. The full bar (light green) includes equity (RSUs) and bonus. At senior US levels, equity can be 2–3× base. UK/EU equity culture is weaker — most of the bar is base.
+          <strong style={{ color: 'var(--prime)' }}>Reading this chart:</strong> The amber bar is base salary. The full bar (light amber) includes equity (RSUs) and bonus. At senior US levels, equity can be 2–3× base. UK/EU equity culture is weaker — most of the bar is base.
           At FAANG, annual refresh grants (new equity each year) compound significantly over a multi-year tenure — not shown here.
         </div>
       </div>
@@ -505,8 +505,8 @@ function StackSection() {
             <div className="section-eyebrow">Philosophy</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{s.philosophy}</p>
           </div>
-          <div className="card" style={{ padding: '16px 20px', background: 'rgba(244,63,94,0.10)', borderColor: 'rgba(244,63,94,0.25)' }}>
-            <div style={{ fontSize: '12px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
+          <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.06)', borderColor: 'rgba(240,165,0,0.2)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{s.antipattern}</p>
           </div>
         </div>
@@ -542,13 +542,13 @@ function CompaniesSection() {
             <span style={{ fontSize: '36px', lineHeight: 1 }}>{c.icon}</span>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '22px', color: 'var(--ink-hi)', margin: '0 0 4px' }}>{c.name}</h3>
-              <div style={{ fontSize: '13px', color: 'var(--mint)', fontStyle: 'italic', marginBottom: '8px' }}>{c.mlMotto}</div>
+              <div style={{ fontSize: '13px', color: 'var(--prime)', fontStyle: 'italic', marginBottom: '8px' }}>{c.mlMotto}</div>
               <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{c.headline}</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', fontFamily: 'var(--font-mono)', padding: '12px 0', borderTop: '1px solid var(--rim)' }}>
             <span style={{ color: 'var(--ink-low)' }}>Team: <span style={{ color: 'var(--ink-mid)' }}>{c.teamSize}</span></span>
-            {c.mlBudget !== 'N/A (private)' && c.mlBudget !== 'N/A' && <span style={{ color: 'var(--ink-low)' }}>Investment: <span style={{ color: 'var(--mint)' }}>{c.mlBudget}</span></span>}
+            {c.mlBudget !== 'N/A (private)' && c.mlBudget !== 'N/A' && <span style={{ color: 'var(--ink-low)' }}>Investment: <span style={{ color: 'var(--prime)' }}>{c.mlBudget}</span></span>}
           </div>
         </div>
 
@@ -563,15 +563,15 @@ function CompaniesSection() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
           <div className="card" style={{ padding: '16px 20px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--sky)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Tech highlights</div>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Tech highlights</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {c.techHighlights.map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.2)', color: 'var(--sky)', fontFamily: 'var(--font-mono)' }}>{t}</span>
+                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.2)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{t}</span>
               ))}
             </div>
           </div>
-          <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
-            <div style={{ fontSize: '12px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Key insight</div>
+          <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.06)', borderColor: 'rgba(240,165,0,0.18)' }}>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Key insight</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{c.insight}</p>
           </div>
         </div>
@@ -590,7 +590,7 @@ function TimelineSection() {
       </div>
 
       <div style={{ position: 'relative', paddingLeft: '24px' }}>
-        <div style={{ position: 'absolute', left: '7px', top: 0, bottom: 0, width: '2px', background: 'linear-gradient(to bottom, var(--mint), var(--gold))' }} />
+        <div style={{ position: 'absolute', left: '7px', top: 0, bottom: 0, width: '2px', background: 'var(--prime)' }} />
         {TIMELINE.map((e, i) => (
           <div key={e.year} style={{ position: 'relative', marginBottom: '28px', paddingLeft: '24px' }}>
             <div style={{ position: 'absolute', left: '-24px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: e.color, border: '2px solid var(--depth)', boxShadow: `0 0 8px ${e.color}` }} />
@@ -625,15 +625,15 @@ function MarketsSection() {
                 <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{m.hubs}</div>
               </div>
             </div>
-            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginBottom: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--mint)' }}>
+            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', marginBottom: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--prime)' }}>
               Senior MLE: {m.seniors}
             </div>
             <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Strengths</div>
+              <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Strengths</div>
               <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>{m.strengths}</p>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--ember)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Watch</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Watch</div>
               <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>{m.watch}</p>
             </div>
           </div>

@@ -344,12 +344,12 @@ function ScenarioCard({ scenario, state, onPick }) {
   const isCorrect = revealed && picked === scenario.correctCategory
 
   return (
-    <div style={{ border: `1px solid ${open ? 'var(--violet)55' : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+    <div style={{ border: `1px solid ${open ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
       {/* Header */}
-      <button onClick={() => onPick('toggle')} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: open ? 'rgba(168,85,247,0.06)' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <button onClick={() => onPick('toggle')} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: open ? 'rgba(240,165,0,0.05)' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '24px' }}>{scenario.id.replace('stf', '').padStart(2, '0')}</span>
         <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{scenario.title}</span>
-        <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(168,85,247,0.12)', color: 'var(--violet)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>FLAW HUNT</span>
+        <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>FLAW HUNT</span>
         {revealed && <span style={{ fontSize: '11px', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
         <span style={{ color: 'var(--ink-ghost)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', display: 'inline-flex' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2l4 3-4 3"/></svg></span>
       </button>
@@ -370,7 +370,7 @@ function ScenarioCard({ scenario, state, onPick }) {
               if (revealed) {
                 if (isAns) { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
                 else if (isPicked) { bg = 'rgba(239,68,68,0.15)'; border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
-              } else if (isPicked) { bg = 'rgba(168,85,247,0.10)'; border = 'rgba(168,85,247,0.50)'; color = 'var(--ink-hi)' }
+              } else if (isPicked) { bg = 'rgba(240,165,0,0.10)'; border = 'rgba(240,165,0,0.50)'; color = 'var(--ink-hi)' }
               return (
                 <button key={opt.category} disabled={revealed} onClick={() => onPick(opt.category)}
                   style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s', width: '100%' }}>
@@ -385,12 +385,12 @@ function ScenarioCard({ scenario, state, onPick }) {
           {/* Reveal */}
           {revealed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ padding: '12px 16px', background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>The Flaw</div>
+              <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>The Flaw</div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{scenario.reveal}</p>
               </div>
-              <div style={{ padding: '12px 16px', background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.20)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>How to prevent it</div>
+              <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.05)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>How to prevent it</div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{scenario.fix}</p>
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function SpotTheFlawTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--violet) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0 }}>Spot the Flaw</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0 }}>Spot the Flaw</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px', margin: '0 0 4px' }}>
           Every scenario looks reasonable. Each contains exactly one buried methodological flaw. Find it before the interviewer does.
@@ -440,9 +440,9 @@ export default function SpotTheFlawTab({ onNavigate }) {
       {/* Score strip */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid var(--rim)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{SCENARIOS.length} attempted</span>
-        {attempted > 0 && <span style={{ fontSize: '11px', color: correct / attempted >= 0.7 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({Math.round(correct / attempted * 100)}%)</span>}
+        {attempted > 0 && <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({Math.round(correct / attempted * 100)}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-          <div style={{ width: `${(attempted / SCENARIOS.length) * 100}%`, height: '100%', background: 'var(--violet)', borderRadius: '2px', transition: 'width 0.3s' }} />
+          <div style={{ width: `${(attempted / SCENARIOS.length) * 100}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.3s' }} />
         </div>
       </div>
 
@@ -456,8 +456,8 @@ export default function SpotTheFlawTab({ onNavigate }) {
       {onNavigate && (
         <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
           <button onClick={() => onNavigate('combinator')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', color: 'var(--violet)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Take the full mock exam in Combinator</span>
-            <span style={{ fontSize: '12px', color: 'var(--violet)' }}>→</span>
+            <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Take the full mock exam in Combinator</span>
+            <span style={{ fontSize: '12px', color: 'var(--prime)' }}>→</span>
           </button>
         </div>
       )}

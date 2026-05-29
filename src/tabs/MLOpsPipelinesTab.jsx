@@ -16,7 +16,7 @@ const pill = (color) => ({
 })
 
 // ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -150,7 +150,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
                     <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
                     {sc.awsCallout && (
@@ -265,7 +265,7 @@ function CiCdGates() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           CI/CD Gate Design
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -332,11 +332,11 @@ function CiCdGates() {
         </button>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
+          <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)' }}>
             <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>
               {matches}/{GATES.length} gates matched expert config
             </div>
-            <div style={{ ...grotesk, fontSize: '14px', fontWeight: 700, color: 'var(--rose)', marginBottom: '8px' }}>
+            <div style={{ ...grotesk, fontSize: '14px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>
               Key insight
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
@@ -463,7 +463,7 @@ function InfraDecision() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           Infrastructure Decision
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -480,19 +480,19 @@ function InfraDecision() {
           { key: 'team',    label: 'Team infra maturity', options: INFRA_PARAMS.team },
         ].map(({ key, label, options }) => (
           <div key={key} className="card" style={{ padding: '14px' }}>
-            <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>
               {label}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {options.map(opt => (
                 <button key={opt.id} onClick={() => setParams(p => ({ ...p, [key]: opt.id }))}
                   style={{
-                    border: `1.5px solid ${params[key] === opt.id ? 'var(--rose)' : 'var(--rim)'}`,
+                    border: `1.5px solid ${params[key] === opt.id ? 'var(--prime)' : 'var(--rim)'}`,
                     borderRadius: '7px', padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
-                    background: params[key] === opt.id ? 'rgba(244,63,94,0.15)' : 'transparent',
+                    background: params[key] === opt.id ? 'rgba(240,165,0,0.15)' : 'transparent',
                     transition: 'all 0.12s',
                   }}>
-                  <div style={{ ...grotesk, fontSize: '12px', fontWeight: 600, color: params[key] === opt.id ? 'var(--rose)' : 'var(--ink-hi)' }}>
+                  <div style={{ ...grotesk, fontSize: '12px', fontWeight: 600, color: params[key] === opt.id ? 'var(--prime)' : 'var(--ink-hi)' }}>
                     {opt.label}
                   </div>
                   {opt.sub && (
@@ -506,23 +506,23 @@ function InfraDecision() {
       </div>
 
       {/* Top recommendation */}
-      <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.25)' }}>
-        <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+      <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.25)' }}>
+        <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Recommended
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
           <div style={{ ...grotesk, fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em' }}>
             {top.name}
           </div>
-          <span style={{ ...pill('var(--sky)'), fontSize: '11px' }}>{top.tech}</span>
+          <span style={{ ...pill('var(--prime)'), fontSize: '11px' }}>{top.tech}</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
           <div>
-            <div style={{ ...mono, fontSize: '11px', color: 'var(--mint)', marginBottom: '4px' }}>Pros</div>
+            <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', marginBottom: '4px' }}>Pros</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{top.pros}</p>
           </div>
           <div>
-            <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', marginBottom: '4px' }}>Cons</div>
+            <div style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)', marginBottom: '4px' }}>Cons</div>
             <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{top.cons}</p>
           </div>
         </div>

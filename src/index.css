@@ -96,7 +96,7 @@
     background-image:
       radial-gradient(ellipse 70% 40% at 50% 0%,    rgba(240,165,0,0.22)   0%, transparent 60%),
       radial-gradient(ellipse 120% 60% at -5% 0%,   rgba(240,165,0,0.14)   0%, transparent 55%),
-      radial-gradient(ellipse 100% 55% at 105% 100%, rgba(167,139,250,0.16) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 55% at 105% 100%, rgba(240,165,0,0.08)   0%, transparent 55%),
       radial-gradient(circle, rgba(240,165,0,0.040) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
     background-attachment: fixed;
@@ -161,7 +161,7 @@
     position: absolute; inset: 0;
     border-radius: 12px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(240,165,0,0.70), rgba(167,139,250,0.50));
+    background: linear-gradient(135deg, rgba(240,165,0,0.70), rgba(240,165,0,0.30));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -362,7 +362,7 @@
 
   /* ── Gradient text ── */
   .text-gradient {
-    background: linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%);
+    background: linear-gradient(135deg, var(--prime-hi) 0%, var(--prime) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
   }
@@ -522,9 +522,9 @@
   /* ── Cloud/AWS service callout panel ── */
   /* Usage: <div className="msl-cloud-map"> with service chips inside */
   .msl-cloud-map {
-    background: rgba(34,211,238,0.05);
-    border: 1px solid rgba(34,211,238,0.20);
-    border-left: 3px solid var(--sky);
+    background: var(--prime-faint);
+    border: 1px solid rgba(240,165,0,0.18);
+    border-left: 3px solid var(--prime);
     border-radius: 8px;
     padding: 10px 14px;
     margin-top: 10px;
@@ -533,7 +533,7 @@
     line-height: 1.6;
   }
   .msl-cloud-map strong {
-    color: var(--sky);
+    color: var(--prime);
     font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;
@@ -541,13 +541,13 @@
   }
   .msl-cloud-chip {
     display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(34,211,238,0.08);
-    border: 1px solid rgba(34,211,238,0.22);
+    background: rgba(240,165,0,0.10);
+    border: 1px solid rgba(240,165,0,0.22);
     border-radius: 5px;
     padding: 2px 8px;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--sky);
+    color: var(--prime-hi);
     white-space: nowrap;
   }
 }

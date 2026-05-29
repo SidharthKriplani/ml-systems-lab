@@ -331,15 +331,15 @@ function search(query) {
 
 // ── Category colors ────────────────────────────────────────────────────────────
 const CAT_COLOR = {
-  'ML Fundamentals': 'var(--mint)',
-  'Evaluation': 'var(--sky)',
-  'Feature Engineering': 'var(--gold)',
-  'Spark': 'var(--ember)',
-  'System Design': 'var(--violet)',
-  'Statistics': 'var(--rose)',
-  'Causal Inference': 'var(--sky)',
-  'Deep Learning': 'var(--violet)',
-  'MLOps': 'var(--ember)',
+  'ML Fundamentals': 'var(--prime)',
+  'Evaluation': 'var(--prime)',
+  'Feature Engineering': 'var(--prime)',
+  'Spark': 'var(--prime)',
+  'System Design': 'var(--prime)',
+  'Statistics': 'var(--prime)',
+  'Causal Inference': 'var(--prime)',
+  'Deep Learning': 'var(--prime)',
+  'MLOps': 'var(--prime)',
   'Interview': 'var(--prime)',
 }
 
@@ -537,9 +537,9 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             style={{
               fontSize: 12,
               fontFamily: 'var(--font-mono)',
-              color: 'var(--sky)',
+              color: 'var(--prime)',
               background: 'transparent',
-              border: '1px solid color-mix(in srgb, var(--sky) 30%, transparent)',
+              border: '1px solid rgba(240,165,0,0.3)',
               borderRadius: 6,
               padding: '4px 10px',
               cursor: 'pointer',
@@ -568,9 +568,9 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             style={{
               fontSize: 12,
               fontFamily: 'var(--font-mono)',
-              color: 'var(--mint)',
+              color: 'var(--prime)',
               background: 'transparent',
-              border: '1px solid color-mix(in srgb, var(--mint) 30%, transparent)',
+              border: '1px solid rgba(240,165,0,0.3)',
               borderRadius: 6,
               padding: '4px 10px',
               cursor: 'pointer',
@@ -695,7 +695,7 @@ export default function AskTab({ onNavigate }) {
             fontWeight: 900,
             letterSpacing: '-0.05em',
             lineHeight: 1.1,
-            background: 'linear-gradient(135deg, var(--sky) 0%, var(--ink-hi) 55%)',
+            background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 55%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',

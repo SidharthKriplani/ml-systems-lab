@@ -1160,7 +1160,7 @@ export default function CombinatorTab({ onNavigate }) {
   }
 
   // ── Timer color ──
-  const timerColor = timeLeft < 60 ? 'var(--rose)' : timeLeft < 300 ? 'var(--ember)' : 'var(--prime)'
+  const timerColor = timeLeft < 60 ? 'var(--prime)' : timeLeft < 300 ? 'var(--prime)' : 'var(--prime)'
   const timerPulse = timeLeft < 60
 
   // ── MCQ score for debrief ──
@@ -1197,7 +1197,7 @@ export default function CombinatorTab({ onNavigate }) {
         `}</style>
 
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--rose) 0%, var(--ink-hi) 55%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Combinator</h1>
+          <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 55%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Combinator</h1>
           <p style={{ color: 'var(--ink-mid)', marginTop: '0.25rem', fontSize: '0.95rem' }}>
             Timed mock session — all answers locked until time ends
           </p>
@@ -1332,8 +1332,8 @@ export default function CombinatorTab({ onNavigate }) {
             width: '100%',
             padding: '0.85rem 1rem',
             borderRadius: 10,
-            border: `2px solid ${challengeMode ? 'var(--ember)' : 'var(--rim)'}`,
-            background: challengeMode ? 'rgba(249,115,22,0.12)' : 'var(--surface)',
+            border: `2px solid ${challengeMode ? 'var(--prime)' : 'var(--rim)'}`,
+            background: challengeMode ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
             cursor: 'pointer',
             fontFamily: 'var(--font-sans)',
             display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -1346,7 +1346,7 @@ export default function CombinatorTab({ onNavigate }) {
             filter: challengeMode ? 'none' : 'grayscale(1) opacity(0.5)',
           }}>⚡</span>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: challengeMode ? 'var(--ember)' : 'var(--ink-hi)' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: challengeMode ? 'var(--prime)' : 'var(--ink-hi)' }}>
               Challenge Mode — All Domains
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--ink-low)', marginTop: '0.15rem' }}>
@@ -1356,7 +1356,7 @@ export default function CombinatorTab({ onNavigate }) {
           <div style={{
             marginLeft: 'auto',
             width: 36, height: 20, borderRadius: 10,
-            background: challengeMode ? 'var(--ember)' : 'var(--rim)',
+            background: challengeMode ? 'var(--prime)' : 'var(--rim)',
             position: 'relative', flexShrink: 0,
             transition: 'background 0.15s',
           }}>
@@ -1380,7 +1380,7 @@ export default function CombinatorTab({ onNavigate }) {
           color: 'var(--ink-mid)',
           lineHeight: 1.5,
         }}>
-          <span style={{ color: 'var(--ember)' }}>⚠</span>{' '}
+          <span style={{ color: 'var(--prime)' }}>⚠</span>{' '}
           All answers are locked until the timer runs out. You must attempt every question.
         </div>
 
@@ -1432,7 +1432,7 @@ export default function CombinatorTab({ onNavigate }) {
             background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
           }}>
             <span style={{ fontSize: '0.85rem' }}>⚡</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ember)', letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--prime)', letterSpacing: '0.04em' }}>
               Cross-Domain Challenge
             </span>
           </div>
@@ -1483,7 +1483,7 @@ export default function CombinatorTab({ onNavigate }) {
                   borderRadius: 8,
                   border: isActive ? '2px solid var(--prime)' : '1px solid var(--rim)',
                   background: isActive ? 'rgba(240,165,0,0.15)' : 'var(--surface)',
-                  color: isActive ? 'var(--prime)' : isAnswered ? 'var(--mint)' : 'rgba(255,255,255,0.45)',
+                  color: isActive ? 'var(--prime)' : isAnswered ? 'var(--prime)' : 'rgba(255,255,255,0.45)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.8rem',
                   cursor: 'pointer',
@@ -1502,7 +1502,7 @@ export default function CombinatorTab({ onNavigate }) {
                     width: 7,
                     height: 7,
                     borderRadius: '50%',
-                    background: 'var(--mint)',
+                    background: 'var(--prime)',
                     display: 'block',
                   }} />
                 )}
@@ -1524,9 +1524,9 @@ export default function CombinatorTab({ onNavigate }) {
               display: 'inline-block',
               padding: '0.2rem 0.6rem',
               borderRadius: 4,
-              background: 'rgba(167,139,250,0.12)',
-              border: '1px solid rgba(167,139,250,0.2)',
-              color: 'var(--violet)',
+              background: 'rgba(240,165,0,0.12)',
+              border: '1px solid rgba(240,165,0,0.2)',
+              color: 'var(--prime)',
               fontSize: '0.75rem',
               fontWeight: 600,
               letterSpacing: '0.05em',
@@ -1617,9 +1617,9 @@ export default function CombinatorTab({ onNavigate }) {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 7,
-              border: '1px solid var(--rose)',
+              border: '1px solid var(--rim)',
               background: 'transparent',
-              color: 'var(--rose)',
+              color: 'var(--ink-low)',
               fontFamily: 'var(--font-sans)',
               cursor: 'pointer',
               fontSize: '0.8rem',
@@ -1665,7 +1665,7 @@ export default function CombinatorTab({ onNavigate }) {
                   onClick={() => endSession(false)}
                   style={{
                     flex: 1, padding: '0.65rem', borderRadius: 7,
-                    background: 'var(--rose)', border: 'none',
+                    background: 'var(--ink-low)', border: 'none',
                     color: 'var(--white)', fontFamily: 'var(--font-sans)',
                     fontWeight: 600, cursor: 'pointer',
                   }}
@@ -1696,7 +1696,7 @@ export default function CombinatorTab({ onNavigate }) {
   // ───────────────────────────────────────────────────────────────────────────
   if (screen === 'debrief') {
     const pct = mcqQuestions.length > 0 ? Math.round((correctCount / mcqQuestions.length) * 100) : 0
-    const scoreColor = pct >= 80 ? 'var(--mint)' : pct >= 60 ? 'var(--prime)' : 'var(--rose)'
+    const scoreColor = 'var(--prime)'
     const weakestDomain = Object.entries(domainStats)
       .sort((a, b) => (a[1].correct / Math.max(a[1].total,1)) - (b[1].correct / Math.max(b[1].total,1)))[0]?.[0] || ''
     function handleShare() {
@@ -1728,9 +1728,9 @@ export default function CombinatorTab({ onNavigate }) {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
               padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
-              background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)',
+              background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
             }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ember)' }}>⚡ Cross-Domain</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)' }}>⚡ Cross-Domain</span>
             </div>
           )}
           {selectedTrack && !challengeMode && (
@@ -1745,7 +1745,7 @@ export default function CombinatorTab({ onNavigate }) {
           <button onClick={handleShare} style={{
             marginTop: '1rem', background: 'none', border: '1px solid var(--rim)',
             borderRadius: 8, padding: '0.45rem 1.1rem', fontSize: '0.82rem',
-            color: copied ? 'var(--mint)' : 'var(--ink-mid)', cursor: 'pointer',
+            color: copied ? 'var(--prime)' : 'var(--ink-mid)', cursor: 'pointer',
             fontFamily: 'var(--font-mono)', transition: 'color 0.2s',
           }}>
             {copied ? '✓ Copied!' : '⎘ Share Score'}
@@ -1762,7 +1762,7 @@ export default function CombinatorTab({ onNavigate }) {
               .map(([domain, stats]) => [domain, stats, stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0])
               .sort((a, b) => a[2] - b[2])
               .map(([domain, stats, pct]) => {
-                const barColor = pct >= 70 ? 'var(--mint)' : pct >= 40 ? 'var(--ember)' : 'var(--rose)'
+                const barColor = 'var(--prime)'
                 return (
                   <div key={domain} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                     <div style={{ width: '110px', fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', flexShrink: 0, textAlign: 'right' }}>{domain}</div>
@@ -1797,7 +1797,7 @@ export default function CombinatorTab({ onNavigate }) {
                 padding: '1rem 1.25rem',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--prime)', fontWeight: 600 }}>{q.domain}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                     {timeSpent}s
                   </span>
@@ -1831,7 +1831,7 @@ export default function CombinatorTab({ onNavigate }) {
                 </div>
 
                 {userIdx === null && (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--ember)', margin: '0 0 0.5rem' }}>Not attempted</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--ink-low)', margin: '0 0 0.5rem' }}>Not attempted</p>
                 )}
 
                 <div style={{
@@ -1842,7 +1842,7 @@ export default function CombinatorTab({ onNavigate }) {
                   color: 'var(--ink-mid)',
                   lineHeight: 1.55,
                 }}>
-                  <span style={{ color: 'var(--sky)', fontWeight: 600, marginRight: '0.4rem' }}>Explanation:</span>
+                  <span style={{ color: 'var(--prime)', fontWeight: 600, marginRight: '0.4rem' }}>Explanation:</span>
                   {q.explanation}
                 </div>
               </div>
@@ -1871,7 +1871,7 @@ export default function CombinatorTab({ onNavigate }) {
                     padding: '1rem 1.25rem',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--violet)', fontWeight: 600 }}>{q.domain}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--prime)', fontWeight: 600 }}>{q.domain}</span>
                       <span style={{ fontSize: '0.8rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
                         {timeSpent}s
                       </span>
@@ -1881,8 +1881,8 @@ export default function CombinatorTab({ onNavigate }) {
                     {userAns && (
                       <div style={{
                         padding: '0.65rem 0.75rem',
-                        background: 'rgba(34,211,238,0.10)',
-                        border: '1px solid rgba(34,211,238,0.15)',
+                        background: 'rgba(240,165,0,0.08)',
+                        border: '1px solid rgba(240,165,0,0.15)',
                         borderRadius: 8,
                         fontSize: '0.85rem',
                         color: 'var(--ink-mid)',
@@ -1890,7 +1890,7 @@ export default function CombinatorTab({ onNavigate }) {
                         marginBottom: '0.75rem',
                         whiteSpace: 'pre-wrap',
                       }}>
-                        <span style={{ color: 'var(--sky)', fontWeight: 600, marginRight: '0.4rem' }}>Your answer:</span>
+                        <span style={{ color: 'var(--prime)', fontWeight: 600, marginRight: '0.4rem' }}>Your answer:</span>
                         {userAns}
                       </div>
                     )}
@@ -1906,7 +1906,7 @@ export default function CombinatorTab({ onNavigate }) {
                       marginBottom: '0.75rem',
                       whiteSpace: 'pre-wrap',
                     }}>
-                      <span style={{ color: 'var(--mint)', fontWeight: 600, marginRight: '0.4rem' }}>Model answer:</span>
+                      <span style={{ color: 'var(--prime)', fontWeight: 600, marginRight: '0.4rem' }}>Model answer:</span>
                       {q.modelAnswer}
                     </div>
 
@@ -1971,7 +1971,7 @@ export default function CombinatorTab({ onNavigate }) {
           </button>
         </div>
 
-        {onNavigate && <ForwardPointer label="Build your Defense Plan before the mock" tab="defense" onNavigate={onNavigate} accent="var(--rose)" />}
+        {onNavigate && <ForwardPointer label="Build your Defense Plan before the mock" tab="defense" onNavigate={onNavigate} accent="var(--prime)" />}
       </div>
     )
   }

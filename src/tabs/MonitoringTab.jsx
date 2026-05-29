@@ -86,7 +86,7 @@ function DriftDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Drift Dashboard</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Drift Dashboard</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           A model is running in production. Concept drift is injected at a hidden day (slide to reveal). Configure your PSI alert threshold — too tight means alert fatigue, too loose means silent degradation.
         </p>
@@ -210,7 +210,7 @@ function PSILab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PSI Lab</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>PSI Lab</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Population Stability Index from scratch. Slide the distribution shift and watch PSI change in real time.
           Understand why 0.2 is the standard threshold — and when it's wrong.
@@ -220,13 +220,13 @@ function PSILab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-            Distribution shift (σ): <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{shiftAmount.toFixed(1)}</span>
+            Distribution shift (σ): <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{shiftAmount.toFixed(1)}</span>
           </label>
           <input type="range" min={0} max={3} step={0.1} value={shiftAmount} onChange={e => setShiftAmount(+e.target.value)} />
         </div>
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-            Bins: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{nBins}</span>
+            Bins: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{nBins}</span>
           </label>
           <input type="range" min={5} max={20} step={1} value={nBins} onChange={e => setNBins(+e.target.value)} />
         </div>
@@ -330,7 +330,7 @@ function KSTestExplorer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>KS Test Explorer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>KS Test Explorer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           The Kolmogorov-Smirnov test detects distribution shift without assuming any particular shape — it measures the maximum gap between two empirical CDFs. Adjust the sliders to see exactly how D, the KS statistic, moves.
         </p>
@@ -339,19 +339,19 @@ function KSTestExplorer() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
         <div className="card" style={{ padding: '14px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '8px' }}>
-            Mean shift: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{meanShift.toFixed(1)}σ</span>
+            Mean shift: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{meanShift.toFixed(1)}σ</span>
           </label>
           <input type="range" min={0} max={2.5} step={0.1} value={meanShift} onChange={e => setMeanShift(+e.target.value)} />
         </div>
         <div className="card" style={{ padding: '14px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '8px' }}>
-            Std ratio: <span style={{ color: 'var(--sky)', fontWeight: 600 }}>{stdRatio.toFixed(2)}×</span>
+            Std ratio: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{stdRatio.toFixed(2)}×</span>
           </label>
           <input type="range" min={0.5} max={2.0} step={0.05} value={stdRatio} onChange={e => setStdRatio(+e.target.value)} />
         </div>
         <div className="card" style={{ padding: '14px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '8px' }}>
-            Sample size n: <span style={{ color: 'var(--mint)', fontWeight: 600 }}>{nSamples.toLocaleString()}</span>
+            Sample size n: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{nSamples.toLocaleString()}</span>
           </label>
           <input type="range" min={50} max={5000} step={50} value={nSamples} onChange={e => setNSamples(+e.target.value)} />
         </div>
@@ -425,7 +425,7 @@ function KSTestExplorer() {
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '12px' }}>KS Test vs PSI — choosing the right tool</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <div style={{ fontSize: '12px', color: 'var(--sky)', fontWeight: 600, marginBottom: '6px' }}>Use KS when:</div>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600, marginBottom: '6px' }}>Use KS when:</div>
             <div style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.8 }}>
               → Continuous feature distributions<br />
               → No assumption on shape needed<br />
@@ -435,7 +435,7 @@ function KSTestExplorer() {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: 'var(--violet)', fontWeight: 600, marginBottom: '6px' }}>Use PSI when:</div>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600, marginBottom: '6px' }}>Use PSI when:</div>
             <div style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.8 }}>
               → Comparing sample to reference bins<br />
               → Categorical or already-binned features<br />
@@ -448,8 +448,8 @@ function KSTestExplorer() {
       </div>
 
       {/* Insight: n matters */}
-      <div className="card" style={{ padding: '14px', background: 'rgba(129,140,248,0.10)', border: '1px solid rgba(129,140,248,0.15)' }}>
-        <span style={{ fontSize: '12px', color: 'var(--violet)', fontWeight: 600 }}>Key insight — sample size matters: </span>
+      <div className="card" style={{ padding: '14px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600 }}>Key insight — sample size matters: </span>
         <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>
           The KS test is sensitive to n. With n = 50, a 0.5σ mean shift may not reach significance. With n = 5,000, even a 0.1σ shift will. In production with millions of predictions, almost any real drift will be statistically significant — the practical question is whether D is large enough to matter.
         </span>
@@ -513,7 +513,7 @@ function AlertTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Alert Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Alert Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Configure alert rules and simulate how they'd perform against a 30-day production window. Balance detection speed against alert fatigue — both kill on-call teams in different ways.
         </p>
@@ -539,7 +539,7 @@ function AlertTuner() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {/* Toggle */}
                 <button onClick={() => updateRule(rule.id, 'enabled', !rule.enabled)}
-                  style={{ width: '36px', height: '20px', borderRadius: '10px', background: rule.enabled ? 'var(--mint)' : 'var(--rim)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.15s', flexShrink: 0 }}>
+                  style={{ width: '36px', height: '20px', borderRadius: '10px', background: rule.enabled ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.15s', flexShrink: 0 }}>
                   <div style={{ position: 'absolute', top: '2px', left: rule.enabled ? '18px' : '2px', width: '16px', height: '16px', borderRadius: '8px', background: 'white', transition: 'left 0.15s' }} />
                 </button>
                 <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)' }}>{rule.label}</span>
@@ -562,7 +562,7 @@ function AlertTuner() {
               </div>
               <div>
                 <label style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '6px' }}>
-                  Window (days): <span style={{ color: 'var(--sky)', fontWeight: 600 }}>{rule.window}</span>
+                  Window (days): <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{rule.window}</span>
                 </label>
                 <input type="range" min={1} max={7} step={1} value={rule.window} onChange={e => updateRule(rule.id, 'window', +e.target.value)} disabled={!rule.enabled} />
               </div>
@@ -770,7 +770,7 @@ function IncidentTriage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Incident Triage</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Incident Triage</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           8 production alerts. For each: decide your immediate action before reading the triage protocol. Most wrong answers involve touching the model first.
         </p>
@@ -814,11 +814,11 @@ function IncidentTriage() {
           ) : (
             <>
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Triage Steps</div>
+                <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Triage Steps</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {incident.triage.map((step, i) => (
                     <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                      <span style={{ color: 'var(--mint)', fontWeight: 700, fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>{i + 1}.</span>
+                      <span style={{ color: 'var(--prime)', fontWeight: 700, fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>{i + 1}.</span>
                       <span style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{step}</span>
                     </div>
                   ))}
@@ -899,7 +899,7 @@ function MonitorCoverageAudit() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Monitor Coverage Audit</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Monitor Coverage Audit</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
           Every ML pipeline has monitored stages and blind spots. Select a stage to see what most teams monitor — and what they silently miss.
         </p>
@@ -930,12 +930,12 @@ function MonitorCoverageAudit() {
       {stage && (
         <div style={{ display: 'grid', gap: '12px' }}>
           {/* What's monitored */}
-          <div className="card" style={{ border: '1px solid rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.10)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>Typically Monitored</div>
+          <div className="card" style={{ border: '1px solid rgba(240,165,0,0.25)', background: 'rgba(240,165,0,0.06)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>Typically Monitored</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {stage.monitored.map((m, i) => (
                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <span style={{ color: 'var(--mint)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: 'var(--prime)', fontWeight: 700, flexShrink: 0 }}>✓</span>
                   <span style={{ fontSize: '13px', color: 'var(--ink-hi)' }}>{m}</span>
                 </div>
               ))}
@@ -966,8 +966,8 @@ function MonitorCoverageAudit() {
                   <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Failure Signal</div>
                   <div style={{ fontSize: '12px', color: 'var(--ember)', lineHeight: 1.5 }}>{blind.signal}</div>
                 </div>
-                <div style={{ background: 'rgba(99,102,241,0.13)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '6px', padding: '10px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Fix</div>
+                <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '6px', padding: '10px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Fix</div>
                   <div style={{ fontSize: '12px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{blind.fix}</div>
                 </div>
               </div>
@@ -980,7 +980,7 @@ function MonitorCoverageAudit() {
 }
 
 // ─── AccordionMCQ ─────────────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -1205,7 +1205,7 @@ function AlertingDecisionTree() {
           Given an alert at 3am — PSI spike, AUC drop, latency breach — decide: page immediately, log and watch, auto-rollback, or suppress. The right answer changes with context.
         </p>
       </div>
-      <AccordionMCQ scenarios={ALERTING_SCENARIOS} accentColor="var(--rose)" storageKey="monitoring_alerting" />
+      <AccordionMCQ scenarios={ALERTING_SCENARIOS} accentColor="var(--prime)" storageKey="monitoring_alerting" />
     </div>
   )
 }
@@ -1302,7 +1302,7 @@ function DriftAttribution() {
           PSI is elevated — but which features are actually driving model degradation? Distinguish covariate drift, label drift, and concept drift and respond to each correctly.
         </p>
       </div>
-      <AccordionMCQ scenarios={DRIFT_ATTRIBUTION_SCENARIOS} accentColor="var(--gold)" storageKey="monitoring_drift" />
+      <AccordionMCQ scenarios={DRIFT_ATTRIBUTION_SCENARIOS} accentColor="var(--prime)" storageKey="monitoring_drift" />
     </div>
   )
 }
@@ -1346,7 +1346,7 @@ export default function MonitoringTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--rose) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Monitor</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Monitor</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Models don't break on deploy day. They degrade silently. Configure thresholds, watch drift develop, build alerts that actually work.
@@ -1361,16 +1361,16 @@ export default function MonitoringTab({ onNavigate }) {
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
-        <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-            Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Concept Drift: How to Detect It Before It Destroys Your Model</strong> in Gradient
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>Concept Drift: How to Detect It Before It Destroys Your Model</strong> in Gradient
           </span>
-          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →
           </button>
         </div>
       )}
-      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--rose)" />}
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

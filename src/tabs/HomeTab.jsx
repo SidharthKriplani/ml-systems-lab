@@ -32,66 +32,66 @@ const CHANGELOG = [
 
 
 // ── Mastery ───────────────────────────────────────────────────────────────────
-const MASTERY_COLORS = { exploring: 'var(--sky)', practicing: 'var(--ember)', mastered: 'var(--mint)' }
+const MASTERY_COLORS = { exploring: 'var(--ink-ghost)', practicing: 'var(--prime)', mastered: 'var(--prime-hi)' }
 const MASTERY_LABELS = { exploring: 'Exploring', practicing: 'Practicing', mastered: 'Mastered' }
 
 // ── Track grid ────────────────────────────────────────────────────────────────
 const TRACKS = [
   // ML Engineering
-  { id: 'models',       label: 'Math Foundations',    type: 'sandbox',  accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.10)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'The math behind the decisions — PCA, SVD, calibration, regularization. Python cells for hands-on exploration.' },
-  { id: 'features',     label: 'Feature Engineering', type: 'judgment', accent: 'var(--violet)', border: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.10)', modules: ['Skew Simulator', 'Feature Store Designer', 'Leakage Zoo', 'Online/Offline Decider'], description: 'Training-serving skew, feature stores, leakage patterns. The bugs that silently corrupt production models.' },
-  { id: 'eval',         label: 'Model Evaluation',    type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.10)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
-  { id: 'design',       label: 'System Design',       type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production incident diagnosis, ML platform design, two-tower retrieval, serving architecture decisions.' },
-  { id: 'classical',    label: 'Classical ML',         type: 'judgment', accent: 'var(--mint)',   border: 'rgba(52,211,153,0.2)', bg: 'rgba(52,211,153,0.10)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
+  { id: 'models',       label: 'Math Foundations',    type: 'sandbox',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['PCA Explorer', 'SVD Decomposer', 'NumPy Internals', 'Calibration Curves'], description: 'The math behind the decisions — PCA, SVD, calibration, regularization. Python cells for hands-on exploration.' },
+  { id: 'features',     label: 'Feature Engineering', type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Skew Simulator', 'Feature Store Designer', 'Leakage Zoo', 'Online/Offline Decider'], description: 'Training-serving skew, feature stores, leakage patterns. The bugs that silently corrupt production models.' },
+  { id: 'eval',         label: 'Model Evaluation',    type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Metric Selector', 'Shadow Mode Sim'], description: 'Pick the wrong metric and you ship a model that looks great on paper while failing in production.' },
+  { id: 'design',       label: 'System Design',       type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Incident Room', 'Design Canvas', 'Two-Tower Explorer', 'Serving Tradeoffs'], description: 'Production incident diagnosis, ML platform design, two-tower retrieval, serving architecture decisions.' },
+  { id: 'classical',    label: 'Classical ML',        type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Model Failure Zoo', 'Ensemble Lab', 'Hyperparameter Priority'], description: 'When random forests, SVMs, and gradient boosting silently fail in production and why.' },
   // Data Engineering
-  { id: 'spark',        label: 'Spark Lab',            type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Diagnose shuffle bottlenecks, fix data skew, read execution DAGs.' },
-  { id: 'airflow',      label: 'Airflow',              type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
-  { id: 'dbt',          label: 'dbt',                  type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
-  { id: 'modeling',     label: 'Data Modeling',        type: 'judgment', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.2)', bg: 'rgba(249,115,22,0.10)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
+  { id: 'spark',        label: 'Spark Lab',           type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Shuffle Hell', 'Skew Doctor', 'Partition Tuner'], description: 'PySpark execution mechanics. Diagnose shuffle bottlenecks, fix data skew, read execution DAGs.' },
+  { id: 'airflow',      label: 'Airflow',             type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['DAG Failure Room', 'Backfill Lab', 'Late Data Handler'], description: 'Pipeline orchestration failures — broken DAGs, backfill decisions, late-arriving data.' },
+  { id: 'dbt',          label: 'dbt',                 type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Materialization Oracle', 'Schema Drift Clinic', 'Incremental Decisions'], description: 'Transformation layer decisions. When incremental models break, schema drift diagnosis.' },
+  { id: 'modeling',     label: 'Data Modeling',       type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Star vs OBT', 'SCD Types', 'OLAP Format Showdown'], description: 'Star schema vs OBT, SCD type decisions, Iceberg vs Delta vs Hive tradeoffs.' },
   // Deep Learning
-  { id: 'dl',           label: 'Training Lab',         type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
-  { id: 'dl_finetune',  label: 'Fine-tuning',          type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
-  { id: 'dl_serving',   label: 'DL Serving',           type: 'judgment', accent: 'var(--violet)', border: 'rgba(99,102,241,0.2)', bg: 'rgba(99,102,241,0.10)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
+  { id: 'dl',           label: 'Training Lab',        type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Training Failure Diagnosis', 'Backprop Debugging'], description: 'Diagnose training failures from telemetry — loss spikes, vanishing gradients, data leakage.' },
+  { id: 'dl_finetune',  label: 'Fine-tuning',         type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Freeze vs LoRA', 'LR Strategy', 'PEFT Methods'], description: 'When to freeze, full fine-tune, or LoRA. The decision most people get wrong the first time.' },
+  { id: 'dl_serving',   label: 'DL Serving',          type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Quantization', 'GPU Memory Calculator', 'Serving Architecture'], description: 'Quantization decisions, GPU memory math, and which serving pattern for your traffic shape.' },
   // MLOps
-  { id: 'monitor',      label: 'Monitoring',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['Drift Dashboard', 'PSI Lab', 'Incident Triage', 'Coverage Audit'], description: 'Drift detection, PSI/KS thresholds, incident triage, monitoring blind spots.' },
-  { id: 'mlops_deploy', label: 'Deployment',           type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
-  { id: 'mlops_pipes',  label: 'CI/CD & Infra',        type: 'judgment', accent: 'var(--rose)',   border: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.10)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
+  { id: 'monitor',      label: 'Monitoring',          type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Drift Dashboard', 'PSI Lab', 'Incident Triage', 'Coverage Audit'], description: 'Drift detection, PSI/KS thresholds, incident triage, monitoring blind spots.' },
+  { id: 'mlops_deploy', label: 'Deployment',          type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Deploy Strategies', 'Champion-Challenger', 'Rollback Decisions'], description: 'Blue-green vs canary vs shadow. Champion-challenger promotion. When to roll back immediately.' },
+  { id: 'mlops_pipes',  label: 'CI/CD & Infra',       type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['CI/CD Gate Design', 'Infra Decisions', 'Model Registry'], description: 'Which CI gates block vs warn. REST vs Triton vs vLLM. Model registry patterns.' },
   // Data Science
-  { id: 'ds',           label: 'DS Fundamentals',      type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Model Selection Oracle', 'Analysis Mistakes', 'Calibration', 'Metric Design Pitfalls'], description: 'Model selection, statistical testing pitfalls, calibration, and metric design under Goodhart\'s Law.' },
-  { id: 'causal',       label: 'Causal Inference',     type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Causal vs Predictive', 'Identification Strategies', 'Confounder or Collider'], description: 'When prediction isn\'t enough. Identification strategies, confounders vs colliders, uplift modeling.' },
-  { id: 'ts',           label: 'Time Series',          type: 'judgment', accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Forecast Failure Zoo', 'Stationarity & Transforms', 'Anomaly Detection Tiers'], description: 'Why forecasts fail in production. Stationarity decisions, anomaly detection tier selection.' },
+  { id: 'ds',           label: 'DS Fundamentals',     type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Model Selection Oracle', 'Analysis Mistakes', 'Calibration', 'Metric Design Pitfalls'], description: 'Model selection, statistical testing pitfalls, calibration, and metric design under Goodhart\'s Law.' },
+  { id: 'causal',       label: 'Causal Inference',    type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Causal vs Predictive', 'Identification Strategies', 'Confounder or Collider'], description: 'When prediction isn\'t enough. Identification strategies, confounders vs colliders, uplift modeling.' },
+  { id: 'ts',           label: 'Time Series',         type: 'judgment', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Forecast Failure Zoo', 'Stationarity & Transforms', 'Anomaly Detection Tiers'], description: 'Why forecasts fail in production. Stationarity decisions, anomaly detection tier selection.' },
   // Resources
-  { id: 'interview',    label: 'Interview Prep',       type: 'reference', accent: 'var(--gold)',  border: 'rgba(251,191,36,0.2)', bg: 'rgba(251,191,36,0.10)', modules: ['52 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
-  { id: 'gradient',     label: 'Gradient',             type: 'reading',  accent: 'var(--sky)',    border: 'rgba(34,211,238,0.2)', bg: 'rgba(34,211,238,0.10)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
+  { id: 'interview',    label: 'Interview Prep',      type: 'reference', accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['52 Questions', 'Fluency Drills', 'Timed Practice'], description: 'MLE interview bank for Spotify, Meta, Google, Airbnb, Uber, Netflix. Timed practice with 4-tier scoring.' },
+  { id: 'gradient',     label: 'Gradient',            type: 'reading',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.20)', bg: 'rgba(240,165,0,0.07)', modules: ['Feature engineering', 'Spark shuffle', 'System design', 'Post-mortems'], description: 'Long-form production ML writing. Architecture reasoning, failure analysis, engineering decisions.' },
 ]
 
 const TAB_ACCENT = {
-  models: 'var(--violet)', features: 'var(--violet)',
-  eval: 'var(--mint)', classical: 'var(--mint)', design: 'var(--sky)',
-  spark: 'var(--ember)', airflow: 'var(--ember)', dbt: 'var(--ember)', modeling: 'var(--ember)',
-  dl: 'var(--violet)', dl_finetune: 'var(--violet)', dl_serving: 'var(--violet)',
-  monitor: 'var(--rose)', mlops_deploy: 'var(--rose)', mlops_pipes: 'var(--rose)',
-  ds: 'var(--sky)', causal: 'var(--sky)', ts: 'var(--sky)',
-  interview: 'var(--gold)', gradient: 'var(--sky)', landscape: 'var(--gold)',
+  models: 'var(--prime)', features: 'var(--prime)',
+  eval: 'var(--prime)', classical: 'var(--prime)', design: 'var(--prime)',
+  spark: 'var(--prime)', airflow: 'var(--prime)', dbt: 'var(--prime)', modeling: 'var(--prime)',
+  dl: 'var(--prime)', dl_finetune: 'var(--prime)', dl_serving: 'var(--prime)',
+  monitor: 'var(--prime)', mlops_deploy: 'var(--prime)', mlops_pipes: 'var(--prime)',
+  ds: 'var(--prime)', causal: 'var(--prime)', ts: 'var(--prime)',
+  interview: 'var(--prime)', gradient: 'var(--prime)', landscape: 'var(--prime)',
 }
 
 // ── Daily case scenarios ──────────────────────────────────────────────────────
 const DAILY_CASES = [
-  { domain: 'Feature Engineering', accent: 'var(--violet)', tab: 'features', q: "Offline AUC is 0.91. Online CTR dropped 18% on day 3 post-deploy. Pipeline logs are clean. What's the first thing you check?" },
-  { domain: 'Model Evaluation',    accent: 'var(--mint)',   tab: 'eval',     q: 'Precision is 0.92 on your test set. The fraud team is furious — the model keeps missing real fraud. What did you measure wrong?' },
-  { domain: 'Spark',               accent: 'var(--ember)',  tab: 'spark',    q: 'One Spark executor is processing 10x more data than the others. The job is 40 minutes late. No code changed. What caused this?' },
-  { domain: 'ML System Design',    accent: 'var(--sky)',    tab: 'design',   q: "You're building a two-tower retrieval model for 100M users. What's the biggest failure mode at serving time that won't show up in offline eval?" },
-  { domain: 'Monitoring',          accent: 'var(--rose)',   tab: 'monitor',  q: 'PSI on your top feature jumped from 0.08 to 0.31 overnight. Model performance metrics are unchanged. Is this a problem?' },
-  { domain: 'Deployment',          accent: 'var(--rose)',   tab: 'mlops_deploy', q: 'Canary at 5% traffic. New model P95 latency is 40ms higher. Accuracy looks the same. Do you roll back, investigate, or expand to 20%?' },
-  { domain: 'Deep Learning',       accent: 'var(--violet)', tab: 'dl',       q: "Training loss decreases smoothly but validation loss diverges after epoch 3. You haven't touched the data pipeline. What's the most likely cause?" },
-  { domain: 'DL Serving',          accent: 'var(--violet)', tab: 'dl_serving', q: 'Your quantized model passes all offline tests but accuracy degrades 8 points after deploying to the GPU cluster. Why?' },
-  { domain: 'Airflow',             accent: 'var(--ember)',  tab: 'airflow',  q: 'A daily pipeline missed its SLA by 3 hours. No task shows as failed. DAG logs look clean. Downstream data is wrong. What happened?' },
-  { domain: 'Causal Inference',    accent: 'var(--sky)',    tab: 'causal',   q: 'A/B test shows +4% conversion for treatment. Your data scientist says the result is invalid before even looking at the p-value. What check did they run?' },
-  { domain: 'Time Series',         accent: 'var(--sky)',    tab: 'ts',       q: "Demand forecast MAPE was 8% for 18 months. It jumped to 34% last week. No model changes were deployed. What's the most likely structural cause?" },
-  { domain: 'Classical ML',        accent: 'var(--mint)',   tab: 'classical', q: 'Your gradient boosting model has 97% accuracy. Business reports it fails on 40% of real transactions. You were not shown class distribution during training. What happened?' },
-  { domain: 'Data Modeling',       accent: 'var(--ember)',  tab: 'modeling', q: 'An analyst joined your fact table to a dimension table and got duplicate rows. No bug in their query. Which SCD type caused this and why?' },
-  { domain: 'Fine-tuning',         accent: 'var(--violet)', tab: 'dl_finetune', q: 'Fine-tuned BERT on 50K examples. Strong eval set performance, but the model regresses badly on general NLP benchmarks. What happened?' },
-  { domain: 'Data Science',        accent: 'var(--sky)',    tab: 'ds',       q: 'You shipped a model that optimized the business metric. Three months later the metric improved but the actual outcome got worse. Name the effect.' },
+  { domain: 'Feature Engineering', accent: 'var(--prime)', tab: 'features', q: "Offline AUC is 0.91. Online CTR dropped 18% on day 3 post-deploy. Pipeline logs are clean. What's the first thing you check?" },
+  { domain: 'Model Evaluation',    accent: 'var(--prime)', tab: 'eval',     q: 'Precision is 0.92 on your test set. The fraud team is furious — the model keeps missing real fraud. What did you measure wrong?' },
+  { domain: 'Spark',               accent: 'var(--prime)', tab: 'spark',    q: 'One Spark executor is processing 10x more data than the others. The job is 40 minutes late. No code changed. What caused this?' },
+  { domain: 'ML System Design',    accent: 'var(--prime)', tab: 'design',   q: "You're building a two-tower retrieval model for 100M users. What's the biggest failure mode at serving time that won't show up in offline eval?" },
+  { domain: 'Monitoring',          accent: 'var(--prime)', tab: 'monitor',  q: 'PSI on your top feature jumped from 0.08 to 0.31 overnight. Model performance metrics are unchanged. Is this a problem?' },
+  { domain: 'Deployment',          accent: 'var(--prime)', tab: 'mlops_deploy', q: 'Canary at 5% traffic. New model P95 latency is 40ms higher. Accuracy looks the same. Do you roll back, investigate, or expand to 20%?' },
+  { domain: 'Deep Learning',       accent: 'var(--prime)', tab: 'dl',       q: "Training loss decreases smoothly but validation loss diverges after epoch 3. You haven't touched the data pipeline. What's the most likely cause?" },
+  { domain: 'DL Serving',          accent: 'var(--prime)', tab: 'dl_serving', q: 'Your quantized model passes all offline tests but accuracy degrades 8 points after deploying to the GPU cluster. Why?' },
+  { domain: 'Airflow',             accent: 'var(--prime)', tab: 'airflow',  q: 'A daily pipeline missed its SLA by 3 hours. No task shows as failed. DAG logs look clean. Downstream data is wrong. What happened?' },
+  { domain: 'Causal Inference',    accent: 'var(--prime)', tab: 'causal',   q: 'A/B test shows +4% conversion for treatment. Your data scientist says the result is invalid before even looking at the p-value. What check did they run?' },
+  { domain: 'Time Series',         accent: 'var(--prime)', tab: 'ts',       q: "Demand forecast MAPE was 8% for 18 months. It jumped to 34% last week. No model changes were deployed. What's the most likely structural cause?" },
+  { domain: 'Classical ML',        accent: 'var(--prime)', tab: 'classical', q: 'Your gradient boosting model has 97% accuracy. Business reports it fails on 40% of real transactions. You were not shown class distribution during training. What happened?' },
+  { domain: 'Data Modeling',       accent: 'var(--prime)', tab: 'modeling', q: 'An analyst joined your fact table to a dimension table and got duplicate rows. No bug in their query. Which SCD type caused this and why?' },
+  { domain: 'Fine-tuning',         accent: 'var(--prime)', tab: 'dl_finetune', q: 'Fine-tuned BERT on 50K examples. Strong eval set performance, but the model regresses badly on general NLP benchmarks. What happened?' },
+  { domain: 'Data Science',        accent: 'var(--prime)', tab: 'ds',       q: 'You shipped a model that optimized the business metric. Three months later the metric improved but the actual outcome got worse. Name the effect.' },
 ]
 
 // ── Role sequences ─────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ const ROLE_SEQUENCES = {
 }
 
 // ── Progress ring ─────────────────────────────────────────────────────────────
-function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
+function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--prime)' }) {
   const r    = (size - stroke * 2) / 2
   const circ = 2 * Math.PI * r
   const dash = (pct / 100) * circ
@@ -122,12 +122,12 @@ function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
 
 // ── Domain section label ──────────────────────────────────────────────────────
 const DOMAIN_LABELS = [
-  { key: 'mle',       label: 'ML Engineering',   tracks: ['models','features','eval','design','classical'], accent: 'var(--violet)' },
-  { key: 'de',        label: 'Data Engineering',  tracks: ['spark','airflow','dbt','modeling'],             accent: 'var(--ember)'  },
-  { key: 'dl',        label: 'Deep Learning',     tracks: ['dl','dl_finetune','dl_serving'],                accent: 'var(--violet)' },
-  { key: 'mlops',     label: 'MLOps',             tracks: ['monitor','mlops_deploy','mlops_pipes'],         accent: 'var(--rose)'   },
-  { key: 'ds',        label: 'Data Science',      tracks: ['ds','causal','ts'],                             accent: 'var(--sky)'    },
-  { key: 'resources', label: 'Resources',         tracks: ['interview','gradient'],                         accent: 'var(--gold)'   },
+  { key: 'mle',       label: 'ML Engineering',   tracks: ['models','features','eval','design','classical'], accent: 'var(--prime)' },
+  { key: 'de',        label: 'Data Engineering',  tracks: ['spark','airflow','dbt','modeling'],             accent: 'var(--prime)' },
+  { key: 'dl',        label: 'Deep Learning',     tracks: ['dl','dl_finetune','dl_serving'],                accent: 'var(--prime)' },
+  { key: 'mlops',     label: 'MLOps',             tracks: ['monitor','mlops_deploy','mlops_pipes'],         accent: 'var(--prime)' },
+  { key: 'ds',        label: 'Data Science',      tracks: ['ds','causal','ts'],                             accent: 'var(--prime)' },
+  { key: 'resources', label: 'Resources',         tracks: ['interview','gradient'],                         accent: 'var(--prime)' },
 ]
 
 // ── Guided paths ──────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ const GUIDED_PATHS = [
     id: 'foundations',
     label: 'Foundations Path',
     desc: 'Core ML judgment from the ground up',
-    accent: 'var(--mint)',
+    accent: 'var(--prime)',
     steps: [
       { tabId: 'features',  label: 'Feature Engineering' },
       { tabId: 'eval',      label: 'Model Evaluation' },
@@ -162,7 +162,7 @@ const GUIDED_PATHS = [
     id: 'production',
     label: 'Production Incidents',
     desc: 'Debug ML systems like a senior engineer',
-    accent: 'var(--rose)',
+    accent: 'var(--prime)',
     steps: [
       { tabId: 'monitor',      label: 'Monitoring' },
       { tabId: 'mlops_deploy', label: 'Deployment' },
@@ -174,10 +174,10 @@ const GUIDED_PATHS = [
 ]
 
 const TYPE_BADGE = {
-  judgment:  { label: 'judgment',  color: 'var(--sky)',    bg: 'rgba(34,211,238,0.1)',  border: 'rgba(34,211,238,0.25)' },
-  sandbox:   { label: 'sandbox',   color: 'var(--violet)', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.25)' },
-  reference: { label: 'reference', color: 'var(--gold)',   bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' },
-  reading:   { label: 'reading',   color: 'var(--ink-low)',bg: 'rgba(255,255,255,0.10)',border: 'var(--rim)' },
+  judgment:  { label: 'judgment',  color: 'var(--prime)',   bg: 'var(--prime-faint)',        border: 'rgba(240,165,0,0.22)' },
+  sandbox:   { label: 'sandbox',   color: 'var(--ink-low)', bg: 'rgba(255,255,255,0.04)',    border: 'var(--rim)' },
+  reference: { label: 'reference', color: 'var(--ink-low)', bg: 'rgba(255,255,255,0.04)',    border: 'var(--rim)' },
+  reading:   { label: 'reading',   color: 'var(--ink-low)', bg: 'rgba(255,255,255,0.04)',    border: 'var(--rim)' },
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -399,7 +399,7 @@ export default function HomeTab({ onNavigate }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{ width: '72px', height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-              <div className="progress-fill-animated" style={{ width: `${nextUp.pct}%`, height: '100%', background: TAB_ACCENT[nextUp.tab] ?? 'var(--mint)', borderRadius: '2px' }} />
+              <div className="progress-fill-animated" style={{ width: `${nextUp.pct}%`, height: '100%', background: TAB_ACCENT[nextUp.tab] ?? 'var(--prime)', borderRadius: '2px' }} />
             </div>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{nextUp.pct}%</span>
           </div>

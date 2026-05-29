@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react'
 const LS_KEY = 'msl_score:codebugs'
 
 const DOMAIN_COLORS = {
-  Spark: 'var(--ember)',
-  'Feature Engineering': 'var(--sky)',
-  'Model Training': 'var(--rose)',
-  SQL: 'var(--mint)',
-  MLOps: 'var(--violet)',
+  Spark: 'var(--prime)',
+  'Feature Engineering': 'var(--prime)',
+  'Model Training': 'var(--prime)',
+  SQL: 'var(--prime)',
+  MLOps: 'var(--prime)',
   DistTraining: 'var(--prime)',
-  SilentData: 'var(--gold)',
+  SilentData: 'var(--prime)',
 }
 
 const BUGS = [
@@ -992,8 +992,8 @@ function BugCard({ bug, answer, onAnswer }) {
               </div>
 
               <div style={{
-                background: 'rgba(249,115,22,0.14)',
-                border: '1px solid rgba(249, 115, 22, 0.25)',
+                background: 'rgba(240,165,0,0.10)',
+                border: '1px solid rgba(240,165,0,0.25)',
                 borderRadius: 6,
                 padding: '10px 12px',
                 marginBottom: 10,
@@ -1001,7 +1001,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 <div style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: 'var(--ember)',
+                  color: 'var(--prime)',
                   fontFamily: 'var(--font-sans)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.07em',
@@ -1024,7 +1024,7 @@ function BugCard({ bug, answer, onAnswer }) {
                 <div style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: 'var(--mint)',
+                  color: 'var(--prime)',
                   fontFamily: 'var(--font-sans)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.07em',
@@ -1110,7 +1110,7 @@ export default function CodeBugsTab({ onNavigate }) {
           fontFamily: 'var(--font-mono)',
           fontSize: 28,
           fontWeight: 700,
-          color: score === 26 ? 'var(--mint)' : score >= 20 ? 'var(--prime)' : 'var(--ink-hi)',
+          color: 'var(--prime)',
           lineHeight: 1,
         }}>
           {score}
@@ -1145,7 +1145,7 @@ export default function CodeBugsTab({ onNavigate }) {
               <div style={{
                 height: '100%',
                 width: `${(score / 26) * 100}%`,
-                background: score >= 20 ? 'var(--mint)' : score >= 13 ? 'var(--prime)' : 'var(--ember)',
+                background: 'var(--prime)',
                 borderRadius: 4,
                 transition: 'width 0.4s ease',
               }} />

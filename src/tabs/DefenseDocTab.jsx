@@ -65,11 +65,11 @@ const HORIZONS = [
   { id: '14d',  label: '2 Weeks',  sub: 'Deep coverage'    },
 ]
 const RATINGS = [
-  { id: 'weak',   label: 'Weak',   color: 'var(--rose)',  inv: 3 },
-  { id: 'okay',   label: 'Okay',   color: 'var(--prime)', inv: 2 },
-  { id: 'strong', label: 'Strong', color: 'var(--mint)',  inv: 1 },
+  { id: 'weak',   label: 'Weak',   color: 'var(--ink-low)', inv: 3 },
+  { id: 'okay',   label: 'Okay',   color: 'var(--prime)',   inv: 2 },
+  { id: 'strong', label: 'Strong', color: 'var(--prime)',   inv: 1 },
 ]
-const TIER_COLOR = { must: 'var(--rose)', important: 'var(--prime)', good: 'var(--mint)' }
+const TIER_COLOR = { must: 'var(--prime)', important: 'var(--prime)', good: 'var(--ink-low)' }
 const ACCESS_CODE = 'DAI2026'
 const GATE_SECTION_PCT = 0.35
 
@@ -96,27 +96,27 @@ function generatePlan(skills, horizon) {
   const weak   = sorted.filter(s => s.rating === 'weak')
 
   if (horizon === 'cram') return [
-    { label: 'Priority Focus — highest gaps first', accent: 'var(--rose)', border: 'rgba(244,63,94,0.28)', items: sorted.slice(0, 4) },
+    { label: 'Priority Focus — highest gaps first', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 4) },
   ]
   if (horizon === '3d') return [
-    { label: 'Day 1 — Biggest gaps', accent: 'var(--rose)',  border: 'rgba(244,63,94,0.28)',  items: sorted.slice(0, 2) },
-    { label: 'Day 2 — Core topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)',   items: sorted.slice(2, 4) },
-    { label: 'Day 3 — Review',       accent: 'var(--mint)',  border: 'rgba(52,211,153,0.28)',  items: sorted.slice(4, 6), bonus: 'Run a 30-min Combinator session to pressure-test.' },
+    { label: 'Day 1 — Biggest gaps', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2) },
+    { label: 'Day 2 — Core topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(2, 4) },
+    { label: 'Day 3 — Review',       accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(4, 6), bonus: 'Run a 30-min Combinator session to pressure-test.' },
   ]
   if (horizon === '7d') return [
-    { label: 'Days 1–2 — Gap Focus',  accent: 'var(--rose)',  border: 'rgba(244,63,94,0.28)',  items: sorted.slice(0, 2) },
-    { label: 'Days 3–4 — Build',      accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)',   items: sorted.slice(2, 5) },
-    { label: 'Day 5 — Weak spots',    accent: 'var(--ember)', border: 'rgba(249,115,22,0.28)',  items: weak.slice(0, 2) },
-    { label: 'Days 6–7 — Simulate',   accent: 'var(--mint)',  border: 'rgba(52,211,153,0.28)',  items: sorted.slice(5), bonus: 'Day 7: full Combinator session + Verbal Practice run-through.' },
+    { label: 'Days 1–2 — Gap Focus',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2) },
+    { label: 'Days 3–4 — Build',      accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(2, 5) },
+    { label: 'Day 5 — Weak spots',    accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: weak.slice(0, 2) },
+    { label: 'Days 6–7 — Simulate',   accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(5), bonus: 'Day 7: full Combinator session + Verbal Practice run-through.' },
   ]
   // 14d
   return [
-    { label: 'Week 1 — Days 1–3 — Must Know gaps',    accent: 'var(--rose)',   border: 'rgba(244,63,94,0.28)',   items: sorted.filter(s => s.tier === 'must').slice(0, 3) },
-    { label: 'Week 1 — Days 4–5 — Important topics',  accent: 'var(--prime)',  border: 'rgba(240,165,0,0.28)',    items: sorted.filter(s => s.tier === 'important').slice(0, 3) },
-    { label: 'Week 1 — Days 6–7 — Weak spots + mock', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.28)',   items: weak, bonus: 'Day 7: Combinator session.' },
-    { label: 'Week 2 — Days 8–10 — Breadth pass',     accent: 'var(--sky)',    border: 'rgba(34,211,238,0.28)',   items: sorted.slice(4) },
-    { label: 'Week 2 — Days 11–13 — Rounds practice', accent: 'var(--violet)', border: 'rgba(99,102,241,0.28)',   items: sorted.slice(0, 2), bonus: 'Interview Q&A + Take-Home Bank. Answer one question out loud per day.' },
-    { label: 'Day 14 — Full simulation',              accent: 'var(--mint)',   border: 'rgba(52,211,153,0.28)',   items: [], bonus: 'Full Combinator session + Verbal Practice. Re-read your Defense Plan from Day 1.' },
+    { label: 'Week 1 — Days 1–3 — Must Know gaps',    accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.filter(s => s.tier === 'must').slice(0, 3) },
+    { label: 'Week 1 — Days 4–5 — Important topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.filter(s => s.tier === 'important').slice(0, 3) },
+    { label: 'Week 1 — Days 6–7 — Weak spots + mock', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: weak, bonus: 'Day 7: Combinator session.' },
+    { label: 'Week 2 — Days 8–10 — Breadth pass',     accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(4) },
+    { label: 'Week 2 — Days 11–13 — Rounds practice', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2), bonus: 'Interview Q&A + Take-Home Bank. Answer one question out loud per day.' },
+    { label: 'Day 14 — Full simulation',              accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: [], bonus: 'Full Combinator session + Verbal Practice. Re-read your Defense Plan from Day 1.' },
   ]
 }
 
@@ -355,9 +355,9 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
         <div style={{ marginBottom: 24, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Plan progress</span>
           <div style={{ flex: 1, height: 3, background: 'var(--rim)', borderRadius: 2 }}>
-            <div style={{ width: `${Math.round((doneCount / totalItems) * 100)}%`, height: '100%', background: 'var(--mint)', borderRadius: 2, transition: 'width 0.4s' }} />
+            <div style={{ width: `${Math.round((doneCount / totalItems) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: 2, transition: 'width 0.4s' }} />
           </div>
-          <span style={{ fontSize: 11, color: 'var(--mint)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{doneCount}/{totalItems}</span>
+          <span style={{ fontSize: 11, color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{doneCount}/{totalItems}</span>
         </div>
       )}
 
@@ -393,7 +393,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
               const inv = RATINGS.find(r => r.id === s.rating)?.inv ?? 2
               return Math.max(w, inv)
             }, 0)
-            const borderColor = worstRating >= 3 ? 'var(--rose)' : worstRating >= 2 ? 'var(--prime)' : 'var(--mint)'
+            const borderColor = 'var(--prime)'
             return (
               <div key={round} style={{ background: 'var(--depth)', border: `1px solid ${round === 'Behavioral' ? 'var(--rim)' : borderColor + '55'}`, borderLeft: `3px solid ${round === 'Behavioral' ? 'var(--rim-hi)' : borderColor}`, borderRadius: 8, padding: '10px 12px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', marginBottom: 5 }}>{round}</div>

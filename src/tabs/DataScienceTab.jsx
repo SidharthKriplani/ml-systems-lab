@@ -10,7 +10,7 @@ const MODELS = [
     strengths: ['Fully interpretable — coefficients are odds ratios', 'Calibrated probabilities out of the box', 'Fast to train, no hyperparameter tuning needed', 'Works well as a baseline and in ensembles'],
     risks: ['Assumes linear decision boundary — will miss interactions', 'Sensitive to feature scale (always normalise)', 'Breaks under multicollinearity'],
     prodNote: 'Default first model for any tabular binary classification. If a logistic regression can\'t beat random, your features are the problem, not the model.',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
   },
   {
     id: 'rf',
@@ -20,7 +20,7 @@ const MODELS = [
     strengths: ['Handles mixed feature types natively', 'Robust to outliers and missing data', 'Feature importances for interpretability', 'No feature scaling required'],
     risks: ['Memory-hungry for large n_estimators', 'Slow prediction with many trees', 'Poor extrapolation beyond training range (regression)'],
     prodNote: 'Strong default for tabular data, especially with mixed types or messy data. Slower than GBMs to train at scale but simpler to tune.',
-    color: 'var(--mint)',
+    color: 'var(--prime)',
   },
   {
     id: 'xgboost',
@@ -40,7 +40,7 @@ const MODELS = [
     strengths: ['Effective in high-dimensional spaces (text, genomics)', 'Works well when n < p', 'Only support vectors matter — memory efficient post-training'],
     risks: ['O(n²) to O(n³) training time — unusable above ~50k samples', 'Sensitive to feature scale', 'Probability calibration requires additional Platt scaling'],
     prodNote: 'Niche use case in 2025: text classification with small data, or any problem where kernel tricks matter. Otherwise, gradient boosting dominates.',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
   },
   {
     id: 'knn',
@@ -50,7 +50,7 @@ const MODELS = [
     strengths: ['Zero training time', 'Naturally handles multi-class', 'Interpretable — "similar to these training examples"'],
     risks: ['O(n) prediction time — scales catastrophically', 'Curse of dimensionality above ~20 features', 'Requires careful distance metric choice'],
     prodNote: 'Useful as an exploratory baseline or for recommendation cold-start. Never deploy raw k-NN at scale — use ANN (Faiss, ScaNN) if you need nearest-neighbour lookup in production.',
-    color: 'var(--rose)',
+    color: 'var(--prime)',
   },
   {
     id: 'linear_reg',
@@ -60,7 +60,7 @@ const MODELS = [
     strengths: ['Interpretable coefficients', 'Ridge handles multicollinearity', 'Lasso does feature selection implicitly', 'Fast and no hyperparameter tuning (Ridge λ aside)'],
     risks: ['Linear assumption — misses non-linear relationships', 'Sensitive to outliers (use Huber loss if needed)', 'Extrapolation outside training range is risky'],
     prodNote: 'Start here for any regression task. If residuals are non-random, you need a more complex model. Lasso is your friend when you have 100+ features.',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
   },
   {
     id: 'tabnet',
@@ -70,7 +70,7 @@ const MODELS = [
     strengths: ['Can learn complex interactions without feature engineering', 'Scales with data', 'TabNet: attention-based, interpretable for neural net'],
     risks: ['Rarely beats GBMs on structured data with same n', 'Requires more hyperparameter tuning', 'Longer training time, needs GPU for large datasets'],
     prodNote: 'Neural nets on tabular data are almost never the right call unless: (1) you have millions of rows, (2) you\'re already in a DL serving stack and want to unify, or (3) you need joint embeddings with text/images.',
-    color: 'var(--gold)',
+    color: 'var(--prime)',
   },
 ]
 
@@ -79,7 +79,7 @@ const DATA_SIZES  = [{ v: 'small', l: 'Small (<10k rows)' }, { v: 'medium', l: '
 const INTERP      = [{ v: 'high', l: 'High — explain to stakeholders' }, { v: 'medium', l: 'Medium — SHAP is acceptable' }, { v: 'low', l: 'Low — accuracy only' }]
 const FEAT_TYPES  = [{ v: 'tabular', l: 'Tabular / structured' }, { v: 'text', l: 'Text / NLP' }, { v: 'image', l: 'Images' }]
 
-function pill(label, active, onClick, activeColor = 'var(--sky)') {
+function pill(label, active, onClick, activeColor = 'var(--prime)') {
   return (
     <button key={label} onClick={onClick}
       style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
@@ -111,7 +111,7 @@ function ModelSelectionOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Model Selection Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your problem constraints. Get ranked model recommendations with production tradeoffs.
         </p>
@@ -120,10 +120,10 @@ function ModelSelectionOracle() {
       {/* Selectors */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
         {[
-          { label: 'Task type', items: TASK_TYPES, val: taskType, set: setTaskType, color: 'var(--sky)' },
-          { label: 'Data size', items: DATA_SIZES, val: dataSize, set: setDataSize, color: 'var(--ember)' },
-          { label: 'Interpretability requirement', items: INTERP, val: interp, set: setInterp, color: 'var(--violet)' },
-          { label: 'Feature type', items: FEAT_TYPES, val: featType, set: setFeatType, color: 'var(--mint)' },
+          { label: 'Task type', items: TASK_TYPES, val: taskType, set: setTaskType, color: 'var(--prime)' },
+          { label: 'Data size', items: DATA_SIZES, val: dataSize, set: setDataSize, color: 'var(--prime)' },
+          { label: 'Interpretability requirement', items: INTERP, val: interp, set: setInterp, color: 'var(--prime)' },
+          { label: 'Feature type', items: FEAT_TYPES, val: featType, set: setFeatType, color: 'var(--prime)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
             <div className="section-eyebrow" style={{ marginBottom: '10px' }}>{g.label}</div>
@@ -164,11 +164,11 @@ function ModelSelectionOracle() {
                 <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--rim)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Strengths</div>
+                      <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Strengths</div>
                       {m.strengths.map((s, j) => <div key={j} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '3px' }}>✓ {s}</div>)}
                     </div>
                     <div>
-                      <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Watch out for</div>
+                      <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Watch out for</div>
                       {m.risks.map((r, j) => <div key={j} style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '3px' }}>⚠ {r}</div>)}
                     </div>
                   </div>
@@ -348,7 +348,7 @@ function StatisticalTestingPitfalls() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Analysis Mistakes</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real scenarios. Identify the statistical mistake. Understand why it matters in production.
         </p>
@@ -359,15 +359,15 @@ function StatisticalTestingPitfalls() {
         <div style={{ display: 'flex', gap: '4px' }}>
           {STATS_SCENARIOS.map((_, i) => (
             <div key={i} onClick={() => { setCurrent(i); setSelected(null); setRevealed(false) }}
-              style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--sky)' : i === current ? 'rgba(34,211,238,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
+              style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--prime)' : i === current ? 'rgba(240,165,0,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
           ))}
         </div>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{STATS_SCENARIOS.length} correct</span>
       </div>
 
       {/* Scenario card */}
-      <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--sky)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {STATS_SCENARIOS.length}</div>
+      <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--prime)' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {STATS_SCENARIOS.length}</div>
         <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: 'var(--font-sans)' }}>{s.scenario}</p>
       </div>
 
@@ -410,8 +410,8 @@ function StatisticalTestingPitfalls() {
               {isCorrect ? 'Correct — ' : 'Incorrect — '}{s.mistake}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 10px' }}>{s.explanation}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(34,211,238,0.13)', borderRadius: '6px', border: '1px solid rgba(34,211,238,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
+            <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.10)', borderRadius: '6px', border: '1px solid rgba(240,165,0,0.15)' }}>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</span>
             </div>
           </div>
@@ -425,7 +425,7 @@ function StatisticalTestingPitfalls() {
       )}
 
       {allDone && revealed && current === STATS_SCENARIOS.length - 1 && (
-        <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
+        <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--prime)' }}>
           
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{STATS_SCENARIOS.length} correct
@@ -557,7 +557,7 @@ function CalibrationInPractice() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Calibration in Practice</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Given a model and scenario, pick the right calibration approach. Understand when and why each method applies.
         </p>
@@ -567,14 +567,14 @@ function CalibrationInPractice() {
       <div className="card" style={{ padding: '16px', border: '1px solid var(--rim)' }}>
         <button onClick={() => setRefOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}>
-          <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>Quick reference</span>
+          <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>Quick reference</span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)', transform: refOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>›</span>
         </button>
         {refOpen && (
           <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {CALIB_REFERENCE.map(r => (
               <div key={r.term} style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)', minWidth: '140px', paddingTop: '1px' }}>{r.term}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', minWidth: '140px', paddingTop: '1px' }}>{r.term}</span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{r.def}</span>
               </div>
             ))}
@@ -587,15 +587,15 @@ function CalibrationInPractice() {
         <div style={{ display: 'flex', gap: '4px' }}>
           {CALIB_SCENARIOS.map((_, i) => (
             <div key={i} onClick={() => { setCurrent(i); setSelected(null); setRevealed(false) }}
-              style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--sky)' : i === current ? 'rgba(34,211,238,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
+              style={{ width: '24px', height: '6px', borderRadius: '3px', cursor: 'pointer', background: answered.includes(i) ? 'var(--prime)' : i === current ? 'rgba(240,165,0,0.4)' : 'var(--rim)', transition: 'background 0.2s' }} />
           ))}
         </div>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{score}/{CALIB_SCENARIOS.length} correct</span>
       </div>
 
       {/* Scenario */}
-      <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--sky)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {CALIB_SCENARIOS.length}</div>
+      <div className="card animate-slide-up" style={{ padding: '22px', borderLeft: '3px solid var(--prime)' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Scenario {current + 1} of {CALIB_SCENARIOS.length}</div>
         <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0, fontFamily: 'var(--font-sans)' }}>{s.scenario}</p>
       </div>
 
@@ -650,7 +650,7 @@ function CalibrationInPractice() {
       )}
 
       {answered.length === CALIB_SCENARIOS.length && revealed && current === CALIB_SCENARIOS.length - 1 && (
-        <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
+        <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--prime)' }}>
           <div style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', marginBottom: '8px', letterSpacing: '0.05em' }}>COMPLETE</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{CALIB_SCENARIOS.length} correct
@@ -739,17 +739,17 @@ const VAR_OPTS = [
 const CALLOUTS = [
   {
     title: 'Power',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
     text: 'You want 80% power (β=0.2). This means a 20% chance of missing a real effect. For high-stakes decisions, use 90% power (β=0.1) — this increases required sample size by roughly 25%.',
   },
   {
     title: 'Runtime',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
     text: 'Never extend an experiment that has already been peeked at. Pre-register your runtime before starting. If you need to extend, treat it as a new independent experiment with a corrected alpha.',
   },
   {
     title: 'Guardrails',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
     text: 'Always define guardrail metrics before starting. If treatment lifts conversion but crashes load time by 20%, you need to catch that before shipping. Guardrails are not optional.',
   },
 ]
@@ -762,7 +762,7 @@ const METRIC_SCENARIOS = [
     options: ['Goodhart\'s Law — the metric became the target, not the outcome', 'Sample size too small for statistical significance', 'CSAT is the wrong metric — should use NPS', 'The model needs recalibration'],
     correct: 0,
     explanation: 'Goodhart\'s Law: when a measure becomes a target, it ceases to be a good measure. The team didn\'t improve customer experience — they gamed the routing to inflate the score. The true metric (resolution quality on hard tickets) got worse. Fix: track CSAT stratified by ticket difficulty, and monitor deflection rate as a counter-metric.',
-    color: 'var(--rose)',
+    color: 'var(--prime)',
   },
   {
     id: 'aggregate_hides',
@@ -771,7 +771,7 @@ const METRIC_SCENARIOS = [
     options: ['Aggregate metric masked a segment failure', 'NDCG is the wrong metric for recommendations', 'The model was undertrained', 'Mobile users need a different model architecture'],
     correct: 0,
     explanation: 'Aggregate metrics hide segment-level failures. Desktop volume (80% of traffic) dominated the NDCG improvement, masking a significant degradation for mobile users. Fix: always track segment metrics (device, user cohort, geography) alongside aggregate. A top-line improvement that harms a minority segment is not a win.',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
   },
   {
     id: 'proxy_decoupled',
@@ -780,7 +780,7 @@ const METRIC_SCENARIOS = [
     options: ['The offline metric has decoupled from the true business outcome', 'AUC-PR calculation is wrong', 'The model needs more training data', 'Feature pipeline has a bug'],
     correct: 0,
     explanation: 'AUC-PR measures ranking quality over all thresholds. In production, the model runs at a specific threshold — if that threshold is miscalibrated, high AUC-PR doesn\'t prevent fraud losses. The true metric (fraud dollar loss) and the proxy metric (AUC-PR) have decoupled. Fix: track precision and recall at your operating threshold, not just aggregate AUC. Add dollar-weighted false negative rate as a primary metric.',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
   },
   {
     id: 'rate_vs_count',
@@ -789,7 +789,7 @@ const METRIC_SCENARIOS = [
     options: ['Recall dropped — more legitimate emails are being blocked as spam', 'Precision measures the wrong thing here', 'The training set was too small', 'Email features have shifted distribution'],
     correct: 0,
     explanation: 'Higher precision means fewer false positives (spam reaching inbox). But if recall dropped, more legitimate emails are falsely classified as spam. The team optimized one side of the precision-recall tradeoff without tracking the other. Fix: in asymmetric cost scenarios (blocking real email is worse than missing spam), recall is the primary metric. Always define cost asymmetry before choosing which metric to optimize.',
-    color: 'var(--gold)',
+    color: 'var(--prime)',
   },
   {
     id: 'time_horizon',
@@ -798,7 +798,7 @@ const METRIC_SCENARIOS = [
     options: ['Wrong time horizon — optimizing short-term at the expense of long-term', 'Sample size was too small for the 6-month metric', '6-month retention is not a valid ML metric', 'The model degraded due to concept drift'],
     correct: 0,
     explanation: 'The model learned to optimize short-term engagement at the cost of long-term quality. This is a classic metric time horizon mismatch — the recommendation system shows engaging but lower-quality content that spikes 1-week retention but causes burnout. Fix: track both short-term and long-term metrics. If they diverge in opposite directions post-ship, you\'re trading long-term health for short-term gains.',
-    color: 'var(--gold)',
+    color: 'var(--prime)',
   },
   {
     id: 'counter_metric',
@@ -807,7 +807,7 @@ const METRIC_SCENARIOS = [
     options: ['A latency counter-metric was never defined as a release gate', 'CTR is the wrong metric for search ranking', 'The model needs to be quantized', 'Infra team should have scaled before the launch'],
     correct: 0,
     explanation: 'CTR-only optimization ignores the cost of getting that CTR. The model likely became more complex or uses more features, increasing inference time. A counter-metric (max latency budget, or latency regression threshold) should be a hard gate on any model ship. Fix: define counter-metrics before shipping: latency, cost per inference, coverage rate. A lift in the primary metric that exceeds counter-metric thresholds is a no-ship.',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
   },
   {
     id: 'leading_lagging',
@@ -816,7 +816,7 @@ const METRIC_SCENARIOS = [
     options: ['The label is a lagging indicator — the event has already started by scoring time', 'AUC is not appropriate for churn prediction', 'The model needs a lower decision threshold', 'Email interventions are the wrong strategy'],
     correct: 0,
     explanation: 'A 30-day churn label is a lagging indicator. By the time a user shows the behavioral signals that predict churn, they may be 25 days into the churn process. Intervening at day 27 is too late. Fix: identify leading indicators (support ticket opens, usage frequency drop, feature disengagement) and predict from those signals 60-90 days out. Evaluate on whether interventions at high-score users reduce churn, not whether the model correctly identifies users who already churned.',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
   },
   {
     id: 'denominator_shift',
@@ -825,7 +825,7 @@ const METRIC_SCENARIOS = [
     options: ['The denominator (eligible traffic) shrank — fewer users were exposed to the model', 'Seasonality caused absolute conversion drop', 'The model has coverage gaps', 'Revenue attribution is miscounted'],
     correct: 0,
     explanation: 'Rate metrics can improve while absolute counts fall if the denominator shrinks. The model may be more conservative — it only recommends when confident, reducing coverage. Fewer recommendations but higher conversion rate = lower total conversions. Fix: track both rate and absolute count. Coverage rate (% of sessions where model fires) is a critical counter-metric for any recommendation or ranking system.',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
   },
 ]
 
@@ -857,7 +857,7 @@ function MetricDesign() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Metric Design Pitfalls</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 production cases where the metric looked right but led teams wrong. Goodhart's Law, proxy decoupling, time horizons, counter-metrics.
         </p>
@@ -984,7 +984,7 @@ export default function DataScienceTab({ onNavigate }) {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--sky) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Data Science</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Data Science</h1>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px' }}>
           Statistics courses teach you the math. This domain teaches you the judgment — when each model is the wrong choice, which tests are being misused, and why your calibration is broken.
@@ -996,7 +996,7 @@ export default function DataScienceTab({ onNavigate }) {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {DS_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--sky)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(34,211,238,0.10)' : 'transparent', color: active === m.id ? 'var(--sky)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--prime)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(240,165,0,0.10)' : 'transparent', color: active === m.id ? 'var(--prime)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
             {m.label}
           </button>
         ))}
@@ -1010,11 +1010,11 @@ export default function DataScienceTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '16px' }}>What's being built</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
           {ROADMAP.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--sky)' : '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>
@@ -1022,7 +1022,7 @@ export default function DataScienceTab({ onNavigate }) {
         </div>
       </div>
 
-      {onNavigate && <ForwardPointer label="Apply causal thinking in Causal Inference" tab="causal" onNavigate={onNavigate} accent="var(--mint)" />}
+      {onNavigate && <ForwardPointer label="Apply causal thinking in Causal Inference" tab="causal" onNavigate={onNavigate} accent="var(--prime)" />}
     </div>
   )
 }

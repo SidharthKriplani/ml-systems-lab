@@ -29,19 +29,19 @@ const QUESTIONS = [
 ];
 
 const CATEGORY_COLORS = {
-  'System Design': 'var(--sky)',
-  'Technical': 'var(--mint)',
-  'Behavioral': 'var(--violet)',
-  'Case Study': 'var(--ember)',
-  'Trade-offs': 'var(--rose)',
+  'System Design': 'var(--prime)',
+  'Technical': 'var(--prime)',
+  'Behavioral': 'var(--prime)',
+  'Case Study': 'var(--prime)',
+  'Trade-offs': 'var(--prime)',
 };
 
 const CATEGORY_BG = {
-  'System Design': 'rgba(34,211,238,0.12)',
-  'Technical': 'rgba(52,211,153,0.12)',
-  'Behavioral': 'rgba(167,139,250,0.12)',
-  'Case Study': 'rgba(249,115,22,0.12)',
-  'Trade-offs': 'rgba(244,63,94,0.12)',
+  'System Design': 'rgba(240,165,0,0.12)',
+  'Technical': 'rgba(240,165,0,0.12)',
+  'Behavioral': 'rgba(240,165,0,0.12)',
+  'Case Study': 'rgba(240,165,0,0.12)',
+  'Trade-offs': 'rgba(240,165,0,0.12)',
 };
 
 const RATING_CRITERIA = [
@@ -359,7 +359,7 @@ export default function VerbatimTab({ onNavigate }) {
 
         {/* Speech not supported fallback */}
         {!speechSupported && (
-          <div style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ember)' }}>
+          <div style={{ background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--prime)' }}>
             {/iPad|iPhone|iPod/.test(navigator.userAgent)
               ? 'Voice recording is not supported on iOS Safari. Type your answer in the text box below instead.'
               : 'Web Speech API not supported in this browser. Use Chrome or Edge for voice input.'
@@ -423,9 +423,9 @@ export default function VerbatimTab({ onNavigate }) {
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 style={{
-                  background: isRecording ? 'rgba(244,63,94,0.15)' : 'rgba(52,211,153,0.15)',
-                  color: isRecording ? 'var(--rose)' : 'var(--mint)',
-                  border: `1px solid ${isRecording ? 'rgba(244,63,94,0.4)' : 'rgba(52,211,153,0.4)'}`,
+                  background: isRecording ? 'rgba(240,165,0,0.15)' : 'rgba(240,165,0,0.10)',
+                  color: isRecording ? 'var(--prime)' : 'var(--ink-low)',
+                  border: `1px solid ${isRecording ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`,
                   borderRadius: 8,
                   padding: '10px 20px',
                   fontFamily: 'var(--font-sans)',
@@ -439,12 +439,12 @@ export default function VerbatimTab({ onNavigate }) {
               >
                 {isRecording ? (
                   <>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--rose)', display: 'inline-block', animation: 'none' }} />
+                    <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--prime)', display: 'inline-block', animation: 'none' }} />
                     Stop Recording
                   </>
                 ) : (
                   <>
-                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--mint)', display: 'inline-block' }} />
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--ink-low)', display: 'inline-block' }} />
                     Record
                   </>
                 )}
@@ -517,7 +517,7 @@ export default function VerbatimTab({ onNavigate }) {
             const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;
             const wpm = recordingDuration > 0 ? Math.round(wordCount / (recordingDuration / 60)) : null;
             const paceLabel = wpm === null ? null : wpm >= 120 && wpm <= 160 ? '· good pace' : wpm < 120 ? '· slow pace' : '· fast pace';
-            const paceColor = wpm === null ? 'var(--ink-ghost)' : wpm >= 120 && wpm <= 160 ? 'var(--mint)' : 'var(--ember)';
+            const paceColor = wpm === null ? 'var(--ink-ghost)' : 'var(--prime)';
             return (
               <div style={{ display: 'flex', gap: '1rem', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--rim)' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)' }}>{wordCount} words</span>

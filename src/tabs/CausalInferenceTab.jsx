@@ -85,7 +85,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Randomized Controlled Trial (A/B Test)',
     strength: 'Gold standard — unbiased estimate of ATE with no assumptions about confounders.',
     when_breaks: 'When treatment and control users interact (network effects — one user\'s behavior affects another\'s). Also fails when the randomization unit is wrong (randomizing sessions instead of users creates cross-contamination).',
-    accent: 'var(--mint)',
+    accent: 'var(--prime)',
   },
   {
     id: 'did',
@@ -94,7 +94,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Difference-in-Differences (DiD)',
     strength: 'Controls for time-invariant confounders and secular trends. Does not require perfect matching.',
     when_breaks: 'When the parallel trends assumption fails — i.e., the treatment and control groups were trending differently before the policy change. Always plot pre-treatment trends to verify.',
-    accent: 'var(--sky)',
+    accent: 'var(--prime)',
   },
   {
     id: 'psm',
@@ -103,7 +103,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Propensity Score Matching / Weighting (IPW)',
     strength: 'Creates a pseudo-randomized comparison group. Handles many observed confounders simultaneously.',
     when_breaks: 'Unobserved confounders — variables that affected both treatment selection and the outcome but weren\'t in your data. This is the fundamental limitation: you can only control for what you measured.',
-    accent: 'var(--violet)',
+    accent: 'var(--prime)',
   },
   {
     id: 'iv',
@@ -112,7 +112,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Instrumental Variables (IV)',
     strength: 'Can identify causal effects even with unobserved confounding, if the instrument is valid.',
     when_breaks: 'If the instrument is weak (low F-statistic < 10) or has a direct effect on the outcome (exclusion restriction violated). Bad instruments give worse estimates than no instrument at all.',
-    accent: 'var(--ember)',
+    accent: 'var(--prime)',
   },
   {
     id: 'rdd',
@@ -121,7 +121,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Regression Discontinuity Design (RDD)',
     strength: 'Identifies local causal effect at the cutoff with minimal assumptions. No need for explicit counterfactual.',
     when_breaks: 'When units can manipulate their score to just above/below the threshold (density test: McCrary density test). Also: effect is only identified locally at the cutoff — external validity to other points on the score is an assumption.',
-    accent: 'var(--rose)',
+    accent: 'var(--prime)',
   },
   {
     id: 'synth',
@@ -130,7 +130,7 @@ const IDENTIFICATION_SCENARIOS = [
     strategy: 'Synthetic Control',
     strength: 'Constructs a weighted average of untreated units that best matches the treated unit pre-treatment. Transparent and auditable.',
     when_breaks: 'When the treated unit has no good match in the donor pool. When there are too few pre-treatment periods to fit the synthetic control. Does not scale well to many treated units.',
-    accent: 'var(--gold)',
+    accent: 'var(--prime)',
   },
 ]
 
@@ -285,7 +285,7 @@ const OBS_EXP_SCENARIOS = [
 ]
 
 // ── AccordionMCQ Component ────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -352,7 +352,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--sky)', storageKey = null
       {visible.map(({ s, i, diff }) => {
         const it = items[i]
         const isCorrect = it.revealed && it.picked === s.correct
-        const diffColor = diff === 'Easy' ? 'var(--mint)' : diff === 'Medium' ? 'var(--ember)' : 'var(--rose)'
+        const diffColor = 'var(--prime)'
         return (
           <div key={s.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', background: it.open ? accentColor + '04' : 'transparent' }}>
             <button onClick={() => toggle(i)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
@@ -430,7 +430,7 @@ function CausalVsPredictive() {
   if (done) return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="card" style={{ padding: '32px', textAlign: 'center', border: '1px solid var(--rim)' }}>
-        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{CAUSAL_SCENARIOS.length}</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>{score}/{CAUSAL_SCENARIOS.length}</div>
         <div style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
           {score >= 7 ? 'Strong causal reasoning. You distinguish prediction from inference correctly.' : score >= 5 ? 'Solid foundation. Review the scenarios you missed — the framing of the question is the key signal.' : 'The hardest part is seeing that "predictive" questions can hide causal assumptions. Work through each trap explanation.'}
         </div>
@@ -443,11 +443,11 @@ function CausalVsPredictive() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Scenario {idx + 1} of {CAUSAL_SCENARIOS.length}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)' }}>{score} correct</span>
       </div>
 
       <div className="card" style={{ padding: '24px 28px', border: '1px solid var(--rim)' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>The ask</div>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>The ask</div>
         <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.75, margin: 0 }}>{s.scenario}</p>
       </div>
 
@@ -481,11 +481,11 @@ function CausalVsPredictive() {
             <div style={{ fontSize: '10px', color: picked === s.correct ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{picked === s.correct ? 'Correct' : 'Incorrect'}</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.method}</span>
             </div>
             <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(244,63,94,0.10)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.trap}</span>
             </div>
           </div>
@@ -566,7 +566,7 @@ function ConfounderOrCollider() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{DAG_SCENARIOS.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>{score}/{DAG_SCENARIOS.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 5 ? 'Solid DAG intuition.' : 'Focus on the mediator vs confounder distinction — that\'s where most practitioners go wrong.'}
       </p>
@@ -578,7 +578,7 @@ function ConfounderOrCollider() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {DAG_SCENARIOS.length}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)' }}>{score} correct</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {['confounder','collider','mediator'].map(t => (
@@ -612,7 +612,7 @@ function ConfounderOrCollider() {
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -745,7 +745,7 @@ function BackdoorCriterion() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{BACKDOOR_SCENARIOS.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>{score}/{BACKDOOR_SCENARIOS.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 5 ? 'Solid backdoor criterion intuition. The front-door result is the hardest.' : 'Focus on the collider and mediator cases — those are where most practitioners go wrong.'}
       </p>
@@ -757,7 +757,7 @@ function BackdoorCriterion() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {BACKDOOR_SCENARIOS.length}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)' }}>{score} correct</span>
       </div>
 
       {/* DAG visualization */}
@@ -795,7 +795,7 @@ function BackdoorCriterion() {
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
             <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -812,7 +812,7 @@ function UpliftModeling() {
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
         Uplift modeling estimates the individual causal treatment effect (CATE) — not just who will churn, but who will respond to intervention. Six scenarios covering T-learner, X-learner, Qini evaluation, and doubly-robust estimation.
       </p>
-      <AccordionMCQ scenarios={UPLIFT_SCENARIOS} accentColor="var(--mint)" storageKey="causal_uplift" />
+      <AccordionMCQ scenarios={UPLIFT_SCENARIOS} accentColor="var(--prime)" storageKey="causal_uplift" />
     </div>
   )
 }
@@ -823,7 +823,7 @@ function ObsVsExperimental() {
       <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
         Six scenarios deciding when observational causal inference is sufficient vs when you need an experiment. Covers DiD natural experiments, selection bias, holdout designs, and the limits of propensity matching.
       </p>
-      <AccordionMCQ scenarios={OBS_EXP_SCENARIOS} accentColor="var(--gold)" storageKey="causal_obs_exp" />
+      <AccordionMCQ scenarios={OBS_EXP_SCENARIOS} accentColor="var(--prime)" storageKey="causal_obs_exp" />
     </div>
   )
 }
@@ -937,7 +937,7 @@ function ExperimentFailureCard({ s, accentColor, onPick }) {
                 <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
                 <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Diagnosis</div>
                 <p style={{ margin: '0 0 10px', fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.diagnosis}</p>
-                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Fix</div>
+                <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Fix</div>
                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</p>
               </div>
             </div>
@@ -950,7 +950,7 @@ function ExperimentFailureCard({ s, accentColor, onPick }) {
 
 function ExperimentDesignFailures() {
   const scoreKey = 'msl_score:causal_exp'
-  const accentColor = 'var(--mint)'
+  const accentColor = 'var(--prime)'
 
   const [scores, setScores] = useState(() => {
     try {
@@ -1318,7 +1318,7 @@ function SimpsonsParadoxViz() {
       <div style={{ display: 'flex', gap: '8px' }}>
         {['aggregate', 'segmented'].map(v => (
           <button key={v} onClick={() => setView(v)}
-            style={{ padding: '7px 18px', borderRadius: '7px', border: `1px solid ${view === v ? 'rgba(168,85,247,0.5)' : 'var(--rim)'}`, background: view === v ? 'rgba(168,85,247,0.12)' : 'transparent', color: view === v ? 'var(--violet)' : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+            style={{ padding: '7px 18px', borderRadius: '7px', border: `1px solid ${view === v ? 'rgba(240,165,0,0.5)' : 'var(--rim)'}`, background: view === v ? 'rgba(240,165,0,0.12)' : 'transparent', color: view === v ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
             {v}
           </button>
         ))}
@@ -1360,14 +1360,14 @@ function SimpsonsParadoxViz() {
       </div>
 
       {/* Explanation */}
-      <div style={{ padding: '12px 16px', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.18)', borderRadius: '8px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>What you're seeing</div>
+      <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>What you're seeing</div>
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{explanation}</p>
       </div>
 
       {/* Causal insight callout */}
-      <div style={{ padding: '14px 16px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.22)', borderRadius: '10px' }}>
-        <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Causal insight</div>
+      <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '10px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Causal insight</div>
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>
           This is Simpson's Paradox — a lurking confound (case severity) reverses the observed direction. In real ML: training data sliced by feature group may show opposite trends from the aggregate. Always condition on known confounders before reporting model lift.
         </p>
@@ -1412,7 +1412,7 @@ export default function CausalInferenceTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Causal Inference</h2>
-          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(34,211,238,0.1)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
+          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(240,165,0,0.1)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
           The question that trips up most practitioners: is this a prediction problem or a causal inference problem? Getting this wrong leads to the wrong method and misleading conclusions.

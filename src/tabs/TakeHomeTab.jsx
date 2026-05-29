@@ -126,11 +126,11 @@ const QUESTIONS = [
 const CATEGORIES = ['All', 'System Design', 'Production', 'Statistical Reasoning', 'Causal / Experimental', 'Architecture'];
 
 const CATEGORY_COLORS = {
-  'System Design': 'var(--sky)',
-  'Production': 'var(--rose)',
-  'Statistical Reasoning': 'var(--mint)',
-  'Causal / Experimental': 'var(--violet)',
-  'Architecture': 'var(--ember)',
+  'System Design': 'var(--prime)',
+  'Production': 'var(--prime)',
+  'Statistical Reasoning': 'var(--prime)',
+  'Causal / Experimental': 'var(--prime)',
+  'Architecture': 'var(--prime)',
 };
 
 const SCORE_CRITERIA = [
@@ -146,10 +146,7 @@ function scoreTotal(scores) {
 }
 
 function scoreBadgeColor(total) {
-  if (total >= 19) return 'var(--prime)';
-  if (total >= 15) return 'var(--mint)';
-  if (total >= 10) return 'var(--ember)';
-  return 'var(--rose)';
+  return 'var(--prime)';
 }
 
 export default function TakeHomeTab({ onNavigate }) {

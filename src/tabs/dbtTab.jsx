@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 
 // ── Shared pill helper ─────────────────────────────────────────────────────────
-function pill(label, active, onClick, activeColor = 'var(--ember)') {
+function pill(label, active, onClick, activeColor = 'var(--prime)') {
   return (
     <button key={label} onClick={onClick}
       style={{ padding: '6px 13px', borderRadius: '7px', border: `1px solid ${active ? activeColor : 'var(--rim)'}`, background: active ? activeColor + '18' : 'transparent', color: active ? activeColor : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
@@ -54,7 +54,7 @@ const MATERIALIZATIONS = [
       if (fr === 'nearrt')  s -= 1
       return s
     },
-    color: 'var(--sky)',
+    color: 'var(--prime)',
   },
   {
     id: 'view',
@@ -81,7 +81,7 @@ const MATERIALIZATIONS = [
       if (fr === 'nearrt') s += 1
       return s
     },
-    color: 'var(--mint)',
+    color: 'var(--prime)',
   },
   {
     id: 'incremental',
@@ -116,7 +116,7 @@ const MATERIALIZATIONS = [
       if (fr === 'nearrt')  s += 1
       return s
     },
-    color: 'var(--ember)',
+    color: 'var(--prime)',
   },
   {
     id: 'ephemeral',
@@ -140,7 +140,7 @@ const MATERIALIZATIONS = [
       if (v === 'large')  s -= 3
       return s
     },
-    color: 'var(--violet)',
+    color: 'var(--prime)',
   },
 ]
 
@@ -160,7 +160,7 @@ function MaterializationOracle() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Materialization Oracle</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Set your model constraints. Get ranked materialization recommendations with production gotchas and ready-to-paste config blocks.
         </p>
@@ -169,10 +169,10 @@ function MaterializationOracle() {
       {/* Parameter selectors */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
         {[
-          { label: 'Query frequency',       items: QUERY_FREQ_OPTIONS, val: freq,      set: setFreq,      color: 'var(--ember)' },
-          { label: 'Data volume',           items: VOLUME_OPTIONS,     val: volume,    set: setVolume,    color: 'var(--sky)' },
-          { label: 'Freshness requirement', items: FRESHNESS_OPTIONS,  val: freshness, set: setFreshness, color: 'var(--mint)' },
-          { label: 'Downstream consumers',  items: CONSUMER_OPTIONS,   val: consumer,  set: setConsumer,  color: 'var(--violet)' },
+          { label: 'Query frequency',       items: QUERY_FREQ_OPTIONS, val: freq,      set: setFreq,      color: 'var(--prime)' },
+          { label: 'Data volume',           items: VOLUME_OPTIONS,     val: volume,    set: setVolume,    color: 'var(--prime)' },
+          { label: 'Freshness requirement', items: FRESHNESS_OPTIONS,  val: freshness, set: setFreshness, color: 'var(--prime)' },
+          { label: 'Downstream consumers',  items: CONSUMER_OPTIONS,   val: consumer,  set: setConsumer,  color: 'var(--prime)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
             <div className="section-eyebrow" style={{ marginBottom: '10px' }}>{g.label}</div>
@@ -200,7 +200,7 @@ function MaterializationOracle() {
             {expanded === m.id && (
               <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--rim)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why it fits your constraints</div>
+                  <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why it fits your constraints</div>
                   {m.reasons.map((r, j) => (
                     <div key={j} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>&#10003; {r}</div>
                   ))}
@@ -430,7 +430,7 @@ sources:
   },
 ]
 
-const DANGER_COLORS = { CRITICAL: 'var(--rose)', HIGH: '#f97316', MEDIUM: 'var(--gold)', LOW: 'var(--mint)' }
+const DANGER_COLORS = { CRITICAL: 'var(--rose)', HIGH: 'var(--prime)', MEDIUM: 'var(--ink-low)', LOW: 'var(--ink-low)' }
 
 function SchemaDriftClinic() {
   const [current, setCurrent]   = useState(0)
@@ -474,9 +474,9 @@ function SchemaDriftClinic() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         </div>
-        <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--ember)' }}>
+        <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'var(--prime)' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>
             {score >= 7 ? 'Excellent' : score >= 5 ? 'Good' : 'Review'}
           </div>
@@ -499,7 +499,7 @@ function SchemaDriftClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Schema Drift Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           8 real drift scenarios. Upstream changes — what breaks in your dbt model, and how do you fix it?
         </p>
@@ -509,11 +509,11 @@ function SchemaDriftClinic() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {DRIFT_SCENARIOS.map((_, i) => (
-            <div key={i} style={{ width: '24px', height: '4px', borderRadius: '2px', background: i < current ? 'var(--ember)' : i === current ? 'var(--ink-low)' : 'var(--rim)' }} />
+            <div key={i} style={{ width: '24px', height: '4px', borderRadius: '2px', background: i < current ? 'var(--prime)' : i === current ? 'var(--ink-low)' : 'var(--rim)' }} />
           ))}
         </div>
         <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{current + 1} / {DRIFT_SCENARIOS.length}</span>
-        <span style={{ fontSize: '12px', color: 'var(--ember)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{score} correct</span>
+        <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{score} correct</span>
       </div>
 
       {/* Scenario card */}
@@ -533,7 +533,7 @@ function SchemaDriftClinic() {
             let bg = 'transparent'
             let border = 'var(--rim)'
             let color = 'var(--ink-mid)'
-            if (selected === i && !revealed) { bg = 'rgba(255,160,50,0.15)'; border = 'var(--ember)'; color = 'var(--ember)' }
+            if (selected === i && !revealed) { bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)' }
             if (revealed && i === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
             if (revealed && selected === i && i !== scenario.answer) { bg = 'rgba(251,113,133,0.15)'; border = 'var(--rose)'; color = 'var(--rose)' }
             return (
@@ -561,7 +561,7 @@ function SchemaDriftClinic() {
               <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.explanation}</p>
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>How to fix it</div>
+              <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>How to fix it</div>
               <CodeBlock>{scenario.fix}</CodeBlock>
             </div>
             <button className="btn-primary" onClick={handleNext} style={{ alignSelf: 'flex-start' }}>
@@ -585,7 +585,7 @@ const INCREMENTAL_RECOMMENDATIONS = {
   snapshot: {
     title: 'dbt Snapshot (SCD Type 2)',
     label: 'For full historical record',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
     config: `-- snapshots/entity_snapshot.sql
 {% snapshot entity_snapshot %}
 {{ config(
@@ -607,7 +607,7 @@ SELECT * FROM {{ source('raw', 'entities') }}
   full_refresh: {
     title: 'materialized=\'table\' (always full refresh)',
     label: 'Correctness over cost',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
     config: `{{ config(
     materialized='table'
 ) }}
@@ -625,7 +625,7 @@ SELECT * FROM {{ source('raw', 'entities') }}
   simple_append: {
     title: 'Incremental — simple append',
     label: 'Append-only, ordered data',
-    color: 'var(--mint)',
+    color: 'var(--prime)',
     config: `{{ config(
     materialized='incremental'
 ) }}
@@ -651,7 +651,7 @@ FROM {{ source('raw', 'events') }}
   upsert: {
     title: 'Incremental — upsert with unique_key',
     label: 'Handles inserts and updates',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
     config: `{{ config(
     materialized='incremental',
     unique_key='order_id',
@@ -680,7 +680,7 @@ FROM {{ source('raw', 'orders') }}
   lookback: {
     title: 'Incremental — lookback window',
     label: 'Late-arriving data protection',
-    color: 'var(--gold)',
+    color: 'var(--prime)',
     config: `{{ config(
     materialized='incremental',
     unique_key='event_id',
@@ -734,7 +734,7 @@ function IncrementalModelDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--ember)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Incremental Model Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Answer 4 questions about your data. Get the right incremental pattern with a copy-paste config and production gotchas.
         </p>
@@ -743,10 +743,10 @@ function IncrementalModelDecisions() {
       {/* Parameter selectors */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
         {[
-          { label: 'Data pattern',                 items: DATA_PATTERN_OPTIONS,  val: pattern,     set: setPattern,     color: 'var(--ember)' },
-          { label: 'unique_key available?',        items: UNIQUE_KEY_OPTIONS,    val: uniqueKey,   set: setUniqueKey,   color: 'var(--sky)' },
-          { label: 'How often full refresh?',      items: FULL_REFRESH_OPTIONS,  val: refreshFreq, set: setRefreshFreq, color: 'var(--violet)' },
-          { label: 'Late data / out-of-order?',    items: LATE_DATA_OPTIONS,     val: lateData,    set: setLateData,    color: 'var(--gold)' },
+          { label: 'Data pattern',                 items: DATA_PATTERN_OPTIONS,  val: pattern,     set: setPattern,     color: 'var(--prime)' },
+          { label: 'unique_key available?',        items: UNIQUE_KEY_OPTIONS,    val: uniqueKey,   set: setUniqueKey,   color: 'var(--prime)' },
+          { label: 'How often full refresh?',      items: FULL_REFRESH_OPTIONS,  val: refreshFreq, set: setRefreshFreq, color: 'var(--prime)' },
+          { label: 'Late data / out-of-order?',    items: LATE_DATA_OPTIONS,     val: lateData,    set: setLateData,    color: 'var(--prime)' },
         ].map(g => (
           <div key={g.label} className="card" style={{ padding: '14px' }}>
             <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{g.label}</div>
@@ -822,8 +822,8 @@ export default function DbtTab({ onNavigate }) {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--ember) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>dbt &amp; Transformations</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(255,160,50,0.12)', color: 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>dbt &amp; Transformations</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Transformation bugs are silent. Wrong materialization costs 10x. Schema drift breaks downstream without warning. This lab teaches you to make the right call before it is a 3am incident.
@@ -835,7 +835,7 @@ export default function DbtTab({ onNavigate }) {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {DBT_MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--ember)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(255,160,50,0.10)' : 'transparent', color: active === m.id ? 'var(--ember)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--prime)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(240,165,0,0.10)' : 'transparent', color: active === m.id ? 'var(--prime)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
             {m.label}
           </button>
         ))}
@@ -849,11 +849,11 @@ export default function DbtTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '16px' }}>What is being built</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
           {ROADMAP.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--ember)' : '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(52,211,153,0.12)', color: 'var(--mint)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

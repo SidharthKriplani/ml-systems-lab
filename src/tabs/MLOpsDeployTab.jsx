@@ -97,7 +97,7 @@ function DeployStrategy() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           Deployment Strategy
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -117,9 +117,9 @@ function DeployStrategy() {
                 fontSize: '12px',
                 padding: '5px 10px',
                 borderRadius: '6px',
-                border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
-                color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
+                border: active === i ? '1.5px solid var(--prime)' : '1.5px solid var(--rim)',
+                background: active === i ? 'rgba(240,165,0,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
+                color: active === i ? 'var(--prime)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
               {done ? (correct ? '✓' : '✗') : '·'} {i + 1}
@@ -135,7 +135,7 @@ function DeployStrategy() {
 
       {/* Scenario card */}
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+        <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Scenario {scenario.id} of {DEPLOY_SCENARIOS.length}
         </div>
         <div style={{ ...grotesk, fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px', letterSpacing: '-0.02em' }}>
@@ -312,7 +312,7 @@ function ChampionChallenger() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           Champion-Challenger
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -323,8 +323,8 @@ function ChampionChallenger() {
       {/* Context */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         {[
-          { label: 'Champion', desc: 'Production GBDT model', sub: '18 months in production', color: 'var(--sky)' },
-          { label: 'Challenger', desc: 'LightGBM + new feature set', sub: '2 weeks in shadow/canary', color: 'var(--rose)' },
+          { label: 'Champion', desc: 'Production GBDT model', sub: '18 months in production', color: 'var(--prime)' },
+          { label: 'Challenger', desc: 'LightGBM + new feature set', sub: '2 weeks in shadow/canary', color: 'var(--prime)' },
         ].map(m => (
           <div key={m.label} className="card" style={{ padding: '14px', borderColor: `${m.color}40` }}>
             <span style={{ ...pill(m.color) }}>{m.label}</span>
@@ -336,7 +336,7 @@ function ChampionChallenger() {
 
       {/* Metrics table */}
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 16px 8px', borderBottom: '1px solid var(--rim)' }}>
+        <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 16px 8px', borderBottom: '1px solid var(--rim)' }}>
           Evaluation Report Card
         </div>
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -371,14 +371,14 @@ function ChampionChallenger() {
               <div key={i} style={{
                 width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 ...mono, fontSize: '11px', fontWeight: 700,
-                background: i < step ? 'rgba(34,197,94,0.15)' : i === step ? 'rgba(244,63,94,0.15)' : 'var(--rim)',
-                color: i < step ? 'var(--mint)' : i === step ? 'var(--rose)' : 'var(--ink-low)',
-                border: i === step ? '1.5px solid var(--rose)' : '1.5px solid transparent',
+                background: i < step ? 'rgba(34,197,94,0.15)' : i === step ? 'rgba(240,165,0,0.15)' : 'var(--rim)',
+                color: i < step ? 'var(--mint)' : i === step ? 'var(--prime)' : 'var(--ink-low)',
+                border: i === step ? '1.5px solid var(--prime)' : '1.5px solid transparent',
               }}>
                 {i < step ? '✓' : i + 1}
               </div>
             ))}
-            <span style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)', marginLeft: '6px' }}>Decision {step + 1} of 4</span>
+            <span style={{ ...mono, fontSize: '11px', color: 'var(--prime)', marginLeft: '6px' }}>Decision {step + 1} of 4</span>
           </div>
 
           <div className="card" style={{ padding: '18px' }}>
@@ -440,7 +440,7 @@ function ChampionChallenger() {
 
       {/* Summary */}
       {done && (
-        <div className="card animate-slide-up" style={{ padding: '22px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: '22px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)' }}>
           <div style={{ ...grotesk, fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
             {score}/4 correct
           </div>
@@ -466,9 +466,9 @@ function ChampionChallenger() {
 
 // ─── Module 3: Rollback Decision ──────────────────────────────────────────────
 const ROLLBACK_OPTIONS = [
-  { id: 'rollback',    label: 'Rollback immediately',   color: 'var(--rose)' },
-  { id: 'investigate', label: 'Investigate before deciding', color: 'var(--gold)' },
-  { id: 'monitor',     label: 'Monitor only',           color: 'var(--sky)' },
+  { id: 'rollback',    label: 'Rollback immediately',   color: 'var(--prime)' },
+  { id: 'investigate', label: 'Investigate before deciding', color: 'var(--prime)' },
+  { id: 'monitor',     label: 'Monitor only',           color: 'var(--prime)' },
   { id: 'noaction',    label: 'No action needed',       color: 'var(--ink-low)' },
 ]
 
@@ -560,7 +560,7 @@ function RollbackDecision() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           Rollback Decision
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -577,9 +577,9 @@ function RollbackDecision() {
             <button key={s.id} onClick={() => setActive(i)}
               style={{
                 ...mono, fontSize: '12px', padding: '5px 10px', borderRadius: '6px',
-                border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
-                color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
+                border: active === i ? '1.5px solid var(--prime)' : '1.5px solid var(--rim)',
+                background: active === i ? 'rgba(240,165,0,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
+                color: active === i ? 'var(--prime)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
               {done ? (correct ? '✓' : '✗') : '·'} {i + 1}
@@ -594,9 +594,9 @@ function RollbackDecision() {
       </div>
 
       {/* Alert card */}
-      <div className="card" style={{ padding: '20px', borderLeft: '3px solid var(--rose)' }}>
+      <div className="card" style={{ padding: '20px', borderLeft: '3px solid var(--prime)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <span style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Alert {scenario.id} / {ROLLBACK_SCENARIOS.length}
           </span>
         </div>
@@ -706,10 +706,10 @@ export default function MLOpsDeployTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--rose) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             MLOps: Deploy & Promote
           </h1>
-          <span style={{ ...pill('var(--rose)'), fontSize: '12px' }}>MLOps</span>
+          <span style={{ ...pill('var(--prime)'), fontSize: '12px' }}>MLOps</span>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           Deployment strategy, champion-challenger promotion, and rollback decisions. The judgment calls that separate careful operators from cowboy deploys.
@@ -721,14 +721,14 @@ export default function MLOpsDeployTab({ onNavigate }) {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.15)' } : {}}>{m.label}
+            style={active === m.id ? { borderColor: 'var(--prime)', color: 'var(--prime)', background: 'rgba(240,165,0,0.15)' } : {}}>{m.label}
           </button>
         ))}
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
 
-      {onNavigate && <ForwardPointer label="Practice deployment decisions in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--ember)" />}
+      {onNavigate && <ForwardPointer label="Practice deployment decisions in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
     </div>
   )
 }

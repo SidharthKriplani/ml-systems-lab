@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 
 // ─── Shared styles ─────────────────────────────────────────────────────────────
-const ACCENT = 'var(--violet)'
+const ACCENT = 'var(--prime)'
 
 const pillBase = {
   padding: '6px 14px',
@@ -33,7 +33,7 @@ function Pill({ label, active, onClick }) {
 function SectionHeader({ title, subtitle }) {
   return (
     <div style={{ marginBottom: '20px' }}>
-      <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+      <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
         {title}
       </h3>
       {subtitle && (

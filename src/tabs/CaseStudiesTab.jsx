@@ -6,7 +6,7 @@ const CASES = [
   {
     id: 'netflix',
     company: 'Netflix',
-    color: 'var(--rose)',
+    color: 'var(--prime)',
     summary: 'Homepage play rate drops 12% after 8,000 new titles added — offline NDCG unchanged.',
     situation: "Netflix's homepage recommendation model showed a 12% drop in play rate over 3 weeks following a content catalog refresh that added 8,000 new titles. The model's offline NDCG was unchanged. Customer satisfaction scores fell. The head of ML asked your team to investigate.",
     data: [
@@ -110,7 +110,7 @@ const CASES = [
   {
     id: 'airbnb',
     company: 'Airbnb',
-    color: 'var(--sky)',
+    color: 'var(--prime)',
     summary: 'Search ranking model surfaces certain host demographics lower — no demographic features used.',
     situation: "Airbnb's search ranking model was found to surface listings from hosts with certain demographic characteristics disproportionately lower in results, even controlling for price, rating, and availability. An independent audit found the correlation. The model uses 47 features — none are demographic directly.",
     data: [
@@ -162,7 +162,7 @@ const CASES = [
   {
     id: 'doordash',
     company: 'DoorDash',
-    color: 'var(--ember)',
+    color: 'var(--prime)',
     summary: 'ETA model overestimates by 8 min in urban areas after batched delivery feature launches.',
     situation: "DoorDash's delivery ETA model showed systematic 8-minute overestimates in dense urban areas during lunch rush, causing order cancellations. A new 'batched delivery' feature (one driver picks up multiple orders) had recently launched, but the model had no batching features and was trained on pre-batching data.",
     data: [
@@ -213,7 +213,7 @@ const CASES = [
   {
     id: 'spotify',
     company: 'Spotify',
-    color: 'var(--violet)',
+    color: 'var(--prime)',
     summary: 'Optimizing 30s completion rate raises it 8% but drives 15% churn — filter bubble effect.',
     situation: "Spotify's recommendation engine was optimized for 30-second listen completion rate. Over 18 months, completion rate rose 8%, but user churn increased 15% and qualitative research showed users feeling 'stuck in a filter bubble' and 'bored.' The ML team faces criticism that optimizing the proxy metric caused the problem.",
     data: [
@@ -318,7 +318,7 @@ export default function CaseStudiesTab({ onNavigate }) {
           <span>{Math.round((completedCases / 5) * 100)}%</span>
         </div>
         <div style={{ background: 'var(--rim)', borderRadius: '4px', height: '6px' }}>
-          <div style={{ background: 'var(--mint)', borderRadius: '4px', height: '6px', width: `${(completedCases / 5) * 100}%`, transition: 'width 0.3s' }} />
+          <div style={{ background: 'var(--prime)', borderRadius: '4px', height: '6px', width: `${(completedCases / 5) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
 

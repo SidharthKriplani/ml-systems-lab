@@ -93,7 +93,7 @@ function PCAExplorer() {
         ].map(ctrl => (
           <div key={ctrl.label} className="card" style={{ padding: '16px' }}>
             <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-              {ctrl.label}: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{ctrl.value}</span>
+              {ctrl.label}: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{ctrl.value}</span>
             </label>
             <input type="range" min={ctrl.min} max={ctrl.max} step={ctrl.step}
               value={ctrl.value} onChange={e => ctrl.set(+e.target.value)} />
@@ -108,7 +108,7 @@ function PCAExplorer() {
 
       <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: 'var(--violet)' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
+          <strong style={{ color: 'var(--prime)' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
           Add more features with the same info → most variance concentrates in early PCs.
           The scree "elbow" is where you should cut.
         </p>
@@ -184,7 +184,7 @@ function SVDDecomposer() {
 
       <div className="card" style={{ padding: '16px', maxWidth: '320px' }}>
         <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-          Rank k: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{rank}</span>
+          Rank k: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{rank}</span>
         </label>
         <input type="range" min={1} max={15} step={1} value={rank} onChange={e => setRank(+e.target.value)} />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
@@ -196,7 +196,7 @@ function SVDDecomposer() {
 
       <div className="card" style={{ padding: '16px', background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: 'var(--violet)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
+          <strong style={{ color: 'var(--prime)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
           A rank-4 approximation of a 20×25 matrix needs only {20*rank + rank + rank*25} numbers instead of {20*25}.
           That's the compression ratio that makes Netflix recommendations possible at scale.
         </p>
@@ -419,7 +419,7 @@ function RegularizationLab() {
 
         <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-            α (strength): <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{alpha}</span>
+            α (strength): <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{alpha}</span>
           </label>
           <input type="range" min={0.001} max={10} step={0.001} value={alpha}
             onChange={e => setAlpha(+e.target.value)} />
@@ -565,12 +565,12 @@ function NumPyInternals() {
 
       <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7 }}>
-          <strong style={{ color: 'var(--mint)' }}>Key rules to remember:</strong><br />
-          • <code style={{ color: 'var(--sky)' }}>x[::2]</code> returns a view; <code style={{ color: 'var(--sky)' }}>x[[0,2,4]]</code> (fancy indexing) returns a copy.<br />
+          <strong style={{ color: 'var(--prime)' }}>Key rules to remember:</strong><br />
+          • <code style={{ color: 'var(--ink-low)' }}>x[::2]</code> returns a view; <code style={{ color: 'var(--ink-low)' }}>x[[0,2,4]]</code> (fancy indexing) returns a copy.<br />
           • Boolean indexing always returns a copy.<br />
-          • <code style={{ color: 'var(--sky)' }}>np.shares_memory(a, b)</code> tells you if two arrays share a buffer.<br />
+          • <code style={{ color: 'var(--ink-low)' }}>np.shares_memory(a, b)</code> tells you if two arrays share a buffer.<br />
           • Reshaping preserves the view if the array is contiguous; otherwise numpy copies.<br />
-          • Always profile with <code style={{ color: 'var(--sky)' }}>%timeit</code> before assuming loop = slow.
+          • Always profile with <code style={{ color: 'var(--ink-low)' }}>%timeit</code> before assuming loop = slow.
         </div>
       </div>
     </div>
@@ -673,7 +673,7 @@ function CalibrationCurves() {
           { title: 'Isotonic regression', body: 'Fits a non-parametric monotone function. More flexible than Platt but needs more data (≥ 1000 test samples). Overfits on small datasets.' },
         ].map(c => (
           <div key={c.title} className="card" style={{ padding: '16px' }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--mint)', marginBottom: '6px' }}>{c.title}</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--prime)', marginBottom: '6px' }}>{c.title}</div>
             <div style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{c.body}</div>
           </div>
         ))}
@@ -703,13 +703,13 @@ export default function ModelsMathTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Math Foundations</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Math Foundations</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '620px' }}>
           The math behind the decisions — why PCA fails with outliers, when regularization helps vs hurts, what the scree plot is actually telling you, and why calibration breaks after threshold tuning.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a real scenario. Pick your answer — then run the Python cell to verify your intuition against the actual numbers.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--mint)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
       </div>
 
       {/* Module picker */}
