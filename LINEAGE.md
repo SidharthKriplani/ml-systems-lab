@@ -46,6 +46,24 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.25 — PAL-modeled polish sprint (2026-05-29)
+
+**Guiding question:** does MSL feel as crafted as PAL?
+
+Three problems identified after reading PAL's source (index.css + Sidebar.jsx):
+
+**1. Typography unification.** MSL mixed three display fonts: Space Grotesk (headings), Satoshi/Inter (body), JetBrains Mono (code). PAL uses one (Inter) throughout. Fixed: removed all `Space Grotesk` references from `index.css`, `App.jsx`, `GlobalSearch.jsx`, `tailwind.config.js`. All headings now use `var(--font-sans)`. No visible regression — Satoshi/Inter handles heading weights cleanly.
+
+**2. Shared utility classes.** Tabs had dozens of repeated inline eyebrow label patterns (`fontSize:'10px', textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--ink-low)'`). Fixed the `.section-eyebrow` class to match actual usage (was 12px monospace, now 10px with correct spacing). Added: `.msl-module-title`, `.msl-scenario-card`, `.msl-reveal-panel`, `.msl-option-btn` (with hover/correct/wrong/selected states), `.msl-hint`. Applied `.section-eyebrow` to 17 inline instances across FeatureEngTab, MonitoringTab, SystemDesignTab, CombinatorTab.
+
+**3. Dark theme token audit.** Replaced hardcoded `rgba(255,255,255,...)` and `rgba(240,165,0,...)` values with CSS variable tokens in SystemDesignTab (4 replacements) and DeepLearningTab (2 replacements). Semantic accent colours (`rgba(52,211,153,...)`, etc.) left intentionally.
+
+**v4.24 (same session — PAL sidebar + HomeTab polish):** Transition tokens (`--t-fast`, `--t`, `--t-slow`), shadow tokens (`--shadow-sm/md/lg`), radius tokens. `.sidebar-item-active` left-border accent class (PAL pattern). Sidebar: all lock icons removed, replaced with subtle `pro` text tag; hover transitions on every nav item; PAL-style search bar at sidebar bottom with icon + `⌘K` kbd. HomeTab: role pills collapsed to compact ghost row (no cold-state pill bombardment); `progress-fill-animated` class on all readiness/guided path/continue bars; `card-interactive` hover lift on guided path cards.
+
+**Files touched (v4.24+v4.25):** `index.css`, `App.jsx`, `GlobalSearch.jsx`, `tailwind.config.js`, `HomeTab.jsx`, `FeatureEngTab.jsx`, `ModelEvalTab.jsx`, `SystemDesignTab.jsx`, `MonitoringTab.jsx`, `DeepLearningTab.jsx`, `CombinatorTab.jsx`. All brace-balanced.
+
+---
+
 ### v4.23 — Nav + progress overhaul — "where are you, what's next?" (2026-05-29)
 
 **Guiding principle:** does the user know where they are and what to do next? Every change in this version is evaluated against that question.

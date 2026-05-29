@@ -550,10 +550,10 @@ export default function GlobalSearch({ onClose, onNavigate }) {
                 <span style={{ fontSize: '18px', lineHeight: 1, marginTop: '1px', flexShrink: 0 }}>{item.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '14px', color: isActive ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>
+                    <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: '14px', color: isActive ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>
                       {item.title}
                     </span>
-                    <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '99px', fontWeight: 600, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', background: kindStyle.bg, color: kindStyle.color, border: `1px solid ${kindStyle.border}`, flexShrink: 0 }}>
+                    <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '99px', fontWeight: 600, fontFamily: "var(--font-sans)", letterSpacing: '0.04em', textTransform: 'uppercase', background: kindStyle.bg, color: kindStyle.color, border: `1px solid ${kindStyle.border}`, flexShrink: 0 }}>
                       {item.kind}
                     </span>
                     <span style={{ fontSize: '11px', color: 'var(--ink-low)', marginLeft: 'auto', flexShrink: 0 }}>

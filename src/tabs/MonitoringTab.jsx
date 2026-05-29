@@ -359,17 +359,17 @@ function KSTestExplorer() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KS Statistic (D)</div>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>KS Statistic (D)</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: statusColor }}>{result.ksStatistic.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>max |F₁(x) − F₂(x)|</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>p-value</div>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>p-value</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: significant ? 'var(--rose)' : 'var(--mint)' }}>{result.pValue.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>threshold: 0.05</div>
         </div>
         <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.11)' : 'rgba(52,211,153,0.11)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verdict</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Verdict</div>
           <div style={{ fontSize: '12px', color: statusColor, fontWeight: 600, lineHeight: 1.4 }}>
             {significant ? 'Significant difference — reject H₀' : 'No significant difference — fail to reject H₀'}
           </div>
@@ -580,7 +580,7 @@ function AlertTuner() {
           { label: 'Detection delay',  value: sim.delay !== null ? `${sim.delay}d` : 'missed', color: sim.delay === null ? 'var(--rose)' : sim.delay <= 2 ? 'var(--mint)' : 'var(--gold)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ padding: '14px', textAlign: 'center' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>{stat.label}</div>
+            <div className="section-eyebrow" style={{ marginBottom: '6px' }}>{stat.label}</div>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: stat.color }}>{stat.value}</div>
           </div>
         ))}
@@ -802,7 +802,7 @@ function IncidentTriage() {
           </div>
 
           <div style={{ marginBottom: '12px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Working Hypothesis</div>
+            <div className="section-eyebrow" style={{ marginBottom: '4px' }}>Working Hypothesis</div>
             <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{incident.hypothesis}</div>
           </div>
 

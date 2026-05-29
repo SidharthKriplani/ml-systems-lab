@@ -1571,7 +1571,7 @@ export default function CombinatorTab({ onNavigate }) {
         {/* Domain breakdown */}
         {mcqQuestions.length > 0 && (
           <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--ink-low)', marginBottom: '0.75rem' }}>
+            <div className="section-eyebrow" style={{ marginBottom: '0.75rem' }}>
               Domain Breakdown
             </div>
             {Object.entries(domainStats)

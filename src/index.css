@@ -103,10 +103,10 @@
   }
 
   h1,h2,h3,h4,h5,h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: var(--font-sans);
     color: var(--ink-hi);
     line-height: 1.15;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
   }
 
   code, pre, kbd { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
@@ -197,7 +197,7 @@
   .nav-tab {
     position: relative;
     padding: 4px 14px 13px;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 500;
     color: var(--ink-low);
@@ -224,7 +224,7 @@
     border-radius: 8px;
     transition: all 0.15s;
     cursor: pointer; border: none; background: none;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
   }
   .sub-tab.active {
     background: var(--prime-faint);
@@ -242,7 +242,7 @@
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--prime);
     color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-weight: 700; font-size: 14px;
     padding: 11px 24px; border-radius: 9px;
     border: none; cursor: pointer;
@@ -261,7 +261,7 @@
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--prime-faint);
     color: var(--prime-hi);
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-weight: 500; font-size: 14px;
     padding: 11px 24px; border-radius: 9px;
     border: 1px solid rgba(240,165,0,0.22);
@@ -304,7 +304,7 @@
     display: inline-flex; align-items: center;
     padding: 2px 9px; border-radius: 99px;
     font-size: 11px; font-weight: 600;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     letter-spacing: 0.03em; text-transform: uppercase;
   }
   .badge-mint   { background: rgba(52,211,153,0.10);  color: var(--mint);   border: 1px solid rgba(52,211,153,0.25); }
@@ -374,17 +374,86 @@
 
   /* ── Typography helpers ── */
   .eyebrow, .section-eyebrow {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.09em;
     text-transform: uppercase; color: var(--ink-low);
     margin-bottom: 8px;
   }
   .section-title {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 22px; font-weight: 700; color: var(--ink-hi);
     letter-spacing: -0.03em; margin-bottom: 6px;
   }
   .section-sub { font-size: 15px; color: var(--ink-mid); line-height: 1.70; margin-bottom: 24px; }
+
+  /* ── Module title — tab section headings ── */
+  .msl-module-title {
+    font-family: var(--font-sans);
+    font-size: 15px; font-weight: 700; color: var(--ink-hi);
+    letter-spacing: -0.02em; line-height: 1.25; margin: 0 0 4px;
+  }
+
+  /* ── Scenario card ── */
+  .msl-scenario-card {
+    background: var(--depth);
+    border: 1px solid var(--rim);
+    border-radius: 10px;
+    padding: 16px 18px;
+    transition: border-color var(--t), box-shadow var(--t);
+  }
+
+  /* ── Answer/reveal panel ── */
+  .msl-reveal-panel {
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.20);
+    border-radius: 10px;
+    padding: 16px 18px;
+    animation: fadeSlideDown 0.18s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  /* ── MCQ option button ── */
+  .msl-option-btn {
+    width: 100%; text-align: left;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--rim);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--ink-mid);
+    font-family: var(--font-sans); font-size: 13px;
+    cursor: pointer; line-height: 1.5;
+    transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  }
+  .msl-option-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--rim-hi);
+    color: var(--ink-hi);
+  }
+  .msl-option-btn.correct {
+    background: rgba(52,211,153,0.10);
+    border-color: rgba(52,211,153,0.40);
+    color: var(--mint);
+  }
+  .msl-option-btn.wrong {
+    background: rgba(244,63,94,0.08);
+    border-color: rgba(244,63,94,0.30);
+    color: var(--rose);
+  }
+  .msl-option-btn.selected {
+    background: rgba(240,165,0,0.08);
+    border-color: rgba(240,165,0,0.35);
+    color: var(--prime-hi);
+  }
+
+  /* ── Hint chip ── */
+  .msl-hint {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--depth);
+    border: 1px solid var(--rim);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px; color: var(--ink-low);
+    font-family: var(--font-mono);
+  }
 
   /* ── Status indicators ── */
   .dot-live   { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 6px var(--mint); display: inline-block; }

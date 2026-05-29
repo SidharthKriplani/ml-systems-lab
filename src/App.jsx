@@ -262,7 +262,7 @@ function PracticeCard({ tab, domain, onSelect, tabProgress, isUnlocked }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", transition: 'color 0.14s' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "var(--font-sans)", transition: 'color 0.14s' }}>
           {tab.label}
         </span>
         {locked
@@ -289,7 +289,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '6px' }}>
         <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
-        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
           200+ production scenarios.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px', marginBottom: '6px' }}>
@@ -361,7 +361,7 @@ function InterviewToolCard({ tool, onSelect, isUnlocked }) {
           )
         }
       </div>
-      <div style={{ fontSize: '14px', fontWeight: 700, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '-0.02em', marginBottom: '8px', transition: 'color 0.14s' }}>
+      <div style={{ fontSize: '14px', fontWeight: 700, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "var(--font-sans)", letterSpacing: '-0.02em', marginBottom: '8px', transition: 'color 0.14s' }}>
         {tool.label}
       </div>
       <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{tool.desc}</p>
@@ -375,7 +375,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '28px' }}>
         <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
-        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
           Nine tools. One loop.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
@@ -828,13 +828,13 @@ export default function App() {
             <>
               <button
                 onClick={() => setZoneTab(prev => ({ ...prev, [activeZone]: null }))}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "'Space Grotesk',sans-serif", padding: '10px 8px', margin: '-10px -8px' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "var(--font-sans)", padding: '10px 8px', margin: '-10px -8px' }}>
                 ← <span>{activeZone === 'interview' ? 'Tools' : 'Domains'}</span>
               </button>
               {activeTabInfo && (
                 <>
                   <span style={{ color: 'var(--rim)', fontSize: '13px' }}>/</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "'Space Grotesk',sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "var(--font-sans)", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {activeTabInfo.label}
                   </span>
                 </>
@@ -843,7 +843,7 @@ export default function App() {
           ) : (
             <button onClick={() => handleZoneNav('today')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'linear-gradient(135deg, var(--prime), var(--violet))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff', flexShrink: 0 }}>ML</div>
-              <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
+              <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
             </button>
           )}
         </div>
@@ -859,7 +859,7 @@ export default function App() {
           )}
           <button
             onClick={() => setSearchOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "'Space Grotesk',sans-serif" }}>
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "var(--font-sans)" }}>
             <span style={{ fontSize: '13px' }}>⌕</span>
             <span style={{ display: 'inline' }}>Search</span>
             <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.14)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>

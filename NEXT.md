@@ -14,8 +14,14 @@ The current README leads with domain breadth ("6 engineering domains, 200+ scena
 ### 2. Mobile verification — HomeTab TODAY row (15 min + fix if broken)
 The two-column `gridTemplateColumns: 'minmax(0, 1fr) auto'` TODAY row was never tested on narrow screens. Open DevTools → 375px and 320px. If the case card text is unreadably compressed, add `@media (max-width: 480px)` to stack columns vertically (`gridTemplateColumns: '1fr'`, activity widget full width below case card). Fix in `HomeTab.jsx` inline with a `<style>` tag or conditional style object.
 
-### 3. Module forward pointers — remaining tabs (1–2 hours)
-SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab are done. Extend to remaining high-traffic tabs: ClassicalMLTab, MLOpsDeployTab, SparkLabTab, DataScienceTab, CombinatorTab. Same `ForwardPointer` component pattern — thin rim border, label + → arrow, `onNavigate('combinator')` or `onNavigate('gradient')`. Guard with `{onNavigate && ...}`. Don't invent new CTAs — standardise the existing pattern.
+### 3. Apply .msl-option-btn to MCQ tabs (1–2 hours)
+The `.msl-option-btn` class was defined in index.css this session but not yet applied to the actual MCQ option buttons across tabs. Target: FeatureEngTab, ModelEvalTab, MonitoringTab, ClassicalMLTab, DataScienceTab. Each has 4-option MCQ buttons rendered with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` class. This unifies the most user-facing interactive element across all practice tabs.
+
+### 4. Module forward pointers — remaining tabs (1 hour)
+SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab are done. Extend to: ClassicalMLTab, MLOpsDeployTab, SparkLabTab, DataScienceTab, CombinatorTab. Same `ForwardPointer` component pattern. Guard with `{onNavigate && ...}`.
+
+### 5. Apply .section-eyebrow to remaining 20 tabs (1–2 hours)
+This session applied `.section-eyebrow` to 4 of 6 target tabs (17 instances). ModelEvalTab and DeepLearningTab had no qualifying candidates. Extend the pass to the remaining high-traffic tabs: ClassicalMLTab, MLOpsDeployTab, TrainerTab, CombinatorTab, StaffLayerTab, CodeBugsTab. Same rule: only replace when `color: var(--ink-low)` + uppercase + letterSpacing. Colour overrides stay inline.
 
 ---
 
@@ -34,7 +40,8 @@ Nothing currently blocked.
 - ~~GlobalSearch expansion — went from ~70 to 192 entries; entire Interview zone was invisible; all 9 Interview tools + scenarios now indexed~~
 - ~~Audit #019 — guidance completeness final sweep; 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean; LINEAGE.md v4.21~~
 - ~~Skeleton mode — COMING_SOON stubs across 16 tabs (24 new + 11 upgraded); userBrief rendered to users, devBrief{micro,macro} in-code dev guidance; LINEAGE.md v4.22~~
-- ~~Nav + progress overhaul — flat sidebar (domain sections, per-tab progress bars), guided paths (Foundations/Interview/Production), domain completion bars, HomeTab polish (activity grid sparse-state, continue bar 0% hide, visual divider), ForwardPointer CTAs on 5 tabs; LINEAGE.md v4.23~~
+- ~~Nav + progress overhaul — flat sidebar, guided paths, domain bars, HomeTab polish, ForwardPointer CTAs on 5 tabs; LINEAGE.md v4.23~~
+- ~~PAL-modeled polish (v4.24+v4.25) — transition/shadow/radius tokens, sidebar-item-active left-border, lock icons removed, role pills collapsed, progress bar animations, Space Grotesk dropped, shared utility classes (.msl-option-btn, .msl-reveal-panel, .msl-scenario-card, .msl-hint), .section-eyebrow applied to 17 instances across 4 tabs, dark theme token audit (6 replacements)~~
 
 ---
 

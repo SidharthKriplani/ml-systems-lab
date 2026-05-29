@@ -67,11 +67,11 @@ function SkewSimulator() {
               {b.label}
             </div>
             <div style={{ marginBottom: '6px' }}>
-              <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Training</div>
+              <div className="section-eyebrow" style={{ marginBottom: '3px' }}>Training</div>
               <code style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.training}</code>
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--ink-low)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Serving</div>
+              <div className="section-eyebrow" style={{ marginBottom: '3px' }}>Serving</div>
               <code style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', display: 'block' }}>{b.serving}</code>
             </div>
           </button>
@@ -311,7 +311,7 @@ result = (df
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '12px' }}>
         {/* Entity */}
         <div className="card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Entity</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Entity</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(ENTITIES).map(([k, v]) => (
               <button key={k} onClick={() => { setEntity(k); setMetric(v.metrics[0]) }}
@@ -324,7 +324,7 @@ result = (df
 
         {/* Metric */}
         <div className="card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Metric</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Metric</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {e.metrics.map(m => (
               <button key={m} onClick={() => setMetric(m)}
@@ -337,7 +337,7 @@ result = (df
 
         {/* Aggregation */}
         <div className="card" style={{ padding: '14px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Aggregation</div>
+          <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Aggregation</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {Object.entries(AGGS).map(([k, v]) => (
               <button key={k} onClick={() => setAgg(k)}
@@ -352,7 +352,7 @@ result = (df
         {/* Window type + size */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Window type</div>
+            <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Window type</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {Object.entries(WINDOW_TYPES).map(([k, v]) => (
                 <button key={k} onClick={() => setWindowType(k)}
@@ -363,7 +363,7 @@ result = (df
             </div>
           </div>
           <div className="card" style={{ padding: '14px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Window size</div>
+            <div className="section-eyebrow">Window size</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {SIZES.map(s => (
                 <button key={s} onClick={() => setWindowSize(s)}
@@ -562,7 +562,7 @@ function FeatureLeakageZoo() {
 
           <div style={{ display: 'grid', gap: '14px' }}>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Example</div>
+              <div className="section-eyebrow" style={{ marginBottom: '4px' }}>Example</div>
               <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6, fontStyle: 'italic' }}>{scenario.example}</div>
             </div>
 
@@ -709,7 +709,7 @@ function OnlineOfflineDecider() {
 
           <div style={{ display: 'grid', gap: '12px' }}>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Why</div>
+              <div className="section-eyebrow" style={{ marginBottom: '4px' }}>Why</div>
               <div style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.6 }}>{scenario.reasoning}</div>
             </div>
             <div style={{ background: 'rgba(244,63,94,0.14)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '8px', padding: '12px' }}>
@@ -860,7 +860,7 @@ function FeatureStoreArchitecture() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div className="section-eyebrow">
           Click any block to explore
         </div>
         <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
