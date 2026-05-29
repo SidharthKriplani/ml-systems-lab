@@ -46,6 +46,34 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.32 — Oracle identity refactor: Batch 2 — remaining 6 tabs + 5 unstaged (2026-05-30)
+
+**What shipped:** Completed the Oracle color refactor across the remaining high-hit tabs. All decorative multi-color accents now replaced with single amber (`var(--prime)`) + warm gray neutrals across the full codebase. Two-session effort totaling 21 tabs refactored.
+
+**Files changed (this session — commit `ca888fc`):** SystemDesignTab, ModelsMathTab, DataScienceTab, dbtTab, DLServingTab, DeepLearningTab (targeted in this session) + ClassicalMLTab, MLOpsPipelinesTab, ModelEvalTab, TimeSeriesTab, GradientTab (unstaged from prior session, included in same commit). All brace-balanced at 0.
+
+**Notable refactors:**
+- SystemDesignTab `getStressTests()` — decoupled `coldRating`/`popRating`/`driftRating` variables from color string comparisons. Original code used color value as the rating key (`coldColor === 'var(--rose)' ? 'POOR'`); replacing the colors would have silently broken rating logic. Explicit rating vars added alongside the color assignments.
+- dbtTab `DANGER_COLORS` — HIGH `'#f97316'` → `var(--prime)`, MEDIUM gold → `var(--ink-low)`, LOW mint → `var(--ink-low)`. CRITICAL rose kept (semantic error severity).
+- DLServingTab `const ACCENT = 'var(--violet)'` → `'var(--prime)'` — cascades to all `pillActive` style object usages via single constant change.
+- All data object `color`/`accent`/`accentColor` fields across all 6 tabs → `var(--prime)`.
+
+**Preserved (intentional):**
+- MCQ correct/wrong post-reveal feedback (mint=correct, rose=wrong) — in all tabs, all AccordionMCQ components
+- GPU fit/no-fit progress bars (mint=fits, rose=no-fit) in DLServingTab
+- "Production gotcha/gotchas" warning labels — rose is semantic (warning signal, not decorative)
+- Chart data series in Python code strings — sky cumulative line, gold threshold, scatter classes in ModelsMathTab REG_CODE
+- dbtTab MCQ `msl-reveal-panel` correct/wrong states
+- Traffic light status colors in SystemDesignTab (semantic: meets/partial/fails)
+
+**Full Oracle refactor scope (across v4.31 + v4.32 — commits `cb37ade`, `4d0bb18`, `470ffd2`, `ca888fc`, `6b56b33`):**
+Batch 1 (v4.31): MonitoringTab, CausalInferenceTab, FeatureEngTab, ClassicalMLTab, GradientTab
+Batch 2 (v4.32): SystemDesignTab, ModelsMathTab, DataScienceTab, dbtTab, DLServingTab, DeepLearningTab, MLOpsPipelinesTab, ModelEvalTab, TimeSeriesTab + SparkLabTab, AirflowTab, DataModelingTab, DLFineTuningTab, DefenseDocTab, CaseStudiesTab, TrainerTab, CodeBugsTab, SpotTheFlawTab, InterviewPrepTab, CombinatorTab, MLOpsDeployTab (all in prior session commits)
+
+Every tab file now uses amber-only decorative accents. Semantic status indicators, data series, and MCQ feedback colors intentionally preserved.
+
+---
+
 ### v4.31 — Oracle identity refactor: full amber sweep across 5 tabs (2026-05-30)
 
 **What shipped:** Systematic replacement of all decorative multi-color accent usage across the 5 highest-hit tabs. Single amber (`var(--prime)`) + warm gray neutrals now enforced across the full practice zone.

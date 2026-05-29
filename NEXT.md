@@ -8,12 +8,7 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. Oracle refactor — Batch 2 (remaining 21 tabs) (2–3 hours)
-The following tabs still have decorative non-amber color hits (counts from grep, some will be semantic keeps):
-Priority by hit count: MLOpsDeployTab (27), SparkLabTab (26), SystemDesignTab (21), ModelEvalTab (16), ModelsMathTab (15), MLOpsPipelinesTab (15), DeepLearningTab (13), DLServingTab (11), TimeSeriesTab (8), AirflowTab (8), dbtTab (7), DataModelingTab (7), DLFineTuningTab (7), DataScienceTab (6), DefenseDocTab (5), CaseStudiesTab (4), TrainerTab (3), CodeBugsTab (3), SpotTheFlawTab (2), InterviewPrepTab (2), CombinatorTab (not listed but check).
-Apply same rules as Batch 1. Brace-balance each. Single commit per batch of ~5 files. DO NOT replace_all on whole files.
-
-### 2. ProjectLab tab — Phase 1 skeleton (2–3 hours)
+### 1. ProjectLab tab — Phase 1 skeleton (2–3 hours)
 New tab `ProjectLabTab.jsx`. Sequential notebook. Phase 1: data ingestion + EDA — 3 Pyodide cells (load sklearn churn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 AccordionMCQ judgment checkpoints between cells. LocalStorage key `msl_projectlab_churn_data`. Add to App.jsx (practice zone, premium). See IDEAS.md Tier 1 for full spec.
 
 ### 3. New user cold-state banner (45 min)
@@ -35,7 +30,7 @@ Nothing currently blocked.
 
 ## Done this session
 
-- ~~Oracle identity refactor Batch 1 (v4.31) — 5 tabs (MonitoringTab 73 hits, CausalInferenceTab 57, FeatureEngTab 62, ClassicalMLTab 66, GradientTab 41). All decorative mint/sky/ember/rose/violet/gold replaced with prime/amber/ink-low. Brace balance 0 on all 5. All 30 POSTS catColor in GradientTab unified. Semantic data-series colors preserved throughout.~~
+- ~~Oracle identity refactor COMPLETE (v4.31 + v4.32) — All 21 tabs across 2 sessions. Batch 1: MonitoringTab, CausalInferenceTab, FeatureEngTab, ClassicalMLTab, GradientTab. Batch 2: SystemDesignTab, ModelsMathTab, DataScienceTab, dbtTab, DLServingTab, DeepLearningTab + MLOpsPipelinesTab, ModelEvalTab, TimeSeriesTab, GradientTab + MLOpsDeployTab, SparkLabTab, AirflowTab, DataModelingTab, DLFineTuningTab, DefenseDocTab, CaseStudiesTab, TrainerTab, CodeBugsTab, SpotTheFlawTab, InterviewPrepTab, CombinatorTab. All decorative mint/sky/ember/rose/violet/gold → prime/amber/ink-low. All MCQ correct/wrong, semantic status, data series preserved. All brace-balanced at 0. Commits ca888fc + 6b56b33.~~
 - ~~Apply .msl-option-btn to remaining MCQ tabs (v4.30) — FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab all migrated from inline styles~~
 - ~~Cloud/AWS callouts — 3 tabs (v4.30) — .msl-cloud-map + .msl-cloud-chip added to index.css; 30+ scenario reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab got AWS service callouts~~
 - ~~SpotTheFlawTab → 12 scenarios (v4.30) — stf11 (NDCG/CTR divergence) + stf12 (annotator majority-vote bias) added~~
