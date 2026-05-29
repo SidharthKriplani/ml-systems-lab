@@ -346,6 +346,7 @@ const CAT_COLOR = {
 // ── Result Card ────────────────────────────────────────────────────────────────
 function ResultCard({ item, faded, onNavigate }) {
   const color = CAT_COLOR[item.cat] || 'var(--ink-mid)'
+  const [hoveredLink, setHoveredLink] = useState(null)
   return (
     <div style={{
       padding: '14px 16px',
@@ -407,22 +408,16 @@ function ResultCard({ item, faded, onNavigate }) {
               style={{
                 fontSize: 11,
                 fontFamily: 'var(--font-mono)',
-                color: 'var(--ink-mid)',
+                color: hoveredLink === link.tab + link.label ? 'var(--prime)' : 'var(--ink-mid)',
                 background: 'transparent',
-                border: '1px solid var(--rim)',
+                border: `1px solid ${hoveredLink === link.tab + link.label ? 'var(--prime)' : 'var(--rim)'}`,
                 borderRadius: 6,
                 padding: '3px 9px',
                 cursor: 'pointer',
                 transition: 'color 0.15s, border-color 0.15s',
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = 'var(--prime)'
-                e.currentTarget.style.borderColor = 'var(--prime)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = 'var(--ink-mid)'
-                e.currentTarget.style.borderColor = 'var(--rim)'
-              }}
+              onMouseEnter={() => setHoveredLink(link.tab + link.label)}
+              onMouseLeave={() => setHoveredLink(null)}
             >
               {link.label} →
             </button>
@@ -635,6 +630,8 @@ export default function AskTab({ onNavigate }) {
   const [messages, setMessages] = useState([])
   const [query, setQuery] = useState('')
   const [surprise, setSurprise] = useState(null)
+  const [surpriseHovered, setSurpriseHovered] = useState(false)
+  const [hoveredSugg, setHoveredSugg] = useState(null)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -725,7 +722,7 @@ export default function AskTab({ onNavigate }) {
             fontFamily: 'var(--font-sans)',
             fontWeight: 600,
             color: 'var(--prime)',
-            background: 'rgba(212,175,55,0.15)',
+            background: surpriseHovered ? 'rgba(212,175,55,0.25)' : 'rgba(212,175,55,0.15)',
             border: '1px solid rgba(212,175,55,0.28)',
             borderRadius: 8,
             padding: '8px 14px',
@@ -733,8 +730,8 @@ export default function AskTab({ onNavigate }) {
             whiteSpace: 'nowrap',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.14)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(212,175,55,0.15)'}
+          onMouseEnter={() => setSurpriseHovered(true)}
+          onMouseLeave={() => setSurpriseHovered(false)}
         >
           <span style={{ fontSize: 15 }}>∿</span> Surprise me
         </button>
@@ -766,23 +763,17 @@ export default function AskTab({ onNavigate }) {
                   textAlign: 'left',
                   fontSize: 13,
                   fontFamily: 'Inter, sans-serif',
-                  color: 'var(--ink-mid)',
+                  color: hoveredSugg === i ? 'var(--ink-hi)' : 'var(--ink-mid)',
                   background: 'var(--depth)',
-                  border: '1px solid var(--rim)',
+                  border: `1px solid ${hoveredSugg === i ? 'var(--rim-hi)' : 'var(--rim)'}`,
                   borderRadius: 8,
                   padding: '10px 13px',
                   cursor: 'pointer',
                   lineHeight: 1.4,
                   transition: 'border-color 0.15s, color 0.15s',
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--rim-hi)'
-                  e.currentTarget.style.color = 'var(--ink-hi)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'var(--rim)'
-                  e.currentTarget.style.color = 'var(--ink-mid)'
-                }}
+                onMouseEnter={() => setHoveredSugg(i)}
+                onMouseLeave={() => setHoveredSugg(null)}
               >
                 {s}
               </button>

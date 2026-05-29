@@ -2227,7 +2227,7 @@ export default function GradientTab({ onNavigate }) {
   const [activeDomain, setActiveDomain] = useState('all')
   const [reading,      setReading]      = useState(null)
   const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
-  const [read, setRead] = useState(() => new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')))
+  const [read, setRead] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')) } catch { return new Set() } })
 
   function markRead(id) {
     const next = new Set(read)

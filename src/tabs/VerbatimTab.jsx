@@ -109,6 +109,7 @@ export default function VerbatimTab({ onNavigate }) {
   const recordingStartRef = useRef(null);
   const isStoppingRef = useRef(false); // guard against onend double-fire
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [hoveredQId, setHoveredQId] = useState(null);
 
   useEffect(() => {
     try {
@@ -292,7 +293,7 @@ export default function VerbatimTab({ onNavigate }) {
                 onClick={() => handleSelectQuestion(q)}
                 style={{
                   background: 'var(--surface)',
-                  border: '1px solid var(--rim)',
+                  border: `1px solid ${hoveredQId === q.id ? (CATEGORY_COLORS[q.category] || 'var(--prime)') : 'var(--rim)'}`,
                   borderRadius: 10,
                   padding: '14px 16px',
                   display: 'flex',
@@ -302,8 +303,8 @@ export default function VerbatimTab({ onNavigate }) {
                   textAlign: 'left',
                   transition: 'border-color 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = CATEGORY_COLORS[q.category] || 'var(--prime)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}
+                onMouseEnter={() => setHoveredQId(q.id)}
+                onMouseLeave={() => setHoveredQId(null)}
               >
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-ghost)', flexShrink: 0, paddingTop: 2 }}>
                   {String(q.id).padStart(2, '0')}

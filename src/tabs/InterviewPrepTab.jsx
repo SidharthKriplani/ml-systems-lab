@@ -304,6 +304,7 @@ function TimedPractice({ questions, onExit }) {
   const [elapsed,      setElapsed]      = useState(0)
   const [tierSelected, setTierSelected] = useState(null)
   const [tierHistory,  setTierHistory]  = useState([])
+  const [hoveredTier,  setHoveredTier]  = useState(null)
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -412,9 +413,9 @@ function TimedPractice({ questions, onExit }) {
                 {TIER_LEVELS.map(t => (
                   <button key={t.key}
                     onClick={() => { setTierSelected(t.key); setTierHistory(h => [...h, { id: q.id, tier: t.key }]) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', background: 'transparent', border: `1px solid ${t.color}20`, borderRadius: '8px', cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = `${t.color}12`}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', background: hoveredTier === t.key ? `${t.color}12` : 'transparent', border: `1px solid ${t.color}20`, borderRadius: '8px', cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
+                    onMouseEnter={() => setHoveredTier(t.key)}
+                    onMouseLeave={() => setHoveredTier(null)}>
                     <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '12px', color: t.color, minWidth: '52px' }}>{t.label}</span>
                     <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{t.desc}</span>
                   </button>
