@@ -818,6 +818,16 @@ export default function App() {
       {/* ── Bottom nav (hidden on desktop via CSS) ── */}
       <BottomNav activeZone={activeZone} onZoneNav={handleZoneNav} />
 
+      {/* ── Footer ── */}
+      <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>
+        <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+          Also by the same author:{' '}
+          <a href="https://genai-systems-lab-ivory.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>GenAI Systems Lab</a>
+          {' · '}
+          <a href="https://experimentation-systems-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Product Analytics Lab</a>
+        </p>
+      </footer>
+
       </div>{/* end desktop-main-wrapper */}
 
       {/* ── Global search ── */}
