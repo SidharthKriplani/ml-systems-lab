@@ -19,6 +19,23 @@ Tailwind is in the config for historical reasons. All component styling uses inl
 **CSS variables for every color and spacing token.**  
 Defined in `:root` in `index.css`. Never hardcode hex values in component files. Adding a new color = add it to `:root` first, then reference it.
 
+**Transition, shadow, and radius tokens — use the system variables.**  
+`--t-fast: 0.10s ease`, `--t: 0.16s ease`, `--t-slow: 0.26s ease`. Shadow: `--shadow-sm/md/lg`. Radius: `--r-sm: 5px`, `--r: 9px`, `--r-lg: 14px`. Never write hardcoded `transition: 0.2s` or `border-radius: 8px` in component files — reference the tokens.
+
+**Shared utility classes for repeated UI patterns.**  
+Defined in `index.css`, never redefined inline in tab files:
+- `.section-eyebrow` — 10px monospace uppercase label with `--ink-low` color and 0.09em spacing. Apply to section headings that match this exact pattern. Colour overrides stay inline.
+- `.msl-option-btn` — standard MCQ option button with `.correct` / `.wrong` / `.selected` modifier classes. Use for all 4-option practice buttons.
+- `.msl-reveal-panel` — animated reveal panel with fadeSlideDown, used for answer explanations.
+- `.msl-scenario-card` — standard scenario card with hover border + shadow transition.
+- `.msl-hint` — hint/tip callout block.
+- `.card-interactive` — hover lift (translateY(-2px)) for interactive card elements.
+- `.progress-fill-animated` — cubic-bezier width transition for progress bars.
+- `.sidebar-item-active` — left-border accent on active sidebar nav items (PAL pattern).
+
+**No lock icons in sidebar or navigation.**  
+Premium items show a subtle inline `pro` text tag (styled faintly) — not SVG padlocks. Lock icons add visual noise and make the product feel restrictive. The freemium gate renders `AccessGate.jsx` at the tab level; the nav itself should feel open.
+
 **Satoshi for UI, JetBrains Mono for code/labels.**  
 Do not introduce additional fonts. These two cover every case. Font families are exposed as CSS variables — `--font-sans` (`'Satoshi', 'Inter', system-ui, sans-serif`) loaded from Fontshare CDN, and `--font-mono` (`'JetBrains Mono', 'Fira Code', monospace`) from Google Fonts — defined in `:root` in `index.css`. Always reference these variables; never hardcode font family strings inline. (Changed from Space Grotesk in v4.14.)
 
@@ -29,8 +46,8 @@ Use `var(--white)` for contrast text on colored badge backgrounds or anywhere pu
 
 ## Architecture
 
-**Responsive dual-nav: bottom nav on mobile, sidebar accordion on desktop.**  
-Zones: Today / Practice / Read / Interview / Ask. On mobile (≤768px): 5-zone bottom nav. On desktop (≥769px): fixed left sidebar (220px) with accordion zones — Practice expands to domain groups, Interview expands to tool list. Same zone/tab routing state for both. Bottom nav is hidden on desktop via CSS; sidebar is hidden on mobile. Do not add a 6th zone without strong justification.
+**Responsive dual-nav: bottom nav on mobile, flat sidebar on desktop.**  
+Zones: Today / Practice / Read / Interview / Ask. On mobile (≤768px): 5-zone bottom nav. On desktop (≥769px): fixed left sidebar (220px) with flat domain sections — Practice domain groups shown inline (no accordion), active item indicated by `.sidebar-item-active` left-border accent. Same zone/tab routing state for both. Bottom nav is hidden on desktop via CSS; sidebar is hidden on mobile. Do not add a 6th zone without strong justification.
 
 **Zone routing via `TAB_TO_ZONE` + `ZONE_DEFAULTS` in App.jsx.**  
 - `TAB_TO_ZONE`: omit a tabId to default it to `practice`. Only add entries for non-practice tabs.
