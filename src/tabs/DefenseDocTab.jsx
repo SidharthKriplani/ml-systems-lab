@@ -70,7 +70,7 @@ const RATINGS = [
   { id: 'strong', label: 'Strong', color: 'var(--mint)',  inv: 1 },
 ]
 const TIER_COLOR = { must: 'var(--rose)', important: 'var(--prime)', good: 'var(--mint)' }
-const ACCESS_CODE = 'INPRODUCTION'
+const ACCESS_CODE = 'DAI2026'
 const GATE_SECTION_PCT = 0.35
 
 // ── JD parser ─────────────────────────────────────────────────────────────────

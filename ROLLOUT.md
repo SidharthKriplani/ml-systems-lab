@@ -30,7 +30,7 @@ Each batch entry states what pass looks like before a single tester is invited. 
 
 ## Access code
 
-**Current community code:** `INPRODUCTION`  
+**Current community code:** `DAI2026`  
 Permanent. Share freely during beta. Unlocks all premium content on device entry. Stored in `msl_access` localStorage key.
 
 **Free tier (no code needed):** HomeTab, LandscapeTab, GradientTab, AskTab, Math Foundations, Feature Engineering, Model Evaluation, Classical ML.  
@@ -66,7 +66,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **No horizontal overflow** | Scroll every tab — nothing bleeds past the right edge | ✓ required | — |
 | **Low brightness readability** | Drop phone brightness to ~20% — all text still readable, no invisible elements | ✓ required | — |
 | **Access gate — locked state** | Open incognito (no localStorage) → navigate to a premium tab → confirm AccessGate screen appears, not the tab content | ✓ required | — |
-| **Access gate — unlock flow** | Enter `INPRODUCTION` → confirm success message → premium content renders immediately | ✓ required | — |
+| **Access gate — unlock flow** | Enter `DAI2026` → confirm success message → premium content renders immediately | ✓ required | — |
 | **Access gate — persistence** | Unlock → close tab → reopen → confirm still unlocked (no re-entry required) | ✓ required | — |
 | **Access gate — wrong code** | Enter wrong code → confirm error message, no unlock | ✓ required | — |
 | **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |
@@ -102,7 +102,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 - Rate 3 skills Weak, 2 Okay, 1 Strong → pick "7 Days" horizon → confirm plan generates with correct skill ordering (highest gap score first)
 - Paste a 3-line startup JD → confirm output doesn't crash, shows something useful
 - Scroll plan to ~35% through sections → confirm inline gate appears (blurred remaining sections visible, code input shown)
-- Enter `INPRODUCTION` → confirm full plan unlocks inline, no page reload
+- Enter `DAI2026` → confirm full plan unlocks inline, no page reload
 - Check off 3 plan items → refresh page → confirm state persists
 - Print on Chrome → confirm printout is readable black-on-white, no dark background, no UI chrome
 
@@ -180,7 +180,7 @@ What to test:
 - Paste a dense JD (FAANG MLE) → self-rate gaps → pick "7 Days" → confirm plan sections feel correctly prioritized (weakest/highest-gap skills first)
 - Paste a sparse JD (startup, 3 bullet points) → confirm graceful output, nothing crashes or goes blank
 - Scroll to the gate (~35% through plan) → confirm it fires cleanly, blurred sections visible, code input shown
-- Enter `INPRODUCTION` → confirm full plan unlocks inline without page reload
+- Enter `DAI2026` → confirm full plan unlocks inline without page reload
 - On mobile: JD textarea usable (no zoom on tap), plan sections don't overflow horizontally
 
 What we're listening for: Did the tier ranking and day plan feel specific to their JD, or could it have been anyone's? Did the gate fire at a point where they already felt invested — or did it feel like a wall too early? Did they enter the code?
@@ -195,7 +195,7 @@ What we're listening for: Did the tier ranking and day plan feel specific to the
 | CombinatorTab tested with 3 different real ML JDs as context (not just one) | ✓ required | — |
 | TrainerTab history renders correctly after 2+ sessions | ✓ required | — |
 | Defense Plan tested with 3 different real JDs — sparse, dense, and ambiguous | ✓ required | — |
-| Defense Plan gate fires correctly at ~35% and unlocks inline with INPRODUCTION | ✓ required | — |
+| Defense Plan gate fires correctly at ~35% and unlocks inline with DAI2026 | ✓ required | — |
 | All three features work end-to-end on real iOS and Android | ✓ required | — |
 | Tester brief written and reviewed — one prompt, no instructions | — | — |
 

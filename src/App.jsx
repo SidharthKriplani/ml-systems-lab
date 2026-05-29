@@ -87,7 +87,7 @@ const PREMIUM_TABS = new Set([
   'ds', 'causal', 'ts',
   'monitor', 'mlops_deploy', 'mlops_pipes',
 ])
-const ACCESS_CODE = 'INPRODUCTION'
+const ACCESS_CODE = 'DAI2026'
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {

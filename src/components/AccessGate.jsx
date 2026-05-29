@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const ACCESS_CODE = 'INPRODUCTION'
+const ACCESS_CODE = 'DAI2026'
 
 export default function AccessGate({ onUnlock }) {
   const [code, setCode]     = useState('')

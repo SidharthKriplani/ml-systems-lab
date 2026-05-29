@@ -57,7 +57,7 @@ JDPrepTab and DefenseDocTab merged into a single 3-screen tool: **Defense Plan**
 - **Screen 2 — Self-rate:** For each extracted skill, user rates Weak / Okay / Strong. User picks time horizon: Cram Up / 3 Days / 7 Days / 2 Weeks. Final gap score = JD weight × inverse rating (Weak=3, Okay=2, Strong=1).
 - **Screen 3 — Plan:** Skill gap bars (ranked by gap score), round-by-round coverage (ML Coding / ML System Design / Depth+Onsite / Behavioral), horizon-specific day plan with study sections. Internal gate fires after 35% of plan sections — inline code input, not a wall. Gate converts with FOMO (user has already seen their plan skeleton). Print/PDF export preserved.
 
-**Internal gate model:** Defense Plan is free to enter and free to start. Gate fires at `Math.max(1, Math.floor(sections.length * 0.35))` sections into the plan. Locked sections are blurred but visible — user sees what they're missing. Code `INPRODUCTION` unlocks the rest inline.
+**Internal gate model:** Defense Plan is free to enter and free to start. Gate fires at `Math.max(1, Math.floor(sections.length * 0.35))` sections into the plan. Locked sections are blurred but visible — user sees what they're missing. Code `DAI2026` unlocks the rest inline.
 
 **What changed:**
 - `DefenseDocTab.jsx`: complete rewrite — 3-screen flow, self-rating, gap score formula, generatePlan(), internal gate, msl_defense_progress persistence
@@ -71,7 +71,7 @@ JDPrepTab and DefenseDocTab merged into a single 3-screen tool: **Defense Plan**
 
 ### v4.9 — Freemium access gate (May 2026)
 
-First freemium split. Premium content gated behind access code `INPRODUCTION`. Code is permanent once entered (localStorage key `msl_access`), shared freely during beta.
+First freemium split. Premium content gated behind access code `DAI2026`. Code is permanent once entered (localStorage key `msl_access`), shared freely during beta.
 
 **Free tier:** HomeTab, LandscapeTab, GradientTab, AskTab, and 4 intro Practice modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML).
 
