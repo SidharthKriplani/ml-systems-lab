@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.18 — Footer cross-links (2026-05-29)
+
+**Problem:** ML Systems Lab, GenAI Systems Lab, and Product Analytics Lab had no awareness of each other. Users who found one lab had no path to the other two.
+
+**Change:** Passive footer added to `App.jsx` below all zone content. Copy: "Also by the same team: GenAI Systems Lab · Product Analytics Lab". Style: `var(--ink-ghost)`, 11px, centered, `lineHeight: 1.6`. Links open in new tab.
+
+**Ecosystem context updated** in LINEAGE.md: Ecosystem section now notes that cross-links exist on each homepage.
+
+---
+
 ### v4.17 — Interaction guidance pass (2026-05-29)
 
 **Problem:** Every tab had a title and a domain description but nothing telling users how to interact. New users landed on tabs with no indication that content was interactive, that answers revealed per-option explanations, or what the controls did.
