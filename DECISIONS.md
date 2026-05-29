@@ -7,8 +7,8 @@ This is the "why this works this way" file — not build history (that's LINEAGE
 
 ## Stack
 
-**React 18 + Vite, no backend, no database.**  
-All progress is localStorage-only. This is deliberate — zero friction, no accounts, instant deploy, nothing to break server-side. Do not add a backend unless there is a feature that is genuinely impossible without one (e.g., real-time multiplayer, server-side auth). Adding a backend would break the "no login, works offline" principle.
+**React 18 + Vite, no backend, no database — current architecture, not a permanent constraint.**  
+All progress is localStorage-only. Zero friction, no accounts, instant deploy, nothing to break server-side. A backend will be added eventually — scoped tightly to the first feature that genuinely requires it (tracked in IDEAS.md Tier 3). Until then, do not add one speculatively. Every backend-dependent feature idea goes into Ideas; it does not change the current implementation.
 
 **Vercel auto-deploy on push to main.**  
 No staging environment. Main is always live. Test locally before pushing.
