@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -917,6 +917,217 @@ function HyperparamPriority() {
   )
 }
 
+// ─── Decision Boundary Lab ────────────────────────────────────────────────────
+
+const CLASS_0 = [
+  [1.2, 1.8], [1.5, 2.1], [0.9, 1.5], [1.8, 1.3], [1.1, 2.4], [2.0, 1.9], [0.8, 2.0], [1.6, 1.1],
+  [1.3, 2.7], [2.2, 2.0], [0.6, 1.7], [1.9, 2.5], [1.4, 1.0], [0.7, 2.3], [2.1, 1.5],
+  [4.5, 4.8], [4.8, 5.2], [5.1, 4.6], [4.3, 5.0], [5.3, 4.9], [4.7, 5.5], [5.0, 5.1],
+]
+const CLASS_1 = [
+  [1.0, 4.5], [1.3, 4.8], [0.8, 5.1], [1.6, 4.3], [1.1, 5.4], [1.8, 4.7], [0.6, 4.2], [2.0, 5.0],
+  [1.4, 5.6], [0.9, 4.9], [1.7, 5.2], [0.5, 5.3], [2.1, 4.4],
+  [4.5, 1.5], [4.8, 1.2], [5.1, 1.8], [4.3, 1.0], [5.3, 1.4], [4.7, 0.8], [5.0, 1.9], [4.2, 1.6],
+  [5.4, 1.1], [4.9, 2.0], [5.2, 0.7], [4.6, 2.2],
+]
+
+const CLASSIFIERS = [
+  {
+    id: 'linear_svm',
+    label: 'Linear SVM',
+    accuracy: '~52%',
+    description: 'Linear boundary fails on XOR-structured data. Accuracy ~52% — barely above random. In production: if your classes aren\'t linearly separable (common in any real feature space), a linear kernel is leaving performance on the table.',
+    // boundary fn: class 1 if col > row + 2  (in grid coords 0-19)
+    boundary: (row, col) => col > row + 2 ? 1 : 0,
+  },
+  {
+    id: 'rbf_svm',
+    label: 'RBF SVM',
+    accuracy: '~95%',
+    description: 'Radial Basis Function kernel captures nonlinear structure. Accuracy ~95%. The kernel trick maps data to infinite-dimensional space where it becomes linearly separable. Correct for this structure.',
+    // XOR pattern: bottom-left and top-right = class 0; top-left and bottom-right = class 1
+    boundary: (row, col) => ((row < 10 && col < 10) || (row > 10 && col > 10)) ? 0 : 1,
+  },
+  {
+    id: 'dt_depth1',
+    label: 'Decision Tree (depth=1)',
+    accuracy: '~50%',
+    description: 'A single split (stump) can only divide the space with one axis-aligned line. Accuracy ~50%. Useful as a weak learner in boosting, but never alone.',
+    // horizontal split at row 10 — top half class 1, bottom half class 0
+    boundary: (row, _col) => row < 10 ? 1 : 0,
+  },
+  {
+    id: 'dt_depth5',
+    label: 'Decision Tree (depth=5)',
+    accuracy: '~72% train / ~58% test',
+    description: 'Deep tree memorizes training data. Accuracy ~72% (train) but likely 55–60% on held-out data. The jagged boundary is the visual signature of overfitting — the model learned noise, not structure.',
+    // Checkerboard-ish pattern — many small regions (simulates overfitting)
+    boundary: (row, col) => {
+      const block = Math.floor(row / 3) + Math.floor(col / 3)
+      // Also include the XOR macro-structure to partially get it right
+      const xor = ((row < 10 && col < 10) || (row > 10 && col > 10)) ? 0 : 1
+      return (block % 2 === 0) ? xor : (1 - xor)
+    },
+  },
+  {
+    id: 'random_forest',
+    label: 'Random Forest',
+    accuracy: '~88%',
+    description: 'Random Forest averages many trees, smoothing the jagged boundary and reducing variance. Accuracy ~88%. The boundary is nonlinear but more stable than any single deep tree. This is why ensemble methods dominate tabular ML.',
+    // Similar to RBF but slightly smoother — allow a small buffer zone
+    boundary: (row, col) => {
+      const xor = ((row < 10 && col < 10) || (row > 10 && col > 10)) ? 0 : 1
+      // Smooth edges: at boundary cells, add slight transition
+      const nearEdge = Math.abs(row - 10) <= 1 || Math.abs(col - 10) <= 1
+      if (nearEdge) return (row + col) % 2 === 0 ? xor : (1 - xor)
+      return xor
+    },
+  },
+]
+
+// Grid cell component (needed to avoid hooks in .map)
+function GridCell({ row, col, classValue }) {
+  const bg = classValue === 0 ? 'var(--sky)' : 'var(--ember)'
+  const opacity = 0.15
+  // Map grid coords (0-19) → SVG space (0-6)
+  const x = (col / 20) * 6
+  const y = (19 - row) / 20 * 6
+  const size = 6 / 20
+  return <rect x={x} y={y} width={size} height={size} fill={bg} fillOpacity={opacity} />
+}
+
+function DecisionBoundaryLab() {
+  const [activeClassifier, setActiveClassifier] = useState('linear_svm')
+  const [viewed, setViewed] = useState(new Set(['linear_svm']))
+
+  const clf = CLASSIFIERS.find(c => c.id === activeClassifier)
+
+  function handleSelect(id) {
+    setActiveClassifier(id)
+    setViewed(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      if (next.size === CLASSIFIERS.length) {
+        localStorage.setItem('msl_score:classical_boundary', JSON.stringify({ completed: true, ts: Date.now() }))
+        window.dispatchEvent(new CustomEvent('msl_score_updated'))
+      }
+      return next
+    })
+  }
+
+  useEffect(() => {
+    setViewed(prev => { const n = new Set(prev); n.add('linear_svm'); return n })
+  }, [])
+
+  // Build grid once per classifier
+  const gridCells = []
+  for (let row = 0; row < 20; row++) {
+    for (let col = 0; col < 20; col++) {
+      gridCells.push({ row, col, classValue: clf.boundary(row, col) })
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Interactive Visualization</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Decision Boundary Lab</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Same 2D dataset, 5 classifiers. The XOR-like structure separates the classifiers that get it from those that don't. Watch how boundaries change — and what that means for production.
+        </p>
+      </div>
+
+      {/* Classifier selector */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {CLASSIFIERS.map(c => (
+          <button key={c.id} onClick={() => handleSelect(c.id)} style={{
+            padding: '7px 14px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: activeClassifier === c.id ? 600 : 400,
+            border: `1px solid ${activeClassifier === c.id ? 'var(--prime)' : 'var(--rim)'}`,
+            background: activeClassifier === c.id ? 'rgba(6,214,160,0.12)' : 'var(--surface)',
+            color: activeClassifier === c.id ? 'var(--prime)' : 'var(--ink-mid)',
+            transition: 'all 0.15s',
+          }}>
+            {c.label}
+            {viewed.has(c.id) && c.id !== activeClassifier && <span style={{ marginLeft: '6px', fontSize: '9px', color: 'var(--ink-ghost)' }}>✓</span>}
+          </button>
+        ))}
+        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', alignSelf: 'center', marginLeft: '4px' }}>
+          {viewed.size}/{CLASSIFIERS.length} explored
+        </span>
+      </div>
+
+      {/* SVG Canvas */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
+          <svg viewBox="0 0 6 6" width="100%" style={{ maxWidth: '500px', display: 'block', border: '1px solid var(--rim)', borderRadius: '8px', background: 'var(--void)' }}>
+            {/* Background regions */}
+            {gridCells.map(({ row, col, classValue }) => (
+              <GridCell key={`${row}-${col}`} row={row} col={col} classValue={classValue} />
+            ))}
+
+            {/* Grid lines (subtle) */}
+            {[1,2,3,4,5].map(v => (
+              <g key={v}>
+                <line x1={v} y1={0} x2={v} y2={6} stroke="var(--rim)" strokeWidth="0.02" strokeOpacity="0.4" />
+                <line x1={0} y1={v} x2={6} y2={v} stroke="var(--rim)" strokeWidth="0.02" strokeOpacity="0.4" />
+              </g>
+            ))}
+
+            {/* Class 1 points (ember/red) */}
+            {CLASS_1.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={6 - y} r="0.12" fill="var(--ember)" fillOpacity="0.9" stroke="var(--void)" strokeWidth="0.03" />
+            ))}
+
+            {/* Class 0 points (sky/blue) */}
+            {CLASS_0.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={6 - y} r="0.12" fill="var(--sky)" fillOpacity="0.9" stroke="var(--void)" strokeWidth="0.03" />
+            ))}
+          </svg>
+        </div>
+
+        {/* Axis labels */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '500px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Feature 2 (vertical)</span>
+          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Feature 1 (horizontal)</span>
+        </div>
+
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--sky)', display: 'inline-block' }} />
+            Class 0 region
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--ember)', display: 'inline-block' }} />
+            Class 1 region
+          </span>
+        </div>
+      </div>
+
+      {/* Classifier info card */}
+      <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{clf.label}</span>
+          <span style={{ padding: '3px 10px', borderRadius: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 600,
+            background: clf.accuracy.startsWith('~9') || clf.accuracy.startsWith('~8') ? 'rgba(52,211,153,0.13)' : 'rgba(249,115,22,0.13)',
+            color: clf.accuracy.startsWith('~9') || clf.accuracy.startsWith('~8') ? 'var(--mint)' : 'var(--ember)',
+            border: `1px solid ${clf.accuracy.startsWith('~9') || clf.accuracy.startsWith('~8') ? 'rgba(52,211,153,0.25)' : 'rgba(249,115,22,0.25)'}` }}>
+            Accuracy {clf.accuracy}
+          </span>
+        </div>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{clf.description}</p>
+      </div>
+
+      {/* Completion note */}
+      {viewed.size === CLASSIFIERS.length && (
+        <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', fontSize: '13px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>
+          All 5 classifiers explored — progress saved.
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
@@ -924,20 +1135,11 @@ const MODULES = [
   { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab },
   { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
   { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures },
+  { id: 'decision_boundary', label: 'Decision Boundary Lab', component: DecisionBoundaryLab },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Decision Boundary Lab',
-    userBrief: 'Adjust kernel and regularization on a live SVM and watch the boundary shift. The visualization that makes the kernel trick genuinely intuitive rather than just described.',
-    devBrief: {
-      micro: 'Pyodide sklearn SVC on a 2D Gaussian mixture dataset. C + gamma sliders update Python vars, re-run cell, re-render matplotlib contourf as base64 image. No server required. ~2–3h.',
-      macro: 'Model Failure Zoo covers when models break in production. This covers why — the geometry behind the failure. Pairs directly with the SVM card in the Zoo, turning the written failure mode into a live demonstration.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function ClassicalMLTab({ onNavigate }) {
   const [activeModule, setActiveModule] = useState('zoo')

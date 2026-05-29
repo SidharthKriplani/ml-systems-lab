@@ -9,19 +9,19 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 ## Next session
 
 ### 1. Apply .msl-option-btn to remaining MCQ tabs (1 hour)
-ClassicalMLTab got it in v4.28. Still missing: FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab. Each has 4-option MCQ buttons with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` modifier class. Check each tab's AccordionMCQ option rendering and apply. Verify with brace check after each file.
+FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab still have AccordionMCQ option buttons with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `.correct`/`.wrong`/`.selected`. Each file: search for the AccordionMCQ component's option button rendering (look for `onClick` + `background:` + `border:` inline style combo), replace with className approach. Brace-check each file after edit.
 
-### 2. SpotTheFlawTab — expand to 12 scenarios + add 2 more flaw categories (1–2 hours)
-Currently 10 scenarios across 5 categories. Add 2 more: stf11 (Metric Mismatch — online/offline metric gap, e.g. NDCG vs CTR divergence), stf12 (Labeling Artifact — annotator bias in ambiguous class boundary). Also audit existing 10 for explanation quality — every reveal must include (a) what breaks in production, (b) the signal that tells you you're in that situation. Flaw count strip shows `{attempted}/{total}` so the total will update automatically.
+### 2. Cloud/service mapping callouts — 3 tabs (1.5 hours)
+Add `.msl-cloud-map` reveal panels (styled like `.msl-reveal-panel`) inside relevant AccordionMCQ reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab. Each scenario that involves a technology choice gets a "In production, this maps to:" AWS service callout. E.g., "PSI drift → SageMaker Model Monitor + CloudWatch alarm", "Model promotion gate → SageMaker Model Registry approval workflow". Pure content work — no architectural change. Closes the gap between judgment simulation and interview-ready AWS fluency. Add `.msl-cloud-map` class to index.css first (same base as `.msl-reveal-panel` but with a cloud/enterprise accent).
 
-### 3. Project Lab tab — Phase 1 skeleton (2–3 hours)
-New tab `ProjectLabTab.jsx`. Sequential notebook pattern. Phase 1 only: data ingestion + EDA. 3 Pyodide cells (load UCI/sklearn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 judgment checkpoints as AccordionMCQ between cells (spotting skew → right transformation choice; null pattern → imputation strategy). LocalStorage key `msl_projectlab_p1`. No deployment scaffold yet — that's Phase 5. See IDEAS.md Tier 1 for full spec. Add to App.jsx (practice zone, premium), import in ALL_TABS.
+### 3. SpotTheFlawTab — expand to 12 scenarios (1 hour)
+Add stf11 (Metric Mismatch — NDCG vs CTR divergence: offline ranking metric improves but online CTR drops) and stf12 (Labeling Artifact — annotator bias: 3 annotators, majority-vote labels on medical imaging → systematic error on ambiguous boundary cases). Flaw count strip updates automatically as total increases.
 
-### 4. New user cold-state banner (45 min)
-Detect first visit: no `msl_tab`, `msl_score:*`, or `msl_access` in localStorage. Show a one-time orientation banner at top of HomeTab: "Start here → Feature Engineering (free) or enter access code DAI2026 for full access." Banner disappears after first tab visit (set `msl_onboarded: 1`). Do not add to Today zone sidebar — HomeTab only. See IDEAS.md Tier 1.
+### 4. Project Lab tab — Phase 1 skeleton (2–3 hours)
+New tab `ProjectLabTab.jsx`. Sequential notebook. Phase 1: data ingestion + EDA — 3 Pyodide cells (load sklearn churn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 AccordionMCQ judgment checkpoints between cells. LocalStorage key `msl_projectlab_churn_data`. Add to App.jsx (practice zone, premium). See IDEAS.md Tier 1 for full spec.
 
-### 5. Emoji → SVG pass — HomeTab + CombinatorTab (1 hour)
-HomeTab and CombinatorTab are the highest-traffic tabs still using decorative emoji. Grep both files for emoji codepoints (🎯🔥⚡🧪📊🎓 etc). Replace decorative ones with inline `<svg>` using `currentColor`. Functional glyphs (✓ ✗ →) stay as-is. Audit #016 in AUDITS.md has the full inventory. One commit per file.
+### 5. New user cold-state banner (45 min)
+Detect first visit: no `msl_tab`, no `msl_score:*`, no `msl_access` in localStorage. Show one-time orientation banner at top of HomeTab: "New here? Start with Feature Engineering (free) or enter code DAI2026 for full access." Disappears after first tab visit (write `msl_onboarded: 1`). HomeTab only — not Today sidebar.
 
 ---
 
@@ -49,6 +49,7 @@ Nothing currently blocked.
 - ~~Apply .msl-option-btn to ClassicalMLTab (v4.28) — NaiveBayes module + option-btn + ForwardPointer~~
 - ~~ForwardPointers to MLOpsDeployTab, CombinatorTab, DataScienceTab (v4.28)~~
 - ~~Spot the Flaw tab full build (v4.28) — 10 scenarios, 5 flaw categories, Interview zone routing, GlobalSearch indexed~~
+- ~~All COMING_SOON stubs cleared (v4.29) — 10 modules across 6 tabs: AttentionHeadVisualizer, ArchDecisionLab, ExperimentDesignFailures, CausalDAGExplorer, StreamingStabilityLab, DecisionBoundaryLab, CompanyTracks, CrossDomainChallenge, SpacedRepQueue, WeakDomainDrill~~
 
 ---
 

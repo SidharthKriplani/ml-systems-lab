@@ -944,6 +944,209 @@ function MemoryPressureSimulator() {
   )
 }
 
+// ─── Streaming Stability Lab ─────────────────────────────────────────────────
+function StreamingStabilityLab() {
+  const INPUT_RATES = [100, 1000, 10000, 50000, 100000]
+  const INPUT_RATE_LABELS = ['100', '1k', '10k', '50k', '100k']
+  const PROCESSING_STEPS = [50, 100, 250, 500, 1000, 2000, 5000]
+  const TRIGGER_OPTIONS = ['Continuous', '250ms', '1s', '5s', '30s', '1min']
+  const WATERMARK_OPTIONS = ['None', '30s', '2min', '10min', '1hr']
+  const STATE_OPTIONS = ['Stateless map', 'Stateful aggregation', 'Stream-stream join', 'Deduplication']
+  const CHECKPOINT_OPTIONS = ['Local disk', 'HDFS/S3 (fast)', 'S3 (eventual consistency)']
+
+  const [inputRateIdx, setInputRateIdx] = useState(1)
+  const [processingTime, setProcessingTime] = useState(250)
+  const [triggerInterval, setTriggerInterval] = useState('1s')
+  const [watermark, setWatermark] = useState('30s')
+  const [stateOp, setStateOp] = useState('Stateless map')
+  const [checkpointStorage, setCheckpointStorage] = useState('HDFS/S3 (fast)')
+
+  const inputRate = INPUT_RATES[inputRateIdx]
+
+  const triggerMs = { 'Continuous': 100, '250ms': 250, '1s': 1000, '5s': 5000, '30s': 30000, '1min': 60000 }[triggerInterval]
+  const eventsPerBatch = (inputRate * triggerMs) / 1000
+  const stateMultiplier = { 'Stateless map': 1.0, 'Stateful aggregation': 1.4, 'Stream-stream join': 2.2, 'Deduplication': 1.8 }[stateOp]
+  const checkpointPenalty = { 'Local disk': 0, 'HDFS/S3 (fast)': 200, 'S3 (eventual consistency)': 800 }[checkpointStorage]
+  const effectiveProcessing = processingTime * stateMultiplier + checkpointPenalty
+  const adjustedLag = effectiveProcessing / triggerMs
+
+  // Verdict determination (priority order)
+  let verdict, verdictColor, verdictExplanation
+  if (adjustedLag > 2.5) {
+    verdict = 'CRITICAL — Trigger Backpressure'
+    verdictColor = 'var(--rose)'
+    verdictExplanation = `Effective processing time (${effectiveProcessing.toFixed(0)}ms) is ${adjustedLag.toFixed(2)}× the trigger interval (${triggerMs}ms). Micro-batches are piling up faster than they can be processed. Spark will detect this and kill the streaming query with a backpressure exception. Reduce processing time, increase trigger interval, or add more executors.`
+  } else if (adjustedLag > 1.1) {
+    verdict = 'WARNING — Falling Behind'
+    verdictColor = 'var(--ember)'
+    verdictExplanation = `Processing time exceeds trigger interval by ${((adjustedLag - 1) * 100).toFixed(0)}%. The streaming query hasn't triggered backpressure yet, but latency is growing unboundedly. Each batch takes longer than the next trigger fires. Left uncorrected, this will eventually hit the backpressure threshold.`
+  } else if (stateOp === 'Stream-stream join' && watermark === 'None') {
+    verdict = 'STATE RISK'
+    verdictColor = 'var(--ember)'
+    verdictExplanation = `Stream-stream joins without a watermark cause unbounded state accumulation. Spark must buffer all events on both sides indefinitely waiting for matching keys. At ${inputRate.toLocaleString()} events/sec, state will exhaust executor memory within hours. Set a watermark to bound the join window.`
+  } else if (checkpointStorage === 'S3 (eventual consistency)' && triggerInterval === 'Continuous') {
+    verdict = 'CHECKPOINT STALL'
+    verdictColor = 'var(--ember)'
+    verdictExplanation = `S3's eventual consistency model conflicts with continuous trigger mode. Rapid checkpoint writes at 100ms intervals can result in stale reads, checkpoint conflicts, and query restarts. Use HDFS or S3 with strong consistency (AWS S3 now supports this), or increase the trigger interval to at least 1s.`
+  } else {
+    verdict = 'HEALTHY'
+    verdictColor = 'var(--mint)'
+    verdictExplanation = `Processing lag ratio of ${adjustedLag.toFixed(2)}× is within acceptable bounds. The streaming query should maintain near-real-time processing without backpressure. Monitor lag in Spark UI → Structured Streaming tab — watch for gradual increases in batch duration.`
+  }
+
+  const sliderStyle = { width: '100%', accentColor: 'var(--prime)' }
+  const labelStyle = { fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
+  const valueStyle = { fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', fontWeight: 700 }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Interactive Simulator</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Streaming Stability Lab</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Configure a Structured Streaming job. The calculator tells you whether it will be stable, falling behind, or about to die — with the math shown.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Left: Input + Processing controls */}
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div className="section-eyebrow">Input &amp; Processing</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>Input Rate (events/sec)</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {INPUT_RATE_LABELS.map((label, i) => (
+                <button key={i} onClick={() => setInputRateIdx(i)} style={{
+                  padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
+                  border: `1px solid ${inputRateIdx === i ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: inputRateIdx === i ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  color: inputRateIdx === i ? 'var(--prime)' : 'var(--ink-low)',
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={labelStyle}>Processing Time / Batch</span>
+              <span style={valueStyle}>{processingTime}ms</span>
+            </div>
+            <input type="range" style={sliderStyle}
+              min={0} max={PROCESSING_STEPS.length - 1} step={1}
+              value={PROCESSING_STEPS.indexOf(processingTime) === -1 ? 2 : PROCESSING_STEPS.indexOf(processingTime)}
+              onChange={e => setProcessingTime(PROCESSING_STEPS[+e.target.value])} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+              <span>50ms</span><span>5000ms</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>Trigger Interval</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {TRIGGER_OPTIONS.map(opt => (
+                <button key={opt} onClick={() => setTriggerInterval(opt)} style={{
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
+                  border: `1px solid ${triggerInterval === opt ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: triggerInterval === opt ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  color: triggerInterval === opt ? 'var(--prime)' : 'var(--ink-low)',
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: State + Checkpoint controls */}
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div className="section-eyebrow">State &amp; Checkpointing</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>Watermark Delay</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {WATERMARK_OPTIONS.map(opt => (
+                <button key={opt} onClick={() => setWatermark(opt)} style={{
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
+                  border: `1px solid ${watermark === opt ? 'var(--sky)' : 'var(--rim)'}`,
+                  background: watermark === opt ? 'rgba(56,189,248,0.12)' : 'transparent',
+                  color: watermark === opt ? 'var(--sky)' : 'var(--ink-low)',
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>State Operation</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {STATE_OPTIONS.map(opt => (
+                <button key={opt} onClick={() => setStateOp(opt)} style={{
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
+                  border: `1px solid ${stateOp === opt ? 'var(--violet)' : 'var(--rim)'}`,
+                  background: stateOp === opt ? 'rgba(139,92,246,0.12)' : 'transparent',
+                  color: stateOp === opt ? 'var(--violet)' : 'var(--ink-low)',
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>Checkpoint Storage</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {CHECKPOINT_OPTIONS.map(opt => (
+                <button key={opt} onClick={() => setCheckpointStorage(opt)} style={{
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
+                  border: `1px solid ${checkpointStorage === opt ? 'var(--ember)' : 'var(--rim)'}`,
+                  background: checkpointStorage === opt ? 'rgba(249,115,22,0.12)' : 'transparent',
+                  color: checkpointStorage === opt ? 'var(--ember)' : 'var(--ink-low)',
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Verdict */}
+      <div style={{ background: 'var(--depth)', border: `1px solid ${verdictColor}40`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '18px', fontWeight: 800, color: verdictColor, fontFamily: 'var(--font-sans)', letterSpacing: '-0.02em',
+            padding: '4px 14px', borderRadius: '8px', background: `${verdictColor}18`, border: `1px solid ${verdictColor}40` }}>
+            {verdict}
+          </span>
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{verdictExplanation}</p>
+      </div>
+
+      {/* Metrics table */}
+      <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px' }}>
+        <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Calculation Breakdown</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {[
+            ['Events per batch', eventsPerBatch >= 1000 ? `${(eventsPerBatch / 1000).toFixed(1)}k` : eventsPerBatch.toLocaleString()],
+            ['Trigger budget', `${triggerMs.toLocaleString()} ms`],
+            ['Base processing time', `${processingTime} ms`],
+            ['State overhead', `${stateMultiplier}×`],
+            ['Checkpoint penalty', `+${checkpointPenalty} ms`],
+            ['Effective processing', `${effectiveProcessing.toFixed(0)} ms`],
+            ['Processing lag ratio', `${adjustedLag.toFixed(2)}×`],
+          ].map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--rim)' }}>
+              <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{label}</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600,
+                color: label === 'Processing lag ratio' ? (adjustedLag > 1.1 ? verdictColor : 'var(--mint)') : 'var(--ink-mid)' }}>
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Insight callout */}
+      <div className="msl-hint">
+        Structured Streaming guarantees exactly-once only with idempotent sinks and checkpoint recovery. A lag ratio &gt; 1.0 doesn't mean data loss — it means latency grows unboundedly until backpressure triggers.
+      </div>
+    </div>
+  )
+}
+
 // ─── Forward Pointer ─────────────────────────────────────────────────────────
 function ForwardPointer({ label, tab, onNavigate, accent = 'var(--prime)' }) {
   return (
@@ -964,20 +1167,11 @@ const MODULES = [
   { id: 'broadcast',       label: 'Broadcast Joins',          icon: '', component: BroadcastJoinDecisions },
   { id: 'oom',             label: 'OOM Diagnosis',            icon: '', component: OOMDiagnosis },
   { id: 'memory_pressure', label: 'Memory Pressure',          icon: '', component: MemoryPressureSimulator },
+  { id: 'streaming',       label: 'Streaming Stability Lab',  icon: '', component: StreamingStabilityLab },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Streaming Stability Lab',
-    userBrief: 'Stateful streaming edge cases that break silently: late data arriving past the watermark, checkpoint corruption, and state explosion on unbounded keyed streams.',
-    devBrief: {
-      micro: 'AccordionMCQ, 4 scenarios covering Spark Structured Streaming in production. Reveals include concrete config recommendations: watermarkDelay values, checkpointLocation patterns, state timeout settings.',
-      macro: 'SparkLab currently covers batch. Streaming is a separate failure-mode class that appears in 30–40% of Spark questions at FAANG. Adds the missing half of the Spark interview surface.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function SparkLabTab({ onNavigate }) {
   const [active, setActive] = useState('shuffle')

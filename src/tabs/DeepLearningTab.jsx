@@ -710,6 +710,266 @@ function TransformerArchitecture() {
   )
 }
 
+// ── Attention Head Visualizer ─────────────────────────────────────────────────
+const AHV_TOKENS = ['The', 'model', 'drift', 'was', 'silent', 'until', 'deployment']
+
+// Pre-computed 7x7 attention weight matrices — each row is a query token, each column is a key token
+// Values normalised so each row sums to ~1.0
+const AHV_HEADS = [
+  // Head 1 — Local/syntactic: diagonal-dominant, neighbors get high weight
+  [
+    [0.55, 0.30, 0.06, 0.04, 0.02, 0.02, 0.01],
+    [0.28, 0.40, 0.22, 0.06, 0.02, 0.01, 0.01],
+    [0.05, 0.22, 0.45, 0.20, 0.05, 0.02, 0.01],
+    [0.03, 0.07, 0.21, 0.42, 0.20, 0.05, 0.02],
+    [0.02, 0.03, 0.06, 0.20, 0.44, 0.21, 0.04],
+    [0.01, 0.02, 0.03, 0.06, 0.22, 0.46, 0.20],
+    [0.01, 0.01, 0.02, 0.03, 0.05, 0.28, 0.60],
+  ],
+  // Head 2 — Semantic focus: drift/deployment/silent cluster
+  [
+    [0.20, 0.18, 0.12, 0.14, 0.12, 0.12, 0.12],
+    [0.10, 0.18, 0.40, 0.10, 0.08, 0.07, 0.07],
+    [0.06, 0.10, 0.28, 0.08, 0.22, 0.08, 0.18],
+    [0.14, 0.12, 0.10, 0.22, 0.14, 0.14, 0.14],
+    [0.08, 0.06, 0.24, 0.08, 0.26, 0.10, 0.18],
+    [0.10, 0.09, 0.12, 0.10, 0.14, 0.22, 0.23],
+    [0.06, 0.08, 0.20, 0.08, 0.20, 0.10, 0.28],
+  ],
+  // Head 3 — Positional: boundary awareness — first and last token attended to from all
+  [
+    [0.45, 0.10, 0.08, 0.08, 0.08, 0.08, 0.13],
+    [0.28, 0.16, 0.10, 0.10, 0.10, 0.10, 0.16],
+    [0.26, 0.12, 0.14, 0.12, 0.12, 0.10, 0.14],
+    [0.24, 0.10, 0.12, 0.16, 0.12, 0.10, 0.16],
+    [0.24, 0.10, 0.12, 0.10, 0.14, 0.12, 0.18],
+    [0.25, 0.10, 0.10, 0.10, 0.10, 0.14, 0.21],
+    [0.22, 0.08, 0.08, 0.08, 0.08, 0.12, 0.34],
+  ],
+  // Head 4 — Subject-predicate: model→was, drift→silent, deployment self-attends
+  [
+    [0.22, 0.20, 0.14, 0.16, 0.12, 0.10, 0.06],
+    [0.10, 0.18, 0.14, 0.38, 0.10, 0.06, 0.04],
+    [0.08, 0.10, 0.20, 0.10, 0.36, 0.10, 0.06],
+    [0.16, 0.20, 0.12, 0.26, 0.12, 0.08, 0.06],
+    [0.08, 0.10, 0.18, 0.10, 0.30, 0.16, 0.08],
+    [0.10, 0.08, 0.12, 0.10, 0.14, 0.30, 0.16],
+    [0.06, 0.06, 0.10, 0.08, 0.10, 0.14, 0.46],
+  ],
+]
+
+const AHV_INSIGHTS = [
+  'Local attention — this head tracks immediate context. Common in early layers; helps with syntax and proximity.',
+  "Semantic grouping — 'drift', 'silent', 'deployment' form a semantic cluster. This head learned domain co-occurrence.",
+  'Boundary detection — high attention to sentence-initial and final tokens. Encodes position structure.',
+  'Subject-predicate tracking — verb-subject dependencies attended here. Common in mid-to-late layers.',
+]
+
+function AHVCell({ value, rowIdx, colIdx, selectedRow, onHover, onLeave, hoveredCell }) {
+  const isHovered = hoveredCell && hoveredCell.row === rowIdx && hoveredCell.col === colIdx
+  const isDimmed  = selectedRow !== null && selectedRow !== rowIdx
+  const alpha     = isDimmed ? value * 0.2 : value
+
+  return (
+    <div
+      onMouseEnter={() => onHover(rowIdx, colIdx)}
+      onMouseLeave={onLeave}
+      style={{
+        width: '36px', height: '36px', borderRadius: '4px', cursor: 'default',
+        background: `rgba(99,102,241, ${alpha * 0.85 + 0.05})`,
+        border: isHovered ? '1.5px solid var(--prime)' : '1px solid transparent',
+        transition: 'background 0.15s, border 0.1s',
+        position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: value > 0.35 ? 'var(--ink-hi)' : 'var(--ink-ghost)', userSelect: 'none' }}>
+        {value.toFixed(2)}
+      </span>
+    </div>
+  )
+}
+
+function AttentionHeadVisualizer() {
+  const [activeHead, setActiveHead]     = useState(0)
+  const [hoveredCell, setHoveredCell]   = useState(null)
+  const [selectedRow, setSelectedRow]   = useState(null)
+
+  const matrix = AHV_HEADS[activeHead]
+
+  function handleHover(row, col) { setHoveredCell({ row, col }) }
+  function handleLeave()          { setHoveredCell(null) }
+  function handleRowClick(i)      { setSelectedRow(prev => prev === i ? null : i) }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Header */}
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>TRANSFORMER INTERNALS</div>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>Attention Head Visualizer</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px', margin: 0 }}>
+          Pre-computed attention weights for a 4-head transformer on a production ML sentence. Select a head, hover cells, click a row label to focus.
+        </p>
+      </div>
+
+      {/* Head selector */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {[0,1,2,3].map(h => (
+          <button key={h} onClick={() => { setActiveHead(h); setSelectedRow(null); setHoveredCell(null) }}
+            style={{
+              padding: '7px 16px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+              border: `1px solid ${activeHead === h ? 'var(--violet)' : 'var(--rim)'}`,
+              background: activeHead === h ? 'rgba(99,102,241,0.12)' : 'transparent',
+              color: activeHead === h ? 'var(--violet)' : 'var(--ink-low)',
+            }}>
+            Head {h + 1}
+          </button>
+        ))}
+      </div>
+
+      {/* Heatmap */}
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0px' }}>
+          {/* Column labels (key tokens) */}
+          <div style={{ display: 'flex', paddingLeft: '72px', gap: '4px', marginBottom: '4px' }}>
+            {AHV_TOKENS.map(tok => (
+              <div key={tok} style={{ width: '36px', textAlign: 'center', fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {tok}
+              </div>
+            ))}
+          </div>
+
+          {/* Row labels + cells */}
+          {AHV_TOKENS.map((tok, rowIdx) => (
+            <div key={tok} style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+              <button
+                onClick={() => handleRowClick(rowIdx)}
+                style={{
+                  width: '68px', textAlign: 'right', paddingRight: '8px', fontSize: '10px', fontFamily: 'var(--font-mono)',
+                  color: selectedRow === rowIdx ? 'var(--violet)' : 'var(--ink-mid)',
+                  fontWeight: selectedRow === rowIdx ? 700 : 400,
+                  background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.15s',
+                  whiteSpace: 'nowrap',
+                }}>
+                {tok}
+              </button>
+              {matrix[rowIdx].map((val, colIdx) => (
+                <AHVCell
+                  key={colIdx}
+                  value={val}
+                  rowIdx={rowIdx}
+                  colIdx={colIdx}
+                  selectedRow={selectedRow}
+                  onHover={handleHover}
+                  onLeave={handleLeave}
+                  hoveredCell={hoveredCell}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      {hoveredCell && (
+        <div style={{ padding: '8px 12px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', alignSelf: 'flex-start', maxWidth: '320px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-hi)' }}>
+            '{AHV_TOKENS[hoveredCell.row]}' → '{AHV_TOKENS[hoveredCell.col]}'
+          </span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--violet)', marginLeft: '8px' }}>
+            weight = {AHV_HEADS[activeHead][hoveredCell.row][hoveredCell.col].toFixed(3)}
+          </span>
+        </div>
+      )}
+
+      {/* Head insight card */}
+      <div style={{ padding: '14px 16px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Head {activeHead + 1} — What this captures</div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{AHV_INSIGHTS[activeHead]}</p>
+      </div>
+
+      {/* Hint callout */}
+      <div className="msl-hint">
+        In practice, different heads specialize: some track syntax, others long-range dependencies. BERT's heads 8–10 are known to track coreference. Click a row label to highlight that query token's attention pattern across all key tokens.
+      </div>
+    </div>
+  )
+}
+
+// ── Architecture Decision Lab ─────────────────────────────────────────────────
+const ARCH_SCENARIOS = [
+  {
+    id: 'cnn_wins',
+    title: 'When CNNs Still Win',
+    context: 'Your team is building a medical image classifier for retinal scans. Dataset: 4,200 labeled images (limited — annotation is expensive). Task: binary detection of diabetic retinopathy. Compute budget: inference on a hospital workstation, p95 latency < 80ms. Team ML expertise: strong in CNNs, no Transformer fine-tuning experience.',
+    question: 'Which architecture choice is correct for this production deployment?',
+    options: [
+      'Vision Transformer (ViT) pretrained on ImageNet-21k — superior attention to global features',
+      'EfficientNet-B3 with ImageNet pretraining and fine-tuning — strong inductive bias for images, data-efficient',
+      'Custom CNN trained from scratch — full control, no transfer learning overhead',
+      'ResNet-50 with random initialization — avoids distribution shift from natural image pretraining',
+    ],
+    answer: 1,
+    diagnosis: 'CNNs dominate on small medical imaging datasets — ViT needs 10k+ images to generalize.',
+    explanation: 'ViT requires significantly more data to generalize — typically 10k+ images. With 4,200 samples, the inductive biases in CNNs (local receptive fields, translation equivariance) are a feature, not a limitation. EfficientNet-B3 with ImageNet fine-tuning has strong data efficiency and hits the latency budget. Training from scratch wastes the spatial prior and risks overfitting.',
+    fix: 'Use CNNs when: dataset < 10k images, spatial locality matters (images, audio spectrograms), or latency budget is tight. ViT wins when: large dataset available, global context is critical, and you can afford the pretraining cost. Always benchmark both on your data before committing.',
+  },
+  {
+    id: 'lstm_vs_transformer_ts',
+    title: 'LSTM vs Transformer for Time Series',
+    context: 'A fintech team is forecasting next-day transaction volume for 500 merchant accounts. The series is non-stationary, shows weekly seasonality, has 3 years of history per merchant. Features: transaction count, day-of-week, merchant category, rolling averages. Inference: batch job, runs nightly. Latency: irrelevant.',
+    question: 'Which architecture should be chosen for this forecasting problem?',
+    options: [
+      'Vanilla LSTM — handles sequential dependencies, proven on financial time series',
+      'Temporal Fusion Transformer (TFT) — attention to both static and temporal features, interpretable attention weights',
+      'WaveNet — dilated convolutions handle long sequences efficiently',
+      'BERT with time-series tokenization — pretrained language representations transfer to numerical patterns',
+    ],
+    answer: 1,
+    diagnosis: 'TFT — purpose-built for multi-variate forecasting with static + temporal features and interpretability.',
+    explanation: 'TFT was designed explicitly for this case: multi-horizon forecasting with heterogeneous static + temporal features. Its attention mechanism identifies which time steps and which features drove each forecast — essential for fintech interpretability requirements. LSTM works but struggles with long-range dependencies past ~200 steps. WaveNet is strong but lacks multi-variate feature integration. BERT tokenization for numerical series is a research prototype, not a production pattern.',
+    fix: 'For production time series with mixed static/temporal features and interpretability requirements, TFT is the current standard. For univariate sequence modeling with short windows, LSTM/GRU is still competitive and simpler to operate. Never use NLP-pretrained transformers on numerical series without strong evidence of transfer.',
+  },
+  {
+    id: 'moe_vs_dense_cpu',
+    title: 'Mixture of Experts vs Dense — Inference Budget',
+    context: 'A team is deploying a text classification model for support ticket routing (12 categories). The model must run on a CPU-only inference fleet with p99 latency < 40ms. The training team wants to use a Mixture-of-Experts (MoE) model — they argue it has higher capacity per FLOP. Throughput: 5,000 tickets/hour. No GPU available in production.',
+    question: 'Should the team deploy the MoE model?',
+    options: [
+      'Yes — MoE uses conditional computation so active parameters per inference are low, meeting the latency budget',
+      'No — MoE models have routing overhead and sparse activation patterns that are inefficient on CPU; a dense model with fewer parameters is faster',
+      'Yes — the 12-category task justifies the routing complexity since each category activates a specialized expert',
+      'No — MoE is only useful for generation tasks, not classification',
+    ],
+    answer: 1,
+    diagnosis: 'MoE is GPU/TPU-optimized — routing overhead and sparse activations destroy CPU latency.',
+    explanation: "MoE's theoretical FLOP efficiency assumes GPU with sparse matrix operations support. On CPU, the routing step itself, the conditional branching, and the sparse activation patterns kill latency — you end up loading more memory and branching more than a compact dense model. For a 12-class routing task on CPU, a fine-tuned DistilBERT or a shallow dense transformer is the correct choice. The 'fewer active parameters' argument only holds when the hardware can exploit sparsity.",
+    fix: "MoE wins in: multi-task generalization at scale with GPU/TPU support, cases where you need 10x capacity at same training cost. MoE loses in: CPU inference, latency-constrained serving, small-task specialization. Always profile on your target hardware — theoretical FLOPs don't translate directly to wall-clock latency on CPU.",
+  },
+]
+
+function ArchDecisionLab() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Architecture Decision Lab</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
+          CNN vs Transformer vs LSTM vs MoE — each has the right problem and the wrong one. 3 production specs where architecture choice decides success or failure.
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+        {[['CNN', 'Small datasets, spatial locality', 'var(--mint)'], ['TFT', 'Multi-variate time series', 'var(--sky)'], ['MoE', 'Scale — GPU/TPU only', 'var(--violet)']].map(([name, desc, color]) => (
+          <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
+            <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
+          </div>
+        ))}
+      </div>
+      <AccordionMCQ scenarios={ARCH_SCENARIOS} accentColor="var(--sky)" contextLabel="Production Spec" storageKey="dl_arch" />
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const DL_MODULES = [
   { id: 'diagnosis',    label: 'Training Failures',       icon: '', component: TrainingFailureDiagnosis },
@@ -717,28 +977,12 @@ const DL_MODULES = [
   { id: 'optimizer',   label: 'Optimizer Comparison',     icon: '', component: OptimizerComparison },
   { id: 'regularize',  label: 'Regularization Decisions', icon: '', component: RegularizationDecisions },
   { id: 'transformer', label: 'Transformer Architecture', icon: '', component: TransformerArchitecture },
+  { id: 'attention',   label: 'Attention Head Visualizer', icon: '', component: AttentionHeadVisualizer },
+  { id: 'arch_decisions', label: 'Architecture Decision Lab', icon: '', component: ArchDecisionLab },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Attention Head Visualizer',
-    userBrief: 'Run interactive self-attention on a sample sentence and inspect per-head weight patterns. Makes "what does an attention head actually attend to?" concrete before the interview asks.',
-    devBrief: {
-      micro: 'Pyodide numpy-only self-attention (no torch — no wasm build needed). Fixed tokenized input, single-layer multi-head, renders attention weight heatmap via matplotlib base64 export. User selects which head to inspect via radio buttons. ~3h.',
-      macro: 'Training Lab covers failure modes in training. This covers understanding the architecture post-training — completing the arc from "can\'t train it" to "can\'t explain it." Should be added between Transformer Architecture and a future Architecture Decisions module.',
-    },
-  },
-  {
-    label: 'Architecture Decision Lab',
-    userBrief: 'ConvNet vs RNN vs Transformer for non-NLP tasks. Given a problem spec — temporal signal, image patches, graph structure — choose and justify the architecture from first principles.',
-    devBrief: {
-      micro: 'AccordionMCQ, 4 scenarios. Framing: production context (latency budget, dataset size, team expertise). Each reveal explains the inductive bias that makes the architecture wrong or right for this input structure. ~2h content + ~30min wiring.',
-      macro: 'Bridges Training Lab (how models fail during training) with DL Serving (how models fail in production). The missing middle: when to choose each architecture family before you even start training.',
-    },
-  },
-]
+const COMING_SOON = []
 
 
 function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {

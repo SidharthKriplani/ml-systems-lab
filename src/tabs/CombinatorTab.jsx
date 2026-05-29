@@ -942,26 +942,40 @@ function formatTime(seconds) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-// ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
+// ── Company Tracks ────────────────────────────────────────────────────────────
+const COMPANY_TRACKS = [
   {
-    label: 'Company-Calibrated Tracks',
-    userBrief: "Google MLE, Meta MLE, Stripe DS — question sets weighted by what each company's interview loop actually tests. No generic mix for targeted preparation.",
-    devBrief: {
-      micro: 'Add COMPANY_TRACKS config mapping company name to question ID subsets. UI: optional company selector on the config screen before session start. Questions biased toward that company\'s known focus domains based on public prep guides.',
-      macro: 'Current session is random-mix or manual domain selection. Company tracks give motivated preparation — "I\'m interviewing at Google in 2 weeks, give me their loop." Most requested feature category for interview prep tools.',
-    },
+    id: 'google_mle',
+    label: 'Google MLE',
+    desc: 'System Design + Spark + MLOps heavy. Production scale, latency constraints.',
+    domains: ['ML Systems', 'MLOps', 'Optimization', 'Model Evaluation'],
+    icon: 'G',
   },
   {
-    label: 'Cross-Domain Challenge Mode',
-    userBrief: 'A single session that forces answers across 3+ domains in sequence, simulating the breadth expected at Senior+ where back-to-back context switching is the actual test.',
-    devBrief: {
-      micro: 'Session config option: "Challenge Mode" enforces minimum 3 distinct domains, no domain repeat in first 15 questions. Post-debrief shows cross-domain reasoning gaps vs. single-domain performance delta.',
-      macro: 'Current Combinator is random-mix or single-domain. Challenge mode trains the breadth expected at Staff+ loops. Differentiated from Trainer (which is drill-focused) by the time constraint and cross-domain sequencing.',
-    },
+    id: 'meta_mle',
+    label: 'Meta MLE',
+    desc: 'Feature Engineering + Model Eval + ranking systems + A/B at scale.',
+    domains: ['Feature Engineering', 'Model Evaluation', 'Ranking & Retrieval', 'Experiment Design'],
+    icon: 'M',
+  },
+  {
+    id: 'stripe_ds',
+    label: 'Stripe DS',
+    desc: 'Causal inference, A/B testing, fraud modeling, business metrics.',
+    domains: ['Statistics & Probability', 'Model Evaluation', 'MLOps', 'Experiment Design'],
+    icon: 'S',
+  },
+  {
+    id: 'startup_ml',
+    label: 'Startup/Growth',
+    desc: 'Full-stack ML: features → model → deploy → monitor. Breadth over depth.',
+    domains: ['Feature Engineering', 'MLOps', 'Model Evaluation', 'ML Systems'],
+    icon: '⚡',
   },
 ]
+
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+const COMING_SOON = []
 
 // ─── ForwardPointer ───────────────────────────────────────────────────────────
 function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
@@ -994,9 +1008,12 @@ export default function CombinatorTab({ onNavigate }) {
 
   const [screen, setScreen] = useState(_saved?.screen || 'config')
   const [duration, setDuration] = useState(_saved?.duration || 30)
+  const [selectedTrack, setSelectedTrack] = useState(null)
+  const [challengeMode, setChallengeMode] = useState(false)
   const [questions, setQuestions] = useState(() => {
     if (!_saved?.questionIds) return []
-    return _saved.questionIds.map(id => QUESTIONS.find(q => q.id === id)).filter(Boolean)
+    const allQ = [...MCQ_QUESTIONS, ...SA_QUESTIONS]
+    return _saved.questionIds.map(id => allQ.find(q => String(q.id) === String(id))).filter(Boolean)
   })
   const [currentIdx, setCurrentIdx] = useState(_saved?.currentIdx || 0)
   const [userAnswers, setUserAnswers] = useState(_saved?.userAnswers || {})
@@ -1014,7 +1031,29 @@ export default function CombinatorTab({ onNavigate }) {
   // ── Config → Session ──
   function startSession() {
     const cfg = DURATION_CONFIG[duration]
-    const qs = buildQuestionSet(cfg.totalQ)
+    let totalQ = cfg.totalQ
+    if (challengeMode) totalQ = Math.max(totalQ, 20)
+
+    let qs
+    if (challengeMode) {
+      // Force all domains, interleave to ensure breadth
+      const allMCQ = [...MCQ_QUESTIONS].sort(() => Math.random() - 0.5)
+      const mcqCount = Math.round(totalQ * 0.8)
+      const saCount = totalQ - mcqCount
+      const shuffledSA = [...SA_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, saCount)
+      qs = [...allMCQ.slice(0, mcqCount), ...shuffledSA]
+    } else if (selectedTrack) {
+      const trackDomains = new Set(selectedTrack.domains)
+      const filteredMCQ = MCQ_QUESTIONS.filter(q => trackDomains.has(q.domain))
+      const shuffledMCQ = [...filteredMCQ].sort(() => Math.random() - 0.5)
+      const mcqCount = Math.round(totalQ * 0.8)
+      const saCount = totalQ - mcqCount
+      const shuffledSA = [...SA_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, saCount)
+      qs = [...shuffledMCQ.slice(0, mcqCount), ...shuffledSA]
+    } else {
+      qs = buildQuestionSet(totalQ)
+    }
+
     setQuestions(qs)
     setCurrentIdx(0)
     setUserAnswers({})
@@ -1218,6 +1257,119 @@ export default function CombinatorTab({ onNavigate }) {
           </div>
         </div>
 
+        {/* Company Tracks */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <p className="section-eyebrow" style={{ marginBottom: '0.75rem' }}>
+            Company Track <span style={{ color: 'var(--ink-ghost)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.625rem' }}>
+            {COMPANY_TRACKS.map(track => {
+              const active = selectedTrack?.id === track.id
+              return (
+                <button
+                  key={track.id}
+                  onClick={() => {
+                    if (active) {
+                      setSelectedTrack(null)
+                    } else {
+                      setSelectedTrack(track)
+                      if (challengeMode) setChallengeMode(false)
+                    }
+                  }}
+                  style={{
+                    textAlign: 'left',
+                    padding: '0.85rem 1rem',
+                    borderRadius: 10,
+                    border: `2px solid ${active ? 'var(--prime)' : 'var(--rim)'}`,
+                    background: active ? 'rgba(240,165,0,0.1)' : 'var(--surface)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: 26, height: 26, borderRadius: 6,
+                      background: active ? 'var(--prime)' : 'var(--depth)',
+                      color: active ? 'var(--void)' : 'var(--ink-mid)',
+                      fontSize: '0.75rem', fontWeight: 700,
+                    }}>{track.icon}</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: active ? 'var(--prime)' : 'var(--ink-hi)' }}>
+                      {track.label}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--ink-low)', margin: '0 0 0.45rem', lineHeight: 1.4 }}>
+                    {track.desc}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                    {track.domains.map(d => (
+                      <span key={d} style={{
+                        fontSize: '0.68rem', padding: '0.15rem 0.45rem',
+                        borderRadius: 4, background: 'var(--depth)',
+                        color: active ? 'var(--prime)' : 'var(--ink-ghost)',
+                        border: `1px solid ${active ? 'rgba(240,165,0,0.3)' : 'var(--rim)'}`,
+                        fontFamily: 'var(--font-mono)',
+                      }}>{d}</span>
+                    ))}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Challenge Mode toggle */}
+        <button
+          onClick={() => {
+            setChallengeMode(prev => {
+              const next = !prev
+              if (next) setSelectedTrack(null)
+              return next
+            })
+          }}
+          style={{
+            width: '100%',
+            padding: '0.85rem 1rem',
+            borderRadius: 10,
+            border: `2px solid ${challengeMode ? 'var(--ember)' : 'var(--rim)'}`,
+            background: challengeMode ? 'rgba(249,115,22,0.12)' : 'var(--surface)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-sans)',
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            marginBottom: '1.5rem',
+            transition: 'all 0.15s',
+          }}
+        >
+          <span style={{
+            fontSize: '1.1rem',
+            filter: challengeMode ? 'none' : 'grayscale(1) opacity(0.5)',
+          }}>⚡</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: challengeMode ? 'var(--ember)' : 'var(--ink-hi)' }}>
+              Challenge Mode — All Domains
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--ink-low)', marginTop: '0.15rem' }}>
+              Forces all domains · 20 questions minimum · breadth test
+            </div>
+          </div>
+          <div style={{
+            marginLeft: 'auto',
+            width: 36, height: 20, borderRadius: 10,
+            background: challengeMode ? 'var(--ember)' : 'var(--rim)',
+            position: 'relative', flexShrink: 0,
+            transition: 'background 0.15s',
+          }}>
+            <div style={{
+              position: 'absolute', top: 3,
+              left: challengeMode ? 18 : 3,
+              width: 14, height: 14, borderRadius: '50%',
+              background: 'var(--void)',
+              transition: 'left 0.15s',
+            }} />
+          </div>
+        </button>
+
         <div style={{
           padding: '0.875rem 1rem',
           borderRadius: 8,
@@ -1250,21 +1402,6 @@ export default function CombinatorTab({ onNavigate }) {
         >
           Start Session
         </button>
-        {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
-        <div style={{ marginTop: '48px' }}>
-          <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
-            {COMING_SOON.map(m => (
-              <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
-                </div>
-                <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     )
   }
@@ -1286,6 +1423,20 @@ export default function CombinatorTab({ onNavigate }) {
           }
           .combinator-pulse { animation: pulse 0.8s ease-in-out infinite; }
         `}</style>
+
+        {/* Challenge mode badge */}
+        {challengeMode && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.3rem 0.75rem', borderRadius: 99, marginBottom: '0.75rem',
+            background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
+          }}>
+            <span style={{ fontSize: '0.85rem' }}>⚡</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ember)', letterSpacing: '0.04em' }}>
+              Cross-Domain Challenge
+            </span>
+          </div>
+        )}
 
         {/* Timer + progress header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -1573,6 +1724,24 @@ export default function CombinatorTab({ onNavigate }) {
           <div style={{ color: 'var(--ink-low)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
             {questions.length} total questions · {duration} min session
           </div>
+          {challengeMode && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
+              background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)',
+            }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--ember)' }}>⚡ Cross-Domain</span>
+            </div>
+          )}
+          {selectedTrack && !challengeMode && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
+              background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
+            }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)' }}>{selectedTrack.icon} {selectedTrack.label} Track</span>
+            </div>
+          )}
           <button onClick={handleShare} style={{
             marginTop: '1rem', background: 'none', border: '1px solid var(--rim)',
             borderRadius: 8, padding: '0.45rem 1.1rem', fontSize: '0.82rem',

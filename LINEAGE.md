@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.29 — All COMING_SOON stubs filled: 6 interactive modules, DAG explorer, decision boundary, streaming simulator (2026-05-30)
+
+**What shipped:** All remaining COMING_SOON stubs cleared across 6 tabs. Zero stubs remain in the codebase. Mix of interactive simulators, SVG visualizations, AccordionMCQ modules, and feature additions.
+
+**Modules built:**
+
+1. **DeepLearningTab — AttentionHeadVisualizer** — Pure React interactive heatmap. Fixed input: 7 ML-domain tokens ("The model drift was silent until deployment"). 4 pre-computed attention heads (local/syntactic, semantic clustering, boundary detection, subject-predicate). CSS grid of AHVCell named components (no hook-in-map). Row click highlights full query row; hover shows weight tooltip. Per-head insight card + `.msl-hint` callout.
+
+2. **DeepLearningTab — ArchDecisionLab** — AccordionMCQ, 3 scenarios: CNN vs ViT for small medical image dataset (inductive bias + data efficiency), TFT vs LSTM for fintech time series (static+temporal features), MoE vs dense on CPU-only inference fleet (sparsity doesn't help on CPU). `msl_score:dl_arch`. Accent `var(--sky)`.
+
+3. **CausalInferenceTab — ExperimentDesignFailures** — AccordionMCQ, 3 scenarios: SRM (7.4% ratio deviation invalidates p-value), Novelty Effect (engagement spike decays — 18% week-1 lift ≠ 18% feature), SUTVA violation in social networks (user-level randomization broken for feed algorithms). `msl_score:causal_exp`. Accent `var(--mint)`.
+
+4. **CausalInferenceTab — CausalDAGExplorer** — Interactive SVG. 3 pre-built DAGs, user identifies node roles (Confounder/Collider/Mediator/Treatment/Outcome) from 4 options. DAG 1: Ad Spend + SeasonalDemand confounding. DAG 2: Drug → InflammationReduction → Recovery mediation. DAG 3: Smoke/Cancer/Hospitalization collider bias (Berkson's). Arrowhead SVG markers, pulse animation on focus node, correct-reveal fills node green. `msl_score:causal_dag`.
+
+5. **SparkLabTab — StreamingStabilityLab** — Interactive simulator. 6 controls: input rate (5 values), processing time, trigger interval, watermark delay, state operation, checkpoint storage. Rule-based calculation: events-per-batch, lag ratio, state overhead multiplier, checkpoint penalty → 5 verdicts (CRITICAL/WARNING/STATE RISK/CHECKPOINT STALL/HEALTHY). Matches MemoryPressureSimulator visual pattern.
+
+6. **ClassicalMLTab — DecisionBoundaryLab** — SVG visualization. Hardcoded XOR-structure 2D dataset (47 points, 2 classes). 5 classifier modes: Linear SVM, RBF SVM, DT depth=1, DT depth=5, Random Forest. 20×20 background grid rendered as GridCell named components with low-opacity fills. Data points rendered as circles. Accuracy badge per classifier. All 5 explored → writes `msl_score:classical_boundary`.
+
+7. **CombinatorTab — Company-Calibrated Tracks** — Config screen addition. 4 company tracks (Google MLE, Meta MLE, Stripe DS, Startup/Growth) each mapping to specific domain subsets. Card selection auto-sets domain filter. Mutually exclusive with Challenge Mode.
+
+8. **CombinatorTab — Cross-Domain Challenge Mode** — Toggle on config screen. Forces all-domain 20-question session, shows ⚡ badge during session and on debrief. Mutually exclusive with company tracks.
+
+9. **TrainerTab — Spaced Repetition Queue** — "Review Queue" panel on config screen. Reads last 5 sessions, identifies 2 weakest recent domains. Shows violet domain tags + accuracy. "Start Review Session" starts 10-question drill on those domains.
+
+10. **TrainerTab — Weak Domain Drill** — "Your Weak Spots" panel. Computes per-domain accuracy across all history (≥3 attempts), renders bars sorted worst-first. "Drill Weakest: [domain]" starts focused 10-question session immediately.
+
+**IDEAS.md + METRICS.md** updated: completed items marked, `msl_spot_the_flaw` key registered, `msl_trainer_sr_log` noted.
+
+**COMING_SOON status:** 0 stubs remaining across all 30 tabs. All brace-balanced at 0. One commit.
+
+---
+
 ### v4.28 — README rewrite, Spot the Flaw tab, SparkLab simulator, StaffLayer + ForwardPointer pass (2026-05-30)
 
 **What shipped:** One new tab, one new interactive simulator, full external README rewrite, HomeTab mobile fix, 3 new StaffLayer scenarios, Naive Bayes module, ForwardPointers to 3 additional tabs.

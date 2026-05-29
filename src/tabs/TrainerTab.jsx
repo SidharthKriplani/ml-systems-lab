@@ -754,29 +754,39 @@ function shuffle(arr) {
 // ─── Setup Screen ────────────────────────────────────────────────────────────
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Spaced Repetition Queue',
-    userBrief: 'Surface questions you answered 3, 7, or 14 days ago for active recall. Forgetting-curve scheduling that turns each session into retention, not just practice.',
-    devBrief: {
-      micro: 'Read msl_sr_log localStorage (completion timestamps per question). Surface due questions as a prioritized queue before the random session. Intervals: 1, 3, 7, 14, 30 days. No backend required — pure localStorage + date arithmetic.',
-      macro: 'TrainerTab currently treats each session as independent. SR transforms it into a retention system. PAL confirmed this as the highest-leverage feature for long-term learning by engagement data.',
-    },
-  },
-  {
-    label: 'Weak Domain Drill',
-    userBrief: 'Auto-selects your two lowest-scoring domains from session history. Pure targeted remediation — no config required. Your practice adapts to your actual gaps, not your estimate of them.',
-    devBrief: {
-      micro: 'Read msl_score:trainer_* keys per domain. Sort ascending. Pre-select the bottom 2 domains in the domain picker. User can override but sees "your weak domains" framing. ~1h implementation.',
-      macro: 'Currently the user manually selects domains. Weak Domain Drill turns the setup screen into an adaptive system. Pairs with Spaced Repetition Queue to make TrainerTab a retention-oriented study tool rather than a random quiz.',
-    },
-  },
-]
+const COMING_SOON = []
+
+// ── Domain weakness helpers ───────────────────────────────────────────────────
+function computeDomainAccuracy(history) {
+  const domainAccuracy = {}
+  history.forEach(session => {
+    if (session.domainBreakdown) {
+      session.domainBreakdown.forEach(({ domain, correct, total }) => {
+        if (!domainAccuracy[domain]) domainAccuracy[domain] = { correct: 0, total: 0 }
+        domainAccuracy[domain].correct += correct
+        domainAccuracy[domain].total += total
+      })
+    }
+  })
+  return domainAccuracy
+}
 
 function SetupScreen({ onStart }) {
   const [selectedDomains, setSelectedDomains] = useState(new Set(ALL_DOMAINS))
   const [count, setCount] = useState('10')
+
+  // Read session history for adaptive panels
+  const history = (() => {
+    try { return JSON.parse(localStorage.getItem('msl_trainer_history') || '[]') } catch (_) { return [] }
+  })()
+
+  const domainAccuracy = computeDomainAccuracy(history)
+  const sortedDomains = Object.entries(domainAccuracy)
+    .filter(([, v]) => v.total >= 3)
+    .map(([d, v]) => ({ domain: d, pct: Math.round((v.correct / v.total) * 100) }))
+    .sort((a, b) => a.pct - b.pct)
+  const weakestDomain = sortedDomains[0]?.domain || null
+  const hasHistory = history.length > 0
 
   function toggleDomain(d) {
     setSelectedDomains(prev => {
@@ -804,6 +814,133 @@ function SetupScreen({ onStart }) {
         </p>
         <p style={{ color: 'var(--ink-low)', marginTop: '0.3rem', fontSize: '0.8rem', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>Select your domains and question count, work through each question one at a time, then review your accuracy per domain in the debrief.</p>
         <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>~ Simulated</span>
+      </div>
+
+      {/* ── Weak Domain Drill ─────────────────────────────────────────────── */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--rim)',
+        borderRadius: 12, padding: '1.1rem 1.35rem', marginBottom: '1.25rem',
+        borderLeft: hasHistory && weakestDomain ? '3px solid var(--rose)' : '1px solid var(--rim)',
+      }}>
+        <p className="section-eyebrow" style={{ marginBottom: '0.75rem', color: hasHistory && weakestDomain ? 'var(--rose)' : 'var(--ink-ghost)' }}>
+          Your Weak Spots
+        </p>
+        {!hasHistory || sortedDomains.length === 0 ? (
+          <p style={{ fontSize: '0.82rem', color: 'var(--ink-ghost)', margin: 0 }}>
+            Complete a session to see your weak domains here.
+          </p>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.9rem' }}>
+              {sortedDomains.slice(0, 4).map(({ domain, pct }) => (
+                <div key={domain}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: pct < 50 ? 'var(--rose)' : 'var(--ink-mid)' }}>{domain}</span>
+                    <span style={{
+                      fontSize: '0.75rem', fontFamily: 'var(--font-mono)',
+                      color: pct < 50 ? 'var(--rose)' : pct < 70 ? 'var(--ember)' : 'var(--mint)',
+                      fontWeight: 600,
+                    }}>{pct}%</span>
+                  </div>
+                  <div style={{ background: 'var(--rim)', borderRadius: 99, height: 5 }}>
+                    <div style={{
+                      width: `${pct}%`, height: '100%', borderRadius: 99,
+                      background: pct < 50 ? 'var(--rose)' : pct < 70 ? 'var(--ember)' : 'var(--mint)',
+                      transition: 'width 0.5s',
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {weakestDomain && (
+              <button
+                onClick={() => {
+                  setSelectedDomains(new Set([weakestDomain]))
+                  setCount('10')
+                  const pool = ALL_QUESTIONS.filter(q => q.domain === weakestDomain)
+                  const final = [...pool].sort(() => Math.random() - 0.5).slice(0, 10)
+                  if (final.length > 0) onStart(final)
+                }}
+                style={{
+                  background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)',
+                  borderRadius: 8, padding: '0.5rem 1.1rem',
+                  fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+                  color: 'var(--rose)', fontFamily: 'var(--font-sans)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                Drill Weakest: {weakestDomain}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Review Queue (Spaced Repetition) ─────────────────────────────── */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--rim)',
+        borderRadius: 12, padding: '1.1rem 1.35rem', marginBottom: '1.5rem',
+      }}>
+        <p className="section-eyebrow" style={{ marginBottom: '0.65rem' }}>
+          Review Queue
+        </p>
+        {!hasHistory ? (
+          <p style={{ fontSize: '0.82rem', color: 'var(--ink-ghost)', margin: 0 }}>
+            No sessions yet — complete a session to build your review queue.
+          </p>
+        ) : (
+          (() => {
+            const recent = history.slice(-5)
+            const recentDomainAcc = computeDomainAccuracy(recent)
+            const weakRecent = Object.entries(recentDomainAcc)
+              .filter(([, v]) => v.total > 0)
+              .map(([d, v]) => ({ domain: d, pct: Math.round((v.correct / v.total) * 100) }))
+              .sort((a, b) => a.pct - b.pct)
+              .slice(0, 2)
+
+            if (weakRecent.length === 0) {
+              return <p style={{ fontSize: '0.82rem', color: 'var(--ink-ghost)', margin: 0 }}>No domain data in recent sessions.</p>
+            }
+
+            return (
+              <>
+                <p style={{ fontSize: '0.82rem', color: 'var(--ink-mid)', margin: '0 0 0.65rem', lineHeight: 1.5 }}>
+                  Based on your last {Math.min(5, recent.length)} session{recent.length > 1 ? 's' : ''}, these domains need work:
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.8rem' }}>
+                  {weakRecent.map(({ domain, pct }) => (
+                    <span key={domain} style={{
+                      padding: '0.25rem 0.65rem', borderRadius: 99,
+                      background: 'rgba(167,139,250,0.12)',
+                      border: '1px solid rgba(167,139,250,0.25)',
+                      fontSize: '0.78rem', color: 'var(--violet)',
+                      fontFamily: 'var(--font-mono)',
+                    }}>
+                      {domain} · {pct}%
+                    </span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    const reviewDomains = new Set(weakRecent.map(w => w.domain))
+                    const pool = ALL_QUESTIONS.filter(q => reviewDomains.has(q.domain))
+                    const final = [...pool].sort(() => Math.random() - 0.5).slice(0, 10)
+                    if (final.length > 0) onStart(final)
+                  }}
+                  style={{
+                    background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)',
+                    borderRadius: 8, padding: '0.5rem 1.1rem',
+                    fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
+                    color: 'var(--violet)', fontFamily: 'var(--font-sans)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  Start Review Session
+                </button>
+              </>
+            )
+          })()
+        )}
       </div>
 
       {/* Domain selector */}
@@ -891,21 +1028,6 @@ function SetupScreen({ onStart }) {
       >
         Start Drill
       </button>
-      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
-      <div style={{ marginTop: '48px' }}>
-        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
-          {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
-              </div>
-              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

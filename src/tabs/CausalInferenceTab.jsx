@@ -828,36 +828,446 @@ function ObsVsExperimental() {
   )
 }
 
+// ── Experiment Design Failures ────────────────────────────────────────────────
+const EXPERIMENT_FAILURE_SCENARIOS = [
+  {
+    id: 'srm',
+    title: 'Sample Ratio Mismatch',
+    domain: 'Experimentation',
+    context: 'Your team runs an A/B test on a new recommendation algorithm. Target split: 50/50. After 2 weeks, analytics shows 48,231 users in control and 51,847 in treatment — a 7.4% ratio deviation. The recommendation team says the result is still "directionally significant" with p=0.04 and wants to ship. Traffic splitting is done at the application layer, not the edge.',
+    question: 'What should happen next?',
+    options: [
+      'Ship — the result is statistically significant and the imbalance is small enough to be noise',
+      'Reject the experiment results, diagnose the traffic split bug before re-running',
+      'Reweight the sample to 50/50 using inverse probability weighting and re-analyze',
+      'Accept the result but widen the confidence interval to account for the imbalance',
+    ],
+    answer: 1,
+    diagnosis: 'SRM (Sample Ratio Mismatch) is not a statistical noise issue — it signals a bug in the randomization or assignment mechanism. With a 7.4% deviation from the target ratio, the p-value and confidence intervals are invalid: selection bias has entered the treatment group. The most common causes: bot traffic filtered differently per variant, session-level vs. user-level assignment mismatch, or a code path that routes some users deterministically. Reweighting masks the root cause and produces false confidence.',
+    fix: 'Reject and diagnose. SRM tests are cheap to run: compute chi-squared on expected vs. observed assignment counts before trusting any metric. In this case: investigate the application-layer split logic, check for any user cohort that disproportionately lands in treatment, and fix before re-running. Booking.com and Microsoft both report SRM as one of the top invalidation reasons in their experiment platforms.',
+  },
+  {
+    id: 'novelty',
+    title: 'Novelty vs. Real Lift',
+    domain: 'Experimentation',
+    context: 'A news app team launches a new "personalized digest" feature. Week 1 A/B test: +18% engagement (open rate) in treatment. The product manager declares success and schedules a full rollout. The data scientist notices: the treatment group\'s engagement was 12% higher than their pre-experiment baseline in week 0, but the control group\'s baseline was flat.',
+    question: 'What is the most likely explanation and correct next step?',
+    options: [
+      'The feature works — the 18% lift is real and the pre-experiment difference validates strong treatment response',
+      'The lift is a novelty effect — users engaged because the feature was new, not because it\'s better. Extend the experiment.',
+      'The pre-experiment baseline difference indicates SRM — reject the results',
+      'Run a CUPED adjustment using the pre-experiment period to correct for covariate imbalance',
+    ],
+    answer: 1,
+    diagnosis: 'Novelty effects are one of the most common false positive sources in feature experiments. Users engage with new UI elements simply because they\'re different — the effect decays as novelty wears off. A dead giveaway: treatment baseline was already elevated before the feature launched (suggesting the treatment cohort was more engaged to begin with), combined with a spike that looks unusually high in week 1. The 18% lift likely contains a real component + a novelty decay component. Without a longer run, you can\'t separate them.',
+    fix: 'Standard mitigation: run experiments for at least 2–3x the novelty decay period (typically 2–4 weeks for engagement features). Use a "holdback": keep 5–10% of users on the old experience for 6+ weeks post-launch and monitor for metric decay. A 18% week-1 lift that decays to 4% by week 6 is not an 18% feature — it\'s a 4% feature that will look like a regression at rollout.',
+  },
+  {
+    id: 'sutva',
+    title: 'Network Interference',
+    domain: 'Experimentation',
+    context: 'A social platform tests a new "activity feed algorithm" that surfaces more posts from highly-active users. The A/B test runs at the user level (50% see new algo, 50% see old). Primary metric: posts created. Result: +9% posts in treatment. The ML team wants to ship. A senior engineer asks: "What happens to a control user whose friends are all in treatment?"',
+    question: 'Why is this experiment result unreliable?',
+    options: [
+      'It\'s reliable — user-level randomization is the correct unit for social experiments',
+      'SUTVA is violated — control users\' behavior is affected by treatment users in their network, contaminating the control',
+      'The metric (posts created) is a proxy and should be replaced with a downstream business metric',
+      'The experiment needs stratification by user activity level before the result is valid',
+    ],
+    answer: 1,
+    diagnosis: 'SUTVA (Stable Unit Treatment Value Assumption) requires that one unit\'s treatment doesn\'t affect another unit\'s outcome. This assumption fails in any network product where users interact. A control user whose friends are all in treatment sees more posts in their feed (because treatment friends post more). This inflates control-group behavior, narrowing the observed treatment effect — or in some cases reversing it. User-level randomization is fundamentally broken for social features.',
+    fix: 'Correct approaches for network effects: (1) Cluster randomization — randomize by social clusters or geographic regions rather than individual users. (2) Ego-network isolation — treatment users whose entire network is also in treatment (pure treatment clusters) vs. control users with pure-control networks. (3) Switchback experiments — alternate between treatment and control at the cluster level over time. (4) Network exposure modeling — estimate the indirect effect explicitly. LinkedIn, Facebook, and Twitter all use cluster-based randomization for feed algorithm tests.',
+  },
+]
+
+function ExperimentFailureCard({ s, accentColor, onPick }) {
+  const [open, setOpen] = useState(false)
+  const [picked, setPicked] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+
+  const isCorrect = revealed && picked === s.answer
+
+  function pick(i) {
+    if (revealed) return
+    setPicked(i)
+    setRevealed(true)
+    if (onPick) onPick(i)
+  }
+
+  return (
+    <div style={{ border: `1px solid ${open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', background: open ? accentColor + '04' : 'transparent' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: accentColor + '18', color: accentColor, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{s.domain}</span>
+        <span style={{ flex: 1, fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 600, lineHeight: 1.5 }}>{s.title}</span>
+        {revealed && <span style={{ fontSize: '12px', flexShrink: 0 }}>{isCorrect ? '✓' : '✗'}</span>}
+        <span style={{ color: 'var(--ink-low)', fontSize: '12px', flexShrink: 0, transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Context block */}
+          <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', border: `1px solid ${accentColor}20`, borderRadius: '8px' }}>
+            <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Context</div>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.context}</p>
+          </div>
+          {/* Question */}
+          <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--ink-hi)', fontWeight: 600, lineHeight: 1.6 }}>{s.question}</p>
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {s.options.map((opt, oi) => {
+              const isAns = oi === s.answer
+              const isOpt = picked === oi
+              let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
+              if (revealed) {
+                if (isAns) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
+                else if (isOpt) { border = 'rgba(244,63,94,0.4)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
+              } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
+              return (
+                <button key={oi} onClick={() => pick(oi)} disabled={revealed}
+                  style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
+                  {opt}
+                </button>
+              )
+            })}
+          </div>
+          {/* Reveal panel */}
+          {revealed && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
+                <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+                <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Diagnosis</div>
+                <p style={{ margin: '0 0 10px', fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.diagnosis}</p>
+                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Fix</div>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ExperimentDesignFailures() {
+  const scoreKey = 'msl_score:causal_exp'
+  const accentColor = 'var(--mint)'
+
+  const [scores, setScores] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(scoreKey))
+      if (Array.isArray(saved) && saved.length === EXPERIMENT_FAILURE_SCENARIOS.length) return saved
+    } catch {}
+    return EXPERIMENT_FAILURE_SCENARIOS.map(() => null)
+  })
+
+  function handlePick(idx, picked) {
+    setScores(prev => {
+      if (prev[idx] !== null) return prev
+      const next = [...prev]
+      next[idx] = picked === EXPERIMENT_FAILURE_SCENARIOS[idx].answer
+      return next
+    })
+  }
+
+  useEffect(() => {
+    localStorage.setItem(scoreKey, JSON.stringify(scores))
+    window.dispatchEvent(new CustomEvent('msl_score_updated'))
+  }, [scores])
+
+  const attempted = scores.filter(s => s !== null).length
+  const correct = scores.filter(s => s === true).length
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
+        Three production experiments with a hidden flaw. Each setup looks valid — the data is real, the p-value is there. Find what breaks: SRM, novelty effects, SUTVA violations.
+      </p>
+      {/* Score strip */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '10px 16px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '8px', flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: accentColor, fontWeight: 700 }}>{correct}/{attempted} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{attempted}/{EXPERIMENT_FAILURE_SCENARIOS.length} attempted</span>
+      </div>
+      {EXPERIMENT_FAILURE_SCENARIOS.map((s, idx) => (
+        <ExperimentFailureCard key={s.id} s={s} accentColor={accentColor} onPick={(picked) => handlePick(idx, picked)} />
+      ))}
+    </div>
+  )
+}
+
+// ── Causal DAG Explorer ───────────────────────────────────────────────────────
+const DAG_EXPLORER_DATA = [
+  {
+    id: 'ad_spend',
+    title: 'Ad Spend → Sales',
+    subtitle: 'Confounding',
+    nodes: [
+      { id: 'SeasonalDemand', label: 'Seasonal\nDemand', x: 220, y: 60 },
+      { id: 'AdSpend',        label: 'Ad\nSpend',        x: 80,  y: 200 },
+      { id: 'Sales',          label: 'Sales',            x: 360, y: 200 },
+    ],
+    edges: [
+      { from: 'SeasonalDemand', to: 'AdSpend' },
+      { from: 'SeasonalDemand', to: 'Sales' },
+      { from: 'AdSpend',        to: 'Sales' },
+    ],
+    focusNode: 'SeasonalDemand',
+    question: 'You want the causal effect of AdSpend on Sales. What role does SeasonalDemand play?',
+    options: ['Confounder', 'Collider', 'Mediator', 'Independent variable'],
+    answer: 0,
+    reveal: 'SeasonalDemand is a common cause (confounder) — it affects both AdSpend (companies spend more in Q4) and Sales independently. To estimate the causal effect of AdSpend on Sales, you must adjust for SeasonalDemand. Failure to do so leads to upward-biased estimates of ad effectiveness.',
+  },
+  {
+    id: 'drug_recovery',
+    title: 'Drug → Recovery',
+    subtitle: 'Mediation',
+    nodes: [
+      { id: 'Drug',                  label: 'Drug',                  x: 80,  y: 200 },
+      { id: 'InflammationReduction', label: 'Inflammation\nReduction', x: 220, y: 60 },
+      { id: 'Recovery',              label: 'Recovery',              x: 360, y: 200 },
+    ],
+    edges: [
+      { from: 'Drug',                  to: 'InflammationReduction' },
+      { from: 'InflammationReduction', to: 'Recovery' },
+      { from: 'Drug',                  to: 'Recovery' },
+    ],
+    focusNode: 'InflammationReduction',
+    question: 'InflammationReduction is on the causal path from Drug to Recovery. What role does it play?',
+    options: ['Mediator', 'Confounder', 'Collider', 'Noise variable'],
+    answer: 0,
+    reveal: 'InflammationReduction is a mediator — it carries part of the causal effect of Drug on Recovery. If you condition on a mediator, you block the indirect path and underestimate total drug effectiveness. This matters in clinical trials: you want the total effect (direct + mediated). Only condition on mediators if estimating the direct effect specifically (e.g., "how much of the drug\'s effect is not via inflammation?").',
+  },
+  {
+    id: 'smoke_cancer',
+    title: 'Smoke → Cancer',
+    subtitle: 'Collider Bias',
+    nodes: [
+      { id: 'Smoking',         label: 'Smoking',         x: 80,  y: 100 },
+      { id: 'Genetics',        label: 'Genetics',        x: 360, y: 100 },
+      { id: 'Cancer',          label: 'Cancer',          x: 360, y: 260 },
+      { id: 'Hospitalization', label: 'Hospital-\nization', x: 220, y: 260 },
+    ],
+    edges: [
+      { from: 'Smoking',  to: 'Cancer' },
+      { from: 'Smoking',  to: 'Hospitalization' },
+      { from: 'Cancer',   to: 'Hospitalization' },
+      { from: 'Genetics', to: 'Cancer' },
+    ],
+    focusNode: 'Hospitalization',
+    question: 'A researcher studies patients admitted to hospital (conditions on Hospitalization). What bias is introduced?',
+    options: ['Collider', 'Confounder', 'Mediator', 'Instrumental variable'],
+    answer: 0,
+    reveal: 'Hospitalization is a collider — it has two causes (Smoking and Cancer) and is not on any causal path. Conditioning on a collider (selecting only hospitalized patients) opens a spurious path between Smoking and Genetics through Hospitalization, inducing negative correlation even if none exists in the population. This is Berkson\'s bias — a major source of spurious findings in hospital-based studies.',
+  },
+]
+
+function DAGSvg({ dag, revealed, focusNode }) {
+  const W = 440
+  const H = 320
+  const R = 32
+
+  const nodeMap = {}
+  dag.nodes.forEach(n => { nodeMap[n.id] = n })
+
+  function edgePath(from, to) {
+    const a = nodeMap[from]
+    const b = nodeMap[to]
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len = Math.sqrt(dx * dx + dy * dy)
+    const ux = dx / len
+    const uy = dy / len
+    const sx = a.x + ux * R
+    const sy = a.y + uy * R
+    const ex = b.x - ux * (R + 8)
+    const ey = b.y - uy * (R + 8)
+    return { sx, sy, ex, ey }
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: '440px', display: 'block', margin: '0 auto' }}>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="var(--ink-low)" />
+        </marker>
+        <marker id="arrow-focus" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="var(--prime)" />
+        </marker>
+        <style>{`
+          @keyframes pulse-stroke {
+            0%, 100% { stroke-width: 2.5; opacity: 1; }
+            50% { stroke-width: 4; opacity: 0.75; }
+          }
+          .focus-node { animation: pulse-stroke 1.8s ease-in-out infinite; }
+        `}</style>
+      </defs>
+      {/* Edges */}
+      {dag.edges.map((e, i) => {
+        const { sx, sy, ex, ey } = edgePath(e.from, e.to)
+        const involvesFocus = e.from === focusNode || e.to === focusNode
+        return (
+          <line key={i} x1={sx} y1={sy} x2={ex} y2={ey}
+            stroke={involvesFocus ? 'var(--prime)' : 'var(--ink-low)'}
+            strokeWidth={involvesFocus ? 2 : 1.5}
+            markerEnd={involvesFocus ? 'url(#arrow-focus)' : 'url(#arrow)'}
+            opacity={involvesFocus ? 0.9 : 0.5}
+          />
+        )
+      })}
+      {/* Nodes */}
+      {dag.nodes.map(n => {
+        const isFocus = n.id === focusNode
+        const isCorrectRevealed = revealed && isFocus
+        const lines = n.label.split('\n')
+        return (
+          <g key={n.id}>
+            <circle
+              cx={n.x} cy={n.y} r={R}
+              fill={isCorrectRevealed ? 'rgba(52,211,153,0.18)' : 'var(--depth)'}
+              stroke={isFocus ? 'var(--prime)' : 'var(--rim)'}
+              strokeWidth={isFocus ? 2.5 : 1.5}
+              className={isFocus && !revealed ? 'focus-node' : ''}
+            />
+            {lines.map((line, li) => (
+              <text key={li} x={n.x} y={n.y + (li - (lines.length - 1) / 2) * 14 + 1}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize="11" fontFamily="var(--font-sans)" fill={isFocus ? 'var(--prime)' : 'var(--ink-hi)'}
+                fontWeight={isFocus ? '700' : '500'}
+              >{line}</text>
+            ))}
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function CausalDAGExplorer() {
+  const scoreKey = 'msl_score:causal_dag'
+  const [currentDag, setCurrentDag] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [revealed, setRevealed] = useState(false)
+  const [score, setScore] = useState(0)
+  const [completed, setCompleted] = useState(false)
+
+  const dag = DAG_EXPLORER_DATA[currentDag]
+  const isCorrect = revealed && selected === dag.answer
+
+  function pick(i) {
+    if (revealed) return
+    setSelected(i)
+    setRevealed(true)
+    if (i === dag.answer) setScore(s => s + 1)
+  }
+
+  function nextDag() {
+    if (currentDag < DAG_EXPLORER_DATA.length - 1) {
+      setCurrentDag(d => d + 1)
+      setSelected(null)
+      setRevealed(false)
+    } else {
+      setCompleted(true)
+    }
+  }
+
+  useEffect(() => {
+    if (completed) {
+      localStorage.setItem(scoreKey, JSON.stringify(score))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [completed, score])
+
+  if (completed) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="card" style={{ padding: '32px', textAlign: 'center', border: '1px solid var(--rim)' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>{score}/{DAG_EXPLORER_DATA.length}</div>
+          <div style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
+            {score === DAG_EXPLORER_DATA.length
+              ? 'Perfect — you can identify confounders, mediators, and colliders on sight.'
+              : score >= 2
+              ? 'Strong. The collider case trips most practitioners — review Berkson\'s bias if you missed it.'
+              : 'Focus on the structural difference: confounders are common causes, mediators are on the path, colliders are common effects.'}
+          </div>
+          <button className="btn-primary" onClick={() => { setCurrentDag(0); setSelected(null); setRevealed(false); setScore(0); setCompleted(false) }}>Try again</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)' }}>{dag.title}</span>
+          <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: 'var(--prime)', color: 'var(--depth)', fontFamily: 'var(--font-mono)', fontWeight: 700, opacity: 0.85 }}>{dag.subtitle}</span>
+        </div>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>DAG {currentDag + 1} of {DAG_EXPLORER_DATA.length}</span>
+      </div>
+
+      {/* SVG DAG */}
+      <div style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          Causal Graph — highlighted node is under question
+        </div>
+        <DAGSvg dag={dag} revealed={revealed} focusNode={dag.focusNode} />
+      </div>
+
+      {/* Question */}
+      <div className="card" style={{ padding: '16px 20px' }}>
+        <p style={{ margin: 0, fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.7, fontWeight: 500 }}>{dag.question}</p>
+      </div>
+
+      {/* Options */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+        {dag.options.map((opt, i) => {
+          const isAns = i === dag.answer
+          const isOpt = selected === i
+          let border = 'var(--rim)', bg = 'transparent', color = 'var(--ink-mid)'
+          if (revealed) {
+            if (isAns) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
+            else if (isOpt) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
+          } else if (isOpt) { border = 'rgba(var(--prime-rgb, 34,211,238),0.5)'; bg = 'rgba(34,211,238,0.1)'; color = 'var(--prime)' }
+          return (
+            <button key={i} onClick={() => pick(i)} disabled={revealed}
+              style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '10px', alignItems: 'center', transition: 'all 0.12s' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', minWidth: '16px', opacity: 0.55 }}>{String.fromCharCode(65 + i)}.</span>
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Reveal panel */}
+      {revealed && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.22)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.25)' : 'rgba(244,63,94,0.25)'}`, borderRadius: '10px' }}>
+            <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>{isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75 }}>{dag.reveal}</p>
+          </div>
+          <button className="btn-primary" onClick={nextDag}>
+            {currentDag < DAG_EXPLORER_DATA.length - 1 ? 'Next DAG →' : 'See results'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'causal_vs_pred', label: 'Causal vs Predictive', component: CausalVsPredictive },
-  { id: 'identification', label: 'Identification Strategies', component: IdentificationStrategies },
-  { id: 'dag',            label: 'Confounder or Collider', component: ConfounderOrCollider },
-  { id: 'backdoor',       label: 'Backdoor Criterion', component: BackdoorCriterion },
-  { id: 'uplift',         label: 'Uplift Modeling', component: UpliftModeling },
-  { id: 'obs_vs_exp',     label: 'Obs vs Experimental', component: ObsVsExperimental },
+  { id: 'causal_vs_pred',      label: 'Causal vs Predictive',      component: CausalVsPredictive },
+  { id: 'identification',      label: 'Identification Strategies',  component: IdentificationStrategies },
+  { id: 'dag',                 label: 'Confounder or Collider',     component: ConfounderOrCollider },
+  { id: 'backdoor',            label: 'Backdoor Criterion',         component: BackdoorCriterion },
+  { id: 'uplift',              label: 'Uplift Modeling',            component: UpliftModeling },
+  { id: 'obs_vs_exp',          label: 'Obs vs Experimental',        component: ObsVsExperimental },
+  { id: 'experiment_failures', label: 'Experiment Design Failures', component: ExperimentDesignFailures },
+  { id: 'dag_explorer',        label: 'Causal DAG Explorer',        component: CausalDAGExplorer },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
-// devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Causal DAG Editor',
-    userBrief: 'Draw a causal graph interactively. Identify confounders, colliders, and mediators by structure alone — no formula required. Intuition before identification.',
-    devBrief: {
-      micro: 'Pyodide-backed DAG builder. Fixed node set (5–7 nodes representing an ML system). User draws edges; code identifies d-separation, open paths, and valid adjustment sets. Similar scope to existing ModelsMathTab Pyodide cells.',
-      macro: 'Existing modules teach causal identification by scenario. This builds the visual/structural intuition first — the scaffold that makes Backdoor Criterion and Confounder or Collider comprehensible. Should be the second module (after Causal vs Predictive), not last.',
-    },
-  },
-  {
-    label: 'Experiment Design Failures',
-    userBrief: 'You designed the experiment correctly — now find the flaw. SUTVA violations, SRM, novelty effects, and interference between units: the failures that look fine until analysis.',
-    devBrief: {
-      micro: 'AccordionMCQ, 4 scenarios. Each presents an experiment design with a hidden flaw. Format: here is the setup — what is wrong? Reveals include: what the stat test showed vs. what actually happened, and how to detect it in practice.',
-      macro: 'Existing Obs vs Experimental module covers when to use observational methods. This covers when experimental methods fail — the failure mode that trips up candidates who know A/B testing but not its edge cases.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function CausalInferenceTab({ onNavigate }) {
   const [active, setActive] = useState('causal_vs_pred')
