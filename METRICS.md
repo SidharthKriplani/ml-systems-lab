@@ -71,8 +71,8 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_role` | `string` | `HomeTab` | Selected role for personalization |
 | `msl_tab` | `string` | `App.jsx` | Last active tab — used for restore on reload |
 | `msl_goto_module` | `string` | Navigation helpers | Deep-link target module, cleared after use |
-| `msl_goto_path` | `string` | Navigation helpers | Deep-link target path, cleared after use |
-| `msl_path_progress` | `JSON object` | `HomeTab` | Map of `{ pathId: { completedSteps: string[] } }` — persists step completion state for guided learning paths |
+| ~~`msl_goto_path`~~ | `string` | ~~Navigation helpers~~ | **Retired v4.15** — Learning Paths removed. Key is dead; do not reuse. |
+| ~~`msl_path_progress`~~ | `JSON object` | ~~`HomeTab`~~ | **Retired v4.15** — Learning Paths removed. Key is dead; do not reuse. |
 | `msl_access` | `string` | `AccessGate` / `App.jsx` | Access code entered by user. Value `'DAI2026'` = premium unlocked. Permanent — never expires. Set on code entry, checked on every app load via `useState` initializer. |
 | `msl_streak` | `number` (as string) | `HomeTab` | Consecutive-day visit streak. Incremented when `msl_last_visit` was yesterday; reset to `1` when gap > 1 day; unchanged when already visited today. |
 | `msl_last_visit` | `string` (ISO date) | `HomeTab` | Date of the most recent HomeTab mount in `YYYY-MM-DD` format. Used to compute streak continuity. |

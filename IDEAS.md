@@ -21,7 +21,7 @@ Last updated: May 2026
 ## Tier 1 — High impact, buildable now
 
 ### Learning Path
-- [x] ~~**Guided learning paths with sequenced module order**~~ — done (2026-05-27, HomeTab LEARNING_PATHS with step completion tracking, checkmarks, X/N counter, msl_path_progress localStorage)
+- [x] ~~**Guided learning paths with sequenced module order**~~ — done then removed (built 2026-05-27; removed v4.15 2026-05-29 — duplicated Practice zone nav, role selector 3-step sequence covers the same job more lightly)
 
 ### Learning Quality (from Audit #008)
 - [x] ~~**Expand MCQ explanations to include production failure mode + recognition signal**~~ — done (2026-05-27, 190 explanations expanded across CombinatorTab + TrainerTab with "In production, this breaks as: [X]. The tell: [Y]." pattern)
