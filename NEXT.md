@@ -8,20 +8,22 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. ProjectLab tab — Phase 1 skeleton (2–3 hours)
+### 1. Oracle refactor — Batch 2 (remaining 21 tabs) (2–3 hours)
+The following tabs still have decorative non-amber color hits (counts from grep, some will be semantic keeps):
+Priority by hit count: MLOpsDeployTab (27), SparkLabTab (26), SystemDesignTab (21), ModelEvalTab (16), ModelsMathTab (15), MLOpsPipelinesTab (15), DeepLearningTab (13), DLServingTab (11), TimeSeriesTab (8), AirflowTab (8), dbtTab (7), DataModelingTab (7), DLFineTuningTab (7), DataScienceTab (6), DefenseDocTab (5), CaseStudiesTab (4), TrainerTab (3), CodeBugsTab (3), SpotTheFlawTab (2), InterviewPrepTab (2), CombinatorTab (not listed but check).
+Apply same rules as Batch 1. Brace-balance each. Single commit per batch of ~5 files. DO NOT replace_all on whole files.
+
+### 2. ProjectLab tab — Phase 1 skeleton (2–3 hours)
 New tab `ProjectLabTab.jsx`. Sequential notebook. Phase 1: data ingestion + EDA — 3 Pyodide cells (load sklearn churn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 AccordionMCQ judgment checkpoints between cells. LocalStorage key `msl_projectlab_churn_data`. Add to App.jsx (practice zone, premium). See IDEAS.md Tier 1 for full spec.
 
-### 2. New user cold-state banner (45 min)
+### 3. New user cold-state banner (45 min)
 Detect first visit: no `msl_tab`, no `msl_score:*`, no `msl_access` in localStorage. Show one-time orientation banner at top of HomeTab: "New here? Start with Feature Engineering (free) or enter code DAI2026 for full access." Disappears after first tab visit (write `msl_onboarded: 1`). HomeTab only — not Today sidebar.
 
-### 3. Role Readiness Score on HomeTab (1.5 hours)
+### 4. Role Readiness Score on HomeTab (1.5 hours)
 Aggregate cross-tab scores into per-domain seniority signal. Read all `msl_score:*` keys + `msl_trainer_history` + `msl_combinator_history`. Compute a 0–100 "readiness" per domain (ML Eng, Data Eng, Deep Learning, MLOps, Data Science, Interview). Render as compact bar-per-domain on HomeTab below the TODAY row. No new localStorage keys needed — derives from existing data.
 
-### 4. Pre-Eval callouts — 3 tabs (1 hour)
-Add a small "Before you score yourself, know:" contextual callout at the TOP of AccordionMCQ blocks in SystemDesignTab, ModelEvalTab, CausalInferenceTab. Single line: the key failure mode to look for before reading the scenario. Not a hint — a priming frame that focuses attention. E.g., "Evaluating retrieval? Check whether your metric accounts for exposure bias." Content-only work, no architectural change.
-
-### 5. Audit #021 — post-v4.30 state check (1 hour)
-Run a focused audit: (a) confirm all new files pass brace balance (ClassicalMLTab BiasVariance, CausalInferenceTab Simpson's, SpotTheFlawTab 12 scenarios, MLOpsDeployTab/PipelinesTab callouts), (b) check METRICS.md for any missing localStorage keys from v4.29/v4.30, (c) verify SpotTheFlaw scenario count in GlobalSearch matches 12, (d) spot-check `.msl-cloud-map` renders correctly in MonitoringTab on mobile (no overflow). Log findings in AUDITS.md.
+### 5. Audit #021 — post-v4.31 state check (1 hour)
+Run a focused audit: (a) confirm all brace-balanced files from v4.29–v4.31 still pass, (b) check METRICS.md for any missing localStorage keys from v4.29/v4.30, (c) verify SpotTheFlaw scenario count in GlobalSearch matches 12, (d) spot-check `.msl-cloud-map` renders correctly in MonitoringTab on mobile (no overflow). Log findings in AUDITS.md.
 
 ---
 
@@ -33,6 +35,7 @@ Nothing currently blocked.
 
 ## Done this session
 
+- ~~Oracle identity refactor Batch 1 (v4.31) — 5 tabs (MonitoringTab 73 hits, CausalInferenceTab 57, FeatureEngTab 62, ClassicalMLTab 66, GradientTab 41). All decorative mint/sky/ember/rose/violet/gold replaced with prime/amber/ink-low. Brace balance 0 on all 5. All 30 POSTS catColor in GradientTab unified. Semantic data-series colors preserved throughout.~~
 - ~~Apply .msl-option-btn to remaining MCQ tabs (v4.30) — FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab all migrated from inline styles~~
 - ~~Cloud/AWS callouts — 3 tabs (v4.30) — .msl-cloud-map + .msl-cloud-chip added to index.css; 30+ scenario reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab got AWS service callouts~~
 - ~~SpotTheFlawTab → 12 scenarios (v4.30) — stf11 (NDCG/CTR divergence) + stf12 (annotator majority-vote bias) added~~
