@@ -70,7 +70,8 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **Access gate — persistence** | Unlock → close tab → reopen → confirm still unlocked (no re-entry required) | ✓ required | — |
 | **Access gate — wrong code** | Enter wrong code → confirm error message, no unlock | ✓ required | — |
 | **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |
-| **Lock indicators — Interview grid** | Without code: all Interview tool cards show padlock icon | ✓ required | — |
+| **Lock indicators — Interview grid** | Without code: all Interview tool cards show padlock icon (6 tools including Spot the Flaw) | ✓ required | — |
+| **Spot the Flaw** | Open SpotTheFlawTab → read scenario → select a flaw category → confirm reveal shows The Flaw + prevention | ✓ required | — |
 
 ---
 
@@ -78,7 +79,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 
 **1. Onboarding / first impression**
 - Open the live URL on a fresh incognito tab (no localStorage). Read only what's on screen — does it communicate what the product is within 10 seconds without scrolling?
-- Scroll HomeTab fully — do the learning paths make sense without explanation? Click one step — does it navigate to the right module?
+- Scroll HomeTab fully — do the TODAY row, domain completion bars, and guided paths sections make sense without explanation? Click a "Continue" or guided path CTA — does it navigate to the right module?
 - Check the role selector if present — does picking a role change anything visible?
 
 **2. Practice zone core loop**

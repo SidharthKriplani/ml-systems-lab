@@ -6,7 +6,7 @@ Read this first, every session.
 
 ## What this project is
 
-ML Systems Lab is a browser-only study tool for production ML judgment. It has 200+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 9-tool Interview simulation zone. No backend. No accounts. Everything in localStorage. Deployed on Vercel.
+ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 10-tool Interview simulation zone. No backend. No accounts. Everything in localStorage. Deployed on Vercel.
 
 **Live:** https://ml-systems-lab-v9xe.vercel.app  
 **Repo:** https://github.com/SidharthKriplani/ml-systems-lab
@@ -22,7 +22,7 @@ React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser
 ## Non-negotiable rules
 
 1. **No Tailwind utility classes in tab files.** Use inline styles with CSS variable references only (e.g., `style={{ color: 'var(--prime)' }}`). Tailwind is in the config but deliberately not used in component files.
-2. **All localStorage keys prefixed `msl_`.** Score keys follow `msl_score:{tabPrefix}`. Non-score keys are tab-specific (see README for full list).
+2. **All localStorage keys prefixed `msl_`.** Score keys follow `msl_score:{tabPrefix}`. Non-score keys are tab-specific (see METRICS.md for full registry).
 3. **No `isolation: "worktree"` in Agent tool calls.** This repo has a persistent git issue where worktree isolation fails with "Failed to resolve base branch 'HEAD': git rev-parse failed". Always spawn agents without that parameter.
 4. **Never hardcode colors.** Every color must be a CSS variable from `:root` in `index.css`.
 5. **Every tab gets `onNavigate` prop.** Signature: `export default function XTab({ onNavigate }) {}`. Cross-tab navigation via `onNavigate(tabId)` / `goTo(tabId)` in App.jsx.
@@ -70,6 +70,7 @@ src/
     JDPrepTab.jsx
     DefenseDocTab.jsx
     VerbatimTab.jsx
+    SpotTheFlawTab.jsx          ← Interview zone, added v4.28 (10 scenarios, 5 flaw categories)
     ProjectLabTab.jsx  ← planned (see IDEAS.md Tier 1 — sequential notebook, Pyodide DS + deployment scaffold)
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/

@@ -364,7 +364,7 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 |---|---------|---------|----------|--------|
 | 1 | Residual emoji in UI copy, button text, section labels, and inline content across multiple tabs — not caught by v4.14 `icon:` field pass, which only targeted module icon data fields and prefixes | All tabs (unsurveyed) | Medium | ⚠️ Open |
 | 2 | Emoji should be replaced with inline SVGs or unicode symbols — not just removed. SVGs allow color theming via CSS variables; bare unicode symbols are acceptable for ✓ ✗ → type glyphs | All tabs | Medium | ⚠️ Open |
-| 3 | Mobile audit not run since HomeTab v4.16 layout redesign — two-column TODAY row (`gridTemplateColumns: 'minmax(0, 1fr) auto'`) has not been tested on narrow screens (≤375px). Activity widget at ~90px wide may leave insufficient width for case card text on 320px devices | `HomeTab.jsx` | Medium | ⚠️ Open |
+| 3 | Mobile audit not run since HomeTab v4.16 layout redesign — two-column TODAY row (`gridTemplateColumns: 'minmax(0, 1fr) auto'`) has not been tested on narrow screens (≤375px). Activity widget at ~90px wide may leave insufficient width for case card text on 320px devices | `HomeTab.jsx` | Medium | ✅ Fixed v4.28 — `@media (max-width: 480px)` stacks TODAY row vertically via `.today-row` class. Sparse heatmap guard (≤3 active days) also added. |
 | 4 | All other layout changes (role selector flex-wrap, track grid `minmax(240px, 1fr)`, gap 28px) use mobile-safe CSS patterns — low risk | `HomeTab.jsx` | Low | ✅ Likely clean — needs verification |
 
 **Priority actions:**
@@ -603,17 +603,36 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds invisible at low brightness | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed |
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav overflow narrow viewports | 2026-05-27 | Mobile | ✅ Fixed |
 | 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
-| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | 3 open ⚠️ |
+| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ #16.3 fixed v4.28 · 2 open ⚠️ (emoji residue) |
 | 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | 3 open ⚠️ |
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
+| 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
+
+### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
+
+**Scope:** Review of new additions from v4.28 (SpotTheFlawTab, README, HomeTab fixes, StaffLayer, ForwardPointers) and v4.29 (AttentionHeadVisualizer, ArchDecisionLab, ExperimentDesignFailures, CausalDAGExplorer, StreamingStabilityLab, DecisionBoundaryLab, CombinatorTab company tracks + challenge mode, TrainerTab SR queue + weak domain drill).  
+**Trigger:** Routine post-sprint check to log any new open issues.  
+**Brace balance:** All 10 modified files verified at `0`.
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | SpotTheFlawTab added to Interview zone + PREMIUM_TABS + GlobalSearch + INTERVIEW_TOOLS — routing confirmed clean | `SpotTheFlawTab.jsx`, `App.jsx`, `GlobalSearch.jsx` | — | ✅ Clean |
+| 2 | AttentionHeadVisualizer uses hardcoded `rgba(99,102,241,...)` for heatmap cell colors instead of CSS var — technically violates no-hex rule | `DeepLearningTab.jsx` | Low | ⚠️ Open — intentional interpolation pattern; closest CSS var is `var(--prime)`. Fix if doing a color pass. |
+| 3 | CombinatorTab agent noted a latent bug in session restore path referencing undefined `QUESTIONS` variable — fixed to search `[...MCQ_QUESTIONS, ...SA_QUESTIONS]` | `CombinatorTab.jsx` | High | ✅ Fixed same session |
+| 4 | TrainerTab Spaced Repetition panel is domain-level only — not per-scenario SR with intervals. `msl_trainer_sr_log` key not written. Tracked as partial in IDEAS.md. | `TrainerTab.jsx` | Low | ⚠️ Open (tracked) |
+| 5 | CLAUDE.md had stale "9-tool" count and "see README" reference for localStorage keys — corrected. | `CLAUDE.md` | Low | ✅ Fixed 2026-05-30 |
+| 6 | IDEAS.md Tier 2: 5 modules marked done (decision boundary, memory pressure, attention head, model registry, alerting); 2 marked partially done (spaced rep, company tracks). | `IDEAS.md` | — | ✅ Updated 2026-05-30 |
+| 7 | `msl_score:dl_arch`, `msl_score:causal_exp`, `msl_score:causal_dag`, `msl_score:classical_boundary` not in METRICS.md registry | `METRICS.md` | Medium | ✅ Fixed 2026-05-30 |
+| 8 | CausalDAGExplorer and StreamingStabilityLab have no fidelity badges — both are Conceptual/Simplified fidelity, not mathematically faithful | `CausalInferenceTab.jsx`, `SparkLabTab.jsx` | Low | ⚠️ Open — fidelity badge upgrade (3-tier) is a separate Ideas.md item |
+| 9 | ROLLOUT.md Batch 0 checklist referenced removed "Learning Paths" (removed v4.15) in HomeTab test item | `ROLLOUT.md` | Low | ✅ Fixed 2026-05-30 |
 
 **Open findings by severity:**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 3 | #008.2 (distractors), #017.1 (hardcoded fonts App.jsx), #017.3 (LandscapeTab undocumented in LINEAGE) |
-| Low | 5 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex in App/dbt/ModelEval/InterviewPrep), #016.1-3 (emoji + mobile TODAY row) |
+| Medium | 3 | #008.2 (distractors), #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) |
+| Low | 7 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex in App/dbt/ModelEval/InterviewPrep), #016.1-2 (emoji residue), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial), #020.8 (no fidelity badges on new interactive modules) |
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

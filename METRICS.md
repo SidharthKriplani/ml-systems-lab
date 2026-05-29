@@ -58,7 +58,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 
 | Key | Type | Set by | Purpose |
 |-----|------|--------|---------|
-| `msl_score:{tabPrefix}` | `number` | Per-tab score logic | Cumulative score for each practice tab. `tabPrefix` examples: `spark`, `ts`, `classical` |
+| `msl_score:{tabPrefix}` | `number` \| `JSON` | Per-tab score logic | Cumulative score for each practice tab. `tabPrefix` examples: `spark`, `ts`, `classical`, `spark_broadcast`, `spark_oom`, `deeplearn_optimizer`, `deeplearn_regularize`, `deeplearn_transformer`, `dl_arch`, `causal_uplift`, `causal_obs_exp`, `causal_exp`, `classical_boundary` (JSON `{completed:true, ts}`). All keys use `msl_score:` prefix. |
 | `msl_trainer_history` | `JSON array` | `TrainerTab` | Last 50 MCQ session records: `{ date, score, total, domainBreakdown }` |
 | `msl_combinator_session` | `JSON` | `CombinatorTab` | Active in-progress session state: `{ screen, duration, questionIds, currentIdx, userAnswers, timeLeft, timePerQuestion, selfRatings, savedAt }`. `savedAt` is a Unix timestamp — elapsed time is subtracted on restore to correct timer drift across zone switches. Cleared on session end. |
 | `msl_combinator_history` | `JSON array` | `CombinatorTab` | Last 50 timed session records: `{ date, duration, score, total, domainBreakdown }` |
@@ -80,6 +80,10 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_casestudies` | `JSON object` | `CaseStudiesTab` | Map of `{ caseId: { q0: answered, q1: answered, ... } }` — persists which questions in each case study have been expanded/answered across sessions. |
 | `msl_projectlab_{dataset}_{phase}` | `JSON` | `ProjectLabTab` (planned) | Per-dataset, per-phase completion state. `dataset` ∈ `{churn, loan, fraud, housing}`. `phase` ∈ `{data, features, model, monitoring, deployment}`. Stores which cells have been run and which judgment checkpoints have been answered. Key is dynamic — one per dataset/phase pair. |
 | `msl_spot_the_flaw` | `JSON object` | `SpotTheFlawTab` | Map of `{ scenarioId: { selected: string, correct: boolean } }` — persists which scenarios have been attempted and whether the flaw category was identified correctly. Powers score strip (`attempted/total` and percentage). |
+| `msl_score:causal_dag` | `JSON` | `CausalInferenceTab` — CausalDAGExplorer | Custom score for the DAG node-role identification module. Tracks correct/attempted across 3 pre-built DAGs. |
+| `msl_score:causal_exp` | `JSON` | `CausalInferenceTab` — ExperimentDesignFailures | AccordionMCQ score for experiment design failures module (SRM, novelty effect, SUTVA). |
+| `msl_score:dl_arch` | `JSON` | `DeepLearningTab` — ArchDecisionLab | AccordionMCQ score for architecture decision scenarios (CNN vs ViT, TFT vs LSTM, MoE vs dense). |
+| `msl_score:classical_boundary` | `JSON {completed:true, ts:number}` | `ClassicalMLTab` — DecisionBoundaryLab | Written once when user has explored all 5 classifier modes. `ts` is Unix timestamp of completion. |
 
 ---
 
