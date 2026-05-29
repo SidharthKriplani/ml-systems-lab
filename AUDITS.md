@@ -47,9 +47,95 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 | **First-Time User** | Cold walk-through in incognito — every confusion point noted live | Before any public promotion |
 | **MVP / Weight** | Which features earn their place? Cut or consolidate candidates | When the app feels heavy |
 | **IP / Moat** | What's hard to replicate? What's original? What to double down on? | Annually |
+| **Guidance Completeness** | Every interactive surface has appropriate guiding text — tab descriptions, interaction hints, empty states, CTAs | After adding any new tab or major component |
+| **Content Linkage** | Every Gradient post has a YouTube ID (where applicable), a practice module CTA, and optionally a related-post link; every practice tab links back to its Gradient post | After adding any new post or practice module |
 
 **Audit types not yet run (high value):**
-- First-Time User, Source Material, Coverage, Analytics, MVP / Weight, IP / Moat, Architecture
+- First-Time User, Source Material, Coverage, Analytics, MVP / Weight, IP / Moat, Architecture, Guidance Completeness, Content Linkage
+
+---
+
+## Guidance Completeness — Audit Spec
+
+**What this audit checks, surface by surface:**
+
+### Tab level (every tab file)
+- `<h1>` or equivalent tab title — present and specific (not generic like "Module")
+- Domain description paragraph — 1–2 sentences explaining what this tab covers and why it matters in production. Should be `var(--ink-mid)` or `var(--ink-low)`, 13–14px, below the title.
+- Interaction hint paragraph — explains *how* to use the tab. Present below the description, above the module nav. Format varies by tab type (see below). Added in v4.17; must be present on all tabs including any added after that version.
+
+### By tab type — what the interaction hint must cover
+
+| Tab type | Must explain |
+|----------|-------------|
+| MCQ / accordion (e.g. FeatureEngTab, ModelEvalTab) | That each module opens with a scenario; that user picks an answer; that reveal shows production failure mode + why wrong options fail |
+| Sequential reveal (StaffLayerTab) | That scenarios show IC3 → IC5 → Staff answers in sequence; that user should form their own read before expanding each level |
+| Multi-part case (CaseStudiesTab) | That each case has 4 connected questions; that user should read the situation before expanding any question |
+| Simulation (SparkLabTab) | What each control does; what the output shows |
+| Python sandbox (ModelsMathTab) | That cells run real Python; that output is live; that user can edit and re-run |
+| Free-text / speech (VerbatimTab) | The record → review → self-rate loop; what the 4 dimensions are |
+| Code reading (CodeBugsTab) | That each scenario contains exactly one bug; the expand → locate → reveal flow |
+| Bank + modes (InterviewPrepTab) | The 4 modes (Bank, Timed, Fluency, Design) and when to use each |
+| Configuration → session (TrainerTab, CombinatorTab) | Domain/count selection → question flow → debrief |
+| Document builder (JDPrepTab, DefenseDocTab) | What the output is; what inputs are needed; what the document is for |
+| Read-only content (GradientTab) | The recommended entry path (featured / "new here" strip); that posts link to practice modules |
+| Information / reference (LandscapeTab, AskTab) | What the content covers; how to navigate it (filter, search, expand) |
+
+### Module level (within a tab)
+- Module nav labels — clear, not ambiguous. "Module 1" is not acceptable; "Feature Stores" is.
+- Module description — each module should have a one-line description of the specific scenario or topic it covers, visible before the user expands anything.
+- Scenario prompt — the question or situation must be clearly framed. A scenario that opens with code or a table but no framing sentence is incomplete.
+
+### Card / item level (within a module)
+- MCQ options — all 4 options must be plausible enough that a user has to think. An obviously-wrong option has no guidance value and wastes a slot.
+- Reveal / explanation — must explain: (a) why the correct answer is correct in production terms, (b) why at least 2 wrong options fail (not just "this is wrong"). One-sentence dismissals don't count.
+- Empty / zero state — any list, grid, or feed that can be empty must have a message. "No results" is the minimum; "No results — try clearing filters" is better.
+
+### CTA / navigation level
+- Every module that has a related Gradient post must have a visible "Go deeper →" link at the bottom of the module content.
+- Every tab must have at least one onward path — either a Gradient post link or a "Test this in Combinator / Trainer →" link. A tab that ends silently is incomplete.
+
+**How to run this audit:**
+1. Open each tab in the running app (or read the JSX if no live environment).
+2. For each surface level above, confirm presence or absence.
+3. Log missing items with tab name, surface level, and what's missing.
+4. Findings → fix in the same session if < 30 min total, otherwise log as open in AUDITS.md and schedule.
+
+**Frequency:** Run after adding any new tab. Run as a full sweep quarterly or whenever a large content sprint adds 5+ new modules.
+
+---
+
+## Content Linkage — Audit Spec
+
+**What this audit checks:**
+
+### Gradient post → outbound links
+
+For each post in `src/data/gradientPosts.js`:
+
+| Field / element | Requirement |
+|----------------|-------------|
+| `youtubeId` | Present and valid if a YouTube video exists for this topic. Empty string is acceptable only if no relevant video exists — must be a deliberate choice, not an oversight. Check by searching YouTube for the post title + channel name. |
+| `practiceLink` (or equivalent CTA) | Each post must link to the practice module most relevant to its content. The CTA should appear at the end of the post body. Format: "Practice this → [Tab name]" linking to the correct `tabId`. |
+| Related post link | Optional but recommended for posts in a series or covering adjacent topics. Should appear inline within the post body at the relevant point, not just in a sidebar. |
+| External source link | Any claim citing a specific paper, incident, or company blog should have an inline link. Unsourced claims in a learning tool erode credibility. |
+
+### Practice tab → Gradient post back-links
+
+For each practice tab (FeatureEngTab, ModelEvalTab, SystemDesignTab, MonitoringTab, DeepLearningTab, ClassicalMLTab, etc.):
+
+| Check | Requirement |
+|-------|-------------|
+| Tab-level "Go deeper" CTA | At minimum one Gradient post link in the tab header area or as a sticky footer within the tab. Already present in FeatureEngTab, ModelEvalTab, MonitoringTab — ensure all others have it. |
+| Module-level "Go deeper" CTA | Each module whose topic has a corresponding Gradient post should link to it at the bottom of the module content. This is the forward pointer pattern described in NEXT.md. |
+| No orphaned modules | A module whose topic has no Gradient post and no Trainer/Combinator link is a dead end. At minimum add "Test this in Combinator →" so the user has an onward path. |
+
+### How to run this audit
+1. Pull the full list of posts from `gradientPosts.js`. For each post: check `youtubeId` is populated, verify the practice CTA exists in the post body, note any missing external source links.
+2. For each practice tab: grep for "Go deeper" or "gradient" — confirm at least one outbound link exists. Check module-level CTAs in the highest-traffic modules first (SystemDesign, FeatureEng, ModelEval, Monitoring, DeepLearning).
+3. Log: post ID / tab name, missing element, severity (High = no practice CTA at all; Medium = missing YouTube ID; Low = missing related post or source link).
+
+**Frequency:** Run after adding any new Gradient post. Run as a full sweep after any content sprint that adds 3+ posts or 5+ new modules.
 
 ---
 
