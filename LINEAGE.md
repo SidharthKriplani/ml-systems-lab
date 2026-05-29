@@ -46,42 +46,64 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
-### v4.19 — Audit #017 codebase sweep (2026-05-29)
+### v4.19 — Audit #017 codebase sweep + new audit types (2026-05-29)
 
-**CLAUDE.md file structure corrected:** 3 wrong filenames fixed (`MathFoundationsTab` → `ModelsMathTab`, `DeploymentTab` → `MLOpsDeployTab`, `CICDTab` → `MLOpsPipelinesTab`). `LandscapeTab.jsx` added to the list — it was missing entirely.
+**Why this audit was run:** Routine health check triggered after a large session (v4.17/v4.18) that touched many files. The specific concern going in: session summaries reference tab names, and if those names are wrong in CLAUDE.md, every future session starts with a broken mental model of the codebase.
 
-**AUDITS.md numbering fixed:** Duplicate #009 section header (emoji/mobile audit) renumbered to #016. Duplicate #010 summary row (TimeSeriesTab bug fix) deduplicated. Stale open findings for #001.5 (onNavigate — fixed v4.2) and #002.1/2 (font hardcoding, dead file — fixed v4.3) updated to resolved. New audit #017 logged with 5 findings.
+**CLAUDE.md file structure — 3 wrong filenames + 1 ghost tab:**
+The file structure list in CLAUDE.md had drifted from reality. Three tabs had been renamed at some point but the doc wasn't updated: `MathFoundationsTab.jsx` (actual: `ModelsMathTab.jsx`), `DeploymentTab.jsx` (actual: `MLOpsDeployTab.jsx`), `CICDTab.jsx` (actual: `MLOpsPipelinesTab.jsx`). More critically, `LandscapeTab.jsx` — a real, 684-line, fully routed tab in the `today` zone — was completely absent from the list. It had never been documented anywhere. A session reading CLAUDE.md would have no idea the tab exists or which zone it lives in.
 
-**LandscapeTab origin (retroactive):** `LandscapeTab.jsx` is a 684-line career intelligence tab in the `today` zone. Content: 6 ML role profiles (MLE, MLOps, DE, DS, Research, Applied Scientist) with day-in-life descriptions, skills, and hiring companies; ML market data for 6 geographies (US, UK, DE, CA, IN, SG) with compensation ranges; ML technology timeline (2017–2025); interactive role detail panels. Built at some point before v4.14 (Satoshi font swap touched it). Added to CLAUDE.md file list in v4.19.
+**LandscapeTab retroactive documentation:**
+`LandscapeTab.jsx` is a career intelligence tab in the `today` zone. Content: 6 ML role profiles (MLE, MLOps, DE, DS, Research, Applied Scientist) — each with day-in-life description, required skills, hiring companies, and compensation by geography. Global ML market data for 6 regions (US, UK, DE, CA, IN, SG) with senior-level compensation ranges, timezone and immigration context. ML technology timeline 2017–2025 (AlphaGo → production AI). All content is static, no localStorage. The tab uses `onNavigate` to link role profiles back to HomeTab learning paths. Built before v4.14 (confirmed: the Satoshi font swap commit touched it). Reason it was never documented: it was likely built in a session where CLAUDE.md wasn't updated at the end.
+
+**AUDITS.md numbering cleanup:**
+Duplicate `#009` section headers — the Visual Polish audit (correct, May 2026-05-27) and the Emoji Residue audit (incorrectly assigned the same number, 2026-05-29). Renumbered emoji residue to `#016`. Duplicate `#010` in summary table (TimeSeriesTab bug fix and Interaction Guidance both listed as 010) — deduplicated. Two findings marked ⚠️ Open that had been resolved in v4.2/v4.3 (onNavigate, font hardcoding) updated to resolved. These had been stale for multiple sessions.
+
+**Open findings from this audit (5 total):**
+Three are quick housekeeping: hardcoded font strings in `App.jsx` (missed when tabs were cleaned in v4.2), residual `#000`/`#fff`/`#f97316` hex literals in 4 files, and `LandscapeTab` undocumented in LINEAGE (addressed here). Two are deferred: bundle size (28,757 lines, no lazy loading — already in IDEAS.md) and the LINEAGE.md brevity pattern noted in the same session.
+
+**Two new audit types added to AUDITS.md:**
+- **Guidance Completeness** — checks that every interactive surface (tab, module, card, CTA) has appropriate guiding text. Detailed spec covers what's required at 4 levels and per tab type. Motivated by the v4.17 guidance pass — without a repeatable audit type, new tabs will silently ship without guidance.
+- **Content Linkage** — checks that every Gradient post has a YouTube ID (where applicable), a practice module CTA, and optionally related-post links; and that practice tabs link back to Gradient posts. Motivated by the observation that posts and modules were being built independently with no systematic check that they reference each other.
 
 ---
 
 ### v4.18 — Footer cross-links (2026-05-29)
 
-**Problem:** ML Systems Lab, GenAI Systems Lab, and Product Analytics Lab had no awareness of each other. Users who found one lab had no path to the other two.
+**Why cross-link at all:**
+Three labs exist — ML Systems Lab, GenAI Systems Lab, Product Analytics Lab — built by the same team, targeting the same user (ML practitioners preparing for production roles). A user who finds one lab and gets value from it has no way to discover the other two unless they happen to search GitHub. Each lab is a standalone deployment on its own Vercel URL with no shared navigation. Cross-links are the minimal fix: passive, non-intrusive, permanent discoverability at zero maintenance cost.
 
-**Change:** Passive footer added to `App.jsx` below all zone content. Copy: "Also by the same team: GenAI Systems Lab · Product Analytics Lab". Style: `var(--ink-ghost)`, 11px, centered, `lineHeight: 1.6`. Links open in new tab.
+**Why a footer rather than a hero/sidebar link:**
+Considered options: (a) a dedicated "More labs" section in the Today zone, (b) a card in the PracticeGrid or InterviewGrid, (c) a passive footer. Options (a) and (b) were rejected because they add navigational weight to surfaces that should stay focused on the app's own content. A first-time user shouldn't see "also check out these other apps" before they've gotten value from this one. The footer is the conventional home for this kind of persistent but non-primary navigation — visible but not competing for attention.
 
-**Ecosystem context updated** in LINEAGE.md: Ecosystem section now notes that cross-links exist on each homepage.
+**Copy — "same team" not "same author":**
+First draft used "Also by the same author:" — then caught that Product Analytics Lab already used "same team." Standardised to "same team" across all three for consistency. "Team" is also more accurate — these are collaborative learning tools, not a single person's byline.
+
+**Styling decisions:**
+`var(--ink-ghost)` (the most muted ink level), 11px, centered. Deliberately the quietest possible text. Underline with `textUnderlineOffset: 3px` for readability without visual noise. Links open in new tab — the user shouldn't lose their place in the current lab.
+
+**State of the other two repos:**
+Checked by cloning both repos at the time of implementation. Both GenAI Systems Lab and PAL already had cross-link footers from their own build sessions. ML Systems Lab was the only one missing it. The final state: all three labs link to the other two, footers are symmetric.
 
 ---
 
 ### v4.17 — Interaction guidance pass (2026-05-29)
 
-**Problem:** Every tab had a title and a domain description but nothing telling users how to interact. New users landed on tabs with no indication that content was interactive, that answers revealed per-option explanations, or what the controls did.
+**The underlying problem:**
+The app had been built from a developer's perspective — content was rich, interactive, and well-structured — but there was no onboarding layer for someone encountering it cold. A new user landing on FeatureEngTab would see a title, a one-line description, and a row of module buttons. Nothing communicated that clicking a module would open a production scenario, that there were 4 answer options, that picking one would reveal a detailed breakdown of why it was right or wrong. The visual design of an MCQ tab and an informational tab look identical at rest. Users were expected to explore and discover the mechanic — which is fine for a side project but breaks for a product trying to demonstrate value in the first 60 seconds.
 
-**Changes:** Added a second instruction paragraph to all 23 interactive tabs — below the existing description, above the module nav. Text is tab-specific:
-- MCQ/accordion tabs (16): scenario format + answer-reveal mechanic explained
-- SparkLab: simulation controls explained
-- ModelsMath: Python execution flow explained
-- CodeBugs: subtitle rewritten + expand→answer→fix flow explained
-- StaffLayer: sequential IC-level reveal format explained
-- CaseStudies: multi-part question format explained
-- InterviewPrep: 4-mode switcher (Bank / Timed / Fluency / Design) explained
-- Trainer: domain selection → question flow → debrief explained
-- Verbatim: record → rate → transcript flow explained
+The deeper observation: visual learning tools, animations, and interactive elements are only aids. They only work if users understand what they're being asked to do. A Pyodide cell that runs Python is useless if the user doesn't realise they can edit and re-run it. A sequential reveal that shows IC3 → IC5 → Staff is useless if the user doesn't know to form their own opinion before expanding. The interaction mechanic is part of the learning design — it needed to be communicated explicitly.
 
-**Net change:** +27 lines across 23 files. No structural changes.
+**What was added and why the format was chosen:**
+A second paragraph below the existing domain description, above the module nav, on every interactive tab. The placement (below description, above nav) puts it in the natural reading flow: you read what the tab is about, then you read how to use it, then you navigate. Considered alternatives: (a) a dismissible onboarding tooltip/modal — rejected because it adds UI complexity and gets dismissed immediately anyway; (b) a banner on first visit only (localStorage-gated) — rejected because it adds state management complexity and fails for users who clear storage; (c) inline hints within each module — rejected because it requires touching every module across 23 files and creates redundant text on repeat visits. The single paragraph per tab was the minimal, no-state, no-JS approach that works for every user on every visit.
+
+**Why tab-specific text, not a generic hint:**
+Every tab type has a fundamentally different mechanic. A generic "click to explore" hint would be true but useless. The hint for StaffLayerTab needs to explain that the user should form their own read *before* expanding — that's a specific instruction that shapes the learning behaviour. The hint for VerbatimTab needs to explain the record → rate → transcript loop including the 4 rating dimensions. Writing tab-specific text was more work but the only way to make the hints actually useful.
+
+**Scope:**
+23 tabs touched. MCQ/accordion tabs got a standardised template with light customisation. Simulation, Python, and specialised-format tabs got fully custom text. CodeBugsTab got a subtitle rewrite as well — the old subtitle described the tab mechanically; the new one ("Real ML code with exactly one bug buried in it.") communicates the challenge and the format in a single line.
+
+**Net change:** +27 lines across 23 files. No structural, routing, or data changes.
 
 ---
 
