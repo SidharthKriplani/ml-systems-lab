@@ -46,6 +46,37 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.31 — Oracle identity refactor: full amber sweep across 5 tabs (2026-05-30)
+
+**What shipped:** Systematic replacement of all decorative multi-color accent usage across the 5 highest-hit tabs. Single amber (`var(--prime)`) + warm gray neutrals now enforced across the full practice zone.
+
+**Files changed:** MonitoringTab (73 hits), CausalInferenceTab (57 hits), FeatureEngTab (62 hits), ClassicalMLTab (66 hits), GradientTab (41 hits). All brace-balanced at 0. One commit.
+
+**Replacement rules applied:**
+- All `borderLeft: '3px solid var(--X)'` on scenario/module cards → `var(--prime)`
+- All eyebrow/section labels using mint/sky/ember/rose/violet/gold → `var(--prime)` or `var(--ink-low)`
+- All badge backgrounds/borders on module type/category labels → amber rgba or `var(--prime)`
+- All progress bar fills using non-amber tokens → `var(--prime)`
+- All `accent: 'var(--X)'` / `accentColor=` on module data/components → `var(--prime)`
+- All inline rgba() card tints using non-amber values → `rgba(240,165,0,…)`
+- GradientTab: all 30 POSTS `catColor` objects unified to amber; `GRADIENT_DOMAINS` + `DOMAIN_COLOR` map all → prime; reading progress bar hardcoded gradient → prime; CALLOUT_STYLES lesson sky → amber; CaseDetail section labels → prime/ink-low; practice CTA box sky → amber
+
+**Preserved (intentional):**
+- `msl-option-btn correct/wrong` CSS classes — MCQ feedback states
+- `msl-reveal-panel` — answer revealed state
+- `.py-output` terminal colors
+- BiasVarianceVisualizer data series (sky training curve, rose/ember regions) — distinct data encoding
+- Decision Boundary Lab sky/ember class 0/1 data points — data series
+- SimpsonsParadoxViz violet/sky Treatment/Control bars — data series
+- SEV severity scales (rose/ember/gold/sky) in AlertTuner/IncidentTriage — functional
+- SEVERITY_COLORS P0/P1 rose in GradientTab CaseLibrary — functional severity
+- BADGE_COLORS latency/freshness in FeatureEngTab OnlineOfflineDecider — severity
+- PROS (mint)/CONS (rose) pair in FeatureEngTab — universal semantic convention
+- VIDEO badge (rose) and READ badge (mint) in GradientTab PostCard — status indicators
+- TYPE_COLORS and BD_NODE_COLORS in CausalInferenceTab — DAG node structural roles
+
+---
+
 ### v4.30 — Bias-Variance visualizer, Simpson's Paradox viz, SpotTheFlaw expanded to 12, cloud callouts, .msl-option-btn unified (2026-05-30)
 
 **What shipped:** New interactive visualizers, 2 new SpotTheFlaw scenarios, AWS cloud callout panels across 3 MLOps tabs, and `.msl-option-btn` applied to all remaining MCQ tabs. CSS design system extended with `.msl-cloud-map` + `.msl-cloud-chip`.

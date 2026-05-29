@@ -423,7 +423,7 @@ function LRStrategyModule() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Learning Rate Strategy</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Learning Rate Strategy</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
             Given the training setup, pick the correct LR strategy. Then see the explanation.
           </p>
@@ -439,7 +439,7 @@ function LRStrategyModule() {
       </div>
 
       {/* Scenario card */}
-      <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--violet)' }}>
+      <div className="card" style={{ padding: '22px', borderLeft: '3px solid var(--prime)' }}>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.6, margin: '0 0 14px 0' }}>
           {scenario.setup}
         </p>
@@ -460,7 +460,7 @@ function LRStrategyModule() {
             if (opt.id === scenario.answer) { bg = 'rgba(52,211,153,0.15)'; border = 'var(--mint)'; color = 'var(--mint)' }
             else if (opt.id === picked)     { bg = 'rgba(244,63,94,0.15)';  border = 'var(--rose)'; color = 'var(--rose)' }
           } else if (opt.id === picked) {
-            bg = 'rgba(99,102,241,0.15)'; border = 'var(--violet)'; color = 'var(--violet)'
+            bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
           }
           return (
             <button key={opt.id} onClick={() => choose(opt.id)} disabled={revealed}
@@ -480,8 +480,8 @@ function LRStrategyModule() {
             {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{LR_OPTIONS.find(o => o.id === scenario.answer)?.label}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
-          <div style={{ padding: '12px 14px', background: 'rgba(99,102,241,0.13)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Practical note</div>
+          <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Practical note</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.note}</p>
           </div>
           <button className="btn-primary" onClick={next} style={{ alignSelf: 'flex-start' }}>Next scenario →</button>
@@ -593,7 +593,7 @@ function PEFTComparisonModule() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>PEFT Method Comparison</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>PEFT Method Comparison</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>
           Pick your primary constraint. Methods are reranked. Feature matrix in mono for quick scanning.
         </p>
@@ -608,9 +608,9 @@ function PEFTComparisonModule() {
               style={{
                 padding: '7px 16px', borderRadius: '20px', fontSize: '13px',
                 fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
-                border: `1px solid ${constraint === c.id ? 'var(--violet)' : 'var(--rim)'}`,
-                background: constraint === c.id ? 'rgba(99,102,241,0.12)' : 'transparent',
-                color: constraint === c.id ? 'var(--violet)' : 'var(--ink-low)',
+                border: `1px solid ${constraint === c.id ? 'var(--prime)' : 'var(--rim)'}`,
+                background: constraint === c.id ? 'rgba(240,165,0,0.12)' : 'transparent',
+                color: constraint === c.id ? 'var(--prime)' : 'var(--ink-low)',
                 transition: 'all 0.15s',
               }}>
               {c.label}
@@ -623,8 +623,8 @@ function PEFTComparisonModule() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {ranked.map((method, rank) => {
           const isTop    = constraint && method.scores[constraint] === topScore
-          const accent   = isTop ? 'var(--violet)' : 'var(--rim)'
-          const bgBoost  = isTop ? 'rgba(99,102,241,0.10)' : 'transparent'
+          const accent   = isTop ? 'var(--prime)' : 'var(--rim)'
+          const bgBoost  = isTop ? 'rgba(240,165,0,0.10)' : 'transparent'
           return (
             <div key={method.id} className="card" style={{ padding: '18px 20px', borderLeft: `3px solid ${accent}`, background: bgBoost, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap' }}>
@@ -632,10 +632,10 @@ function PEFTComparisonModule() {
                 <div style={{ minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {constraint && (
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: isTop ? 'var(--violet)' : 'var(--ink-low)', fontWeight: 700 }}>#{rank + 1}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: isTop ? 'var(--prime)' : 'var(--ink-low)', fontWeight: 700 }}>#{rank + 1}</span>
                     )}
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: isTop ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{method.name}</span>
-                    {isTop && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(99,102,241,0.15)', color: 'var(--violet)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>BEST FIT</span>}
+                    {isTop && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(240,165,0,0.15)', color: 'var(--prime)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>BEST FIT</span>}
                   </div>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Trainable: {method.trainable}</span>
                 </div>
@@ -703,8 +703,8 @@ export default function DLFineTuningTab({ onNavigate }) {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--violet) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Fine-tuning & Adaptation</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(99,102,241,0.12)', color: 'var(--violet)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Fine-tuning & Adaptation</h1>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '680px', margin: 0 }}>
           Full fine-tune when you shouldn't, LoRA when you don't need to, freeze when you need to update — these are the real mistakes. Make the right call from constraints.
@@ -718,9 +718,9 @@ export default function DLFineTuningTab({ onNavigate }) {
           <button key={m.id} onClick={() => setActive(m.id)}
             style={{
               padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s',
-              border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`,
-              background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent',
-              color: active === m.id ? 'var(--violet)' : 'var(--ink-low)',
+              border: `1px solid ${active === m.id ? 'var(--prime)' : 'var(--rim)'}`,
+              background: active === m.id ? 'rgba(240,165,0,0.10)' : 'transparent',
+              color: active === m.id ? 'var(--prime)' : 'var(--ink-low)',
               fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500,
             }}>
             {m.label}
