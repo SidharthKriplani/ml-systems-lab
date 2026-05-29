@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 // ─── Shared style helpers ─────────────────────────────────────────────────────
 const mono = { fontFamily: 'var(--font-mono)' }
@@ -14,6 +14,155 @@ const pill = (color) => ({
   color: color,
   ...mono,
 })
+
+// ─── Shared AccordionMCQ ─────────────────────────────────────────────────────
+function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
+  const [diffFilter, setDiffFilter] = useState('all')
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
+
+  function getDiff(i, total) {
+    const t = total / 3
+    return i < t ? 'easy' : i < 2 * t ? 'medium' : 'hard'
+  }
+
+  function toggle(i) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, open: !it.open } : it))
+  }
+  function pick(i, opt) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: opt, revealed: true } : it))
+  }
+
+  useEffect(() => {
+    function handleKey(e) {
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 4) {
+        const openIdx = items.findIndex(it => it.open && !it.revealed)
+        if (openIdx !== -1 && n - 1 < scenarios[openIdx].options.length) pick(openIdx, n - 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [items])
+
+  const attempted = items.filter(it => it.revealed).length
+  const correct   = items.filter((it, i) => it.revealed && it.picked === scenarios[i].answer).length
+  const pct       = attempted === 0 ? 0 : Math.round((correct / attempted) * 100)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Difficulty filter */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        {['all','easy','medium','hard'].map(d => (
+          <button key={d} onClick={() => setDiffFilter(d)} style={{
+            fontSize: '10px', padding: '3px 10px', borderRadius: '999px',
+            background: diffFilter === d ? accentColor + '15' : 'transparent',
+            border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
+            color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}>
+            {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
+          </button>
+        ))}
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
+          {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
+        </span>
+      </div>
+
+      {/* Score strip */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
+        {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
+        <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+          <div style={{ width: `${(attempted / scenarios.length) * 100}%`, height: '100%', background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {scenarios.map((sc, i) => { if (diffFilter !== 'all' && getDiff(i, scenarios.length) !== diffFilter) return null;
+        const it = items[i]
+        const isCorrect = it.revealed && it.picked === sc.answer
+        return (
+          <div key={sc.id} style={{ border: `1px solid ${it.open ? accentColor + '55' : 'rgba(255,255,255,0.15)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
+            {/* Header row */}
+            <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-ghost)', transition: 'transform 0.2s', transform: it.open ? 'rotate(90deg)' : 'rotate(0deg)' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 2l4 3-4 3"/></svg></span>
+            </button>
+
+            {/* Body */}
+            {it.open && (
+              <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Context */}
+                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
+                  {Array.isArray(sc.context) ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{sc.context}</p>
+                  )}
+                </div>
+
+                <p style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', margin: 0 }}>{sc.question}</p>
+
+                {/* Options */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {sc.options.map((opt, oi) => {
+                    const isPicked = it.picked === oi
+                    const isAns    = sc.answer === oi
+                    let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
+                    if (it.revealed) {
+                      if (isAns)          { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
+                      else if (isPicked)  { bg = 'rgba(239,68,68,0.15)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
+                    } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
+                    return (
+                      <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
+                        <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Explanation */}
+                {it.revealed && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="msl-reveal-panel" style={{ padding: '12px 16px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
+                    </div>
+                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
+                      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 // ─── Module 1: CI/CD Gate Design ─────────────────────────────────────────────
 const GATES = [
@@ -572,33 +721,149 @@ function RegistryPatterns() {
   )
 }
 
+// ─── Module 4: Model Registry Patterns (AccordionMCQ) ────────────────────────
+const MODEL_REGISTRY_SCENARIOS = [
+  {
+    id: 'mreg1',
+    title: 'Semantic versioning breaks under continuous training',
+    context: 'Your team uses semantic versioning (1.0.0, 1.1.0, 2.0.0) for model artifacts in S3. Models are retrained weekly. After 6 months you have 26 versions. A downstream team pinned their serving config to "model >= 1.x" and accidentally picked up a model with a breaking input schema change that was released as v1.9.0 instead of v2.0.0.',
+    question: 'What versioning strategy prevents this class of failure?',
+    options: [
+      'Use stricter semantic versioning discipline — major version for any schema change.',
+      'Hash-based versioning (content-addressed by model artifact hash) with an explicit schema contract file checked into the registry alongside every artifact.',
+      'Require all downstream consumers to pin exact versions, not ranges.',
+      'Add a model changelog document that engineers read before upgrading.',
+    ],
+    answer: 1,
+    diagnosis: 'Semantic versioning requires human judgment to correctly classify breaking vs. non-breaking changes. Under weekly retraining with multiple engineers, version bumping discipline degrades. Hash-based versioning removes the judgment call: the hash is the version. Schema contracts checked into the registry make breaking changes detectable programmatically.',
+    fix: 'Move to content-addressed artifact versioning: `sha256(model_artifact)` as the canonical version ID. Register a `schema.json` with every artifact (input feature names + dtypes, output schema). Add a compatibility check in the promotion gate: if `schema.json` differs from the currently deployed version, block auto-promotion and require explicit sign-off.',
+  },
+  {
+    id: 'mreg2',
+    title: 'Shadow mode promotion gate fails silently',
+    context: 'Your MLOps platform runs new models in shadow mode for 48 hours before promoting to canary. Shadow mode logs predictions but does not serve them to users. After promotion, a model that performed well in shadow mode shows 12% higher error rate in canary. Investigation reveals shadow traffic was sampled from cached requests, not live traffic.',
+    question: 'What was the root failure in the shadow mode gate?',
+    options: [
+      'Shadow mode duration was too short at 48 hours.',
+      'The canary rollout percentage was too high.',
+      'Shadow traffic did not represent the live distribution — cached requests have different feature distributions than real-time requests. The gate passed a model that was never tested on actual live traffic.',
+      'The model was not retrained on recent enough data.',
+    ],
+    answer: 2,
+    diagnosis: 'Shadow mode is only as valid as its traffic sample. Cached requests have higher hit rates, different session lengths, and different feature value distributions than real-time traffic. A model that performs well on cached traffic may degrade on real-time traffic with cold-start features, fresh user state, or recent inventory changes.',
+    fix: 'Verify shadow traffic provenance before trusting gate results. Live shadow mode must intercept actual inference requests, not replay cached ones. Add a traffic distribution check to the gate: compare feature value distributions between shadow traffic and the last 7 days of production traffic. Flag divergence > 10% PSI as a gate failure.',
+  },
+  {
+    id: 'mreg3',
+    title: 'Rollback trigger: when to rollback vs. retrain',
+    context: 'Your production recommendation model shows a sudden AUC drop from 0.81 to 0.74 at 2am. Monitoring also shows PSI = 0.31 on the `user_age` feature (upstream data pipeline changed bucketing logic). P95 serving latency is unchanged.',
+    question: 'What is the correct immediate response?',
+    options: [
+      'Rollback to the previous model version immediately.',
+      'Retrain the model on recent data and promote to production.',
+      'The AUC drop is caused by the upstream feature distribution shift, not model degradation. Fix the upstream pipeline first. Rollback would restore the model but not fix the feature — the rollback model would also degrade on the same corrupted feature.',
+      'Increase canary traffic to the previous model version while investigating.',
+    ],
+    answer: 2,
+    diagnosis: 'Rollback addresses model failures, not data failures. When PSI on an input feature exceeds 0.25, the feature distribution has fundamentally shifted — both the current and previous model will produce degraded outputs on the same bad feature. Rollback without fixing the upstream pipeline is a no-op.',
+    fix: 'Classify the failure before responding: if monitoring shows feature PSI > 0.25 alongside metric degradation, the root cause is upstream, not the model. Escalate to the data engineering team for pipeline fix. If the fix takes >2 hours, consider temporarily routing traffic to a model that does not depend on the degraded feature. Reserve model rollback for cases where the model artifact itself is the failure source.',
+  },
+]
+
+function ModelRegistryPatterns() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>MLOps Patterns</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Model Registry Patterns</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Versioning strategies, promotion gates, and rollback decisions — the operational state machine that separates teams that ship safely from teams that page at 2am.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={MODEL_REGISTRY_SCENARIOS} accentColor="var(--mint)" storageKey="mlops_pipeline_registry" />
+    </div>
+  )
+}
+
+// ─── Module 5: Schema Cascade Failure ────────────────────────────────────────
+const SCHEMA_CASCADE_SCENARIOS = [
+  {
+    id: 'sc1',
+    title: 'Upstream column rename breaks four models silently',
+    context: 'A data engineering team renames `user_tenure_days` to `account_age_days` in the feature store as part of a schema cleanup. The change passes CI because no tests check column names against downstream consumers. Four production models that use `user_tenure_days` as a top-5 feature continue serving — they silently receive NaN for the missing column and fall back to imputed mean values.',
+    question: 'Why did model monitoring not catch this immediately?',
+    options: [
+      'The models were retrained after the rename, so they learned to use the new column name.',
+      'NaN imputation with mean values keeps the feature distribution superficially stable — PSI stays low because the imputed mean resembles historical distribution. Prediction quality degrades without triggering a distribution alert.',
+      'The monitoring system was not configured to track this feature.',
+      'Four models is too many to monitor simultaneously.',
+    ],
+    answer: 1,
+    diagnosis: 'Mean imputation is the silent killer: replacing a missing column with its historical mean produces a feature value that looks statistically valid. PSI compares the new distribution to the reference — if the reference also included some mean-imputed values, the shift is masked. Model performance degrades because the signal is gone, but the distribution appears stable.',
+    fix: 'Add null-rate monitoring as a first-class signal alongside PSI. A null rate jump from 0.2% to 100% for any feature should trigger an immediate alert, regardless of imputation strategy. In CI/CD, add a schema compatibility check: before merging any feature store schema change, run a consumer scan that lists all models depending on the affected columns.',
+  },
+  {
+    id: 'sc2',
+    title: 'dbt model rename cascades to serving pipeline',
+    context: [
+      'A dbt model `fct_user_events` is renamed to `fct_events_v2` and the old model is deprecated. The dbt CI passes.',
+      'Three days later, the real-time feature computation service — which reads from the dbt output table directly via a Spark job — begins returning stale features. The Spark job silently fails to find the renamed table and falls back to a cached snapshot from 3 days prior.',
+    ],
+    question: 'What gating mechanism would have prevented this?',
+    options: [
+      'The dbt rename should have been blocked — table names should never change.',
+      'A cross-system lineage check in the dbt CI pipeline: before deprecating any model, verify no downstream consumers (Spark jobs, ML pipelines, dashboards) reference the old table name. Block merge if live consumers exist.',
+      'The Spark job should have used a table alias, not a direct table name.',
+      'Feature store caching should be disabled to prevent stale fallback.',
+    ],
+    answer: 1,
+    diagnosis: 'dbt CI only validates the dbt DAG. It has no visibility into Spark jobs, ML serving pipelines, or dashboards that read from dbt output tables directly. A rename that passes dbt CI can still silently break every downstream consumer that was not part of the dbt graph.',
+    fix: 'Build cross-system lineage: maintain a registry of all consumers of each dbt model (Spark jobs, ML features, dashboards). Integrate this registry into dbt CI — any rename or deprecation triggers a consumer scan. Block merge until all consumers are either updated or explicitly acknowledged. Tools like DataHub, OpenLineage, or a simple internal YAML consumer manifest work for this.',
+  },
+  {
+    id: 'sc3',
+    title: 'Feature dtype change causes silent score inflation',
+    context: 'A feature pipeline changes `purchase_count_30d` from `int32` to `float32` as part of a standardisation pass. The change is backward-compatible in Python. Model serving normalises all features by dividing by their historical max. The historical max for `purchase_count_30d` was computed as integer 847 — stored as int in the normalisation config. After the dtype change, floating-point division produces slightly different normalised values due to precision differences.',
+    question: 'What is the most production-dangerous aspect of this failure?',
+    options: [
+      'Float features use more memory than int features.',
+      'The score change is small enough to stay within monitoring thresholds — no alert fires. But the model was trained on int-normalised values, so the serving distribution has silently diverged from the training distribution for every request.',
+      'The normalisation config should be recomputed after every dtype change.',
+      'Int32 to float32 is a breaking schema change that should require a major version bump.',
+    ],
+    answer: 1,
+    diagnosis: 'Training-serving skew without an alert: the dtype change introduces a tiny, consistent numerical difference in every normalised feature value. The PSI on the normalised feature stays near zero (the distribution shape is identical, just shifted by a small constant). But the model was never trained on float-normalised values — the skew is real and permanent.',
+    fix: 'Add a training-serving consistency check to the serving pipeline: periodically sample a batch of serving requests, run the same features through the training-time normalisation pipeline, and compare outputs. Any consistent difference > 1e-4 in feature value should trigger a review. Lock normalisation configs to the training pipeline version and require recomputation — not just dtype-safe migration — when any input schema changes.',
+  },
+]
+
+function SchemaCascade() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Pipeline Failure Modes</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Schema Cascade Failure</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          A schema change in an upstream table breaks downstream models without raising an exception. Trace the cascade and design the gating strategy that would have caught it.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={SCHEMA_CASCADE_SCENARIOS} accentColor="var(--ember)" storageKey="mlops_pipeline_schema" />
+    </div>
+  )
+}
+
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'cicd',     label: 'CI/CD Gate Design',       icon: '',  component: CiCdGates },
-  { id: 'infra',    label: 'Infrastructure Decision',  icon: '',  component: InfraDecision },
-  { id: 'registry', label: 'Model Registry Patterns',  icon: '',  component: RegistryPatterns },
+  { id: 'cicd',            label: 'CI/CD Gate Design',       icon: '',  component: CiCdGates },
+  { id: 'infra',           label: 'Infrastructure Decision',  icon: '',  component: InfraDecision },
+  { id: 'registry',        label: 'Model Registry Patterns',  icon: '',  component: RegistryPatterns },
+  { id: 'model_registry',  label: 'Model Registry',           icon: '',  component: ModelRegistryPatterns },
+  { id: 'schema_cascade',  label: 'Schema Cascade',           icon: '',  component: SchemaCascade },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Model Registry Patterns',
-    userBrief: 'Version a model correctly before your promotion gates break. Semantic versioning vs hash-based, when each fails, and the state machine from shadow mode to production.',
-    devBrief: {
-      micro: 'AccordionMCQ, 3 scenarios: versioning strategy collapse, promotion gate misconfiguration, rollback trigger ambiguity. Same AccordionMCQ format as existing modules. ~1.5h content + ~30min wiring.',
-      macro: 'Pipelines tab covers testing and data quality gates. Registry Patterns covers the model lifecycle gate — promotion, rollback, versioning. Fills the gap in the CI/CD loop between "tests pass" and "model ships."',
-    },
-  },
-  {
-    label: 'Upstream Dependency Failures',
-    userBrief: 'A schema change in the upstream feature table breaks four downstream models without throwing an exception. Walk through the cascade and decide the right gating strategy.',
-    devBrief: {
-      micro: 'Single multi-part scenario with branching analysis. Decision: schema validation at ingestion vs at model serving vs at both. Reveals production config options: Great Expectations, dbt contracts, schema registries.',
-      macro: 'Complements the existing Schema Validation module with the production failure version of the same problem — what happens when the tests did not catch it. Reinforces why schema contracts matter upstream of the pipeline.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function MLOpsPipelinesTab({ onNavigate }) {
   const [active, setActive] = useState('cicd')

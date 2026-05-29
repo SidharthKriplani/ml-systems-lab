@@ -2043,6 +2043,137 @@ function TwoTowerArchitecture() {
   )
 }
 
+// ─── Do We Even Need ML? ─────────────────────────────────────────────────────
+const DO_WE_NEED_ML_SCENARIOS = [
+  {
+    id: 'dwml1',
+    title: 'Churn prediction email campaign',
+    context: 'A growth PM requests a churn prediction model. Users predicted as high-churn will receive a retention email. Your data team has 18 months of historical churn labels and 40 features. Training will take ~2 weeks.',
+    question: 'Is ML the right solution here?',
+    options: [
+      'Yes — a trained model will identify high-churn users more precisely than rules.',
+      'No — if the action is sending an email to high-churn users, send it to everyone. The incremental lift from targeting is likely smaller than the cost of building the model.',
+      'Yes — but only if model AUC exceeds 0.80 on the holdout set.',
+      'No — use a rules engine based on days-since-last-login and purchase frequency.',
+    ],
+    answer: 1,
+    diagnosis: 'The counterfactual action is "send everyone the email." If the email is cheap and the churn cost is high, the ROI of precision targeting is often negative once model-building cost is included. The question is not "can we build a model?" but "does the model create more value than the baseline action?"',
+    fix: 'Before scoping any ML project, ask: what is the counterfactual action if we have no model? What does the model let us do differently? If the difference in action between top-decile and bottom-decile predicted users is small, the model ROI is negative. Ship the email campaign first; add targeting only when you have signal that untargeted outreach has diminishing returns.',
+  },
+  {
+    id: 'dwml2',
+    title: 'Support ticket classifier',
+    context: 'A support team of 3 agents handles ~8 tickets per day across 6 categories (billing, technical, returns, complaints, general, escalation). A PM wants an ML classifier to auto-route tickets to the right agent.',
+    question: 'Should you build a text classification model?',
+    options: [
+      'Yes — even at low volume, a classifier eliminates manual routing overhead.',
+      'Yes — train a fine-tuned BERT model; it will generalise better as volume grows.',
+      'No — at 8 tickets/day, a human reads the ticket in seconds. Regex + keyword rules for the 2 common categories covers 80% of routing. ML ROI is negative at this volume.',
+      'No — use a decision tree trained on ticket text, not a neural model.',
+    ],
+    answer: 2,
+    diagnosis: 'At 8 tickets/day, a human agent routes each ticket in under 30 seconds. Building, deploying, and maintaining a text classifier takes weeks and ongoing effort. The break-even volume for ML routing is typically 500+ tickets/day where manual routing becomes the bottleneck.',
+    fix: 'Apply the volume test: ML routing pays off when routing is the bottleneck, not when it is a minor inconvenience. For low-volume queues, implement keyword rules for the top-2 categories and let agents handle the rest. Revisit when volume exceeds 200 tickets/day or routing errors cause measurable SLA misses.',
+  },
+  {
+    id: 'dwml3',
+    title: 'Fraud flagging at 0.001% base rate',
+    context: 'A fintech product processes 500,000 transactions per day. Historical fraud rate is 0.001% — about 5 fraudulent transactions per day. The fraud team manually reviews flagged transactions. A data scientist proposes an XGBoost fraud classifier.',
+    question: 'What is the primary problem with building a fraud classifier at this base rate?',
+    options: [
+      'XGBoost is the wrong algorithm — neural networks handle imbalanced data better.',
+      'The dataset is too small to train a reliable model.',
+      'At 0.001% base rate, even a 99% precise model flags ~500 false positives per day for every 5 real frauds. The review queue is overwhelmed and the precision economics are broken.',
+      'Fraud detection always requires real-time inference, which XGBoost cannot support.',
+    ],
+    answer: 2,
+    diagnosis: 'Precision-recall economics break at extreme class imbalance. A model with 99% precision on 500k transactions flags 5,000 transactions/day as fraud — 4,995 false positives for 5 real frauds. Unless the review team can scale to 5,000 daily reviews, the model creates more work than it saves.',
+    fix: 'Before building: compute the maximum tolerable false positive rate given review team capacity, then back-calculate the precision the model needs. At 0.001% base rate with a 3-person team reviewing 50 flags/day, you need >90% precision. Validate whether that precision is achievable before committing. Consider a rules engine for the highest-signal fraud patterns (impossible geolocation, known BIN ranges) as a cheaper first layer.',
+  },
+]
+
+function DoWeNeedML() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Staff-Level Judgment</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Do We Even Need ML?</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          The most senior judgment call: the counterfactual test. Before scoping any ML project, decide whether a model creates more value than the baseline action. Most ML projects fail this test.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={DO_WE_NEED_ML_SCENARIOS} accentColor="var(--violet)" storageKey="sysdesign_dwml" />
+    </div>
+  )
+}
+
+// ─── Retrieval System Failures ────────────────────────────────────────────────
+const RETRIEVAL_SCENARIOS = [
+  {
+    id: 'ret1',
+    title: 'Two-tower embedding drift',
+    context: 'A two-tower recommendation model was trained 6 months ago. Item embeddings are recomputed weekly; user embeddings are recomputed daily. Users are complaining that recommendations feel stale — items they already purchased keep appearing.',
+    question: 'What is the most likely root cause?',
+    options: [
+      'The ANN index is using cosine similarity; switch to dot product.',
+      'Item embeddings are updated weekly but user behaviour shifts faster — the embedding space mismatch means user vectors point toward item clusters that no longer reflect current inventory or user state.',
+      'The model needs more negative samples during training.',
+      'Daily user embedding recomputation is too frequent and causing instability.',
+    ],
+    answer: 1,
+    diagnosis: 'Embedding drift: user embeddings are recomputed daily against a model trained 6 months ago. The embedding space has not shifted, but item inventory, pricing, and availability have. Items the user purchased are still in the same embedding cluster as items they might buy — the model cannot distinguish "already owned" from "relevant."',
+    fix: 'Add a purchased-item filter as a post-retrieval exclusion layer (fastest fix). Longer-term: retrain the two-tower model more frequently, or add explicit negative feedback signals (purchases, skips) to the training data. Monitor embedding space drift with periodic random sample cosine similarity audits.',
+  },
+  {
+    id: 'ret2',
+    title: 'HNSW index staleness under writes',
+    context: 'A product search system uses HNSW (Hierarchical Navigable Small World) for approximate nearest-neighbour retrieval over 2M product embeddings. New products are added daily (~500/day). Engineers report that newly added products rarely appear in search results for the first 48 hours after ingestion.',
+    question: 'What is causing the retrieval gap for new products?',
+    options: [
+      'New product embeddings are lower quality because they have fewer purchase signals.',
+      'HNSW graph connectivity degrades when new nodes are inserted without a full index rebuild — new items are sparsely connected and rarely reached during beam search.',
+      'The embedding model was not fine-tuned on new product categories.',
+      'The retrieval system is caching results for 48 hours.',
+    ],
+    answer: 1,
+    diagnosis: 'HNSW is an approximation structure optimised for static datasets. Incremental inserts add nodes with limited graph connectivity — the new node connects to a small neighbourhood but is not back-linked from existing nodes that should point to it. Beam search rarely reaches these weakly-connected new nodes.',
+    fix: 'Schedule a full HNSW index rebuild nightly (incremental inserts accumulate connectivity debt). For time-sensitive new items, add a recency-boosted brute-force fallback layer: exact-search over the last 72 hours of new products and merge results with HNSW output before re-ranking. Monitor recall@100 on a held-out new-item test set.',
+  },
+  {
+    id: 'ret3',
+    title: 'Query-document domain mismatch',
+    context: [
+      'A legal document search system embeds queries and documents using a general-purpose sentence-transformer (trained on web text and news). Retrieval precision is 0.41 on the legal domain benchmark.',
+      'The same model achieves 0.78 precision on a general news retrieval benchmark.',
+    ],
+    question: 'What is the primary cause of the precision gap?',
+    options: [
+      'The HNSW index needs more ef_construction parameter tuning.',
+      'Legal queries use domain-specific terminology and Latin phrases not present in the model\'s training distribution — query and document embeddings land in different regions of the embedding space for the same legal concept.',
+      'The model\'s max token length is too short for long legal documents.',
+      'Legal documents need TF-IDF retrieval, not dense embeddings.',
+    ],
+    answer: 1,
+    diagnosis: 'Domain mismatch: "force majeure" in a query and "force majeure" in a document should be near-neighbours in embedding space. For a web-trained model, they may not be — the model has seen these terms in different contexts and assigns them different representations. Precision collapses when query-document vocabulary diverges from training distribution.',
+    fix: 'Fine-tune the sentence transformer on legal query-document pairs using contrastive loss (positive pairs: query + relevant document; hard negatives: query + plausible-but-wrong document). Even 5,000–10,000 domain-specific pairs significantly improve in-domain precision. Evaluate on a held-out legal retrieval benchmark before and after fine-tuning.',
+  },
+]
+
+function RetrievalFailures() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Production Debugging</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Retrieval System Failures</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Your embedding similarity returns results that are semantically plausible but contextually wrong. Diagnose the real failure: embedding drift, index staleness, or domain mismatch.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={RETRIEVAL_SCENARIOS} accentColor="var(--sky)" storageKey="sysdesign_retrieval" />
+    </div>
+  )
+}
+
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'incident',   label: 'ML Incident Room',    component: IncidentRoom },
@@ -2053,28 +2184,13 @@ const MODULES = [
   { id: 'serving',    label: 'Serving Tradeoffs',    component: ServingTradeoffLab },
   { id: 'rag',        label: 'RAG Architecture',     component: RAGArchitecture },
   { id: 'two_tower_arch', label: 'Two-Tower Diagram', component: TwoTowerArchitecture },
+  { id: 'do_we_need_ml', label: 'Do We Need ML?', component: DoWeNeedML },
+  { id: 'retrieval_failures', label: 'Retrieval Failures', component: RetrievalFailures },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Do We Even Need ML?',
-    userBrief: 'A product request arrives framed as an ML problem. Judge whether ML is actually warranted — or whether a rules engine, lookup table, or simpler system dominates the counterfactual.',
-    devBrief: {
-      micro: 'AccordionMCQ, 3 scenarios: (1) churn prediction where action = send email to everyone anyway — ROI negative, (2) support ticket classifier at 2 tickets/day — regex + human triage wins, (3) fraud flagging at 0.001% rate — precision economics favor rules engine. Reveal models the PM/engineer dialogue.',
-      macro: 'The most senior judgment call in ML: counterfactual thinking before building. Existing SystemDesignTab scenarios cover the model is live and breaking. This is pre-production — when to not build at all. Critical gap in Staff-level preparation.',
-    },
-  },
-  {
-    label: 'Retrieval System Failures',
-    userBrief: 'Your embedding similarity returns results that are semantically similar but not contextually useful. Diagnose and fix: embedding space issues, index staleness, query-document domain mismatch.',
-    devBrief: {
-      micro: 'AccordionMCQ + embedding diagram, 3 scenarios. Covers two-tower embedding drift, HNSW index staleness under writes, and query-document domain mismatch. Builds directly on the existing Two-Tower Explorer module.',
-      macro: 'Two-Tower Explorer covers architecture selection. This covers operational failure — the system is built correctly but breaks in production. Closes the design → debug arc and is the most commonly cited production surprise in recommendation system interviews.',
-    },
-  },
-]
+const COMING_SOON = []
 
 
 function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {

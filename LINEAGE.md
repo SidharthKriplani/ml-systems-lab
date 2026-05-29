@@ -46,6 +46,21 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.27 — Fill 10 COMING_SOON stubs across 5 tabs (2026-05-30)
+
+**What shipped:** 10 previously stubbed modules replaced with real content across 5 tabs. All pure AccordionMCQ/CodeBug format — no new architecture.
+
+**Modules added (18 new scenarios + 6 new bugs):**
+- `SystemDesignTab`: "Do We Need ML?" (3 scenarios — churn email, support ticket classifier, fraud at 0.001% base rate) + "Retrieval Failures" (3 scenarios — two-tower drift, HNSW staleness, query-document domain mismatch)
+- `MLOpsPipelinesTab`: "Model Registry" (3 scenarios — hash versioning, shadow mode provenance, rollback vs retrain) + "Schema Cascade" (3 scenarios — silent NaN imputation, dbt rename cascade, dtype precision skew)
+- `MonitoringTab`: "Alerting Decisions" (3 scenarios — PSI during maintenance, coverage gap vs input drift, latency at promotion) + "Drift Attribution" (3 scenarios — PSI-importance intersection, covariate + label drift, concept drift)
+- `FeatureEngTab`: "Feature Store Time-Travel" (3 scenarios — PIT leakage, staleness in real-time serving, backfill immutability) + "Interaction & Leakage" (3 scenarios — ratio feature future leakage, when trees need manual interactions, target encoding CV leakage)
+- `CodeBugsTab`: "DistTraining" domain (3 bugs — gradient accumulation scaling, DDP unused params hang, DataLoader shared RNG) + "SilentData" domain (3 bugs — pandas column order, float32 precision, OHE schema drift)
+
+**COMING_SOON cleared** to `[]` in all 5 tabs. All brace-balanced at 0.
+
+---
+
 ### v4.26 — Systematic design-system pass across all 30 tabs (2026-05-29)
 
 **Goal:** complete the application of `.section-eyebrow`, `.msl-option-btn`, and `.msl-reveal-panel` to every qualifying location across all tabs — not just the 6 touched in v4.25. MSL should be able to stand next to PAL and not feel inconsistent.

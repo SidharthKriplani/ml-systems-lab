@@ -979,6 +979,265 @@ function MonitorCoverageAudit() {
   )
 }
 
+// ─── AccordionMCQ ─────────────────────────────────────────────────────────────
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
+
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  }, [items, storageKey])
+
+  const score = items.reduce((acc, item, i) => ({
+    attempted: acc.attempted + (item.revealed ? 1 : 0),
+    correct:   acc.correct   + (item.revealed && item.picked === scenarios[i].answer ? 1 : 0),
+  }), { attempted: 0, correct: 0 })
+
+  function toggle(i) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, open: !it.open } : it))
+  }
+
+  function pick(i, optIdx) {
+    if (items[i].revealed) return
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: optIdx, revealed: true, open: true } : it))
+  }
+
+  useEffect(() => {
+    function handleKey(e) {
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 4) {
+        const openIdx = items.findIndex(it => it.open && !it.revealed)
+        if (openIdx !== -1 && n - 1 < scenarios[openIdx].options.length) pick(openIdx, n - 1)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [items])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {score.attempted > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
+            {score.correct}/{score.attempted}
+          </span>
+          <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
+            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
+        </div>
+      )}
+
+      {scenarios.map((sc, i) => {
+        const item = items[i]
+        const isCorrect = item.revealed && item.picked === sc.answer
+        const isWrong   = item.revealed && item.picked !== sc.answer
+        let borderColor = item.open ? accentColor : 'var(--rim)'
+        if (isCorrect) borderColor = 'rgba(52,211,153,0.5)'
+        if (isWrong)   borderColor = 'rgba(244,63,94,0.5)'
+
+        return (
+          <div key={sc.id} style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.2s', background: 'rgba(255,255,255,0.015)' }}>
+            <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
+              {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>&#10003;</span>}
+              {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>&#10007;</span>}
+              <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
+            </button>
+
+            {item.open && (
+              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>Context</div>
+                  <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.context}</p>
+                </div>
+
+                <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {sc.options.map((opt, j) => {
+                    let bg = 'transparent', border = 'var(--rim)', color = 'var(--ink-mid)'
+                    if (item.revealed) {
+                      if (j === sc.answer)                        { bg = 'rgba(52,211,153,0.15)';  border = 'var(--mint)'; color = 'var(--mint)' }
+                      else if (j === item.picked)                 { bg = 'rgba(244,63,94,0.15)';   border = 'var(--rose)'; color = 'var(--rose)' }
+                    } else if (j === item.picked) {
+                      bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
+                    }
+                    return (
+                      <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
+                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
+                        {item.revealed && j === sc.answer               && <span>&#10003; </span>}
+                        {item.revealed && j === item.picked && j !== sc.answer && <span>&#10007; </span>}
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {item.revealed && (
+                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(244,63,94,0.11)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
+                      {isCorrect ? '&#10003; Correct' : '&#10007; Wrong'}
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.diagnosis}</p>
+                    {sc.fix && (
+                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
+                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
+                        <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Alerting Decision Tree ───────────────────────────────────────────────────
+const ALERTING_SCENARIOS = [
+  {
+    id: 'alert1',
+    title: 'PSI spike on user_age at 3am',
+    context: 'Your monitoring system fires at 3:12am: PSI = 0.31 on `user_age` for the fraud detection model. Model AUC has dropped from 0.83 to 0.79 over the last 6 hours. P95 serving latency is unchanged. The upstream user profile pipeline had a scheduled maintenance window from 2am–3am.',
+    question: 'What is the correct immediate action?',
+    options: [
+      'Page the on-call ML engineer and roll back the model immediately.',
+      'The PSI spike and AUC drop are consistent with a data pipeline issue during the maintenance window — not a model failure. Log the alert, check whether the upstream pipeline has recovered post-maintenance, and monitor for 30 minutes before escalating.',
+      'Retrain the model on the most recent 7 days of data.',
+      'Disable the fraud model and fall back to the rules engine.',
+    ],
+    answer: 1,
+    diagnosis: 'Temporal correlation matters: PSI spike overlapping exactly with a scheduled maintenance window is almost certainly a pipeline artifact, not a model failure. Rollback and retraining are expensive and irreversible actions. The correct response is to determine whether the root cause is transient (maintenance window data gap) before escalating.',
+    fix: 'Build alert context into your monitoring: tag each alert with any overlapping maintenance windows, recent deployments, or known data pipeline events. If PSI spikes coincide with a known infrastructure event, auto-suppress the page and create a watch-and-log entry instead. Escalate only if PSI remains elevated >1 hour after the maintenance window closes.',
+  },
+  {
+    id: 'alert2',
+    title: 'AUC drops 8 points — batch vs. real-time serving',
+    context: 'A content recommendation model shows AUC dropping from 0.76 to 0.68 over 48 hours. PSI is stable across all input features. The model serves batch pre-computed recommendations refreshed every 4 hours. Investigation shows that a new content category was launched 3 days ago and now represents 18% of user interactions.',
+    question: 'Why is PSI stable while AUC degrades?',
+    options: [
+      'PSI is calculated incorrectly — the monitoring system has a bug.',
+      'Batch serving means the model never saw the new content category — it cannot recommend items it was never trained on. PSI measures input feature distributions, which are stable. AUC degradation comes from missing coverage, not feature drift.',
+      'AUC degradation always lags PSI changes by 48 hours.',
+      'The new content category is reducing engagement across all recommendations.',
+    ],
+    answer: 1,
+    diagnosis: 'PSI and AUC measure different things. PSI monitors input feature distributions — which are stable because user features have not changed. AUC monitors prediction quality — which degrades because the model has no coverage for a new content category that now drives 18% of interactions. You need output distribution monitoring, not just input monitoring.',
+    fix: 'Add coverage monitoring: track the percentage of serving requests where the model has low confidence (prediction score < 0.5) or returns items from a category absent from training data. When a new content category launches, trigger a model evaluation on the new-category slice immediately. For batch serving, shorten the refresh cycle or add a real-time fallback for cold-start categories.',
+  },
+  {
+    id: 'alert3',
+    title: 'Latency breach at peak — auto-rollback or hold?',
+    context: 'P95 serving latency for your real-time pricing model breaches SLA (>200ms) for 8 consecutive minutes during peak load at 6pm. The breach started immediately after a model update was promoted to 100% traffic. PSI and AUC are both stable. Infrastructure team confirms no server-side issues.',
+    question: 'Should you auto-rollback the model or hold and investigate?',
+    options: [
+      'Hold — latency breaches are infrastructure problems, not model problems.',
+      'Auto-rollback immediately — any SLA breach warrants rollback.',
+      'The timing correlation (latency breach = model update) and stable PSI/AUC strongly suggest the new model has higher computational complexity. Rollback to the previous model to restore SLA, then profile the new model\'s inference path before re-promoting.',
+      'Scale up serving infrastructure and keep the new model live.',
+    ],
+    answer: 2,
+    diagnosis: 'When a latency breach starts precisely at a model update and infrastructure is healthy, the model is the most likely cause — larger model size, more features, or a more complex decision tree depth. Holding and investigating while users experience SLA breaches is wrong. Rollback first, profile second.',
+    fix: 'Add latency to the model promotion gate: run a load test at expected peak QPS before promoting any model to 100% traffic. Gate on P95 < 150ms (giving 50ms headroom to SLA). For the specific incident: rollback, then profile the new model — compare feature count, tree depth, and inference time against the previous version. Re-promote only after confirming P95 at peak load.',
+  },
+]
+
+function AlertingDecisionTree() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>On-Call Judgment</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Alerting Decision Tree</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Given an alert at 3am — PSI spike, AUC drop, latency breach — decide: page immediately, log and watch, auto-rollback, or suppress. The right answer changes with context.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={ALERTING_SCENARIOS} accentColor="var(--rose)" storageKey="monitoring_alerting" />
+    </div>
+  )
+}
+
+// ─── Drift Attribution ────────────────────────────────────────────────────────
+const DRIFT_ATTRIBUTION_SCENARIOS = [
+  {
+    id: 'drift1',
+    title: 'PSI elevated — which feature is actually driving it?',
+    context: 'Your aggregate monitoring dashboard shows overall PSI = 0.22 across 47 input features for a credit scoring model. The alert threshold is 0.20. You need to identify which features are driving the drift before filing an incident.',
+    question: 'What is the correct attribution approach?',
+    options: [
+      'Compute PSI for each feature individually and rank by PSI value descending.',
+      'PSI is already computed per feature — sort by PSI descending, focus on features with PSI > 0.10, then cross-reference with feature importance from the trained model. A high-PSI feature that is also high-importance is the real risk; a high-PSI feature with near-zero importance is noise.',
+      'Retrain the model and compare performance to identify which features degraded.',
+      'File the incident based on the aggregate PSI alone — individual feature analysis is too slow for on-call response.',
+    ],
+    answer: 1,
+    diagnosis: 'PSI alone is not enough — it measures distributional shift but not impact. A feature with PSI = 0.45 that contributes 0.1% to model predictions is less dangerous than a feature with PSI = 0.12 that is the top feature by importance. The intersection of drift magnitude and model dependence determines actual risk.',
+    fix: 'Build a drift impact score: `drift_impact = PSI_feature × feature_importance_rank`. Sort by drift impact, not raw PSI. In your incident report, list the top 3 features by drift impact, their PSI values, their importance percentile, and the upstream data source responsible. This immediately focuses the data engineering response on the right pipeline.',
+  },
+  {
+    id: 'drift2',
+    title: 'Covariate drift vs. label drift — different responses',
+    context: 'A loan default model shows: (1) PSI = 0.28 on `debt_to_income_ratio` over the last 30 days — users applying for loans have higher DTI than training distribution. (2) Observed default rate has dropped from 3.2% to 2.1% over the same period. Model predicted default rate is still 3.1%.',
+    question: 'Is this covariate drift, label drift, or both — and what is the correct response?',
+    options: [
+      'Covariate drift only — the feature distribution shifted. Retrain on recent data.',
+      'Label drift only — the default rate changed. Update the decision threshold.',
+      'Both: covariate drift (DTI distribution shifted) and label drift (true default rate dropped). These require different responses — feature drift requires pipeline investigation, label drift requires threshold recalibration and potentially retraining with recent labels.',
+      'Neither — a 1% drop in default rate is within normal seasonal variation.',
+    ],
+    answer: 2,
+    diagnosis: 'Covariate and label drift are independent failure modes that happen to co-occur here. Covariate drift (DTI shift) means the input distribution has changed — model predictions may be less reliable in the new region of feature space. Label drift (true default rate drop) means the model is now miscalibrated — it still predicts 3.1% default when the true rate is 2.1%, causing systematic over-rejection of creditworthy applicants.',
+    fix: 'Respond to each independently: (1) For covariate drift — investigate the DTI pipeline, check if loan application eligibility criteria changed, assess whether the model has enough training data in the new DTI range. (2) For label drift — recalibrate the decision threshold using recent outcome data (Platt scaling or isotonic regression on 90-day labels). Schedule a retrain on data from the post-shift period once enough labels accumulate.',
+  },
+  {
+    id: 'drift3',
+    title: 'Concept drift without input drift',
+    context: 'A fraud detection model shows stable input feature distributions (all PSI < 0.10) and stable serving latency. But precision on confirmed fraud cases has dropped from 0.81 to 0.63 over 6 weeks. The fraud team reports that fraud patterns have changed — new account takeover techniques using legitimate-looking session behaviour.',
+    question: 'Why did input feature monitoring fail to catch this?',
+    options: [
+      'The monitoring system computed PSI incorrectly.',
+      'Concept drift: the relationship between features and the fraud label has changed, even though the feature distributions are stable. New fraud techniques produce inputs that look identical to legitimate behaviour — the model\'s learned boundary is no longer valid.',
+      'The model needs more training data.',
+      'Precision dropped because more legitimate transactions are being processed.',
+    ],
+    answer: 1,
+    diagnosis: 'Concept drift is invisible to input monitoring. PSI measures whether features look different — it cannot detect whether the same feature values now mean something different. New fraud techniques specifically exploit this: they produce feature distributions indistinguishable from legitimate behaviour, making PSI-based monitoring blind to the change.',
+    fix: 'Add outcome-based monitoring: track precision, recall, and F1 on confirmed fraud labels as they come in (typically 2–4 week delay). When outcome metrics degrade with stable input distributions, the diagnosis is concept drift. Response: increase human review sampling rate to build a fresh labeled dataset, then retrain on recent data. Add adversarial test cases representing known new fraud patterns to the model evaluation suite.',
+  },
+]
+
+function DriftAttribution() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Drift Diagnosis</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Drift Attribution</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          PSI is elevated — but which features are actually driving model degradation? Distinguish covariate drift, label drift, and concept drift and respond to each correctly.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={DRIFT_ATTRIBUTION_SCENARIOS} accentColor="var(--gold)" storageKey="monitoring_drift" />
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'drift',    label: 'Drift Dashboard',   icon: '', component: DriftDashboard },
@@ -986,29 +1245,14 @@ const MODULES = [
   { id: 'ks',      label: 'KS Test',            icon: '', component: KSTestExplorer },
   { id: 'alert',   label: 'Alert Tuner',        icon: '', component: AlertTuner },
   { id: 'triage',  label: 'Incident Triage',    icon: '', component: IncidentTriage },
-  { id: 'coverage',label: 'Coverage Audit',     icon: '', component: MonitorCoverageAudit },
+  { id: 'coverage',       label: 'Coverage Audit',     icon: '', component: MonitorCoverageAudit },
+  { id: 'alerting_tree',  label: 'Alerting Decisions', component: AlertingDecisionTree },
+  { id: 'drift_attribution', label: 'Drift Attribution', component: DriftAttribution },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Alerting Decision Tree',
-    userBrief: 'Given an alert — PSI spike, AUC drop, latency breach at 3am — decide: page immediately, log and watch, auto-rollback, or suppress. The right answer changes with context.',
-    devBrief: {
-      micro: 'Branching MCQ state machine — first choice determines next question. Inputs: alert type + business context (batch vs real-time serving, model role, time of day). Each branch reveals production reasoning. Adds a branching format not currently in MonitoringTab.',
-      macro: 'Existing modules cover detection — reading PSI, KS, accuracy signals. This covers response: the judgment that separates L4 from L5 oncall. Closes the detect → diagnose → decide loop that is currently incomplete.',
-    },
-  },
-  {
-    label: 'Drift Attribution Lab',
-    userBrief: 'PSI is elevated across your input feature distribution. Which features are actually driving it? Work through real attribution methods before filing the incident report.',
-    devBrief: {
-      micro: 'AccordionMCQ + data table scenarios. User is given a drift alert and a feature PSI table and must diagnose which feature subset to investigate. 3 scenarios. Univariate PSI per feature, SHAP interaction analysis, cohort comparison.',
-      macro: 'PSI/KS modules cover metric interpretation. Attribution is the next natural step — once you detect drift, where do you look? Fills the gap between alert detection and root-cause handoff to the feature team.',
-    },
-  },
-]
+const COMING_SOON = []
 
 
 function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {

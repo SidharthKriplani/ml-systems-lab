@@ -8,6 +8,8 @@ const DOMAIN_COLORS = {
   'Model Training': 'var(--rose)',
   SQL: 'var(--mint)',
   MLOps: 'var(--violet)',
+  DistTraining: 'var(--prime)',
+  SilentData: 'var(--gold)',
 }
 
 const BUGS = [
@@ -600,9 +602,206 @@ lightgbm`,
     impact: "scikit-learn 1.3 changed default values for several estimators. XGBoost 2.0 changed tree construction. Unpinned deps mean `pip install` today gets different versions than 6 months ago. Model retraining produces different results. Debugging production issues is impossible without reproducible environments.",
     fix: "Pin all versions: `scikit-learn==1.3.2`, `pandas==2.1.0`, etc. Use `pip freeze > requirements.txt` after testing. Better: use Docker with a pinned base image. Best: hash-pinned deps (`pip-compile --generate-hashes`). Also pin Python version in `.python-version` or Dockerfile.",
   },
+
+  // ─── DISTRIBUTED TRAINING ──────────────────────────────────────────────────
+  {
+    id: 'DT1',
+    domain: 'DistTraining',
+    title: 'Gradient Accumulation — Wrong Loss Scaling',
+    description: 'This PyTorch training loop uses gradient accumulation to simulate a larger batch size but produces unstable training loss.',
+    code: `import torch
+import torch.nn as nn
+
+model = nn.Linear(512, 10).cuda()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+accumulation_steps = 4
+
+for i, (inputs, labels) in enumerate(dataloader):
+    inputs, labels = inputs.cuda(), labels.cuda()
+    outputs = model(inputs)
+    loss = criterion(outputs, labels)
+    loss.backward()
+
+    if (i + 1) % accumulation_steps == 0:
+        optimizer.step()
+        optimizer.zero_grad()`,
+    options: {
+      A: 'Missing `loss.detach()` before backward pass',
+      B: 'Loss is not divided by `accumulation_steps` — gradients accumulate 4× larger than a true batch-4 gradient, causing effective LR to be 4× too high',
+      C: '`optimizer.zero_grad()` should be called before `loss.backward()`',
+      D: 'Adam optimizer does not support gradient accumulation',
+    },
+    correct: 'B',
+    impact: "Accumulated gradients are 4× the magnitude of a single-step gradient. Adam's adaptive learning rate partially compensates, but the gradient norm is inflated, causing loss spikes and unstable convergence — especially with large learning rates.",
+    fix: "Divide loss by accumulation_steps before backward: `loss = criterion(outputs, labels) / accumulation_steps`. This ensures the accumulated gradient magnitude matches what a true large-batch gradient would produce. Alternatively, use PyTorch's `GradScaler` which handles scaling automatically with AMP.",
+  },
+  {
+    id: 'DT2',
+    domain: 'DistTraining',
+    title: 'DDP — Unused Parameters Cause Hang',
+    description: 'This PyTorch DistributedDataParallel (DDP) training job hangs indefinitely during the first backward pass when using a model with conditional computation.',
+    code: `import torch
+import torch.nn as nn
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+class ConditionalModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1 = nn.Linear(512, 256)
+        self.layer2 = nn.Linear(256, 128)
+        self.auxiliary = nn.Linear(512, 10)  # only used during warmup
+
+    def forward(self, x, use_auxiliary=False):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        if use_auxiliary:
+            return self.auxiliary(x)
+        return x
+
+model = DDP(ConditionalModel().cuda(), device_ids=[local_rank])`,
+    options: {
+      A: 'DDP does not support models with more than 2 layers',
+      B: 'The `auxiliary` layer is not used in most forward passes — DDP requires all parameters to participate in every backward pass to synchronise gradients across processes. Unused parameters cause DDP to wait indefinitely for gradient synchronisation that never arrives.',
+      C: 'Missing `find_unused_parameters=True` is a performance issue, not a hang',
+      D: 'The conditional `use_auxiliary` flag is not supported in multi-GPU training',
+    },
+    correct: 'B',
+    impact: 'DDP hangs at the all-reduce barrier waiting for gradient sync on `auxiliary` layer parameters. All training processes deadlock. Job must be killed manually.',
+    fix: 'Pass `find_unused_parameters=True` to DDP: `model = DDP(model, device_ids=[local_rank], find_unused_parameters=True)`. This tells DDP to skip gradient sync for parameters that did not participate in the forward pass. Note: this adds overhead — the cleaner fix is to architect the model so all parameters are always used, or split the auxiliary head into a separate module trained independently.',
+  },
+  {
+    id: 'DT3',
+    domain: 'DistTraining',
+    title: 'DataLoader Worker — Shared State Corruption',
+    description: 'A PyTorch training job with multiple DataLoader workers produces non-deterministic results and occasional NaN losses, even with a fixed random seed.',
+    code: `import torch
+import numpy as np
+from torch.utils.data import DataLoader, Dataset
+
+class AugmentedDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+        self.rng = np.random.RandomState(42)  # shared RNG
+
+    def __getitem__(self, idx):
+        x = self.data[idx]
+        # Random augmentation
+        noise = self.rng.normal(0, 0.1, x.shape)
+        return torch.tensor(x + noise, dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.data)
+
+dataset = AugmentedDataset(data)
+loader = DataLoader(dataset, batch_size=32, num_workers=4)`,
+    options: {
+      A: 'NumPy RandomState is not compatible with PyTorch tensors',
+      B: 'A single `RandomState` instance is shared across 4 worker processes. Worker processes are forked from the main process and share the same RNG state — concurrent calls to `self.rng.normal()` from multiple workers produce race conditions and corrupt RNG state, causing non-determinism and occasional NaN from state corruption.',
+      C: 'The seed 42 is not a valid NumPy random seed',
+      D: 'DataLoader workers should not perform augmentation — use torchvision transforms instead',
+    },
+    correct: 'B',
+    impact: 'Non-deterministic augmentation makes experiments non-reproducible. RNG state corruption occasionally produces out-of-range values that propagate to NaN loss. Debugging is extremely difficult because the issue only manifests with num_workers > 1.',
+    fix: "Create a fresh RNG instance per worker using PyTorch's worker_init_fn: `def worker_init(worker_id): np.random.seed(42 + worker_id)`. Pass to DataLoader: `DataLoader(..., worker_init_fn=worker_init)`. Alternatively, use per-item seeding: `rng = np.random.RandomState(idx)` inside `__getitem__` — each item gets its own deterministic seed based on its index.",
+  },
+
+  // ─── SILENT DATA BUGS ──────────────────────────────────────────────────────
+  {
+    id: 'SD1',
+    domain: 'SilentData',
+    title: 'Pandas — Column Order Dependency in Model Input',
+    description: 'A trained sklearn model is deployed behind a FastAPI endpoint. Predictions are systematically wrong for some request types, but no exception is raised.',
+    code: `import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+
+model = joblib.load('model.pkl')
+
+def predict(request_data: dict) -> float:
+    # Convert request to DataFrame
+    df = pd.DataFrame([request_data])
+
+    # Model expects: ['age', 'income', 'tenure', 'product_count']
+    prediction = model.predict_proba(df)[0][1]
+    return prediction
+
+# Example request
+result = predict({
+    'income': 85000,
+    'age': 34,
+    'tenure': 24,
+    'product_count': 3
+})`,
+    options: {
+      A: 'The model should use `predict()` not `predict_proba()`',
+      B: 'Dict-to-DataFrame conversion does not guarantee column order — if request keys arrive in a different order than training, the model receives features in the wrong columns. sklearn silently accepts the misaligned input and produces wrong predictions with no error.',
+      C: 'FastAPI request dicts are always ordered correctly',
+      D: 'Missing input validation for data types',
+    },
+    correct: 'B',
+    impact: "Systematic silent mispredictions. `income` (85000) is passed to the `age` column slot; `age` (34) is passed to `income`. The model produces a confident wrong prediction with no error. This affects every request where the client sends keys in a different order than the training column order.",
+    fix: "Always explicitly reorder columns to match training: `df = pd.DataFrame([request_data])[FEATURE_COLUMNS]` where `FEATURE_COLUMNS = ['age', 'income', 'tenure', 'product_count']` is defined at the top of the serving module and matches the column order used during training. Better: save the feature column list with the model artifact using joblib so the order is always in sync.",
+  },
+  {
+    id: 'SD2',
+    domain: 'SilentData',
+    title: 'Float32 Precision Loss in Feature Normalisation',
+    description: 'A feature normalisation pipeline converts features to float32 for memory efficiency before passing to the model. A downstream aggregation silently loses precision.',
+    code: `import numpy as np
+
+# Large transaction amounts
+transaction_amounts = np.array([9999999.99, 10000000.01, 9999999.50], dtype=np.float32)
+
+# Compute daily total
+daily_total = np.sum(transaction_amounts)
+print(f"Daily total: {daily_total}")
+
+# Check for large transactions
+large_txns = transaction_amounts[transaction_amounts > 10_000_000]
+print(f"Large transactions: {large_txns}")`,
+    options: {
+      A: 'NumPy sum is computed incorrectly for float arrays',
+      B: 'float32 has ~7 significant decimal digits of precision. Values near 10,000,000 lose sub-dollar precision — 9999999.99 and 10000000.01 may be represented as the same float32 value. The large transaction filter silently misclassifies boundary transactions.',
+      C: 'The threshold 10_000_000 should use scientific notation',
+      D: 'NumPy boolean indexing does not work with float32 arrays',
+    },
+    correct: 'B',
+    impact: 'Float32 represents ~16,777,216 as the next representable integer after ~8,388,608. For values around 10M, the precision gap is ~1. Transactions of $9,999,999.99 and $10,000,001.00 may map to the same float32 value. Fraud rules, regulatory thresholds, and fee calculations built on float32 financial data silently produce wrong results.',
+    fix: "Use float64 for financial amounts — the memory savings from float32 are not worth the precision loss for currency values above ~$10M. If memory is genuinely constrained, store amounts as integer cents (multiply by 100, use int64) which preserves exact representation up to ~$92 trillion. Add a precision audit step: for any feature involving currency amounts, verify the max value against float32's representable precision limit.",
+  },
+  {
+    id: 'SD3',
+    domain: 'SilentData',
+    title: 'Schema Drift — New Categorical Value at Serving Time',
+    description: "A model trained on e-commerce data uses one-hot encoding for `device_type` with categories: [mobile, desktop, tablet]. In production, a new device_type \"smart_tv\" starts appearing. The encoding pipeline silently handles it.",
+    code: `import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+import joblib
+
+encoder = joblib.load('ohe_encoder.pkl')  # fitted on [mobile, desktop, tablet]
+
+def encode_features(df: pd.DataFrame) -> pd.DataFrame:
+    encoded = encoder.transform(df[['device_type']])
+    feature_names = encoder.get_feature_names_out(['device_type'])
+    return pd.DataFrame(encoded, columns=feature_names)
+
+# New serving request with unseen category
+new_data = pd.DataFrame({'device_type': ['smart_tv']})
+result = encode_features(new_data)
+print(result)  # What does this output?`,
+    options: {
+      A: 'This will raise a ValueError — OneHotEncoder rejects unseen categories by default',
+      B: 'Default sklearn OneHotEncoder raises an error for unseen categories. BUT if `handle_unknown="ignore"` was set during training, the encoder silently outputs all zeros for "smart_tv" — the model receives a valid-looking zero vector and makes a prediction with no signal from device_type, silently degrading for all smart_tv users.',
+      C: 'The encoder will automatically add a new column for smart_tv',
+      D: 'smart_tv will be mapped to the most similar known category',
+    },
+    correct: 'B',
+    impact: 'Silent all-zero encoding for new categories means the model treats all smart_tv users as if device_type was missing. Depending on model architecture, this can systematically mis-score an entire user segment. The failure is invisible — no exception, no monitoring alert, just degraded predictions for a growing user cohort.',
+    fix: "Three approaches in order of preference: (1) Add an \"other\" category to the encoder by including a representative \"other\" sample during training and mapping unseen values to it at serving time. (2) Add a schema validation step before encoding that alerts when a new category appears — treat new categories as a data quality event requiring a model update. (3) Monitor the distribution of each categorical feature's encoded zero-vector rate — a spike indicates unseen categories are arriving.",
+  },
 ]
 
-const DOMAINS = ['All', 'Spark', 'Feature Engineering', 'Model Training', 'SQL', 'MLOps']
+const DOMAINS = ['All', 'Spark', 'Feature Engineering', 'Model Training', 'SQL', 'MLOps', 'DistTraining', 'SilentData']
 
 function loadAnswers() {
   try {
@@ -853,24 +1052,7 @@ function BugCard({ bug, answer, onAnswer }) {
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Distributed Training Bugs',
-    userBrief: 'Gradient aggregation errors, NaN in loss with gradient clipping, and device-mismatch assertions — the bugs that emerge when you move from single-GPU to multi-GPU training.',
-    devBrief: {
-      micro: 'Same CodeBugs format. 3–4 scenarios. Each shows a distributed training script with one buried bug. Bug taxonomy: gradient all-reduce ordering, device placement mismatch, SyncBatchNorm handling in DDP.',
-      macro: 'Current bugs are mostly data pipeline and single-device PyTorch/sklearn. Distributed bugs are a separate class that appears at FAANG+ when the model scales. Completes the production ML bug surface from data to distributed compute.',
-    },
-  },
-  {
-    label: 'Silent Data Pipeline Bugs',
-    userBrief: "Type coercions that lose precision, DataFrame column-order dependencies, schema drift between training and serving — bugs that don't raise exceptions but corrupt model behavior.",
-    devBrief: {
-      micro: 'Same format. 3 scenarios. Focus: pandas dtypes, numpy broadcasting edge cases, sklearn pipeline fit vs. transform assumptions. "The model trains fine but serves garbage" failure class.',
-      macro: 'Data bugs are harder to catch than code bugs because they are silent. This adds a stealth category that interviewers probe specifically with "when would you never know your model was wrong?" — the hardest class of production bugs.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function CodeBugsTab({ onNavigate }) {
   const [answers, setAnswers] = useState(loadAnswers)
@@ -928,11 +1110,11 @@ export default function CodeBugsTab({ onNavigate }) {
           fontFamily: 'var(--font-mono)',
           fontSize: 28,
           fontWeight: 700,
-          color: score === 20 ? 'var(--mint)' : score >= 15 ? 'var(--prime)' : 'var(--ink-hi)',
+          color: score === 26 ? 'var(--mint)' : score >= 20 ? 'var(--prime)' : 'var(--ink-hi)',
           lineHeight: 1,
         }}>
           {score}
-          <span style={{ fontSize: 16, color: 'var(--ink-ghost)', fontWeight: 400 }}>/20</span>
+          <span style={{ fontSize: 16, color: 'var(--ink-ghost)', fontWeight: 400 }}>/26</span>
         </div>
         <div>
           <div style={{
@@ -948,7 +1130,7 @@ export default function CodeBugsTab({ onNavigate }) {
             fontSize: 12,
             color: 'var(--ink-low)',
           }}>
-            {totalAnswered} of 20 attempted
+            {totalAnswered} of 26 attempted
           </div>
         </div>
         {totalAnswered > 0 && (
@@ -962,8 +1144,8 @@ export default function CodeBugsTab({ onNavigate }) {
             }}>
               <div style={{
                 height: '100%',
-                width: `${(score / 20) * 100}%`,
-                background: score >= 15 ? 'var(--mint)' : score >= 10 ? 'var(--prime)' : 'var(--ember)',
+                width: `${(score / 26) * 100}%`,
+                background: score >= 20 ? 'var(--mint)' : score >= 13 ? 'var(--prime)' : 'var(--ember)',
                 borderRadius: 4,
                 transition: 'width 0.4s ease',
               }} />
@@ -975,7 +1157,7 @@ export default function CodeBugsTab({ onNavigate }) {
               marginTop: 3,
               textAlign: 'right',
             }}>
-              {Math.round((score / 20) * 100)}%
+              {Math.round((score / 26) * 100)}%
             </div>
           </div>
         )}
