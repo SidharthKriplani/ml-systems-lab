@@ -93,11 +93,16 @@ Every tab file now uses amber-only decorative accents. Semantic status indicator
 
 ---
 
-### v4.31 — Oracle identity refactor: full amber sweep across 5 tabs (2026-05-30)
+### v4.31 — Oracle identity refactor: single amber accent end-to-end (2026-05-30)
 
-**What shipped:** Systematic replacement of all decorative multi-color accent usage across the 5 highest-hit tabs. Single amber (`var(--prime)`) + warm gray neutrals now enforced across the full practice zone.
+**What shipped:** Full codebase sweep replacing all decorative multi-color accents with single amber (`var(--prime)`) + warm gray neutrals. 36 files. Problem identified from screenshot: rainbow of green/pink/cyan/violet across path cards, domain tracks, and zone nav despite the amber identity being correct.
 
-**Files changed:** MonitoringTab (73 hits), CausalInferenceTab (57 hits), FeatureEngTab (62 hits), ClassicalMLTab (66 hits), GradientTab (41 hits). All brace-balanced at 0. One commit.
+**Core structural changes (index.css, HomeTab.jsx, App.jsx):**
+- `index.css`: body background violet corner gradient → faint amber; `.text-gradient` violet → amber family; `.card-border-gradient` violet → amber; `.msl-cloud-map` + `.msl-cloud-chip` sky/cyan → amber (`var(--prime)`)
+- `HomeTab.jsx`: `TRACKS` array (all 20 tracks) accent/border/bg → amber; `TAB_ACCENT` map all values → prime; `DAILY_CASES` all accents → prime; `DOMAIN_LABELS` all accents → prime; `GUIDED_PATHS` (green Foundations, rose Production) both → prime; `TYPE_BADGE` (judgment=sky, sandbox=violet, reference=gold) all → amber/ghost; `MASTERY_COLORS` (sky/ember/mint) → ghost/prime/prime-hi; Ring component default → prime
+- `App.jsx`: `NAV_ZONES` (practice=mint, read=sky, ask=violet) all → prime; `PRACTICE_DOMAINS` (mle=mint, de=ember, dl=violet, ds=sky, mlops=rose) all → prime; `INTERVIEW_TOOLS` (6 tools with sky/mint/ember/rose/violet accents) all → prime; PracticeGrid "Practice" eyebrow mint → prime, h2 violet gradient → flat ink-hi; InterviewGrid h2 ember gradient → flat ink-hi; progress fill mint → prime; ML logo gradient violet → solid amber (both desktop sidebar + mobile topbar)
+
+**Tab file changes:** MonitoringTab (73 hits), CausalInferenceTab (57 hits), FeatureEngTab (62 hits), ClassicalMLTab (66 hits), GradientTab (41 hits). All brace-balanced at 0. One commit.
 
 **Replacement rules applied:**
 - All `borderLeft: '3px solid var(--X)'` on scenario/module cards → `var(--prime)`
