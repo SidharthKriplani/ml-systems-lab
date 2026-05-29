@@ -376,15 +376,14 @@ function StatisticalTestingPitfalls() {
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>What is the primary mistake being made?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {s.options.map((opt, idx) => {
-            let borderColor = 'var(--rim)'
-            let bg = 'transparent'
-            let textColor = 'var(--ink-mid)'
-            if (selected === idx && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.14)'; textColor = 'var(--sky)' }
-            if (revealed && idx === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.15)'; textColor = 'var(--mint)' }
-            if (revealed && selected === idx && idx !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.15)'; textColor = 'var(--rose)' }
+            const optClass = revealed
+              ? (idx === s.correct ? ' correct' : (selected === idx ? ' wrong' : ''))
+              : (selected === idx ? ' selected' : '')
             return (
               <button key={idx} onClick={() => handleSelect(idx)}
-                style={{ padding: '12px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                className={`msl-option-btn${optClass}`}
+                disabled={revealed}
+                style={{ marginBottom: '0px' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', minWidth: '18px' }}>{String.fromCharCode(65 + idx)}</span>
                 {opt}
                 {revealed && idx === s.correct && <span style={{ marginLeft: 'auto', fontSize: '11px' }}>✓</span>}
@@ -605,15 +604,14 @@ function CalibrationInPractice() {
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>Which calibration approach is most appropriate?</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {CALIB_OPTIONS.map(opt => {
-            let borderColor = 'var(--rim)'
-            let bg = 'transparent'
-            let textColor = 'var(--ink-mid)'
-            if (selected === opt.id && !revealed) { borderColor = 'var(--sky)'; bg = 'rgba(34,211,238,0.14)'; textColor = 'var(--sky)' }
-            if (revealed && opt.id === s.correct) { borderColor = 'var(--mint)'; bg = 'rgba(52,211,153,0.15)'; textColor = 'var(--mint)' }
-            if (revealed && selected === opt.id && opt.id !== s.correct) { borderColor = 'var(--rose)'; bg = 'rgba(251,113,133,0.15)'; textColor = 'var(--rose)' }
+            const optClass = revealed
+              ? (opt.id === s.correct ? ' correct' : (selected === opt.id ? ' wrong' : ''))
+              : (selected === opt.id ? ' selected' : '')
             return (
               <button key={opt.id} onClick={() => { if (!revealed) setSelected(opt.id) }}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${borderColor}`, background: bg, color: textColor, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                className={`msl-option-btn${optClass}`}
+                disabled={revealed}
+                style={{ marginBottom: '0px' }}>
                 {opt.label}
               </button>
             )
@@ -896,18 +894,14 @@ function MetricDesign() {
         {s.options.map((opt, i) => {
           const isSelected = selected === i
           const isRight = i === s.correct
-          let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-hi)'
-          if (revealed) {
-            if (isRight) { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.4)'; color = 'var(--mint)' }
-            else if (isSelected && !isRight) { bg = 'rgba(244,63,94,0.15)'; border = 'rgba(244,63,94,0.4)'; color = 'var(--rose)' }
-          } else if (isSelected) { bg = 'rgba(240,165,0,0.15)'; border = 'rgba(240,165,0,0.4)' }
+          const optClass = revealed
+            ? (isRight ? ' correct' : (isSelected ? ' wrong' : ''))
+            : (isSelected ? ' selected' : '')
           return (
             <button key={i} onClick={() => handleAnswer(i)}
-              style={{
-                textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: isAnswered ? 'default' : 'pointer',
-                border: `1px solid ${border}`, background: bg, color,
-                display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.15s',
-              }}>
+              className={`msl-option-btn${optClass}`}
+              disabled={isAnswered}
+              style={{ marginBottom: '0px' }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, flexShrink: 0, marginTop: '2px', opacity: 0.6 }}>
                 {String.fromCharCode(65 + i)}
               </span>

@@ -1068,16 +1068,16 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {sc.options.map((opt, j) => {
-                    let bg = 'transparent', border = 'var(--rim)', color = 'var(--ink-mid)'
+                    let stateClass = ''
                     if (item.revealed) {
-                      if (j === sc.answer)                        { bg = 'rgba(52,211,153,0.15)';  border = 'var(--mint)'; color = 'var(--mint)' }
-                      else if (j === item.picked)                 { bg = 'rgba(244,63,94,0.15)';   border = 'var(--rose)'; color = 'var(--rose)' }
+                      if (j === sc.answer)           stateClass = ' correct'
+                      else if (j === item.picked)    stateClass = ' wrong'
                     } else if (j === item.picked) {
-                      bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
+                      stateClass = ' pending'
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        className={`msl-option-btn${stateClass}`}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
                         {item.revealed && j === sc.answer               && <span>&#10003; </span>}
                         {item.revealed && j === item.picked && j !== sc.answer && <span>&#10007; </span>}
@@ -1099,6 +1099,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                         <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                       </div>
                     )}
+                    {sc.cloudMap && sc.cloudMap}
                   </div>
                 )}
               </div>
@@ -1126,6 +1127,17 @@ const ALERTING_SCENARIOS = [
     answer: 1,
     diagnosis: 'Temporal correlation matters: PSI spike overlapping exactly with a scheduled maintenance window is almost certainly a pipeline artifact, not a model failure. Rollback and retraining are expensive and irreversible actions. The correct response is to determine whether the root cause is transient (maintenance window data gap) before escalating.',
     fix: 'Build alert context into your monitoring: tag each alert with any overlapping maintenance windows, recent deployments, or known data pipeline events. If PSI spikes coincide with a known infrastructure event, auto-suppress the page and create a watch-and-log entry instead. Escalate only if PSI remains elevated >1 hour after the maintenance window closes.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">SageMaker Model Monitor</span>{' '}
+        detects PSI drift automatically; alerts route to{' '}
+        <span className="msl-cloud-chip">CloudWatch Alarms</span>{' '}
+        → <span className="msl-cloud-chip">SNS</span> for on-call paging. Tag alarms with maintenance window metadata via{' '}
+        <span className="msl-cloud-chip">EventBridge</span>{' '}
+        rules to auto-suppress during known maintenance.
+      </div>
+    ),
   },
   {
     id: 'alert2',
@@ -1141,6 +1153,17 @@ const ALERTING_SCENARIOS = [
     answer: 1,
     diagnosis: 'PSI and AUC measure different things. PSI monitors input feature distributions — which are stable because user features have not changed. AUC monitors prediction quality — which degrades because the model has no coverage for a new content category that now drives 18% of interactions. You need output distribution monitoring, not just input monitoring.',
     fix: 'Add coverage monitoring: track the percentage of serving requests where the model has low confidence (prediction score < 0.5) or returns items from a category absent from training data. When a new content category launches, trigger a model evaluation on the new-category slice immediately. For batch serving, shorten the refresh cycle or add a real-time fallback for cold-start categories.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">CloudWatch Metrics</span>{' '}
+        with composite alarms; use{' '}
+        <span className="msl-cloud-chip">EventBridge</span>{' '}
+        rules to trigger automatic retraining pipelines via{' '}
+        <span className="msl-cloud-chip">SageMaker Pipelines</span>{' '}
+        when new content categories exceed 10% of traffic.
+      </div>
+    ),
   },
   {
     id: 'alert3',
@@ -1156,6 +1179,19 @@ const ALERTING_SCENARIOS = [
     answer: 2,
     diagnosis: 'When a latency breach starts precisely at a model update and infrastructure is healthy, the model is the most likely cause — larger model size, more features, or a more complex decision tree depth. Holding and investigating while users experience SLA breaches is wrong. Rollback first, profile second.',
     fix: 'Add latency to the model promotion gate: run a load test at expected peak QPS before promoting any model to 100% traffic. Gate on P95 < 150ms (giving 50ms headroom to SLA). For the specific incident: rollback, then profile the new model — compare feature count, tree depth, and inference time against the previous version. Re-promote only after confirming P95 at peak load.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">CloudWatch Metrics</span>{' '}
+        with composite alarms on P95 latency; use{' '}
+        <span className="msl-cloud-chip">EventBridge</span>{' '}
+        rules to trigger automatic retraining pipelines via{' '}
+        <span className="msl-cloud-chip">SageMaker Pipelines</span>.{' '}
+        Gate model promotion with{' '}
+        <span className="msl-cloud-chip">SageMaker Inference Recommender</span>{' '}
+        load tests before 100% rollout.
+      </div>
+    ),
   },
 ]
 
@@ -1190,6 +1226,17 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     answer: 1,
     diagnosis: 'PSI alone is not enough — it measures distributional shift but not impact. A feature with PSI = 0.45 that contributes 0.1% to model predictions is less dangerous than a feature with PSI = 0.12 that is the top feature by importance. The intersection of drift magnitude and model dependence determines actual risk.',
     fix: 'Build a drift impact score: `drift_impact = PSI_feature × feature_importance_rank`. Sort by drift impact, not raw PSI. In your incident report, list the top 3 features by drift impact, their PSI values, their importance percentile, and the upstream data source responsible. This immediately focuses the data engineering response on the right pipeline.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">SageMaker Model Monitor</span>{' '}
+        detects PSI drift automatically per feature; alerts route to{' '}
+        <span className="msl-cloud-chip">CloudWatch Alarms</span>{' '}
+        → <span className="msl-cloud-chip">SNS</span> for on-call paging. Cross-reference feature PSI with model explainability via{' '}
+        <span className="msl-cloud-chip">SageMaker Clarify</span>{' '}
+        to compute drift impact scores automatically.
+      </div>
+    ),
   },
   {
     id: 'drift2',
@@ -1205,6 +1252,17 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     answer: 2,
     diagnosis: 'Covariate and label drift are independent failure modes that happen to co-occur here. Covariate drift (DTI shift) means the input distribution has changed — model predictions may be less reliable in the new region of feature space. Label drift (true default rate drop) means the model is now miscalibrated — it still predicts 3.1% default when the true rate is 2.1%, causing systematic over-rejection of creditworthy applicants.',
     fix: 'Respond to each independently: (1) For covariate drift — investigate the DTI pipeline, check if loan application eligibility criteria changed, assess whether the model has enough training data in the new DTI range. (2) For label drift — recalibrate the decision threshold using recent outcome data (Platt scaling or isotonic regression on 90-day labels). Schedule a retrain on data from the post-shift period once enough labels accumulate.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">SageMaker Model Monitor</span>{' '}
+        detects PSI drift automatically; alerts route to{' '}
+        <span className="msl-cloud-chip">CloudWatch Alarms</span>{' '}
+        → <span className="msl-cloud-chip">SNS</span> for on-call paging.{' '}
+        <span className="msl-cloud-chip">SageMaker Clarify</span>{' '}
+        handles bias monitoring and label drift detection on predictions.
+      </div>
+    ),
   },
   {
     id: 'drift3',
@@ -1220,6 +1278,17 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     answer: 1,
     diagnosis: 'Concept drift is invisible to input monitoring. PSI measures whether features look different — it cannot detect whether the same feature values now mean something different. New fraud techniques specifically exploit this: they produce feature distributions indistinguishable from legitimate behaviour, making PSI-based monitoring blind to the change.',
     fix: 'Add outcome-based monitoring: track precision, recall, and F1 on confirmed fraud labels as they come in (typically 2–4 week delay). When outcome metrics degrade with stable input distributions, the diagnosis is concept drift. Response: increase human review sampling rate to build a fresh labeled dataset, then retrain on recent data. Add adversarial test cases representing known new fraud patterns to the model evaluation suite.',
+    cloudMap: (
+      <div className="msl-cloud-map">
+        <strong>AWS in production →</strong>{' '}
+        <span className="msl-cloud-chip">AWS Glue Data Quality</span>{' '}
+        for schema validation and outcome label pipeline checks;{' '}
+        <span className="msl-cloud-chip">SageMaker Clarify</span>{' '}
+        for bias monitoring on predictions. Route concept drift alerts via{' '}
+        <span className="msl-cloud-chip">CloudWatch Alarms</span>{' '}
+        → <span className="msl-cloud-chip">SNS</span> to trigger human review queues.
+      </div>
+    ),
   },
 ]
 

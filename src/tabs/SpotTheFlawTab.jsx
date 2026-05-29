@@ -278,6 +278,65 @@ Regulators later find the model produces systematically different scores by geog
     reveal: 'Permutation importance underestimates the importance of correlated features. When zip_code is permuted (shuffled), the model can partially recover the geographic signal from correlated features: income, home value, employment type, education. The model does not need zip_code once these correlates are available. Permutation importance measures "how much does the model depend on this feature given all other features are available" — not "does the model use geographic information." The model encodes geographic information through its correlates, and permutation importance misses this entirely.',
     fix: 'For fairness audits, permutation importance is insufficient. Use: (1) Conditional importance: measure importance of zip_code after removing correlated features. (2) Subgroup analysis: directly compute model outputs by geographic region and test for disparate impact. (3) Causal feature attribution: use SHAP interaction values to detect how zip_code interacts with other features. Regulatory compliance requires outcome testing, not just feature importance analysis.',
   },
+  {
+    id: 'stf11',
+    title: 'Ranking Model: Offline Wins, Online Drops',
+    flawCategory: 'Metric Mismatch',
+    setup: `A recsys team trains a new ranking model. Offline NDCG@10 improves from 0.41 to 0.47 — a +14.6% lift. They ship to production via A/B test. After 7 days, CTR in the treatment arm is 2.1% vs 2.3% in control — a statistically significant -8.7% drop. The team is confused: how can offline quality improve while online engagement drops?
+
+# Offline evaluation
+offline_results = {
+  'control':   {'NDCG@10': 0.41, 'Precision@5': 0.38},
+  'treatment': {'NDCG@10': 0.47, 'Precision@5': 0.44}
+}
+
+# Online A/B results (7 days, n=2.1M impressions)
+online_results = {
+  'control':   {'CTR': 0.023, 'Sessions': 1_050_000},
+  'treatment': {'CTR': 0.021, 'Sessions': 1_050_000}
+}
+# p-value for CTR difference: 0.003 (significant)`,
+    question: 'Offline NDCG improved +14.6% but online CTR dropped -8.7%. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'The offline test set contained items seen during training' },
+      { category: 'Evaluation Error', desc: 'The A/B test was not run long enough to be valid' },
+      { category: 'Distribution Shift', desc: 'User preferences changed between offline eval and the A/B test' },
+      { category: 'Metric Mismatch', desc: 'NDCG and CTR measure different things — offline quality does not predict online engagement' },
+      { category: 'Labeling Artifact', desc: 'Click labels in the offline dataset are systematically biased' },
+    ],
+    correctCategory: 'Metric Mismatch',
+    reveal: 'NDCG measures ranking quality of items the user eventually clicked, using a static offline log. It does not measure whether the ranked items are ones the user would click on a fresh visit. The new model may surface more "relevant-looking" items that are less novel or less clickable in context — improving recall of historically clicked items but hurting discovery. Offline NDCG and online CTR are measuring different things.',
+    fix: 'Pair offline NDCG with online-proxy metrics like expected CTR from a click prediction model applied to the ranked slate. Run interleaving experiments before full A/B to catch metric divergence cheaply. Track diversity and novelty alongside relevance — a model that over-indexes on known preferences may have high NDCG but low discovery value.',
+  },
+  {
+    id: 'stf12',
+    title: 'Medical Imaging: Annotator Majority-Vote Bias',
+    flawCategory: 'Labeling Artifact',
+    setup: `A team trains a chest X-ray classifier for pneumonia detection using labels from 3 radiologists (majority vote). The model achieves 94% accuracy on held-out test data. In clinical pilot, sensitivity on actual pneumonia cases is 61% — meaning 39% of pneumonia cases are missed. The held-out test set was labeled by the same 3 radiologists using the same majority-vote protocol.
+
+# Label distribution analysis
+label_stats = {
+  'annotator_agreement_rate': 0.71,  # all 3 agree
+  'split_2_vs_1':            0.29,  # majority vote resolves these
+  'positive_label_rate':     0.18   # 18% pneumonia in training set
+}
+
+# Model performance
+train_accuracy = 0.94
+test_accuracy  = 0.94  # same 3 annotators, same protocol
+clinical_sensitivity = 0.61  # true positive rate on real cases`,
+    question: 'The model achieves 94% test accuracy but only 61% clinical sensitivity. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Test images were used during model training' },
+      { category: 'Evaluation Error', desc: 'The test set is too small to be statistically valid' },
+      { category: 'Distribution Shift', desc: 'Clinical pilot patients differ from training hospital patients' },
+      { category: 'Metric Mismatch', desc: 'Accuracy is the wrong metric for medical diagnosis' },
+      { category: 'Labeling Artifact', desc: 'The majority-vote protocol encodes systematic annotator error, not ground truth' },
+    ],
+    correctCategory: 'Labeling Artifact',
+    reveal: '94% test accuracy is meaningless here because the test set uses the same labeling protocol as training. The 29% of cases where annotators disagreed (2-vs-1) were resolved by majority vote — but majority vote does not resolve clinical ground truth. If two radiologists systematically miss early-stage pneumonia and one catches it, majority vote always labels those cases as negative. The model learns to replicate systematic annotator error, not actual pathology. Test accuracy measures agreement with annotators, not diagnostic accuracy.',
+    fix: 'Use adjudicated labels for the test set — cases where annotators disagree should be resolved by a senior radiologist or confirmed via follow-up imaging (CT, biopsy). Never share labeling protocol between train and test when the protocol itself may carry systematic error. Track sensitivity and specificity separately, not just accuracy — in imbalanced clinical tasks, accuracy can look high while sensitivity is dangerously low.',
+  },
 ]
 
 function ScenarioCard({ scenario, state, onPick }) {

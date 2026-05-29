@@ -32,6 +32,7 @@ const DEPLOY_SCENARIOS = [
     body: "New fraud detection model. Can't test offline — fraud patterns require live traffic. Need to limit blast radius if it fires too aggressively.",
     correct: 'canary',
     reasoning: "Start at 1%, watch false positive rate and block rate vs champion. Shadow would generate no real decisions so you can't measure business impact. Feature flag requires explicit user targeting which doesn't make sense for fraud.",
+    awsCallout: { service: 'SageMaker Deployment Guardrails', desc: 'configure automatic traffic shifting with metric-gated rollback — halt the canary ramp if false positive rate exceeds your threshold.' },
   },
   {
     id: 2,
@@ -39,6 +40,7 @@ const DEPLOY_SCENARIOS = [
     body: 'Updated recommendation model. New embedding architecture — completely different score distribution. You need to compare engagement metrics over 2 weeks.',
     correct: 'shadow',
     reasoning: 'Shadow Mode first, then Canary. Shadow lets you collect predictions without impacting users. After offline comparison passes, canary 5% → 20% → 50% → 100% with engagement guardrails. Never go straight to canary on a completely different score distribution.',
+    awsCallout: { service: 'SageMaker Shadow Testing', desc: 'routes a copy of live traffic to the shadow variant and logs predictions without serving them — the managed AWS primitive for this exact pattern.' },
   },
   {
     id: 3,
@@ -46,6 +48,7 @@ const DEPLOY_SCENARIOS = [
     body: 'Critical bug fix in the model serving code (NaN handling). Identical model weights, just a one-line code fix.',
     correct: 'rolling',
     reasoning: 'Rolling Update (or Blue-Green). No model change means no need for gradual traffic ramp. Rolling is standard; Blue-Green if you want instant rollback capability.',
+    awsCallout: { service: 'SageMaker Endpoints', desc: 'support rolling updates natively; pair with CodeDeploy blue/green if you need instant rollback without instance churn.' },
   },
   {
     id: 4,
@@ -53,6 +56,7 @@ const DEPLOY_SCENARIOS = [
     body: 'New content ranking model. Different teams own different user surfaces (homepage, search, notifications). You want team leads to control when their surface gets the new model.',
     correct: 'featureflag',
     reasoning: "Segment by surface. Each team lead can flip their surface independently. Canary can't express this ownership structure.",
+    awsCallout: { service: 'SageMaker Multi-Model Endpoints', desc: 'let each surface route to a distinct model variant on the same endpoint — team leads swap their variant without touching others.' },
   },
   {
     id: 5,
@@ -60,6 +64,7 @@ const DEPLOY_SCENARIOS = [
     body: 'Model passed all offline evals. Deploying to an internal tool used by 20 data analysts. No external customers affected.',
     correct: 'immediate',
     reasoning: 'Low blast radius, known user base, internal only. Over-engineering deployment here wastes time. Ship it, monitor it.',
+    awsCallout: { service: 'SageMaker Serverless Inference', desc: 'ideal for low-traffic internal tools — zero idle cost, auto-scaling, no instance management overhead.' },
   },
   {
     id: 6,
@@ -67,6 +72,7 @@ const DEPLOY_SCENARIOS = [
     body: 'LLM serving upgrade: new version produces slightly different token probabilities. Need to compare response quality but automated metrics aren\'t reliable for this.',
     correct: 'shadow',
     reasoning: 'Shadow Mode with human eval. LLM quality requires human judgment, not just automated metrics. Run both versions, collect shadow outputs, run human preference evaluation before any live traffic.',
+    awsCallout: { service: 'SageMaker Shadow Testing', desc: 'captures challenger outputs alongside champion responses without serving them — feed those logs into a human evaluation pipeline before promoting the new version.' },
   },
 ]
 
@@ -175,20 +181,29 @@ function DeployStrategy() {
 
       {/* Reasoning reveal */}
       {isRevealed && (
-        <div className="card animate-slide-up" style={{
-          padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
-          border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
-        }}>
-          <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
-            {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Engineering reasoning
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="card animate-slide-up" style={{
+            padding: '18px',
+            background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
+            border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
+          }}>
+            <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
+              {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Engineering reasoning
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              <strong style={{ color: 'var(--ink-hi)' }}>
+                {STRATEGIES.find(s => s.id === scenario.correct)?.label}:
+              </strong>{' '}
+              {scenario.reasoning}
+            </p>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
-            <strong style={{ color: 'var(--ink-hi)' }}>
-              {STRATEGIES.find(s => s.id === scenario.correct)?.label}:
-            </strong>{' '}
-            {scenario.reasoning}
-          </p>
+          {scenario.awsCallout && (
+            <div className="msl-cloud-map">
+              <strong>AWS in production →</strong>{' '}
+              <span className="msl-cloud-chip">{scenario.awsCallout.service}</span>{' '}
+              {scenario.awsCallout.desc}
+            </div>
+          )}
         </div>
       )}
 
@@ -228,6 +243,7 @@ const CC_QUESTIONS = [
     ],
     correct: 'conditions',
     reasoning: 'The p99 latency jump from 45ms → 89ms is a red flag if there\'s an SLA. Accuracy gains are real but you need to resolve the latency issue first before promoting.',
+    awsCallout: { service: 'SageMaker Inference Recommender', desc: 'benchmarks challenger latency across instance types so you have real numbers before committing to a conditional promotion.' },
   },
   {
     q: 'Q2: The SLA for this service is p99 < 100ms. Does the challenger meet it?',
@@ -239,6 +255,7 @@ const CC_QUESTIONS = [
     ],
     correct: 'depends',
     reasoning: '89ms on current traffic might be 110ms under peak load. 11ms headroom at p99 is insufficient. You need load testing under peak traffic, not just current traffic.',
+    awsCallout: { service: 'SageMaker Inference Recommender', desc: 'runs load tests at configured peak traffic levels and reports p99 latency and throughput — use this before trusting any single-traffic-level latency number.' },
   },
   {
     q: 'Q3: Load test shows p99 = 103ms under peak load — just over SLA. What do you do?',
@@ -250,6 +267,7 @@ const CC_QUESTIONS = [
     ],
     correct: 'profile',
     reasoning: 'The accuracy gains are real and worth preserving. First: profile what\'s causing the extra 50ms (is it the new features? model size? I/O?). Often 80% of latency gain comes from one inefficiency. Don\'t throw away a better model because of an undiagnosed bottleneck.',
+    awsCallout: { service: 'SageMaker Endpoints', desc: 'expose CloudWatch metrics per variant (CPU/GPU utilisation, invocation time) — start profiling the hot path there before reaching for a heavier profiling tool.' },
   },
   {
     q: 'Q4: After optimization, challenger runs at p99 = 67ms under peak. Promote?',
@@ -261,6 +279,7 @@ const CC_QUESTIONS = [
     ],
     correct: 'rollback',
     reasoning: 'Never promote directly to 100%. Ramp 5% → 20% → 50% → 100% with rollback trigger: if p99 > 80ms OR false positive rate > 5% over 1-hour window → auto-rollback to champion.',
+    awsCallout: { service: 'SageMaker Deployment Guardrails', desc: 'automates the canary ramp and fires automatic rollback to the champion endpoint if your CloudWatch alarm thresholds are breached during promotion.' },
   },
 ]
 
@@ -394,17 +413,26 @@ function ChampionChallenger() {
           </div>
 
           {revealed && (
-            <div className="card animate-slide-up" style={{
-              padding: '16px',
-              background: currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
-              border: `1px solid ${currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
-            }}>
-              <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: '0 0 12px' }}>
-                {CC_QUESTIONS[step].reasoning}
-              </p>
-              <button className="btn-primary" onClick={next} style={{ fontSize: '13px', padding: '8px 16px' }}>
-                {step < CC_QUESTIONS.length - 1 ? 'Next decision →' : 'See summary →'}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="card animate-slide-up" style={{
+                padding: '16px',
+                background: currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
+                border: `1px solid ${currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
+              }}>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: '0 0 12px' }}>
+                  {CC_QUESTIONS[step].reasoning}
+                </p>
+                <button className="btn-primary" onClick={next} style={{ fontSize: '13px', padding: '8px 16px' }}>
+                  {step < CC_QUESTIONS.length - 1 ? 'Next decision →' : 'See summary →'}
+                </button>
+              </div>
+              {CC_QUESTIONS[step].awsCallout && (
+                <div className="msl-cloud-map">
+                  <strong>AWS in production →</strong>{' '}
+                  <span className="msl-cloud-chip">{CC_QUESTIONS[step].awsCallout.service}</span>{' '}
+                  {CC_QUESTIONS[step].awsCallout.desc}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -451,6 +479,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'Model error rate jumped from 0.1% to 2.3% within 5 minutes of deploy. Errors are NullPointerExceptions in the feature pipeline.',
     correct: 'rollback',
     reasoning: "Sharp spike immediately post-deploy = deploy caused it. Don't investigate first — you're actively erroring on 2% of traffic. Roll back, then investigate safely.",
+    awsCallout: { service: 'SageMaker Deployment Guardrails', desc: 'with automatic rollback triggers — configure a CloudWatch alarm on error rate > 1% to roll back the endpoint to the previous variant automatically, no on-call page required.' },
   },
   {
     id: 2,
@@ -458,6 +487,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'Model AUC-PR dropped from 0.847 to 0.831 over the past 3 days. No recent deploys.',
     correct: 'investigate',
     reasoning: 'Gradual metric degradation with no deploy is data drift, not a code bug. Rolling back won\'t help. Investigate: which features drifted? Is this seasonal? What changed upstream?',
+    awsCallout: { service: 'SageMaker Model Monitor', desc: 'schedules continuous data quality and model quality monitoring jobs — set up a baseline from production traffic and alert when feature distributions exceed PSI thresholds.' },
   },
   {
     id: 3,
@@ -465,6 +495,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'p99 latency increased from 45ms to 62ms over the past 2 hours. Currently 8am Monday — traffic ramping up for start of business.',
     correct: 'monitor',
     reasoning: 'Traffic-correlated latency increase at start-of-business is expected. 62ms is still within SLA. Alert is noisy. No action until you\'re outside SLA or the pattern persists at stable traffic.',
+    awsCallout: { service: 'SageMaker Endpoints', desc: 'auto-scaling policies adjust instance count based on InvocationsPerInstance — ensure your scaling policy has time to warm up before Monday peaks instead of treating the ramp as an incident.' },
   },
   {
     id: 4,
@@ -472,6 +503,7 @@ const ROLLBACK_SCENARIOS = [
     alert: '40% of predictions are returning score exactly 0.5000 since the last feature pipeline deploy 30 minutes ago.',
     correct: 'rollback',
     reasoning: 'Predictions collapsing to a single constant value = feature pipeline is broken, likely returning null/zero features. Not a model problem — a data problem. Rollback the pipeline deploy.',
+    awsCallout: { service: 'SageMaker Feature Store', desc: 'version-controlled feature groups let you roll back the pipeline to a previous ingestion snapshot while you debug the broken feature compute logic.' },
   },
   {
     id: 5,
@@ -479,6 +511,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'Business metric (conversion rate on ranked items) dropped 8% over the past week. Model metrics unchanged.',
     correct: 'investigate',
     reasoning: "Model metrics unchanged but business metric down = either (a) the feature the model optimizes doesn't correlate with conversion as expected, or (b) external factor (seasonality, competitor). Rollback won't fix it if the model is technically correct.",
+    awsCallout: { service: 'SageMaker Experiments', desc: 'track the A/B split between model variants alongside business metrics in one place — makes it easier to rule out model causality before chasing external explanations.' },
   },
   {
     id: 6,
@@ -486,6 +519,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'New model version deployed to canary 5% shows false positive rate 2x the champion on the 5% slice.',
     correct: 'rollback',
     reasoning: "This is what canary is for — caught it at 5%. The 2x false positive rate would cause real user pain if promoted. Rollback the canary, investigate the eval set vs production distribution mismatch.",
+    awsCallout: { service: 'SageMaker Deployment Guardrails', desc: 'canary mode with a false-positive-rate alarm would have triggered the automatic rollback before you needed a human decision — this is the automated form of what you just did manually.' },
   },
   {
     id: 7,
@@ -493,6 +527,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'Model training job failed — no new model produced today. Current model is 26 hours old (daily retrain schedule).',
     correct: 'monitor',
     reasoning: "A single missed retrain rarely causes quality degradation. Monitor staleness. If model age > 48h and drift is detected, then escalate. Don't rollback — there's nothing to roll back to that's better.",
+    awsCallout: { service: 'SageMaker Pipelines', desc: 'conditional step logic can skip promotion and send an alert when a training job fails, keeping the current production model live and paging the on-call only after the staleness threshold is crossed.' },
   },
   {
     id: 8,
@@ -500,6 +535,7 @@ const ROLLBACK_SCENARIOS = [
     alert: 'GPU memory usage on serving cluster increased 40% after latest deploy. No OOM errors yet but trending toward it.',
     correct: 'investigate',
     reasoning: 'Not a rollback trigger yet (no errors) but it\'s a pre-failure signal. Profile: did the new model use more memory? Is it a memory leak? Act before OOM hits.',
+    awsCallout: { service: 'SageMaker Inference Recommender', desc: 'run a right-sizing job on the new model artifact to confirm its memory footprint before the next deploy — catches GPU memory bloat in pre-production rather than at 2am.' },
   },
 ]
 
@@ -601,20 +637,29 @@ function RollbackDecision() {
 
       {/* Reasoning */}
       {isRevealed && (
-        <div className="card animate-slide-up" style={{
-          padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
-          border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
-        }}>
-          <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
-            {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Reasoning
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="card animate-slide-up" style={{
+            padding: '18px',
+            background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
+            border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
+          }}>
+            <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
+              {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Reasoning
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              <strong style={{ color: 'var(--ink-hi)' }}>
+                {ROLLBACK_OPTIONS.find(o => o.id === scenario.correct)?.label}:
+              </strong>{' '}
+              {scenario.reasoning}
+            </p>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
-            <strong style={{ color: 'var(--ink-hi)' }}>
-              {ROLLBACK_OPTIONS.find(o => o.id === scenario.correct)?.label}:
-            </strong>{' '}
-            {scenario.reasoning}
-          </p>
+          {scenario.awsCallout && (
+            <div className="msl-cloud-map">
+              <strong>AWS in production →</strong>{' '}
+              <span className="msl-cloud-chip">{scenario.awsCallout.service}</span>{' '}
+              {scenario.awsCallout.desc}
+            </div>
+          )}
         </div>
       )}
 

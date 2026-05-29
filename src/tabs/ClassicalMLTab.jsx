@@ -1128,6 +1128,262 @@ function DecisionBoundaryLab() {
   )
 }
 
+// ─── Bias-Variance Visualizer ─────────────────────────────────────────────────
+
+// Pre-computed curve data (static arrays, no Pyodide)
+// X axis: complexity 0–100 (41 points, step 2.5)
+// Training error: starts 0.75, falls steeply, levels near 0.05
+// Validation error: starts 0.80, dips to 0.18 at ~complexity 45, rises to 0.72
+const BV_POINTS = (() => {
+  const pts = []
+  for (let i = 0; i <= 40; i++) {
+    const t = i / 40   // 0..1 maps to complexity 0..100
+    const cx = t * 100
+    // Training error: fast initial drop, asymptote near 0.05
+    const trainErr = 0.05 + 0.70 * Math.exp(-4.5 * t)
+    // Validation error: U-shape, min near t=0.45
+    // Use a simple quadratic-ish blend
+    const dist = t - 0.45
+    const valErr = 0.18 + 0.62 * dist * dist * 4.5 + 0.02 * Math.exp(-8 * t)
+    pts.push({ cx, trainErr: Math.min(0.80, Math.max(0.03, trainErr)), valErr: Math.min(0.80, Math.max(0.14, valErr)) })
+  }
+  return pts
+})()
+
+// Noise floor: constant line at 0.15
+const NOISE_FLOOR = 0.15
+// Sweet-spot complexity: ~45
+const SWEET_SPOT_CX = 45
+
+// Map complexity (0-100) → pixel X in viewBox (0-500)
+function cxToSvgX(cx) { return 52 + (cx / 100) * 410 }
+// Map error (0–1) → pixel Y in viewBox (0-280); error=0 → top, error=1 → bottom
+function errToSvgY(err) { return 260 - err * 210 }
+
+// Interpolate a curve value at a given complexity (0-100)
+function interpCurve(cx, key) {
+  const idx = (cx / 100) * 40
+  const lo = Math.min(39, Math.floor(idx))
+  const hi = lo + 1
+  const frac = idx - lo
+  return BV_POINTS[lo][key] * (1 - frac) + BV_POINTS[hi][key] * frac
+}
+
+function BiasVarianceVisualizer() {
+  const [complexity, setComplexity] = useState(45)
+
+  const trainErr = interpCurve(complexity, 'trainErr')
+  const valErr   = interpCurve(complexity, 'valErr')
+
+  // Regime detection
+  let regime
+  if (complexity <= 30)      regime = 'bias'
+  else if (complexity <= 65) regime = 'sweet'
+  else                       regime = 'variance'
+
+  const regimeMeta = {
+    bias: {
+      label: 'High Bias (Underfitting)',
+      borderColor: 'var(--rose)',
+      badgeColor: 'rgba(244,63,94,0.12)',
+      trainLabel: 'High',
+      valLabel: 'High',
+      production: 'A model in high-bias territory will fail silently on both training and serving data — RMSE looks bad everywhere but the team blames data quality rather than model capacity. Adding more training data will not help. The fix is always more model capacity: deeper trees, more features, polynomial transforms, or switching algorithm families.',
+    },
+    sweet: {
+      label: 'Good Fit (Sweet Spot)',
+      borderColor: 'var(--mint)',
+      badgeColor: 'rgba(52,211,153,0.10)',
+      trainLabel: 'Low',
+      valLabel: 'Near minimum',
+      production: 'This is the deployable region. Generalisation gap (val error − train error) is small. The model captures real signal without memorising noise. In production monitoring, watch for val error creeping up over time — that\'s distribution shift, not overfitting. Re-tune periodically rather than letting the model age past this window.',
+    },
+    variance: {
+      label: 'High Variance (Overfitting)',
+      borderColor: 'var(--ember)',
+      badgeColor: 'rgba(249,115,22,0.12)',
+      trainLabel: 'Very low',
+      valLabel: 'Rising fast',
+      production: 'A high-variance model looks excellent in training and CI pipelines, then silently degrades on production traffic as the distribution shifts even slightly. Classic tell: train accuracy 98%, production accuracy 73%. The model memorised the training set. Fix: add regularisation (L2, dropout, max_depth), reduce features, gather more diverse training data, or use an ensemble.',
+    },
+  }
+
+  const meta = regimeMeta[regime]
+
+  // Build SVG path strings from BV_POINTS
+  const trainPath = BV_POINTS.map((p, i) => `${i === 0 ? 'M' : 'L'}${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(p.trainErr).toFixed(1)}`).join(' ')
+  const valPath   = BV_POINTS.map((p, i) => `${i === 0 ? 'M' : 'L'}${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(p.valErr).toFixed(1)}`).join(' ')
+
+  // Bias² shaded region: between noise floor and val curve, on low-complexity side (cx 0..45)
+  const biasRegionPts = [
+    ...BV_POINTS.filter(p => p.cx <= SWEET_SPOT_CX).map(p => `${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(p.valErr).toFixed(1)}`),
+    // close bottom: walk back along noise floor
+    ...BV_POINTS.filter(p => p.cx <= SWEET_SPOT_CX).reverse().map(p => `${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(NOISE_FLOOR).toFixed(1)}`),
+  ].join(' ')
+
+  // Variance shaded region: between sweet-spot val error level and val curve, on high-complexity side (cx 45..100)
+  const sweetValErr = interpCurve(SWEET_SPOT_CX, 'valErr')
+  const varRegionPts = [
+    ...BV_POINTS.filter(p => p.cx >= SWEET_SPOT_CX).map(p => `${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(p.valErr).toFixed(1)}`),
+    ...BV_POINTS.filter(p => p.cx >= SWEET_SPOT_CX).reverse().map(p => `${cxToSvgX(p.cx).toFixed(1)},${errToSvgY(sweetValErr).toFixed(1)}`),
+  ].join(' ')
+
+  // Current-complexity x position in SVG
+  const curX = cxToSvgX(complexity)
+  const dotTrainY = errToSvgY(trainErr)
+  const dotValY   = errToSvgY(valErr)
+
+  // Sweet-spot x
+  const sweetX = cxToSvgX(SWEET_SPOT_CX)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Header */}
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Classical ML</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>
+          Bias-Variance Tradeoff
+        </h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Drag the complexity slider to move through the underfitting-to-overfitting spectrum. Watch how training and validation error diverge — and what it means when a model lands here in production.
+        </p>
+      </div>
+
+      {/* SVG Chart */}
+      <div style={{ width: '100%', maxWidth: '560px' }}>
+        <svg
+          viewBox="0 0 500 280"
+          width="100%"
+          style={{ display: 'block', borderRadius: 'var(--r)', border: '1px solid var(--rim)', background: 'var(--void)' }}
+        >
+          {/* Shaded Bias² region */}
+          <polygon points={biasRegionPts} fill="var(--rose)" fillOpacity="0.10" />
+          {/* Shaded Variance region */}
+          <polygon points={varRegionPts} fill="var(--ember)" fillOpacity="0.10" />
+
+          {/* Noise floor line */}
+          <line
+            x1={cxToSvgX(0)} y1={errToSvgY(NOISE_FLOOR)}
+            x2={cxToSvgX(100)} y2={errToSvgY(NOISE_FLOOR)}
+            stroke="var(--ink-ghost)" strokeWidth="1" strokeDasharray="4 3"
+          />
+          <text x={cxToSvgX(101)} y={errToSvgY(NOISE_FLOOR) + 4} fontSize="8" fill="var(--ink-ghost)" fontFamily="var(--font-mono)">noise</text>
+
+          {/* Sweet-spot dashed vertical */}
+          <line
+            x1={sweetX} y1={errToSvgY(0.85)}
+            x2={sweetX} y2={errToSvgY(0)}
+            stroke="var(--mint)" strokeWidth="1" strokeDasharray="4 3" strokeOpacity="0.5"
+          />
+          {/* Sweet-spot star marker */}
+          <text x={sweetX - 5} y={errToSvgY(0.82)} fontSize="11" fill="var(--mint)" fillOpacity="0.8" fontFamily="var(--font-sans)">✦</text>
+
+          {/* Training error curve */}
+          <path d={trainPath} fill="none" stroke="var(--sky)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Validation error curve */}
+          <path d={valPath} fill="none" stroke="var(--prime)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+          {/* Current complexity vertical line */}
+          <line
+            x1={curX} y1={errToSvgY(0.85)}
+            x2={curX} y2={errToSvgY(0)}
+            stroke="var(--ink-mid)" strokeWidth="1.5" strokeOpacity="0.7"
+          />
+
+          {/* Highlight dots */}
+          <circle cx={curX} cy={dotTrainY} r="5" fill="var(--sky)" stroke="var(--void)" strokeWidth="2" />
+          <circle cx={curX} cy={dotValY}   r="5" fill="var(--prime)" stroke="var(--void)" strokeWidth="2" />
+
+          {/* Region labels */}
+          <text x={cxToSvgX(14)} y={errToSvgY(0.75)} fontSize="8" fill="var(--rose)" fillOpacity="0.75" fontFamily="var(--font-mono)" textAnchor="middle">Bias²</text>
+          <text x={cxToSvgX(78)} y={errToSvgY(0.60)} fontSize="8" fill="var(--ember)" fillOpacity="0.75" fontFamily="var(--font-mono)" textAnchor="middle">Variance</text>
+
+          {/* Legend */}
+          <line x1="58" y1="16" x2="76" y2="16" stroke="var(--sky)"   strokeWidth="2" />
+          <text x="79" y="20" fontSize="9" fill="var(--sky)"   fontFamily="var(--font-mono)">Train error</text>
+          <line x1="58" y1="30" x2="76" y2="30" stroke="var(--prime)" strokeWidth="2" />
+          <text x="79" y="34" fontSize="9" fill="var(--prime)" fontFamily="var(--font-mono)">Val error</text>
+
+          {/* X axis */}
+          <line x1={cxToSvgX(0)} y1={errToSvgY(0)} x2={cxToSvgX(100)} y2={errToSvgY(0)} stroke="var(--rim)" strokeWidth="1" />
+          <text x={cxToSvgX(0)}   y="276" fontSize="8" fill="var(--ink-ghost)" fontFamily="var(--font-mono)" textAnchor="middle">Low</text>
+          <text x={cxToSvgX(50)}  y="276" fontSize="8" fill="var(--ink-ghost)" fontFamily="var(--font-mono)" textAnchor="middle">Model Complexity</text>
+          <text x={cxToSvgX(100)} y="276" fontSize="8" fill="var(--ink-ghost)" fontFamily="var(--font-mono)" textAnchor="middle">High</text>
+
+          {/* Y axis */}
+          <line x1={cxToSvgX(0)} y1={errToSvgY(0)} x2={cxToSvgX(0)} y2={errToSvgY(0.85)} stroke="var(--rim)" strokeWidth="1" />
+          <text x="10" y={errToSvgY(0.82)} fontSize="8" fill="var(--ink-ghost)" fontFamily="var(--font-mono)" textAnchor="middle" transform={`rotate(-90, 10, ${errToSvgY(0.42)})`}>Error</text>
+        </svg>
+      </div>
+
+      {/* Slider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', maxWidth: '560px' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Complexity</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={complexity}
+          onChange={e => setComplexity(Number(e.target.value))}
+          style={{ flex: 1, accentColor: 'var(--prime)', cursor: 'pointer' }}
+        />
+        <span style={{ fontSize: '11px', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', minWidth: '28px', textAlign: 'right' }}>{complexity}</span>
+      </div>
+
+      {/* Live readout */}
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ padding: '8px 14px', borderRadius: 'var(--r-sm)', background: 'rgba(99,179,237,0.10)', border: '1px solid rgba(99,179,237,0.2)' }}>
+          <div style={{ fontSize: '9px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '3px' }}>TRAIN ERROR</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--sky)', fontFamily: 'var(--font-mono)' }}>{trainErr.toFixed(2)}</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{meta.trainLabel}</div>
+        </div>
+        <div style={{ padding: '8px 14px', borderRadius: 'var(--r-sm)', background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.18)' }}>
+          <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '3px' }}>VAL ERROR</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{valErr.toFixed(2)}</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{meta.valLabel}</div>
+        </div>
+        <div style={{ padding: '8px 14px', borderRadius: 'var(--r-sm)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rim)' }}>
+          <div style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '3px' }}>GAP (VAL − TRAIN)</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: (valErr - trainErr) > 0.15 ? 'var(--ember)' : 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>{(valErr - trainErr).toFixed(2)}</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>generalisation gap</div>
+        </div>
+      </div>
+
+      {/* Diagnosis panel */}
+      <div style={{
+        borderLeft: `3px solid ${meta.borderColor}`,
+        background: meta.badgeColor,
+        borderRadius: '0 var(--r) var(--r) 0',
+        padding: '16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{meta.label}</span>
+          <span style={{
+            padding: '2px 8px', borderRadius: '99px',
+            fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 600,
+            background: meta.badgeColor,
+            border: `1px solid ${meta.borderColor}`,
+            color: meta.borderColor,
+          }}>
+            complexity {complexity}
+          </span>
+        </div>
+        {/* In-production callout */}
+        <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--r-sm)', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: '12px', color: 'var(--prime)', flexShrink: 0, marginTop: '1px' }}>→</span>
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>IN PRODUCTION</div>
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>{meta.production}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
@@ -1136,6 +1392,7 @@ const MODULES = [
   { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
   { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures },
   { id: 'decision_boundary', label: 'Decision Boundary Lab', component: DecisionBoundaryLab },
+  { id: 'bias_variance', label: 'Bias-Variance Tradeoff', component: BiasVarianceVisualizer },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────

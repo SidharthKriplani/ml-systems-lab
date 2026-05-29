@@ -120,16 +120,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
                 {/* Options */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {sc.options.map((opt, j) => {
-                    let bg = 'transparent', border = 'var(--rim)', color = 'var(--ink-mid)'
-                    if (item.revealed) {
-                      if (j === sc.answer)                   { bg = 'rgba(52,211,153,0.15)';  border = 'var(--mint)'; color = 'var(--mint)' }
-                      else if (j === item.picked)            { bg = 'rgba(244,63,94,0.15)';   border = 'var(--rose)'; color = 'var(--rose)' }
-                    } else if (j === item.picked) {
-                      bg = 'rgba(240,165,0,0.15)'; border = 'var(--prime)'; color = 'var(--prime)'
-                    }
+                    const optClass = item.revealed
+                      ? (j === sc.answer ? ' correct' : (j === item.picked ? ' wrong' : ''))
+                      : (j === item.picked ? ' selected' : '')
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        className={`msl-option-btn${optClass}`}
+                        style={{ marginBottom: '0px' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
                         {item.revealed && j === sc.answer         && <span>✓ </span>}
                         {item.revealed && j === item.picked && j !== sc.answer && <span>✗ </span>}

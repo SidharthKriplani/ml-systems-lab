@@ -153,6 +153,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--ember)', storageKey = nu
                       <div style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
+                    {sc.awsCallout && (
+                      <div className="msl-cloud-map">
+                        <strong>AWS in production →</strong>{' '}
+                        <span className="msl-cloud-chip">{sc.awsCallout.service}</span>{' '}
+                        {sc.awsCallout.desc}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -324,19 +331,26 @@ function CiCdGates() {
           Compare to expert recommendation
         </button>
       ) : (
-        <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
-          <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>
-            {matches}/{GATES.length} gates matched expert config
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.2)' }}>
+            <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px' }}>
+              {matches}/{GATES.length} gates matched expert config
+            </div>
+            <div style={{ ...grotesk, fontSize: '14px', fontWeight: 700, color: 'var(--rose)', marginBottom: '8px' }}>
+              Key insight
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              ML CI/CD differs from software CI/CD: you can't unit test model quality exhaustively.{' '}
+              <strong style={{ color: 'var(--ink-hi)' }}>Shadow mode is your integration test. Canary ramp is your production smoke test.</strong>{' '}
+              Schema mismatch and metric regression are the only two things that should reliably block a ship.
+              Everything else is signal — worth knowing, rarely worth blocking.
+            </p>
           </div>
-          <div style={{ ...grotesk, fontSize: '14px', fontWeight: 700, color: 'var(--rose)', marginBottom: '8px' }}>
-            Key insight
+          <div className="msl-cloud-map">
+            <strong>AWS in production →</strong>{' '}
+            <span className="msl-cloud-chip">SageMaker Projects</span>{' '}
+            provides MLOps project templates that wire these CI/CD gates — schema validation, offline metrics, and shadow comparison — into a CodePipeline workflow with automatic approval steps.
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
-            ML CI/CD differs from software CI/CD: you can't unit test model quality exhaustively.{' '}
-            <strong style={{ color: 'var(--ink-hi)' }}>Shadow mode is your integration test. Canary ramp is your production smoke test.</strong>{' '}
-            Schema mismatch and metric regression are the only two things that should reliably block a ship.
-            Everything else is signal — worth knowing, rarely worth blocking.
-          </p>
         </div>
       )}
     </div>
@@ -558,6 +572,7 @@ const REGISTRY_SCENARIOS = [
     body: 'Challenger model passed all offline evals and 2-week shadow. Canary at 5% for 3 days shows metrics matching champion.',
     correct: 'promote',
     reasoning: 'All gates passed. Canary data confirms offline eval held up. This is the normal promotion path.',
+    awsCallout: { service: 'SageMaker Model Registry', desc: 'transition model version status from Staging → Production via a SageMaker Pipelines approval step — the registry records who approved, when, and which eval metrics passed.' },
   },
   {
     id: 2,
@@ -565,6 +580,7 @@ const REGISTRY_SCENARIOS = [
     body: "Model trained 6 months ago is still registered as 'staging'. It was never deployed — a better version was trained instead.",
     correct: 'archive',
     reasoning: "Don't delete (you might want the weights for comparison or rollback reference). Archive indicates 'valid but superseded.' Keeps the registry clean without losing history.",
+    awsCallout: { service: 'SageMaker Model Registry', desc: 'supports Archived status natively — pair with an S3 lifecycle policy to move the artifact to Glacier after 90 days if storage cost matters.' },
   },
   {
     id: 3,
@@ -572,6 +588,7 @@ const REGISTRY_SCENARIOS = [
     body: "Production model's training data was found to contain test set labels (data leakage). Model is currently serving live traffic.",
     correct: 'rollback',
     reasoning: 'Leakage = model results are invalid. Roll back immediately, then audit: how long was the leaky model live? What decisions did it influence? Flag for incident review.',
+    awsCallout: { service: 'SageMaker Pipelines', desc: 'maintains a full lineage graph from raw S3 training data through to deployed endpoint — use the lineage API to pinpoint when the leaky data first entered training and which model versions are affected.' },
   },
   {
     id: 4,
@@ -579,6 +596,7 @@ const REGISTRY_SCENARIOS = [
     body: "New model version failed schema validation in CI — the feature 'user_country' was renamed to 'country_code' in the feature pipeline.",
     correct: 'stage',
     reasoning: "Don't promote. The schema mismatch would cause production errors. Fix the schema alignment, re-run CI, then promote if it passes.",
+    awsCallout: { service: 'SageMaker Feature Store', desc: 'feature group schema is versioned and immutable — a rename requires creating a new feature group, making the breaking change explicit and blocking accidental promotion through CI.' },
   },
   {
     id: 5,
@@ -586,6 +604,7 @@ const REGISTRY_SCENARIOS = [
     body: 'Model version from 2 years ago is taking up 40GB in the registry. It has been superseded by 12 newer versions.',
     correct: 'archive',
     reasoning: 'If retention policy says keep 6 months, delete it. If no formal policy, archive. Never delete a model that was in production without confirming audit requirements are met.',
+    awsCallout: { service: 'SageMaker Model Registry', desc: 'combined with S3 Intelligent-Tiering, archived model artifacts automatically shift to lower-cost storage tiers — set a lifecycle rule to expire artifacts beyond your compliance retention window.' },
   },
   {
     id: 6,
@@ -593,6 +612,7 @@ const REGISTRY_SCENARIOS = [
     body: 'A/B test shows challenger is better on engagement but worse on a fairness metric (higher false positive rate on minority subgroup).',
     correct: 'flag',
     reasoning: "This is not a pure technical decision — it requires product/legal/policy review. Don't promote, don't rollback the canary, but don't just reject either. Escalate with the data.",
+    awsCallout: { service: 'SageMaker Clarify', desc: 'generates a bias report per subgroup for both pre-training data and post-training predictions — attach the Clarify report as a registry artifact so the product/legal review has structured evidence to evaluate.' },
   },
 ]
 
@@ -691,20 +711,29 @@ function RegistryPatterns() {
 
       {/* Reasoning */}
       {isRevealed && (
-        <div className="card animate-slide-up" style={{
-          padding: '18px',
-          background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
-          border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
-        }}>
-          <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
-            {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Reasoning
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="card animate-slide-up" style={{
+            padding: '18px',
+            background: picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
+            border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
+          }}>
+            <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
+              {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Reasoning
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              <strong style={{ color: 'var(--ink-hi)' }}>
+                {REGISTRY_OPTIONS.find(o => o.id === scenario.correct)?.label}:
+              </strong>{' '}
+              {scenario.reasoning}
+            </p>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
-            <strong style={{ color: 'var(--ink-hi)' }}>
-              {REGISTRY_OPTIONS.find(o => o.id === scenario.correct)?.label}:
-            </strong>{' '}
-            {scenario.reasoning}
-          </p>
+          {scenario.awsCallout && (
+            <div className="msl-cloud-map">
+              <strong>AWS in production →</strong>{' '}
+              <span className="msl-cloud-chip">{scenario.awsCallout.service}</span>{' '}
+              {scenario.awsCallout.desc}
+            </div>
+          )}
         </div>
       )}
 
@@ -737,6 +766,7 @@ const MODEL_REGISTRY_SCENARIOS = [
     answer: 1,
     diagnosis: 'Semantic versioning requires human judgment to correctly classify breaking vs. non-breaking changes. Under weekly retraining with multiple engineers, version bumping discipline degrades. Hash-based versioning removes the judgment call: the hash is the version. Schema contracts checked into the registry make breaking changes detectable programmatically.',
     fix: 'Move to content-addressed artifact versioning: `sha256(model_artifact)` as the canonical version ID. Register a `schema.json` with every artifact (input feature names + dtypes, output schema). Add a compatibility check in the promotion gate: if `schema.json` differs from the currently deployed version, block auto-promotion and require explicit sign-off.',
+    awsCallout: { service: 'SageMaker Model Registry', desc: 'stores model metadata including custom schema contracts alongside each artifact version — attach schema.json as a registry property and enforce the compatibility check in a SageMaker Pipelines approval step.' },
   },
   {
     id: 'mreg2',
@@ -752,6 +782,7 @@ const MODEL_REGISTRY_SCENARIOS = [
     answer: 2,
     diagnosis: 'Shadow mode is only as valid as its traffic sample. Cached requests have higher hit rates, different session lengths, and different feature value distributions than real-time traffic. A model that performs well on cached traffic may degrade on real-time traffic with cold-start features, fresh user state, or recent inventory changes.',
     fix: 'Verify shadow traffic provenance before trusting gate results. Live shadow mode must intercept actual inference requests, not replay cached ones. Add a traffic distribution check to the gate: compare feature value distributions between shadow traffic and the last 7 days of production traffic. Flag divergence > 10% PSI as a gate failure.',
+    awsCallout: { service: 'SageMaker Shadow Testing', desc: 'intercepts live endpoint invocations and mirrors them to the shadow variant in real time — eliminates the cached-replay problem because traffic is sourced directly from the production request path.' },
   },
   {
     id: 'mreg3',
@@ -767,6 +798,7 @@ const MODEL_REGISTRY_SCENARIOS = [
     answer: 2,
     diagnosis: 'Rollback addresses model failures, not data failures. When PSI on an input feature exceeds 0.25, the feature distribution has fundamentally shifted — both the current and previous model will produce degraded outputs on the same bad feature. Rollback without fixing the upstream pipeline is a no-op.',
     fix: 'Classify the failure before responding: if monitoring shows feature PSI > 0.25 alongside metric degradation, the root cause is upstream, not the model. Escalate to the data engineering team for pipeline fix. If the fix takes >2 hours, consider temporarily routing traffic to a model that does not depend on the degraded feature. Reserve model rollback for cases where the model artifact itself is the failure source.',
+    awsCallout: { service: 'SageMaker Model Monitor', desc: 'data quality jobs compute PSI on incoming feature distributions continuously — the PSI > 0.25 alarm is your signal to page data engineering rather than triggering a model rollback.' },
   },
 ]
 
@@ -801,6 +833,7 @@ const SCHEMA_CASCADE_SCENARIOS = [
     answer: 1,
     diagnosis: 'Mean imputation is the silent killer: replacing a missing column with its historical mean produces a feature value that looks statistically valid. PSI compares the new distribution to the reference — if the reference also included some mean-imputed values, the shift is masked. Model performance degrades because the signal is gone, but the distribution appears stable.',
     fix: 'Add null-rate monitoring as a first-class signal alongside PSI. A null rate jump from 0.2% to 100% for any feature should trigger an immediate alert, regardless of imputation strategy. In CI/CD, add a schema compatibility check: before merging any feature store schema change, run a consumer scan that lists all models depending on the affected columns.',
+    awsCallout: { service: 'SageMaker Feature Store', desc: 'enforces schema on ingestion and tracks which feature groups each model consumed — a consumer scan before merging a column rename surfaces every downstream model that will silently receive nulls.' },
   },
   {
     id: 'sc2',
@@ -819,6 +852,7 @@ const SCHEMA_CASCADE_SCENARIOS = [
     answer: 1,
     diagnosis: 'dbt CI only validates the dbt DAG. It has no visibility into Spark jobs, ML serving pipelines, or dashboards that read from dbt output tables directly. A rename that passes dbt CI can still silently break every downstream consumer that was not part of the dbt graph.',
     fix: 'Build cross-system lineage: maintain a registry of all consumers of each dbt model (Spark jobs, ML features, dashboards). Integrate this registry into dbt CI — any rename or deprecation triggers a consumer scan. Block merge until all consumers are either updated or explicitly acknowledged. Tools like DataHub, OpenLineage, or a simple internal YAML consumer manifest work for this.',
+    awsCallout: { service: 'AWS Lake Formation', desc: 'combined with AWS Glue Data Catalog, tracks table-level lineage across Glue jobs, Spark, and Athena — use the catalog to enumerate all consumers of a table before approving a rename in dbt.' },
   },
   {
     id: 'sc3',
@@ -834,6 +868,7 @@ const SCHEMA_CASCADE_SCENARIOS = [
     answer: 1,
     diagnosis: 'Training-serving skew without an alert: the dtype change introduces a tiny, consistent numerical difference in every normalised feature value. The PSI on the normalised feature stays near zero (the distribution shape is identical, just shifted by a small constant). But the model was never trained on float-normalised values — the skew is real and permanent.',
     fix: 'Add a training-serving consistency check to the serving pipeline: periodically sample a batch of serving requests, run the same features through the training-time normalisation pipeline, and compare outputs. Any consistent difference > 1e-4 in feature value should trigger a review. Lock normalisation configs to the training pipeline version and require recomputation — not just dtype-safe migration — when any input schema changes.',
+    awsCallout: { service: 'SageMaker Model Monitor', desc: 'model quality monitoring jobs can detect training-serving skew by comparing live prediction distributions against a baseline captured at training time — catches the silent normalisation drift before it affects business metrics.' },
   },
 ]
 

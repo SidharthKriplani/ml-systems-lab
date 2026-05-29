@@ -518,6 +518,38 @@
     border-color: var(--rim-hi) !important;
     box-shadow: var(--shadow-md) !important;
   }
+
+  /* ── Cloud/AWS service callout panel ── */
+  /* Usage: <div className="msl-cloud-map"> with service chips inside */
+  .msl-cloud-map {
+    background: rgba(34,211,238,0.05);
+    border: 1px solid rgba(34,211,238,0.20);
+    border-left: 3px solid var(--sky);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.6;
+  }
+  .msl-cloud-map strong {
+    color: var(--sky);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .msl-cloud-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(34,211,238,0.22);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--sky);
+    white-space: nowrap;
+  }
 }
 
 /* ─── Responsive nav layout ──────────────────────────────────────────────── */

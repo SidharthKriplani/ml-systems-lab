@@ -1254,6 +1254,128 @@ function CausalDAGExplorer() {
   )
 }
 
+// ── Simpson's Paradox Visualizer ──────────────────────────────────────────────
+const SIMPSON_DATA = {
+  aggregate: {
+    treatment: { rate: 0.73, n: 270 },
+    control:   { rate: 0.83, n: 230 },
+  },
+  segments: [
+    { label: 'Mild Cases',   treatment: { rate: 0.93, n:  87 }, control: { rate: 0.87, n: 270 } },
+    { label: 'Severe Cases', treatment: { rate: 0.73, n: 263 }, control: { rate: 0.55, n:  80 } },
+  ],
+}
+
+function SimpsonsParadoxViz() {
+  const [view, setView] = useState('aggregate')
+  const isSegmented = view === 'segmented'
+
+  function BarRow({ label, treatRate, controlRate, showN, treatN, controlN }) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+        {label && (
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+        )}
+        {/* Treatment row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', minWidth: '80px' }}>Treatment</span>
+          <div style={{ flex: 1, height: '22px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ width: `${treatRate * 100}%`, height: '100%', background: 'var(--violet)', borderRadius: '4px', transition: 'width 0.5s ease' }} />
+          </div>
+          <span style={{ fontSize: '12px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', minWidth: '36px', textAlign: 'right' }}>{Math.round(treatRate * 100)}%</span>
+          {showN && <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', minWidth: '50px' }}>n={treatN}</span>}
+        </div>
+        {/* Control row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', minWidth: '80px' }}>Control</span>
+          <div style={{ flex: 1, height: '22px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ width: `${controlRate * 100}%`, height: '100%', background: 'var(--sky)', borderRadius: '4px', transition: 'width 0.5s ease' }} />
+          </div>
+          <span style={{ fontSize: '12px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', minWidth: '36px', textAlign: 'right' }}>{Math.round(controlRate * 100)}%</span>
+          {showN && <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', minWidth: '50px' }}>n={controlN}</span>}
+        </div>
+      </div>
+    )
+  }
+
+  const verdict = isSegmented
+    ? 'Treatment wins in BOTH segments'
+    : 'Control wins'
+
+  const verdictColor = isSegmented ? 'var(--mint)' : 'var(--rose)'
+
+  const explanation = isSegmented
+    ? 'When split by severity, Treatment outperforms in BOTH segments. The aggregate result was driven by confounding: Treatment arm had proportionally more severe cases.'
+    : 'The aggregate view suggests Control is better (+10pp). But this is misleading — the two groups received different case mixes.'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.65, margin: 0 }}>
+        A clinical trial for a new treatment measures recovery rates. Toggle between the aggregate view and the segmented view to see how the conclusion reverses.
+      </p>
+
+      {/* Toggle */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {['aggregate', 'segmented'].map(v => (
+          <button key={v} onClick={() => setView(v)}
+            style={{ padding: '7px 18px', borderRadius: '7px', border: `1px solid ${view === v ? 'rgba(168,85,247,0.5)' : 'var(--rim)'}`, background: view === v ? 'rgba(168,85,247,0.12)' : 'transparent', color: view === v ? 'var(--violet)' : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+            {v}
+          </button>
+        ))}
+      </div>
+
+      {/* Chart area */}
+      <div style={{ padding: '20px', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '16px' }}>
+          {isSegmented ? 'Recovery rate by severity segment' : 'Overall recovery rate'}
+        </div>
+
+        {!isSegmented && (
+          <BarRow
+            treatRate={SIMPSON_DATA.aggregate.treatment.rate}
+            controlRate={SIMPSON_DATA.aggregate.control.rate}
+            showN
+            treatN={SIMPSON_DATA.aggregate.treatment.n}
+            controlN={SIMPSON_DATA.aggregate.control.n}
+          />
+        )}
+
+        {isSegmented && SIMPSON_DATA.segments.map(seg => (
+          <BarRow
+            key={seg.label}
+            label={seg.label}
+            treatRate={seg.treatment.rate}
+            controlRate={seg.control.rate}
+            showN
+            treatN={seg.treatment.n}
+            controlN={seg.control.n}
+          />
+        ))}
+
+        {/* Verdict badge */}
+        <div style={{ marginTop: '8px', padding: '8px 14px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: `1px solid ${verdictColor}30`, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Verdict:</span>
+          <span style={{ fontSize: '13px', color: verdictColor, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{verdict}</span>
+        </div>
+      </div>
+
+      {/* Explanation */}
+      <div style={{ padding: '12px 16px', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.18)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>What you're seeing</div>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{explanation}</p>
+      </div>
+
+      {/* Causal insight callout */}
+      <div style={{ padding: '14px 16px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.22)', borderRadius: '10px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--violet)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Causal insight</div>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>
+          This is Simpson's Paradox — a lurking confound (case severity) reverses the observed direction. In real ML: training data sliced by feature group may show opposite trends from the aggregate. Always condition on known confounders before reporting model lift.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'causal_vs_pred',      label: 'Causal vs Predictive',      component: CausalVsPredictive },
@@ -1264,6 +1386,7 @@ const MODULES = [
   { id: 'obs_vs_exp',          label: 'Obs vs Experimental',        component: ObsVsExperimental },
   { id: 'experiment_failures', label: 'Experiment Design Failures', component: ExperimentDesignFailures },
   { id: 'dag_explorer',        label: 'Causal DAG Explorer',        component: CausalDAGExplorer },
+  { id: 'simpsons_paradox',   label: "Simpson's Paradox",          component: SimpsonsParadoxViz },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────

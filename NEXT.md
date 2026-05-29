@@ -8,20 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. Apply .msl-option-btn to remaining MCQ tabs (1 hour)
-FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab still have AccordionMCQ option buttons with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `.correct`/`.wrong`/`.selected`. Each file: search for the AccordionMCQ component's option button rendering (look for `onClick` + `background:` + `border:` inline style combo), replace with className approach. Brace-check each file after edit.
-
-### 2. Cloud/service mapping callouts — 3 tabs (1.5 hours)
-Add `.msl-cloud-map` reveal panels (styled like `.msl-reveal-panel`) inside relevant AccordionMCQ reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab. Each scenario that involves a technology choice gets a "In production, this maps to:" AWS service callout. E.g., "PSI drift → SageMaker Model Monitor + CloudWatch alarm", "Model promotion gate → SageMaker Model Registry approval workflow". Pure content work — no architectural change. Closes the gap between judgment simulation and interview-ready AWS fluency. Add `.msl-cloud-map` class to index.css first (same base as `.msl-reveal-panel` but with a cloud/enterprise accent).
-
-### 3. SpotTheFlawTab — expand to 12 scenarios (1 hour)
-Add stf11 (Metric Mismatch — NDCG vs CTR divergence: offline ranking metric improves but online CTR drops) and stf12 (Labeling Artifact — annotator bias: 3 annotators, majority-vote labels on medical imaging → systematic error on ambiguous boundary cases). Flaw count strip updates automatically as total increases.
-
-### 4. Project Lab tab — Phase 1 skeleton (2–3 hours)
+### 1. ProjectLab tab — Phase 1 skeleton (2–3 hours)
 New tab `ProjectLabTab.jsx`. Sequential notebook. Phase 1: data ingestion + EDA — 3 Pyodide cells (load sklearn churn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 AccordionMCQ judgment checkpoints between cells. LocalStorage key `msl_projectlab_churn_data`. Add to App.jsx (practice zone, premium). See IDEAS.md Tier 1 for full spec.
 
-### 5. New user cold-state banner (45 min)
+### 2. New user cold-state banner (45 min)
 Detect first visit: no `msl_tab`, no `msl_score:*`, no `msl_access` in localStorage. Show one-time orientation banner at top of HomeTab: "New here? Start with Feature Engineering (free) or enter code DAI2026 for full access." Disappears after first tab visit (write `msl_onboarded: 1`). HomeTab only — not Today sidebar.
+
+### 3. Role Readiness Score on HomeTab (1.5 hours)
+Aggregate cross-tab scores into per-domain seniority signal. Read all `msl_score:*` keys + `msl_trainer_history` + `msl_combinator_history`. Compute a 0–100 "readiness" per domain (ML Eng, Data Eng, Deep Learning, MLOps, Data Science, Interview). Render as compact bar-per-domain on HomeTab below the TODAY row. No new localStorage keys needed — derives from existing data.
+
+### 4. Pre-Eval callouts — 3 tabs (1 hour)
+Add a small "Before you score yourself, know:" contextual callout at the TOP of AccordionMCQ blocks in SystemDesignTab, ModelEvalTab, CausalInferenceTab. Single line: the key failure mode to look for before reading the scenario. Not a hint — a priming frame that focuses attention. E.g., "Evaluating retrieval? Check whether your metric accounts for exposure bias." Content-only work, no architectural change.
+
+### 5. Audit #021 — post-v4.30 state check (1 hour)
+Run a focused audit: (a) confirm all new files pass brace balance (ClassicalMLTab BiasVariance, CausalInferenceTab Simpson's, SpotTheFlawTab 12 scenarios, MLOpsDeployTab/PipelinesTab callouts), (b) check METRICS.md for any missing localStorage keys from v4.29/v4.30, (c) verify SpotTheFlaw scenario count in GlobalSearch matches 12, (d) spot-check `.msl-cloud-map` renders correctly in MonitoringTab on mobile (no overflow). Log findings in AUDITS.md.
 
 ---
 
@@ -33,6 +33,11 @@ Nothing currently blocked.
 
 ## Done this session
 
+- ~~Apply .msl-option-btn to remaining MCQ tabs (v4.30) — FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab all migrated from inline styles~~
+- ~~Cloud/AWS callouts — 3 tabs (v4.30) — .msl-cloud-map + .msl-cloud-chip added to index.css; 30+ scenario reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab got AWS service callouts~~
+- ~~SpotTheFlawTab → 12 scenarios (v4.30) — stf11 (NDCG/CTR divergence) + stf12 (annotator majority-vote bias) added~~
+- ~~BiasVarianceVisualizer in ClassicalMLTab (v4.30) — animated SVG, slider, Bias²/Variance regions, regime diagnosis~~
+- ~~SimpsonsParadoxViz in CausalInferenceTab (v4.30) — aggregate/segmented toggle, animated bars, confounding explanation~~
 - ~~Footer cross-links — added to App.jsx, copy "Also by the same team:", LINEAGE.md v4.18, committed~~
 - ~~Interaction guidance pass — all 23 tabs, LINEAGE.md v4.17, AUDITS.md #010~~
 - ~~Audit #017 — full codebase health sweep; CLAUDE.md filenames fixed, AUDITS.md numbering fixed, 5 new findings logged, LINEAGE.md v4.19~~
@@ -56,8 +61,6 @@ Nothing currently blocked.
 ## What comes after (not for this session)
 
 - **Emoji → SVG — highest-traffic tabs only** — 1 hour. Target HomeTab, CombinatorTab, TrainerTab, StaffLayerTab. Grep for emoji codepoints, replace decorative ones with inline SVG using `currentColor`. Functional glyphs (✓ ✗ →) stay. Reference Audit #016 in AUDITS.md for the full list.
-- **New user cold-state banner** — 45 min. Detect first visit (no `msl_tab`/`msl_score`/`msl_access`), show one-time "start here" orientation. Disappears after first tab visit. See IDEAS.md Tier 1.
 - Pre-Eval Callout pattern — 5 target tabs (SystemDesign, ModelEval, Monitoring, MLOpsDeploy, CausalInference). Content work-heavy.
-- Role Readiness Score — aggregate cross-tab scores into per-domain seniority signal on HomeTab.
 - Slim scenario index + lazy content loading — bundle audit first (`npm run build` output), then implement if > 1.5 MB.
 - DefenseDocTab v2 — gap-mapped prep plan, resume cross-reference, round-type selector.

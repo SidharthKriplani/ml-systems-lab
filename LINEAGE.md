@@ -46,6 +46,34 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.30 — Bias-Variance visualizer, Simpson's Paradox viz, SpotTheFlaw expanded to 12, cloud callouts, .msl-option-btn unified (2026-05-30)
+
+**What shipped:** New interactive visualizers, 2 new SpotTheFlaw scenarios, AWS cloud callout panels across 3 MLOps tabs, and `.msl-option-btn` applied to all remaining MCQ tabs. CSS design system extended with `.msl-cloud-map` + `.msl-cloud-chip`.
+
+**Deliverables:**
+
+1. **index.css — `.msl-cloud-map` + `.msl-cloud-chip`** — New utility classes for AWS/cloud service callout panels. Sky-blue left border (3px `var(--sky)`), `rgba(34,211,238,0.05)` background, monospace service chips. Appended to `@layer components`.
+
+2. **ClassicalMLTab — BiasVarianceVisualizer** — Pure React interactive SVG (viewBox 500×280, responsive). Pre-computed BV_POINTS array (41 steps). Training error curve (sky): exponential decay 0.75 → 0.05. Validation error curve (prime): U-shape, minimum ~0.18 at complexity 45, rising to ~0.72 at 100. Shaded Bias² region (rose), shaded Variance region (ember), noise floor dashed line, sweet-spot ✦ marker. Draggable complexity slider. Live readout tiles (Train Error, Val Error, Generalisation Gap). Diagnosis panel with regime-colored left border: High Bias / Good Fit / High Variance. "In Production" callout per regime. No Pyodide.
+
+3. **CausalInferenceTab — SimpsonsParadoxViz** — Toggle between Aggregate and Segmented views. Aggregate: Treatment 73% vs Control 83% → "Control wins". Segmented: Mild (93% vs 87%), Severe (73% vs 55%) → "Treatment wins in BOTH segments". Animated div bars, `BarRow` named component. Verdict badge, explanation panel, causal insight callout. Added to MODULES array (now 9 modules).
+
+4. **SpotTheFlawTab — stf11 + stf12** — Now 12 scenarios total:
+   - stf11 "Ranking Model: Offline Wins, Online Drops" — NDCG +14.6% offline but CTR -8.7% online; NDCG measures recall of historical clicks, not freshness/discovery. Category: Metric Mismatch.
+   - stf12 "Medical Imaging: Annotator Majority-Vote Bias" — 94% accuracy on test set built with same 3-annotator majority-vote protocol as training; clinical sensitivity 61%; test set accuracy measures annotator agreement, not pathology. Category: Labeling Artifact.
+
+5. **MonitoringTab — `.msl-option-btn` + cloud callouts** — Replaced inline-styled option buttons with `className="msl-option-btn"`. Added `msl-cloud-map` callouts to all 6 scenarios: SageMaker Model Monitor, CloudWatch, SNS, EventBridge, SageMaker Pipelines, SageMaker Inference Recommender, Glue Data Quality, SageMaker Clarify.
+
+6. **FeatureEngTab, ModelEvalTab, DataScienceTab — `.msl-option-btn`** — All MCQ option buttons in 3 tabs migrated from inline styles to `className="msl-option-btn correct/wrong"`. DataScienceTab had 3 standalone MCQ components (StatisticalTestingPitfalls, CalibrationInPractice, MetricDesign) — all updated; `disabled` prop added where missing.
+
+7. **MLOpsDeployTab — cloud callouts** — 18+ scenarios across DeployStrategy, ChampionChallenger, RollbackDecision got `.msl-cloud-map` panels: SageMaker Deployment Guardrails, SageMaker Shadow Testing, SageMaker Serverless Inference, SageMaker Inference Recommender, SageMaker Experiments, ECR, CodeDeploy.
+
+8. **MLOpsPipelinesTab — cloud callouts** — 4 modules, 12+ scenarios got `.msl-cloud-map` panels: SageMaker Pipelines, SageMaker Model Registry, SageMaker Feature Store, SageMaker Projects, SageMaker Clarify, AWS Lake Formation, Glue Data Catalog, S3 Intelligent-Tiering, MWAA, Step Functions.
+
+All 9 modified files brace-balanced at 0. One commit.
+
+---
+
 ### v4.29 — All COMING_SOON stubs filled: 6 interactive modules, DAG explorer, decision boundary, streaming simulator (2026-05-30)
 
 **What shipped:** All remaining COMING_SOON stubs cleared across 6 tabs. Zero stubs remain in the codebase. Mix of interactive simulators, SVG visualizations, AccordionMCQ modules, and feature additions.
