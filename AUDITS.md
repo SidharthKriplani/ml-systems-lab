@@ -287,6 +287,11 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 ---
 
+### Audit #010 — Interaction Guidance (2026-05-29)
+**Scope:** All 23 interactive tab files  
+**Finding:** Every tab had a domain description but no instruction on how to interact. Users landing on MCQ tabs had no indication that scenarios were expandable, that answers revealed per-option explanations, or that answers were interactive at all. Simulation tabs (SparkLab) had no explanation of what the controls did. Specialized formats (StaffLayer sequential reveal, CaseStudies multi-part, Verbatim record→rate) were entirely unexplained.  
+**Status:** Resolved v4.17 (2026-05-29) — interaction guidance added to all 23 tabs.
+
 ---
 
 ## Part VI — Learning Quality Audit
@@ -439,6 +444,7 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 | 008 | Learning Quality — MCQ explanation depth, distractor quality, StaffLayer domain gaps, IC3 strawman | 2026-05-27 | Learning Quality / Source Material | 1 open ⚠️ |
 | 009 | Visual Polish — "take my money" end-to-end audit: tab headers, icons, cards, interactive surfaces | 2026-05-27 | Visual Consistency / UX | ✅ All resolved |
 | 010 | TimeSeriesTab ForecastFailureZoo — `correct:` field was numeric index, code compared against string IDs; score never counted, correct answer never highlighted | 2026-05-27 | BUILD / Content Integrity | ✅ Fixed — all 8 scenarios updated to string IDs |
+| 010 | Interaction Guidance — 23 interactive tabs had domain descriptions but no user-facing instruction on how to interact; MCQ reveal mechanic, simulation controls, and specialized formats entirely unexplained | 2026-05-29 | UX / First-Time User | ✅ Resolved v4.17 — guidance added to all 23 tabs |
 | 011 | Mobile layout — hero two-column grid not responsive; ScenarioMockup clipped on phone viewports | 2026-05-27 | Mobile | ✅ Fixed — hero-grid CSS class, mockup hidden <700px |
 | 012 | Low-brightness contrast pass 1 — ink-low/ink-ghost variables too conservative; card borders invisible | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — ink scale and surfaces bumped |
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds (0.04–0.08 opacity) invisible at low brightness; affected all interactive states (selected MCQ, correct/wrong highlights, info boxes, domain cards) | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed — 369 lines across 31 files: 0.04→0.10, 0.05→0.11, 0.06→0.13, 0.07→0.14, 0.08→0.15; ink scale more aggressive; nav inactive 0.35→0.62 |

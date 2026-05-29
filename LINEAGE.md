@@ -46,6 +46,25 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.17 — Interaction guidance pass (2026-05-29)
+
+**Problem:** Every tab had a title and a domain description but nothing telling users how to interact. New users landed on tabs with no indication that content was interactive, that answers revealed per-option explanations, or what the controls did.
+
+**Changes:** Added a second instruction paragraph to all 23 interactive tabs — below the existing description, above the module nav. Text is tab-specific:
+- MCQ/accordion tabs (16): scenario format + answer-reveal mechanic explained
+- SparkLab: simulation controls explained
+- ModelsMath: Python execution flow explained
+- CodeBugs: subtitle rewritten + expand→answer→fix flow explained
+- StaffLayer: sequential IC-level reveal format explained
+- CaseStudies: multi-part question format explained
+- InterviewPrep: 4-mode switcher (Bank / Timed / Fluency / Design) explained
+- Trainer: domain selection → question flow → debrief explained
+- Verbatim: record → rate → transcript flow explained
+
+**Net change:** +27 lines across 23 files. No structural changes.
+
+---
+
 ### v4.16 — HomeTab dashboard-first rebuild (May 2026)
 
 Continued the declutter with a structural redesign. The guiding principle: HomeTab serves returning users (dashboard), not first-time visitors (landing page). Every section that didn't pass the "does a daily user need this?" test was cut.
