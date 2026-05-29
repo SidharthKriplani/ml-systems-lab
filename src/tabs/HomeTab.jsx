@@ -122,12 +122,55 @@ function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
 
 // ── Domain section label ──────────────────────────────────────────────────────
 const DOMAIN_LABELS = [
-  { key: 'mle',       label: 'ML Engineering',   tracks: ['models','features','eval','design','classical'] },
-  { key: 'de',        label: 'Data Engineering',  tracks: ['spark','airflow','dbt','modeling'] },
-  { key: 'dl',        label: 'Deep Learning',     tracks: ['dl','dl_finetune','dl_serving'] },
-  { key: 'mlops',     label: 'MLOps',             tracks: ['monitor','mlops_deploy','mlops_pipes'] },
-  { key: 'ds',        label: 'Data Science',      tracks: ['ds','causal','ts'] },
-  { key: 'resources', label: 'Resources',         tracks: ['interview','gradient'] },
+  { key: 'mle',       label: 'ML Engineering',   tracks: ['models','features','eval','design','classical'], accent: 'var(--violet)' },
+  { key: 'de',        label: 'Data Engineering',  tracks: ['spark','airflow','dbt','modeling'],             accent: 'var(--ember)'  },
+  { key: 'dl',        label: 'Deep Learning',     tracks: ['dl','dl_finetune','dl_serving'],                accent: 'var(--violet)' },
+  { key: 'mlops',     label: 'MLOps',             tracks: ['monitor','mlops_deploy','mlops_pipes'],         accent: 'var(--rose)'   },
+  { key: 'ds',        label: 'Data Science',      tracks: ['ds','causal','ts'],                             accent: 'var(--sky)'    },
+  { key: 'resources', label: 'Resources',         tracks: ['interview','gradient'],                         accent: 'var(--gold)'   },
+]
+
+// ── Guided paths ──────────────────────────────────────────────────────────────
+const GUIDED_PATHS = [
+  {
+    id: 'foundations',
+    label: 'Foundations Path',
+    desc: 'Core ML judgment from the ground up',
+    accent: 'var(--mint)',
+    steps: [
+      { tabId: 'features',  label: 'Feature Engineering' },
+      { tabId: 'eval',      label: 'Model Evaluation' },
+      { tabId: 'classical', label: 'Classical ML' },
+      { tabId: 'monitor',   label: 'Monitoring' },
+      { tabId: 'design',    label: 'System Design' },
+    ],
+  },
+  {
+    id: 'interview',
+    label: 'Interview Prep',
+    desc: 'MLE interview ready in 2 weeks',
+    accent: 'var(--prime)',
+    steps: [
+      { tabId: 'defense',    label: 'Defense Plan' },
+      { tabId: 'combinator', label: 'Combinator Mock' },
+      { tabId: 'verbal',     label: 'Verbal Practice' },
+      { tabId: 'design',     label: 'System Design' },
+      { tabId: 'interview',  label: 'Q&A Bank' },
+    ],
+  },
+  {
+    id: 'production',
+    label: 'Production Incidents',
+    desc: 'Debug ML systems like a senior engineer',
+    accent: 'var(--rose)',
+    steps: [
+      { tabId: 'monitor',      label: 'Monitoring' },
+      { tabId: 'mlops_deploy', label: 'Deployment' },
+      { tabId: 'codebugs',     label: 'Code Bugs' },
+      { tabId: 'mlops_pipes',  label: 'CI/CD & Infra' },
+      { tabId: 'stafflayer',   label: 'Staff Layer' },
+    ],
+  },
 ]
 
 const TYPE_BADGE = {
@@ -235,7 +278,7 @@ export default function HomeTab({ onNavigate }) {
             </div>
             <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.65, margin: 0, fontFamily: 'var(--font-sans)' }}>{todayCase.q}</p>
           </div>
-          {/* Activity */}
+          {/* Activity — hide grid when sparse, show streak number only */}
           {activityGrid.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '14px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
               {streak > 0 && (
@@ -244,12 +287,18 @@ export default function HomeTab({ onNavigate }) {
                   <div style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>day streak</div>
                 </>
               )}
-              <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 8px)', gridAutoFlow: 'column', gridAutoColumns: '8px', gap: '2px', marginTop: '4px' }}>
-                {activityGrid.slice(-28).map(({ date, count }) => (
-                  <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '8px', height: '8px', borderRadius: '1px', background: count > 0 ? 'var(--prime)' : 'rgba(255,255,255,0.06)', opacity: count > 0 ? Math.min(0.4 + count * 0.2, 1) : 1 }} />
-                ))}
-              </div>
-              <div style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>4 weeks</div>
+              {activityGrid.filter(d => d.count > 0).length >= 7 ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 8px)', gridAutoFlow: 'column', gridAutoColumns: '8px', gap: '2px', marginTop: '4px' }}>
+                    {activityGrid.slice(-28).map(({ date, count }) => (
+                      <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '8px', height: '8px', borderRadius: '1px', background: count > 0 ? 'var(--prime)' : 'rgba(255,255,255,0.06)', opacity: count > 0 ? Math.min(0.4 + count * 0.2, 1) : 1 }} />
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>4 weeks</div>
+                </>
+              ) : (
+                <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textAlign: 'center', lineHeight: 1.5 }}>Keep going</div>
+              )}
             </div>
           )}
         </div>
@@ -297,8 +346,43 @@ export default function HomeTab({ onNavigate }) {
         )}
       </section>
 
-      {/* ── Progress ── */}
-      {nextUp && (
+      {/* ── Guided Paths ── */}
+      <section>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Guided Paths</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+          {GUIDED_PATHS.map(path => {
+            const started = path.steps.filter(s => (progress.find(p => p.tab === s.tabId)?.pct ?? 0) > 0).length
+            const pct     = Math.round((started / path.steps.length) * 100)
+            const nextStep = path.steps.find(s => (progress.find(p => p.tab === s.tabId)?.pct ?? 0) === 0) ?? path.steps[path.steps.length - 1]
+            return (
+              <div key={path.id} className="card" style={{ padding: '14px 16px', borderLeft: `3px solid ${path.accent}`, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: path.accent, fontFamily: 'var(--font-sans)', marginBottom: '2px' }}>{path.label}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{path.desc}</div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>{started}/{path.steps.length} steps</span>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: pct > 0 ? path.accent : 'var(--ink-ghost)' }}>{pct}%</span>
+                  </div>
+                  <div style={{ height: '2px', background: 'var(--rim)', borderRadius: '1px' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: path.accent, borderRadius: '1px', transition: 'width 0.5s' }} />
+                  </div>
+                </div>
+                <button
+                  onClick={() => onNavigate(nextStep.tabId)}
+                  style={{ marginTop: '2px', padding: '5px 10px', background: `${path.accent}15`, border: `1px solid ${path.accent}35`, borderRadius: '6px', color: path.accent, fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {pct === 0 ? 'Start' : pct === 100 ? 'Review' : 'Continue'}: {nextStep.label} →
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ── Continue ── */}
+      {nextUp && nextUp.pct > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderLeft: `3px solid ${TAB_ACCENT[nextUp?.tab] ?? 'var(--prime)'}`, borderRadius: '10px', cursor: 'pointer', boxShadow: '0 4px 24px rgba(0,0,0,0.50), 0 1px 4px rgba(0,0,0,0.3)', transition: 'transform 0.18s ease, box-shadow 0.18s' }}
           onClick={() => onNavigate(nextUp.tab)}>
           <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Continue</div>
@@ -339,8 +423,33 @@ export default function HomeTab({ onNavigate }) {
 
 
 
-      {/* ── Track grid ── */}
-      <section>
+      {/* ── All tracks ── */}
+      <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
+        {/* Domain completion overview */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Readiness by domain</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {DOMAIN_LABELS.filter(d => d.key !== 'resources').map(domain => {
+              const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))
+              const avgPct = domainTracks.length > 0
+                ? Math.round(domainTracks.reduce((sum, t) => sum + getTrackPct(t.id), 0) / domainTracks.length)
+                : 0
+              const started = domainTracks.filter(t => getTrackPct(t.id) > 0).length
+              return (
+                <div key={domain.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)', minWidth: '130px', flexShrink: 0 }}>{domain.label}</span>
+                  <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: `${avgPct}%`, height: '100%', background: domain.accent, borderRadius: '2px', transition: 'width 0.6s ease', boxShadow: avgPct > 0 ? `0 0 8px ${domain.accent}60` : 'none' }} />
+                  </div>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: avgPct > 0 ? domain.accent : 'var(--ink-ghost)', minWidth: '60px', textAlign: 'right', flexShrink: 0 }}>
+                    {started}/{domainTracks.length} started
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
         <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '16px' }}>All tracks</div>
         {DOMAIN_LABELS.map(domain => {
           const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))

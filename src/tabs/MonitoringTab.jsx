@@ -1010,6 +1010,21 @@ const COMING_SOON = [
   },
 ]
 
+
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
+  return (
+    <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+      <button
+        onClick={() => onNavigate(tab)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <span style={{ fontSize: '12px', color: accent, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: '12px', color: accent }}>→</span>
+      </button>
+    </div>
+  )
+}
+
 export default function MonitoringTab({ onNavigate }) {
   const [active, setActive] = useState('drift')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? DriftDashboard
@@ -1042,6 +1057,7 @@ export default function MonitoringTab({ onNavigate }) {
           </button>
         </div>
       )}
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--rose)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

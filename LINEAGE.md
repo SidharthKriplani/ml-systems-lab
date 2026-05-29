@@ -46,6 +46,26 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.23 — Nav + progress overhaul — "where are you, what's next?" (2026-05-29)
+
+**Guiding principle:** does the user know where they are and what to do next? Every change in this version is evaluated against that question.
+
+**What changed:**
+
+**1. DesktopSidebar rewritten (App.jsx)** — Old structure: 3 levels (zone button → domain accordion → tab). Required zone awareness before reaching content. New structure: 2 levels (domain section → tab). Zone accordion removed. All domains always visible (no collapse state needed). Per-tab progress % inline with each nav item. Per-tab progress bar (1.5px) below the label when pct > 0. Section labels in monospace uppercase (PRACTICE / INTERVIEW / READ). Accent colors per domain match domain accent vars.
+
+**2. Guided Paths on HomeTab (HomeTab.jsx)** — New `GUIDED_PATHS` constant: 3 curated sequences — Foundations Path (5 steps: features → eval → classical → monitor → design), Interview Prep (5 steps: defense → combinator → verbal → design → interview), Production Incidents (5 steps: monitor → deploy → codebugs → pipes → stafflayer). Each path card shows label, description, X/5 steps completed, a thin progress bar, and a Start/Continue/Review CTA. Progress derived from existing `msl_score:*` localStorage keys — no new keys.
+
+**3. Domain completion bars on HomeTab (HomeTab.jsx)** — New "Readiness by domain" section above the All Tracks grid. 5 domain rows (Resources excluded), each showing avg completion %, a thin accent-colored bar with glow, and "X/Y started" count. Pure read of existing `msl_score:*` keys via `getTrackPct()`.
+
+**4. HomeTab polish — 3 fixes (HomeTab.jsx)** — Activity widget hides heatmap when < 7 active days (shows "Keep going" text instead — sparse grid looked broken). Continue bar suppressed entirely when pct = 0. Visual hierarchy divider (`borderTop: '1px solid var(--rim)'` + `paddingTop: 28px`) separates "your session" context (Jump Back In, Today, Role) from the "browse everything" section below.
+
+**5. ForwardPointer CTAs — 5 tabs** — `ForwardPointer` component added to SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab. Consistent pattern: thin `var(--rim)` top border, label + → arrow, `onNavigate('combinator')` on click. Closes the learn loop at the bottom of each module. Guarded with `{onNavigate && ...}`.
+
+**Files touched:** App.jsx, HomeTab.jsx, SystemDesignTab.jsx, FeatureEngTab.jsx, ModelEvalTab.jsx, MonitoringTab.jsx, DeepLearningTab.jsx. 7 files. Brace balance `0` on all.
+
+---
+
 ### v4.22 — Skeleton mode — COMING_SOON stubs across 16 tabs (2026-05-29)
 
 **The problem this solves:**

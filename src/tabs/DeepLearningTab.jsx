@@ -740,6 +740,21 @@ const COMING_SOON = [
   },
 ]
 
+
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
+  return (
+    <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+      <button
+        onClick={() => onNavigate(tab)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <span style={{ fontSize: '12px', color: accent, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: '12px', color: accent }}>→</span>
+      </button>
+    </div>
+  )
+}
+
 export default function DeepLearningTab({ onNavigate }) {
   const [active, setActive] = useState('diagnosis')
   const [, forceUpdate] = useState(0)
@@ -783,6 +798,7 @@ export default function DeepLearningTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--violet)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

@@ -392,31 +392,26 @@ function InterviewGrid({ onSelect, isUnlocked }) {
 }
 
 // ── DesktopSidebar ────────────────────────────────────────────────────────────
-function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
-  const [openZones,   setOpenZones]   = useState(() => ({ [activeZone]: true }))
+// Guiding principle: user always knows where they are and what to do next.
+// Flat domain sections — one click to any tab. No zone accordion. Progress inline.
+function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) {
   const [openDomains, setOpenDomains] = useState(() => {
-    // Pre-open the domain that contains the current active tab
-    const activeTabId = zoneTab['practice']
     const initial = {}
-    PRACTICE_DOMAINS.forEach(d => {
-      if (d.tabs.some(t => t.id === activeTabId)) initial[d.id] = true
-    })
+    PRACTICE_DOMAINS.forEach(d => { initial[d.id] = true })
     return initial
   })
 
-  // Always keep active zone open
-  useEffect(() => {
-    setOpenZones(prev => ({ ...prev, [activeZone]: true }))
-  }, [activeZone])
-
-  function toggleZone(zoneId) {
-    setOpenZones(prev => ({ ...prev, [zoneId]: !prev[zoneId] }))
-  }
   function toggleDomain(domainId) {
     setOpenDomains(prev => ({ ...prev, [domainId]: !prev[domainId] }))
   }
 
   const activeTabId = zoneTab[activeZone]
+
+  function getTabPct(tabId) {
+    const p = tabProgress?.[tabId]
+    if (!p || p.total === 0) return 0
+    return Math.round((p.attempted / p.total) * 100)
+  }
 
   const S = {
     aside: {
@@ -424,7 +419,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.92) 100px, rgba(8,6,4,0.94) 100%)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
       borderRight: '1px solid rgba(255,255,255,0.15)',
-      flexDirection: 'column', overflowY: 'auto',
+      display: 'flex', flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'thin',
     },
     logo: {
@@ -441,39 +436,39 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
       fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
       boxShadow: '0 0 20px rgba(240,165,0,0.55), 0 2px 8px rgba(0,0,0,0.6)',
     },
-    zoneBtn: (isActive, accent) => ({
-      width: '100%', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '7px 12px 7px 14px',
-      background: isActive
-        ? `linear-gradient(90deg, ${accent}28 0%, ${accent}08 50%, transparent 100%)`
-        : 'none',
+    sectionLabel: {
+      padding: '10px 14px 3px',
+      fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
+      textTransform: 'uppercase', letterSpacing: '0.13em',
+      color: 'rgba(255,255,255,0.25)', userSelect: 'none',
+    },
+    divider: { height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' },
+    homeBtn: (isActive) => ({
+      width: '100%', textAlign: 'left', padding: '7px 14px',
+      background: isActive ? 'rgba(240,165,0,0.10)' : 'none',
       border: 'none', cursor: 'pointer',
-      borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
-      boxShadow: isActive ? `inset 3px 0 12px ${accent}30` : 'none',
-      transition: 'all 0.15s',
+      borderLeft: `2px solid ${isActive ? 'var(--prime)' : 'transparent'}`,
+      transition: 'background 0.1s',
     }),
     domainBtn: {
       width: '100%', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '5px 12px 5px 28px',
+      justifyContent: 'space-between', padding: '5px 12px 4px 14px',
       background: 'none', border: 'none', cursor: 'pointer',
     },
     tabBtn: (isActive, accent) => ({
-      width: '100%', textAlign: 'left', padding: '5px 12px 5px 40px',
-      background: isActive ? `${accent}12` : 'none', border: 'none', cursor: 'pointer',
-      borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
-      transition: 'background 0.1s',
-    }),
-    leafBtn: (isActive, accent) => ({
-      width: '100%', textAlign: 'left', padding: '6px 12px 6px 28px',
+      width: '100%', textAlign: 'left', padding: '5px 12px 5px 24px',
       background: isActive ? `${accent}12` : 'none', border: 'none', cursor: 'pointer',
       borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
       transition: 'background 0.1s',
     }),
     chevron: (open) => ({
-      fontSize: '9px', color: 'rgba(255,255,255,0.55)', display: 'inline-block',
+      fontSize: '9px', color: 'rgba(255,255,255,0.30)', display: 'inline-block',
       transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
     }),
   }
+
+  const isHomeActive   = activeZone === 'today'
+  const isSearchActive = activeZone === 'ask'
 
   return (
     <aside className="desktop-sidebar" style={S.aside}>
@@ -483,83 +478,91 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, onZoneNav }) {
         <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '14px', color: 'var(--ink-hi)', letterSpacing: '-0.03em' }}>Systems Lab</span>
       </button>
 
-      {/* Zone accordion */}
-      <nav style={{ flex: 1, padding: '6px 0 20px' }}>
-        {NAV_ZONES.map(zone => {
-          const isZoneActive = activeZone === zone.id
-          const isOpen = openZones[zone.id] || isZoneActive
+      <nav style={{ flex: 1, padding: '6px 0 24px' }}>
 
+        {/* Home */}
+        <button style={S.homeBtn(isHomeActive)} onClick={() => goTo('home')}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: isHomeActive ? 700 : 400, color: isHomeActive ? 'var(--prime)' : 'var(--ink-mid)' }}>Home</span>
+        </button>
+
+        <div style={S.divider} />
+        <div style={S.sectionLabel}>Practice</div>
+
+        {/* Practice — flat domain sections, one click to any tab */}
+        {PRACTICE_DOMAINS.map(domain => {
+          const isOpen = openDomains[domain.id] !== false
+          const domainHasActive = domain.tabs.some(t => t.id === activeTabId) && activeZone === 'practice'
           return (
-            <div key={zone.id}>
-              <button style={S.zoneBtn(isZoneActive, zone.accent)}
-                onClick={() => { toggleZone(zone.id); onZoneNav(zone.id) }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                  <span style={{ fontSize: '15px', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.62)', filter: isZoneActive ? `drop-shadow(0 0 4px ${zone.accent})` : 'none', transition: 'all 0.15s' }}>{zone.icon}</span>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: isZoneActive ? zone.accent : 'rgba(255,255,255,0.65)', transition: 'color 0.15s' }}>{zone.label}</span>
-                </div>
+            <div key={domain.id}>
+              <button style={S.domainBtn} onClick={() => toggleDomain(domain.id)}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: domainHasActive ? 700 : 500, color: domainHasActive ? domain.accent : 'var(--ink-mid)', letterSpacing: '0.01em' }}>{domain.label}</span>
                 <span style={S.chevron(isOpen)}>▶</span>
               </button>
-
-              {isOpen && (
-                <div style={{ paddingBottom: '2px' }}>
-
-                  {/* TODAY → Home only */}
-                  {zone.id === 'today' && (
-                    <button style={S.leafBtn(activeTabId === 'home' && isZoneActive, 'var(--prime)')} onClick={() => goTo('home')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: activeTabId === 'home' && isZoneActive ? 'var(--prime)' : 'var(--ink-mid)' }}>Home</span>
-                    </button>
-                  )}
-
-                  {/* PRACTICE → domain accordion → tabs */}
-                  {zone.id === 'practice' && PRACTICE_DOMAINS.map(domain => {
-                    const isDomainOpen = openDomains[domain.id]
-                    const domainHasActive = domain.tabs.some(t => t.id === activeTabId) && isZoneActive
-                    return (
-                      <div key={domain.id}>
-                        <button style={S.domainBtn} onClick={() => toggleDomain(domain.id)}>
-                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: domainHasActive ? domain.accent : 'var(--ink-mid)', fontWeight: domainHasActive ? 600 : 400 }}>{domain.label}</span>
-                          <span style={S.chevron(isDomainOpen || domainHasActive)}>▶</span>
-                        </button>
-                        {(isDomainOpen || domainHasActive) && domain.tabs.map(tab => {
-                          const isTabActive = activeTabId === tab.id && isZoneActive
-                          return (
-                            <button key={tab.id} style={S.tabBtn(isTabActive, domain.accent)} onClick={() => goTo(tab.id)}>
-                              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: isTabActive ? domain.accent : 'var(--ink-low)', fontWeight: isTabActive ? 600 : 400 }}>{tab.label}</span>
-                            </button>
-                          )
-                        })}
+              {isOpen && domain.tabs.map(tab => {
+                const isTabActive = activeTabId === tab.id && activeZone === 'practice'
+                const pct = getTabPct(tab.id)
+                const locked = PREMIUM_TABS.has(tab.id) && !isUnlocked
+                return (
+                  <button key={tab.id} style={S.tabBtn(isTabActive, domain.accent)} onClick={() => goTo(tab.id)}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isTabActive ? 600 : 400, color: isTabActive ? domain.accent : locked ? 'var(--ink-ghost)' : 'var(--ink-low)' }}>{tab.label}</span>
+                      {locked
+                        ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        : pct > 0 && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isTabActive ? domain.accent : 'var(--ink-ghost)', flexShrink: 0 }}>{pct}%</span>
+                      }
+                    </div>
+                    {pct > 0 && (
+                      <div style={{ marginTop: '3px', height: '1.5px', background: 'rgba(255,255,255,0.08)', borderRadius: '1px' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: domain.accent, borderRadius: '1px', opacity: 0.55 }} />
                       </div>
-                    )
-                  })}
-
-                  {/* READ → Gradient */}
-                  {zone.id === 'read' && (
-                    <button style={S.leafBtn(isZoneActive, 'var(--sky)')} onClick={() => goTo('gradient')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isZoneActive ? 'var(--sky)' : 'var(--ink-mid)' }}>Gradient ∇</span>
-                    </button>
-                  )}
-
-                  {/* INTERVIEW → tool list */}
-                  {zone.id === 'interview' && INTERVIEW_TOOLS.map(tool => {
-                    const isToolActive = activeTabId === tool.id && isZoneActive
-                    return (
-                      <button key={tool.id} style={S.leafBtn(isToolActive, tool.accent)} onClick={() => goTo(tool.id)}>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isToolActive ? tool.accent : 'var(--ink-mid)', fontWeight: isToolActive ? 600 : 400 }}>{tool.label}</span>
-                      </button>
-                    )
-                  })}
-
-                  {/* SEARCH */}
-                  {zone.id === 'ask' && (
-                    <button style={S.leafBtn(isZoneActive, 'var(--violet)')} onClick={() => goTo('ask')}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: isZoneActive ? 'var(--violet)' : 'var(--ink-mid)' }}>KB Search</span>
-                    </button>
-                  )}
-                </div>
-              )}
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )
         })}
+
+        <div style={S.divider} />
+        <div style={S.sectionLabel}>Interview</div>
+
+        {/* Interview tools — flat list */}
+        {INTERVIEW_TOOLS.map(tool => {
+          const isToolActive = activeTabId === tool.id && activeZone === 'interview'
+          const locked = PREMIUM_TABS.has(tool.id) && !isUnlocked
+          return (
+            <button key={tool.id} style={S.tabBtn(isToolActive, tool.accent)} onClick={() => goTo(tool.id)}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isToolActive ? 600 : 400, color: isToolActive ? tool.accent : locked ? 'var(--ink-ghost)' : 'var(--ink-low)' }}>{tool.label}</span>
+                {locked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+              </div>
+            </button>
+          )
+        })}
+
+        <div style={S.divider} />
+        <div style={S.sectionLabel}>Read</div>
+
+        {/* Read */}
+        {[
+          { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--sky)',  zone: 'read' },
+          { id: 'landscape', label: 'Landscape',   accent: 'var(--gold)', zone: 'today' },
+        ].map(item => {
+          const isActive = activeTabId === item.id && activeZone === item.zone
+          return (
+            <button key={item.id} style={S.tabBtn(isActive, item.accent)} onClick={() => goTo(item.id)}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isActive ? 600 : 400, color: isActive ? item.accent : 'var(--ink-low)' }}>{item.label}</span>
+            </button>
+          )
+        })}
+
+        <div style={S.divider} />
+
+        {/* Search */}
+        <button style={S.tabBtn(isSearchActive, 'var(--violet)')} onClick={() => goTo('ask')}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isSearchActive ? 600 : 400, color: isSearchActive ? 'var(--violet)' : 'var(--ink-low)' }}>Search</span>
+        </button>
+
       </nav>
     </aside>
   )
@@ -744,7 +747,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'var(--void)' }}>
 
       {/* ── Desktop sidebar (hidden on mobile via CSS) ── */}
-      <DesktopSidebar activeZone={activeZone} zoneTab={zoneTab} goTo={goTo} onZoneNav={handleZoneNav} />
+      <DesktopSidebar activeZone={activeZone} zoneTab={zoneTab} goTo={goTo} onZoneNav={handleZoneNav} tabProgress={tabProgress} isUnlocked={isUnlocked} />
 
       {/* ── Desktop main wrapper (offset for sidebar on desktop) ── */}
       <div className="desktop-main-wrapper">
