@@ -598,6 +598,7 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           CI/CD gate design, infrastructure selection, and model registry patterns. The plumbing decisions that determine whether a model makes it from training to production reliably.
         </p>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a production scenario. Pick your answer — then see what breaks in production and why every wrong option fails.</p>
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
