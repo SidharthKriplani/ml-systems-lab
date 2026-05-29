@@ -65,7 +65,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_staff_reveals` | `JSON object` | `StaffLayerTab` | Map of `{ scenarioId: revealLevel }` — persists reveal state across sessions |
 | `msl_defense_progress` | `JSON` | `DefenseDocTab` | Defense doc generation state |
 | `msl_takehome` | `JSON` | `TakeHomeTab` | Take-home exercise state |
-| `msl_jdprep_last` | `string` | `JDPrepTab` | Last pasted JD text — **pending deprecation** when JDPrepTab is merged into DefenseDocTab (see IDEAS.md Upgrades section); fold into `msl_defense_progress` or drop |
+| `msl_jdprep_last` | `string` | `JDPrepTab` (retired) | Last pasted JD text — **deprecated** (JDPrepTab retired in v4.10, merged into Defense Plan). Safe to drop from localStorage; `msl_defense_progress` holds all Defense Plan state. |
 | `msl_read` | `JSON` | `GradientTab` | Set of post IDs marked as read |
 | `msl_role` | `string` | `HomeTab` | Selected role for personalization |
 | `msl_tab` | `string` | `App.jsx` | Last active tab — used for restore on reload |

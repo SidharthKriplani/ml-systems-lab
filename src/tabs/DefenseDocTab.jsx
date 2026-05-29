@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
+// ── Keyword map (JD parsing) ──────────────────────────────────────────────────
 const KEYWORD_MAP = [
   { keywords: ['feature store', 'feast', 'tecton'], topic: 'Feature Stores', tab: 'features', tier: 'must', weight: 3 },
   { keywords: ['recommendation', 'ranking', 'retrieval', 'two-tower', 'embedding'], topic: 'Recommendation Systems', tab: 'design', tier: 'must', weight: 3 },
   { keywords: ['mlops', 'ml platform', 'model deployment', 'serving', 'inference'], topic: 'MLOps & Deployment', tab: 'mlops_deploy', tier: 'must', weight: 3 },
-  { keywords: ['spark', 'pyspark', 'distributed training', 'dataproc'], topic: 'Distributed Computing (Spark)', tab: 'spark', tier: 'must', weight: 3 },
-  { keywords: ['experiment', 'a/b test', 'causal', 'uplift'], topic: 'Experimentation & Causal Inference', tab: 'causal', tier: 'must', weight: 3 },
+  { keywords: ['spark', 'pyspark', 'distributed training', 'dataproc'], topic: 'Distributed Compute (Spark)', tab: 'spark', tier: 'must', weight: 3 },
+  { keywords: ['experiment', 'a/b test', 'causal', 'uplift'], topic: 'Experimentation & Causality', tab: 'causal', tier: 'must', weight: 3 },
   { keywords: ['monitoring', 'drift', 'data quality', 'observability'], topic: 'Model Monitoring', tab: 'monitor', tier: 'must', weight: 3 },
   { keywords: ['deep learning', 'neural network', 'pytorch', 'tensorflow', 'transformer'], topic: 'Deep Learning', tab: 'dl', tier: 'must', weight: 3 },
   { keywords: ['system design', 'architecture', 'scalable'], topic: 'ML System Design', tab: 'design', tier: 'must', weight: 3 },
-  { keywords: ['gradient boosting', 'xgboost', 'lightgbm', 'gbm', 'trees'], topic: 'Classical ML & Tree Models', tab: 'classical', tier: 'important', weight: 2 },
+  { keywords: ['gradient boosting', 'xgboost', 'lightgbm', 'gbm', 'trees'], topic: 'Classical ML & Ensembles', tab: 'classical', tier: 'important', weight: 2 },
   { keywords: ['evaluation', 'metrics', 'auc', 'ndcg', 'precision', 'recall'], topic: 'Model Evaluation', tab: 'eval', tier: 'important', weight: 2 },
   { keywords: ['pipeline', 'airflow', 'orchestration', 'dag', 'workflow'], topic: 'Pipelines & Orchestration', tab: 'airflow', tier: 'important', weight: 2 },
   { keywords: ['sql', 'query', 'warehouse', 'bigquery', 'snowflake', 'redshift'], topic: 'SQL & Data Modeling', tab: 'modeling', tier: 'important', weight: 2 },
@@ -20,492 +21,457 @@ const KEYWORD_MAP = [
   { keywords: ['statistics', 'hypothesis', 'bayesian', 'probability'], topic: 'Statistics & DS', tab: 'ds', tier: 'important', weight: 2 },
   { keywords: ['model math', 'optimization', 'gradient descent', 'backprop'], topic: 'Models & Math', tab: 'models', tier: 'good', weight: 1 },
   { keywords: ['triton', 'torchserve', 'bentoml', 'inference optimization'], topic: 'DL Serving', tab: 'dl_serving', tier: 'good', weight: 1 },
-  { keywords: ['sklearn', 'logistic regression', 'svm'], topic: 'Classical ML', tab: 'classical', tier: 'good', weight: 1 },
   { keywords: ['causal inference', 'did', 'iv', 'regression discontinuity'], topic: 'Causal Inference', tab: 'causal', tier: 'good', weight: 1 },
-  { keywords: ['knowledge graph', 'graph ml', 'gnn'], topic: 'ML System Design', tab: 'design', tier: 'good', weight: 1 },
-];
+]
 
+// ── Study checklist items per topic ──────────────────────────────────────────
 const CHECKLISTS = {
-  'Feature Stores': [
-    'Understand online vs. offline store architecture',
-    'Know point-in-time correct joins',
-    'Explain training-serving skew',
-    'Compare Feast vs. Tecton',
-  ],
-  'Recommendation Systems': [
-    'Two-tower retrieval architecture',
-    'Cold-start strategies',
-    'ANN serving (FAISS/HNSW)',
-    'Re-ranking stage design',
-    'Evaluation: offline recall@K vs. online CTR',
-  ],
-  'MLOps & Deployment': [
-    'CI/CD for ML models',
-    'Canary vs. shadow deployment',
-    'Model versioning and registry',
-    'Rollback triggers',
-    'A/B test integration',
-  ],
-  'Distributed Computing (Spark)': [
-    'Spark RDD vs. DataFrame API',
-    'Shuffle optimization and broadcast joins',
-    'Structured Streaming checkpointing',
-    'Partitioning strategies',
-  ],
-  'Experimentation & Causal Inference': [
-    'A/B test design: power analysis, MDE',
-    'CUPED variance reduction',
-    'Network effects and SUTVA',
-    'Sequential testing (mSPRT)',
-  ],
-  'Model Monitoring': [
-    'Feature drift: PSI and KL divergence',
-    'Prediction distribution monitoring',
-    'Label feedback loops',
-    'Alerting and escalation paths',
-  ],
-  'Deep Learning': [
-    'Transformer attention mechanism',
-    'Training stability: gradient clipping, warmup',
-    'Regularization: dropout, weight decay',
-    'Mixed precision training',
-  ],
-  'ML System Design': [
-    'Feature store + model serving architecture',
-    'Latency budget allocation',
-    'Training pipeline design',
-    'Online learning vs. batch',
-  ],
-  'Classical ML & Tree Models': [
-    'Bias-variance tradeoff',
-    'Tree ensemble methods',
-    'Regularization (L1/L2)',
-    'Feature selection techniques',
-  ],
-  'Classical ML': [
-    'Bias-variance tradeoff',
-    'Tree ensemble methods',
-    'Regularization (L1/L2)',
-    'Feature selection techniques',
-  ],
-  'Model Evaluation': [
-    'Calibration vs. discrimination',
-    'NDCG@K for ranking',
-    'Precision-recall at threshold',
-    'Offline vs. online metrics',
-  ],
-  'SQL & Data Modeling': [
-    'Window functions',
-    'CTEs and query optimization',
-    'Partitioning strategies',
-    'SCD Type 2',
-  ],
-};
+  'Feature Stores': ['Online vs. offline store architecture', 'Point-in-time correct joins', 'Training-serving skew', 'Feast vs. Tecton tradeoffs'],
+  'Recommendation Systems': ['Two-tower retrieval architecture', 'Cold-start strategies', 'ANN serving (FAISS/HNSW)', 'Re-ranking stage design', 'Offline recall@K vs. online CTR'],
+  'MLOps & Deployment': ['CI/CD for ML models', 'Canary vs. shadow deployment', 'Model versioning and registry', 'Rollback triggers', 'A/B test integration'],
+  'Distributed Compute (Spark)': ['Spark RDD vs. DataFrame API', 'Shuffle optimization and broadcast joins', 'Structured Streaming checkpointing', 'Partitioning strategies'],
+  'Experimentation & Causality': ['A/B test design: power analysis, MDE', 'CUPED variance reduction', 'Network effects and SUTVA', 'Sequential testing (mSPRT)'],
+  'Model Monitoring': ['Feature drift: PSI and KL divergence', 'Prediction distribution monitoring', 'Label feedback loops', 'Alerting and escalation paths'],
+  'Deep Learning': ['Transformer attention mechanism', 'Training stability: gradient clipping, warmup', 'Regularization: dropout, weight decay', 'Mixed precision training'],
+  'ML System Design': ['Feature store + model serving architecture', 'Latency budget allocation', 'Training pipeline design', 'Online vs. batch learning'],
+  'Classical ML & Ensembles': ['Bias-variance tradeoff', 'Tree ensemble methods', 'Regularization (L1/L2)', 'Feature selection techniques'],
+  'Model Evaluation': ['Calibration vs. discrimination', 'NDCG@K for ranking', 'Precision-recall at threshold', 'Offline vs. online metrics'],
+  'SQL & Data Modeling': ['Window functions', 'CTEs and query optimization', 'Partitioning strategies', 'SCD Type 2'],
+  'Pipelines & Orchestration': ['DAG structure and dependencies', 'Backfill strategies', 'Late data handling', 'SLA and alerting'],
+  'LLM Fine-Tuning': ['LoRA and PEFT methods', 'Instruction fine-tuning vs. RLHF', 'Catastrophic forgetting', 'Evaluation: ROUGE vs. human eval'],
+  'Data Modeling & dbt': ['Materialization strategies', 'Schema drift handling', 'Incremental models', 'Testing in dbt'],
+  'Time Series': ['Stationarity and unit root tests', 'ARIMA vs. ML approaches', 'Walk-forward validation', 'Anomaly detection methods'],
+  'Feature Engineering': ['Target encoding with k-fold', 'Feature store time-travel', 'Imputation without leakage', 'High-cardinality handling'],
+  'Statistics & DS': ['Central limit theorem application', 'Type I vs. Type II error', 'Calibration of probability outputs', 'Bootstrap confidence intervals'],
+  'Models & Math': ['PCA and SVD', 'Gradient descent variants', 'Kernel methods', 'Backpropagation'],
+  'DL Serving': ['Quantization (INT8/FP16)', 'GPU memory optimization', 'Batching strategies', 'Latency vs. throughput tradeoffs'],
+  'Causal Inference': ['Identification strategies', 'DiD and parallel trends', 'IV and regression discontinuity', 'Uplift modeling'],
+}
+const DEFAULT_CHECKLIST = ['Review core concepts', 'Work through production scenarios', 'Articulate reasoning out loud']
 
-const DEFAULT_CHECKLIST = ['Review core concepts', 'Practice interview questions', 'Study production examples'];
+// ── Interview round → skill mapping ──────────────────────────────────────────
+const ROUND_SKILLS = {
+  'ML Coding':         ['Feature Engineering', 'Classical ML & Ensembles', 'Model Evaluation', 'Models & Math', 'Statistics & DS'],
+  'ML System Design':  ['ML System Design', 'MLOps & Deployment', 'Feature Stores', 'Recommendation Systems', 'Deep Learning', 'Distributed Compute (Spark)'],
+  'Depth / Onsite':    ['Experimentation & Causality', 'Model Monitoring', 'LLM Fine-Tuning', 'DL Serving', 'Time Series', 'Data Modeling & dbt', 'Pipelines & Orchestration'],
+  'Behavioral':        [],
+}
 
-const TIER_CONFIG = {
-  must: { label: 'Must Know', color: 'var(--rose)', bg: 'rgba(244,63,94,0.15)', border: 'rgba(244,63,94,0.3)' },
-  important: { label: 'Important', color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)', border: 'rgba(240,165,0,0.3)' },
-  good: { label: 'Good to Have', color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.3)' },
-};
+// ── Config ────────────────────────────────────────────────────────────────────
+const HORIZONS = [
+  { id: 'cram', label: 'Cram Up',  sub: 'Today / tomorrow' },
+  { id: '3d',   label: '3 Days',   sub: 'Quick sprint'     },
+  { id: '7d',   label: '7 Days',   sub: 'Standard prep'    },
+  { id: '14d',  label: '2 Weeks',  sub: 'Deep coverage'    },
+]
+const RATINGS = [
+  { id: 'weak',   label: 'Weak',   color: 'var(--rose)',  inv: 3 },
+  { id: 'okay',   label: 'Okay',   color: 'var(--prime)', inv: 2 },
+  { id: 'strong', label: 'Strong', color: 'var(--mint)',  inv: 1 },
+]
+const TIER_COLOR = { must: 'var(--rose)', important: 'var(--prime)', good: 'var(--mint)' }
+const ACCESS_CODE = 'INPRODUCTION'
+const GATE_SECTION_PCT = 0.35
 
+// ── JD parser ─────────────────────────────────────────────────────────────────
 function analyzeJD(jdText) {
-  const lower = jdText.toLowerCase();
-  const topicsMap = new Map();
-
+  const lower = jdText.toLowerCase()
+  const map = new Map()
   for (const entry of KEYWORD_MAP) {
-    const matched = entry.keywords.filter(kw => lower.includes(kw));
-    if (matched.length > 0) {
-      const key = `${entry.topic}-${entry.tier}`;
-      if (topicsMap.has(key)) {
-        const existing = topicsMap.get(key);
-        matched.forEach(kw => {
-          if (!existing.matched.includes(kw)) existing.matched.push(kw);
-        });
-      } else {
-        topicsMap.set(key, { ...entry, matched: [...matched] });
-      }
+    const matched = entry.keywords.filter(kw => lower.includes(kw))
+    if (!matched.length) continue
+    const key = entry.topic + '-' + entry.tier
+    if (map.has(key)) {
+      matched.forEach(kw => { if (!map.get(key).matched.includes(kw)) map.get(key).matched.push(kw) })
+    } else {
+      map.set(key, { ...entry, matched: [...matched] })
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => b.weight - a.weight).slice(0, 8)
+}
+
+// ── Plan generator ────────────────────────────────────────────────────────────
+function generatePlan(skills, horizon) {
+  const sorted = [...skills].sort((a, b) => b.gapScore - a.gapScore)
+  const weak   = sorted.filter(s => s.rating === 'weak')
+
+  if (horizon === 'cram') return [
+    { label: '⚡ Priority Focus — highest gaps first', accent: 'var(--rose)', border: 'rgba(244,63,94,0.28)', items: sorted.slice(0, 4) },
+  ]
+  if (horizon === '3d') return [
+    { label: 'Day 1 — Biggest gaps', accent: 'var(--rose)',  border: 'rgba(244,63,94,0.28)',  items: sorted.slice(0, 2) },
+    { label: 'Day 2 — Core topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)',   items: sorted.slice(2, 4) },
+    { label: 'Day 3 — Review',       accent: 'var(--mint)',  border: 'rgba(52,211,153,0.28)',  items: sorted.slice(4, 6), bonus: 'Run a 30-min Combinator session to pressure-test.' },
+  ]
+  if (horizon === '7d') return [
+    { label: 'Days 1–2 — Gap Focus',  accent: 'var(--rose)',  border: 'rgba(244,63,94,0.28)',  items: sorted.slice(0, 2) },
+    { label: 'Days 3–4 — Build',      accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)',   items: sorted.slice(2, 5) },
+    { label: 'Day 5 — Weak spots',    accent: 'var(--ember)', border: 'rgba(249,115,22,0.28)',  items: weak.slice(0, 2) },
+    { label: 'Days 6–7 — Simulate',   accent: 'var(--mint)',  border: 'rgba(52,211,153,0.28)',  items: sorted.slice(5), bonus: 'Day 7: full Combinator session + Verbal Practice run-through.' },
+  ]
+  // 14d
+  return [
+    { label: 'Week 1 — Days 1–3 — Must Know gaps',    accent: 'var(--rose)',   border: 'rgba(244,63,94,0.28)',   items: sorted.filter(s => s.tier === 'must').slice(0, 3) },
+    { label: 'Week 1 — Days 4–5 — Important topics',  accent: 'var(--prime)',  border: 'rgba(240,165,0,0.28)',    items: sorted.filter(s => s.tier === 'important').slice(0, 3) },
+    { label: 'Week 1 — Days 6–7 — Weak spots + mock', accent: 'var(--ember)',  border: 'rgba(249,115,22,0.28)',   items: weak, bonus: 'Day 7: Combinator session.' },
+    { label: 'Week 2 — Days 8–10 — Breadth pass',     accent: 'var(--sky)',    border: 'rgba(34,211,238,0.28)',   items: sorted.slice(4) },
+    { label: 'Week 2 — Days 11–13 — Rounds practice', accent: 'var(--violet)', border: 'rgba(99,102,241,0.28)',   items: sorted.slice(0, 2), bonus: 'Interview Q&A + Take-Home Bank. Answer one question out loud per day.' },
+    { label: 'Day 14 — Full simulation',              accent: 'var(--mint)',   border: 'rgba(52,211,153,0.28)',   items: [], bonus: 'Full Combinator session + Verbal Practice. Re-read your Defense Plan from Day 1.' },
+  ]
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
+  const [screen,   setScreen]   = useState('input')
+  const [jdText,   setJdText]   = useState('')
+  const [skills,   setSkills]   = useState([]) // { ...kwEntry, rating, gapScore, checklist }
+  const [horizon,  setHorizon]  = useState('7d')
+  const [done,     setDone]     = useState(new Set()) // 'topicIdx-itemIdx'
+  const [codeInput, setCodeInput] = useState('')
+  const [codeError, setCodeError] = useState(false)
+  const [unlocked,  setUnlocked]  = useState(isUnlocked)
+
+  useEffect(() => { setUnlocked(isUnlocked) }, [isUnlocked])
+
+  // Restore
+  useEffect(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('msl_defense_progress') || 'null')
+      if (!s) return
+      if (s.jd)      setJdText(s.jd)
+      if (s.skills)  setSkills(s.skills)
+      if (s.horizon) setHorizon(s.horizon)
+      if (s.done)    setDone(new Set(s.done))
+      if (s.screen)  setScreen(s.screen)
+    } catch {}
+  }, [])
+
+  function persist(patch = {}) {
+    try {
+      const state = { jd: jdText, skills, horizon, done: [...done], screen, ...patch }
+      localStorage.setItem('msl_defense_progress', JSON.stringify(state))
+    } catch {}
+  }
+
+  // ── Step 1: analyze JD ───────────────────────────────────────────────────
+  function handleAnalyze() {
+    if (!jdText.trim()) return
+    const extracted = analyzeJD(jdText)
+    const built = extracted.map((e, i) => ({
+      ...e,
+      idx: i,
+      rating: null,
+      gapScore: e.weight * 2, // default "okay"
+      checklist: (CHECKLISTS[e.topic] || DEFAULT_CHECKLIST).map(t => ({ text: t })),
+    }))
+    setSkills(built)
+    setScreen('rate')
+    persist({ skills: built, screen: 'rate' })
+  }
+
+  // ── Step 2: save ratings, go to plan ─────────────────────────────────────
+  function handleRate(idx, rating) {
+    const updated = skills.map((s, i) => i === idx
+      ? { ...s, rating, gapScore: s.weight * RATINGS.find(r => r.id === rating).inv }
+      : s
+    )
+    setSkills(updated)
+    persist({ skills: updated })
+  }
+
+  function handleViewPlan() {
+    setScreen('plan')
+    persist({ screen: 'plan' })
+  }
+
+  // ── Plan: toggle checklist item ───────────────────────────────────────────
+  function toggleDone(key) {
+    const next = new Set(done)
+    next.has(key) ? next.delete(key) : next.add(key)
+    setDone(next)
+    persist({ done: [...next] })
+  }
+
+  // ── Inline code unlock ────────────────────────────────────────────────────
+  function handleInlineUnlock(e) {
+    e.preventDefault()
+    if (codeInput.trim().toUpperCase() === ACCESS_CODE) {
+      localStorage.setItem('msl_access', ACCESS_CODE)
+      setUnlocked(true)
+      if (onUnlock) onUnlock(ACCESS_CODE)
+    } else {
+      setCodeError(true)
+      setTimeout(() => setCodeError(false), 1800)
     }
   }
 
-  return Array.from(topicsMap.values()).sort((a, b) => b.weight - a.weight);
-}
-
-function buildTopicsWithChecklists(topics) {
-  return topics.map((t, i) => ({
-    id: `${t.topic}-${i}`,
-    name: t.topic,
-    tier: t.tier,
-    keywords: t.matched,
-    checklist: (CHECKLISTS[t.topic] || DEFAULT_CHECKLIST).map(text => ({ text, done: false })),
-  }));
-}
-
-export default function DefenseDocTab({ onNavigate }) {
-  const [screen, setScreen] = useState('input');
-  const [jdText, setJdText] = useState('');
-  const [candidateName, setCandidateName] = useState('');
-  const [topics, setTopics] = useState([]);
-  const [guidedIdx, setGuidedIdx] = useState(0);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('msl_defense_progress');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.jd) setJdText(parsed.jd);
-        if (parsed.topics && parsed.topics.length > 0) {
-          setTopics(parsed.topics);
-          setScreen('brief');
-        }
-      }
-    } catch {}
-  }, []);
-
-  function saveProgress(updatedTopics, jd) {
-    try {
-      localStorage.setItem('msl_defense_progress', JSON.stringify({ jd: jd ?? jdText, topics: updatedTopics }));
-    } catch {}
-  }
-
-  function handleGenerate() {
-    if (!jdText.trim()) return;
-    const analyzed = analyzeJD(jdText);
-    const built = buildTopicsWithChecklists(analyzed);
-    setTopics(built);
-    setScreen('brief');
-    saveProgress(built, jdText);
-  }
-
   function handleReset() {
-    setScreen('input');
-    setTopics([]);
-    setJdText('');
-    setCandidateName('');
-    try { localStorage.removeItem('msl_defense_progress'); } catch {}
+    setScreen('input'); setJdText(''); setSkills([]); setHorizon('7d')
+    setDone(new Set())
+    try { localStorage.removeItem('msl_defense_progress') } catch {}
   }
 
-  function handleChecklistToggle(topicId, itemIdx) {
-    const updated = topics.map(t => {
-      if (t.id !== topicId) return t;
-      return {
-        ...t,
-        checklist: t.checklist.map((item, i) => i === itemIdx ? { ...item, done: !item.done } : item),
-      };
-    });
-    setTopics(updated);
-    saveProgress(updated);
-  }
+  // ── Plan data ─────────────────────────────────────────────────────────────
+  const planSections   = generatePlan(skills, horizon)
+  const gateAfterIdx   = Math.max(1, Math.floor(planSections.length * GATE_SECTION_PCT))
+  const totalItems     = skills.reduce((s, sk) => s + sk.checklist.length, 0)
+  const doneCount      = done.size
 
-  function handlePrint() {
-    window.print();
-  }
-
-  const mustTopics = topics.filter(t => t.tier === 'must');
-  const importantTopics = topics.filter(t => t.tier === 'important');
-  const goodTopics = topics.filter(t => t.tier === 'good');
-  const totalItems = topics.reduce((s, t) => s + t.checklist.length, 0);
-  const doneItems = topics.reduce((s, t) => s + t.checklist.filter(c => c.done).length, 0);
-
-  // Input screen
-  if (screen === 'input') {
-    return (
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 26, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 8px' }}>
-            Defense Brief
-          </h2>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: 0 }}>
-            Generate a weighted study brief from a job description — exportable as PDF or workable in guided mode.
-          </p>
+  // ── SCREEN: input ─────────────────────────────────────────────────────────
+  if (screen === 'input') return (
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 20px' }}>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
+          Interview Prep
         </div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 26, fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: '0 0 10px' }}>
+          Defense Plan
+        </h2>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+          Paste the job description. We extract what the role actually cares about, ask you to rate yourself honestly, then build a sequenced study plan based on your real gaps — not a generic list.
+        </p>
+      </div>
+      <textarea
+        value={jdText}
+        onChange={e => setJdText(e.target.value)}
+        placeholder="Paste the full job description here…"
+        style={{ width: '100%', minHeight: 280, background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 10, padding: 16, fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-hi)', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: 1.65 }}
+      />
+      <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={handleAnalyze} disabled={!jdText.trim()} className="btn-primary" style={{ fontSize: 14, padding: '11px 26px', opacity: jdText.trim() ? 1 : 0.45 }}>
+          Analyze JD →
+        </button>
+      </div>
+    </div>
+  )
 
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
-            Your name (optional — for PDF header)
-          </label>
-          <input
-            value={candidateName}
-            onChange={e => setCandidateName(e.target.value)}
-            placeholder="e.g. Alex Chen"
-            style={{
-              width: '100%',
-              background: 'var(--surface)',
-              border: '1px solid var(--rim)',
-              borderRadius: 8,
-              padding: '10px 14px',
-              fontFamily: 'var(--font-sans)',
-              fontSize: 14,
-              color: 'var(--ink-hi)',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
+  // ── SCREEN: rate ──────────────────────────────────────────────────────────
+  if (screen === 'rate') return (
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>Step 2 of 3</div>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>Rate yourself honestly</h2>
         </div>
+        <button onClick={handleReset} style={{ background: 'transparent', border: '1px solid var(--rim)', borderRadius: 7, padding: '7px 14px', fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--ink-low)', cursor: 'pointer' }}>← New JD</button>
+      </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-mid)', display: 'block', marginBottom: 6 }}>
-            Job Description
-          </label>
-          <textarea
-            value={jdText}
-            onChange={e => setJdText(e.target.value)}
-            placeholder="Paste the full job description here..."
-            style={{
-              width: '100%',
-              minHeight: 300,
-              background: 'var(--surface)',
-              border: '1px solid var(--rim)',
-              borderRadius: 10,
-              padding: 16,
-              fontFamily: 'var(--font-sans)',
-              fontSize: 14,
-              color: 'var(--ink-hi)',
-              resize: 'vertical',
-              outline: 'none',
-              boxSizing: 'border-box',
-              lineHeight: 1.6,
-            }}
-          />
-        </div>
+      <p style={{ fontSize: 13, color: 'var(--ink-low)', lineHeight: 1.65, marginBottom: 24 }}>
+        {skills.length} topics extracted from your JD — ordered by how much the role cares. Rate each one. Weak answers build your plan. Strong answers let us skip what you already know.
+      </p>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button
-            onClick={handleGenerate}
-            disabled={!jdText.trim()}
-            style={{
-              background: jdText.trim() ? 'var(--prime)' : 'var(--rim)',
-              color: jdText.trim() ? 'var(--void)' : 'var(--ink-low)',
-              border: 'none',
-              borderRadius: 8,
-              padding: '12px 28px',
-              fontFamily: 'var(--font-sans)',
-              fontWeight: 700,
-              fontSize: 15,
-              cursor: jdText.trim() ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Generate Brief →
-          </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+        {skills.map((sk, i) => (
+          <div key={i} style={{ background: 'var(--depth)', border: `1px solid ${sk.rating ? RATINGS.find(r => r.id === sk.rating).color + '50' : 'var(--rim)'}`, borderRadius: 10, padding: '14px 16px', transition: 'border-color 0.15s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700, color: TIER_COLOR[sk.tier], textTransform: 'uppercase', letterSpacing: '0.08em' }}>{sk.tier === 'must' ? 'Must Know' : sk.tier === 'important' ? 'Important' : 'Good to Have'}</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{sk.topic}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{sk.matched.join(', ')}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                {RATINGS.map(r => (
+                  <button key={r.id} onClick={() => handleRate(i, r.id)}
+                    style={{ padding: '6px 12px', borderRadius: 6, border: `1px solid ${sk.rating === r.id ? r.color : 'var(--rim)'}`, background: sk.rating === r.id ? r.color + '22' : 'transparent', color: sk.rating === r.id ? r.color : 'var(--ink-low)', fontSize: 12, fontWeight: sk.rating === r.id ? 700 : 400, fontFamily: 'var(--font-sans)', cursor: 'pointer', transition: 'all 0.14s' }}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Horizon selector */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', marginBottom: 10 }}>How much time do you have?</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {HORIZONS.map(h => (
+            <button key={h.id} onClick={() => setHorizon(h.id)}
+              style={{ padding: '9px 16px', borderRadius: 8, border: `1px solid ${horizon === h.id ? 'var(--prime)' : 'var(--rim)'}`, background: horizon === h.id ? 'rgba(240,165,0,0.14)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.14s' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: horizon === h.id ? 'var(--prime)' : 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{h.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)' }}>{h.sub}</div>
+            </button>
+          ))}
         </div>
       </div>
-    );
-  }
 
-  // Guided mode screen
-  if (screen === 'guided') {
-    const topic = topics[guidedIdx];
-    const topicDone = topic.checklist.filter(c => c.done).length;
-    const topicTotal = topic.checklist.length;
-    const overallPct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
-    const config = TIER_CONFIG[topic.tier];
+      <button
+        onClick={handleViewPlan}
+        disabled={skills.some(s => !s.rating)}
+        className="btn-primary"
+        style={{ fontSize: 14, padding: '12px 28px', opacity: skills.some(s => !s.rating) ? 0.45 : 1 }}
+      >
+        Build my Defense Plan →
+      </button>
+      {skills.some(s => !s.rating) && (
+        <p style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', marginTop: 8 }}>Rate all skills to continue.</p>
+      )}
+    </div>
+  )
 
-    return (
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-          <button
-            onClick={() => setScreen('brief')}
-            style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}
-          >
-            ← Back to Brief
-          </button>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-mid)' }}>
-            Topic {guidedIdx + 1} of {topics.length} · {overallPct}% checklist complete
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ height: 4, background: 'var(--rim)', borderRadius: 2, marginBottom: 28, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${overallPct}%`, background: 'var(--mint)', borderRadius: 2, transition: 'width 0.3s' }} />
-        </div>
-
-        <div style={{ background: 'var(--surface)', border: `1px solid ${config.border}`, borderRadius: 12, padding: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', margin: 0, flex: 1 }}>
-              {topic.name}
-            </h2>
-            <span style={{
-              background: config.bg,
-              color: config.color,
-              border: `1px solid ${config.border}`,
-              borderRadius: 20,
-              padding: '3px 10px',
-              fontSize: 11,
-              fontFamily: 'var(--font-sans)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}>
-              {config.label}
-            </span>
-          </div>
-
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', marginBottom: 20 }}>
-            keywords: {topic.keywords.join(', ')}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-            {topic.checklist.map((item, i) => (
-              <label
-                key={i}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', padding: '10px 14px', background: item.done ? 'rgba(52,211,153,0.15)' : 'var(--depth)', borderRadius: 8, border: `1px solid ${item.done ? 'rgba(52,211,153,0.3)' : 'var(--rim)'}`, transition: 'all 0.15s' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.done}
-                  onChange={() => handleChecklistToggle(topic.id, i)}
-                  style={{ marginTop: 1, accentColor: 'var(--mint)', width: 16, height: 16, flexShrink: 0 }}
-                />
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: item.done ? 'var(--ink-mid)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
-                  {item.text}
-                </span>
-              </label>
-            ))}
-          </div>
-
-          <div style={{ fontSize: 12, color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', marginBottom: 20, textAlign: 'right' }}>
-            {topicDone}/{topicTotal} items checked
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button
-              onClick={() => setGuidedIdx(i => Math.max(0, i - 1))}
-              disabled={guidedIdx === 0}
-              style={{ background: 'var(--rim)', color: guidedIdx === 0 ? 'var(--ink-ghost)' : 'var(--ink-hi)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14, cursor: guidedIdx === 0 ? 'not-allowed' : 'pointer' }}
-            >
-              ← Prev Topic
-            </button>
-            <button
-              onClick={() => setGuidedIdx(i => Math.min(topics.length - 1, i + 1))}
-              disabled={guidedIdx === topics.length - 1}
-              style={{ background: guidedIdx === topics.length - 1 ? 'var(--rim)' : 'var(--prime)', color: guidedIdx === topics.length - 1 ? 'var(--ink-ghost)' : 'var(--void)', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 14, cursor: guidedIdx === topics.length - 1 ? 'not-allowed' : 'pointer' }}
-            >
-              Next Topic →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Brief screen
-  const printDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // ── SCREEN: plan ──────────────────────────────────────────────────────────
+  const sortedSkills = [...skills].sort((a, b) => b.gapScore - a.gapScore)
+  const maxGap = Math.max(...sortedSkills.map(s => s.gapScore), 1)
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px' }}>
-      {/* Print styles injected */}
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 20px' }} className="defense-doc-print">
+
+      {/* Print styles */}
       <style>{`
         @media print {
           @page { margin: 1.2cm; size: A4; }
           * { visibility: hidden !important; }
-          .defense-doc-print,
-          .defense-doc-print * { visibility: visible !important; }
-          .defense-doc-print {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100% !important;
-            background: #fff !important;
-            color: #000 !important;
-            font-size: 12pt !important;
-            padding: 0 !important;
-            border: none !important;
-            border-radius: 0 !important;
-          }
-          .defense-doc-print * {
-            color: #000 !important;
-            background: transparent !important;
-            border-color: #ccc !important;
-            box-shadow: none !important;
-          }
-          .defense-doc-print a::after { content: none !important; }
-        }
-        @media screen {
-          .defense-doc-print { display: block; }
+          .defense-doc-print, .defense-doc-print * { visibility: visible !important; }
+          .defense-doc-print { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; background: #fff !important; color: #000 !important; font-size: 12pt !important; padding: 0 !important; border: none !important; border-radius: 0 !important; }
+          .defense-doc-print * { color: #000 !important; background: transparent !important; border-color: #ccc !important; box-shadow: none !important; }
+          .no-print { display: none !important; }
         }
       `}</style>
 
-      {/* Screen-only controls */}
-      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      {/* Header */}
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 24, fontWeight: 700, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
-            Defense Brief
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 5 }}>Defense Plan</div>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: 0 }}>
+            Your personalized prep plan
           </h2>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-mid)', margin: 0 }}>
-            {topics.length} topics · {doneItems}/{totalItems} checklist items done
-          </p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={handleReset} style={{ background: 'var(--surface)', color: 'var(--ink-mid)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, cursor: 'pointer' }}>
-            ← New JD
-          </button>
-          <button onClick={handlePrint} style={{ background: 'var(--surface)', color: 'var(--sky)', border: '1px solid rgba(34,211,238,0.4)', borderRadius: 8, padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Download PDF
-          </button>
-          <button onClick={() => { setGuidedIdx(0); setScreen('guided'); }} style={{ background: 'var(--prime)', color: 'var(--void)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            Start Guided Mode →
-          </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => window.print()} style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 7, padding: '7px 14px', fontSize: 12, color: 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Print / PDF</button>
+          <button onClick={handleReset} style={{ background: 'transparent', border: '1px solid var(--rim)', borderRadius: 7, padding: '7px 14px', fontSize: 12, color: 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>← New JD</button>
         </div>
       </div>
 
-      {/* Printable document */}
-      <div className="defense-doc-print" style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: 32 }}>
-        {/* Header */}
-        <div style={{ borderBottom: '2px solid var(--prime)', paddingBottom: 16, marginBottom: 28 }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
-            Interview Defense Brief
+      {/* Progress bar */}
+      {totalItems > 0 && (
+        <div style={{ marginBottom: 24, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Plan progress</span>
+          <div style={{ flex: 1, height: 3, background: 'var(--rim)', borderRadius: 2 }}>
+            <div style={{ width: `${Math.round((doneCount / totalItems) * 100)}%`, height: '100%', background: 'var(--mint)', borderRadius: 2, transition: 'width 0.4s' }} />
           </div>
-          {candidateName && (
-            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 700, color: 'var(--ink-hi)', marginBottom: 4 }}>
-              {candidateName}
+          <span style={{ fontSize: 11, color: 'var(--mint)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{doneCount}/{totalItems}</span>
+        </div>
+      )}
+
+      {/* Skill gap bars */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Skill gap map</div>
+        {sortedSkills.map((sk, i) => {
+          const r = RATINGS.find(r => r.id === sk.rating)
+          const barPct = Math.round((sk.gapScore / maxGap) * 100)
+          return (
+            <div key={i} style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ fontSize: 12, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{sk.topic}</span>
+                <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: r?.color || 'var(--ink-ghost)' }}>{r?.label || '—'}</span>
+              </div>
+              <div style={{ height: 5, background: 'var(--rim)', borderRadius: 3 }}>
+                <div style={{ width: `${barPct}%`, height: '100%', background: r?.color || 'var(--rim-hi)', borderRadius: 3, transition: 'width 0.4s' }} />
+              </div>
             </div>
-          )}
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-low)' }}>
-            Generated {printDate} · {topics.length} topics · weighted by signal strength
-          </div>
+          )
+        })}
+      </div>
+
+      {/* Round exposure */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Round-by-round exposure</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+          {Object.entries(ROUND_SKILLS).map(([round, topicNames]) => {
+            const roundSkills = topicNames.length === 0
+              ? []
+              : skills.filter(s => topicNames.includes(s.topic))
+            const worstRating = roundSkills.reduce((w, s) => {
+              const inv = RATINGS.find(r => r.id === s.rating)?.inv ?? 2
+              return Math.max(w, inv)
+            }, 0)
+            const borderColor = worstRating >= 3 ? 'var(--rose)' : worstRating >= 2 ? 'var(--prime)' : 'var(--mint)'
+            return (
+              <div key={round} style={{ background: 'var(--depth)', border: `1px solid ${round === 'Behavioral' ? 'var(--rim)' : borderColor + '55'}`, borderLeft: `3px solid ${round === 'Behavioral' ? 'var(--rim-hi)' : borderColor}`, borderRadius: 8, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', marginBottom: 5 }}>{round}</div>
+                {round === 'Behavioral'
+                  ? <div style={{ fontSize: 10, color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)' }}>Always present — prepare your stories.</div>
+                  : roundSkills.length === 0
+                    ? <div style={{ fontSize: 10, color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)' }}>No matched skills from your JD.</div>
+                    : roundSkills.map((s, i) => {
+                        const r = RATINGS.find(r => r.id === s.rating)
+                        return <div key={i} style={{ fontSize: 10, color: r?.color || 'var(--ink-low)', fontFamily: 'var(--font-sans)', marginBottom: 2 }}>· {s.topic}</div>
+                      })
+                }
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Day plan sections */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+          Your {HORIZONS.find(h => h.id === horizon)?.label} plan
         </div>
 
-        {/* Topic groups */}
-        {[
-          { tier: 'must', label: 'Must Know', list: mustTopics },
-          { tier: 'important', label: 'Important', list: importantTopics },
-          { tier: 'good', label: 'Good to Have', list: goodTopics },
-        ].map(({ tier, label, list }) => {
-          if (list.length === 0) return null;
-          const config = TIER_CONFIG[tier];
+        {planSections.map((section, sIdx) => {
+          const isGated = sIdx >= gateAfterIdx && !unlocked
           return (
-            <div key={tier} style={{ marginBottom: 28 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, color: config.color, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>
-                {label}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {list.map(topic => (
-                  <div key={topic.id} style={{ background: config.bg, border: `1px solid ${config.border}`, borderRadius: 10, padding: '16px 18px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--ink-hi)' }}>
-                        {topic.name}
-                      </span>
-                      <span style={{ background: config.bg, color: config.color, border: `1px solid ${config.border}`, borderRadius: 20, padding: '2px 8px', fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {label}
-                      </span>
+            <div key={sIdx}>
+              {/* Gate wall — appears inline between sections */}
+              {sIdx === gateAfterIdx && !unlocked && (
+                <div style={{ background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderRadius: 12, padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Premium</div>
+                  <p style={{ fontSize: 14, color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: 16, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                    You've seen enough to know this plan is real. Enter your access code to unlock the full sequence.
+                  </p>
+                  <form onSubmit={handleInlineUnlock} style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="text" value={codeInput} onChange={e => setCodeInput(e.target.value)}
+                      placeholder="Access code"
+                      style={{ background: 'var(--surface)', border: `1px solid ${codeError ? 'var(--rose)' : 'var(--rim-hi)'}`, borderRadius: 7, padding: '9px 14px', fontSize: 14, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)', outline: 'none', width: 180, letterSpacing: '0.06em' }}
+                    />
+                    <button type="submit" className="btn-primary" style={{ fontSize: 13, padding: '9px 18px' }}>Unlock →</button>
+                  </form>
+                  {codeError && <p style={{ fontSize: 11, color: 'var(--rose)', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Incorrect code.</p>}
+                </div>
+              )}
+
+              {/* Plan section */}
+              <div style={{ marginBottom: 14, opacity: isGated ? 0.3 : 1, filter: isGated ? 'blur(3px)' : 'none', pointerEvents: isGated ? 'none' : 'auto', transition: 'all 0.2s', background: 'var(--depth)', border: `1px solid ${section.border}`, borderLeft: `3px solid ${section.accent}`, borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: section.accent, fontFamily: 'var(--font-sans)', marginBottom: section.items.length > 0 ? 12 : 0 }}>{section.label}</div>
+                {section.items.map((sk, skIdx) => (
+                  <div key={skIdx} style={{ marginBottom: skIdx < section.items.length - 1 ? 12 : 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{sk.topic}</span>
+                      <button onClick={() => onNavigate && onNavigate(sk.tab)} style={{ background: section.accent + '22', border: `1px solid ${section.accent}44`, borderRadius: 5, padding: '4px 10px', fontSize: 11, color: section.accent, fontFamily: 'var(--font-sans)', fontWeight: 700, cursor: 'pointer' }}>
+                        Study →
+                      </button>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', marginBottom: 12 }}>
-                      {topic.keywords.join(', ')}
-                    </div>
-                    <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {topic.checklist.map((item, i) => (
-                        <li key={i} style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: item.done ? 'var(--ink-low)' : 'var(--ink-hi)', textDecoration: item.done ? 'line-through' : 'none' }}>
-                          {item.text}
-                        </li>
-                      ))}
-                    </ul>
+                    {sk.checklist.map((item, iIdx) => {
+                      const key = `${sk.idx ?? skIdx}-${iIdx}`
+                      const isDone = done.has(key)
+                      return (
+                        <div key={iIdx} onClick={() => toggleDone(key)}
+                          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '5px 0', cursor: 'pointer', borderTop: iIdx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                          <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim-hi)'}`, background: isDone ? 'rgba(52,211,153,0.2)' : 'transparent', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isDone && <span style={{ fontSize: 9, color: 'var(--mint)' }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 12, color: isDone ? 'var(--ink-ghost)' : 'var(--ink-mid)', textDecoration: isDone ? 'line-through' : 'none', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{item.text}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
+                {section.bonus && (
+                  <div style={{ marginTop: section.items.length > 0 ? 10 : 0, padding: '7px 10px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.22)', borderRadius: 6, fontSize: 11, color: 'var(--mint)', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
+                    {section.bonus}
+                  </div>
+                )}
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

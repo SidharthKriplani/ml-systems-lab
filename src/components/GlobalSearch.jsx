@@ -94,9 +94,6 @@ const INDEX = [
     desc: '17-node production ML lifecycle — interactive map of who owns which decision at each stage' },
   { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'Serving Tradeoffs',
     desc: 'Batch vs online vs streaming serving decisions, latency SLA, throughput math' },
-  { id: 'design', tab: 'design', icon: '🏗', kind: 'module', title: 'RAG Architecture',
-    desc: '6 RAG scenarios: chunk size, hybrid retrieval, reranking, embedding choice, RAGAS eval, hallucination gating' },
-
   // ── Classical ML ─────────────────────────────────────────────────────────
   { id: 'classical', tab: 'classical', icon: '🌲', kind: 'module', title: 'Model Failure Zoo',
     desc: 'Silent production failure modes for 8 classical models — when linear regression, SVM, or trees quietly break' },

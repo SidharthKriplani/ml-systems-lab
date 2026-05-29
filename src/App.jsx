@@ -77,8 +77,8 @@ const ALL_TABS = [
 // Free: home, landscape, gradient, ask, models, features, eval, classical
 // Premium: all Interview zone, all interview tools, all advanced practice modules
 const PREMIUM_TABS = new Set([
-  // Interview zone
-  'interview', 'takehome', 'jdprep', 'defense', 'combinator', 'verbal',
+  // Interview zone (Defense Plan is free — has internal gate)
+  'interview', 'takehome', 'combinator', 'verbal',
   // Interview tools (Practice > Drills domain)
   'trainer', 'codebugs', 'casestudies', 'stafflayer',
   // Advanced practice modules
@@ -174,13 +174,11 @@ const INTERVIEW_TOOLS = [
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
   { id: 'takehome',   label: 'Take-Home Bank',   desc: '15 open-ended questions. No time limit. Write your answer, then compare against a senior model response.', step: null, accent: 'var(--mint)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-  { id: 'jdprep',     label: 'JD Prep',          desc: 'Paste a job description. Get a ranked list of study topics weighted by how often they appear in real interviews for that role.', step: '01', accent: 'var(--prime)',
-    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
-  { id: 'defense',    label: 'Defense Doc',      desc: 'Build a structured study brief from your JD Prep output. Export as PDF. Your written commitment to what you will master.', step: '02', accent: 'var(--ember)',
+  { id: 'defense',    label: 'Defense Plan',     desc: 'Paste your JD, self-rate your gaps, get a day-by-day study plan with round-by-round coverage. The strategic core of your prep.', step: '01', accent: 'var(--ember)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '03', accent: 'var(--rose)',
+  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '02', accent: 'var(--rose)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '04', accent: 'var(--violet)',
+  { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--violet)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
 ]
 
@@ -331,6 +329,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
 // ── InterviewToolCard ─────────────────────────────────────────────────────────
 function InterviewToolCard({ tool, onSelect, isUnlocked }) {
   const [hov, setHov] = useState(false)
+  const locked = PREMIUM_TABS.has(tool.id) && !isUnlocked
   return (
     <button
       onClick={() => onSelect(tool.id)}
@@ -346,14 +345,14 @@ function InterviewToolCard({ tool, onSelect, isUnlocked }) {
         borderRadius: '14px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
-        opacity: isUnlocked ? 1 : 0.72,
+        opacity: locked ? 0.72 : 1,
         boxShadow: hov
           ? `0 20px 56px rgba(0,0,0,0.65), 0 0 0 1px ${tool.accent}22, inset 0 1px 0 rgba(255,255,255,0.09)`
           : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.11)',
       }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ color: tool.accent, opacity: hov ? 1 : 0.75, transition: 'opacity 0.15s' }}>{tool.svg}</div>
-        {!isUnlocked
+        {locked
           ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           : tool.step && (
             <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
@@ -380,7 +379,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
           Nine tools. One loop.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
-          Steps 01–04 are a sequence: JD Prep → Defense Doc → Combinator → Verbal. Run them in order two weeks before your interview. The other tools work any time.
+          Steps 01–03 are a sequence: Defense Plan → Combinator → Verbal. Run them in order starting two weeks before your interview. The other tools work any time.
         </p>
       </div>
       <div className="grid-cards-wide">
@@ -730,6 +729,10 @@ export default function App() {
   function renderContent() {
     if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} isUnlocked={isUnlocked} />
     if (isInterviewGrid) return <InterviewGrid onSelect={goTo} isUnlocked={isUnlocked} />
+    // Defense Plan handles its own internal gate; jdprep redirects here
+    if (currentTabId === 'defense' || currentTabId === 'jdprep') {
+      return <DefenseDocTab onNavigate={goTo} isUnlocked={isUnlocked} onUnlock={handleUnlock} />
+    }
     if (currentTabId && PREMIUM_TABS.has(currentTabId) && !isUnlocked) {
       return <AccessGate onUnlock={handleUnlock} />
     }

@@ -56,8 +56,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **Practice zone core loop** | Pick a domain → open a module → answer scenarios → score updates in localStorage | ✓ required | — |
 | **CombinatorTab (timed mock)** | Start a 30-min session → answer questions → end early → debrief renders correctly | ✓ required | — |
 | **TrainerTab (MCQ drill)** | Complete a session → weakness heatmap renders → history saves | ✓ required | — |
-| **JDPrepTab** | Paste a real JD → skill extraction runs → Must/Important/Good to Have ranks appear → nav links work | ✓ required | — |
-| **DefenseDocTab** | Generate a defense brief → checklist mode → print/PDF export (test on Chrome + Safari) | ✓ required | — |
+| **Defense Plan** | Paste a real JD → skill extraction runs → self-rate gaps → horizon selector → plan generates → gate fires at ~35% → enter code → full plan unlocks → print/PDF export (Chrome + Safari) | ✓ required | — |
 | **VerbatimTab** | Open on Android Chrome → record → transcript appears → self-rating saves. Open on iOS → fallback message shown, no broken UI | ✓ required | — |
 | **GradientTab (Read zone)** | Browse posts → filter by domain → open a post → CTA link navigates to correct practice module | ✓ required | — |
 | **Global search** | Search a term → results appear → click result → navigates correctly | ✓ required | — |
@@ -98,14 +97,13 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 - Run a second session in a different domain → confirm history table shows both, sorted by date
 - On mobile: confirm heatmap bars don't overflow the card width
 
-**5. JDPrepTab**
-- Paste a dense FAANG MLE JD → confirm tier extraction — does Must Know match what you'd expect?
+**5. Defense Plan**
+- Paste a dense FAANG MLE JD → confirm skill extraction — does Must Know match what you'd expect?
+- Rate 3 skills Weak, 2 Okay, 1 Strong → pick "7 Days" horizon → confirm plan generates with correct skill ordering (highest gap score first)
 - Paste a 3-line startup JD → confirm output doesn't crash, shows something useful
-- Click a nav link in the output → confirm it lands on the correct module tab
-
-**6. DefenseDocTab**
-- Paste a JD → generate brief → confirm topics are weighted correctly
-- Switch to checklist mode → check off 3 items → refresh page → confirm state persists
+- Scroll plan to ~35% through sections → confirm inline gate appears (blurred remaining sections visible, code input shown)
+- Enter `INPRODUCTION` → confirm full plan unlocks inline, no page reload
+- Check off 3 plan items → refresh page → confirm state persists
 - Print on Chrome → confirm printout is readable black-on-white, no dark background, no UI chrome
 
 **7. VerbatimTab**
@@ -176,15 +174,16 @@ What we're listening for: Did the heatmap surface something the tester didn't al
 
 ---
 
-### 3. JDPrepTab — JD Analysis + Module Navigation
+### 3. Defense Plan — JD Parse + Gap Score + Day Plan
 
 What to test:
-- Paste a dense JD (FAANG MLE) → confirm Must/Important/Good to Have tier extraction looks accurate → click a module nav link → confirm it navigates to the right tab
-- Paste a sparse JD (startup, 3 bullet points) → confirm graceful output, not a crash or empty page
-- Paste a non-ML JD (wrong paste) → confirm output is still coherent, doesn't hallucinate skills
-- On mobile: JD textarea usable (no zoom on tap — v4.8 fix), output renders without horizontal overflow
+- Paste a dense JD (FAANG MLE) → self-rate gaps → pick "7 Days" → confirm plan sections feel correctly prioritized (weakest/highest-gap skills first)
+- Paste a sparse JD (startup, 3 bullet points) → confirm graceful output, nothing crashes or goes blank
+- Scroll to the gate (~35% through plan) → confirm it fires cleanly, blurred sections visible, code input shown
+- Enter `INPRODUCTION` → confirm full plan unlocks inline without page reload
+- On mobile: JD textarea usable (no zoom on tap), plan sections don't overflow horizontally
 
-What we're listening for: Did the tier ranking feel accurate to the JD they pasted, or did it feel like it could have been anyone's JD? Did the nav links feel useful — did they actually click through?
+What we're listening for: Did the tier ranking and day plan feel specific to their JD, or could it have been anyone's? Did the gate fire at a point where they already felt invested — or did it feel like a wall too early? Did they enter the code?
 
 ---
 
@@ -195,13 +194,14 @@ What we're listening for: Did the tier ranking feel accurate to the JD they past
 | Batch 0 fully passed | ✓ required | — |
 | CombinatorTab tested with 3 different real ML JDs as context (not just one) | ✓ required | — |
 | TrainerTab history renders correctly after 2+ sessions | ✓ required | — |
-| JDPrepTab tested with 3 different real JDs — sparse, dense, and ambiguous | ✓ required | — |
+| Defense Plan tested with 3 different real JDs — sparse, dense, and ambiguous | ✓ required | — |
+| Defense Plan gate fires correctly at ~35% and unlocks inline with INPRODUCTION | ✓ required | — |
 | All three features work end-to-end on real iOS and Android | ✓ required | — |
 | Tester brief written and reviewed — one prompt, no instructions | — | — |
 
 **Tester brief (send verbatim):**
 
-> You're 3 weeks out from an ML engineering interview. Go to [URL], enter the access code `INPRODUCTION`, paste your actual JD (or a real one you've seen), then run one practice session using whatever the tool surfaces. That's it. Don't read any instructions — just use it. After 20 minutes, tell me: where did you drop off, what felt useful, and did anything feel like it was made for someone else's interview and not yours?
+> You're 3 weeks out from an ML engineering interview. Go to [URL], paste your actual JD (or a real one you've seen) into the Defense Plan tool, rate your own gaps, then run one Combinator session. That's it. Don't read any instructions — just use it. After 20–25 minutes, tell me: where did you drop off, did the plan feel specific to your JD or generic, and did anything feel like it was made for someone else's interview and not yours?
 
 **Feedback target:** Not "does it work." Specifically: did the JD-to-study-plan flow feel personal to them, or generic? Did they complete the Combinator session or abandon it and why? Was the timed pressure useful or annoying?
 

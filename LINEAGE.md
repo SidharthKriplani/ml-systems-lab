@@ -46,6 +46,29 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.10 — Defense Plan (May 2026)
+
+JDPrepTab and DefenseDocTab merged into a single 3-screen tool: **Defense Plan**.
+
+**Motivation:** Both tabs started with "paste a JD" — forcing users to paste the same JD twice and reconcile two different outputs. The workflow is inherently linear (parse → self-assess → plan), so it belongs in one tool.
+
+**3-screen flow:**
+- **Screen 1 — JD parse:** Paste JD text, extract up to 8 skills weighted by keyword hit count (Must/Important/Good). Gap score seed = JD weight (3/2/1).
+- **Screen 2 — Self-rate:** For each extracted skill, user rates Weak / Okay / Strong. User picks time horizon: Cram Up / 3 Days / 7 Days / 2 Weeks. Final gap score = JD weight × inverse rating (Weak=3, Okay=2, Strong=1).
+- **Screen 3 — Plan:** Skill gap bars (ranked by gap score), round-by-round coverage (ML Coding / ML System Design / Depth+Onsite / Behavioral), horizon-specific day plan with study sections. Internal gate fires after 35% of plan sections — inline code input, not a wall. Gate converts with FOMO (user has already seen their plan skeleton). Print/PDF export preserved.
+
+**Internal gate model:** Defense Plan is free to enter and free to start. Gate fires at `Math.max(1, Math.floor(sections.length * 0.35))` sections into the plan. Locked sections are blurred but visible — user sees what they're missing. Code `INPRODUCTION` unlocks the rest inline.
+
+**What changed:**
+- `DefenseDocTab.jsx`: complete rewrite — 3-screen flow, self-rating, gap score formula, generatePlan(), internal gate, msl_defense_progress persistence
+- `App.jsx`: removed `'defense'` and `'jdprep'` from PREMIUM_TABS (Defense Plan handles its own gate); `renderContent()` intercepts both tabIds and renders DefenseDocTab with `isUnlocked`/`onUnlock` props; `InterviewToolCard` now uses per-tool `PREMIUM_TABS.has(tool.id)` check instead of global `isUnlocked` flag; jdprep removed from INTERVIEW_TOOLS, defense card renamed "Defense Plan" (step 01), combinator/verbal renumbered to steps 02/03
+- `JDPrepTab.jsx`: replaced with redirect stub — renderContent intercepts at App level so this component is never reached in normal navigation
+- `GlobalSearch.jsx`: removed RAG Architecture entry (GenAI Lab territory, wrong lab)
+
+**Gating note:** `'defense'` and `'jdprep'` are no longer in PREMIUM_TABS. The Defense Plan is the funnel — it's free to use and hooks the user, then gates at the point of highest intent.
+
+---
+
 ### v4.9 — Freemium access gate (May 2026)
 
 First freemium split. Premium content gated behind access code `INPRODUCTION`. Code is permanent once entered (localStorage key `msl_access`), shared freely during beta.

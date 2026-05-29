@@ -75,25 +75,9 @@ Last updated: May 2026
 
 *Items here affect existing UX and have a different risk profile from new features. Different from bug fixes (those go in Known Bugs) and new content (those go in Tier 1). Spin this section out into UPGRADES.md if it grows past 5 items.*
 
-### JDPrepTab + DefenseDocTab → unified Interview Strategy tool (Tier 1 priority)
+### ~~JDPrepTab + DefenseDocTab → unified Interview Strategy tool~~ — done (2026-05-29, Defense Plan, v4.10)
 
-**Decision:** Merge into DefenseDocTab (keep), retire JDPrepTab (delete).
-
-Both tabs start with "paste a JD" — that alone means they shouldn't be two separate tools. A user shouldn't have to paste the same JD twice and reconcile two different outputs. The workflow is linear: parse → self-assess → output. One tool, three steps.
-
-**The merged 3-step flow:**
-
-- **Step 1 — JD parse** (already in DefenseDocTab): extract skills, compute JD weights (High / Med / Low from keyword hit count)
-- **Step 2 — Self-rate + configure** (new): for each extracted skill, user picks Weak / Okay / Strong; user picks time horizon — Cram Up / 3 days / 7 days / 14 days. Gap score = JD weight × inverse rating (Weak=3, Okay=2, Strong=1). Cram Up is a separate mode — produces a triage focus list, not a day plan.
-- **Step 3 — Strategy output** (merged): gap-ordered skill list with direct module nav links (from JDPrepTab), day plan or Cram Up focus list, round-by-round ML interview exposure (Recruiter Screen / ML Coding / ML System Design / Behavioral / Onsite), PDF export
-
-**What changes in App.jsx:** remove JDPrepTab import + its card from `INTERVIEW_TOOLS`. DefenseDocTab card stays — rename label to "Interview Strategy" or "Prep Planner".
-
-**localStorage:** `msl_jdprep_last` becomes redundant — fold into `msl_defense_progress` or drop. See METRICS.md.
-
-**Scope:** 2–3 hours. Step 2 is net-new. Step 3 needs nav links wired in + round-by-round ML round logic added. Step 1 already exists.
-
-**Source:** PAL Defense Strategy pattern (gap score formula + self-rating), May 2026 session.
+Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-rate + horizon → gated day plan. Internal gate at 35% of plan sections. JDPrepTab retired (redirect stub). See LINEAGE.md v4.10.
 
 ---
 
