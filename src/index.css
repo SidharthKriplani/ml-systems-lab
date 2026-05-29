@@ -54,6 +54,22 @@
   /* ── Typography tokens ───────────────────────────── */
   --font-sans: 'Satoshi', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Transition tokens (use these everywhere) ───── */
+  --t-fast: 0.10s ease;
+  --t:      0.16s ease;
+  --t-slow: 0.26s ease;
+
+  /* ── Shadow tokens ───────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.30);
+  --shadow:    0 2px 10px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.40);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.72), 0 4px 12px rgba(0,0,0,0.50);
+
+  /* ── Radius tokens ───────────────────────────────── */
+  --r-sm: 5px;
+  --r:    9px;
+  --r-lg: 14px;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -408,6 +424,31 @@
   .fade-in  { animation: fadeIn  0.35s ease-out; }
   .slide-up { animation: slideUp 0.25s ease-out; }
   .animate-slide-up { animation: slideUp 0.20s ease-out; }
+
+  /* ── Sidebar active item — PAL-style left accent border ── */
+  .sidebar-item-active {
+    background: var(--prime-faint) !important;
+    color: var(--prime-hi) !important;
+    font-weight: 600 !important;
+    box-shadow: inset 3px 0 0 var(--prime) !important;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0 !important;
+  }
+
+  /* ── Animated progress fill — for all bar fills ── */
+  .progress-fill-animated {
+    transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Interactive card hover — consistent lift ── */
+  .card-interactive {
+    transition: transform var(--t), box-shadow var(--t), border-color var(--t);
+    will-change: transform;
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: var(--rim-hi) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
 }
 
 /* ─── Responsive nav layout ──────────────────────────────────────────────── */

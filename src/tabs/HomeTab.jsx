@@ -304,19 +304,26 @@ export default function HomeTab({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Role selector ── */}
+      {/* ── Role focus (collapsed when unset — no cold-state pill grid) ── */}
       <section>
-        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Role</div>
         {role ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: activeRole ? '12px' : 0 }}>
-            <span style={{ padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.50)', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 700 }}>{activeRole.label}</span>
-            <button onClick={() => pickRole(role)} style={{ fontSize: '11px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', textDecoration: 'underline', padding: 0 }}>change</button>
-          </div>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: activeRole ? '12px' : 0 }}>
+              <span style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Focus:</span>
+              <span style={{ padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(240,165,0,0.45)', background: 'rgba(240,165,0,0.10)', color: 'var(--prime)', fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 700 }}>{activeRole.label}</span>
+              <button onClick={() => pickRole(role)} style={{ fontSize: '10px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', textDecoration: 'underline', padding: 0, transition: 'color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--ink-mid)' }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}>change</button>
+            </div>
+          </>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Focus area:</span>
             {ROLES.map(r => (
               <button key={r.key} onClick={() => pickRole(r.key)}
-                style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--rim)', background: 'transparent', color: 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s' }}>
+                style={{ padding: '3px 10px', borderRadius: '6px', border: '1px solid var(--rim)', background: 'transparent', color: 'var(--ink-ghost)', fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'border-color var(--t-fast), color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-ghost)' }}>
                 {r.label}
               </button>
             ))}
@@ -355,7 +362,7 @@ export default function HomeTab({ onNavigate }) {
             const pct     = Math.round((started / path.steps.length) * 100)
             const nextStep = path.steps.find(s => (progress.find(p => p.tab === s.tabId)?.pct ?? 0) === 0) ?? path.steps[path.steps.length - 1]
             return (
-              <div key={path.id} className="card" style={{ padding: '14px 16px', borderLeft: `3px solid ${path.accent}`, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div key={path.id} className="card card-interactive" style={{ padding: '14px 16px', borderLeft: `3px solid ${path.accent}`, display: 'flex', flexDirection: 'column', gap: '8px', cursor: 'pointer' }}>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: path.accent, fontFamily: 'var(--font-sans)', marginBottom: '2px' }}>{path.label}</div>
                   <div style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{path.desc}</div>
@@ -366,7 +373,7 @@ export default function HomeTab({ onNavigate }) {
                     <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: pct > 0 ? path.accent : 'var(--ink-ghost)' }}>{pct}%</span>
                   </div>
                   <div style={{ height: '2px', background: 'var(--rim)', borderRadius: '1px' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', background: path.accent, borderRadius: '1px', transition: 'width 0.5s' }} />
+                    <div className="progress-fill-animated" style={{ width: `${pct}%`, height: '100%', background: path.accent, borderRadius: '1px' }} />
                   </div>
                 </div>
                 <button
@@ -391,7 +398,7 @@ export default function HomeTab({ onNavigate }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <div style={{ width: '72px', height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-              <div style={{ width: `${nextUp.pct}%`, height: '100%', background: TAB_ACCENT[nextUp.tab] ?? 'var(--mint)', borderRadius: '2px' }} />
+              <div className="progress-fill-animated" style={{ width: `${nextUp.pct}%`, height: '100%', background: TAB_ACCENT[nextUp.tab] ?? 'var(--mint)', borderRadius: '2px' }} />
             </div>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{nextUp.pct}%</span>
           </div>
@@ -439,7 +446,7 @@ export default function HomeTab({ onNavigate }) {
                 <div key={domain.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)', minWidth: '130px', flexShrink: 0 }}>{domain.label}</span>
                   <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ width: `${avgPct}%`, height: '100%', background: domain.accent, borderRadius: '2px', transition: 'width 0.6s ease', boxShadow: avgPct > 0 ? `0 0 8px ${domain.accent}60` : 'none' }} />
+                    <div className="progress-fill-animated" style={{ width: `${avgPct}%`, height: '100%', background: domain.accent, borderRadius: '2px', boxShadow: avgPct > 0 ? `0 0 8px ${domain.accent}60` : 'none' }} />
                   </div>
                   <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: avgPct > 0 ? domain.accent : 'var(--ink-ghost)', minWidth: '60px', textAlign: 'right', flexShrink: 0 }}>
                     {started}/{domainTracks.length} started

@@ -393,7 +393,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
 
 // ── DesktopSidebar ────────────────────────────────────────────────────────────
 // Guiding principle: user always knows where they are and what to do next.
-// Flat domain sections — one click to any tab. No zone accordion. Progress inline.
+// Flat domain sections — one click to any tab. No lock icons. Progress inline.
 function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) {
   const [openDomains, setOpenDomains] = useState(() => {
     const initial = {}
@@ -413,157 +413,218 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
     return Math.round((p.attempted / p.total) * 100)
   }
 
-  const S = {
-    aside: {
-      position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.92) 100px, rgba(8,6,4,0.94) 100%)',
-      backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      borderRight: '1px solid rgba(255,255,255,0.15)',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto',
-      zIndex: 60, scrollbarWidth: 'thin',
-    },
-    logo: {
-      padding: '14px 14px 12px',
-      borderBottom: '1px solid rgba(240,165,0,0.18)',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.16) 0%, rgba(240,165,0,0.10) 100%)',
-      flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px',
-      border: 'none', cursor: 'pointer', width: '100%',
-    },
-    logoIcon: {
-      width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
-      background: 'linear-gradient(135deg, var(--prime), var(--violet))',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
-      boxShadow: '0 0 20px rgba(240,165,0,0.55), 0 2px 8px rgba(0,0,0,0.6)',
-    },
-    sectionLabel: {
-      padding: '10px 14px 3px',
-      fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
-      textTransform: 'uppercase', letterSpacing: '0.13em',
-      color: 'rgba(255,255,255,0.25)', userSelect: 'none',
-    },
-    divider: { height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' },
-    homeBtn: (isActive) => ({
-      width: '100%', textAlign: 'left', padding: '7px 14px',
-      background: isActive ? 'rgba(240,165,0,0.10)' : 'none',
-      border: 'none', cursor: 'pointer',
-      borderLeft: `2px solid ${isActive ? 'var(--prime)' : 'transparent'}`,
-      transition: 'background 0.1s',
-    }),
-    domainBtn: {
-      width: '100%', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', padding: '5px 12px 4px 14px',
-      background: 'none', border: 'none', cursor: 'pointer',
-    },
-    tabBtn: (isActive, accent) => ({
-      width: '100%', textAlign: 'left', padding: '5px 12px 5px 24px',
-      background: isActive ? `${accent}12` : 'none', border: 'none', cursor: 'pointer',
-      borderLeft: `2px solid ${isActive ? accent : 'transparent'}`,
-      transition: 'background 0.1s',
-    }),
-    chevron: (open) => ({
-      fontSize: '9px', color: 'rgba(255,255,255,0.30)', display: 'inline-block',
-      transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-    }),
-  }
-
   const isHomeActive   = activeZone === 'today'
   const isSearchActive = activeZone === 'ask'
 
+  // Shared nav item base — hover handled via onMouseEnter/Leave
+  function NavBtn({ id, label, accent, isActive, indent = false, extra = null, onClick }) {
+    const [hov, setHov] = useState(false)
+    return (
+      <button
+        onClick={onClick || (() => goTo(id))}
+        className={isActive ? 'sidebar-item-active' : ''}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          width: '100%', textAlign: 'left',
+          padding: indent ? '4px 12px 4px 26px' : '6px 14px',
+          background: isActive ? undefined : hov ? 'rgba(255,255,255,0.04)' : 'none',
+          border: 'none', cursor: 'pointer',
+          transition: 'background var(--t-fast), color var(--t-fast)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: indent ? '12px' : '13px',
+            fontWeight: isActive ? 600 : 400,
+            color: isActive ? undefined : hov ? 'var(--ink-mid)' : 'var(--ink-low)',
+            transition: 'color var(--t-fast)',
+          }}>{label}</span>
+          {extra}
+        </div>
+      </button>
+    )
+  }
+
   return (
-    <aside className="desktop-sidebar" style={S.aside}>
-      {/* Logo */}
-      <button style={S.logo} onClick={() => goTo('home')}>
-        <div style={S.logoIcon}>ML</div>
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '14px', color: 'var(--ink-hi)', letterSpacing: '-0.03em' }}>Systems Lab</span>
+    <aside className="desktop-sidebar" style={{
+      position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
+      background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.94) 110px, rgba(8,6,4,0.96) 100%)',
+      backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+      borderRight: '1px solid rgba(255,255,255,0.10)',
+      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      zIndex: 60, scrollbarWidth: 'none',
+    }}>
+
+      {/* ── Logo ── */}
+      <button
+        onClick={() => goTo('home')}
+        style={{
+          padding: '14px 14px 12px', flexShrink: 0,
+          display: 'flex', alignItems: 'center', gap: '8px',
+          background: 'linear-gradient(180deg, rgba(240,165,0,0.14) 0%, rgba(240,165,0,0.07) 100%)',
+          borderBottom: '1px solid rgba(240,165,0,0.15)',
+          border: 'none', cursor: 'pointer', width: '100%',
+          transition: 'opacity var(--t)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.opacity = '0.82' }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+      >
+        <div style={{
+          width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
+          background: 'linear-gradient(135deg, var(--prime), var(--violet))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
+          boxShadow: '0 0 18px rgba(240,165,0,0.50), 0 2px 8px rgba(0,0,0,0.6)',
+        }}>ML</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>Systems Lab</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>ml · data · mlops</span>
+        </div>
       </button>
 
-      <nav style={{ flex: 1, padding: '6px 0 24px' }}>
+      {/* ── Nav ── */}
+      <nav style={{ flex: 1, padding: '6px 0 16px', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
         {/* Home */}
-        <button style={S.homeBtn(isHomeActive)} onClick={() => goTo('home')}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: isHomeActive ? 700 : 400, color: isHomeActive ? 'var(--prime)' : 'var(--ink-mid)' }}>Home</span>
-        </button>
+        <NavBtn id="home" label="Home" accent="var(--prime)" isActive={isHomeActive} onClick={() => goTo('home')} />
 
-        <div style={S.divider} />
-        <div style={S.sectionLabel}>Practice</div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Practice</div>
 
-        {/* Practice — flat domain sections, one click to any tab */}
+        {/* Practice domains */}
         {PRACTICE_DOMAINS.map(domain => {
           const isOpen = openDomains[domain.id] !== false
           const domainHasActive = domain.tabs.some(t => t.id === activeTabId) && activeZone === 'practice'
           return (
             <div key={domain.id}>
-              <button style={S.domainBtn} onClick={() => toggleDomain(domain.id)}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: domainHasActive ? 700 : 500, color: domainHasActive ? domain.accent : 'var(--ink-mid)', letterSpacing: '0.01em' }}>{domain.label}</span>
-                <span style={S.chevron(isOpen)}>▶</span>
+              {/* Domain header */}
+              <button
+                onClick={() => toggleDomain(domain.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', padding: '4px 12px 3px 14px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  transition: 'opacity var(--t-fast)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.75' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                <span style={{
+                  fontFamily: 'var(--font-sans)', fontSize: '11px',
+                  fontWeight: domainHasActive ? 700 : 500,
+                  color: domainHasActive ? domain.accent : 'var(--ink-mid)',
+                  letterSpacing: '0.01em',
+                  transition: 'color var(--t-fast)',
+                }}>{domain.label}</span>
+                <span style={{
+                  fontSize: '8px', color: 'rgba(255,255,255,0.28)', display: 'inline-block',
+                  transition: 'transform var(--t)',
+                  transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}>▶</span>
               </button>
+
+              {/* Tab items */}
               {isOpen && domain.tabs.map(tab => {
                 const isTabActive = activeTabId === tab.id && activeZone === 'practice'
                 const pct = getTabPct(tab.id)
-                const locked = PREMIUM_TABS.has(tab.id) && !isUnlocked
+                const isDimmed = PREMIUM_TABS.has(tab.id) && !isUnlocked
                 return (
-                  <button key={tab.id} style={S.tabBtn(isTabActive, domain.accent)} onClick={() => goTo(tab.id)}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isTabActive ? 600 : 400, color: isTabActive ? domain.accent : locked ? 'var(--ink-ghost)' : 'var(--ink-low)' }}>{tab.label}</span>
-                      {locked
-                        ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        : pct > 0 && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isTabActive ? domain.accent : 'var(--ink-ghost)', flexShrink: 0 }}>{pct}%</span>
-                      }
-                    </div>
-                    {pct > 0 && (
-                      <div style={{ marginTop: '3px', height: '1.5px', background: 'rgba(255,255,255,0.08)', borderRadius: '1px' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', background: domain.accent, borderRadius: '1px', opacity: 0.55 }} />
-                      </div>
-                    )}
-                  </button>
+                  <NavBtn
+                    key={tab.id}
+                    id={tab.id}
+                    label={tab.label}
+                    accent={domain.accent}
+                    isActive={isTabActive}
+                    indent
+                    extra={
+                      pct > 0
+                        ? <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isTabActive ? domain.accent : 'var(--ink-ghost)', flexShrink: 0 }}>{pct}%</span>
+                        : isDimmed
+                          ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
+                          : null
+                    }
+                  />
                 )
               })}
             </div>
           )
         })}
 
-        <div style={S.divider} />
-        <div style={S.sectionLabel}>Interview</div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Interview</div>
 
-        {/* Interview tools — flat list */}
+        {/* Interview tools */}
         {INTERVIEW_TOOLS.map(tool => {
           const isToolActive = activeTabId === tool.id && activeZone === 'interview'
-          const locked = PREMIUM_TABS.has(tool.id) && !isUnlocked
+          const isDimmed = PREMIUM_TABS.has(tool.id) && !isUnlocked
           return (
-            <button key={tool.id} style={S.tabBtn(isToolActive, tool.accent)} onClick={() => goTo(tool.id)}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isToolActive ? 600 : 400, color: isToolActive ? tool.accent : locked ? 'var(--ink-ghost)' : 'var(--ink-low)' }}>{tool.label}</span>
-                {locked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
-              </div>
-            </button>
+            <NavBtn
+              key={tool.id}
+              id={tool.id}
+              label={tool.label}
+              accent={tool.accent}
+              isActive={isToolActive}
+              indent
+              extra={
+                isDimmed && !isToolActive
+                  ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
+                  : null
+              }
+            />
           )
         })}
 
-        <div style={S.divider} />
-        <div style={S.sectionLabel}>Read</div>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Read</div>
 
-        {/* Read */}
         {[
           { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--sky)',  zone: 'read' },
           { id: 'landscape', label: 'Landscape',   accent: 'var(--gold)', zone: 'today' },
         ].map(item => {
           const isActive = activeTabId === item.id && activeZone === item.zone
-          return (
-            <button key={item.id} style={S.tabBtn(isActive, item.accent)} onClick={() => goTo(item.id)}>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isActive ? 600 : 400, color: isActive ? item.accent : 'var(--ink-low)' }}>{item.label}</span>
-            </button>
-          )
+          return <NavBtn key={item.id} id={item.id} label={item.label} accent={item.accent} isActive={isActive} indent />
         })}
 
-        <div style={S.divider} />
-
-        {/* Search */}
-        <button style={S.tabBtn(isSearchActive, 'var(--violet)')} onClick={() => goTo('ask')}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: isSearchActive ? 600 : 400, color: isSearchActive ? 'var(--violet)' : 'var(--ink-low)' }}>Search</span>
-        </button>
-
       </nav>
+
+      {/* ── Search — PAL-style bottom bar ── */}
+      <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+        <button
+          onClick={() => goTo('ask')}
+          className={isSearchActive ? 'sidebar-item-active' : ''}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            width: '100%', textAlign: 'left',
+            background: isSearchActive ? undefined : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${isSearchActive ? 'var(--prime)' : 'rgba(255,255,255,0.10)'}`,
+            borderRadius: 'var(--r-sm)',
+            padding: '7px 10px',
+            cursor: 'pointer',
+            transition: 'border-color var(--t), background var(--t), box-shadow var(--t)',
+          }}
+          onMouseEnter={e => {
+            if (!isSearchActive) {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'
+              e.currentTarget.style.boxShadow = '0 0 0 2px rgba(240,165,0,0.12)'
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isSearchActive) {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'
+              e.currentTarget.style.boxShadow = 'none'
+            }
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: isSearchActive ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: '12px', color: isSearchActive ? undefined : 'var(--ink-low)' }}>Search</span>
+          <kbd style={{ fontSize: '9px', padding: '2px 5px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '3px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
+        </button>
+      </div>
+
     </aside>
   )
 }
