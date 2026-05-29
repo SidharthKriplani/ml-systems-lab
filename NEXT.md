@@ -51,6 +51,8 @@ Nothing currently blocked.
 
 ## What comes after (not for this session)
 
+- **README positioning rewrite** — 30 min, high external-perception return. Opens with product thesis, surfaces 4 differentiators (Pyodide, Web Speech, StaffLayer, CodeBugs), foregrounds flagship (Interview zone / 45-min mock). See IDEAS.md Tier 1.
+- **New user cold-state banner** — 45 min. Detect first visit (no `msl_tab`/`msl_score`/`msl_access`), show one-time "start here" orientation. Disappears after first tab visit. See IDEAS.md Tier 1.
 - Pre-Eval Callout pattern — 5 target tabs (SystemDesign, ModelEval, Monitoring, MLOpsDeploy, CausalInference). Content work-heavy.
 - Role Readiness Score — aggregate cross-tab scores into per-domain seniority signal on HomeTab.
 - Slim scenario index + lazy content loading — bundle audit first (`npm run build` output), then implement if > 1.5 MB.

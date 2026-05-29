@@ -48,6 +48,7 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 | **MVP / Weight** | Which features earn their place? Cut or consolidate candidates | When the app feels heavy |
 | **IP / Moat** | What's hard to replicate? What's original? What to double down on? | Annually |
 | **Guidance Completeness** | Every interactive surface has appropriate guiding text — tab descriptions, interaction hints, empty states, CTAs | After adding any new tab or major component |
+| **Positioning & Discoverability** | README opens with product thesis (not scope inventory); flagship experience is findable by a new visitor; four unique differentiators (Pyodide, Web Speech, StaffLayer, CodeBugs) are surface-visible; new user has a cold-state orientation path; social proof signal exists | Before any external promotion, sharing, or public launch |
 | **Content Linkage** | Every Gradient post has a YouTube ID (where applicable), a practice module CTA, and optionally a related-post link; every practice tab links back to its Gradient post | After adding any new post or practice module |
 
 **Audit types not yet run (high value):**

@@ -99,6 +99,25 @@ Jump Back In pill → TODAY row (case + activity) → Role → Continue → Book
 
 ---
 
+## Product framing
+
+**ML Systems Lab is an ML judgment simulator, not an ML systems platform.**  
+The name "ML Systems Lab" can imply infrastructure — pipelines, Kubernetes, distributed training, real vector databases. The product delivers something different: it trains the pattern recognition and decision-making that lets you work *with* those systems under production pressure. "I built a systems lab" and "I built a judgment simulator for ML practitioners" create completely different expectations, and the product only meets the second. Every copy and positioning decision should be grounded in the second framing.
+
+Concretely, this means:
+- README opening: describes the judgment gap (you can finish an ML course and still freeze when a model degrades silently in production), not the feature inventory
+- Tab and CTA language: "train your judgment" not "learn ML systems"
+- Scenario framing: "a real incident broke this way" not "here is a concept about X"
+- External descriptions: "production ML judgment simulator" not "ML systems learning platform"
+
+**The product has four differentiators that are genuinely hard to replicate:**  
+Pyodide (Python execution in-browser, no server), Web Speech API (verbal practice with live transcription), StaffLayer (IC5→Staff gap scenarios — almost nowhere else covers this), CodeBugs (production ML code with exactly one buried flaw). These must be surface-visible in the README and first-load experience — they are the moat, and they are currently buried.
+
+**The no-backend architecture is correct for this product type — it is not a limitation.**  
+A user who opens the app in 3 seconds and starts a 45-min mock exam has a better experience than a user who creates an account, verifies email, and navigates an onboarding flow. The right comparison is not "this vs. a SaaS platform" — it is "this vs. doing nothing, using YouTube, or hoping your interviewer mentions the right failure modes." For that comparison, frictionless wins. The no-backend decision must not be re-litigated without a feature that is genuinely impossible without one.
+
+---
+
 ## What is deliberately excluded
 
 **No dark/light mode toggle.** Dark-only is a product decision, not an oversight. The design system is built around `--void` (`#0c0a08`) and does not have a light-mode token set. Adding one requires a full design system audit — defer until there's user demand.
