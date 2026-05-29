@@ -251,6 +251,7 @@ export default function VerbatimTab({ onNavigate }) {
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: '0 0 4px' }}>
             Record yourself answering interview questions, then self-rate.
           </p>
+          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.25rem', letterSpacing: '0.04em' }}>~ Simulated</span>
           {history.length > 0 && (
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-low)', margin: 0 }}>
               {history.length} session{history.length !== 1 ? 's' : ''} recorded · avg score {avgScore}/20

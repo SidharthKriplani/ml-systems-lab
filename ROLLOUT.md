@@ -52,7 +52,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 
 | Area | Check | Mobile | Status |
 |------|-------|--------|--------|
-| **Onboarding / first impression** | Land on HomeTab cold — is it immediately clear what this is and what to do? | ✓ required | — |
+| **Onboarding / first impression** | Land on HomeTab cold — is it immediately clear what this is and what to do? | ✓ required | ✅ |
 | **Practice zone core loop** | Pick a domain → open a module → answer scenarios → score updates in localStorage | ✓ required | — |
 | **CombinatorTab (timed mock)** | Start a 30-min session → answer questions → end early → debrief renders correctly | ✓ required | — |
 | **TrainerTab (MCQ drill)** | Complete a session → weakness heatmap renders → history saves | ✓ required | — |

@@ -11,7 +11,10 @@ Last updated: May 2026
 
 *Move items here from Tier 1 at the start of a session. Strike through and move to LINEAGE.md when done.*
 
-— nothing in progress —
+- [ ] **Improve distractor quality** — CombinatorTab + TrainerTab, ~20-30 questions (session: 2026-05-29)
+- [ ] **Share Score clipboard button** — CombinatorTab debrief + TrainerTab session end (session: 2026-05-29)
+- [ ] **Fidelity/simulation badges** — module headers across all tabs (session: 2026-05-29)
+- [ ] **Streak tracking + 91-day heatmap** — HomeTab progress section (session: 2026-05-29)
 
 ---
 
@@ -35,10 +38,16 @@ Last updated: May 2026
 - [ ] CombinatorTab: expand question bank from 50 → 100 (enables 90-min sessions)
 
 ### First-Time User friction (from Audit #007)
-- [ ] **Rename "Ask" zone → "Search" and add explainer copy** — bottom nav label "Ask" implies AI assistant; AskTab is keyword search over a hardcoded KB. Rename nav label. Add one line above search input: "Search the ML Systems KB — concepts, patterns, failure modes." ~15 min.
-- [ ] **Rename Practice-zone "Interview Tools" domain card to "Drills" or "Scenario Drills"** — having an "Interview Tools" domain in Practice AND an "Interview" zone in bottom nav is a naming collision for first-timers. Rename the domain card. ~5 min.
-- [ ] **Add numbered sequence labels to Interview zone hub cards** — intended flow JD Prep → Defense → Combinator → Verbal is not communicated. Add step numbers (①②③④) to the relevant tool cards in the hub grid. ~15 min.
+- [x] ~~**Rename "Ask" zone → "Search"**~~ — done (nav label is 'Search', zone id stays 'ask')
+- [x] ~~**Rename Practice-zone "Interview Tools" domain card to "Drills"**~~ — done (domain label is 'Drills')
+- [x] ~~**Add numbered sequence labels to Interview zone hub cards**~~ — done (v4.10, steps 01/02/03 on Defense Plan/Combinator/Verbal)
 - [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
+
+### HomeTab redesign (from PAL screenshot review, May 2026)
+- [ ] **"Jump Back In" chip** — surface `msl_tab` localStorage on HomeTab as a single chip: "● [Last Module] · [time]". One line of state, massive returning-user signal. ~20 min.
+- [ ] **"Today's Case" featured card** — rotating featured scenario pulled from CombinatorTab/StaffLayerTab question bank. Gives users a reason to return daily. Above-the-fold, left card. ~1 hour.
+- [ ] **HomeTab hero copy fixes** — drop "You can train a model." line from hero headline. Fix sub-headline copy. Reduce total HomeTab scroll length (currently too long for a first visit). ~30 min.
+- [ ] **Role selector CTA labels** — role selector exists but CTA labels don't change meaningfully per role. Make role selection visibly alter the recommended path shown. ~30 min.
 
 ### Freemium gate v2 — granular scenario-level difficulty gating
 - [ ] **Tag all 200+ scenarios by difficulty (easy/junior/mid/senior/staff)** — v1 gate is tab-level (free = 4 intro tabs, premium = everything else). v2 should gate within free tabs too: easy/junior scenarios free, medium/hard gated. Requires a `difficulty` field on every scenario object and a `PremiumGate` wrapper in each tab that slices to free content. ~3-4 hours content work + 2 hours implementation. (Source: freemium architecture decision, May 2026)

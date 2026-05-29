@@ -274,6 +274,7 @@ export default function StaffLayerTab({ onNavigate }) {
         <div>
           <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Senior / Staff Layer</h2>
           <p style={{ margin: '4px 0 0', color: 'var(--ink-mid)', fontSize: '13px' }}>The same problem through IC3 → IC5 → Staff eyes</p>
+          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '6px', letterSpacing: '0.04em' }}>~ Simulated</span>
         </div>
         <button
           onClick={() => { setReveals({}); setExpanded(new Set()); }}

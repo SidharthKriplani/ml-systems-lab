@@ -801,6 +801,7 @@ export default function SparkLabTab({ onNavigate }) {
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.
         </p>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--mint)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (

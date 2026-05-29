@@ -302,6 +302,8 @@ export default function HomeTab({ onNavigate }) {
   })
   const [bookmarks,      setBookmarks]      = useState(() => getBookmarks())
   const [showChangelog,  setShowChangelog]  = useState(false)
+  const [streak,         setStreak]         = useState(0)
+  const [activityGrid,   setActivityGrid]   = useState([])
 
   function refresh() {
     setProgress(getAllProgress())
@@ -320,6 +322,23 @@ export default function HomeTab({ onNavigate }) {
     refresh()
     window.addEventListener('msl_progress', refresh)
     window.addEventListener('msl_bookmarks', refreshBookmarks)
+    // --- Streak + activity tracking ---
+    const today = new Date().toISOString().slice(0, 10)
+    try { localStorage.setItem(`msl_activity_${today}`, String(parseInt(localStorage.getItem(`msl_activity_${today}`) || '0') + 1)) } catch(_) {}
+    const lastVisit = localStorage.getItem('msl_last_visit')
+    const saved = parseInt(localStorage.getItem('msl_streak') || '0')
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+    const newStreak = lastVisit === today ? (saved || 1) : lastVisit === yesterday ? saved + 1 : 1
+    localStorage.setItem('msl_streak', String(newStreak))
+    localStorage.setItem('msl_last_visit', today)
+    setStreak(newStreak)
+    // Build 91-day grid
+    const grid = []
+    for (let i = 90; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+      grid.push({ date: d, count: parseInt(localStorage.getItem(`msl_activity_${d}`) || '0') })
+    }
+    setActivityGrid(grid)
     // Auto-open a learning path when navigated from LandscapeTab
     const gotoPath = localStorage.getItem('msl_goto_path')
     if (gotoPath) {
@@ -442,6 +461,29 @@ export default function HomeTab({ onNavigate }) {
           </div>
           <span style={{ color: 'var(--ink-low)', fontSize: '13px', flexShrink: 0 }}>→</span>
         </div>
+      )}
+
+      {/* ── Streak + Heatmap ── */}
+      {activityGrid.length > 0 && (
+        <section>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <div className="eyebrow" style={{ marginBottom: 0 }}>Practice activity</div>
+            {streak > 0 && (
+              <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '20px', padding: '2px 10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{streak}</span>
+                <span style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>day streak</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 10px)', gridAutoFlow: 'column', gridAutoColumns: '10px', gap: '2px', overflowX: 'auto', paddingBottom: '2px' }}>
+            {activityGrid.map(({ date, count }) => (
+              <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '10px', height: '10px', borderRadius: '2px', background: count > 0 ? 'var(--prime)' : 'var(--depth)', border: '1px solid var(--rim)', opacity: count > 0 ? Math.min(0.5 + count * 0.15, 1) : 1 }} />
+            ))}
+          </div>
+          <div style={{ marginTop: '5px', fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+            Last 91 days · each square = 1 day
+          </div>
+        </section>
       )}
 
       {/* ── Bookmarks ── */}

@@ -23,7 +23,7 @@ const ALL_QUESTIONS = [
     options: [
       'One-hot encoding',
       'Target encoding with cross-validation',
-      'Label encoding with random assignment',
+      'Target encoding applied to the full dataset before any train/test split',
       'Dropping the feature',
     ],
     correct: 1,
@@ -72,7 +72,7 @@ const ALL_QUESTIONS = [
     options: [
       'It over-penalizes false positives',
       'A model predicting all negatives achieves 99% accuracy with zero predictive value',
-      'It ignores the AUC score',
+      'It penalizes all misclassifications equally, regardless of asymmetric class costs',
       'It makes cross-validation unreliable',
     ],
     correct: 1,
@@ -208,7 +208,7 @@ const ALL_QUESTIONS = [
     id: 18, domain: 'MLOps',
     q: 'What is concept drift in production ML?',
     options: [
-      "The model's weights drift due to floating point errors",
+      "Input feature distributions shift — P(X) changes while P(Y|X) stays stable",
       'The relationship between input features and target variable changes over time',
       'Training data becomes unavailable',
       'API endpoints change breaking client calls',
@@ -310,7 +310,7 @@ const ALL_QUESTIONS = [
       'Self-join on user_id with date difference filter',
       'Correlated subquery for each user',
       'Full table scan with WHERE clause',
-      'CROSS JOIN all visits and purchases',
+      'Unnested lateral join over all visit/purchase event pairs, filtered to the earliest visit date',
     ],
     correct: 0,
     explanation: "Self-join: JOIN first_visit_table ON user_id AND purchase_date BETWEEN first_visit_date AND first_visit_date+7. Use indexed columns. Correlated subquery is O(N²). In production this breaks as: correlated subquery version runs overnight on 50M users before timing out; self-join on unindexed purchase_date still takes 4 hours — adding a composite index on (user_id, purchase_date) drops it to 8 minutes.",
@@ -319,7 +319,7 @@ const ALL_QUESTIONS = [
     id: 27, domain: 'SQL & Data',
     q: 'A query with SELECT DISTINCT on 100M rows is slow. Best optimization strategy?',
     options: [
-      'Add more ORDER BY clauses',
+      'Partition the table by user_id and run DISTINCT within each partition to parallelize deduplication',
       'Use GROUP BY instead (often better optimized by query planners)',
       'Increase memory allocation',
       'Switch to a subquery',
@@ -332,7 +332,7 @@ const ALL_QUESTIONS = [
     id: 28, domain: 'Optimization',
     q: 'Adam optimizer vs. SGD with momentum: when is SGD preferred?',
     options: [
-      'Always — Adam is obsolete',
+      'When batch sizes are very small, since Adam\'s variance estimates become unreliable at low sample counts',
       'When training very large transformers',
       'When generalization is critical — SGD often finds flatter minima that generalize better',
       'When training speed is the priority',
@@ -383,7 +383,7 @@ const ALL_QUESTIONS = [
     options: [
       'Log transform only matters for tree-based models',
       'High skewness violates linearity assumptions and makes gradient descent unstable due to scale differences',
-      'Skewness above 3 disables one-hot encoding compatibility',
+      'Tree-based models are equally sensitive to feature skewness and require the same log-transform treatment',
       'Linear models require all features to be log-normal',
     ],
     correct: 1,
@@ -580,7 +580,7 @@ const ALL_QUESTIONS = [
     options: [
       'The model weights have corrupted',
       'Memory leak or cache saturation from growing request volume, or feature store key space growth slowing lookups',
-      'Gradient accumulation is running in production',
+      'Upstream feature store TTL expired, causing all lookups to bypass local cache and hit cold storage',
       'The model is retraining in the background',
     ],
     correct: 1,
@@ -667,7 +667,7 @@ const ALL_QUESTIONS = [
     options: [
       'Boolean columns cannot be indexed in SQL',
       'When a column has very few distinct values, a full table scan with parallel execution is cheaper than random I/O via the index',
-      'The index is corrupted and needs rebuilding',
+      'Add explicit USE INDEX hints to force the query planner to use low-selectivity indexes',
       'Non-selective indexes only work with composite keys',
     ],
     correct: 1,
@@ -781,6 +781,7 @@ function SetupScreen({ onStart }) {
         <p style={{ color: 'var(--ink-mid)', marginTop: '0.4rem', fontSize: '0.95rem' }}>
           Sharpen your ML interview skills with targeted MCQ drills.
         </p>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>~ Simulated</span>
       </div>
 
       {/* Domain selector */}
@@ -1074,11 +1075,23 @@ function DrillScreen({ questions, onFinish, onAbort }) {
 
 function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }) {
   const pct = total > 0 ? Math.round((score / total) * 100) : 0
+  const [copied, setCopied] = useState(false)
 
   const scoreColor = pct >= 80 ? 'var(--mint)' : pct >= 60 ? 'var(--prime)' : 'var(--rose)'
 
   // All domains that appeared
   const domains = Object.keys(domainStats)
+
+  const weakest = [...Object.keys(domainStats)].sort((a, b) => {
+    const accA = domainStats[a].total > 0 ? domainStats[a].correct / domainStats[a].total : 0
+    const accB = domainStats[b].total > 0 ? domainStats[b].correct / domainStats[b].total : 0
+    return accA - accB
+  })[0] || ''
+
+  function handleShare() {
+    const text = `ML Systems Lab Trainer: ${score}/${total} · ${pct}% · Weak: ${weakest} → ml-systems-lab-v9xe.vercel.app`
+    navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
+  }
 
   // Sort by accuracy ascending (weakest first)
   const sortedDomains = [...domains].sort((a, b) => {
@@ -1216,6 +1229,18 @@ function ResultsScreen({ score, total, domainStats, onDrillAgain, onNewSession }
           }}
         >
           New Session
+        </button>
+        <button
+          onClick={handleShare}
+          style={{
+            background: 'none', border: '1px solid var(--rim)',
+            borderRadius: 10, padding: '0.8rem 1.75rem',
+            fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', color: copied ? 'var(--mint)' : 'var(--ink-mid)',
+            transition: 'color 0.2s',
+          }}
+        >
+          {copied ? '✓ Copied!' : '⎘ Share Score'}
         </button>
       </div>
     </div>

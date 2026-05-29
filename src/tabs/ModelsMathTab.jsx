@@ -708,6 +708,7 @@ export default function ModelsMathTab({ onNavigate }) {
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '620px' }}>
           The math behind the decisions — why PCA fails with outliers, when regularization helps vs hurts, what the scree plot is actually telling you, and why calibration breaks after threshold tuning.
         </p>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--mint)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
       </div>
 
       {/* Module picker */}

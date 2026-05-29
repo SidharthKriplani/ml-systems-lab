@@ -38,7 +38,7 @@ const MCQ_QUESTIONS = [
     explanation: "NDCG@K captures position-weighted relevance via log-discounting: relevant item at rank 1 is worth far more than at rank 10. MAP@K also averages precision at each relevant rank but weights all positions within K equally — it misses the concentration of value at the very top of the list. Production tell: AUC looks flat but user engagement drops; NDCG@5 reveals the model is burying relevant items below rank 5 where users rarely scroll." },
   { id: 'C7', domain: 'Model Evaluation', type: 'mcq',
     q: 'Log loss penalizes:',
-    options: ['Only incorrect predictions', 'Confident wrong predictions most severely', 'All predictions equally', 'Predictions far from 0.5 only'],
+    options: ['Only incorrect predictions', 'Confident wrong predictions most severely', 'Low-confidence correct predictions more harshly than high-confidence wrong ones', 'Predictions far from 0.5 only'],
     correct: 1,
     explanation: "Log loss = -log(p) for true class. If model predicts p=0.01 for true class, loss = -log(0.01) ≈ 4.6. High confidence wrong predictions = very high loss. In production this breaks as: a single confident wrong prediction on a rare fraud case inflates average log loss and masks poor calibration on the long tail." },
   { id: 'C8', domain: 'Model Evaluation', type: 'mcq',
@@ -85,7 +85,7 @@ const MCQ_QUESTIONS = [
     explanation: "Bayesian A/B testing's primary advantage is valid continuous monitoring — P(B>A | data) can be computed at any point without inflating the false-positive rate. Incorporating priors is a secondary Bayesian feature, and using strongly biased priors can mislead decisions. Bayesian methods still require a control group. In production this breaks as: analyst checks p-value daily and stops at first p<0.05; actual false positive rate is closer to 30%, not 5%." },
   { id: 'C16', domain: 'Statistics & Probability', type: 'mcq',
     q: 'Maximum Likelihood Estimation (MLE) finds parameters that:',
-    options: ['Maximize the prior probability', 'Maximize the posterior probability', 'Maximize the probability of observed data given parameters', 'Minimize variance of the estimator'],
+    options: ['Maximize the joint probability P(θ, data) by finding the most likely parameter-data pairing', 'Maximize the posterior probability', 'Maximize the probability of observed data given parameters', 'Minimize variance of the estimator'],
     correct: 2,
     explanation: "MLE: θ̂ = argmax P(data | θ). No prior. Contrast with MAP which adds a prior. MLE is equivalent to MAP with uniform prior. In production this breaks as: MLE on sparse categorical data assigns near-zero probability to unseen classes; MAP with a weak Dirichlet prior prevents zero-probability predictions in production logs." },
   // Deep Learning
@@ -206,7 +206,7 @@ const MCQ_QUESTIONS = [
     explanation: "Transformers: random init → noisy gradients → high LR causes divergence. Warmup: linear increase for ~4% of steps. Cosine decay: smooth reduction to near-zero, better than step decay. In production this breaks as: fine-tuning a pretrained model without warmup causes loss spike in the first 100 steps and the run diverges, wasting GPU hours." },
   { id: 'C39', domain: 'Optimization', type: 'mcq',
     q: 'Which optimizer is most commonly used in production-scale recommendation system training?',
-    options: ['Vanilla SGD', 'AdaGrad for sparse features, Adam for dense parameters (mixed)', 'LBFGS', 'RMSProp only'],
+    options: ['Vanilla SGD', 'AdaGrad for sparse features, Adam for dense parameters (mixed)', 'Adam uniformly across all parameter types, including sparse embeddings', 'RMSProp only'],
     correct: 1,
     explanation: "Rec systems have sparse embeddings: AdaGrad/Adafactor adapts per-coordinate LR (rarely-updated embeddings get larger updates). Dense layers use Adam. This split is standard (Google, Meta). In production this breaks as: applying Adam uniformly to sparse embeddings causes popular items to dominate updates; rare-item embeddings never converge and cold-start recall drops 30%." },
   { id: 'C40', domain: 'Optimization', type: 'mcq',
@@ -233,7 +233,7 @@ const MCQ_QUESTIONS = [
     options: [
       'Log transform only matters for tree-based models',
       'High skewness violates linearity assumptions and makes gradient descent unstable due to scale differences',
-      'Skewness above 3 disables one-hot encoding compatibility',
+      'Tree-based models are equally sensitive to feature skewness and require the same log-transform treatment',
       'Linear models require all features to be log-normal',
     ],
     correct: 1,
@@ -430,7 +430,7 @@ const MCQ_QUESTIONS = [
     options: [
       'The model weights have corrupted',
       'Memory leak or cache saturation from growing request volume, or feature store key space growth slowing lookups',
-      'Gradient accumulation is running in production',
+      'Upstream feature store TTL expired, causing all lookups to bypass local cache and hit cold storage',
       'The model is retraining in the background',
     ],
     correct: 1,
@@ -970,6 +970,7 @@ export default function CombinatorTab({ onNavigate }) {
   const [selfRatings, setSelfRatings] = useState(_saved?.selfRatings || {})
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [totalTimeUsed, setTotalTimeUsed] = useState(0)
+  const [copied, setCopied] = useState(false)
 
   const questionStartRef = useRef(null)
   const timerRef = useRef(null)
@@ -1125,6 +1126,7 @@ export default function CombinatorTab({ onNavigate }) {
           <p style={{ color: 'var(--ink-mid)', marginTop: '0.25rem', fontSize: '0.95rem' }}>
             Timed mock session — all answers locked until time ends
           </p>
+          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>~ Simulated</span>
         </div>
 
         {_saved?.screen === 'session' && (
@@ -1490,6 +1492,12 @@ export default function CombinatorTab({ onNavigate }) {
   if (screen === 'debrief') {
     const pct = mcqQuestions.length > 0 ? Math.round((correctCount / mcqQuestions.length) * 100) : 0
     const scoreColor = pct >= 80 ? 'var(--mint)' : pct >= 60 ? 'var(--prime)' : 'var(--rose)'
+    const weakestDomain = Object.entries(domainStats)
+      .sort((a, b) => (a[1].correct / Math.max(a[1].total,1)) - (b[1].correct / Math.max(b[1].total,1)))[0]?.[0] || ''
+    function handleShare() {
+      const text = `ML Systems Lab Combinator: ${correctCount}/${mcqQuestions.length} · ${pct}% · Weak: ${weakestDomain} → ml-systems-lab-v9xe.vercel.app`
+      navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
+    }
 
     return (
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '1.5rem 1rem 3rem' }}>
@@ -1511,6 +1519,14 @@ export default function CombinatorTab({ onNavigate }) {
           <div style={{ color: 'var(--ink-low)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
             {questions.length} total questions · {duration} min session
           </div>
+          <button onClick={handleShare} style={{
+            marginTop: '1rem', background: 'none', border: '1px solid var(--rim)',
+            borderRadius: 8, padding: '0.45rem 1.1rem', fontSize: '0.82rem',
+            color: copied ? 'var(--mint)' : 'var(--ink-mid)', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', transition: 'color 0.2s',
+          }}>
+            {copied ? '✓ Copied!' : '⎘ Share Score'}
+          </button>
         </div>
 
         {/* Domain breakdown */}
