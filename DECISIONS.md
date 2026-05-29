@@ -19,8 +19,8 @@ Tailwind is in the config for historical reasons. All component styling uses inl
 **CSS variables for every color and spacing token.**  
 Defined in `:root` in `index.css`. Never hardcode hex values in component files. Adding a new color = add it to `:root` first, then reference it.
 
-**Space Grotesk for UI, JetBrains Mono for code/labels.**  
-Do not introduce additional fonts. These two cover every case. Font families are exposed as CSS variables — `--font-sans` (`'Space Grotesk', system-ui, sans-serif`) and `--font-mono` (`'JetBrains Mono', 'Fira Code', monospace`) — defined in `:root` in `index.css`. Always reference these variables; never hardcode font family strings inline.
+**Satoshi for UI, JetBrains Mono for code/labels.**  
+Do not introduce additional fonts. These two cover every case. Font families are exposed as CSS variables — `--font-sans` (`'Satoshi', 'Inter', system-ui, sans-serif`) loaded from Fontshare CDN, and `--font-mono` (`'JetBrains Mono', 'Fira Code', monospace`) from Google Fonts — defined in `:root` in `index.css`. Always reference these variables; never hardcode font family strings inline. (Changed from Space Grotesk in v4.14.)
 
 **`--white` (#ffffff) is a named CSS variable, not a hardcoded hex.**  
 Use `var(--white)` for contrast text on colored badge backgrounds or anywhere pure white is needed. Do not write `#fff` or `#ffffff` in component files.
@@ -83,6 +83,19 @@ This repo has a recurring git issue where worktree isolation fails. Agents must 
 
 **Brace balance check before committing.**  
 Run `node -e "..."` brace counter on any new or heavily edited `.jsx` file. Output must be `0`.
+
+---
+
+## HomeTab
+
+**HomeTab is a dashboard for returning users, not a landing page.**  
+The primary audience is someone who has already seen the product and is coming back to practice. Every section added to HomeTab must pass: "does a daily returning user need this?" If the honest answer is "it impresses new visitors" or "it explains what the product is", it does not belong on HomeTab. Landing-page content (hero, stats strips, ecosystem ads, feature callouts) has been removed and must not return. The Today zone's sidebar nav is the correct place for first-time orientation.
+
+**HomeTab section budget (v4.16 baseline):**  
+Jump Back In pill → TODAY row (case + activity) → Role → Continue → Bookmarks → Track grid → Changelog. This is the ceiling. New sections need to displace something, not just append.
+
+**Activity widget shows last 4 weeks (28 days), not 91.**  
+91 days of mostly-empty squares is visually meaningless for a new or casual user. 4 weeks is the right window — dense enough to show a pattern when there is one, honest when there isn't.
 
 ---
 

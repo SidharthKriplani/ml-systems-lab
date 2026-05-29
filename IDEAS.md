@@ -20,6 +20,11 @@ Last updated: May 2026
 
 ## Tier 1 — High impact, buildable now
 
+### HomeTab polish (identified 2026-05-29, post v4.16)
+- [ ] **Activity widget: hide heatmap when sparse** — For users with ≤3 days of activity, the 4-week grid is 27 dark squares and 1 lit dot. It looks broken, not informative. Either hide the grid until there are ≥7 active days, or replace it with a simple "Day 1" / "Day N" message for new users. The streak number alone is enough for early days.
+- [ ] **Continue bar: only show if pct > 0** — Currently shows "Spark Lab · 0%" which signals no progress. A 0% bar is noise. Should only render if `nextUp.pct > 0`, i.e., the user has genuinely started the track. If nothing has been started, suppress the bar entirely.
+- [ ] **HomeTab visual hierarchy** — Role → Continue → All Tracks three full-width sections carry equal weight. Add a subtle divider or increase spacing before "All Tracks" to signal the shift from "your session" context to "browse everything".
+
 ### Learning Path
 - [x] ~~**Guided learning paths with sequenced module order**~~ — done then removed (built 2026-05-27; removed v4.15 2026-05-29 — duplicated Practice zone nav, role selector 3-step sequence covers the same job more lightly)
 

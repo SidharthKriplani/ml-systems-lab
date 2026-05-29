@@ -46,6 +46,29 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.16 — HomeTab dashboard-first rebuild (May 2026)
+
+Continued the declutter with a structural redesign. The guiding principle: HomeTab serves returning users (dashboard), not first-time visitors (landing page). Every section that didn't pass the "does a daily user need this?" test was cut.
+
+**Removed:**
+- Hero section — two-column grid with ScenarioMockup, ambient orb, gradient headline, CTAs, "Free · no account" tagline. Pure landing-page content, zero value on return visits.
+- FEATURES stats strip — "200+ Scenarios / 9 Interview tools / 4 Career levels". Marketing copy for a product you already have.
+- Python callout — "Run sklearn, numpy, matplotlib". Promoted a tab that's already in the Practice nav.
+- Ecosystem section — "Three labs. One production mindset." An ad for other products. ECOSYSTEM constant removed.
+- Standalone streak + heatmap section — replaced by the activity widget inside the TODAY row (see below).
+- Marketing h2 from track grid ("7 domains · 100+ scenarios · all free").
+- "What brings you here today?" heading from role selector.
+
+**Redesigned:**
+- **TODAY row**: Two-column grid — Today's Case card (left, `1fr`) + compact activity widget (right, `auto`). Activity widget contains streak number + 4-week heatmap (28 cells, 8px, `gridTemplateRows: repeat(7, 8px)`, `gridAutoColumns: 8px`). Case and widget match height.
+- **Role selector**: Stripped gradient card background + heavy shadow. Now a flat section with `ROLE` eyebrow. Expanded role panel toned down (`rgba(240,165,0,0.07)` background, no `boxShadow`).
+- **Jump Back In bug fix**: `msl_tab` was being set to `'home'` on HomeTab mount, causing the pill to show "Continue: home →". Fixed by filtering `lastTab !== 'home'` before `setJumpBackTab`.
+- **Gap**: outer flex gap reduced 40px → 28px.
+
+Net: −173 lines from HomeTab.jsx since v4.14.
+
+---
+
 ### v4.15 — HomeTab declutter (May 2026)
 
 Removed three sections that were adding weight without earning it:
