@@ -564,6 +564,26 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 ---
 
+### #019 — 2026-05-29 · Guidance Completeness Final Sweep
+
+**Scope:** All 31 tab files — header, description, interaction hint, module nav labels  
+**Trigger:** Follow-on to v4.17 guidance pass; completing the full-app coverage  
+**Method:** Grep for description paragraph patterns → direct reads on all `desc=0` results → confirmed gaps by reading rendered header sections  
+**Output:** 4 gaps found and fixed same session; 27 tabs confirmed clean
+
+| # | Finding | File | Severity | Status |
+|---|---------|------|----------|--------|
+| 1 | Missing interaction hint — no workflow description for expand→write→compare→self-score flow | `TakeHomeTab.jsx` | Medium | ✅ Fixed — added hint below subtitle |
+| 2 | Missing navigation hint — description was broad but no guidance on what each of the 5 section tabs contains | `LandscapeTab.jsx` | Low | ✅ Fixed — added Roles/Salary/Stack/etc. navigation hint |
+| 3 | Missing session flow explanation — subtitle said "answers locked until time ends" but no description of question flow or debrief | `CombinatorTab.jsx` config screen | Medium | ✅ Fixed — added choose→start→lock→debrief flow hint |
+| 4 | Missing interaction hint — description said what KB covers but not how to interact with it | `AskTab.jsx` | Low | ✅ Fixed — added type/suggest/Surprise-me usage hint |
+
+**False negatives in initial grep:** Practice tabs using `fontSize: '15px'` and `color: 'var(--ink-low)'` registered as `desc=0` because the grep pattern targeted `14px`/`var(--ink-mid)`. All 9 tabs confirmed clean on direct read (Airflow, dbt, DataModeling, DeepLearning, DLFineTuning, DLServing, DataScience, CausalInference, TimeSeries).
+
+**Brace balance:** All 4 modified files verified at `0` post-fix.
+
+---
+
 ## Summary Table
 
 | # | Audit | Date | Type | Status |
@@ -586,6 +606,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | 3 open ⚠️ |
 | 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | 3 open ⚠️ |
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
+| 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 
 **Open findings by severity:**
 

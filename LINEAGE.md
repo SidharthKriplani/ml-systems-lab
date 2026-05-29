@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.21 — Guidance completeness pass — final 4 tabs (2026-05-29)
+
+**What and why:**
+Audit #019 completed the guidance completeness sweep started in v4.17. The earlier pass (v4.17) covered 23 tabs with MCQ/accordion, simulation, Python, and specialised-format mechanics. Four tabs were confirmed missing guidance text in this final sweep:
+
+- **TakeHomeTab** — subtitle "15 open-ended questions · self-scored · export your answers" gave the stats but not the workflow. Added: expand → write → compare model response → self-score on four dimensions → export JSON.
+- **LandscapeTab** — description explained what the tab covered broadly, but nothing told the user what each of the 5 section tabs contained. Added: navigation hint naming Roles (day-in-life + demand), Salary (L3–L7 TC benchmarks), Stack (tooling by company stage).
+- **CombinatorTab config screen** — had "Timed mock session — all answers locked until time ends" but no flow explanation. Added: choose duration → start → one question at a time → answers locked → debrief with domain breakdown when time expires.
+- **AskTab** — described the KB but not the interaction surface. Added: type a question or pick from suggestions; "Surprise me" for a random challenge with hint and worked answer.
+
+**False negatives in the grep audit:** Most practice tabs (Airflow, dbt, DataModeling, DeepLearning, DLFineTuning, DLServingTab, DataScience, CausalInference, TimeSeries) showed `desc=0` in the grep because they use `fontSize: '15px'` and `color: 'var(--ink-low)'` while the grep pattern matched for `14px`/`var(--ink-mid)`. All confirmed present on direct read — no fixes needed.
+
+**Scope:** 4 files, 20 lines net. Brace balance `0` on all 4.
+
+---
+
 ### v4.20 — Mobile hover sticky fix — PAL pattern applied (2026-05-29)
 
 **The bug class:**
