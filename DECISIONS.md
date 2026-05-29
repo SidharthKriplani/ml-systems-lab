@@ -139,7 +139,7 @@ A user who opens the app in 3 seconds and starts a 45-min mock exam has a better
 
 **No dark/light mode toggle.** Dark-only is a product decision, not an oversight. The design system is built around `--void` (`#0c0a08`) and does not have a light-mode token set. Adding one requires a full design system audit — defer until there's user demand.
 
-**No backend or server-side storage.** See Stack section above.
+**No backend or server-side storage — current constraint, not a permanent one.** See Stack section above. The no-backend architecture is correct for this product's current phase: zero friction, no accounts, instant deploy, nothing to break server-side. This will eventually be reversed when a feature genuinely requires it (e.g., a real end-to-end ML execution demo, collaborative features, or server-side model inference). When that time comes, add a minimal backend scoped to exactly that feature — do not retrofit the whole product. The first backend feature is tracked in IDEAS.md Tier 3.
 
 **No account system.** Zero-friction access is a core principle. Progress lives in localStorage and can be exported to JSON.
 
