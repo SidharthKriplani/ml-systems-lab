@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.15 — HomeTab declutter (May 2026)
+
+Removed three sections that were adding weight without earning it:
+
+- **Learning Paths** (7-path accordion, ~110 lines of data + render): duplicated the Practice zone's navigation with extra ceremony. The role selector's "Your path" 3-step sequence covers the same job. `LEARNING_PATHS` constant, `openPath`/`pathDone` state, `markStepDone`, and `msl_goto_path` localStorage logic all removed. `msl_path_progress` key is now dead.
+- **Export progress snapshot**: utility action buried in the home page. Not wrong to have, but wrong placement.
+- **"Find your path" hero button**: linked to the now-removed Learning Paths section.
+
+**Role selector collapse:** First-time visitors see the full 7-button grid. On return visits, the selected role renders as a compact chip + "Change" link. `msl_role` persistence was already wired; only the render logic changed.
+
+**Heatmap full width:** Changed from fixed 10×10px cells with `overflowX: auto` to `gridAutoColumns: '1fr'` with `aspectRatio: '13 / 7'` — 91 cells, 7 rows × 13 columns, squares fill the card width.
+
+---
+
 ### v4.14 — Satoshi font swap + emoji audit (May 2026)
 
 **Font swap:** Replaced Space Grotesk with Satoshi (Fontshare CDN). Single change point: `--font-sans` in `index.css`. `index.html` updated to load from `api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400`. JetBrains Mono preserved from Google Fonts. Inter and Playfair Display dropped (unused). Satoshi reads crisper at smaller weights, tighter at heavy weights — better fit for the amber/dark design system than Space Grotesk's rounded neutrality.

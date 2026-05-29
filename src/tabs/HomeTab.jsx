@@ -106,118 +106,6 @@ const ECOSYSTEM = [
 const MASTERY_COLORS = { exploring: 'var(--sky)', practicing: 'var(--ember)', mastered: 'var(--mint)' }
 const MASTERY_LABELS = { exploring: 'Exploring', practicing: 'Practicing', mastered: 'Mastered' }
 
-// ── Learning paths ────────────────────────────────────────────────────────────
-const LEARNING_PATHS = [
-  {
-    id: 'mle_interview',
-    name: 'MLE Interview Ready',
-    duration: '2 weeks',
-    outcome: 'Confident across system design, evaluation, and ML rounds at Meta, Spotify, Google, or Airbnb.',
-    accent: 'var(--gold)', border: 'rgba(251,191,36,0.22)', bg: 'rgba(251,191,36,0.10)',
-    steps: [
-      { tab: 'interview',  label: 'Question Bank — System Design',  desc: 'Work through all system design questions. Build a reusable 6-step framework.' },
-      { tab: 'interview',  label: 'Fluency Drills',                 desc: '30 weak→strong vocabulary pairs. Replace vague phrases with production-grade ones.' },
-      { tab: 'causal',     label: 'Causal vs Predictive',           desc: 'A DS interview trap. Know when prediction isn\'t the right tool before the interviewer asks.' },
-      { tab: 'design',     label: 'ML Incident Room',               desc: 'Diagnose production incidents under pressure. Senior/Staff expected output.' },
-      { tab: 'design',     label: 'Two-Tower Explorer',             desc: 'The architecture powering YouTube, Spotify, TikTok retrieval. Know it cold.' },
-      { tab: 'eval',       label: 'Metric Selector',                desc: 'When to use PR-AUC vs ROC-AUC vs calibration. Interviewers will ask.' },
-      { tab: 'interview',  label: 'Timed Practice — full mock',     desc: '45-minute session. Use 4-tier self-assessment. Aim for Analyst on every question.' },
-    ],
-  },
-  {
-    id: 'data_engineering',
-    name: 'Data Engineering Track',
-    duration: '3 weeks',
-    outcome: 'Design, debug, and operate production data pipelines — from Spark to orchestration to storage.',
-    accent: 'var(--ember)', border: 'rgba(249,115,22,0.22)', bg: 'rgba(249,115,22,0.10)',
-    steps: [
-      { tab: 'spark',    label: 'Shuffle Hell + Skew Doctor',      desc: 'Understand Spark execution mechanics. Diagnose and fix data skew.' },
-      { tab: 'airflow',  label: 'DAG Failure Room',                desc: 'Diagnose 8 types of broken DAGs. Trigger rules, timezone bugs, zombie tasks.' },
-      { tab: 'airflow',  label: 'Backfill Decision Lab',           desc: 'When to backfill, from when, in what order. The risks most teams skip.' },
-      { tab: 'dbt',      label: 'Materialization Oracle',          desc: 'Table vs view vs incremental vs ephemeral — when each breaks in production.' },
-      { tab: 'dbt',      label: 'Schema Drift Clinic',             desc: 'What breaks downstream when upstream columns change.' },
-      { tab: 'modeling', label: 'Star vs OBT + OLAP Format Showdown', desc: 'Data modeling decisions and Iceberg vs Delta vs Hive tradeoffs.' },
-    ],
-  },
-  {
-    id: 'deep_learning_prod',
-    name: 'Deep Learning for Production',
-    duration: '2 weeks',
-    outcome: 'Debug training failures, make fine-tuning decisions, and serve models at p99 without an oncall incident.',
-    accent: 'var(--violet)', border: 'rgba(99,102,241,0.22)', bg: 'rgba(99,102,241,0.10)',
-    steps: [
-      { tab: 'dl',          label: 'Training Failure Diagnosis',     desc: '8 scenarios: NaN loss, vanishing gradients, dead ReLUs, data leakage.' },
-      { tab: 'dl',          label: 'Backprop Debugging',             desc: 'Per-layer gradient norms. Which layers are learning, which are dead.' },
-      { tab: 'dl_finetune', label: 'Freeze vs Fine-tune vs LoRA',    desc: 'Given model size and data size — which approach and why.' },
-      { tab: 'dl_finetune', label: 'LR Strategy',                    desc: '8 scenarios on learning rate choices. The knob that matters most.' },
-      { tab: 'dl_serving',  label: 'Quantization Tradeoffs',         desc: 'FP32 vs FP16 vs INT8 vs INT4 — given your hardware and accuracy tolerance.' },
-      { tab: 'dl_serving',  label: 'GPU Memory Calculator + Serving Architecture', desc: 'Will the model fit? Which serving pattern for your traffic shape?' },
-    ],
-  },
-  {
-    id: 'production_ml',
-    name: 'Production ML Fundamentals',
-    duration: '3 weeks',
-    outcome: 'Build, debug, and monitor an ML pipeline end-to-end. Know what breaks and why before it pages you.',
-    accent: 'var(--mint)', border: 'rgba(52,211,153,0.22)', bg: 'rgba(52,211,153,0.10)',
-    steps: [
-      { tab: 'features',    label: 'Skew Simulator',                 desc: 'Break features intentionally. Build intuition for training-serving skew.' },
-      { tab: 'features',    label: 'Feature Store Designer',         desc: 'Point-in-time correct joins. Dual-layer feature store design.' },
-      { tab: 'classical',   label: 'Model Failure Zoo',              desc: 'Silent failure modes for 8 classical models. War stories + diagnostic signals.' },
-      { tab: 'eval',        label: 'Metric Selector + Shadow Mode',  desc: 'Pick the right metric. Run shadow before canary. Always.' },
-      { tab: 'causal',      label: 'Causal vs Predictive',           desc: 'Before running your next A/B test — know what you\'re actually trying to estimate.' },
-      { tab: 'monitor',     label: 'Drift Dashboard',                desc: 'PSI/KS thresholds. Model health alerts before degradation compounds.' },
-      { tab: 'mlops_deploy',label: 'Champion-Challenger',            desc: 'Walk through a real promotion decision: metrics, latency SLA, rollback trigger.' },
-    ],
-  },
-  {
-    id: 'staff_design',
-    name: 'Staff-Level System Design',
-    duration: '4 weeks',
-    outcome: 'Design and defend end-to-end ML platforms. Trade-off reasoning at the Staff/Principal level.',
-    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.10)',
-    steps: [
-      { tab: 'design',     label: 'Design Canvas',                  desc: 'Full ML system design: rec systems, fraud detection, search ranking.' },
-      { tab: 'design',     label: 'Two-Tower Explorer',             desc: 'The retrieval architecture behind every major recommendation system.' },
-      { tab: 'design',     label: 'DS Ownership Chain',             desc: '17-node production ML lifecycle. Where each role owns the decision.' },
-      { tab: 'modeling',   label: 'OLAP Format Showdown',           desc: 'Iceberg vs Delta vs Hive. Storage layer decisions at Staff level.' },
-      { tab: 'mlops_deploy',label: 'Deployment Strategy + Rollback', desc: 'Blue-green vs canary vs shadow. When to rollback immediately vs investigate.' },
-      { tab: 'ts',         label: 'Forecast Failure Zoo',            desc: 'Staff-level sign-off: know the 8 ways forecasting pipelines silently break.' },
-      { tab: 'gradient',   label: 'Read all Gradient posts',        desc: 'Long-form architecture reasoning. How real systems are built and why.' },
-    ],
-  },
-  {
-    id: 'ds_track',
-    name: 'Data Scientist Track',
-    duration: '2 weeks',
-    outcome: 'Model selection, causal identification, and time series judgment — the three areas that separate good DS from great DS.',
-    accent: 'var(--sky)', border: 'rgba(34,211,238,0.22)', bg: 'rgba(34,211,238,0.10)',
-    steps: [
-      { tab: 'ds',     label: 'Model Selection Oracle',    desc: 'When linear vs tree vs neural — the defaults that get you 80% of the way.' },
-      { tab: 'ds',     label: 'Analysis Mistakes',         desc: '8 antipatterns: p-hacking, Simpson\'s paradox, survivorship bias, Goodhart\'s Law.' },
-      { tab: 'ds',     label: 'Calibration',               desc: 'When your probabilities are lying to you. Platt scaling vs isotonic regression.' },
-      { tab: 'causal', label: 'Causal vs Predictive',      desc: 'The framing question before every analysis. Prediction and causation need different tools.' },
-      { tab: 'causal', label: 'Identification Strategies', desc: 'RCT, DiD, PSM, IV, RDD, Synthetic Control — match strategy to constraint.' },
-      { tab: 'ts',     label: 'Forecast Failure Zoo',      desc: 'Why forecasts fail: leakage, nonstationarity, structural breaks, sparse series.' },
-    ],
-  },
-  {
-    id: 'mlops_track',
-    name: 'MLOps & Deployment',
-    duration: '2 weeks',
-    outcome: 'Ship models safely, monitor them continuously, and respond to production degradation without panic.',
-    accent: 'var(--rose)', border: 'rgba(244,63,94,0.22)', bg: 'rgba(244,63,94,0.10)',
-    steps: [
-      { tab: 'mlops_deploy', label: 'Deployment Strategy',          desc: 'Blue-green, canary, shadow, feature flag — which for which situation.' },
-      { tab: 'mlops_deploy', label: 'Champion-Challenger',          desc: 'The 4-decision promotion framework. Metrics, SLA, rollback triggers.' },
-      { tab: 'mlops_deploy', label: 'Rollback Decisions',           desc: '8 production alerts — rollback now, investigate first, or monitor only?' },
-      { tab: 'mlops_pipes',  label: 'CI/CD Gate Design',            desc: 'Which gates block, which warn. How ML CI/CD differs from software.' },
-      { tab: 'mlops_pipes',  label: 'Infrastructure Decision',      desc: 'REST vs Triton vs Ray Serve vs vLLM — given your scale and model size.' },
-      { tab: 'monitor',      label: 'Drift Dashboard',              desc: 'PSI/KS thresholds, alert tuning, and what gradual drift looks like.' },
-    ],
-  },
-]
-
 // ── Track grid ────────────────────────────────────────────────────────────────
 const TRACKS = [
   // ML Engineering
@@ -325,11 +213,7 @@ export default function HomeTab({ onNavigate }) {
   const [progress,       setProgress]       = useState([])
   const [nextUp,         setNextUp]         = useState(null)
   const [role,           setRole]           = useState(() => localStorage.getItem('msl_role') || null)
-  const [openPath,       setOpenPath]       = useState(null)
-  const [pathDone,       setPathDone]       = useState(() => {
-    try { return JSON.parse(localStorage.getItem('msl_path_progress') || '{}') }
-    catch(_) { return {} }
-  })
+
   const [bookmarks,      setBookmarks]      = useState(() => getBookmarks())
   const [showChangelog,  setShowChangelog]  = useState(false)
   const [streak,         setStreak]         = useState(0)
@@ -341,13 +225,7 @@ export default function HomeTab({ onNavigate }) {
     setNextUp(getNextRecommendation())
   }
 
-  function markStepDone(pathId, stepIdx) {
-    setPathDone(prev => {
-      const next = { ...prev, [pathId]: [...new Set([...(prev[pathId] || []), stepIdx])] }
-      try { localStorage.setItem('msl_path_progress', JSON.stringify(next)) } catch(_) {}
-      return next
-    })
-  }
+
   function refreshBookmarks() { setBookmarks(getBookmarks()) }
   useEffect(() => {
     refresh()
@@ -373,15 +251,7 @@ export default function HomeTab({ onNavigate }) {
     // Jump Back In
     const lastTab = localStorage.getItem('msl_tab')
     if (lastTab) setJumpBackTab(lastTab)
-    // Auto-open a learning path when navigated from LandscapeTab
-    const gotoPath = localStorage.getItem('msl_goto_path')
-    if (gotoPath) {
-      localStorage.removeItem('msl_goto_path')
-      setOpenPath(gotoPath)
-      setTimeout(() => {
-        document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 120)
-    }
+
     return () => {
       window.removeEventListener('msl_progress', refresh)
       window.removeEventListener('msl_bookmarks', refreshBookmarks)
@@ -446,7 +316,7 @@ export default function HomeTab({ onNavigate }) {
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
               <button className="btn-primary" onClick={() => onNavigate('design')} style={{ fontSize: '14px', padding: '12px 26px' }}>Run a scenario →</button>
-              <button className="btn-secondary" onClick={() => document.getElementById('learning-paths')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ fontSize: '14px', padding: '12px 22px' }}>Find your path</button>
+
             </div>
 
             <p style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
@@ -498,14 +368,21 @@ export default function HomeTab({ onNavigate }) {
           <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'var(--font-mono)', marginBottom: '6px' }}>Personalise by role</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em' }}>What brings you here today?</div>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: activeRole ? '20px' : '0' }}>
-          {ROLES.map(r => (
-            <button key={r.key} onClick={() => pickRole(r.key)}
-              style={{ padding: '7px 16px', borderRadius: '8px', border: `1px solid ${role === r.key ? 'rgba(240,165,0,0.55)' : 'rgba(255,255,255,0.10)'}`, background: role === r.key ? 'rgba(240,165,0,0.16)' : 'rgba(255,255,255,0.10)', color: role === r.key ? 'var(--prime)' : 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: role === r.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', boxShadow: role === r.key ? '0 0 16px rgba(240,165,0,0.30)' : 'none' }}>
-              {r.label}
-            </button>
-          ))}
-        </div>
+        {role ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <span style={{ padding: '6px 16px', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.55)', background: 'rgba(240,165,0,0.16)', color: 'var(--prime)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 700 }}>{activeRole.label}</span>
+            <button onClick={() => pickRole(role)} style={{ fontSize: '11px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', textDecoration: 'underline', padding: 0 }}>Change</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+            {ROLES.map(r => (
+              <button key={r.key} onClick={() => pickRole(r.key)}
+                style={{ padding: '7px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.10)', color: 'var(--ink-mid)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+        )}
         {activeRole && (
           <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px' }}>
             <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: '0 0 14px' }}>{activeRole.desc}</p>
@@ -560,9 +437,9 @@ export default function HomeTab({ onNavigate }) {
               </div>
             )}
           </div>
-          <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 10px)', gridAutoFlow: 'column', gridAutoColumns: '10px', gap: '2px', overflowX: 'auto', paddingBottom: '2px' }}>
+          <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 1fr)', gridAutoFlow: 'column', gridAutoColumns: '1fr', gap: '3px', width: '100%', aspectRatio: '13 / 7' }}>
             {activityGrid.map(({ date, count }) => (
-              <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ width: '10px', height: '10px', borderRadius: '2px', background: count > 0 ? 'var(--prime)' : 'var(--depth)', border: '1px solid var(--rim)', opacity: count > 0 ? Math.min(0.5 + count * 0.15, 1) : 1 }} />
+              <div key={date} title={count > 0 ? `${date} · ${count} visit${count !== 1 ? 's' : ''}` : date} style={{ borderRadius: '2px', background: count > 0 ? 'var(--prime)' : 'var(--depth)', border: '1px solid var(--rim)', opacity: count > 0 ? Math.min(0.5 + count * 0.15, 1) : 1 }} />
             ))}
           </div>
           <div style={{ marginTop: '5px', fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
@@ -592,91 +469,7 @@ export default function HomeTab({ onNavigate }) {
         </section>
       )}
 
-      {/* ── Export progress ── */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          className="btn-ghost"
-          style={{ fontSize: '11px', padding: '6px 14px' }}
-          onClick={() => {
-            const snapshot = {}
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i)
-              if (!k.startsWith('msl_')) continue
-              try { snapshot[k] = JSON.parse(localStorage.getItem(k)) }
-              catch { snapshot[k] = localStorage.getItem(k) }
-            }
-            const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' })
-            const url  = URL.createObjectURL(blob)
-            const a    = Object.assign(document.createElement('a'), { href: url, download: `msl-progress-${new Date().toISOString().slice(0,10)}.json` })
-            a.click(); URL.revokeObjectURL(url)
-          }}
-        >↓ Export progress snapshot</button>
-      </div>
 
-      {/* ── Learning paths ── */}
-      <section id="learning-paths">
-        <div className="eyebrow">Learning paths</div>
-        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', marginBottom: '4px' }}>
-          Guided sequences. Clear outcomes.
-        </h2>
-        <p style={{ fontSize: '13px', color: 'var(--ink-low)', marginBottom: '16px', maxWidth: '500px', lineHeight: 1.6 }}>
-          Seven paths across every role. Each step links directly to the right module.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {LEARNING_PATHS.map(path => {
-            const isOpen = openPath === path.id
-            const doneSets = pathDone[path.id] || []
-            const doneCount = doneSets.length
-            const allDone = doneCount >= path.steps.length
-            return (
-              <div key={path.id} style={{ border: `1px solid ${isOpen ? path.border : allDone ? path.border : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', background: isOpen ? path.bg : 'transparent', transition: 'all 0.15s' }}>
-                <button onClick={() => setOpenPath(isOpen ? null : path.id)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', gap: '16px', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: isOpen ? path.accent : 'var(--ink-hi)' }}>{path.name}</span>
-                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', padding: '2px 8px', border: '1px solid var(--rim)', borderRadius: '999px' }}>{path.duration}</span>
-                    {doneCount > 0
-                      ? <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: allDone ? path.accent : 'var(--ink-mid)', padding: '2px 8px', border: `1px solid ${allDone ? path.border : 'var(--rim)'}`, borderRadius: '999px', fontWeight: allDone ? 700 : 400 }}>
-                          {allDone ? '✓ Complete' : `${doneCount}/${path.steps.length} done`}
-                        </span>
-                      : <span style={{ fontSize: '11px', color: 'var(--ink-low)' }}>{path.steps.length} steps</span>
-                    }
-                  </div>
-                  <span style={{ color: 'var(--ink-low)', fontSize: '13px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
-                </button>
-                {isOpen && (
-                  <div style={{ padding: '0 20px 20px' }}>
-                    <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: '16px', borderTop: `1px solid ${path.border}`, paddingTop: '14px' }}>
-                      <span style={{ fontSize: '10px', color: path.accent, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '4px' }}>Outcome</span>
-                      {path.outcome}
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {path.steps.map((step, i) => {
-                        const isDone = (pathDone[path.id] || []).includes(i)
-                        return (
-                          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: isDone ? `${path.accent}08` : 'rgba(0,0,0,0.25)', border: `1px solid ${isDone ? path.border : 'var(--rim)'}`, borderRadius: '8px', transition: 'all 0.15s' }}>
-                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: isDone ? path.accent : 'var(--ink-low)', minWidth: '20px', paddingTop: '2px', flexShrink: 0, fontWeight: 700 }}>
-                              {isDone ? '✓' : String(i+1).padStart(2,'0')}
-                            </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: isDone ? path.accent : 'var(--ink-hi)', marginBottom: '3px', fontFamily: 'var(--font-sans)', textDecoration: isDone ? 'none' : 'none' }}>{step.label}</div>
-                              <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.55 }}>{step.desc}</div>
-                            </div>
-                            <button onClick={() => { markStepDone(path.id, i); onNavigate(step.tab) }}
-                              style={{ fontSize: '11px', padding: '4px 10px', background: isDone ? `${path.accent}20` : `${path.accent}15`, border: `1px solid ${path.border}`, borderRadius: '6px', color: path.accent, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                              {isDone ? 'Revisit' : 'Go →'}
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </section>
 
       {/* ── Track grid ── */}
       <section>
