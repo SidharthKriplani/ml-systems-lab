@@ -133,6 +133,29 @@ Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-r
 ### Cross-domain scenarios
 - [ ] **"Production Incident" cross-tab scenarios** — a single scenario that requires reasoning across multiple domains simultaneously. E.g., "Model AUC dropped 4 points 72 hours after a feature store migration. Serving P95 latency increased 40ms. What do you check first, in what order, and what's the most likely root cause?" Correct answer requires: Feature Engineering (store migration → feature drift), Monitoring (latency signal = schema mismatch or embedding recomputation), MLOps (was the migration rolled forward or is there a rollback option). Format: multi-step diagnosis with branching — choose your first action, see what that reveals, choose next. 6–8 scenarios. Tab: could be a new "Incident Room" tool in Interview zone. (Source: PAL cross-room challenges concept, May 2026)
 
+### DefenseDocTab v2 — Gap-mapped, cost-weighted prep plan (identified 2026-05-29)
+
+**Concept:** Full rebuild of Defense Plan around the core insight that the only prep that matters is the gap between what the JD requires and what the user can already evidence from their resume. Everything else is noise.
+
+**5-step flow (fast path + optional enrichment):**
+
+1. **JD input** — already exists. Parse required skills, signals, and competencies.
+2. **Resume input** *(optional enrichment)* — paste-as-text or file upload (PDF with text-paste fallback for edge cases — column layouts, icon-heavy resumes, non-standard encodings). Map resume signals against JD requirements. Output: the delta — skills/signals in JD not evidenced in resume. This is the actual prep surface. Without resume, default to rating on all JD signals (current behavior).
+3. **Self-rating on gaps only** — not "rate yourself on everything the JD mentions" (current behavior), but "rate yourself on the things your resume doesn't cover." Fewer questions, more targeted, doesn't waste time on things already proven.
+4. **Round context** — two inputs: (a) round type selector: Technical / Hiring Manager / Behavioral / HR; (b) time horizon: 3 / 7 / 14 days. These two together determine the weighting of the output plan — a 3-day behavioral prep and a 14-day technical prep are completely different documents.
+5. **Previous round history** *(optional enrichment)* — if the user is mid-process (already completed a screen or two), they can describe what happened and any feedback received. This is the real personalization signal. Example: "first technical went well but got dinged on scale estimation" → upweight scale estimation questions in the plan regardless of self-rating. No other tool captures this because it requires the user to be mid-loop, not starting fresh.
+
+**Output:** Gated day-by-day prep plan. Gate logic same as v1 (35% threshold). Plan sections weighted by: gap severity (self-rating score) + round type + time horizon + round history signals (if provided).
+
+**Key design constraints:**
+- Fast path must exist: JD only → plan in 2 steps (same as v1). Resume + round history are optional enrichment; the plan degrades gracefully without them — don't gate on completing all 5 steps.
+- This is DefenseDocTab v2, not a new tab. Same tab, same place in the Interview zone flow.
+- localStorage only — resume text, JD text, self-ratings, round history all storable without a backend.
+
+**Build trigger:** Current Defense Plan completion rate shows users actually finishing the 3-step flow regularly. Don't rebuild an underused feature with 5 steps before the 3-step version has traction. (Decided 2026-05-29)
+
+**Risk:** Form fatigue. 5-6 steps before seeing output is a lot of upfront investment. Fast path is non-negotiable — not optional.
+
 ### GradientTab UX (identified 2026-05-29)
 - [ ] **Series + Tags redesign** — group the 25 posts into 4–5 named series (e.g., "Silent Failures", "Production Diagnostics"); add per-post tags (domains + concepts). Tags filter collapses to a filtered post list with sort options (newest / most relevant to current practice activity). Default sort when no filter: most relevant to user's active domains. Build trigger: when post count hits 50+. Below that threshold the flat list is navigable and series groupings would just add overhead. (Decided 2026-05-29)
 - [ ] **Revise / Learn / What's Next — state-aware reading mode** — three reading lenses powered by existing localStorage data: (1) **Revise** = posts in domains where practice scores are weak (`msl_score:*` < 60%); (2) **Learn** = unread posts in domains the user is actively practicing; (3) **What's Next** = unread posts in domains not yet touched. Data source: `msl_read` (read post IDs) + `msl_score:*` keys. Most valuable of the three — turns the feed from chronological browse into a personalized study queue without any backend. Pagination ("view more after N") explicitly decided against — not needed at 25 posts, reassess at 100+. (Decided 2026-05-29)
