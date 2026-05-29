@@ -194,7 +194,7 @@ function SVDDecomposer() {
 
       <PythonCell key={rank} initialCode={SVD_CODE(rank)} withPlot height={200} label="SVD · numpy" />
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(168,85,247,0.10)', border: '1px solid rgba(168,85,247,0.15)' }}>
+      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--prime)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
           A rank-4 approximation of a 20×25 matrix needs only {20*rank + rank + rank*25} numbers instead of {20*25}.
@@ -292,26 +292,26 @@ function PreprocessingLab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px', color: 'var(--mint)' }}>✓</span>
-            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--mint)', fontSize: '14px' }}>Correct pipeline</span>
+            <span style={{ fontSize: '16px', color: 'var(--prime)' }}>✓</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--prime)', fontSize: '14px' }}>Correct pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_CORRECT} height={280} label="sklearn Pipeline (correct)" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px', color: 'var(--rose)' }}>✗</span>
-            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--rose)', fontSize: '14px' }}>Leaky pipeline</span>
+            <span style={{ fontSize: '16px', color: 'var(--ink-low)' }}>✗</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-low)', fontSize: '14px' }}>Leaky pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_LEAKY} height={280} label="sklearn (data leakage bug)" />
         </div>
       </div>
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.15)' }}>
+      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
-          <strong style={{ color: 'var(--rose)' }}>The bug:</strong> When you <code style={{ color: 'var(--rose)' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
+          <strong style={{ color: 'var(--prime)' }}>The bug:</strong> When you <code style={{ color: 'var(--ink-low)' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
           test-set statistics leak into the transforms. Your reported metrics will be optimistically biased —
           and you won't know until you hit production.
-          Always use <code style={{ color: 'var(--mint)' }}>sklearn.Pipeline</code>: it <code>fit</code>s only on train, <code>transform</code>s test without leaking.
+          Always use <code style={{ color: 'var(--prime)' }}>sklearn.Pipeline</code>: it <code>fit</code>s only on train, <code>transform</code>s test without leaking.
         </p>
       </div>
     </div>
@@ -563,7 +563,7 @@ function NumPyInternals() {
         <PythonCell initialCode={NUMPY_BENCH_CODE} height={180} withPlot={false} label="vectorisation + strides" />
       </div>
 
-      <div className="card" style={{ padding: '16px 20px', background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
+      <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.10)', borderColor: 'rgba(240,165,0,0.18)' }}>
         <div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7 }}>
           <strong style={{ color: 'var(--prime)' }}>Key rules to remember:</strong><br />
           • <code style={{ color: 'var(--ink-low)' }}>x[::2]</code> returns a view; <code style={{ color: 'var(--ink-low)' }}>x[[0,2,4]]</code> (fancy indexing) returns a copy.<br />
@@ -722,7 +722,7 @@ export default function ModelsMathTab({ onNavigate }) {
       </div>
 
       {/* Python runtime notice */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>
           First run loads the Python runtime (~8 MB). Subsequent runs are instant.
           Everything executes locally — your data never leaves the browser.

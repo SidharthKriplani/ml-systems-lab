@@ -8,7 +8,7 @@ const INCIDENTS = [
     id: 'stale_embed',
     title: 'Silent Recommendation Degradation',
     severity: 'P1',
-    severityColor: 'var(--rose)',
+    severityColor: 'var(--prime)',
     tagline: 'CTR dropped 18% over 4 days. No alerts fired.',
     context: 'You run a two-tower recommendation system. Item embeddings are refreshed daily from a feature pipeline. User embeddings are refreshed hourly. Your monitoring tracks accuracy@10 and latency. It\'s Tuesday 2am — PagerDuty fires for the first time.',
     clues: [
@@ -35,7 +35,7 @@ const INCIDENTS = [
     id: 'label_leak',
     title: 'Fraud Model Performance Cliff',
     severity: 'P0',
-    severityColor: 'var(--rose)',
+    severityColor: 'var(--prime)',
     tagline: 'Precision dropped from 0.91 to 0.43 in production overnight.',
     context: 'A gradient boosted fraud detection model was retrained last night on 60 days of data. Offline metrics were excellent: AUC 0.97, precision 0.91. It was promoted to production this morning. By noon, fraud operations is overwhelmed by false positives.',
     clues: [
@@ -62,7 +62,7 @@ const INCIDENTS = [
     id: 'skew_serving',
     title: 'Search Ranking Latency Explosion',
     severity: 'P1',
-    severityColor: 'var(--ember)',
+    severityColor: 'var(--prime)',
     tagline: 'P99 latency hit 8 seconds. P50 still fine at 120ms.',
     context: 'You run a two-stage search ranking system: ANN retrieval (fast) + cross-encoder reranking (slow). A new reranker model was deployed yesterday. P50 latency is fine but P99 started climbing 6 hours after deployment.',
     clues: [

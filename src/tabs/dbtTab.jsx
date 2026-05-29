@@ -205,8 +205,8 @@ function MaterializationOracle() {
                     <div key={j} style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>&#10003; {r}</div>
                   ))}
                 </div>
-                <div style={{ padding: '12px 14px', background: 'rgba(251,113,133,0.11)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Production gotcha</div>
+                <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>Production gotcha</div>
                   <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{m.gotcha}</p>
                 </div>
                 <div>
@@ -430,7 +430,7 @@ sources:
   },
 ]
 
-const DANGER_COLORS = { CRITICAL: 'var(--rose)', HIGH: 'var(--prime)', MEDIUM: 'var(--ink-low)', LOW: 'var(--ink-low)' }
+const DANGER_COLORS = { CRITICAL: 'var(--prime)', HIGH: 'var(--prime)', MEDIUM: 'var(--ink-low)', LOW: 'var(--ink-low)' }
 
 function SchemaDriftClinic() {
   const [current, setCurrent]   = useState(0)
@@ -779,11 +779,11 @@ function IncrementalModelDecisions() {
         </div>
 
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Production gotchas</div>
+          <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Production gotchas</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {rec.gotchas.map((g, i) => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <span style={{ color: 'var(--rose)', fontSize: '12px', marginTop: '2px', flexShrink: 0 }}>&#9651;</span>
+                <span style={{ color: 'var(--prime)', fontSize: '12px', marginTop: '2px', flexShrink: 0 }}>&#9651;</span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{g}</span>
               </div>
             ))}
