@@ -144,7 +144,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'First differencing: yt - yt-1. Makes the series stationary by removing the trend.',
     check: 'ADF test (Augmented Dickey-Fuller). p < 0.05 → stationary after differencing.',
     dont: 'Don\'t use log transform alone — it won\'t remove a linear trend, only stabilize variance.',
-    accent: 'var(--ember)',
+    accent: 'var(--prime)',
   },
   {
     id: 'seasonal',
@@ -155,7 +155,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'Seasonal differencing: yt - yt-s where s is the seasonal period (7 for weekly, 52 for yearly). Or use STL decomposition + model the residuals.',
     check: 'KPSS test for seasonal stationarity. Visual ACF plot — spikes at lag s confirm seasonality.',
     dont: 'Don\'t ignore seasonality and model raw series — models will be confused by repeating patterns.',
-    accent: 'var(--sky)',
+    accent: 'var(--prime)',
   },
   {
     id: 'hetero',
@@ -166,7 +166,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'Log transform: log(yt). Stabilizes variance when it grows proportionally with the level. Box-Cox transformation for more general variance stabilization.',
     check: 'Plot the series and its absolute residuals over time. Increasing spread = heteroscedasticity.',
     dont: 'Don\'t use first differencing alone — it won\'t fix multiplicative variance growth. Log first, then difference if trend remains.',
-    accent: 'var(--violet)',
+    accent: 'var(--prime)',
   },
   {
     id: 'stationary',
@@ -177,7 +177,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'No transformation needed. Fit ARMA/ARIMA(p,0,q) directly. Identify p and q from ACF/PACF.',
     check: 'ADF test p < 0.05, KPSS test p > 0.05 — both confirm stationarity.',
     dont: 'Don\'t over-transform. Differencing a stationary series introduces unnecessary autocorrelation and makes modeling harder.',
-    accent: 'var(--mint)',
+    accent: 'var(--prime)',
   },
   {
     id: 'structural',
@@ -188,7 +188,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'Detect the break point (CUSUM test, Bayesian change-point detection). Fit separate models per regime, OR add a level shift indicator variable at the break point.',
     check: 'Plot the series and inspect visually. Chow test for break at a known date. CUSUM for unknown break dates.',
     dont: 'Don\'t just difference or detrend — differencing a level-shift series creates a spike at the break point and is wrong. Standard stationarity tests may incorrectly reject stationarity.',
-    accent: 'var(--rose)',
+    accent: 'var(--prime)',
   },
   {
     id: 'unit_root',
@@ -199,7 +199,7 @@ const STATIONARITY_SCENARIOS = [
     transform: 'First differencing removes the unit root. After differencing, fit ARMA to the differenced series. This is the "I" in ARIMA(p,d,q) — d=1 means one round of differencing.',
     check: 'ADF test: if p > 0.05, fail to reject null of unit root. KPSS test: if p < 0.05, reject stationarity. Both tests together give stronger evidence.',
     dont: 'Don\'t forecast a random walk far into the future — forecast uncertainty grows linearly with horizon. Wide intervals are correct, not a model failure.',
-    accent: 'var(--gold)',
+    accent: 'var(--prime)',
   },
 ]
 
@@ -217,7 +217,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'Rule-based is correct here. The threshold is known, fixed, and operationally meaningful. A statistical or ML approach would add complexity with no benefit — and might miss the specific threshold the SLA is defined against. Use the right tool for the right job.',
     when_to_upgrade: 'Upgrade to statistical if the threshold varies by server type, time of day, or load profile. Upgrade to ML if correlations between metrics (CPU + memory + network) define anomalies better than any single metric.',
-    accent: 'var(--mint)',
+    accent: 'var(--prime)',
   },
   {
     id: 'stat',
@@ -231,7 +231,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'Statistical residual-based is the right tier. Fit an ARIMA or STL model to capture seasonal/trend patterns, then flag residuals beyond ±3σ as anomalies. This accounts for the known seasonality without requiring ML complexity. A fixed threshold ignores normal hourly variation and fires constantly during off-peak hours. An autoencoder is overkill for a univariate series with known seasonality.',
     when_to_upgrade: 'Upgrade to ML when you have multivariate correlated metrics where no single threshold or simple decomposition captures the anomaly (e.g., simultaneously low revenue + low order count + high cart abandonment).',
-    accent: 'var(--sky)',
+    accent: 'var(--prime)',
   },
   {
     id: 'ml',
@@ -245,7 +245,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'ML-based multivariate anomaly detection is appropriate here. Failures in manufacturing equipment manifest as correlated deviations across multiple sensors — no single sensor exceeds its individual threshold, but the combination is anomalous. Isolation Forest or an LSTM autoencoder trained on normal operating data can detect these inter-sensor correlation breaks. Rule-based thresholds per sensor would miss the subtle cross-sensor patterns entirely.',
     when_to_upgrade: 'Upgrade to LSTM autoencoder if the anomaly patterns are temporal (sequences of correlated sensor values over time), not just instantaneous cross-sensor correlations.',
-    accent: 'var(--violet)',
+    accent: 'var(--prime)',
   },
   {
     id: 'label',
@@ -264,7 +264,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'Hybrid is correct. Fraud detection with labeled data is a supervised learning problem at its core — use those labels. But rule-based pre-filters from domain experts are fast, interpretable, and catch known fraud patterns without burning model capacity on obvious cases. The supervised model handles the subtle cases that rules miss. Pure unsupervised anomaly detection ignores your labeled data, which is almost always the wrong call when labels exist.',
     when_to_upgrade: 'Add unsupervised components specifically for detecting novel fraud patterns that differ from historical fraud — your supervised model won\'t generalize to genuinely new attack vectors.',
-    accent: 'var(--ember)',
+    accent: 'var(--prime)',
   },
   {
     id: 'sparse',
@@ -278,7 +278,7 @@ const ANOMALY_SCENARIOS = [
     ],
     answer: 'Rule-based is correct for sparse data. With only 50 requests/day, there\'s insufficient data to reliably fit a statistical model or train an ML model. A simple relative threshold (2× baseline) is robust, interpretable, and doesn\'t require enough data to estimate a distribution. Statistical methods need at minimum hundreds of observations per window to produce reliable σ estimates.',
     when_to_upgrade: 'Aggregate with similar endpoints and train a shared model once you have sufficient data volume. Or use Bayesian methods with strong priors for small-sample settings.',
-    accent: 'var(--rose)',
+    accent: 'var(--prime)',
   },
   {
     id: 'concept_drift',
@@ -323,7 +323,7 @@ function ForecastFailureZoo() {
 
   if (done) return (
     <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--sky)', marginBottom: '8px' }}>{score}/{FORECAST_FAILURES.length}</div>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 700, color: 'var(--prime)', marginBottom: '8px' }}>{score}/{FORECAST_FAILURES.length}</div>
       <p style={{ fontSize: '14px', color: 'var(--ink-low)', marginBottom: '20px' }}>
         {score >= 6 ? 'Sharp time-series diagnostic instincts.' : score >= 4 ? 'Solid. The look-ahead bias and structural break scenarios trip most people.' : 'Focus on the train/test split scenarios — they account for most real production forecast failures.'}
       </p>
@@ -337,13 +337,13 @@ function ForecastFailureZoo() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FORECAST_FAILURES.length}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--sky)' }}>{score} correct</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)' }}>{score} correct</span>
       </div>
-      <div className="card" style={{ padding: '22px 26px', borderLeft: '3px solid var(--rose)' }}>
+      <div className="card" style={{ padding: '22px 26px', borderLeft: '3px solid var(--prime)' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{s.title}</div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, marginBottom: '12px' }}>{s.context}</p>
         <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
-          <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
+          <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.clue}</span>
         </div>
       </div>
@@ -356,7 +356,7 @@ function ForecastFailureZoo() {
           if (revealed) {
             if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
             else if (isPicked) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
-          } else if (isPicked) { border = 'rgba(34,211,238,0.5)'; bg = 'rgba(34,211,238,0.13)'; color = 'var(--sky)' }
+          } else if (isPicked) { border = 'rgba(240,165,0,0.5)'; bg = 'rgba(240,165,0,0.13)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
               style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -375,7 +375,7 @@ function ForecastFailureZoo() {
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.fix}</span>
             </div>
             <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.10)', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.15)' }}>
-              <span style={{ fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
+              <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
           </div>
@@ -412,12 +412,12 @@ function StationaritySelector() {
               <span style={{ fontSize: '11px', padding: '2px 8px', background: s.accent + '15', color: s.accent, border: `1px solid ${s.accent}30`, borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>{s.issue}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-              <div style={{ padding: '14px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Transform</div>
+              <div style={{ padding: '14px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Transform</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.transform}</p>
               </div>
-              <div style={{ padding: '14px', background: 'rgba(34,211,238,0.10)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px' }}>
-                <div style={{ fontSize: '10px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>How to check</div>
+              <div style={{ padding: '14px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>How to check</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.check}</p>
               </div>
             </div>

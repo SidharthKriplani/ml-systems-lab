@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ── Shared accordion MCQ ──────────────────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -170,7 +170,7 @@ const FAILURES = [
   { id: 'wrong_loss', title: 'Model predicts only the most common class', symptoms: ['Dataset: 95% class A, 5% class B', 'Training loss steadily decreasing', 'Model outputs class A for every input', 'Using CrossEntropyLoss, no class weights'], options: ['Vanishing gradients', 'Learning rate too low', 'Class imbalance — model collapsed to majority class', 'Wrong activation in output layer'], answer: 2, diagnosis: 'Class collapse due to imbalance', explanation: 'With 95/5 imbalance, predicting class A always gives 95% accuracy and low cross-entropy. The model found the shortcut.', fix: 'Use weighted cross-entropy (weight minority class by 1/frequency). Or use focal loss. Oversample the minority class. Always check per-class metrics, not just accuracy.', tier: 'Analyst' },
 ]
 
-const TIER_COLORS = { Junior: 'var(--sky)', Analyst: 'var(--mint)', Senior: 'var(--prime)', Staff: 'var(--violet)' }
+const TIER_COLORS = { Junior: 'var(--ink-low)', Analyst: 'var(--prime)', Senior: 'var(--prime)', Staff: 'var(--ink-low)' }
 
 function TrainingFailureDiagnosis() {
   const [idx, setIdx]           = useState(0)
@@ -195,16 +195,16 @@ function TrainingFailureDiagnosis() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Training Failure Diagnosis</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the training telemetry. Diagnose before you scroll.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {FAILURES.length}</span>
-          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
+          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.10)', color: 'var(--prime)' }}>{score.correct}/{score.total} correct</span>}
         </div>
       </div>
 
-      <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--rose)` }}>
+      <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--prime)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
           <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{scenario.tier}</span>
@@ -282,16 +282,16 @@ function GradientDebugger() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
+          <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', marginBottom: '4px' }}>Backprop Debugging</h3>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>Read the gradient telemetry. Diagnose the gradient flow problem before you reveal.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>{idx + 1} / {GRAD_SCENARIOS.length}</span>
-          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(52,211,153,0.10)', color: 'var(--mint)' }}>{score.correct}/{score.total} correct</span>}
+          {score.total > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '3px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.10)', color: 'var(--prime)' }}>{score.correct}/{score.total} correct</span>}
         </div>
       </div>
 
-      <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--sky)` }}>
+      <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--prime)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
@@ -443,20 +443,20 @@ function OptimizerComparison() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Optimizer Comparison</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           SGD vs Adam vs AdamW vs RMSprop — each has failure modes the others don't. 6 scenarios where optimizer choice is the deciding factor.
         </p>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-        {[['SGD', 'Flatter minima, large-batch', 'var(--mint)'], ['Adam', 'Sparse grads, NLP', 'var(--violet)'], ['AdamW', 'Transformers (decoupled WD)', 'var(--sky)'], ['RMSprop', 'RNNs, non-stationary', 'var(--gold)']].map(([name, desc, color]) => (
+        {[['SGD', 'Flatter minima, large-batch', 'var(--prime)'], ['Adam', 'Sparse grads, NLP', 'var(--ink-low)'], ['AdamW', 'Transformers (decoupled WD)', 'var(--prime)'], ['RMSprop', 'RNNs, non-stationary', 'var(--ink-low)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={OPTIMIZER_SCENARIOS} accentColor="var(--violet)" contextLabel="Telemetry" storageKey="deeplearn_optimizer" />
+      <AccordionMCQ scenarios={OPTIMIZER_SCENARIOS} accentColor="var(--prime)" contextLabel="Telemetry" storageKey="deeplearn_optimizer" />
     </div>
   )
 }
@@ -571,12 +571,12 @@ function RegularizationDecisions() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Regularization Decisions</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Dropout, weight decay, augmentation, label smoothing, mixup — each attacks overfitting differently. 6 scenarios where the wrong regularizer makes things worse.
         </p>
       </div>
-      <AccordionMCQ scenarios={REGULARIZATION_SCENARIOS} accentColor="var(--rose)" contextLabel="Setup" storageKey="deeplearn_regularize" />
+      <AccordionMCQ scenarios={REGULARIZATION_SCENARIOS} accentColor="var(--prime)" contextLabel="Setup" storageKey="deeplearn_regularize" />
     </div>
   )
 }
@@ -692,20 +692,20 @@ function TransformerArchitecture() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Transformer Architecture</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           Attention heads, KV cache, positional encodings, Pre vs Post-LN, FlashAttention — architecture decisions that separate LLM practitioners from LLM users. 6 production scenarios.
         </p>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-        {[['MHA', 'Multi-Head Attention', 'var(--violet)'], ['GQA', 'Grouped Query Attention', 'var(--sky)'], ['RoPE/ALiBi', 'Positional Encoding', 'var(--mint)'], ['Flash Attn', 'IO-efficient attention', 'var(--gold)']].map(([name, desc, color]) => (
+        {[['MHA', 'Multi-Head Attention', 'var(--prime)'], ['GQA', 'Grouped Query Attention', 'var(--ink-low)'], ['RoPE/ALiBi', 'Positional Encoding', 'var(--prime)'], ['Flash Attn', 'IO-efficient attention', 'var(--ink-low)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={TRANSFORMER_SCENARIOS} accentColor="var(--sky)" contextLabel="System State" storageKey="deeplearn_transformer" />
+      <AccordionMCQ scenarios={TRANSFORMER_SCENARIOS} accentColor="var(--prime)" contextLabel="System State" storageKey="deeplearn_transformer" />
     </div>
   )
 }
@@ -806,7 +806,7 @@ function AttentionHeadVisualizer() {
       {/* Header */}
       <div>
         <div className="section-eyebrow" style={{ marginBottom: '6px' }}>TRANSFORMER INTERNALS</div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--violet)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>Attention Head Visualizer</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>Attention Head Visualizer</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px', margin: 0 }}>
           Pre-computed attention weights for a 4-head transformer on a production ML sentence. Select a head, hover cells, click a row label to focus.
         </p>
@@ -818,9 +818,9 @@ function AttentionHeadVisualizer() {
           <button key={h} onClick={() => { setActiveHead(h); setSelectedRow(null); setHoveredCell(null) }}
             style={{
               padding: '7px 16px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-              border: `1px solid ${activeHead === h ? 'var(--violet)' : 'var(--rim)'}`,
-              background: activeHead === h ? 'rgba(99,102,241,0.12)' : 'transparent',
-              color: activeHead === h ? 'var(--violet)' : 'var(--ink-low)',
+              border: `1px solid ${activeHead === h ? 'var(--prime)' : 'var(--rim)'}`,
+              background: activeHead === h ? 'rgba(240,165,0,0.12)' : 'transparent',
+              color: activeHead === h ? 'var(--prime)' : 'var(--ink-low)',
             }}>
             Head {h + 1}
           </button>
@@ -846,7 +846,7 @@ function AttentionHeadVisualizer() {
                 onClick={() => handleRowClick(rowIdx)}
                 style={{
                   width: '68px', textAlign: 'right', paddingRight: '8px', fontSize: '10px', fontFamily: 'var(--font-mono)',
-                  color: selectedRow === rowIdx ? 'var(--violet)' : 'var(--ink-mid)',
+                  color: selectedRow === rowIdx ? 'var(--prime)' : 'var(--ink-mid)',
                   fontWeight: selectedRow === rowIdx ? 700 : 400,
                   background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.15s',
                   whiteSpace: 'nowrap',
@@ -876,15 +876,15 @@ function AttentionHeadVisualizer() {
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-hi)' }}>
             '{AHV_TOKENS[hoveredCell.row]}' → '{AHV_TOKENS[hoveredCell.col]}'
           </span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--violet)', marginLeft: '8px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--prime)', marginLeft: '8px' }}>
             weight = {AHV_HEADS[activeHead][hoveredCell.row][hoveredCell.col].toFixed(3)}
           </span>
         </div>
       )}
 
       {/* Head insight card */}
-      <div style={{ padding: '14px 16px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px' }}>
-        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Head {activeHead + 1} — What this captures</div>
+      <div style={{ padding: '14px 16px', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 600 }}>Head {activeHead + 1} — What this captures</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{AHV_INSIGHTS[activeHead]}</p>
       </div>
 
@@ -952,20 +952,20 @@ function ArchDecisionLab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--sky)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Architecture Decision Lab</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Architecture Decision Lab</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           CNN vs Transformer vs LSTM vs MoE — each has the right problem and the wrong one. 3 production specs where architecture choice decides success or failure.
         </p>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-        {[['CNN', 'Small datasets, spatial locality', 'var(--mint)'], ['TFT', 'Multi-variate time series', 'var(--sky)'], ['MoE', 'Scale — GPU/TPU only', 'var(--violet)']].map(([name, desc, color]) => (
+        {[['CNN', 'Small datasets, spatial locality', 'var(--prime)'], ['TFT', 'Multi-variate time series', 'var(--ink-low)'], ['MoE', 'Scale — GPU/TPU only', 'var(--ink-low)']].map(([name, desc, color]) => (
           <div key={name} style={{ padding: '5px 10px', borderRadius: '5px', border: `1px solid ${color}30`, background: `${color}08` }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color }}>{name}</span>
             <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginLeft: '7px' }}>{desc}</span>
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={ARCH_SCENARIOS} accentColor="var(--sky)" contextLabel="Production Spec" storageKey="dl_arch" />
+      <AccordionMCQ scenarios={ARCH_SCENARIOS} accentColor="var(--prime)" contextLabel="Production Spec" storageKey="dl_arch" />
     </div>
   )
 }
@@ -1018,7 +1018,7 @@ export default function DeepLearningTab({ onNavigate }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: '0 0 6px', background: 'linear-gradient(135deg, var(--violet) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Training Lab</h1>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: '0 0 6px', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Training Lab</h1>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px', margin: 0 }}>
           DL courses teach you to build. This domain teaches you to debug — training failures, gradient issues, optimizer tradeoffs, regularization choices, transformer internals. Real telemetry, real decisions.
         </p>
@@ -1029,7 +1029,7 @@ export default function DeepLearningTab({ onNavigate }) {
         {DL_MODULES.map(m => (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
             <button onClick={() => setActive(m.id)}
-              style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--violet)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(99,102,241,0.10)' : 'transparent', color: active === m.id ? 'var(--violet)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+              style={{ padding: '8px 16px', borderRadius: '8px', border: `1px solid ${active === m.id ? 'var(--prime)' : 'var(--rim)'}`, background: active === m.id ? 'rgba(240,165,0,0.10)' : 'transparent', color: active === m.id ? 'var(--prime)' : 'var(--ink-low)', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>
               {m.icon} {m.label}
             </button>
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('deeplearn', m.id, m.label); forceUpdate(n => n+1) }}
@@ -1042,7 +1042,7 @@ export default function DeepLearningTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
-      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--violet)" />}
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

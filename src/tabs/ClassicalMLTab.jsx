@@ -235,7 +235,7 @@ const HYPERPARAM_SCENARIOS = [
 
 // ─── AccordionMCQ ─────────────────────────────────────────────────────────────
 
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -295,11 +295,11 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
       {score.attempted > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--prime)' }}>
             {score.correct}/{score.attempted}
           </span>
           <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.3s' }} />
           </div>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
         </div>
@@ -450,7 +450,7 @@ function NaiveBayesFailures() {
           Three failure modes that look fine in training and break in production. The independence assumption, the Gaussian assumption, and the zero-frequency problem.
         </p>
       </div>
-      <AccordionMCQ scenarios={NAIVE_BAYES_SCENARIOS} accentColor="var(--sky)" storageKey="classical_naive_bayes" />
+      <AccordionMCQ scenarios={NAIVE_BAYES_SCENARIOS} accentColor="var(--prime)" storageKey="classical_naive_bayes" />
     </div>
   )
 }
@@ -479,9 +479,9 @@ function ModelFailureZoo() {
             style={{
               padding: '7px 14px',
               borderRadius: '20px',
-              border: selectedModel === m.id ? '1px solid var(--mint)' : '1px solid var(--rim)',
-              background: selectedModel === m.id ? 'rgba(52,211,153,0.12)' : 'var(--surface)',
-              color: selectedModel === m.id ? 'var(--mint)' : 'var(--ink-mid)',
+              border: selectedModel === m.id ? '1px solid var(--prime)' : '1px solid var(--rim)',
+              background: selectedModel === m.id ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
+              color: selectedModel === m.id ? 'var(--prime)' : 'var(--ink-mid)',
               fontSize: '13px',
               fontWeight: selectedModel === m.id ? 600 : 400,
               fontFamily: 'var(--font-sans)',
@@ -501,25 +501,25 @@ function ModelFailureZoo() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '36px', height: '36px', borderRadius: '8px',
-              background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
+              background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: 'var(--mint)', fontFamily: 'var(--font-mono)',
+              fontSize: '11px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)',
             }}>
               ML
             </div>
             <div>
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 800, color: 'var(--mint)' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 800, color: 'var(--prime)' }}>
                 {model.name}
               </h3>
-              <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                 PRODUCTION FAILURE MODES
               </span>
             </div>
           </div>
 
           {/* Silent failure */}
-          <div style={{ borderLeft: '3px solid var(--rose)', paddingLeft: '16px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
+          <div style={{ borderLeft: '3px solid var(--prime)', paddingLeft: '16px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
               SILENT FAILURE
             </div>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -534,7 +534,7 @@ function ModelFailureZoo() {
             borderRadius: '8px',
             padding: '14px 16px',
           }}>
-            <div style={{ fontSize: '11px', color: 'var(--gold)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', marginBottom: '8px', letterSpacing: '0.05em' }}>
               PRODUCTION INCIDENT
             </div>
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, fontStyle: 'italic' }}>
@@ -544,8 +544,8 @@ function ModelFailureZoo() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {/* Diagnostic signal */}
-            <div style={{ borderLeft: '3px solid var(--sky)', paddingLeft: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--sky)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
+            <div style={{ borderLeft: '3px solid var(--prime)', paddingLeft: '16px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
                 DIAGNOSTIC SIGNAL
               </div>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -554,8 +554,8 @@ function ModelFailureZoo() {
             </div>
 
             {/* Fix */}
-            <div style={{ borderLeft: '3px solid var(--mint)', paddingLeft: '16px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
+            <div style={{ borderLeft: '3px solid var(--prime)', paddingLeft: '16px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', marginBottom: '6px', letterSpacing: '0.05em' }}>
                 FIX
               </div>
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -572,7 +572,7 @@ function ModelFailureZoo() {
             border: '1px solid var(--rim)',
             borderRadius: '6px',
             fontSize: '12px',
-            color: 'var(--mint)',
+            color: 'var(--ink-hi)',
             fontFamily: 'var(--font-mono)',
             overflowX: 'auto',
             lineHeight: 1.6,
@@ -582,8 +582,8 @@ function ModelFailureZoo() {
 
           {/* Production note */}
           <div style={{
-            background: 'rgba(52,211,153,0.11)',
-            border: '1px solid rgba(52,211,153,0.15)',
+            background: 'rgba(240,165,0,0.08)',
+            border: '1px solid rgba(240,165,0,0.18)',
             borderRadius: '8px',
             padding: '12px 14px',
             display: 'flex',
@@ -591,7 +591,7 @@ function ModelFailureZoo() {
           }}>
             <span style={{ fontSize: '14px', flexShrink: 0, color: 'var(--prime)' }}>→</span>
             <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
-              <strong style={{ color: 'var(--mint)', fontWeight: 600 }}>Production note: </strong>
+              <strong style={{ color: 'var(--prime)', fontWeight: 600 }}>Production note: </strong>
               {model.productionNote}
             </p>
           </div>
@@ -630,10 +630,10 @@ function EnsembleDecisionLab() {
           <div style={{
             padding: '8px 16px',
             borderRadius: '20px',
-            background: 'rgba(52,211,153,0.1)',
-            border: '1px solid rgba(52,211,153,0.2)',
+            background: 'rgba(240,165,0,0.1)',
+            border: '1px solid rgba(240,165,0,0.2)',
             fontSize: '13px',
-            color: 'var(--mint)',
+            color: 'var(--prime)',
             fontFamily: 'var(--font-mono)',
             fontWeight: 600,
           }}>
@@ -687,7 +687,7 @@ function EnsembleDecisionLab() {
                   if (isCorrectOpt) { borderColor = 'var(--mint)'; bgColor = 'rgba(52,211,153,0.1)'; textColor = 'var(--mint)' }
                   else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.15)'; textColor = 'var(--rose)' }
                 } else if (isSelected) {
-                  borderColor = 'var(--violet)'; bgColor = 'rgba(139,92,246,0.1)'; textColor = 'var(--violet)'
+                  borderColor = 'var(--prime)'; bgColor = 'rgba(240,165,0,0.1)'; textColor = 'var(--prime)'
                 }
 
                 return (
@@ -730,7 +730,7 @@ function EnsembleDecisionLab() {
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                       ANSWER: {scenario.answer.toUpperCase()}
                     </span>
                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
@@ -775,10 +775,10 @@ function HyperparamPriority() {
           <div style={{
             padding: '8px 16px',
             borderRadius: '20px',
-            background: 'rgba(52,211,153,0.1)',
-            border: '1px solid rgba(52,211,153,0.2)',
+            background: 'rgba(240,165,0,0.1)',
+            border: '1px solid rgba(240,165,0,0.2)',
             fontSize: '13px',
-            color: 'var(--mint)',
+            color: 'var(--prime)',
             fontFamily: 'var(--font-mono)',
             fontWeight: 600,
           }}>
@@ -812,8 +812,8 @@ function HyperparamPriority() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
                   <span style={{
                     padding: '2px 8px', borderRadius: '10px',
-                    background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
-                    fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)',
+                    background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.2)',
+                    fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)',
                   }}>
                     {scenario.model}
                   </span>
@@ -841,7 +841,7 @@ function HyperparamPriority() {
                   if (isCorrectOpt) { borderColor = 'var(--mint)'; bgColor = 'rgba(52,211,153,0.1)'; textColor = 'var(--mint)' }
                   else if (isSelected && !isCorrectOpt) { borderColor = 'var(--rose)'; bgColor = 'rgba(244,114,182,0.15)'; textColor = 'var(--rose)' }
                 } else if (isSelected) {
-                  borderColor = 'var(--violet)'; bgColor = 'rgba(139,92,246,0.1)'; textColor = 'var(--violet)'
+                  borderColor = 'var(--prime)'; bgColor = 'rgba(240,165,0,0.1)'; textColor = 'var(--prime)'
                 }
 
                 return (
@@ -885,15 +885,15 @@ function HyperparamPriority() {
                   <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
                         TUNE FIRST: {scenario.answer.toUpperCase()}
                       </span>
                       <span style={{
                         padding: '2px 8px', borderRadius: '8px',
-                        background: scenario.impact.startsWith('HIGH') ? 'rgba(52,211,153,0.1)' : 'rgba(245,158,11,0.1)',
-                        border: `1px solid ${scenario.impact.startsWith('HIGH') ? 'rgba(52,211,153,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                        background: 'rgba(240,165,0,0.1)',
+                        border: '1px solid rgba(240,165,0,0.2)',
                         fontSize: '10px',
-                        color: scenario.impact.startsWith('HIGH') ? 'var(--mint)' : 'var(--gold)',
+                        color: 'var(--prime)',
                         fontFamily: 'var(--font-mono)',
                       }}>
                         IMPACT: {scenario.impact}
@@ -1120,7 +1120,7 @@ function DecisionBoundaryLab() {
 
       {/* Completion note */}
       {viewed.size === CLASSIFIERS.length && (
-        <div style={{ padding: '12px 16px', background: 'rgba(52,211,153,0.11)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', fontSize: '13px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>
+        <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', fontSize: '13px', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>
           All 5 classifiers explored — progress saved.
         </div>
       )}
@@ -1407,7 +1407,7 @@ export default function ClassicalMLTab({ onNavigate }) {
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 0 60px' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <div className="eyebrow" style={{ color: 'var(--mint)', marginBottom: '8px' }}>
+        <div className="eyebrow" style={{ color: 'var(--prime)', marginBottom: '8px' }}>
           Classical ML
         </div>
         <h1 style={{
@@ -1417,7 +1417,7 @@ export default function ClassicalMLTab({ onNavigate }) {
           letterSpacing: '-0.05em',
           margin: '0 0 10px',
           lineHeight: 1.1,
-          background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)',
+          background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -1447,9 +1447,9 @@ export default function ClassicalMLTab({ onNavigate }) {
               gap: '7px',
               padding: '9px 18px',
               borderRadius: '24px',
-              border: activeModule === mod.id ? '1px solid var(--mint)' : '1px solid var(--rim)',
-              background: activeModule === mod.id ? 'rgba(52,211,153,0.1)' : 'var(--surface)',
-              color: activeModule === mod.id ? 'var(--mint)' : 'var(--ink-mid)',
+              border: activeModule === mod.id ? '1px solid var(--prime)' : '1px solid var(--rim)',
+              background: activeModule === mod.id ? 'rgba(240,165,0,0.1)' : 'var(--surface)',
+              color: activeModule === mod.id ? 'var(--prime)' : 'var(--ink-mid)',
               fontSize: '13px',
               fontWeight: activeModule === mod.id ? 600 : 400,
               fontFamily: 'var(--font-sans)',
@@ -1481,7 +1481,7 @@ export default function ClassicalMLTab({ onNavigate }) {
           ))}
         </div>
       </div>
-      {onNavigate && <ForwardPointer label="Test classical ML judgment in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--sky)" />}
+      {onNavigate && <ForwardPointer label="Test classical ML judgment in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
     </div>
   )
 }

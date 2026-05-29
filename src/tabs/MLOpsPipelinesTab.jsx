@@ -527,7 +527,7 @@ function InfraDecision() {
           </div>
         </div>
         <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '10px' }}>
-          <div style={{ ...mono, fontSize: '11px', color: 'var(--gold)', marginBottom: '4px' }}>Where it breaks</div>
+          <div style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)', marginBottom: '4px' }}>Where it breaks</div>
           <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{top.whenBreaks}</p>
         </div>
       </div>
@@ -557,12 +557,12 @@ function InfraDecision() {
 
 // ─── Module 3: Model Registry Patterns ───────────────────────────────────────
 const REGISTRY_OPTIONS = [
-  { id: 'stage',    label: 'Register as staging',     color: 'var(--sky)' },
-  { id: 'promote',  label: 'Promote to production',   color: 'var(--mint)' },
-  { id: 'rollback', label: 'Rollback to previous',    color: 'var(--gold)' },
+  { id: 'stage',    label: 'Register as staging',     color: 'var(--prime)' },
+  { id: 'promote',  label: 'Promote to production',   color: 'var(--prime)' },
+  { id: 'rollback', label: 'Rollback to previous',    color: 'var(--prime)' },
   { id: 'archive',  label: 'Archive',                 color: 'var(--ink-low)' },
-  { id: 'flag',     label: 'Flag for review',         color: 'var(--violet)' },
-  { id: 'delete',   label: 'Delete',                  color: 'var(--rose)' },
+  { id: 'flag',     label: 'Flag for review',         color: 'var(--ink-low)' },
+  { id: 'delete',   label: 'Delete',                  color: 'var(--ink-low)' },
 ]
 
 const REGISTRY_SCENARIOS = [
@@ -636,7 +636,7 @@ function RegistryPatterns() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--rose)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+        <h3 style={{ ...grotesk, fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
           Model Registry Patterns
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>
@@ -653,9 +653,9 @@ function RegistryPatterns() {
             <button key={s.id} onClick={() => setActive(i)}
               style={{
                 ...mono, fontSize: '12px', padding: '5px 10px', borderRadius: '6px',
-                border: active === i ? '1.5px solid var(--rose)' : '1.5px solid var(--rim)',
-                background: active === i ? 'rgba(244,63,94,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
-                color: active === i ? 'var(--rose)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
+                border: active === i ? '1.5px solid var(--prime)' : '1.5px solid var(--rim)',
+                background: active === i ? 'rgba(240,165,0,0.15)' : done ? (correct ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)') : 'transparent',
+                color: active === i ? 'var(--prime)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
               {done ? (correct ? '✓' : '✗') : '·'} {i + 1}
@@ -671,7 +671,7 @@ function RegistryPatterns() {
 
       {/* Scenario card */}
       <div className="card" style={{ padding: '20px' }}>
-        <div style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+        <div style={{ ...mono, fontSize: '11px', color: 'var(--prime)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Scenario {scenario.id} / {REGISTRY_SCENARIOS.length}
         </div>
         <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '10px', letterSpacing: '-0.02em' }}>
@@ -812,7 +812,7 @@ function ModelRegistryPatterns() {
           Versioning strategies, promotion gates, and rollback decisions — the operational state machine that separates teams that ship safely from teams that page at 2am.
         </p>
       </div>
-      <AccordionMCQ scenarios={MODEL_REGISTRY_SCENARIOS} accentColor="var(--mint)" storageKey="mlops_pipeline_registry" />
+      <AccordionMCQ scenarios={MODEL_REGISTRY_SCENARIOS} accentColor="var(--prime)" storageKey="mlops_pipeline_registry" />
     </div>
   )
 }
@@ -882,7 +882,7 @@ function SchemaCascade() {
           A schema change in an upstream table breaks downstream models without raising an exception. Trace the cascade and design the gating strategy that would have caught it.
         </p>
       </div>
-      <AccordionMCQ scenarios={SCHEMA_CASCADE_SCENARIOS} accentColor="var(--ember)" storageKey="mlops_pipeline_schema" />
+      <AccordionMCQ scenarios={SCHEMA_CASCADE_SCENARIOS} accentColor="var(--prime)" storageKey="mlops_pipeline_schema" />
     </div>
   )
 }
@@ -908,12 +908,12 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--rose) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             MLOps: Pipelines & Infrastructure
           </h1>
           <span style={{
             display: 'inline-block', padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
-            background: 'rgba(244,63,94,0.2)', color: 'var(--rose)', ...mono,
+            background: 'rgba(240,165,0,0.2)', color: 'var(--prime)', ...mono,
           }}>MLOps</span>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
@@ -926,7 +926,7 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
         {MODULES.map(m => (
           <button key={m.id} onClick={() => setActive(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}
-            style={active === m.id ? { borderColor: 'var(--rose)', color: 'var(--rose)', background: 'rgba(244,63,94,0.15)' } : {}}>{m.label}
+            style={active === m.id ? { borderColor: 'var(--prime)', color: 'var(--prime)', background: 'rgba(240,165,0,0.15)' } : {}}>{m.label}
           </button>
         ))}
       </div>

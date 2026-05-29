@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ─── Shared accordion MCQ component ──────────────────────────────────────────
-function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
   const [items, setItems] = useState(() => {
     if (storageKey) {
       try {
@@ -78,7 +78,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel =
             {score.correct}/{score.attempted}
           </span>
           <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: accentColor, borderRadius: '2px', transition: 'width 0.3s' }} />
           </div>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
         </div>
@@ -195,13 +195,13 @@ function MetricSelector() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Selector</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>Configure your dataset and pick a metric. Then see if you chose correctly — and why.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-            Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--violet)', fontWeight: 600 }}>{imbalance}%</span>
+            Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--prime)', fontWeight: 600 }}>{imbalance}%</span>
             {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}>⚠ imbalanced</span>}
           </label>
           <input type="range" min={1} max={50} value={imbalance} onChange={e => { setImbalance(+e.target.value); setRevealed(false); setPicked(null) }} />
@@ -211,7 +211,7 @@ function MetricSelector() {
         </div>
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
-            Decision threshold: <span style={{ color: 'var(--violet)', fontWeight: 600 }}>{threshold}</span>
+            Decision threshold: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{threshold}</span>
           </label>
           <input type="range" min={0.1} max={0.9} step={0.05} value={threshold} onChange={e => { setThreshold(+e.target.value); setRevealed(false); setPicked(null) }} />
         </div>
@@ -272,7 +272,7 @@ function ShadowModeSim() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Shadow Mode Simulator</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>A challenger model runs in shadow alongside the champion — serving no real traffic, just logging predictions. After 14 days, compare offline metrics and decide on promotion.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -293,10 +293,10 @@ function ShadowModeSim() {
         <div className="card animate-fade-in" style={{ padding: '18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-low)' }}>Shadow run progress</span>
-            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '18px', color: 'var(--violet)' }}>Day {days} / 14</span>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '18px', color: 'var(--prime)' }}>Day {days} / 14</span>
           </div>
           <div style={{ height: '8px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${(days / 14) * 100}%`, background: 'linear-gradient(90deg,#6366f1,#22d3ee)', transition: 'width 0.1s', borderRadius: '4px' }} />
+            <div style={{ height: '100%', width: `${(days / 14) * 100}%`, background: 'var(--prime)', transition: 'width 0.1s', borderRadius: '4px' }} />
           </div>
         </div>
       )}
@@ -428,12 +428,12 @@ function CalibrationClinic() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 6 calibration failure patterns.
         </p>
       </div>
-      <AccordionMCQ scenarios={CALIBRATION_SCENARIOS} accentColor="var(--mint)" contextLabel="Telemetry" storageKey="modeleval_calibration" />
+      <AccordionMCQ scenarios={CALIBRATION_SCENARIOS} accentColor="var(--prime)" contextLabel="Telemetry" storageKey="modeleval_calibration" />
     </div>
   )
 }
@@ -551,12 +551,12 @@ function ThresholdTuner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Threshold Tuner</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           The default threshold of 0.5 is almost always wrong. Business costs, asymmetric errors, and base rate shifts all demand deliberate threshold choices. 6 real-world cases.
         </p>
       </div>
-      <AccordionMCQ scenarios={THRESHOLD_SCENARIOS} accentColor="var(--gold)" contextLabel="Setup" storageKey="modeleval_threshold" />
+      <AccordionMCQ scenarios={THRESHOLD_SCENARIOS} accentColor="var(--prime)" contextLabel="Setup" storageKey="modeleval_threshold" />
     </div>
   )
 }
@@ -671,7 +671,7 @@ function RankingMetrics() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--mint)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Ranking Metrics</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
           NDCG, MAP, MRR, Precision@K — each captures a different aspect of ranking quality. Using the wrong one silently optimizes the wrong thing. 6 scenarios, one right answer each.
         </p>
@@ -684,7 +684,7 @@ function RankingMetrics() {
           </div>
         ))}
       </div>
-      <AccordionMCQ scenarios={RANKING_SCENARIOS} accentColor="var(--violet)" contextLabel="System" storageKey="modeleval_ranking" />
+      <AccordionMCQ scenarios={RANKING_SCENARIOS} accentColor="var(--prime)" contextLabel="System" storageKey="modeleval_ranking" />
     </div>
   )
 }
@@ -733,7 +733,7 @@ export default function ModelEvalTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--mint) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Evaluation</h1>
+          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Evaluation</h1>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Offline metrics lie. Pick the wrong metric and you'll ship a model that looks great on paper while failing in production.
@@ -756,16 +756,16 @@ export default function ModelEvalTab({ onNavigate }) {
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
       {onNavigate && (
-        <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-            Go deeper → Read <strong style={{ color: 'var(--sky)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
           </span>
-          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →
           </button>
         </div>
       )}
-      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--mint)" />}
+      {onNavigate && <ForwardPointer label="Test this in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--prime)" />}
     </div>
   )
 }

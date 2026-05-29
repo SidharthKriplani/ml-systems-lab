@@ -254,9 +254,9 @@ function QuantModule() {
       {/* Top recommendation detail */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
         {[
-          { label: 'Speedup vs FP32', value: topMeta.speedup, color: 'var(--mint)' },
-          { label: 'Accuracy delta', value: topMeta.accuracyDelta, color: 'var(--ember)' },
-          { label: 'VRAM savings', value: topMeta.vramSave, color: 'var(--sky)' },
+          { label: 'Speedup vs FP32', value: topMeta.speedup, color: 'var(--prime)' },
+          { label: 'Accuracy delta', value: topMeta.accuracyDelta, color: 'var(--ink-low)' },
+          { label: 'VRAM savings', value: topMeta.vramSave, color: 'var(--ink-low)' },
         ].map(({ label, value, color }) => (
           <div key={label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
             <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'var(--font-mono)', color }}>{value}</div>
@@ -465,14 +465,14 @@ function MemoryModule() {
       {seqLen > 2048 && (
         <div style={{
           padding: '12px 16px',
-          background: 'var(--ember)18',
-          borderLeft: '3px solid var(--ember)',
+          background: 'rgba(240,165,0,0.10)',
+          borderLeft: '3px solid var(--prime)',
           borderRadius: '0 8px 8px 0',
           fontSize: '13px',
           color: 'var(--ink-mid)',
           lineHeight: 1.6,
         }}>
-          <strong style={{ color: 'var(--ember)' }}>KV cache grows quadratically with sequence length.</strong>{' '}
+          <strong style={{ color: 'var(--ink-low)' }}>KV cache grows quadratically with sequence length.</strong>{' '}
           At {seqLen.toLocaleString()} tokens the KV cache is {(seqLen / 2048).toFixed(1)}× larger than at 2048. Long contexts are the #1 cause of OOM in LLM serving.
         </div>
       )}
@@ -791,14 +791,14 @@ function ServingModule() {
                 </div>
                 <div style={{
                   padding: '10px 14px',
-                  background: 'var(--ember)10',
-                  borderLeft: '3px solid var(--ember)',
+                  background: 'rgba(240,165,0,0.08)',
+                  borderLeft: '3px solid var(--prime)',
                   borderRadius: '0 8px 8px 0',
                   fontSize: '12px',
                   color: 'var(--ink-mid)',
                   lineHeight: 1.6,
                 }}>
-                  <strong style={{ color: 'var(--ember)' }}>Tradeoff: </strong>{scenario.tradeoff}
+                  <strong style={{ color: 'var(--ink-low)' }}>Tradeoff: </strong>{scenario.tradeoff}
                 </div>
               </div>
             )}
@@ -821,7 +821,7 @@ const SRV_NODES = [
   },
   {
     id: 'gateway', label: 'API Gateway', sub: 'auth, rate limit',
-    color: 'var(--sky)', bg: 'rgba(34,211,238,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'Entry point that handles authentication, authorization, rate limiting, and request routing. Shields the model service from unauthenticated or malformed requests.',
     decisions: 'Rate limit strategy: per-user vs per-service. Whether to add a request validation layer (schema check) before forwarding.',
     failures: 'Rate limiting too strict blocks legitimate traffic spikes. No input validation allows malformed tensors to reach the model and cause cryptic errors.',
@@ -829,7 +829,7 @@ const SRV_NODES = [
   },
   {
     id: 'feature_svc', label: 'Feature Service', sub: 'Redis / online store',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Online feature service retrieves pre-computed features from Redis or a similar low-latency store. Accepts entity keys, returns feature vectors in <5ms P99.',
     decisions: 'Staleness tolerance (features computed every minute vs real-time). Fallback strategy when a feature key is missing: return zeros, a default vector, or error.',
     failures: 'Training-serving skew: features computed differently offline vs online. Missing features return zero instead of erroring — model silently receives wrong input.',
@@ -837,7 +837,7 @@ const SRV_NODES = [
   },
   {
     id: 'model_svc', label: 'Model Service', sub: 'TorchServe / Triton',
-    color: 'var(--mint)', bg: 'rgba(52,211,153,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
     what: 'Model serving framework (TorchServe, Triton Inference Server) that manages model loading, versioning, batching, and request routing to the inference engine.',
     decisions: 'Model versioning strategy: blue/green vs canary rollout. Dynamic batching: batch multiple requests together to improve GPU utilization.',
     failures: 'Model version mismatch between feature pipeline and model artifact. Dynamic batching increases average latency under low load — disable for latency-sensitive paths.',
@@ -845,7 +845,7 @@ const SRV_NODES = [
   },
   {
     id: 'cache', label: 'Prediction Cache', sub: 'TTL-based',
-    color: 'var(--violet)', bg: 'rgba(139,92,246,0.15)',
+    color: 'var(--prime)', bg: 'rgba(240,165,0,0.15)',
     what: 'Prediction cache stores recent inference results keyed by input hash or entity ID. Returns cached predictions for repeated identical requests, bypassing inference entirely.',
     decisions: 'TTL length — too short defeats the purpose, too long serves stale predictions. Key design: hash input features exactly or use entity ID (entity ID is faster but coarser).',
     failures: 'Cache poisoning: bad prediction gets served repeatedly until TTL expires. Key collision on input rounding causes different inputs to return the same cached result.',
@@ -853,7 +853,7 @@ const SRV_NODES = [
   },
   {
     id: 'inference', label: 'Inference Engine', sub: 'ONNX / TensorRT',
-    color: 'var(--ember)', bg: 'rgba(249,115,22,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'ONNX or TensorRT engine executes the model forward pass on CPU or GPU. This is the actual computation step — everything else is orchestration around it.',
     decisions: 'Batch size (1 for online, >1 for async), FP16 vs INT8 quantization, dynamic vs static shapes. Static shapes enable better TensorRT optimization but require padding.',
     failures: 'Padding to fixed shapes wastes compute on short sequences. Dynamic shapes add overhead. FP16 overflow on activations causes NaN outputs silently.',
@@ -861,7 +861,7 @@ const SRV_NODES = [
   },
   {
     id: 'monitor', label: 'Shadow Monitor', sub: 'logs + drift check',
-    color: 'var(--rose)', bg: 'rgba(244,63,94,0.15)',
+    color: 'var(--ink-low)', bg: 'rgba(240,165,0,0.08)',
     what: 'Shadow monitor logs every prediction asynchronously for drift detection and performance tracking. Runs out of the critical path so it cannot add latency to the response.',
     decisions: 'Sampling rate (log everything vs 1%). What to log: input features, output scores, latency, model version. Alerting thresholds for feature drift (PSI) and score distribution shift.',
     failures: 'Async logging drops under load if the queue fills. Logged features do not match serving features if the pipeline diverges after the logging point.',
@@ -1004,8 +1004,8 @@ function MLServingArchitecture() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
             {[
               { label: 'What it is',       text: node.what,      col: 'var(--ink-mid)' },
-              { label: 'Key decisions',    text: node.decisions, col: 'var(--sky)' },
-              { label: 'Failure modes',    text: node.failures,  col: 'var(--rose)' },
+              { label: 'Key decisions',    text: node.decisions, col: 'var(--prime)' },
+              { label: 'Failure modes',    text: node.failures,  col: 'var(--ink-low)' },
               { label: 'Interview signal', text: node.signal,    col: 'var(--prime)' },
             ].map(row => (
               <div key={row.label}>
