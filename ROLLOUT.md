@@ -66,7 +66,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **No horizontal overflow** | Scroll every tab — nothing bleeds past the right edge | ✓ required | — |
 | **Low brightness readability** | Drop phone brightness to ~20% — all text still readable, no invisible elements | ✓ required | — |
 | **Access gate — locked state** | Open incognito (no localStorage) → navigate to a premium tab → confirm AccessGate screen appears, not the tab content | ✓ required | — |
-| **Access gate — unlock flow** | Enter `DAI2026` → confirm success message → premium content renders immediately | ✓ required | — |
+| **Access gate — unlock flow** | Enter `DAI2026` → confirm "You're in." unlock moment → premium content renders | ✓ required | — |
 | **Access gate — persistence** | Unlock → close tab → reopen → confirm still unlocked (no re-entry required) | ✓ required | — |
 | **Access gate — wrong code** | Enter wrong code → confirm error message, no unlock | ✓ required | — |
 | **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |

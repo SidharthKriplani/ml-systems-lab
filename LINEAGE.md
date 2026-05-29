@@ -46,6 +46,25 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.13 — HomeTab redesign + unlock moment (May 2026)
+
+**HomeTab redesign:**
+- **Hero copy:** Dropped "You can train a model." opener (weak, presumptuous). New h1: "Production ML breaks in silence. / Can you find it?" — gradient on first two lines, plain on third. Sub-headline tightened from a domain list to a 200+ / 4-domain / incident-framing sentence.
+- **Jump Back In chip:** Amber pill at top of HomeTab, visible only when `msl_tab` is set (returning user). Reads the tab label from TRACKS, navigates on click. One line of state, strong returning-user signal.
+- **Today's Case:** 15-scenario `DAILY_CASES` array covering all 15 domains. Date-seeded rotation (sum of YYYY+MM+DD mod 15) — same scenario all day, new one tomorrow. Card shows domain badge + scenario question + "Try it →" link to the relevant tab. Placed between feature stat cards and role selector.
+- **Role sequences:** `ROLE_SEQUENCES` map (7 roles × 3 steps). When a role is selected, the active panel now shows a numbered 3-step path (e.g., "01 Defense Plan → 02 Combinator → 03 Verbal Practice" for MLE Interview) above the existing CTAs. Makes role selection visibly alter the recommended path.
+
+**Premium unlock moment (v4.12 — same session):**
+- `AccessGate.jsx`: scale-in animation + amber glow pulse on correct code entry. "You're in." screen for 1.3s before content loads.
+- `DefenseDocTab.jsx` inline gate: `inlineSuccess` state, same moment at 35% gate. Gate box cross-fades to amber + circle-check + "You're in." before plan sections reveal.
+
+**Content expansion confirmed:**
+- CombinatorTab already at 100 questions (target met, confirmed)
+- TrainerTab already at 60 questions (target met, confirmed)
+- InterviewPrepTab already at 128 questions (target met, confirmed)
+
+---
+
 ### v4.11 — Share Score, fidelity badges, streak + 91-day heatmap (May 2026)
 
 **Share Score button** added to CombinatorTab debrief and TrainerTab ResultsScreen. One button: copies a one-line plain-text summary to clipboard (`ML Systems Lab [Tab]: X/Y · Z% · Weak: [domain] → url`). `copied` state toggles the button label to `✓ Copied!` for 2 seconds, then resets. `navigator.clipboard.writeText` — no external dependency.

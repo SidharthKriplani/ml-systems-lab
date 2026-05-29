@@ -258,6 +258,36 @@ const TAB_ACCENT = {
   interview: 'var(--gold)', gradient: 'var(--sky)', landscape: 'var(--gold)',
 }
 
+// ── Daily case scenarios ──────────────────────────────────────────────────────
+const DAILY_CASES = [
+  { domain: 'Feature Engineering', accent: 'var(--violet)', tab: 'features', q: 'Offline AUC is 0.91. Online CTR dropped 18% on day 3 post-deploy. Pipeline logs are clean. What's the first thing you check?' },
+  { domain: 'Model Evaluation',    accent: 'var(--mint)',   tab: 'eval',     q: 'Precision is 0.92 on your test set. The fraud team is furious — the model keeps missing real fraud. What did you measure wrong?' },
+  { domain: 'Spark',               accent: 'var(--ember)',  tab: 'spark',    q: 'One Spark executor is processing 10x more data than the others. The job is 40 minutes late. No code changed. What caused this?' },
+  { domain: 'ML System Design',    accent: 'var(--sky)',    tab: 'design',   q: 'You're building a two-tower retrieval model for 100M users. What's the biggest failure mode at serving time that won't show up in offline eval?' },
+  { domain: 'Monitoring',          accent: 'var(--rose)',   tab: 'monitor',  q: 'PSI on your top feature jumped from 0.08 to 0.31 overnight. Model performance metrics are unchanged. Is this a problem?' },
+  { domain: 'Deployment',          accent: 'var(--rose)',   tab: 'mlops_deploy', q: 'Canary at 5% traffic. New model P95 latency is 40ms higher. Accuracy looks the same. Do you roll back, investigate, or expand to 20%?' },
+  { domain: 'Deep Learning',       accent: 'var(--violet)', tab: 'dl',       q: 'Training loss decreases smoothly but validation loss diverges after epoch 3. You haven\'t touched the data pipeline. What's the most likely cause?' },
+  { domain: 'DL Serving',          accent: 'var(--violet)', tab: 'dl_serving', q: 'Your quantized model passes all offline tests but accuracy degrades 8 points after deploying to the GPU cluster. Why?' },
+  { domain: 'Airflow',             accent: 'var(--ember)',  tab: 'airflow',  q: 'A daily pipeline missed its SLA by 3 hours. No task shows as failed. DAG logs look clean. Downstream data is wrong. What happened?' },
+  { domain: 'Causal Inference',    accent: 'var(--sky)',    tab: 'causal',   q: 'A/B test shows +4% conversion for treatment. Your data scientist says the result is invalid before even looking at the p-value. What check did they run?' },
+  { domain: 'Time Series',         accent: 'var(--sky)',    tab: 'ts',       q: 'Demand forecast MAPE was 8% for 18 months. It jumped to 34% last week. No model changes were deployed. What's the most likely structural cause?' },
+  { domain: 'Classical ML',        accent: 'var(--mint)',   tab: 'classical', q: 'Your gradient boosting model has 97% accuracy. Business reports it fails on 40% of real transactions. You were not shown class distribution during training. What happened?' },
+  { domain: 'Data Modeling',       accent: 'var(--ember)',  tab: 'modeling', q: 'An analyst joined your fact table to a dimension table and got duplicate rows. No bug in their query. Which SCD type caused this and why?' },
+  { domain: 'Fine-tuning',         accent: 'var(--violet)', tab: 'dl_finetune', q: 'Fine-tuned BERT on 50K examples. Strong eval set performance, but the model regresses badly on general NLP benchmarks. What happened?' },
+  { domain: 'Data Science',        accent: 'var(--sky)',    tab: 'ds',       q: 'You shipped a model that optimized the business metric. Three months later the metric improved but the actual outcome got worse. Name the effect.' },
+]
+
+// ── Role sequences ─────────────────────────────────────────────────────────────
+const ROLE_SEQUENCES = {
+  mle_interview:  [{ label: 'Defense Plan',  tab: 'defense'      }, { label: 'Combinator',   tab: 'combinator'  }, { label: 'Verbal Practice', tab: 'verbal'      }],
+  production_ml:  [{ label: 'Feature Eng.',  tab: 'features'     }, { label: 'System Design', tab: 'design'     }, { label: 'Monitoring',      tab: 'monitor'     }],
+  data_engineer:  [{ label: 'Spark Lab',     tab: 'spark'        }, { label: 'Airflow',       tab: 'airflow'    }, { label: 'dbt',             tab: 'dbt'         }],
+  deep_learning:  [{ label: 'Training Lab',  tab: 'dl'           }, { label: 'Fine-tuning',   tab: 'dl_finetune'}, { label: 'DL Serving',      tab: 'dl_serving'  }],
+  data_scientist: [{ label: 'Classical ML',  tab: 'classical'    }, { label: 'Model Eval',    tab: 'eval'       }, { label: 'Data Science',    tab: 'ds'          }],
+  mlops:          [{ label: 'Deployment',    tab: 'mlops_deploy' }, { label: 'Monitoring',    tab: 'monitor'    }, { label: 'CI/CD & Infra',   tab: 'mlops_pipes' }],
+  staff:          [{ label: 'System Design', tab: 'design'       }, { label: 'Staff Layer',   tab: 'stafflayer' }, { label: 'Defense Plan',    tab: 'defense'     }],
+}
+
 // ── Progress ring ─────────────────────────────────────────────────────────────
 function Ring({ pct, size = 44, stroke = 3.5, accent = 'var(--mint)' }) {
   const r    = (size - stroke * 2) / 2
@@ -304,6 +334,7 @@ export default function HomeTab({ onNavigate }) {
   const [showChangelog,  setShowChangelog]  = useState(false)
   const [streak,         setStreak]         = useState(0)
   const [activityGrid,   setActivityGrid]   = useState([])
+  const [jumpBackTab,    setJumpBackTab]    = useState(null)
 
   function refresh() {
     setProgress(getAllProgress())
@@ -339,6 +370,9 @@ export default function HomeTab({ onNavigate }) {
       grid.push({ date: d, count: parseInt(localStorage.getItem(`msl_activity_${d}`) || '0') })
     }
     setActivityGrid(grid)
+    // Jump Back In
+    const lastTab = localStorage.getItem('msl_tab')
+    if (lastTab) setJumpBackTab(lastTab)
     // Auto-open a learning path when navigated from LandscapeTab
     const gotoPath = localStorage.getItem('msl_goto_path')
     if (gotoPath) {
@@ -364,8 +398,28 @@ export default function HomeTab({ onNavigate }) {
   const getTrackPct = id => progress.find(p => p.tab === id)?.pct ?? 0
   const activeRole  = ROLES.find(r => r.key === role)
 
+  // Today's Case — deterministic per calendar day
+  const todayCase = (() => {
+    const d = new Date().toISOString().slice(0, 10)
+    const seed = d.split('-').reduce((a, c) => a + parseInt(c, 10), 0)
+    return DAILY_CASES[seed % DAILY_CASES.length]
+  })()
+
+  const jumpBackLabel = jumpBackTab ? (TRACKS.find(t => t.id === jumpBackTab)?.label ?? jumpBackTab) : null
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+
+      {/* ── Jump Back In ── */}
+      {jumpBackLabel && (
+        <div
+          onClick={() => onNavigate(jumpBackTab)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', alignSelf: 'flex-start', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '24px', padding: '6px 16px 6px 10px', cursor: 'pointer', transition: 'background 0.15s' }}
+        >
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--prime)', boxShadow: '0 0 8px rgba(240,165,0,0.8)', flexShrink: 0, display: 'inline-block' }} />
+          <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>Continue: {jumpBackLabel} →</span>
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <section style={{ position: 'relative' }}>
@@ -382,12 +436,12 @@ export default function HomeTab({ onNavigate }) {
             </div>
 
             <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 3.2vw, 48px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: '20px' }}>
-              You can train a model.<br />
-              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))' }}>Can you debug it<br />in production?</span>
+              <span style={{ background: 'linear-gradient(135deg, var(--prime-hi) 0%, var(--ember) 45%, var(--violet) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 28px rgba(240,165,0,0.38))' }}>Production ML<br />breaks in silence.</span><br />
+              Can you find it?
             </h1>
 
-            <p style={{ fontSize: '17px', color: 'var(--ink-hi)', lineHeight: 1.7, maxWidth: '500px', marginBottom: '28px', opacity: 0.80 }}>
-              Scenario-first drills across 7 ML domains — Feature Engineering, Spark, DL Serving, MLOps, System Design, and more. Each one puts you inside a real incident and asks you to make the call.
+            <p style={{ fontSize: '16px', color: 'var(--ink-hi)', lineHeight: 1.7, maxWidth: '460px', marginBottom: '28px', opacity: 0.80 }}>
+              200+ scenario-first drills across ML Engineering, Data Engineering, Deep Learning, and MLOps. Every question puts you inside a real incident and asks you to make the call.
             </p>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
@@ -420,6 +474,24 @@ export default function HomeTab({ onNavigate }) {
         ))}
       </div>
 
+      {/* ── Today's Case ── */}
+      <section>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <div className="eyebrow" style={{ marginBottom: 0 }}>Today's case</div>
+          <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{new Date().toISOString().slice(0, 10)}</div>
+        </div>
+        <div
+          onClick={() => onNavigate(todayCase.tab)}
+          style={{ background: 'var(--depth)', border: `1px solid var(--rim)`, borderLeft: `3px solid ${todayCase.accent}`, borderRadius: '12px', padding: '18px 20px', cursor: 'pointer', transition: 'border-color 0.15s' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: todayCase.accent, textTransform: 'uppercase', letterSpacing: '0.08em', background: `${todayCase.accent}18`, border: `1px solid ${todayCase.accent}40`, borderRadius: '4px', padding: '2px 8px' }}>{todayCase.domain}</span>
+            <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Try it →</span>
+          </div>
+          <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.65, margin: 0, fontFamily: 'var(--font-sans)' }}>{todayCase.q}</p>
+        </div>
+      </section>
+
       {/* ── Role selector ── */}
       <section style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', padding: '28px', boxShadow: '0 8px 40px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <div style={{ marginBottom: '16px' }}>
@@ -435,8 +507,21 @@ export default function HomeTab({ onNavigate }) {
           ))}
         </div>
         {activeRole && (
-          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0, flex: 1, minWidth: '200px' }}>{activeRole.desc}</p>
+          <div style={{ padding: '18px 20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '12px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: '0 0 14px' }}>{activeRole.desc}</p>
+            {ROLE_SEQUENCES[activeRole.key] && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Your path:</span>
+                {ROLE_SEQUENCES[activeRole.key].map((step, i) => (
+                  <span key={step.tab} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <button onClick={() => onNavigate(step.tab)} style={{ background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 700, cursor: 'pointer' }}>
+                      {`${String(i + 1).padStart(2, '0')} ${step.label}`}
+                    </button>
+                    {i < ROLE_SEQUENCES[activeRole.key].length - 1 && <span style={{ color: 'var(--ink-ghost)', fontSize: '10px' }}>→</span>}
+                  </span>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
               <button className="btn-primary"   onClick={() => onNavigate(activeRole.cta1.tab)}>{activeRole.cta1.label}</button>
               <button className="btn-secondary" onClick={() => onNavigate(activeRole.cta2.tab)}>{activeRole.cta2.label}</button>

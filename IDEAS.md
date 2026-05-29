@@ -33,9 +33,9 @@ Last updated: May 2026
 - [ ] **StaffLayerTab or SystemDesignTab: "Do we even need ML?" scenario type** — present a business request framed as an ML problem, user must judge whether ML is actually warranted or if a simpler solution dominates. Seed scenarios: (1) churn prediction where the action is "send an email" → correct answer is just send everyone the email; (2) support ticket auto-categoriser, 8 categories, 2 tickets/day → ML ROI is negative, regex + human triage wins; (3) "AI-powered" fraud flag where the fraud rate is 0.001% → precision/recall economics make a rules engine better. Core judgment: what's the counterfactual action? What volume justifies the model? What's the real cost of a false positive vs. a simpler system? Reveal should model the PM/engineer dialogue cadence from the post — short Socratic questions that expose the assumption. Ties directly into StaffLayerTab's "kill more projects than you ship" ethos. (Source: LinkedIn post, May 2026)
 - [ ] Add 5+ Gradient posts — priority order: "feature store time-travel bug" → Feature Engineering, "validation set leakage" → Feature Engineering, "Forecast Failure Zoo" → Time Series, "two failure modes of A/B tests" → Experimentation cross-link, "quantization from first principles: what FP16 throws away" → DL Serving
 - [ ] Add YouTube embed IDs to remaining Gradient posts (currently only 3 have videos)
-- [ ] Interview Q&A: expand to 100+ questions (currently ~77)
-- [ ] TrainerTab: expand MCQ bank from 30 → 60 questions (2 per domain per difficulty tier)
-- [ ] CombinatorTab: expand question bank from 50 → 100 (enables 90-min sessions)
+- [x] ~~**Interview Q&A: expand to 100+**~~ — already at 128 questions (confirmed 2026-05-29)
+- [x] ~~**TrainerTab: expand MCQ bank from 30 → 60**~~ — already at 60 questions (confirmed 2026-05-29)
+- [x] ~~**CombinatorTab: expand question bank from 50 → 100**~~ — already at 100 questions (confirmed 2026-05-29)
 
 ### First-Time User friction (from Audit #007)
 - [x] ~~**Rename "Ask" zone → "Search"**~~ — done (nav label is 'Search', zone id stays 'ask')
@@ -44,10 +44,10 @@ Last updated: May 2026
 - [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
 
 ### HomeTab redesign (from PAL screenshot review, May 2026)
-- [ ] **"Jump Back In" chip** — surface `msl_tab` localStorage on HomeTab as a single chip: "● [Last Module] · [time]". One line of state, massive returning-user signal. ~20 min.
-- [ ] **"Today's Case" featured card** — rotating featured scenario pulled from CombinatorTab/StaffLayerTab question bank. Gives users a reason to return daily. Above-the-fold, left card. ~1 hour.
-- [ ] **HomeTab hero copy fixes** — drop "You can train a model." line from hero headline. Fix sub-headline copy. Reduce total HomeTab scroll length (currently too long for a first visit). ~30 min.
-- [ ] **Role selector CTA labels** — role selector exists but CTA labels don't change meaningfully per role. Make role selection visibly alter the recommended path shown. ~30 min.
+- [x] ~~**"Jump Back In" chip**~~ — done (2026-05-29, amber pill top of HomeTab, reads msl_tab, navigates on click)
+- [x] ~~**"Today's Case" featured card**~~ — done (2026-05-29, DAILY_CASES array 15 scenarios, date-seeded rotation, domain badge + scenario text + nav)
+- [x] ~~**HomeTab hero copy fixes**~~ — done (2026-05-29, dropped "You can train a model.", new headline "Production ML breaks in silence. / Can you find it?", tightened sub-headline)
+- [x] ~~**Role selector CTA labels**~~ — done (2026-05-29, ROLE_SEQUENCES map, numbered 3-step path shown in active role panel)
 
 ### Freemium gate v2 — granular scenario-level difficulty gating
 - [ ] **Tag all 200+ scenarios by difficulty (easy/junior/mid/senior/staff)** — v1 gate is tab-level (free = 4 intro tabs, premium = everything else). v2 should gate within free tabs too: easy/junior scenarios free, medium/hard gated. Requires a `difficulty` field on every scenario object and a `PremiumGate` wrapper in each tab that slices to free content. ~3-4 hours content work + 2 hours implementation. (Source: freemium architecture decision, May 2026)
