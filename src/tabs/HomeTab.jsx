@@ -260,17 +260,17 @@ const TAB_ACCENT = {
 
 // ── Daily case scenarios ──────────────────────────────────────────────────────
 const DAILY_CASES = [
-  { domain: 'Feature Engineering', accent: 'var(--violet)', tab: 'features', q: 'Offline AUC is 0.91. Online CTR dropped 18% on day 3 post-deploy. Pipeline logs are clean. What's the first thing you check?' },
+  { domain: 'Feature Engineering', accent: 'var(--violet)', tab: 'features', q: "Offline AUC is 0.91. Online CTR dropped 18% on day 3 post-deploy. Pipeline logs are clean. What's the first thing you check?" },
   { domain: 'Model Evaluation',    accent: 'var(--mint)',   tab: 'eval',     q: 'Precision is 0.92 on your test set. The fraud team is furious — the model keeps missing real fraud. What did you measure wrong?' },
   { domain: 'Spark',               accent: 'var(--ember)',  tab: 'spark',    q: 'One Spark executor is processing 10x more data than the others. The job is 40 minutes late. No code changed. What caused this?' },
-  { domain: 'ML System Design',    accent: 'var(--sky)',    tab: 'design',   q: 'You're building a two-tower retrieval model for 100M users. What's the biggest failure mode at serving time that won't show up in offline eval?' },
+  { domain: 'ML System Design',    accent: 'var(--sky)',    tab: 'design',   q: "You're building a two-tower retrieval model for 100M users. What's the biggest failure mode at serving time that won't show up in offline eval?" },
   { domain: 'Monitoring',          accent: 'var(--rose)',   tab: 'monitor',  q: 'PSI on your top feature jumped from 0.08 to 0.31 overnight. Model performance metrics are unchanged. Is this a problem?' },
   { domain: 'Deployment',          accent: 'var(--rose)',   tab: 'mlops_deploy', q: 'Canary at 5% traffic. New model P95 latency is 40ms higher. Accuracy looks the same. Do you roll back, investigate, or expand to 20%?' },
-  { domain: 'Deep Learning',       accent: 'var(--violet)', tab: 'dl',       q: 'Training loss decreases smoothly but validation loss diverges after epoch 3. You haven\'t touched the data pipeline. What's the most likely cause?' },
+  { domain: 'Deep Learning',       accent: 'var(--violet)', tab: 'dl',       q: "Training loss decreases smoothly but validation loss diverges after epoch 3. You haven't touched the data pipeline. What's the most likely cause?" },
   { domain: 'DL Serving',          accent: 'var(--violet)', tab: 'dl_serving', q: 'Your quantized model passes all offline tests but accuracy degrades 8 points after deploying to the GPU cluster. Why?' },
   { domain: 'Airflow',             accent: 'var(--ember)',  tab: 'airflow',  q: 'A daily pipeline missed its SLA by 3 hours. No task shows as failed. DAG logs look clean. Downstream data is wrong. What happened?' },
   { domain: 'Causal Inference',    accent: 'var(--sky)',    tab: 'causal',   q: 'A/B test shows +4% conversion for treatment. Your data scientist says the result is invalid before even looking at the p-value. What check did they run?' },
-  { domain: 'Time Series',         accent: 'var(--sky)',    tab: 'ts',       q: 'Demand forecast MAPE was 8% for 18 months. It jumped to 34% last week. No model changes were deployed. What's the most likely structural cause?' },
+  { domain: 'Time Series',         accent: 'var(--sky)',    tab: 'ts',       q: "Demand forecast MAPE was 8% for 18 months. It jumped to 34% last week. No model changes were deployed. What's the most likely structural cause?" },
   { domain: 'Classical ML',        accent: 'var(--mint)',   tab: 'classical', q: 'Your gradient boosting model has 97% accuracy. Business reports it fails on 40% of real transactions. You were not shown class distribution during training. What happened?' },
   { domain: 'Data Modeling',       accent: 'var(--ember)',  tab: 'modeling', q: 'An analyst joined your fact table to a dimension table and got duplicate rows. No bug in their query. Which SCD type caused this and why?' },
   { domain: 'Fine-tuning',         accent: 'var(--violet)', tab: 'dl_finetune', q: 'Fine-tuned BERT on 50K examples. Strong eval set performance, but the model regresses badly on general NLP benchmarks. What happened?' },
