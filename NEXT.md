@@ -19,18 +19,18 @@ All three together, one commit.
 The two-column `gridTemplateColumns: 'minmax(0, 1fr) auto'` TODAY row was never tested on narrow screens. Open DevTools → 375px and 320px. If the case card text is unreadably compressed, add `@media (max-width: 480px)` to stack columns vertically (`gridTemplateColumns: '1fr'`, activity widget full width below case card). Fix in `HomeTab.jsx` inline with a `<style>` tag or conditional style object.
 
 ### 3. Module forward pointers — systematic pass (2–3 hours)
-Every tab/module currently ends silently. After today's guidance pass (which added hints at the TOP), this closes the learn loop at the BOTTOM. Pattern: a small `ForwardPointer` div at the end of each module's rendered content — consistent style, one link per module. Two types:
+Every tab/module currently ends silently. After the guidance pass (which added hints at the TOP), this closes the learn loop at the BOTTOM. Pattern: a small `ForwardPointer` div at the end of each module's rendered content — consistent style, one link per module. Two types:
 
 - **Gradient post link** (for tabs that already have a "Go deeper" CTA — just ensure every module has one, not just the tab header)
 - **CombinatorTab or TrainerTab link** ("Test this domain in Combinator →")
 
 Start with the highest-traffic tabs: SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab. Use the existing "Go deeper → Read X in Gradient" CTA pattern — it's already in FeatureEngTab and MonitoringTab. Standardise it and add to the rest. Don't invent new CTAs, just make the existing pattern consistent.
 
-### 4. Footer cross-links — all three labs (30 min across three repos)
-Add a one-line passive footer to ML Systems Lab, GenAI Systems Lab, and Experimentation Systems Lab simultaneously. Text: "Also by the same author: [ML Systems Lab] · [GenAI Systems Lab] · [Product Analytics Lab]" — each linking to the other two. Style: `var(--ink-ghost)`, 11px, centered, bottom of page. Do this in all three repos in the same session so the cross-links are symmetric from day one. In ML Systems Lab this goes in App.jsx's main layout wrapper, below the zone content.
-
-### 5. Emoji → SVG — highest-traffic tabs only (1 hour)
+### 4. Emoji → SVG — highest-traffic tabs only (1 hour)
 Don't do the full sweep yet (that's a longer audit session). Target the 4 tabs users land on most: HomeTab, CombinatorTab, TrainerTab, StaffLayerTab. Grep each for emoji codepoints, replace decorative ones with inline SVG using `currentColor`. Functional glyphs (✓ ✗ →) stay. Reference Audit #009 in AUDITS.md for the full list when doing the complete pass.
+
+### 5. Spot the Flaw tab — full build (3–4 hours)
+Interview zone, 12 scenarios. See IDEAS.md Tier 1 for full spec. Each scenario: a real ML code block or metric summary with exactly one subtle flaw — user picks the flaw category from 5 options, then sees the breakdown. Flaw taxonomy: Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact. Routing: `tabId: 'spottheflaw'`, zone: `interview`.
 
 ---
 
@@ -42,13 +42,14 @@ Nothing currently blocked.
 
 ## Done this session
 
-*(strike items here as they complete, then wipe this section at session end)*
+- ~~Footer cross-links — added to App.jsx, copy "Also by the same team:", LINEAGE.md v4.18 entry added, committed~~
+- ~~Interaction guidance pass — all 23 tabs, LINEAGE.md v4.17, AUDITS.md #010~~
 
 ---
 
 ## What comes after (not for this session)
 
-- Spot the Flaw tab — full build, Interview zone, 12 scenarios. See IDEAS.md Tier 1 for spec.
 - Pre-Eval Callout pattern — 5 target tabs (SystemDesign, ModelEval, Monitoring, MLOpsDeploy, CausalInference). Content work-heavy.
 - Role Readiness Score — aggregate cross-tab scores into per-domain seniority signal on HomeTab.
 - Slim scenario index + lazy content loading — bundle audit first (`npm run build` output), then implement if > 1.5 MB.
+- DefenseDocTab v2 — gap-mapped prep plan, resume cross-reference, round-type selector.
