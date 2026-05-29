@@ -52,7 +52,7 @@ Last updated: May 2026
 - [x] ~~**Rename "Ask" zone → "Search"**~~ — done (nav label is 'Search', zone id stays 'ask')
 - [x] ~~**Rename Practice-zone "Interview Tools" domain card to "Drills"**~~ — done (domain label is 'Drills')
 - [x] ~~**Add numbered sequence labels to Interview zone hub cards**~~ — done (v4.10, steps 01/02/03 on Defense Plan/Combinator/Verbal)
-- [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
+- [x] ~~**Add "Start here" pinned row to GradientTab**~~ — explicitly rejected (2026-05-29). "Start here" is prescriptive and adds friction. The Series + Tags redesign (see Tier 2) replaces this with user-driven navigation.
 
 ### HomeTab redesign (from PAL screenshot review, May 2026)
 - [x] ~~**"Jump Back In" chip**~~ — done (2026-05-29, amber pill top of HomeTab, reads msl_tab, navigates on click)
@@ -132,6 +132,10 @@ Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-r
 
 ### Cross-domain scenarios
 - [ ] **"Production Incident" cross-tab scenarios** — a single scenario that requires reasoning across multiple domains simultaneously. E.g., "Model AUC dropped 4 points 72 hours after a feature store migration. Serving P95 latency increased 40ms. What do you check first, in what order, and what's the most likely root cause?" Correct answer requires: Feature Engineering (store migration → feature drift), Monitoring (latency signal = schema mismatch or embedding recomputation), MLOps (was the migration rolled forward or is there a rollback option). Format: multi-step diagnosis with branching — choose your first action, see what that reveals, choose next. 6–8 scenarios. Tab: could be a new "Incident Room" tool in Interview zone. (Source: PAL cross-room challenges concept, May 2026)
+
+### GradientTab UX (identified 2026-05-29)
+- [ ] **Series + Tags redesign** — group the 25 posts into 4–5 named series (e.g., "Silent Failures", "Production Diagnostics"); add per-post tags (domains + concepts). Tags filter collapses to a filtered post list with sort options (newest / most relevant to current practice activity). Default sort when no filter: most relevant to user's active domains. Build trigger: when post count hits 50+. Below that threshold the flat list is navigable and series groupings would just add overhead. (Decided 2026-05-29)
+- [ ] **Revise / Learn / What's Next — state-aware reading mode** — three reading lenses powered by existing localStorage data: (1) **Revise** = posts in domains where practice scores are weak (`msl_score:*` < 60%); (2) **Learn** = unread posts in domains the user is actively practicing; (3) **What's Next** = unread posts in domains not yet touched. Data source: `msl_read` (read post IDs) + `msl_score:*` keys. Most valuable of the three — turns the feed from chronological browse into a personalized study queue without any backend. Pagination ("view more after N") explicitly decided against — not needed at 25 posts, reassess at 100+. (Decided 2026-05-29)
 
 ### Gradient posts (remaining from ideation)
 - [ ] "The 6 ways a recommendation system can silently stop recommending" → System Design
