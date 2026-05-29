@@ -76,7 +76,8 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_access` | `string` | `AccessGate` / `App.jsx` | Access code entered by user. Value `'DAI2026'` = premium unlocked. Permanent — never expires. Set on code entry, checked on every app load via `useState` initializer. |
 | `msl_streak` | `number` (as string) | `HomeTab` | Consecutive-day visit streak. Incremented when `msl_last_visit` was yesterday; reset to `1` when gap > 1 day; unchanged when already visited today. |
 | `msl_last_visit` | `string` (ISO date) | `HomeTab` | Date of the most recent HomeTab mount in `YYYY-MM-DD` format. Used to compute streak continuity. |
-| `msl_activity_YYYY-MM-DD` | `number` (as string) | `HomeTab` | Visit count for a specific calendar day. Key is dynamic — one key per day. Incremented on every HomeTab mount. Powers the 91-day activity heatmap. |
+| `msl_activity_YYYY-MM-DD` | `number` (as string) | `HomeTab` | Visit count for a specific calendar day. Key is dynamic — one key per day. Incremented on every HomeTab mount. Powers the activity heatmap (currently 28-day / 4-week window — changed from 91-day in v4.16 because 91 mostly-empty squares looked broken for new users). Keys older than 28 days are still written but not rendered. |
+| `msl_casestudies` | `JSON object` | `CaseStudiesTab` | Map of `{ caseId: { q0: answered, q1: answered, ... } }` — persists which questions in each case study have been expanded/answered across sessions. |
 
 ---
 

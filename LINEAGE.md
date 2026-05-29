@@ -173,13 +173,17 @@ Removed three sections that were adding weight without earning it:
 
 ### v4.11 — Share Score, fidelity badges, streak + 91-day heatmap (May 2026)
 
-**Share Score button** added to CombinatorTab debrief and TrainerTab ResultsScreen. One button: copies a one-line plain-text summary to clipboard (`ML Systems Lab [Tab]: X/Y · Z% · Weak: [domain] → url`). `copied` state toggles the button label to `✓ Copied!` for 2 seconds, then resets. `navigator.clipboard.writeText` — no external dependency.
+**Share Score button:**
+The problem this solves: users completing a Combinator or Trainer session had no way to record or share their result other than a screenshot. A one-button clipboard copy creates a lightweight social + accountability loop. Why clipboard over native share API: native share on desktop opens an OS dialog that feels heavy for a single line of text; clipboard is instant and works identically across all platforms. Why plain text over a formatted image: no canvas dependency, no build complexity, works everywhere including Slack/Discord. Format chosen (`ML Systems Lab [Tab]: X/Y · Z% · Weak: [domain]`) packs maximum signal in one line — score, percentage, and study recommendation. `copied` state toggles the label for 2s then resets — prevents the user from thinking the button is broken on repeated clicks.
 
-**Fidelity badges** added to 6 module headers as small monospace chip spans. Three variants: `✓ Real execution` (mint, Pyodide runs actual Python — SparkLabTab, ModelsMathTab), `~ Simulated` (prime/amber, scripted scenarios — CombinatorTab, TrainerTab, VerbatimTab, StaffLayerTab). No new component — inline `<span>` with CSS variable colors.
+**Fidelity badges:**
+The underlying concern: users learning from a simulated MCQ drill (CombinatorTab) and from a Pyodide cell running actual Python (ModelsMathTab) are having fundamentally different learning experiences — one builds pattern recognition, the other builds executable understanding. No signal existed to distinguish them. Fidelity badges are honesty infrastructure. They set the right expectations: "~ Simulated" tells the user the scenarios are scripted, not live; "✓ Real execution" tells them the Python is actually running. This matters for how users apply the knowledge — someone who knows they're running real SVD decomposition will trust the output differently than someone running a scripted response. Binary badges (Simulated / Real) are the v1 — a 3-tier upgrade (Faithful / Simplified / Conceptual) is logged in IDEAS.md Tier 2.
 
-**Streak tracking + 91-day heatmap** added to HomeTab. On every HomeTab mount: increments `msl_activity_YYYY-MM-DD` (visit count per day), updates `msl_streak` (consecutive-day counter, reset if gap > 1 day) and `msl_last_visit`. Renders a 7×13 GitHub-style activity grid (gridTemplateRows + gridAutoFlow: column) with amber squares on active days. Streak shown as a pill alongside "Practice activity" eyebrow. Mobile-scrollable horizontally.
+**Streak tracking + 91-day heatmap:**
+Motivation: the core retention mechanic for daily practice tools. A user who has a 7-day streak has intrinsic motivation to not break it — this is the same psychology GitHub activity grids use. The 91-day window (7×13 grid) was chosen to show a quarter's worth of activity — enough to reveal patterns (weekly cadence, exam prep spikes). Implementation chose `msl_activity_YYYY-MM-DD` as a dynamic key (one per day) rather than a rolling array because it's simpler to increment on mount and never needs pruning logic. Note: the 91-day grid was later replaced with a 28-day grid in v4.16 — 91 mostly-empty squares looked broken for new users. The streak counter was retained; only the heatmap window changed.
 
-**Distractor quality pass** (14 questions, CombinatorTab + TrainerTab): replaced trivially-eliminable wrong options with plausibly-wrong options requiring genuine reasoning to eliminate. Target ratio: 2 of 3 wrong options should require judgment, not just recall or pattern-matching.
+**Distractor quality pass (14 questions):**
+Wrong options in MCQ tabs were failing the judgment test — several could be eliminated by recall alone ("just don't pick 'accuracy' for imbalanced classes") without any reasoning about the tradeoff. Replaced the most obvious eliminators with plausibly-wrong options: answers that are correct in a *different* context, or adjacent to the right answer but wrong for a specific reason worth understanding. Target: 2 of 3 wrong options require genuine judgment. This pass covered 14 questions; the full audit (Audit #008 finding 2) remains open for a wider pass.
 
 ---
 
@@ -208,13 +212,20 @@ JDPrepTab and DefenseDocTab merged into a single 3-screen tool: **Defense Plan**
 
 ### v4.9 — Freemium access gate (May 2026)
 
-First freemium split. Premium content gated behind access code `DAI2026`. Code is permanent once entered (localStorage key `msl_access`), shared freely during beta.
+**Why gate at all:**
+The app was fully free from launch. The freemium gate was introduced because: (a) the Interview zone tools (Combinator, Defense Plan, Verbal) represent the highest-value, most effort-intensive content in the product and needed a mechanism to filter for serious users; (b) a gate creates a moment of intent — users who enter a code are more likely to finish a session; (c) it sets up a monetization path without breaking the "no login" principle (localStorage-only, no server-side check). Sharing the code freely during beta is deliberate — the goal is not revenue, it's signal from users who care enough to seek it out.
 
-**Free tier:** HomeTab, LandscapeTab, GradientTab, AskTab, and 4 intro Practice modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML).
+**Why tab-level gating, not feature-level:**
+Tab-level is simpler to implement and reason about. Every tab is either gated or not — no per-feature logic, no half-rendered states. The downside (can't sample premium modules) is addressed in the free tier design: the 4 free Practice modules cover the app's core learning mechanic fully. If a user engages with FeatureEngTab, ModelEvalTab, MathFoundationsTab, and ClassicalML, they understand exactly what the premium tabs contain. The `isFree` per-case upgrade is logged in IDEAS.md for v2.
 
-**Premium tier:** All 6 Interview zone tools, all 4 Drills (TrainerTab, CodeBugsTab, CaseStudiesTab, StaffLayerTab), and 14 advanced Practice modules (SystemDesign, Spark, Airflow, dbt, DataModeling, DL/DLFineTuning/DLServing, DataScience, CausalInference, TimeSeries, Monitoring, Deployment, CICD).
+**Free tier selection reasoning:**
+The 4 free Practice modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML) were chosen as the ones that: (a) teach the core judgment mechanic (scenario → pick → reveal), (b) cover foundational skills any ML practitioner needs regardless of specialisation, and (c) don't give away the moat. The Interview zone tools — especially Combinator (full exam simulation) and Defense Plan (JD-mapped prep plan) — are the moat. GradientTab (reading), AskTab (search), and LandscapeTab (career intelligence) are free because they build desire: a user who reads a Gradient post and sees the locked practice module at the bottom has FOMO, not access.
 
-**Implementation:** `src/components/AccessGate.jsx` (new) — clean lock screen with code input, error/success states, persistence note. `PREMIUM_TABS` set in App.jsx — single source of truth for what is gated. `renderContent()` checks `isUnlocked` before rendering any premium tab. PracticeCard and InterviewToolCard show SVG padlock + reduced opacity when locked. Grids remain fully visible (FOMO is the conversion mechanism — locked content is discoverable, not hidden).
+**Why grids remain visible:**
+Hiding locked content removes the FOMO signal entirely. A user who can see the Combinator card with a padlock on it knows what they're missing. A user who sees a partial grid of 4 cards doesn't know the product is deeper. Visible locked state is the conversion mechanism — the padlock is an ad for the gate code, not a wall.
+
+**Implementation:**
+`src/components/AccessGate.jsx` (new file) — lock screen with code input, error/success states, persistence note. `PREMIUM_TABS` set in App.jsx. `renderContent()` checks `isUnlocked` before rendering any premium tab. Code `DAI2026` stored in `msl_access` (localStorage), checked on app load via `useState` initializer — no re-auth on refresh.
 
 **Decided against:** hiding locked content entirely. Visible locked state creates upgrade desire. Hidden content creates no signal.
 
