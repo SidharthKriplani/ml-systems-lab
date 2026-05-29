@@ -28,6 +28,16 @@ Each batch entry states what pass looks like before a single tester is invited. 
 
 ---
 
+## Access code
+
+**Current community code:** `INPRODUCTION`  
+Permanent. Share freely during beta. Unlocks all premium content on device entry. Stored in `msl_access` localStorage key.
+
+**Free tier (no code needed):** HomeTab, LandscapeTab, GradientTab, AskTab, Math Foundations, Feature Engineering, Model Evaluation, Classical ML.  
+**Premium tier (requires code):** All Interview zone tools, all Drills (TrainerTab, CodeBugsTab, CaseStudiesTab, StaffLayerTab), all advanced Practice modules (SystemDesign, Spark, Airflow, dbt, DataModeling, DL suite, DataScience, Causal, TimeSeries, Monitoring, Deployment, CICD).
+
+---
+
 ## Batch 0 — Founder Self-Vet
 
 **Status:** Open  
@@ -56,6 +66,12 @@ Each batch entry states what pass looks like before a single tester is invited. 
 | **v4.8 mobile fixes** | Input tap on iOS does not zoom page · SVG diagrams scroll horizontally · MLOpsDeployTab table scrolls · Back button easy to tap | ✓ required | — |
 | **No horizontal overflow** | Scroll every tab — nothing bleeds past the right edge | ✓ required | — |
 | **Low brightness readability** | Drop phone brightness to ~20% — all text still readable, no invisible elements | ✓ required | — |
+| **Access gate — locked state** | Open incognito (no localStorage) → navigate to a premium tab → confirm AccessGate screen appears, not the tab content | ✓ required | — |
+| **Access gate — unlock flow** | Enter `INPRODUCTION` → confirm success message → premium content renders immediately | ✓ required | — |
+| **Access gate — persistence** | Unlock → close tab → reopen → confirm still unlocked (no re-entry required) | ✓ required | — |
+| **Access gate — wrong code** | Enter wrong code → confirm error message, no unlock | ✓ required | — |
+| **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |
+| **Lock indicators — Interview grid** | Without code: all Interview tool cards show padlock icon | ✓ required | — |
 
 ---
 
@@ -185,7 +201,7 @@ What we're listening for: Did the tier ranking feel accurate to the JD they past
 
 **Tester brief (send verbatim):**
 
-> You're 3 weeks out from an ML engineering interview. Paste your actual JD (or a real one you've seen) into the tool at [URL], then run one practice session using whatever the tool surfaces. That's it. Don't read any instructions — just use it. After 20 minutes, tell me: where did you drop off, what felt useful, and did anything feel like it was made for someone else's interview and not yours?
+> You're 3 weeks out from an ML engineering interview. Go to [URL], enter the access code `INPRODUCTION`, paste your actual JD (or a real one you've seen), then run one practice session using whatever the tool surfaces. That's it. Don't read any instructions — just use it. After 20 minutes, tell me: where did you drop off, what felt useful, and did anything feel like it was made for someone else's interview and not yours?
 
 **Feedback target:** Not "does it work." Specifically: did the JD-to-study-plan flow feel personal to them, or generic? Did they complete the Combinator session or abandon it and why? Was the timed pressure useful or annoying?
 

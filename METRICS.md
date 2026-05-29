@@ -72,6 +72,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_goto_module` | `string` | Navigation helpers | Deep-link target module, cleared after use |
 | `msl_goto_path` | `string` | Navigation helpers | Deep-link target path, cleared after use |
 | `msl_path_progress` | `JSON object` | `HomeTab` | Map of `{ pathId: { completedSteps: string[] } }` — persists step completion state for guided learning paths |
+| `msl_access` | `string` | `AccessGate` / `App.jsx` | Access code entered by user. Value `'INPRODUCTION'` = premium unlocked. Permanent — never expires. Set on code entry, checked on every app load via `useState` initializer. |
 
 ---
 

@@ -94,6 +94,20 @@ Run `node -e "..."` brace counter on any new or heavily edited `.jsx` file. Outp
 
 **No account system.** Zero-friction access is a core principle. Progress lives in localStorage and can be exported to JSON.
 
+---
+
+## Freemium gating
+
+**Free tier:** HomeTab, LandscapeTab, GradientTab, AskTab, and four intro Practice modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML). Enough to understand the product and build genuine value.
+
+**Premium tier (access code gated):** All Interview zone tools, all Interview drill tools (TrainerTab, CodeBugsTab, CaseStudiesTab, StaffLayerTab), and all advanced Practice modules (SystemDesign, Spark, Airflow, dbt, DataModeling, DeepLearning, DLFineTuning, DLServing, DataScience, CausalInference, TimeSeries, Monitoring, Deployment, CICD). These are the moat — the exam simulation, interview prep, and advanced production scenarios.
+
+**Access code:** `INPRODUCTION`. Permanent once entered — stored in `msl_access` in localStorage. Access code is currently shared freely during beta. The split is free = learn (intro content), premium = perform (exam simulation + advanced modules).
+
+**Gate implementation:** `src/components/AccessGate.jsx` — rendered in `renderContent()` in App.jsx when a premium tab is requested and `msl_access !== 'INPRODUCTION'`. Premium tabs are defined in the `PREMIUM_TABS` set in App.jsx. Lock indicators (SVG padlock) are shown on PracticeCard and InterviewToolCard when locked. Grids remain visible — FOMO is the conversion mechanism.
+
+**v2 enhancement (planned):** Granular scenario-level difficulty gating within free Practice modules (first N easy scenarios free, medium/hard gated). Requires difficulty tagging on 200+ scenarios — logged in IDEAS.md.
+
 **No Tailwind utilities in component files.** See Stack section above.
 
 **No mobile sidebar.** The v3 persistent sidebar scaled poorly on mobile and was replaced with the bottom-nav 5-zone architecture in v4. A desktop-only accordion sidebar was re-added alongside the bottom nav (≥769px breakpoint) as a secondary navigation aid — it mirrors the same zone/tab state. Bottom-nav is the primary navigation and is permanent.

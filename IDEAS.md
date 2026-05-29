@@ -40,6 +40,9 @@ Last updated: May 2026
 - [ ] **Add numbered sequence labels to Interview zone hub cards** — intended flow JD Prep → Defense → Combinator → Verbal is not communicated. Add step numbers (①②③④) to the relevant tool cards in the hub grid. ~15 min.
 - [ ] **Add "Start here" pinned row to GradientTab** — Read zone lands on 25+ posts with no entry point. Pin 2–3 recommended beginner posts per domain, or add a single "Start here" row above the filter bar. ~20 min.
 
+### Freemium gate v2 — granular scenario-level difficulty gating
+- [ ] **Tag all 200+ scenarios by difficulty (easy/junior/mid/senior/staff)** — v1 gate is tab-level (free = 4 intro tabs, premium = everything else). v2 should gate within free tabs too: easy/junior scenarios free, medium/hard gated. Requires a `difficulty` field on every scenario object and a `PremiumGate` wrapper in each tab that slices to free content. ~3-4 hours content work + 2 hours implementation. (Source: freemium architecture decision, May 2026)
+
 ### Mobile fixes (from Audit #015, 2026-05-27) — v4.8 sprint complete
 - [x] iOS input zoom — `font-size: 16px` in `index.css` ✅
 - [x] SVG diagrams fixed-width overflow — `maxWidth: '100%'` on both SVGs ✅

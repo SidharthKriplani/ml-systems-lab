@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { trackTabSwitch } from './analytics.js'
 import GlobalSearch from './components/GlobalSearch.jsx'
+import AccessGate from './components/AccessGate.jsx'
 
 import HomeTab           from './tabs/HomeTab.jsx'
 import SparkLabTab       from './tabs/SparkLabTab.jsx'
@@ -71,6 +72,22 @@ const ALL_TABS = [
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
 ]
+
+// ── Freemium gate ─────────────────────────────────────────────────────────────
+// Free: home, landscape, gradient, ask, models, features, eval, classical
+// Premium: all Interview zone, all interview tools, all advanced practice modules
+const PREMIUM_TABS = new Set([
+  // Interview zone
+  'interview', 'takehome', 'jdprep', 'defense', 'combinator', 'verbal',
+  // Interview tools (Practice > Drills domain)
+  'trainer', 'codebugs', 'casestudies', 'stafflayer',
+  // Advanced practice modules
+  'design', 'spark', 'airflow', 'dbt', 'modeling',
+  'dl', 'dl_finetune', 'dl_serving',
+  'ds', 'causal', 'ts',
+  'monitor', 'mlops_deploy', 'mlops_pipes',
+])
+const ACCESS_CODE = 'INPRODUCTION'
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
@@ -219,10 +236,11 @@ function ProgressRing({ attempted, total, accent }) {
 }
 
 // ── PracticeCard ──────────────────────────────────────────────────────────────
-function PracticeCard({ tab, domain, onSelect, tabProgress }) {
+function PracticeCard({ tab, domain, onSelect, tabProgress, isUnlocked }) {
   const [hov, setHov] = useState(false)
-  const prog = tabProgress?.[tab.id]
-  const pct  = prog && prog.total > 0 ? Math.round((prog.attempted / prog.total) * 100) : 0
+  const prog   = tabProgress?.[tab.id]
+  const pct    = prog && prog.total > 0 ? Math.round((prog.attempted / prog.total) * 100) : 0
+  const locked = PREMIUM_TABS.has(tab.id) && !isUnlocked
 
   return (
     <button
@@ -235,10 +253,11 @@ function PracticeCard({ tab, domain, onSelect, tabProgress }) {
         borderTop:    `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
         borderRight:  `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
         borderBottom: `1px solid ${hov ? domain.accent + '60' : 'var(--rim)'}`,
-        borderLeft:   `3px solid ${domain.accent}`,
+        borderLeft:   `3px solid ${locked ? 'var(--rim-hi)' : domain.accent}`,
         borderRadius: '10px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-2px)' : 'translateY(0)',
+        opacity: locked ? 0.72 : 1,
         boxShadow: hov
           ? `0 16px 48px rgba(0,0,0,0.60), 0 0 0 1px ${domain.accent}30, -4px 0 24px ${domain.accent}18`
           : '0 2px 12px rgba(0,0,0,0.40)',
@@ -248,12 +267,13 @@ function PracticeCard({ tab, domain, onSelect, tabProgress }) {
         <span style={{ fontSize: '13px', fontWeight: 600, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", transition: 'color 0.14s' }}>
           {tab.label}
         </span>
-        {prog && prog.total > 0 && (
-          <ProgressRing attempted={prog.attempted} total={prog.total} accent={domain.accent} />
-        )}
+        {locked
+          ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          : prog && prog.total > 0 && <ProgressRing attempted={prog.attempted} total={prog.total} accent={domain.accent} />
+        }
       </div>
       <p style={{ fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0 }}>{tab.desc}</p>
-      {pct > 0 && (
+      {!locked && pct > 0 && (
         <div style={{ marginTop: '9px', height: '2px', background: 'var(--rim)', borderRadius: '1px' }}>
           <div style={{ width: `${pct}%`, height: '100%', background: domain.accent, borderRadius: '1px' }} />
         </div>
@@ -263,7 +283,7 @@ function PracticeCard({ tab, domain, onSelect, tabProgress }) {
 }
 
 // ── PracticeGrid ──────────────────────────────────────────────────────────────
-function PracticeGrid({ onSelect, tabProgress }) {
+function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
   const totalAttempted = Object.values(tabProgress ?? {}).reduce((s, p) => s + (p.attempted || 0), 0)
   const totalScenarios = Object.values(tabProgress ?? {}).reduce((s, p) => s + (p.total || 0), 0)
 
@@ -299,7 +319,7 @@ function PracticeGrid({ onSelect, tabProgress }) {
           </div>
           <div className="grid-cards">
             {domain.tabs.map(tab => (
-              <PracticeCard key={tab.id} tab={tab} domain={domain} onSelect={onSelect} tabProgress={tabProgress} />
+              <PracticeCard key={tab.id} tab={tab} domain={domain} onSelect={onSelect} tabProgress={tabProgress} isUnlocked={isUnlocked} />
             ))}
           </div>
         </div>
@@ -309,7 +329,7 @@ function PracticeGrid({ onSelect, tabProgress }) {
 }
 
 // ── InterviewToolCard ─────────────────────────────────────────────────────────
-function InterviewToolCard({ tool, onSelect }) {
+function InterviewToolCard({ tool, onSelect, isUnlocked }) {
   const [hov, setHov] = useState(false)
   return (
     <button
@@ -326,17 +346,21 @@ function InterviewToolCard({ tool, onSelect }) {
         borderRadius: '14px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
+        opacity: isUnlocked ? 1 : 0.72,
         boxShadow: hov
           ? `0 20px 56px rgba(0,0,0,0.65), 0 0 0 1px ${tool.accent}22, inset 0 1px 0 rgba(255,255,255,0.09)`
           : '0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.11)',
       }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ color: tool.accent, opacity: hov ? 1 : 0.75, transition: 'opacity 0.15s' }}>{tool.svg}</div>
-        {tool.step && (
-          <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
-            STEP {tool.step}
-          </span>
-        )}
+        {!isUnlocked
+          ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          : tool.step && (
+            <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
+              STEP {tool.step}
+            </span>
+          )
+        }
       </div>
       <div style={{ fontSize: '14px', fontWeight: 700, color: hov ? 'var(--ink-hi)' : 'var(--ink-mid)', fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '-0.02em', marginBottom: '8px', transition: 'color 0.14s' }}>
         {tool.label}
@@ -347,7 +371,7 @@ function InterviewToolCard({ tool, onSelect }) {
 }
 
 // ── InterviewGrid ─────────────────────────────────────────────────────────────
-function InterviewGrid({ onSelect }) {
+function InterviewGrid({ onSelect, isUnlocked }) {
   return (
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '28px' }}>
@@ -361,7 +385,7 @@ function InterviewGrid({ onSelect }) {
       </div>
       <div className="grid-cards-wide">
         {INTERVIEW_TOOLS.map(tool => (
-          <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} />
+          <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} isUnlocked={isUnlocked} />
         ))}
       </div>
     </div>
@@ -623,6 +647,14 @@ export default function App() {
   })
   const [searchOpen,  setSearchOpen]  = useState(false)
   const [tabProgress, setTabProgress] = useState(() => readTabProgress())
+  const [isUnlocked,  setIsUnlocked]  = useState(() => localStorage.getItem('msl_access') === ACCESS_CODE)
+
+  function handleUnlock(code) {
+    if (code === ACCESS_CODE) {
+      localStorage.setItem('msl_access', code)
+      setIsUnlocked(true)
+    }
+  }
 
   // Navigate to any tabId from anywhere
   const goTo = useCallback((tabId) => {
@@ -696,8 +728,11 @@ export default function App() {
   const activeTabInfo = showBackBtn ? ALL_NAV_TABS.find(t => t.id === currentTabId) : null
 
   function renderContent() {
-    if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} />
-    if (isInterviewGrid) return <InterviewGrid onSelect={goTo} />
+    if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} isUnlocked={isUnlocked} />
+    if (isInterviewGrid) return <InterviewGrid onSelect={goTo} isUnlocked={isUnlocked} />
+    if (currentTabId && PREMIUM_TABS.has(currentTabId) && !isUnlocked) {
+      return <AccessGate onUnlock={handleUnlock} />
+    }
     const Component = ALL_TABS.find(t => t.id === currentTabId)?.component
     return Component ? <Component onNavigate={goTo} /> : <HomeTab onNavigate={goTo} />
   }

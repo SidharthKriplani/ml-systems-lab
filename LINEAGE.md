@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.9 — Freemium access gate (May 2026)
+
+First freemium split. Premium content gated behind access code `INPRODUCTION`. Code is permanent once entered (localStorage key `msl_access`), shared freely during beta.
+
+**Free tier:** HomeTab, LandscapeTab, GradientTab, AskTab, and 4 intro Practice modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML).
+
+**Premium tier:** All 6 Interview zone tools, all 4 Drills (TrainerTab, CodeBugsTab, CaseStudiesTab, StaffLayerTab), and 14 advanced Practice modules (SystemDesign, Spark, Airflow, dbt, DataModeling, DL/DLFineTuning/DLServing, DataScience, CausalInference, TimeSeries, Monitoring, Deployment, CICD).
+
+**Implementation:** `src/components/AccessGate.jsx` (new) — clean lock screen with code input, error/success states, persistence note. `PREMIUM_TABS` set in App.jsx — single source of truth for what is gated. `renderContent()` checks `isUnlocked` before rendering any premium tab. PracticeCard and InterviewToolCard show SVG padlock + reduced opacity when locked. Grids remain fully visible (FOMO is the conversion mechanism — locked content is discoverable, not hidden).
+
+**Decided against:** hiding locked content entirely. Visible locked state creates upgrade desire. Hidden content creates no signal.
+
+---
+
 ### v4.8 — Mobile UI/UX audit fixes (May 2026)
 
 Resolved 8 of 10 findings from Audit #015 (comprehensive mobile pass). 2 deferred (Pyodide mobile warning, InterviewPrepTab line length).
