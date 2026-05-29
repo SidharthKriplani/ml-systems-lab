@@ -1665,16 +1665,12 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', storageKey = n
                   {sc.options.map((opt, oi) => {
                     const isPicked = it.picked === oi
                     const isAns    = sc.answer === oi
-                    let bg = 'var(--depth)', border = 'var(--rim)', color = 'var(--ink-mid)'
-                    if (it.revealed) {
-                      if (isAns)          { bg = 'rgba(52,211,153,0.15)'; border = 'rgba(52,211,153,0.35)'; color = 'var(--ink-hi)' }
-                      else if (isPicked)  { bg = 'rgba(239,68,68,0.15)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
-                    } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
-                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        className={`msl-option-btn${it.revealed && isAns ? ' correct' : ''}${it.revealed && isPicked && !isAns ? ' wrong' : ''}${!it.revealed && isPicked ? ' selected' : ''}`}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
-                        <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
+                        <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
                       </button>
                     )

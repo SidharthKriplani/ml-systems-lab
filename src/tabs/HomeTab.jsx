@@ -251,6 +251,7 @@ export default function HomeTab({ onNavigate }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <style>{`@media (max-width: 480px) { .today-row { grid-template-columns: 1fr !important; } }`}</style>
 
       {/* ── Jump Back In ── */}
       {jumpBackLabel && (
@@ -269,7 +270,7 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>
           Today · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '10px', alignItems: 'stretch' }}>
+        <div className="today-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '10px', alignItems: 'stretch' }}>
           {/* Case */}
           <div onClick={() => onNavigate(todayCase.tab)} style={{ background: 'var(--depth)', border: `1px solid var(--rim)`, borderLeft: `3px solid ${todayCase.accent}`, borderRadius: '12px', padding: '16px 18px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -287,7 +288,7 @@ export default function HomeTab({ onNavigate }) {
                   <div style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>day streak</div>
                 </>
               )}
-              {activityGrid.filter(d => d.count > 0).length >= 7 ? (
+              {activityGrid.filter(d => d.count > 0).length > 3 ? (
                 <>
                   <div style={{ display: 'grid', gridTemplateRows: 'repeat(7, 8px)', gridAutoFlow: 'column', gridAutoColumns: '8px', gap: '2px', marginTop: '4px' }}>
                     {activityGrid.slice(-28).map(({ date, count }) => (
@@ -297,7 +298,7 @@ export default function HomeTab({ onNavigate }) {
                   <div style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>4 weeks</div>
                 </>
               ) : (
-                <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textAlign: 'center', lineHeight: 1.5 }}>Keep going</div>
+                <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', textAlign: 'center', lineHeight: 1.5 }}>Day {streak} — keep going</div>
               )}
             </div>
           )}

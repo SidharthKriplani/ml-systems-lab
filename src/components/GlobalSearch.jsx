@@ -422,6 +422,10 @@ const INDEX = [
   { id: 'v-20', tab: 'verbal', icon: '🎙', kind: 'tool', title: 'Verbal: Deciding when a model is ready to ship',
     desc: 'How do you decide when a model is ready to go to production? Verbal + transcript + self-rating.' },
 
+  // ── Spot the Flaw ─────────────────────────────────────────────────────────
+  { id: 'spottheflaw', tab: 'spottheflaw', icon: '◎', kind: 'tool', title: 'Spot the Flaw',
+    desc: '10 real ML analyses with exactly one buried methodological flaw each. Data leakage, evaluation errors, distribution shift, metric mismatch, labeling artifacts.' },
+
   // ── Take-Home ─────────────────────────────────────────────────────────────
   { id: 'th-1',  tab: 'takehome', icon: '📝', kind: 'tool', title: 'Take-Home: Feature store for ride-sharing',
     desc: 'Design a real-time feature store serving 50M daily rides — freshness, backfill, <10ms serving latency.' },
@@ -468,6 +472,7 @@ const TAB_LABELS = {
   trainer: 'Trainer', combinator: 'Combinator', codebugs: 'Code Bugs',
   casestudies: 'Case Studies', stafflayer: 'Staff Layer',
   verbal: 'Verbal Practice', takehome: 'Take-Home', defense: 'Defense Plan',
+  spottheflaw: 'Spot the Flaw',
 }
 
 function match(item, q) {

@@ -46,6 +46,30 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.28 — README rewrite, Spot the Flaw tab, SparkLab simulator, StaffLayer + ForwardPointer pass (2026-05-30)
+
+**What shipped:** One new tab, one new interactive simulator, full external README rewrite, HomeTab mobile fix, 3 new StaffLayer scenarios, Naive Bayes module, ForwardPointers to 3 additional tabs.
+
+**Deliverables:**
+
+1. **README.md full rewrite** — replaces domain-breadth opening with judgment-gap hook ("Can you debug it in production?"). Foregrounds 4 moat differentiators: Pyodide in-browser Python, Web Speech API verbal practice, StaffLayer IC5→Staff scenarios, CodeBugs one-buried-flaw format. Interview zone flagship (45-min mock, Defense Plan) leads over domain grid.
+
+2. **SpotTheFlawTab.jsx (new file, 382 lines)** — Interview zone. 10 scenarios across 5 flaw categories: Data Leakage (imputer fit before split, time series KFold shuffle), Evaluation Error (A/B peeking, offline rec eval exposure bias, permutation importance with correlated features), Distribution Shift (NLP learns Reuters byline, pediatric→adult radiology transfer, product reviews→support tickets), Metric Mismatch (fraud detection 99.93% accuracy on 0.08% imbalance), Labeling Artifact (CLV survivorship bias). ScenarioCard shows code block, 5 category options, reveal panel ("The Flaw" + "How to prevent it"). ForwardPointer → combinator. Routed in App.jsx (interview zone, premium), GlobalSearch indexed, INTERVIEW_TOOLS card added.
+
+3. **SparkLabTab: MemoryPressureSimulator** — pure React interactive (no Pyodide). 5 controls: executor memory slider (2–64 GB), cores (1–16), dataset size (1–500 GB), shuffle partitions (50–2000), join type (sort_merge/broadcast/shuffle_hash). Real Spark memory model chain: reserved 300 MB → usable → user pool 40% → Spark pool 60% → execution budget 50% → per-task budget. 4 verdicts: OOM Risk (broadcast on large dataset), Spill/Slowdown, OOM-Undersized, Healthy. Memory breakdown table. ForwardPointer → combinator.
+
+4. **HomeTab.jsx: mobile + personalization fixes** — `@media (max-width: 480px)` stacks TODAY row columns vertically (`gridTemplateColumns: 1fr`) on narrow screens. Sparse heatmap guard: ≤3 active days shows "Day {streak} — keep going" instead of mostly-empty squares.
+
+5. **ClassicalMLTab: NaiveBayesFailures module** — 3 scenarios (correlated features/independence assumption, Gaussian NB on skewed data, zero-frequency/Laplace smoothing). `.msl-option-btn` applied to all MCQ option buttons. ForwardPointer → combinator.
+
+6. **StaffLayerTab: 3 new scenarios** — Multi-Team Incident Room (dual-team coordination under model degradation), Feature Ownership Conflict (cross-team drift ownership dispute), Build vs Buy: Feature Serving (platform investment decision framing). COMING_SOON cleared to `[]`.
+
+7. **ForwardPointers** — added to MLOpsDeployTab (→ combinator, ember), CombinatorTab (→ defense, rose), DataScienceTab (→ causal, mint).
+
+All 11 modified files brace-balanced at 0. One commit.
+
+---
+
 ### v4.27 — Fill 10 COMING_SOON stubs across 5 tabs (2026-05-30)
 
 **What shipped:** 10 previously stubbed modules replaced with real content across 5 tabs. All pure AccordionMCQ/CodeBug format — no new architecture.

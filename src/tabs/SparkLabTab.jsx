@@ -767,26 +767,208 @@ function OOMDiagnosis() {
   )
 }
 
+// ─── Memory Pressure Simulator ──────────────────────────────────────────────
+function MemoryPressureSimulator() {
+  const [executorMemoryGB, setExecutorMemoryGB] = useState(8)
+  const [executorCores, setExecutorCores] = useState(4)
+  const [datasetGB, setDatasetGB] = useState(50)
+  const [shufflePartitions, setShufflePartitions] = useState(200)
+  const [joinType, setJoinType] = useState('sort_merge') // sort_merge | broadcast | shuffle_hash
+
+  // Spark memory model calculation
+  // Reserved memory: 300MB fixed
+  // User memory fraction: 0.4 of (heap - reserved)
+  // Spark execution memory: 0.6 * (heap - reserved) * spark.memory.fraction (default 0.6)
+  // Spark storage memory: shares pool with execution
+
+  const reservedMB = 300
+  const heapMB = executorMemoryGB * 1024
+  const usableMB = heapMB - reservedMB
+  const userMemMB = Math.round(usableMB * 0.4)
+  const sparkMemMB = Math.round(usableMB * 0.6)
+  const execMemMB = Math.round(sparkMemMB * 0.5) // unified memory pool, half available for execution
+
+  // Per-task memory
+  const tasksPerExecutor = executorCores
+  const memPerTaskMB = Math.round(execMemMB / tasksPerExecutor)
+
+  // Shuffle spill estimate
+  // Each shuffle partition = datasetGB * 1024 / shufflePartitions MB
+  const partitionSizeMB = Math.round((datasetGB * 1024) / shufflePartitions)
+
+  // Join memory requirement
+  let joinMemMB = partitionSizeMB
+  if (joinType === 'sort_merge') joinMemMB = partitionSizeMB * 2 // sort buffers
+  if (joinType === 'shuffle_hash') joinMemMB = partitionSizeMB * 1.5
+  if (joinType === 'broadcast') joinMemMB = 0 // broadcast stays in storage memory
+
+  // Verdict
+  let verdict, verdictColor, verdictIcon, explanation
+
+  if (joinType === 'broadcast' && datasetGB > 2) {
+    verdict = 'OOM Risk'
+    verdictColor = 'var(--rose)'
+    verdictIcon = '✗'
+    explanation = `Broadcast join on ${datasetGB}GB dataset will exceed the default broadcast threshold (10MB). Spark will attempt to broadcast the full table to every executor — each executor needs ${datasetGB * 1024}MB for the broadcast copy. With only ${executorMemoryGB}GB executor memory, this will OOM.`
+  } else if (joinMemMB > memPerTaskMB * 0.8) {
+    verdict = 'Spill / Slowdown'
+    verdictColor = 'var(--ember)'
+    verdictIcon = '~'
+    explanation = `Each task needs ~${joinMemMB}MB for the join but only has ~${memPerTaskMB}MB available (${execMemMB}MB execution memory split across ${tasksPerExecutor} tasks). Spark will spill ${Math.round(joinMemMB - memPerTaskMB)}MB to disk per task — expect ${Math.round((joinMemMB / memPerTaskMB - 1) * 100)}% slowdown from disk I/O.`
+  } else if (memPerTaskMB < 100) {
+    verdict = 'OOM — Undersized'
+    verdictColor = 'var(--rose)'
+    verdictIcon = '✗'
+    explanation = `Only ${memPerTaskMB}MB per task. With ${tasksPerExecutor} cores and ${executorMemoryGB}GB total, there is not enough memory to run tasks without OOM. Reduce cores per executor or increase executor memory.`
+  } else {
+    verdict = 'Healthy'
+    verdictColor = 'var(--mint)'
+    verdictIcon = '✓'
+    explanation = `Each task has ~${memPerTaskMB}MB execution memory. Partition size is ~${partitionSizeMB}MB. Join requires ~${joinMemMB}MB per task. Memory headroom: ~${memPerTaskMB - joinMemMB}MB. No spill expected.`
+  }
+
+  const sliderStyle = { width: '100%', accentColor: 'var(--prime)' }
+  const labelStyle = { fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
+  const valueStyle = { fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', fontWeight: 700 }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Interactive Simulator</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Memory Pressure Simulator</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Adjust executor config and job spec. See whether your Spark job OOMs, spills to disk, or runs healthy — with the memory math shown step by step.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Executor Config */}
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div className="section-eyebrow">Executor Config</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={labelStyle}>Executor Memory</span>
+              <span style={valueStyle}>{executorMemoryGB} GB</span>
+            </div>
+            <input type="range" min={2} max={64} step={2} value={executorMemoryGB} onChange={e => setExecutorMemoryGB(+e.target.value)} style={sliderStyle} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+              <span>2GB</span><span>64GB</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={labelStyle}>Cores per Executor</span>
+              <span style={valueStyle}>{executorCores}</span>
+            </div>
+            <input type="range" min={1} max={16} step={1} value={executorCores} onChange={e => setExecutorCores(+e.target.value)} style={sliderStyle} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+              <span>1</span><span>16</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Spec */}
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div className="section-eyebrow">Job Spec</div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={labelStyle}>Dataset Size</span>
+              <span style={valueStyle}>{datasetGB} GB</span>
+            </div>
+            <input type="range" min={1} max={500} step={5} value={datasetGB} onChange={e => setDatasetGB(+e.target.value)} style={sliderStyle} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
+              <span>1GB</span><span>500GB</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={labelStyle}>Shuffle Partitions</span>
+              <span style={valueStyle}>{shufflePartitions}</span>
+            </div>
+            <input type="range" min={50} max={2000} step={50} value={shufflePartitions} onChange={e => setShufflePartitions(+e.target.value)} style={sliderStyle} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={labelStyle}>Join Type</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[['sort_merge', 'Sort-Merge'], ['broadcast', 'Broadcast'], ['shuffle_hash', 'Shuffle Hash']].map(([val, label]) => (
+                <button key={val} onClick={() => setJoinType(val)} style={{
+                  padding: '5px 12px', borderRadius: '6px', border: `1px solid ${joinType === val ? 'var(--prime)' : 'var(--rim)'}`,
+                  background: joinType === val ? 'rgba(6,214,160,0.12)' : 'transparent',
+                  color: joinType === val ? 'var(--prime)' : 'var(--ink-low)',
+                  fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Verdict */}
+      <div style={{ background: 'var(--depth)', border: `1px solid ${verdictColor}40`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '22px', color: verdictColor }}>{verdictIcon}</span>
+          <span style={{ fontSize: '18px', fontWeight: 800, color: verdictColor, fontFamily: 'var(--font-sans)', letterSpacing: '-0.02em' }}>{verdict}</span>
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{explanation}</p>
+      </div>
+
+      {/* Memory breakdown */}
+      <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '12px', padding: '20px' }}>
+        <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Memory Calculation</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {[
+            [`Heap memory`, `${(executorMemoryGB * 1024).toLocaleString()} MB`],
+            [`Reserved (fixed)`, `${reservedMB} MB`],
+            [`Usable heap`, `${usableMB.toLocaleString()} MB`],
+            [`User memory (40%)`, `${userMemMB.toLocaleString()} MB`],
+            [`Spark unified pool (60%)`, `${sparkMemMB.toLocaleString()} MB`],
+            [`Execution budget (50% of pool)`, `${execMemMB.toLocaleString()} MB`],
+            [`Tasks per executor`, `${tasksPerExecutor}`],
+            [`Memory per task`, `${memPerTaskMB.toLocaleString()} MB`],
+            [`Partition size`, `${partitionSizeMB.toLocaleString()} MB`],
+            [`Join memory needed/task`, `${joinMemMB.toLocaleString()} MB`],
+          ].map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--rim)' }}>
+              <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{label}</span>
+              <span style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Forward Pointer ─────────────────────────────────────────────────────────
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--prime)' }) {
+  return (
+    <div style={{ marginTop: '32px', padding: '16px 20px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{label}</span>
+      <button onClick={() => onNavigate(tab)} style={{ padding: '6px 14px', borderRadius: '6px', border: `1px solid ${accent}50`, background: `${accent}15`, color: accent, fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600 }}>
+        Go →
+      </button>
+    </div>
+  )
+}
+
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'shuffle',   label: 'Shuffle Hell',         icon: '', component: ShuffleHell },
-  { id: 'skew',      label: 'Skew Doctor',          icon: '', component: SkewDoctor },
-  { id: 'partition', label: 'Partition Tuner',      icon: '', component: PartitionTuner },
-  { id: 'broadcast', label: 'Broadcast Joins',      icon: '', component: BroadcastJoinDecisions },
-  { id: 'oom',       label: 'OOM Diagnosis',        icon: '', component: OOMDiagnosis },
+  { id: 'shuffle',         label: 'Shuffle Hell',             icon: '', component: ShuffleHell },
+  { id: 'skew',            label: 'Skew Doctor',              icon: '', component: SkewDoctor },
+  { id: 'partition',       label: 'Partition Tuner',          icon: '', component: PartitionTuner },
+  { id: 'broadcast',       label: 'Broadcast Joins',          icon: '', component: BroadcastJoinDecisions },
+  { id: 'oom',             label: 'OOM Diagnosis',            icon: '', component: OOMDiagnosis },
+  { id: 'memory_pressure', label: 'Memory Pressure',          icon: '', component: MemoryPressureSimulator },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
 const COMING_SOON = [
-  {
-    label: 'Memory Pressure Simulator',
-    userBrief: 'Given an executor config and job spec, predict: OOM, slowdown, or healthy. Builds the mental model for Spark sizing without needing a live cluster.',
-    devBrief: {
-      micro: 'Rule-based deterministic engine (not ML). Inputs: executor cores, memory, memoryFraction + dataset size, shuffle width, join type. Reveal shows calculation chain: available → reserved → execution memory → spill threshold → verdict. Same UI pattern as existing SparkLab simulators.',
-      macro: 'Completes a production failure trilogy alongside ShuffleHell (data movement) and PartitionSkew (imbalance). Together these are the 3 Spark failure modes probed at Senior+ interviews. SparkLab becomes the most complete Spark interview prep available.',
-    },
-  },
   {
     label: 'Streaming Stability Lab',
     userBrief: 'Stateful streaming edge cases that break silently: late data arriving past the watermark, checkpoint corruption, and state explosion on unbounded keyed streams.',
@@ -838,6 +1020,7 @@ export default function SparkLabTab({ onNavigate }) {
         ))}
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {onNavigate && <ForwardPointer label="Practice Spark scenarios in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--ember)" />}
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>

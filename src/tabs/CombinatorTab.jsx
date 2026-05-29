@@ -963,6 +963,21 @@ const COMING_SOON = [
   },
 ]
 
+// ─── ForwardPointer ───────────────────────────────────────────────────────────
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
+  return (
+    <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+      <button
+        onClick={() => onNavigate(tab)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <span style={{ fontSize: '12px', color: accent, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: '12px', color: accent }}>→</span>
+      </button>
+    </div>
+  )
+}
+
 export default function CombinatorTab({ onNavigate }) {
   // ── Restore saved session from localStorage ──
   const _saved = (() => {
@@ -1786,6 +1801,8 @@ export default function CombinatorTab({ onNavigate }) {
             New Config
           </button>
         </div>
+
+        {onNavigate && <ForwardPointer label="Build your Defense Plan before the mock" tab="defense" onNavigate={onNavigate} accent="var(--rose)" />}
       </div>
     )
   }

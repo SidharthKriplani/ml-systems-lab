@@ -35,6 +35,7 @@ import StaffLayerTab  from './tabs/StaffLayerTab.jsx'
 import JDPrepTab      from './tabs/JDPrepTab.jsx'
 import DefenseDocTab  from './tabs/DefenseDocTab.jsx'
 import VerbatimTab    from './tabs/VerbatimTab.jsx'
+import SpotTheFlawTab from './tabs/SpotTheFlawTab.jsx'
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -71,6 +72,7 @@ const ALL_TABS = [
   { id: 'jdprep',      component: JDPrepTab },
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
+  { id: 'spottheflaw', component: SpotTheFlawTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -78,7 +80,7 @@ const ALL_TABS = [
 // Premium: all Interview zone, all interview tools, all advanced practice modules
 const PREMIUM_TABS = new Set([
   // Interview zone (Defense Plan is free — has internal gate)
-  'interview', 'takehome', 'combinator', 'verbal',
+  'interview', 'takehome', 'combinator', 'verbal', 'spottheflaw',
   // Interview tools (Practice > Drills domain)
   'trainer', 'codebugs', 'casestudies', 'stafflayer',
   // Advanced practice modules
@@ -96,6 +98,7 @@ const TAB_TO_ZONE = {
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
   jdprep: 'interview', defense: 'interview', verbal: 'interview',
+  spottheflaw: 'interview',
   ask: 'ask',
 }
 const ZONE_DEFAULTS = {
@@ -180,6 +183,8 @@ const INTERVIEW_TOOLS = [
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--violet)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
+  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '10 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--violet)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> },
 ]
 
 // all practice tabs flat, for label lookup

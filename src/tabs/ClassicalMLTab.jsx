@@ -233,6 +233,228 @@ const HYPERPARAM_SCENARIOS = [
   },
 ]
 
+// ─── AccordionMCQ ─────────────────────────────────────────────────────────────
+
+function AccordionMCQ({ scenarios, accentColor = 'var(--violet)', contextLabel = 'Context', storageKey = null }) {
+  const [items, setItems] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('msl_score:' + storageKey))
+        if (saved && saved.length === scenarios.length) return saved
+      } catch {}
+    }
+    return scenarios.map(() => ({ open: false, picked: null, revealed: false }))
+  })
+  const [diffFilter, setDiffFilter] = useState('all')
+
+  useState(() => {
+    if (storageKey) {
+      localStorage.setItem('msl_score:' + storageKey, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('msl_score_updated'))
+    }
+  })
+
+  function getDiff(i, total) {
+    const t = total / 3
+    return i < t ? 'easy' : i < 2 * t ? 'medium' : 'hard'
+  }
+
+  const score = items.reduce((acc, item, i) => ({
+    attempted: acc.attempted + (item.revealed ? 1 : 0),
+    correct:   acc.correct   + (item.revealed && item.picked === scenarios[i].answer ? 1 : 0),
+  }), { attempted: 0, correct: 0 })
+
+  function toggle(i) {
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, open: !it.open } : it))
+  }
+
+  function pick(i, optIdx) {
+    if (items[i].revealed) return
+    setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: optIdx, revealed: true, open: true } : it))
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* Difficulty filter */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        {['all','easy','medium','hard'].map(d => (
+          <button key={d} onClick={() => setDiffFilter(d)} style={{
+            fontSize: '10px', padding: '3px 10px', borderRadius: '999px',
+            background: diffFilter === d ? accentColor + '15' : 'transparent',
+            border: `1px solid ${diffFilter === d ? accentColor : 'var(--rim)'}`,
+            color: diffFilter === d ? accentColor : 'var(--ink-ghost)', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}>
+            {d === 'all' ? 'All' : d === 'easy' ? 'Easy' : d === 'medium' ? 'Med' : 'Hard'}
+          </button>
+        ))}
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: '4px' }}>
+          {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
+        </span>
+      </div>
+      {score.attempted > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
+            {score.correct}/{score.attempted}
+          </span>
+          <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
+            <div style={{ height: '100%', width: `${(score.correct / Math.max(scenarios.length, 1)) * 100}%`, background: 'var(--mint)', borderRadius: '2px', transition: 'width 0.3s' }} />
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>{scenarios.length - score.attempted} left</span>
+        </div>
+      )}
+
+      {scenarios.map((sc, i) => {
+        if (diffFilter !== 'all' && getDiff(i, scenarios.length) !== diffFilter) return null
+        const it = items[i]
+        const isCorrect = it.revealed && it.picked === sc.answer
+        const isWrong   = it.revealed && it.picked !== sc.answer
+        let borderColor = it.open ? accentColor : 'var(--rim)'
+        if (isCorrect) borderColor = 'rgba(52,211,153,0.5)'
+        if (isWrong)   borderColor = 'rgba(244,63,94,0.5)'
+
+        return (
+          <div key={sc.id} style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden', transition: 'border-color 0.2s', background: 'rgba(255,255,255,0.015)' }}>
+            <button onClick={() => toggle(i)} style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
+              {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
+              {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
+              <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{it.open ? '▲' : '▼'}</span>
+            </button>
+
+            {it.open && (
+              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 600 }}>{contextLabel}</div>
+                  <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.context}</p>
+                </div>
+
+                <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {sc.options.map((opt, oi) => {
+                    const isAns    = oi === sc.answer
+                    const isPicked = oi === it.picked
+                    return (
+                      <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
+                        className={`msl-option-btn${it.revealed && isAns ? ' correct' : ''}${it.revealed && isPicked && !isAns ? ' wrong' : ''}${!it.revealed && isPicked ? ' selected' : ''}`}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px', flexShrink: 0, marginTop: '2px' }}>{String.fromCharCode(65 + oi)}</span>
+                        <span style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, lineHeight: 1.55 }}>
+                          {it.revealed && isAns && <span>✓ </span>}
+                          {it.revealed && isPicked && !isAns && <span>✗ </span>}
+                          {opt}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {it.revealed && (
+                  <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(244,63,94,0.11)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
+                      {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
+                    </div>
+                    {sc.fix && (
+                      <div style={{ padding: '10px 12px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '6px' }}>
+                        <div style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>Production Fix</div>
+                        <p style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── ForwardPointer ───────────────────────────────────────────────────────────
+
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
+  return (
+    <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+      <button
+        onClick={() => onNavigate(tab)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <span style={{ fontSize: '12px', color: accent, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: '12px', color: accent }}>→</span>
+      </button>
+    </div>
+  )
+}
+
+// ─── Naive Bayes Failure Modes ────────────────────────────────────────────────
+
+const NAIVE_BAYES_SCENARIOS = [
+  {
+    id: 'nb1',
+    title: 'Text classification with correlated features',
+    context: 'You are building a spam classifier using Multinomial Naive Bayes on bag-of-words features. Training accuracy is 97%. In production, performance drops to 71%. Investigation shows that spam emails consistently contain both "free" and "money" together, while your model treats them as independent features.',
+    question: 'Why does Naive Bayes fail here, and what is the correct fix?',
+    options: [
+      'Naive Bayes requires more training data — 97% training accuracy means the model is underfitted.',
+      'The conditional independence assumption is violated: P("money" | spam) and P("free" | spam) are not independent — they co-occur systematically. Naive Bayes multiplies these probabilities as if they are independent, amplifying the spam signal far beyond its true strength and making the model overconfident on correlated features.',
+      'Bag-of-words features should be replaced with TF-IDF before using Naive Bayes.',
+      'Naive Bayes cannot handle binary classification — use logistic regression instead.',
+    ],
+    answer: 1,
+    diagnosis: 'The independence assumption is the core limitation of Naive Bayes. When features co-occur systematically (as in spam: "free" + "money" + "click"), the model multiplies their conditional probabilities, treating them as independent evidence. This causes probability estimates to become extremely overconfident — Naive Bayes will assign probabilities near 1.0 to spam when correlated features appear, making it poorly calibrated even when directionally correct.',
+    fix: 'Three options: (1) Accept the limitation and use Naive Bayes for its speed/simplicity, monitoring calibration separately. (2) Add feature selection to remove highly correlated features, reducing redundant evidence. (3) Switch to a model that handles feature dependencies: logistic regression, random forest, or gradient boosting — all of which model feature interactions without assuming independence.',
+  },
+  {
+    id: 'nb2',
+    title: 'Gaussian Naive Bayes on skewed numeric features',
+    context: 'A fraud detection model uses Gaussian Naive Bayes on transaction amount, time since last transaction, and account age. Training AUC is 0.82. In production, high-value transactions (>$10,000) are almost never flagged as fraud, even when other signals are strong. Investigation reveals transaction amounts follow a heavy-tailed Pareto distribution.',
+    question: 'What is the core failure mode?',
+    options: [
+      'Gaussian Naive Bayes requires feature standardisation (z-score normalisation) before training.',
+      'The model needs more fraud examples for high-value transactions (class imbalance).',
+      'Gaussian Naive Bayes assumes each feature follows a Gaussian (normal) distribution. Transaction amounts follow a heavy-tailed Pareto distribution — the Gaussian assumption severely underestimates the probability of high-value amounts under the fraud class, making the model systematically ignore high-value transactions.',
+      'Naive Bayes cannot handle financial data — use a neural network instead.',
+    ],
+    answer: 2,
+    diagnosis: 'The Gaussian NB likelihood P(amount | fraud) is computed assuming the feature is normally distributed. For a Pareto-distributed feature, the Gaussian fit places nearly zero probability mass on values in the tail (>$10,000). This means even if $10,000 transactions are disproportionately fraudulent, the model assigns near-zero P(amount=$10,000 | fraud), dominating the posterior and suppressing the fraud prediction.',
+    fix: 'Replace Gaussian assumption with a distribution that fits the data: log-transform the transaction amount (making it approximately log-normal) before training, or use a kernel density estimator (KDE NB) which makes no parametric assumption about the feature distribution. Alternatively, bucket the amount feature into quantile bins and use Categorical/Multinomial NB, which makes no distributional assumption.',
+  },
+  {
+    id: 'nb3',
+    title: 'Zero-frequency problem in production',
+    context: 'A product category classifier uses Multinomial Naive Bayes trained on 50,000 product descriptions. In production, it fails with a probability of 0.0 for any product containing a word not seen during training — even if every other word strongly indicates the category.',
+    question: 'What causes this and what is the standard fix?',
+    options: [
+      'The training vocabulary needs to be expanded — the model did not see enough training examples.',
+      'The zero-frequency problem: if a word never appeared in training, P(word | class) = 0. Since Naive Bayes multiplies all feature probabilities, a single zero collapses the entire posterior to 0.0, regardless of how strong the other signals are. One unseen word destroys the prediction.',
+      'Out-of-vocabulary words should be removed from the input before prediction.',
+      'The model needs to be retrained with TF-IDF instead of raw counts.',
+    ],
+    answer: 1,
+    diagnosis: 'Multinomial Naive Bayes computes the product of P(word_i | class) for all words in the document. If any word has P(word_i | class) = 0 (because it never appeared in training), the entire product evaluates to 0.0 regardless of how many other words strongly indicate the class. This is a fundamental failure mode for any real deployment where the input vocabulary will differ from training.',
+    fix: 'Apply Laplace smoothing (add-1 smoothing): add 1 to every word count in training, including words that never appeared. This gives every possible word a small non-zero probability. In sklearn: `MultinomialNB(alpha=1.0)` (default). For stronger smoothing on rare words, tune alpha: higher alpha = more smoothing = more conservative probability estimates. Also implement an OOV (out-of-vocabulary) token for unknown words.',
+  },
+]
+
+function NaiveBayesFailures() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Classical ML</div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 8px' }}>Naive Bayes Failure Modes</h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '560px', margin: 0 }}>
+          Three failure modes that look fine in training and break in production. The independence assumption, the Gaussian assumption, and the zero-frequency problem.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={NAIVE_BAYES_SCENARIOS} accentColor="var(--sky)" storageKey="classical_naive_bayes" />
+    </div>
+  )
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ModelFailureZoo() {
@@ -701,6 +923,7 @@ const MODULES = [
   { id: 'zoo', icon: '', label: 'Model Failure Zoo', component: ModelFailureZoo },
   { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab },
   { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
+  { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -712,14 +935,6 @@ const COMING_SOON = [
     devBrief: {
       micro: 'Pyodide sklearn SVC on a 2D Gaussian mixture dataset. C + gamma sliders update Python vars, re-run cell, re-render matplotlib contourf as base64 image. No server required. ~2–3h.',
       macro: 'Model Failure Zoo covers when models break in production. This covers why — the geometry behind the failure. Pairs directly with the SVM card in the Zoo, turning the written failure mode into a live demonstration.',
-    },
-  },
-  {
-    label: 'Bayesian Classifier Clinic',
-    userBrief: 'Naive Bayes works until the independence assumption shatters. Real failure modes: text classification with bigrams, structured data with correlated features, numeric inputs with non-Gaussian distributions.',
-    devBrief: {
-      micro: 'AccordionMCQ, 3 scenarios. Focus: diagnosing when the i.i.d. assumption breaks in practice and which signals expose it. Each reveal includes a calibration plot or confusion matrix as context.',
-      macro: 'Completes classical ML failure mode coverage alongside the Zoo and Ensemble Lab. Every model in the Zoo has a failure scenario; this adds the Bayesian family which is currently absent.',
     },
   },
 ]
@@ -807,6 +1022,7 @@ export default function ClassicalMLTab({ onNavigate }) {
           ))}
         </div>
       </div>
+      {onNavigate && <ForwardPointer label="Test classical ML judgment in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--sky)" />}
     </div>
   )
 }

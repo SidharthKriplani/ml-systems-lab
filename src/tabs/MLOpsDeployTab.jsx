@@ -631,6 +631,21 @@ function RollbackDecision() {
   )
 }
 
+// ─── ForwardPointer ───────────────────────────────────────────────────────────
+function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
+  return (
+    <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+      <button
+        onClick={() => onNavigate(tab)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <span style={{ fontSize: '12px', color: accent, fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: '12px', color: accent }}>→</span>
+      </button>
+    </div>
+  )
+}
+
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
   { id: 'deploy',    label: 'Deployment Strategy',  icon: '', component: DeployStrategy },
@@ -667,6 +682,8 @@ export default function MLOpsDeployTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+
+      {onNavigate && <ForwardPointer label="Practice deployment decisions in Combinator" tab="combinator" onNavigate={onNavigate} accent="var(--ember)" />}
     </div>
   )
 }

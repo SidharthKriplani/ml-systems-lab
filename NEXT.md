@@ -8,20 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. README positioning rewrite (30 min)
-The current README leads with domain breadth ("6 engineering domains, 200+ scenarios"). That buries the wedge. Rewrite to open with the product thesis and lead with "Can you debug it in production?" Hook: one sharp paragraph up top. Then: 4 differentiators (Pyodide in-browser Python, Web Speech verbal practice, StaffLayer IC5→Staff scenarios, CodeBugs debugging), flagship foregrounded (Interview zone / 45-min mock interview). Cut or move the domain/tab grid lower. One commit, README.md only.
+### 1. Apply .msl-option-btn to remaining MCQ tabs (1 hour)
+ClassicalMLTab got it in v4.28. Still missing: FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab. Each has 4-option MCQ buttons with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` modifier class. Check each tab's AccordionMCQ option rendering and apply. Verify with brace check after each file.
 
-### 2. Mobile verification — HomeTab TODAY row (15 min + fix if broken)
-The two-column `gridTemplateColumns: 'minmax(0, 1fr) auto'` TODAY row was never tested on narrow screens. Open DevTools → 375px and 320px. If the case card text is unreadably compressed, add `@media (max-width: 480px)` to stack columns vertically (`gridTemplateColumns: '1fr'`, activity widget full width below case card). Fix in `HomeTab.jsx` inline with a `<style>` tag or conditional style object.
+### 2. SpotTheFlawTab — expand to 12 scenarios + add 2 more flaw categories (1–2 hours)
+Currently 10 scenarios across 5 categories. Add 2 more: stf11 (Metric Mismatch — online/offline metric gap, e.g. NDCG vs CTR divergence), stf12 (Labeling Artifact — annotator bias in ambiguous class boundary). Also audit existing 10 for explanation quality — every reveal must include (a) what breaks in production, (b) the signal that tells you you're in that situation. Flaw count strip shows `{attempted}/{total}` so the total will update automatically.
 
-### 3. Apply .msl-option-btn to MCQ tabs (1–2 hours)
-The `.msl-option-btn` class is defined in index.css and was applied to CodeBugsTab and InterviewPrepTab last session. Extend to the core MCQ practice tabs: FeatureEngTab, ModelEvalTab, MonitoringTab, ClassicalMLTab, DataScienceTab. Each has 4-option MCQ buttons rendered with ad-hoc inline styles. Replace with `className="msl-option-btn"` + conditional `correct`/`wrong`/`selected` class. This unifies the most user-facing interactive element across all practice tabs.
+### 3. Project Lab tab — Phase 1 skeleton (2–3 hours)
+New tab `ProjectLabTab.jsx`. Sequential notebook pattern. Phase 1 only: data ingestion + EDA. 3 Pyodide cells (load UCI/sklearn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 judgment checkpoints as AccordionMCQ between cells (spotting skew → right transformation choice; null pattern → imputation strategy). LocalStorage key `msl_projectlab_p1`. No deployment scaffold yet — that's Phase 5. See IDEAS.md Tier 1 for full spec. Add to App.jsx (practice zone, premium), import in ALL_TABS.
 
-### 4. Module forward pointers — remaining tabs (1 hour)
-SystemDesignTab, FeatureEngTab, ModelEvalTab, MonitoringTab, DeepLearningTab are done. Extend to: ClassicalMLTab, MLOpsDeployTab, SparkLabTab, DataScienceTab, CombinatorTab. Same `ForwardPointer` component pattern. Guard with `{onNavigate && ...}`.
+### 4. New user cold-state banner (45 min)
+Detect first visit: no `msl_tab`, `msl_score:*`, or `msl_access` in localStorage. Show a one-time orientation banner at top of HomeTab: "Start here → Feature Engineering (free) or enter access code DAI2026 for full access." Banner disappears after first tab visit (set `msl_onboarded: 1`). Do not add to Today zone sidebar — HomeTab only. See IDEAS.md Tier 1.
 
-### 5. Spot the Flaw tab — full build (3–4 hours)
-Interview zone, 12 scenarios. Each scenario: a real ML code block or metric summary with exactly one subtle flaw — user picks the flaw category from 5 options, then sees the breakdown. Flaw taxonomy: Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact. Routing: `tabId: 'spottheflaw'`, zone: `interview`. See IDEAS.md Tier 1 for full spec.
+### 5. Emoji → SVG pass — HomeTab + CombinatorTab (1 hour)
+HomeTab and CombinatorTab are the highest-traffic tabs still using decorative emoji. Grep both files for emoji codepoints (🎯🔥⚡🧪📊🎓 etc). Replace decorative ones with inline `<svg>` using `currentColor`. Functional glyphs (✓ ✗ →) stay as-is. Audit #016 in AUDITS.md has the full inventory. One commit per file.
 
 ---
 
@@ -44,6 +44,11 @@ Nothing currently blocked.
 - ~~PAL-modeled polish (v4.24+v4.25) — transition/shadow/radius tokens, sidebar-item-active left-border, lock icons removed, role pills collapsed, progress bar animations, Space Grotesk dropped, shared utility classes (.msl-option-btn, .msl-reveal-panel, .msl-scenario-card, .msl-hint), .section-eyebrow applied to 17 instances across 4 tabs, dark theme token audit (6 replacements)~~
 - ~~Systematic design-system pass (v4.26) — .section-eyebrow (~44 instances), .msl-option-btn, .msl-reveal-panel applied across remaining 14 tabs; all 30 tabs brace-balanced~~
 - ~~Fill 10 COMING_SOON stubs (v4.27) — SystemDesign, MLOpsPipelines, Monitoring, FeatureEng, CodeBugs; 18 new scenarios + 6 new bugs; all COMING_SOON arrays cleared~~
+- ~~README rewrite (v4.28) — judgment-gap hook, 4 differentiators foregrounded, Interview zone flagship, domain grid moved lower~~
+- ~~HomeTab mobile fix (v4.28) — @media 480px TODAY row stacks vertically; sparse heatmap guard~~
+- ~~Apply .msl-option-btn to ClassicalMLTab (v4.28) — NaiveBayes module + option-btn + ForwardPointer~~
+- ~~ForwardPointers to MLOpsDeployTab, CombinatorTab, DataScienceTab (v4.28)~~
+- ~~Spot the Flaw tab full build (v4.28) — 10 scenarios, 5 flaw categories, Interview zone routing, GlobalSearch indexed~~
 
 ---
 

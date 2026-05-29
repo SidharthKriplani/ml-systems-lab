@@ -13,6 +13,8 @@ const DOMAIN_COLORS = {
   'Feature Engineering': 'var(--mint)',
   'Problem Framing': 'var(--amber, #f59e0b)',
   'ML Necessity': 'var(--gold)',
+  'Incident Response': 'var(--rose)',
+  'Platform Decisions': 'var(--violet)',
 }
 
 const SCENARIOS = [
@@ -232,6 +234,30 @@ const SCENARIOS = [
     ic5: "High correlation with label in offline eval but zero online lift is the signature of label leakage or a feature that captures a downstream consequence of the label rather than a cause. Check: is this feature computed using information that wouldn't be available at prediction time? Is the timestamp on the feature data correct? Run a point-in-time audit.",
     staff: "0.8 correlation with zero online lift is almost always leakage — the feature is a consequence of the event you're trying to predict, not a precursor. The offline eval looks great because in historical data the feature value was recorded after the outcome. At serving time, the outcome hasn't happened yet, so the feature contains no signal. The fix: enforce strict point-in-time correctness in your feature join — for each training example (entity, event_timestamp), join feature values at max(feature_timestamp) ≤ event_timestamp. Then re-evaluate the feature offline with the corrected join. If the correlation drops to near-zero, the feature is pure leakage. If it drops but stays meaningful, you had partial leakage. Document this in your feature store's feature card — future engineers will try to add this feature again.",
   },
+  {
+    id: 'incident_room',
+    title: 'Multi-Team Incident Room',
+    domain: 'Incident Response',
+    ic3: 'Checks each alert in the order they arrived. Asks the feature engineering team what changed, asks infra for logs, and starts looking at the model eval code. Treats all three as separate incidents. Escalates to the Staff engineer after 30 minutes of no progress. Gap: No triage framework. Treats correlated signals as independent. Does not ask "are these three alerts caused by the same root event?" first. Spends investigation budget on the wrong layer.',
+    ic5: 'Immediately hypothesises that the three signals are correlated — stale features would cause both AUC degradation and serving latency (if the serving pipeline is recomputing stale features on every request). Asks: did the feature store issue start before the latency spike? If yes, focuses on feature store first. Coordinates the two teams with a shared incident channel. Assigns one person to monitor, not investigate. Gap: Good triage, but still relies on sequential investigation. Does not immediately think about blast radius: how many models depend on this feature? What is the business impact per minute of delay? Does not pre-position rollback while investigating.',
+    staff: "First 60 seconds: establish a timeline. \"When did each signal first appear?\" If the feature store staleness predates the latency spike by >5 minutes, the root cause is upstream — everything else is a symptom. While the feature team investigates, immediately answer: (1) Can we route traffic to a model version that does not use this feature? (2) Is there a cached/fallback value that is safe enough to serve? (3) What is the P&L impact per minute — does that justify an emergency rollback to last week's model? Coordinates three teams from a shared war room doc with explicit ownership. Does not investigate personally — delegates investigation, makes rollback/serve decisions. Staff incident response is about blast radius assessment and decision authority, not debugging skill. The right move is often \"serve safely degraded\" while root cause is found, not \"find root cause before acting.\" The IC5 investigates; the Staff decides.",
+  },
+  {
+    id: 'cross_team_drift',
+    title: 'Cross-Team Feature Ownership Conflict',
+    domain: 'Incident Response',
+    ic3: "Retrain the model on the new feature distribution. Notes that the data team should communicate changes better. Moves on. Gap: Fixes the symptom, not the system. The same failure will happen again with the next schema change. No structural change to prevent recurrence.",
+    ic5: "Retrain the model. Proposes adding a schema change review process: any data engineering change to a feature used by an ML model requires ML team sign-off. Documents the incident. Creates a shared Slack channel between data engineering and ML. Gap: Better, but the proposed process relies on humans remembering to check. Does not address the underlying issue: there is no automated system that knows which ML models depend on which features. Manual process will degrade over time.",
+    staff: "Retrain the model immediately. But the real fix is architectural: build or adopt a feature registry with consumer tracking. Every feature has an owner and a list of registered consumers (ML models, downstream pipelines). Any schema change to a registered feature triggers an automated compatibility check and notifies all registered consumers before the change lands in production. The ownership question (\"who is responsible?\") is answered structurally: the feature owner is responsible for the feature contract; the model team is responsible for registering as a consumer. Neither party can claim ignorance once registration is required. Schema conflicts at scale are not communication problems — they are architecture problems. The Staff move is to eliminate the class of failures, not to improve the process that failed.",
+  },
+  {
+    id: 'build_vs_buy',
+    title: 'Build vs. Buy: Feature Serving Infrastructure',
+    domain: 'Platform Decisions',
+    ic3: 'Benchmarks Redis latency and confirms it can hit <10ms. Notes that Feast is free and widely used. Recommends building on Redis because "it gives us full control." Does not model the engineering cost of building and maintaining the custom service over 2 years. Gap: Evaluates the technical capabilities but not the total cost of ownership. "Full control" is not a benefit when you do not have the team to exercise it. Does not ask: what problem are we actually solving, and is it our core competency?',
+    ic5: 'Estimates the engineering cost: building a production-grade feature store with point-in-time correctness, backfill, monitoring, and serving will take 3–6 months and require ongoing maintenance. Compares against Feast (6–8 weeks to adopt, community support, but ops burden stays internal) and commercial (faster, SLA-backed, but vendor lock-in and cost). Recommends Feast as the middle path: proven, free, avoids the build cost, gives enough control. Gap: Good cost modelling, but does not fully account for team velocity impact. A 5-person team spending 30% of time on feature store maintenance is a meaningful drag on roadmap. Does not ask: what is the opportunity cost of this infrastructure investment vs. building ML value?',
+    staff: 'Starts with the org constraints: 5 engineers, 2 senior. Building and owning custom infrastructure at this team size creates fragility — if one senior engineer leaves, the feature store is a bus factor 1 system. The decision framework: (1) Is this your core competency? No — serving features is infrastructure, not ML differentiation. (2) What is the build cost vs. expected value of control? At 5 engineers, the control value is low. (3) What are the lock-in risks of commercial? Evaluate contract terms, data portability, migration cost. Recommendation: start with Feast. Adopt commercial if team grows beyond 10 engineers and the ops burden of Feast becomes material. Document this decision explicitly so it is revisited at the right trigger, not revisited emotionally when Feast has a bad week. Build vs. buy at Staff level is an org decision, not a technical one. The right answer depends on team size, bus factor, core competency, and opportunity cost. "We can build it" is almost always true and almost never the right framing.',
+  },
 
 ]
 
@@ -245,24 +271,7 @@ function initReveals() {
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 // devBrief fields are internal build guidance only — not rendered to users.
-const COMING_SOON = [
-  {
-    label: 'Multi-Team Incident Room',
-    userBrief: 'A production ML incident spans feature engineering, model serving, and monitoring simultaneously. Coordinate the response across teams — IC3, IC5, and Staff each see a different part of the problem.',
-    devBrief: {
-      micro: 'Same sequential reveal format (IC3 → IC5 → Staff). Scenario: model latency SLA breached and accuracy drop detected simultaneously. IC3 diagnoses independently. IC5 coordinates. Staff escalates, assigns owners, runs postmortem framing.',
-      macro: 'Existing StaffLayer scenarios are single-domain. This is cross-domain — the failure mode that defines Staff-level system visibility. Most realistic Staff interview scenario type and currently absent from the bank.',
-    },
-  },
-  {
-    label: 'Platform Investment Decision',
-    userBrief: 'Build vs. buy: a new feature serving infrastructure. IC3 benchmarks options. IC5 adds cost and latency tradeoffs. Staff decides based on team velocity, vendor lock-in, and org-level technical debt.',
-    devBrief: {
-      micro: 'Sequential reveal, same format. Scenario: ML platform team evaluating feast vs. tecton vs. custom build. IC3 gives technical comparison. IC5 adds cost/latency. Staff answer introduces: total maintenance cost, eng-months to migrate, what you give up with each choice.',
-      macro: 'Build vs. buy is the signature Staff-level engineering framing. Absent from current StaffLayer and present in almost every Staff+ interview. High-signal addition that covers the org-level reasoning the tool is designed to teach.',
-    },
-  },
-]
+const COMING_SOON = []
 
 export default function StaffLayerTab({ onNavigate }) {
   const [reveals, setReveals] = useState(initReveals)
