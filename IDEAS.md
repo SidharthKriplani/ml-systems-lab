@@ -85,6 +85,68 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 - [ ] Behavioral question bank in Interview zone — ML-specific situations (disagreed with a metric, shipped despite uncertainty, stakeholder conflict over model decision)
 - [ ] Causal Inference: DAG editor — draw causal graph, identify confounders/colliders/mediators interactively (Pyodide)
 
+### Project Lab — end-to-end DS/MLE notebook tab (identified 2026-05-29)
+
+- [ ] **New tab: `ProjectLabTab` in the Practice zone.** A sequential, runnable notebook experience covering the full production ML workflow — from raw data to deployment scaffold. This is the biggest gap between MSL's current judgment-simulation format and what DS/MLE roles actually test in take-homes and technical rounds.
+
+**Why this is Tier 1:** DS and MLE roles increasingly expect candidates to demonstrate the full loop — not just "what would you do?" (judgment) but "show me the code" (execution). MSL currently has the judgment layer. Project Lab adds the execution layer, with Pyodide handling data science and annotated scaffolds covering deployment.
+
+**Format:** Sequential notebook — cells run in order, each cell's output feeds the next. Not AccordionMCQ. Closest analogy: a Jupyter notebook embedded in MSL with judgment checkpoints between sections.
+
+**Datasets (3–4, fixed, pre-loaded in JS):**
+- Churn prediction (telco): binary classification, class imbalance, business interpretation
+- Loan default (credit): risk scoring, calibration-critical, regulatory framing
+- Fraud detection (transactions): extreme imbalance, precision/recall tradeoff, latency constraint
+- House price regression: continuous target, feature importance, residual diagnostics
+
+**Cell sequence per project:**
+
+*Phase 1 — Data (Pyodide, real execution):*
+1. Schema inspection — dtypes, nulls, cardinality, duplicates
+2. EDA — distribution plots (matplotlib), class balance, correlation heatmap, outlier flags
+3. Data quality judgment checkpoint: "3 issues found — which would you fix before training?"
+
+*Phase 2 — Features (Pyodide, real execution):*
+4. Feature engineering — encoding (OHE/target), scaling, imputation strategy, interaction terms
+5. Feature importance — permutation importance or SHAP values (sklearn)
+6. Leakage check judgment checkpoint: "Does feature X constitute leakage for this use case?"
+
+*Phase 3 — Model (Pyodide, real execution):*
+7. Train/val/test split — stratified, correct ordering (no future leakage)
+8. Model training — LogisticRegression + RandomForest + XGBoost, side-by-side
+9. Evaluation — precision/recall/AUC/F1, confusion matrix, threshold selection
+10. Calibration — reliability diagram, ECE (Expected Calibration Error), Platt scaling vs. isotonic regression
+11. Deployment judgment checkpoint: "AUC = 0.81, ECE = 0.12, p95 latency = 38ms, class imbalance 1:20 — would you ship this?"
+
+*Phase 4 — Monitoring (Pyodide, real execution):*
+12. PSI (Population Stability Index) — compute on held-out "production" split, interpret bands (<0.1 stable, 0.1–0.25 monitor, >0.25 retrain)
+13. KS test — Kolmogorov-Smirnov for distribution shift on numerical features
+14. Prediction drift — output score distribution shift over time
+15. Label drift (conceptual + code stub) — when ground truth labels arrive, how to detect and act
+16. Data quality monitoring — null rate drift, out-of-range values, schema violations
+17. Alerting judgment checkpoint: "PSI = 0.19 on user_age, KS p-value = 0.03 on income — page immediately, log and watch, or auto-rollback?"
+
+*Phase 5 — Deployment scaffold (code blocks, annotated, not runnable until backend lands):*
+18. FastAPI app — model loading, `/predict` endpoint, input validation (Pydantic), response schema, error handling
+19. Dockerfile — multi-stage build, model artifact copy, uvicorn entrypoint, health check
+20. Kubernetes manifest — Deployment + Service + HPA (horizontal pod autoscaler), resource limits, liveness/readiness probes
+21. CI/CD stub — GitHub Actions workflow: test → build → push to ECR → apply manifest
+22. AWS mapping callout: FastAPI → ECS/ECR or Lambda, K8s → EKS, monitoring → CloudWatch + SageMaker Model Monitor
+
+**Judgment layer (woven throughout):** At each checkpoint, user selects from 3–4 options and sees a reveal explaining the production reasoning. Same `.msl-option-btn` + `.msl-reveal-panel` pattern. These are the interview moments — not the code, but the decisions the code surfaces.
+
+**Implementation notes:**
+- New tab `ProjectLabTab.jsx` in Practice zone, zone: `practice`, domain: ML Engineering
+- Pyodide cells use existing `PythonCell.jsx` wrapper
+- Datasets bundled as JS arrays (small enough: 500–1000 rows, 10–15 features)
+- Deployment phase: static code blocks with syntax highlighting, copy button, annotation overlays
+- Each phase completable independently — progress stored in `msl_projectlab_{dataset}_{phase}` localStorage keys
+- Estimated build: 2–3 days. Content (Python scripts, annotations, judgment questions) is the long pole.
+
+**What this is not:** A Jupyter replacement or a generic coding sandbox. Every cell has a purpose tied to a production decision. The notebook is the vehicle; the judgment checkpoints are the product.
+
+(Source: lab diagnosis + DS/MLE role analysis, May 2026)
+
 ### Cloud/service mapping layer (identified 2026-05-29, post lab diagnosis)
 - [ ] **AWS/cloud service callouts on MLOps/deployment/monitoring scenarios** — each scenario that involves a technology or architecture choice should include a "In production, this maps to:" reveal panel showing the concrete AWS (or equivalent) service. E.g., "Feature store staleness → SageMaker Feature Store, CloudWatch feature drift metric." E.g., "Model registry promotion gate → SageMaker Model Registry, approval workflow, shadow endpoint." Target tabs: MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, StaffLayerTab, SystemDesignTab. Implementation: new `.msl-cloud-map` panel (styled like `.msl-reveal-panel`) added inside relevant AccordionMCQ reveals. Pure content work — no architecture change. ~2–3 hours content, ~30 min UI. This closes the gap between judgment simulation and interview-ready AWS fluency: users learn not just "what breaks" but "what it's called in prod." (Source: lab diagnosis, May 2026)
 

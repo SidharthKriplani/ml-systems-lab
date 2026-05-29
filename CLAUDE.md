@@ -70,6 +70,7 @@ src/
     JDPrepTab.jsx
     DefenseDocTab.jsx
     VerbatimTab.jsx
+    ProjectLabTab.jsx  ← planned (see IDEAS.md Tier 1 — sequential notebook, Pyodide DS + deployment scaffold)
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/
     gradientPosts.js       All Gradient post content

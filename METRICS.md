@@ -78,6 +78,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_last_visit` | `string` (ISO date) | `HomeTab` | Date of the most recent HomeTab mount in `YYYY-MM-DD` format. Used to compute streak continuity. |
 | `msl_activity_YYYY-MM-DD` | `number` (as string) | `HomeTab` | Visit count for a specific calendar day. Key is dynamic — one key per day. Incremented on every HomeTab mount. Powers the activity heatmap (currently 28-day / 4-week window — changed from 91-day in v4.16 because 91 mostly-empty squares looked broken for new users). Keys older than 28 days are still written but not rendered. |
 | `msl_casestudies` | `JSON object` | `CaseStudiesTab` | Map of `{ caseId: { q0: answered, q1: answered, ... } }` — persists which questions in each case study have been expanded/answered across sessions. |
+| `msl_projectlab_{dataset}_{phase}` | `JSON` | `ProjectLabTab` (planned) | Per-dataset, per-phase completion state. `dataset` ∈ `{churn, loan, fraud, housing}`. `phase` ∈ `{data, features, model, monitoring, deployment}`. Stores which cells have been run and which judgment checkpoints have been answered. Key is dynamic — one per dataset/phase pair. |
 
 ---
 

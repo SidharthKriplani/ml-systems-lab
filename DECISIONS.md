@@ -76,6 +76,9 @@ Every module opens with a real situation (a broken system, a metric gone wrong, 
 **AccordionMCQ pattern for judgment modules.**  
 Closed = title + domain badge. Open = description + code/context + 4 options. After answer: reveal correct/wrong with color border + explanation. This is the standard interaction pattern — use it for all new judgment modules.
 
+**Sequential notebook pattern for execution modules (Project Lab).**  
+A second interaction pattern exists for tabs where the user runs code step-by-step through a complete workflow (Project Lab: data → features → model → monitoring → deployment scaffold). Format: numbered cells run in order, each cell's output feeds the next, judgment checkpoints (`msl-option-btn` + `msl-reveal-panel`) woven between execution phases. Do not mix this pattern with AccordionMCQ in the same tab — they serve different learning modes. Pyodide (`PythonCell.jsx`) handles execution; deployment cells are annotated code blocks (not runnable until backend lands).
+
 **Per-option explanations, not just "correct answer" reveals.**  
 Every wrong option gets an explanation of why it's wrong. This is the core learning mechanism.
 
