@@ -292,14 +292,14 @@ function PreprocessingLab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>✅</span>
+            <span style={{ fontSize: '16px', color: 'var(--mint)' }}>✓</span>
             <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--mint)', fontSize: '14px' }}>Correct pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_CORRECT} height={280} label="sklearn Pipeline (correct)" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>❌</span>
+            <span style={{ fontSize: '16px', color: 'var(--rose)' }}>✗</span>
             <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--rose)', fontSize: '14px' }}>Leaky pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_LEAKY} height={280} label="sklearn (data leakage bug)" />

@@ -367,7 +367,7 @@ function ModelFailureZoo() {
             display: 'flex',
             gap: '10px',
           }}>
-            <span style={{ fontSize: '14px', flexShrink: 0 }}>📌</span>
+            <span style={{ fontSize: '14px', flexShrink: 0, color: 'var(--prime)' }}>→</span>
             <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
               <strong style={{ color: 'var(--mint)', fontWeight: 600 }}>Production note: </strong>
               {model.productionNote}
@@ -698,9 +698,9 @@ function HyperparamPriority() {
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
-  { id: 'zoo', icon: '💀', label: 'Model Failure Zoo', component: ModelFailureZoo },
-  { id: 'ensemble', icon: '🎰', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab },
-  { id: 'hyperparam', icon: '🎛', label: 'Hyperparameter Priority', component: HyperparamPriority },
+  { id: 'zoo', icon: '', label: 'Model Failure Zoo', component: ModelFailureZoo },
+  { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab },
+  { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
 ]
 
 export default function ClassicalMLTab({ onNavigate }) {

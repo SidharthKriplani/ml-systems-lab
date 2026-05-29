@@ -6,7 +6,7 @@ const ROLES = [
   {
     title: 'Machine Learning Engineer',
     pathId: 'production_ml',
-    icon: '⚙️',
+    icon: '',
     level: 'Core',
     accentColor: 'var(--mint)',
     borderColor: 'rgba(52,211,153,0.25)',
@@ -23,7 +23,7 @@ const ROLES = [
   {
     title: 'MLOps / ML Platform Engineer',
     pathId: 'mlops_track',
-    icon: '🔧',
+    icon: '',
     level: 'Infra',
     accentColor: 'var(--sky)',
     borderColor: 'rgba(56,189,248,0.25)',
@@ -40,7 +40,7 @@ const ROLES = [
   {
     title: 'Research Scientist',
     pathId: 'staff_design',
-    icon: '🔬',
+    icon: '',
     level: 'Research',
     accentColor: 'var(--violet)',
     borderColor: 'rgba(168,85,247,0.25)',
@@ -57,7 +57,7 @@ const ROLES = [
   {
     title: 'Applied Scientist',
     pathId: 'mle_interview',
-    icon: '🧪',
+    icon: '',
     level: 'Applied Research',
     accentColor: 'var(--ember)',
     borderColor: 'rgba(249,115,22,0.25)',
@@ -74,7 +74,7 @@ const ROLES = [
   {
     title: 'Data Scientist',
     pathId: 'ds_track',
-    icon: '📊',
+    icon: '',
     level: 'Analytics',
     accentColor: 'var(--gold)',
     borderColor: 'rgba(251,191,36,0.25)',
@@ -91,7 +91,7 @@ const ROLES = [
   {
     title: 'NLP / Vision Specialist',
     pathId: 'deep_learning_prod',
-    icon: '👁',
+    icon: '',
     level: 'Specialist',
     accentColor: 'var(--rose)',
     borderColor: 'rgba(244,63,94,0.25)',
@@ -187,7 +187,7 @@ const STAGES = [
 const COMPANIES = [
   {
     name: 'Netflix',
-    icon: '🎬',
+    icon: '',
     sector: 'Streaming',
     mlMotto: '"Every second of content you\'ve watched was predicted."',
     headline: 'ML is Netflix\'s core product, not a feature.',
@@ -204,7 +204,7 @@ const COMPANIES = [
   },
   {
     name: 'Spotify',
-    icon: '🎵',
+    icon: '',
     sector: 'Music Streaming',
     mlMotto: '"Every Monday morning, 456 million people get a playlist made just for them."',
     headline: 'Discovery is the product. ML is how discovery works.',
@@ -221,7 +221,7 @@ const COMPANIES = [
   },
   {
     name: 'Uber',
-    icon: '🚗',
+    icon: '',
     sector: 'Ride-sharing / Logistics',
     mlMotto: '"Every price, every ETA, every match — ML."',
     headline: 'Real-time marketplace optimisation at planetary scale.',
@@ -238,7 +238,7 @@ const COMPANIES = [
   },
   {
     name: 'Airbnb',
-    icon: '🏠',
+    icon: '',
     sector: 'Marketplace',
     mlMotto: '"Every price, every search ranking, every trust decision."',
     headline: 'Trust and discovery are ML problems. Solving them is Airbnb\'s business.',
@@ -255,7 +255,7 @@ const COMPANIES = [
   },
   {
     name: 'Google',
-    icon: '🔍',
+    icon: '',
     sector: 'Search / Ads / Cloud',
     mlMotto: '"ML is foundational, not a feature."',
     headline: 'Google is a machine learning company that also does search.',
@@ -272,7 +272,7 @@ const COMPANIES = [
   },
   {
     name: 'Meta',
-    icon: '👥',
+    icon: '',
     sector: 'Social / VR',
     mlMotto: '"Every feed, every ad, every content moderation decision."',
     headline: 'Four billion users generate the world\'s largest labelled social graph.',
@@ -332,7 +332,6 @@ function RolesSection({ onNavigate }) {
           <button key={r.title} onClick={() => setSelected(selected === i ? null : i)}
             style={{ textAlign: 'left', padding: '18px 20px', borderRadius: '12px', border: `1px solid ${selected === i ? r.borderColor : 'var(--rim)'}`, background: selected === i ? r.bgColor : 'var(--depth)', cursor: 'pointer', transition: 'all 0.15s' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '22px' }}>{r.icon}</span>
               <div>
                 <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: selected === i ? r.accentColor : 'var(--ink-hi)' }}>{r.title}</div>
                 <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{r.level}</div>
@@ -347,7 +346,6 @@ function RolesSection({ onNavigate }) {
       {role && (
         <div className="card" style={{ border: `1px solid ${role.borderColor}`, background: role.bgColor, padding: '24px 28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '28px' }}>{role.icon}</span>
             <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '20px', fontWeight: 700, color: role.accentColor, margin: 0 }}>{role.title}</h3>
           </div>
 
@@ -647,12 +645,12 @@ function MarketsSection() {
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const SECTIONS = [
-  { id: 'roles',     label: 'Roles',      icon: '👤', component: RolesSection },
-  { id: 'salary',    label: 'Salaries',   icon: '💰', component: SalarySection },
-  { id: 'stacks',    label: 'Tech Stacks',icon: '🔩', component: StackSection },
-  { id: 'companies', label: 'Companies',  icon: '🏢', component: CompaniesSection },
-  { id: 'timeline',  label: 'ML History', icon: '📅', component: TimelineSection },
-  { id: 'markets',   label: 'Global',     icon: '🌍', component: MarketsSection },
+  { id: 'roles',     label: 'Roles',      icon: '', component: RolesSection },
+  { id: 'salary',    label: 'Salaries',   icon: '', component: SalarySection },
+  { id: 'stacks',    label: 'Tech Stacks',icon: '', component: StackSection },
+  { id: 'companies', label: 'Companies',  icon: '', component: CompaniesSection },
+  { id: 'timeline',  label: 'ML History', icon: '', component: TimelineSection },
+  { id: 'markets',   label: 'Global',     icon: '', component: MarketsSection },
 ]
 
 export default function LandscapeTab({ onNavigate }) {
@@ -675,7 +673,7 @@ export default function LandscapeTab({ onNavigate }) {
         {SECTIONS.map(s => (
           <button key={s.id} onClick={() => setActive(s.id)}
             className={`sub-tab ${active === s.id ? 'active' : 'inactive'}`}>
-            <span style={{ marginRight: '6px' }}>{s.icon}</span>{s.label}
+            {s.label}
           </button>
         ))}
       </div>

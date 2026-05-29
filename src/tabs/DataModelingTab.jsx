@@ -678,12 +678,12 @@ function OLAPShowdown() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ROADMAP = [
-  { icon: '⭐', label: 'Star vs OBT Judgment',    desc: 'Set team + query + volume + audit constraints. Get a reasoned schema recommendation with where it breaks.', status: 'live' },
-  { icon: '🕐', label: 'SCD Type Selector',       desc: '8 business scenarios. Pick the correct SCD type. Reveal explains production tradeoffs.', status: 'live' },
-  { icon: '🏔', label: 'OLAP Format Showdown',    desc: 'Iceberg vs Delta vs Hudi vs Hive+Parquet. Ranked by your engine, operation, and team constraints.', status: 'live' },
-  { icon: '🌾', label: 'Grain Decision Lab',      desc: 'Choosing fact table grain, fan trap and chasm trap diagnosis.', status: 'soon' },
-  { icon: '📐', label: 'Denormalization Pressure',desc: 'When to denorm — query performance vs flexibility tradeoff under load.', status: 'soon' },
-  { icon: '🏛',  label: 'Data Vault Patterns',    desc: 'Hub/satellite/link architecture for regulated industries. When raw vault beats star schema.', status: 'soon' },
+  { icon: '', label: 'Star vs OBT Judgment',    desc: 'Set team + query + volume + audit constraints. Get a reasoned schema recommendation with where it breaks.', status: 'live' },
+  { icon: '', label: 'SCD Type Selector',       desc: '8 business scenarios. Pick the correct SCD type. Reveal explains production tradeoffs.', status: 'live' },
+  { icon: '', label: 'OLAP Format Showdown',    desc: 'Iceberg vs Delta vs Hudi vs Hive+Parquet. Ranked by your engine, operation, and team constraints.', status: 'live' },
+  { icon: '', label: 'Grain Decision Lab',      desc: 'Choosing fact table grain, fan trap and chasm trap diagnosis.', status: 'soon' },
+  { icon: '', label: 'Denormalization Pressure',desc: 'When to denorm — query performance vs flexibility tradeoff under load.', status: 'soon' },
+  { icon: '',  label: 'Data Vault Patterns',    desc: 'Hub/satellite/link architecture for regulated industries. When raw vault beats star schema.', status: 'soon' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -691,9 +691,9 @@ const ROADMAP = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DM_MODULES = [
-  { id: 'star_obt', label: 'Star vs OBT',         icon: '⭐', component: StarOBT },
-  { id: 'scd',      label: 'SCD Type Selector',    icon: '🕐', component: SCDSelector },
-  { id: 'olap',     label: 'OLAP Format Showdown', icon: '🏔', component: OLAPShowdown },
+  { id: 'star_obt', label: 'Star vs OBT',         icon: '', component: StarOBT },
+  { id: 'scd',      label: 'SCD Type Selector',    icon: '', component: SCDSelector },
+  { id: 'olap',     label: 'OLAP Format Showdown', icon: '', component: OLAPShowdown },
 ]
 
 export default function DataModelingTab({ onNavigate }) {

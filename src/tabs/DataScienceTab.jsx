@@ -137,7 +137,7 @@ function ModelSelectionOracle() {
       {/* Non-tabular notice */}
       {featType !== 'tabular' && (
         <div className="card" style={{ padding: '20px', border: '1px solid var(--rim)', textAlign: 'center' }}>
-          <div style={{ fontSize: '16px', marginBottom: '8px' }}>{featType === 'text' ? '📝' : '🖼'}</div>
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginBottom: '8px' }}>{featType === 'text' ? 'TEXT' : 'IMAGE'}</div>
           <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
             {featType === 'text'
               ? 'Text data: go to the Deep Learning domain. Transformer-based models (BERT, RoBERTa, DistilBERT) are the correct starting point. Classical ML on TF-IDF features is a valid baseline for small datasets.'
@@ -653,7 +653,7 @@ function CalibrationInPractice() {
 
       {answered.length === CALIB_SCENARIOS.length && revealed && current === CALIB_SCENARIOS.length - 1 && (
         <div className="card animate-slide-up" style={{ padding: '20px', textAlign: 'center', borderLeft: '3px solid var(--sky)' }}>
-          <div style={{ fontSize: '22px', marginBottom: '8px' }}>🎛</div>
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', marginBottom: '8px', letterSpacing: '0.05em' }}>COMPLETE</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>
             {score}/{CALIB_SCENARIOS.length} correct
           </div>

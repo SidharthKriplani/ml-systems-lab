@@ -46,6 +46,14 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.14 — Satoshi font swap + emoji audit (May 2026)
+
+**Font swap:** Replaced Space Grotesk with Satoshi (Fontshare CDN). Single change point: `--font-sans` in `index.css`. `index.html` updated to load from `api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400`. JetBrains Mono preserved from Google Fonts. Inter and Playfair Display dropped (unused). Satoshi reads crisper at smaller weights, tighter at heavy weights — better fit for the amber/dark design system than Space Grotesk's rounded neutrality.
+
+**Emoji audit:** Systematic removal of all decorative emoji from tab files. Rule: Unicode symbols (✓ ✗ ⚠ → ← ↺ etc.) kept — they carry semantic meaning and render crisply in monospace. Emoji removed: all `icon: 'emoji'` fields in MODULES/ROADMAP/STRATEGIES/SECTIONS data arrays across 18 tabs; inline emoji prefixes in headings and status strings (📊 Post-mortem, 🔔 Alert, 📖 Go deeper, etc.); ✅/❌ UI spans replaced with ✓/✗. Country flags in LandscapeTab kept — geographically meaningful, not decorative. Two inline non-icon replacements: DataScienceTab feature type indicator (📝/🖼 → TEXT/IMAGE monospace labels), ClassicalMLTab production note pin (📌 → →).
+
+---
+
 ### v4.13 — HomeTab redesign + unlock moment (May 2026)
 
 **HomeTab redesign:**

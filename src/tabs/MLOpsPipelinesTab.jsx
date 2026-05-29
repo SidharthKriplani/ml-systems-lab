@@ -574,9 +574,9 @@ function RegistryPatterns() {
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'cicd',     label: 'CI/CD Gate Design',       icon: '⚙️',  component: CiCdGates },
-  { id: 'infra',    label: 'Infrastructure Decision',  icon: '🏗',  component: InfraDecision },
-  { id: 'registry', label: 'Model Registry Patterns',  icon: '📦',  component: RegistryPatterns },
+  { id: 'cicd',     label: 'CI/CD Gate Design',       icon: '',  component: CiCdGates },
+  { id: 'infra',    label: 'Infrastructure Decision',  icon: '',  component: InfraDecision },
+  { id: 'registry', label: 'Model Registry Patterns',  icon: '',  component: RegistryPatterns },
 ]
 
 export default function MLOpsPipelinesTab({ onNavigate }) {

@@ -688,9 +688,9 @@ function PEFTComparisonModule() {
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 
 const FT_MODULES = [
-  { id: 'freeze', label: 'Freeze vs LoRA',  icon: '🧊', component: FreezeLoRAModule },
-  { id: 'lr',     label: 'LR Strategy',     icon: '📉', component: LRStrategyModule },
-  { id: 'peft',   label: 'PEFT Comparison', icon: '⚡', component: PEFTComparisonModule },
+  { id: 'freeze', label: 'Freeze vs LoRA',  icon: '', component: FreezeLoRAModule },
+  { id: 'lr',     label: 'LR Strategy',     icon: '', component: LRStrategyModule },
+  { id: 'peft',   label: 'PEFT Comparison', icon: '', component: PEFTComparisonModule },
 ]
 
 export default function DLFineTuningTab({ onNavigate }) {

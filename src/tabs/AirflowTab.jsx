@@ -427,7 +427,7 @@ const DOWNSTREAM_TYPES = [
 const STRATEGIES = {
   fixed_window: {
     name: 'Fixed window, no late handling',
-    icon: '🪟',
+    icon: '',
     color: 'var(--sky)',
     why: (params) => `Your data arrives predictably early and you ${params.reprocess === 'high' ? 'can' : 'cannot'} reprocess. A fixed window closes at a defined time and moves on. Simple to reason about and operate.`,
     risks: 'Silent incompleteness if data is occasionally late. No automatic correction. Works only when arrival pattern is truly reliable.',
@@ -435,7 +435,7 @@ const STRATEGIES = {
   },
   watermark: {
     name: 'Watermark + allowed lateness',
-    icon: '💧',
+    icon: '',
     color: 'var(--prime)',
     why: (params) => `Data arrives ${params.arrival} with moderate lateness. Watermarks let you emit results as data arrives while still correcting for late events up to a defined threshold.`,
     risks: 'Requires streaming infrastructure (Spark Structured Streaming or Flink). Window results are emitted multiple times (retract-correct pattern). Downstream must handle updates.',
@@ -451,7 +451,7 @@ const STRATEGIES = {
   },
   microbatch: {
     name: 'Micro-batch with idempotent reprocessing',
-    icon: '🔁',
+    icon: '',
     color: 'var(--ember)',
     why: (params) => `Moderate lateness + ability to reprocess maps well to scheduled micro-batches. Re-run the last N hours on a schedule — each run is idempotent so overlaps are safe.`,
     risks: 'Data is always slightly stale (one micro-batch interval behind). Late data beyond the reprocessing window is permanently missed. Must ensure pipeline is truly idempotent (UPSERT, not INSERT).',
@@ -459,7 +459,7 @@ const STRATEGIES = {
   },
   sla_only: {
     name: 'SLA + alerting only',
-    icon: '🔔',
+    icon: '',
     color: 'var(--gold)',
     why: (params) => `When reprocessing is impossible and the data pattern is unpredictable, automated late-handling may cause more harm than good. Alert humans when data is late and let them decide whether to wait, impute, or proceed.`,
     risks: 'Requires disciplined on-call response. Late data is never automatically corrected. Only appropriate when human review is fast and business can tolerate a manual process.',
@@ -583,19 +583,19 @@ function LateDataHandler() {
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
 const ROADMAP = [
-  { icon: '🔴', label: 'DAG Failure Room', desc: 'Zombie tasks, trigger_rule bugs, catchup backlog, pool starvation, XCom blowouts — diagnose from symptoms.', status: 'live' },
-  { icon: '⏪', label: 'Backfill Decision Lab', desc: 'Pipeline down, source corrections, idempotency — when to backfill, how much, in what order.', status: 'live' },
-  { icon: '⏰', label: 'Late Data Handler', desc: 'Set arrival pattern and reprocessing tolerance; get a recommended strategy with production config.', status: 'live' },
-  { icon: '🔧', label: 'Operator Selection Guide', desc: 'BashOperator vs PythonOperator vs sensors, when TaskGroups beat SubDAGs, choosing the right execution primitive.', status: 'soon' },
-  { icon: '🏭', label: 'Dynamic DAG Patterns', desc: 'Parameterised DAGs, DAG factories, config-driven pipelines — avoiding copy-paste DAG sprawl.', status: 'soon' },
-  { icon: '📈', label: 'Airflow at Scale', desc: 'CeleryExecutor vs KubernetesExecutor, scheduler HA, metadata DB sizing, performance tuning.', status: 'soon' },
+  { icon: '', label: 'DAG Failure Room', desc: 'Zombie tasks, trigger_rule bugs, catchup backlog, pool starvation, XCom blowouts — diagnose from symptoms.', status: 'live' },
+  { icon: '', label: 'Backfill Decision Lab', desc: 'Pipeline down, source corrections, idempotency — when to backfill, how much, in what order.', status: 'live' },
+  { icon: '', label: 'Late Data Handler', desc: 'Set arrival pattern and reprocessing tolerance; get a recommended strategy with production config.', status: 'live' },
+  { icon: '', label: 'Operator Selection Guide', desc: 'BashOperator vs PythonOperator vs sensors, when TaskGroups beat SubDAGs, choosing the right execution primitive.', status: 'soon' },
+  { icon: '', label: 'Dynamic DAG Patterns', desc: 'Parameterised DAGs, DAG factories, config-driven pipelines — avoiding copy-paste DAG sprawl.', status: 'soon' },
+  { icon: '', label: 'Airflow at Scale', desc: 'CeleryExecutor vs KubernetesExecutor, scheduler HA, metadata DB sizing, performance tuning.', status: 'soon' },
 ]
 
 // ── Module nav ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'dag_failure', label: 'DAG Failure Room', icon: '🔴', component: DAGFailureRoom },
-  { id: 'backfill', label: 'Backfill Decision Lab', icon: '⏪', component: BackfillDecisionLab },
-  { id: 'late_data', label: 'Late Data Handler', icon: '⏰', component: LateDataHandler },
+  { id: 'dag_failure', label: 'DAG Failure Room', icon: '', component: DAGFailureRoom },
+  { id: 'backfill', label: 'Backfill Decision Lab', icon: '', component: BackfillDecisionLab },
+  { id: 'late_data', label: 'Late Data Handler', icon: '', component: LateDataHandler },
 ]
 
 // ── Tab shell ─────────────────────────────────────────────────────────────────

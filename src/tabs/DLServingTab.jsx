@@ -1029,9 +1029,9 @@ function MLServingArchitecture() {
 
 // ─── Module nav config ─────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'quant',   icon: '🔢', label: 'Quantization Tradeoff',  Component: QuantModule },
-  { id: 'memory',  icon: '🧮', label: 'GPU Memory Calculator',  Component: MemoryModule },
-  { id: 'serving', icon: '🏗',  label: 'Serving Architecture',   Component: ServingModule },
+  { id: 'quant',   icon: '', label: 'Quantization Tradeoff',  Component: QuantModule },
+  { id: 'memory',  icon: '', label: 'GPU Memory Calculator',  Component: MemoryModule },
+  { id: 'serving', icon: '',  label: 'Serving Architecture',   Component: ServingModule },
   { id: 'pipeline_arch', icon: '◈', label: 'Pipeline Diagram', Component: MLServingArchitecture },
 ]
 

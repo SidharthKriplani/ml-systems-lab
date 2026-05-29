@@ -305,7 +305,7 @@ function ShadowModeSim() {
       )}
       {phase === 'complete' && (
         <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)' }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>📊 Shadow run complete — promote?</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp</p>
             <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Recall: +9pp</p>
@@ -694,11 +694,11 @@ function RankingMetrics() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'metric',       label: 'Metric Selector',    icon: '📉', component: MetricSelector },
-  { id: 'calibration', label: 'Calibration Clinic',  icon: '📐', component: CalibrationClinic },
-  { id: 'threshold',   label: 'Threshold Tuner',     icon: '🎚', component: ThresholdTuner },
-  { id: 'ranking',     label: 'Ranking Metrics',     icon: '📊', component: RankingMetrics },
-  { id: 'shadow',      label: 'Shadow Mode',         icon: '👥', component: ShadowModeSim },
+  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector },
+  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic },
+  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner },
+  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics },
+  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim },
 ]
 
 export default function ModelEvalTab({ onNavigate }) {
@@ -745,7 +745,7 @@ export default function ModelEvalTab({ onNavigate }) {
       {onNavigate && (
         <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-            📖 Go deeper → Read <strong style={{ color: 'var(--sky)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
+            Go deeper → Read <strong style={{ color: 'var(--sky)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
           </span>
           <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →

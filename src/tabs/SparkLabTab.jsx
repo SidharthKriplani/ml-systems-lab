@@ -87,7 +87,7 @@ function ShuffleHell() {
 
   const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.15)'    : result?.spillRisk ? 'rgba(245,158,11,0.15)'  : result?.healthy ? 'rgba(16,185,129,0.15)'    : 'rgba(255,255,255,0.07)'
   const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : 'var(--rim)'
-  const statusMsg    = result?.oomRisk ? '💥 JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '⚠ Significant spill to disk' : result?.healthy ? '✅ Job looks healthy' : '🟡 Suboptimal — will run'
+  const statusMsg    = result?.oomRisk ? 'JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '⚠ Significant spill to disk' : result?.healthy ? '✓ Job looks healthy' : '~ Suboptimal — will run'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -769,11 +769,11 @@ function OOMDiagnosis() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'shuffle',   label: 'Shuffle Hell',         icon: '🌪', component: ShuffleHell },
-  { id: 'skew',      label: 'Skew Doctor',          icon: '🩺', component: SkewDoctor },
-  { id: 'partition', label: 'Partition Tuner',      icon: '⚡', component: PartitionTuner },
-  { id: 'broadcast', label: 'Broadcast Joins',      icon: '📡', component: BroadcastJoinDecisions },
-  { id: 'oom',       label: 'OOM Diagnosis',        icon: '💥', component: OOMDiagnosis },
+  { id: 'shuffle',   label: 'Shuffle Hell',         icon: '', component: ShuffleHell },
+  { id: 'skew',      label: 'Skew Doctor',          icon: '', component: SkewDoctor },
+  { id: 'partition', label: 'Partition Tuner',      icon: '', component: PartitionTuner },
+  { id: 'broadcast', label: 'Broadcast Joins',      icon: '', component: BroadcastJoinDecisions },
+  { id: 'oom',       label: 'OOM Diagnosis',        icon: '', component: OOMDiagnosis },
 ]
 
 export default function SparkLabTab({ onNavigate }) {

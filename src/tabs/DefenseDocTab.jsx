@@ -96,7 +96,7 @@ function generatePlan(skills, horizon) {
   const weak   = sorted.filter(s => s.rating === 'weak')
 
   if (horizon === 'cram') return [
-    { label: '⚡ Priority Focus — highest gaps first', accent: 'var(--rose)', border: 'rgba(244,63,94,0.28)', items: sorted.slice(0, 4) },
+    { label: 'Priority Focus — highest gaps first', accent: 'var(--rose)', border: 'rgba(244,63,94,0.28)', items: sorted.slice(0, 4) },
   ]
   if (horizon === '3d') return [
     { label: 'Day 1 — Biggest gaps', accent: 'var(--rose)',  border: 'rgba(244,63,94,0.28)',  items: sorted.slice(0, 2) },

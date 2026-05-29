@@ -796,19 +796,19 @@ function IncrementalModelDecisions() {
 
 // ── Roadmap ────────────────────────────────────────────────────────────────────
 const ROADMAP = [
-  { icon: '🧱', label: 'Materialization Oracle',      desc: 'Set 4 constraints, get ranked materialization recommendations with gotchas and config snippets.',  status: 'live' },
-  { icon: '🌊', label: 'Schema Drift Clinic',         desc: '8 scenarios: upstream breaks — what fails in your dbt model and how to defend against it.',          status: 'live' },
-  { icon: '📈', label: 'Incremental Model Decisions', desc: 'Answer 4 questions about your data pattern, get the right incremental config with gotchas.',         status: 'live' },
-  { icon: '🧪', label: 'Model Testing Strategy',      desc: 'What to test, what is overkill, the test pyramid for dbt — not everything needs a generic test.',    status: 'soon' },
-  { icon: '🔗', label: 'DAG Dependency Patterns',     desc: 'ref() vs source(), when to split models, avoiding monoliths, layer architecture decisions.',         status: 'soon' },
-  { icon: '🚀', label: 'dbt at Scale',                desc: 'Model selection, defer, slim CI, partial parsing — running dbt efficiently on 1000+ model projects.', status: 'soon' },
+  { icon: '', label: 'Materialization Oracle',      desc: 'Set 4 constraints, get ranked materialization recommendations with gotchas and config snippets.',  status: 'live' },
+  { icon: '', label: 'Schema Drift Clinic',         desc: '8 scenarios: upstream breaks — what fails in your dbt model and how to defend against it.',          status: 'live' },
+  { icon: '', label: 'Incremental Model Decisions', desc: 'Answer 4 questions about your data pattern, get the right incremental config with gotchas.',         status: 'live' },
+  { icon: '', label: 'Model Testing Strategy',      desc: 'What to test, what is overkill, the test pyramid for dbt — not everything needs a generic test.',    status: 'soon' },
+  { icon: '', label: 'DAG Dependency Patterns',     desc: 'ref() vs source(), when to split models, avoiding monoliths, layer architecture decisions.',         status: 'soon' },
+  { icon: '', label: 'dbt at Scale',                desc: 'Model selection, defer, slim CI, partial parsing — running dbt efficiently on 1000+ model projects.', status: 'soon' },
 ]
 
 // ── Module registry ────────────────────────────────────────────────────────────
 const DBT_MODULES = [
-  { id: 'materialization', label: 'Materialization Oracle',      icon: '🧱', component: MaterializationOracle },
-  { id: 'schema_drift',    label: 'Schema Drift Clinic',         icon: '🌊', component: SchemaDriftClinic },
-  { id: 'incremental',     label: 'Incremental Model Decisions', icon: '📈', component: IncrementalModelDecisions },
+  { id: 'materialization', label: 'Materialization Oracle',      icon: '', component: MaterializationOracle },
+  { id: 'schema_drift',    label: 'Schema Drift Clinic',         icon: '', component: SchemaDriftClinic },
+  { id: 'incremental',     label: 'Incremental Model Decisions', icon: '', component: IncrementalModelDecisions },
 ]
 
 // ── Tab shell ──────────────────────────────────────────────────────────────────

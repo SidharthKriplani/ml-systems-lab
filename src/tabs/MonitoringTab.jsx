@@ -153,7 +153,7 @@ function DriftDashboard() {
             ))}
           </div>
           <div style={{ marginTop: '10px', fontSize: '12px', color: missed ? 'var(--rose)' : alertDelay !== null && alertDelay > 7 ? 'var(--gold)' : 'var(--mint)' }}>
-            {missed ? '🔕 No alert fired — drift undetected' :
+            {missed ? 'No alert fired — drift undetected' :
              alertDelay === 0 ? '✓ Alert fired same day as drift onset' :
              `⚠ Alert fired ${alertDelay} day${alertDelay !== 1 ? 's' : ''} after drift onset`}
           </div>
@@ -162,7 +162,7 @@ function DriftDashboard() {
 
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '18px', background: 'rgba(244,63,94,0.11)', border: '1px solid rgba(244,63,94,0.2)' }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '10px' }}>📊 Post-mortem</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '10px' }}>Post-mortem</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
             Drift started on <strong style={{ color: 'var(--rose)' }}>Day {driftDay}</strong>.
             {missed
@@ -620,7 +620,7 @@ function AlertTuner() {
 
       {/* Recommendation */}
       <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.10)' : sim.delay === null ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
-        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px' }}>📋 Recommendation</div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px' }}>Recommendation</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
           {sim.delay === null
             ? 'Drift was missed entirely. Lower thresholds or enable more rules — PSI on input features is usually the fastest leading indicator.'
@@ -841,7 +841,7 @@ const PIPELINE_STAGES = [
   {
     id: 'raw_data',
     label: 'Raw Data Ingestion',
-    icon: '📥',
+    icon: '',
     monitored: ['Volume (row count per batch)', 'Schema validation (column names + types)', 'Freshness (time since last ingest)'],
     blind_spots: [
       { issue: 'Value range violations', example: 'age = -5, revenue = 10^15', signal: 'Silent: model silently uses garbage values', fix: 'Add min/max bounds checks per column. Alert if >0.1% of rows violate bounds.' },
@@ -851,7 +851,7 @@ const PIPELINE_STAGES = [
   {
     id: 'features',
     label: 'Feature Pipeline',
-    icon: '⚙️',
+    icon: '',
     monitored: ['Null rates per feature', 'Feature pipeline run time', 'Row count output'],
     blind_spots: [
       { issue: 'Distribution shift (PSI)', example: 'mean_purchase_7d shifted from $45 to $12 after a discount campaign', signal: 'Model scores compress without explanation. PSI > 0.2 on key features.', fix: 'Monitor PSI weekly for top-10 features by model weight. Page if PSI > 0.2.' },
@@ -861,7 +861,7 @@ const PIPELINE_STAGES = [
   {
     id: 'model_serving',
     label: 'Model Serving',
-    icon: '🤖',
+    icon: '',
     monitored: ['Request latency (P50, P99)', 'Error rate', 'Request volume'],
     blind_spots: [
       { issue: 'Score distribution monitoring', example: 'Scores compressed to 0.48–0.52 — model outputting near-prior for all users', signal: 'CTR drops. No latency or error spike. Business wonders what happened.', fix: 'Monitor score distribution mean, std, and percentiles. Alert if std drops >50% from baseline.' },
@@ -871,7 +871,7 @@ const PIPELINE_STAGES = [
   {
     id: 'labels',
     label: 'Label Collection',
-    icon: '🏷️',
+    icon: '',
     monitored: ['Label volume', 'Label pipeline freshness'],
     blind_spots: [
       { issue: 'Label delay tracking', example: 'Conversion labels take 7–30 days to arrive. Model trained on last 7 days uses mostly null labels.', signal: 'Training data appears healthy but model performance mysteriously degrades after retraining.', fix: 'Track label coverage rate by prediction cohort. Don\'t train on cohorts with <80% label coverage.' },
@@ -881,7 +881,7 @@ const PIPELINE_STAGES = [
   {
     id: 'business',
     label: 'Business Metrics',
-    icon: '📊',
+    icon: '',
     monitored: ['Daily/weekly KPI dashboard'],
     blind_spots: [
       { issue: 'Model-to-metric correlation monitoring', example: 'Model AUC stable but conversion rate dropping — model is optimizing the wrong proxy', signal: 'Stakeholders notice revenue drop; ML team says model looks fine.', fix: 'Track correlation between model score and business metric weekly. Alert if correlation drops >0.1.' },
@@ -981,12 +981,12 @@ function MonitorCoverageAudit() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'drift',    label: 'Drift Dashboard',   icon: '📉', component: DriftDashboard },
-  { id: 'psi',     label: 'PSI Lab',            icon: '📏', component: PSILab },
-  { id: 'ks',      label: 'KS Test',            icon: '📐', component: KSTestExplorer },
-  { id: 'alert',   label: 'Alert Tuner',        icon: '🔔', component: AlertTuner },
-  { id: 'triage',  label: 'Incident Triage',    icon: '🚨', component: IncidentTriage },
-  { id: 'coverage',label: 'Coverage Audit',     icon: '🗺', component: MonitorCoverageAudit },
+  { id: 'drift',    label: 'Drift Dashboard',   icon: '', component: DriftDashboard },
+  { id: 'psi',     label: 'PSI Lab',            icon: '', component: PSILab },
+  { id: 'ks',      label: 'KS Test',            icon: '', component: KSTestExplorer },
+  { id: 'alert',   label: 'Alert Tuner',        icon: '', component: AlertTuner },
+  { id: 'triage',  label: 'Incident Triage',    icon: '', component: IncidentTriage },
+  { id: 'coverage',label: 'Coverage Audit',     icon: '', component: MonitorCoverageAudit },
 ]
 
 export default function MonitoringTab({ onNavigate }) {
@@ -1013,7 +1013,7 @@ export default function MonitoringTab({ onNavigate }) {
       {onNavigate && (
         <div style={{ background: 'rgba(34,211,238,0.13)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-            📖 Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Concept Drift: How to Detect It Before It Destroys Your Model</strong> in Gradient
+            Go deeper → Read <strong style={{ color: 'var(--sky)' }}>Concept Drift: How to Detect It Before It Destroys Your Model</strong> in Gradient
           </span>
           <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', borderRadius: '6px', color: 'var(--sky)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →

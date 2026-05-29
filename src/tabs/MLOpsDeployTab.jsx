@@ -561,7 +561,7 @@ function RollbackDecision() {
       <div className="card" style={{ padding: '20px', borderLeft: '3px solid var(--rose)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <span style={{ ...mono, fontSize: '11px', color: 'var(--rose)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            🔔 Alert {scenario.id} / {ROLLBACK_SCENARIOS.length}
+            Alert {scenario.id} / {ROLLBACK_SCENARIOS.length}
           </span>
         </div>
         <div style={{ ...grotesk, fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
@@ -633,9 +633,9 @@ function RollbackDecision() {
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'deploy',    label: 'Deployment Strategy',  icon: '🚀', component: DeployStrategy },
-  { id: 'champion',  label: 'Champion-Challenger',  icon: '🏆', component: ChampionChallenger },
-  { id: 'rollback',  label: 'Rollback Decision',    icon: '🔄', component: RollbackDecision },
+  { id: 'deploy',    label: 'Deployment Strategy',  icon: '', component: DeployStrategy },
+  { id: 'champion',  label: 'Champion-Challenger',  icon: '', component: ChampionChallenger },
+  { id: 'rollback',  label: 'Rollback Decision',    icon: '', component: RollbackDecision },
 ]
 
 export default function MLOpsDeployTab({ onNavigate }) {

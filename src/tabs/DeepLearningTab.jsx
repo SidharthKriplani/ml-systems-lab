@@ -293,7 +293,6 @@ function GradientDebugger() {
 
       <div className="card" style={{ padding: '22px', borderLeft: `3px solid var(--sky)` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <span style={{ fontSize: '18px' }}>📉</span>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
         {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
@@ -713,11 +712,11 @@ function TransformerArchitecture() {
 
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const DL_MODULES = [
-  { id: 'diagnosis',    label: 'Training Failures',       icon: '🔴', component: TrainingFailureDiagnosis },
-  { id: 'gradient',    label: 'Backprop Debugging',       icon: '📉', component: GradientDebugger },
-  { id: 'optimizer',   label: 'Optimizer Comparison',     icon: '⚡', component: OptimizerComparison },
-  { id: 'regularize',  label: 'Regularization Decisions', icon: '🛡', component: RegularizationDecisions },
-  { id: 'transformer', label: 'Transformer Architecture', icon: '🔷', component: TransformerArchitecture },
+  { id: 'diagnosis',    label: 'Training Failures',       icon: '', component: TrainingFailureDiagnosis },
+  { id: 'gradient',    label: 'Backprop Debugging',       icon: '', component: GradientDebugger },
+  { id: 'optimizer',   label: 'Optimizer Comparison',     icon: '', component: OptimizerComparison },
+  { id: 'regularize',  label: 'Regularization Decisions', icon: '', component: RegularizationDecisions },
+  { id: 'transformer', label: 'Transformer Architecture', icon: '', component: TransformerArchitecture },
 ]
 
 export default function DeepLearningTab({ onNavigate }) {
