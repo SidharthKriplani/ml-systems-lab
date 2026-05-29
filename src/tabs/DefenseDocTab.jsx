@@ -127,9 +127,10 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
   const [skills,   setSkills]   = useState([]) // { ...kwEntry, rating, gapScore, checklist }
   const [horizon,  setHorizon]  = useState('7d')
   const [done,     setDone]     = useState(new Set()) // 'topicIdx-itemIdx'
-  const [codeInput, setCodeInput] = useState('')
-  const [codeError, setCodeError] = useState(false)
-  const [unlocked,  setUnlocked]  = useState(isUnlocked)
+  const [codeInput,     setCodeInput]     = useState('')
+  const [codeError,     setCodeError]     = useState(false)
+  const [unlocked,      setUnlocked]      = useState(isUnlocked)
+  const [inlineSuccess, setInlineSuccess] = useState(false)
 
   useEffect(() => { setUnlocked(isUnlocked) }, [isUnlocked])
 
@@ -197,8 +198,12 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
     e.preventDefault()
     if (codeInput.trim().toUpperCase() === ACCESS_CODE) {
       localStorage.setItem('msl_access', ACCESS_CODE)
-      setUnlocked(true)
-      if (onUnlock) onUnlock(ACCESS_CODE)
+      setInlineSuccess(true)
+      setTimeout(() => {
+        setUnlocked(true)
+        setInlineSuccess(false)
+        if (onUnlock) onUnlock(ACCESS_CODE)
+      }, 900)
     } else {
       setCodeError(true)
       setTimeout(() => setCodeError(false), 1800)
@@ -419,20 +424,38 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
             <div key={sIdx}>
               {/* Gate wall — appears inline between sections */}
               {sIdx === gateAfterIdx && !unlocked && (
-                <div style={{ background: 'var(--depth)', border: '1px solid var(--rim-hi)', borderRadius: 12, padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Premium</div>
-                  <p style={{ fontSize: 14, color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: 16, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
-                    You've seen enough to know this plan is real. Enter your access code to unlock the full sequence.
-                  </p>
-                  <form onSubmit={handleInlineUnlock} style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <input
-                      type="text" value={codeInput} onChange={e => setCodeInput(e.target.value)}
-                      placeholder="Access code"
-                      style={{ background: 'var(--surface)', border: `1px solid ${codeError ? 'var(--rose)' : 'var(--rim-hi)'}`, borderRadius: 7, padding: '9px 14px', fontSize: 14, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)', outline: 'none', width: 180, letterSpacing: '0.06em' }}
-                    />
-                    <button type="submit" className="btn-primary" style={{ fontSize: 13, padding: '9px 18px' }}>Unlock →</button>
-                  </form>
-                  {codeError && <p style={{ fontSize: 11, color: 'var(--rose)', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Incorrect code.</p>}
+                <div style={{ background: inlineSuccess ? 'rgba(240,165,0,0.10)' : 'var(--depth)', border: `1px solid ${inlineSuccess ? 'rgba(240,165,0,0.50)' : 'var(--rim-hi)'}`, borderRadius: 12, padding: '28px 20px', marginBottom: 14, textAlign: 'center', transition: 'background 0.3s, border-color 0.3s' }}>
+                  {inlineSuccess ? (
+                    <>
+                      <style>{`@keyframes ig-unlock-in { from { opacity:0; transform:scale(0.90) } to { opacity:1; transform:scale(1) } }`}</style>
+                      <div style={{ animation: 'ig-unlock-in 0.3s cubic-bezier(0.16,1,0.3,1)' }}>
+                        <div style={{ color: 'var(--prime)', marginBottom: 10, display: 'flex', justifyContent: 'center' }}>
+                          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                          </svg>
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 18, fontWeight: 800, color: 'var(--prime)', letterSpacing: '-0.03em' }}>You're in.</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-low)', marginTop: 5 }}>Loading your full plan…</div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Premium</div>
+                      <p style={{ fontSize: 14, color: 'var(--ink-mid)', lineHeight: 1.65, marginBottom: 16, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+                        You've seen enough to know this plan is real. Enter your access code to unlock the full sequence.
+                      </p>
+                      <form onSubmit={handleInlineUnlock} style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <input
+                          type="text" value={codeInput} onChange={e => setCodeInput(e.target.value)}
+                          placeholder="Access code"
+                          style={{ background: 'var(--surface)', border: `1px solid ${codeError ? 'var(--rose)' : 'var(--rim-hi)'}`, borderRadius: 7, padding: '9px 14px', fontSize: 14, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)', outline: 'none', width: 180, letterSpacing: '0.06em' }}
+                        />
+                        <button type="submit" className="btn-primary" style={{ fontSize: 13, padding: '9px 18px' }}>Unlock →</button>
+                      </form>
+                      {codeError && <p style={{ fontSize: 11, color: 'var(--rose)', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Incorrect code.</p>}
+                    </>
+                  )}
                 </div>
               )}
 

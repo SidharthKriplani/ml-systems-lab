@@ -3,21 +3,62 @@ import { useState } from 'react'
 const ACCESS_CODE = 'DAI2026'
 
 export default function AccessGate({ onUnlock }) {
-  const [code, setCode]     = useState('')
-  const [error, setError]   = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [code,       setCode]       = useState('')
+  const [error,      setError]      = useState(false)
+  const [showMoment, setShowMoment] = useState(false)
 
   function handleSubmit(e) {
     e.preventDefault()
     if (code.trim().toUpperCase() === ACCESS_CODE) {
-      setSuccess(true)
-      setTimeout(() => onUnlock(code.trim().toUpperCase()), 400)
+      setShowMoment(true)
+      setTimeout(() => onUnlock(code.trim().toUpperCase()), 1300)
     } else {
       setError(true)
       setTimeout(() => setError(false), 1800)
     }
   }
 
+  // ── Unlock moment ────────────────────────────────────────────────────────────
+  if (showMoment) return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <style>{`
+        @keyframes ag-unlock-in {
+          from { opacity: 0; transform: scale(0.88) }
+          to   { opacity: 1; transform: scale(1) }
+        }
+        @keyframes ag-prime-glow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(240,165,0,0.35), 0 32px 80px rgba(0,0,0,0.65) }
+          50%       { box-shadow: 0 0 0 1px rgba(240,165,0,0.70), 0 0 64px rgba(240,165,0,0.28), 0 32px 80px rgba(0,0,0,0.65) }
+        }
+      `}</style>
+      <div style={{
+        maxWidth: '420px', width: '100%',
+        background: 'var(--depth)',
+        borderRadius: '16px',
+        padding: '52px 36px',
+        textAlign: 'center',
+        animation: 'ag-unlock-in 0.35s cubic-bezier(0.16, 1, 0.3, 1), ag-prime-glow 1.1s ease-in-out 0.35s',
+      }}>
+        <div style={{ color: 'var(--prime)', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '12px' }}>
+          Access granted
+        </div>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 900, color: 'var(--ink-hi)', letterSpacing: '-0.05em', margin: '0 0 10px', lineHeight: 1.0 }}>
+          You're in.
+        </h2>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', lineHeight: 1.6, margin: 0 }}>
+          Everything is unlocked on this device.
+        </p>
+      </div>
+    </div>
+  )
+
+  // ── Default: code entry ──────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight: '60vh',
@@ -32,7 +73,6 @@ export default function AccessGate({ onUnlock }) {
         padding: '40px 36px',
         boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
       }}>
-        {/* Lock icon */}
         <div style={{ marginBottom: '24px', color: 'var(--ink-ghost)' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -62,7 +102,7 @@ export default function AccessGate({ onUnlock }) {
             style={{
               width: '100%',
               background: 'var(--surface)',
-              border: `1px solid ${error ? 'var(--rose)' : success ? 'var(--mint)' : 'var(--rim-hi)'}`,
+              border: `1px solid ${error ? 'var(--rose)' : 'var(--rim-hi)'}`,
               borderRadius: '8px',
               padding: '12px 16px',
               fontSize: '16px',
@@ -79,12 +119,6 @@ export default function AccessGate({ onUnlock }) {
           {error && (
             <p style={{ fontSize: '12px', color: 'var(--rose)', marginBottom: '10px', fontFamily: 'var(--font-mono)' }}>
               Incorrect code. Try again.
-            </p>
-          )}
-
-          {success && (
-            <p style={{ fontSize: '12px', color: 'var(--mint)', marginBottom: '10px', fontFamily: 'var(--font-mono)' }}>
-              ✓ Access granted. Unlocking…
             </p>
           )}
 
