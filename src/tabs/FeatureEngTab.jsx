@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 // ─── Training-Serving Skew Simulator ─────────────────────────────────────────
 function SkewSimulator() {
