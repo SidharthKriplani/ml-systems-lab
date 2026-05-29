@@ -32,8 +32,9 @@ All events are fired via `track()` in `src/analytics.js`. Events only fire when 
 | Verbatim practice session start/end | `VerbatimTab` | Medium |
 | Interview Q&A question viewed | `InterviewPrepTab` | Medium |
 | Gradient post opened | `GradientTab` | Medium |
-| JD paste + analysis run | `JDPrepTab` | Low |
-| Defense doc generated | `DefenseDocTab` | Low |
+| Defense Plan: JD paste + analysis run | `DefenseDocTab` (Defense Plan screen 1) | Low |
+| Defense Plan: plan generated | `DefenseDocTab` (Defense Plan screen 3) | Low |
+| Access code unlocked | `AccessGate` / `DefenseDocTab` inline gate | Medium |
 
 ---
 
@@ -73,6 +74,9 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_goto_path` | `string` | Navigation helpers | Deep-link target path, cleared after use |
 | `msl_path_progress` | `JSON object` | `HomeTab` | Map of `{ pathId: { completedSteps: string[] } }` — persists step completion state for guided learning paths |
 | `msl_access` | `string` | `AccessGate` / `App.jsx` | Access code entered by user. Value `'DAI2026'` = premium unlocked. Permanent — never expires. Set on code entry, checked on every app load via `useState` initializer. |
+| `msl_streak` | `number` (as string) | `HomeTab` | Consecutive-day visit streak. Incremented when `msl_last_visit` was yesterday; reset to `1` when gap > 1 day; unchanged when already visited today. |
+| `msl_last_visit` | `string` (ISO date) | `HomeTab` | Date of the most recent HomeTab mount in `YYYY-MM-DD` format. Used to compute streak continuity. |
+| `msl_activity_YYYY-MM-DD` | `number` (as string) | `HomeTab` | Visit count for a specific calendar day. Key is dynamic — one key per day. Incremented on every HomeTab mount. Powers the 91-day activity heatmap. |
 
 ---
 

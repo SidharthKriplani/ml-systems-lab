@@ -11,10 +11,10 @@ Last updated: May 2026
 
 *Move items here from Tier 1 at the start of a session. Strike through and move to LINEAGE.md when done.*
 
-- [ ] **Improve distractor quality** — CombinatorTab + TrainerTab, ~20-30 questions (session: 2026-05-29)
-- [ ] **Share Score clipboard button** — CombinatorTab debrief + TrainerTab session end (session: 2026-05-29)
-- [ ] **Fidelity/simulation badges** — module headers across all tabs (session: 2026-05-29)
-- [ ] **Streak tracking + 91-day heatmap** — HomeTab progress section (session: 2026-05-29)
+- [x] ~~**Improve distractor quality**~~ — done (2026-05-29, 14 questions across CombinatorTab + TrainerTab, replaced trivially-eliminable wrong options with plausibly-wrong options requiring real reasoning)
+- [x] ~~**Share Score clipboard button**~~ — done (2026-05-29, CombinatorTab debrief + TrainerTab ResultsScreen, navigator.clipboard, copied/setCopied 2s toggle)
+- [x] ~~**Fidelity/simulation badges**~~ — done (2026-05-29, 6 tabs: ✓ Real execution on SparkLab + ModelsMath, ~ Simulated on Combinator/Trainer/Verbatim/StaffLayer)
+- [x] ~~**Streak tracking + 91-day heatmap**~~ — done (2026-05-29, HomeTab — msl_streak/msl_last_visit/msl_activity_YYYY-MM-DD, 7×13 GitHub-style grid, streak pill)
 
 ---
 
@@ -25,7 +25,7 @@ Last updated: May 2026
 
 ### Learning Quality (from Audit #008)
 - [x] ~~**Expand MCQ explanations to include production failure mode + recognition signal**~~ — done (2026-05-27, 190 explanations expanded across CombinatorTab + TrainerTab with "In production, this breaks as: [X]. The tell: [Y]." pattern)
-- [ ] **Improve distractor quality in CombinatorTab and TrainerTab** — several wrong options are eliminable without judgment (e.g., "Accuracy" in imbalanced-class questions, "Drop rows" in imputation questions). Replace 1 obviously-wrong option per affected question with a plausibly-wrong option that requires real reasoning to eliminate. Target: 2 of 3 wrong options should require genuine judgment, not just recall. ~60 min across 20-30 questions. (Source: Audit #008, 2026-05-27)
+- [x] ~~**Improve distractor quality in CombinatorTab and TrainerTab**~~ — done (2026-05-29, 14 questions fixed, 2-of-3 wrong options now require genuine judgment)
 - [x] ~~**Add StaffLayerTab scenarios in thin domains**~~ — done (2026-05-27, 6 new scenarios: Experiment Design ×4 (SRM, novelty effect, 12 simultaneous tests, SUTVA), Feature Engineering ×2 (covariate shift, leakage). Total 17 → 23)
 - [x] ~~**Fix IC3 strawman reveals in StaffLayerTab**~~ — done (2026-05-27, s1 and s2 IC3 revised to competent-but-incomplete responses)
 
@@ -72,11 +72,12 @@ Last updated: May 2026
 - [ ] **New format: show a real-looking ML analysis/pipeline with a buried methodological flaw — user must find it.** Distinct from MCQ (which gives options) — this is open diagnosis. Flaw types: data leakage in evaluation, train/test split after imputation, wrong metric for class imbalance, SRM in A/B test, silent feature drift, imputer fit on full dataset, eval metric computed before target lag. Format: show the analysis with context (code snippet or narrative), ask "what's wrong here?", user selects from 4-6 options (flaw category + location), reveal shows the exact failure mode and why it's dangerous in production. Seed: 12 scenarios across Feature Eng, Model Eval, Experimentation, Monitoring. Tab: new "Spot the Flaw" tool in Interview zone (sits alongside CodeBugsTab). Builds: adversarial reading of real analyses — the skill interviewers test when they say "what would you check first?" (Source: PAL experimentation-systems-lab, May 2026)
 
 ### Features
-- [ ] **"Share Score" clipboard button on CombinatorTab debrief and TrainerTab session end** — one button, copies score summary to clipboard as plain text (e.g., "ML Systems Lab: 17/20 correct · 85% · Weak: Feature Engineering. Try: ml-systems-lab-v9xe.vercel.app"). 15 min. (Source: GenAI Systems Lab challenge log, May 2026)
-- [ ] **91-day practice heatmap** — localStorage-based activity grid (GitHub-style), 1 square per day, colored by modules attempted. Renders in HomeTab or a Progress panel. Tracks `msl_activity_YYYY-MM-DD` keys. High retention signal for returning users. (Source: PAL Progress dashboard, May 2026)
-- [ ] **Streak tracking** — daily visit streak counter, stored in `msl_streak` / `msl_last_visit`. Show on HomeTab alongside the practice heatmap. Simple but drives return rate. (Source: GenAI Systems Lab, May 2026)
+- [x] ~~**"Share Score" clipboard button on CombinatorTab debrief and TrainerTab session end**~~ — done (2026-05-29)
+- [x] ~~**91-day practice heatmap**~~ — done (2026-05-29, HomeTab, 7×13 grid, msl_activity_YYYY-MM-DD)
+- [x] ~~**Streak tracking**~~ — done (2026-05-29, HomeTab, msl_streak / msl_last_visit)
+- [x] ~~**Fidelity/simulation badges on module headers**~~ — done (2026-05-29, 6 tabs)
+- [ ] **Premium unlock moment** — the AccessGate code entry currently confirms with a text message and the content appears. Replace with a brief animated transition: scale + fade in (~300ms), glow pulse on `--prime`, "You're in" heading before content renders. One interaction, no navigation. This is the branding gap — the unlock should feel like crossing a threshold, not submitting a form. ~30 min. (Session: 2026-05-29)
 - [ ] **RSS feed for Gradient posts** — generate `/rss.xml` at build time from `gradientPosts.js` metadata. 20 most recent posts. Adds a distribution channel for free. ~30 min to write a Vite plugin or pre-build script. (Source: GenAI Systems Lab, May 2026)
-- [ ] **Fidelity/simulation badges on module headers** — label each interactive module with what it actually is: `✓ Real execution` (Pyodide cells — actual Python running), `~ Simulated` (scripted scenario, not live model), `◌ Illustrative` (conceptual diagram, not a real system). Builds trust, prevents users from mistaking a simulation for ground truth. Render as a small chip on the h3 module header. (Source: GenAI Systems Lab fidelity tagging system, May 2026)
 
 ---
 

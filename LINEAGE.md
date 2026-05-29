@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.11 — Share Score, fidelity badges, streak + 91-day heatmap (May 2026)
+
+**Share Score button** added to CombinatorTab debrief and TrainerTab ResultsScreen. One button: copies a one-line plain-text summary to clipboard (`ML Systems Lab [Tab]: X/Y · Z% · Weak: [domain] → url`). `copied` state toggles the button label to `✓ Copied!` for 2 seconds, then resets. `navigator.clipboard.writeText` — no external dependency.
+
+**Fidelity badges** added to 6 module headers as small monospace chip spans. Three variants: `✓ Real execution` (mint, Pyodide runs actual Python — SparkLabTab, ModelsMathTab), `~ Simulated` (prime/amber, scripted scenarios — CombinatorTab, TrainerTab, VerbatimTab, StaffLayerTab). No new component — inline `<span>` with CSS variable colors.
+
+**Streak tracking + 91-day heatmap** added to HomeTab. On every HomeTab mount: increments `msl_activity_YYYY-MM-DD` (visit count per day), updates `msl_streak` (consecutive-day counter, reset if gap > 1 day) and `msl_last_visit`. Renders a 7×13 GitHub-style activity grid (gridTemplateRows + gridAutoFlow: column) with amber squares on active days. Streak shown as a pill alongside "Practice activity" eyebrow. Mobile-scrollable horizontally.
+
+**Distractor quality pass** (14 questions, CombinatorTab + TrainerTab): replaced trivially-eliminable wrong options with plausibly-wrong options requiring genuine reasoning to eliminate. Target ratio: 2 of 3 wrong options should require judgment, not just recall or pattern-matching.
+
+---
+
 ### v4.10 — Defense Plan (May 2026)
 
 JDPrepTab and DefenseDocTab merged into a single 3-screen tool: **Defense Plan**.
