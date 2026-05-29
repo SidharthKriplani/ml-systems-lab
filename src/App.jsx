@@ -36,6 +36,7 @@ import JDPrepTab      from './tabs/JDPrepTab.jsx'
 import DefenseDocTab  from './tabs/DefenseDocTab.jsx'
 import VerbatimTab    from './tabs/VerbatimTab.jsx'
 import SpotTheFlawTab from './tabs/SpotTheFlawTab.jsx'
+import ProjectLabTab  from './tabs/ProjectLabTab.jsx'
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -73,6 +74,7 @@ const ALL_TABS = [
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
   { id: 'spottheflaw', component: SpotTheFlawTab },
+  { id: 'projectlab',  component: ProjectLabTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -88,6 +90,7 @@ const PREMIUM_TABS = new Set([
   'dl', 'dl_finetune', 'dl_serving',
   'ds', 'causal', 'ts',
   'monitor', 'mlops_deploy', 'mlops_pipes',
+  'projectlab',
 ])
 const ACCESS_CODE = 'DAI2026'
 
@@ -124,7 +127,8 @@ const PRACTICE_DOMAINS = [
       { id: 'features',  label: 'Feature Engineering', desc: 'Skew, leakage, feature stores' },
       { id: 'eval',      label: 'Model Evaluation',    desc: 'Metrics, shadow mode, calibration' },
       { id: 'design',    label: 'System Design',       desc: 'Incident room, two-tower, ML platform' },
-      { id: 'classical', label: 'Classical ML',        desc: 'Failure zoo, ensembles, hyperparams' },
+      { id: 'classical',   label: 'Classical ML',        desc: 'Failure zoo, ensembles, hyperparams' },
+      { id: 'projectlab', label: 'Project Lab',         desc: 'End-to-end DS notebook — churn prediction with Pyodide' },
     ],
   },
   {

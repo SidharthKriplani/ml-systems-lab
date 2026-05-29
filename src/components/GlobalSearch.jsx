@@ -426,6 +426,14 @@ const INDEX = [
   { id: 'spottheflaw', tab: 'spottheflaw', icon: '◎', kind: 'tool', title: 'Spot the Flaw',
     desc: '10 real ML analyses with exactly one buried methodological flaw each. Data leakage, evaluation errors, distribution shift, metric mismatch, labeling artifacts.' },
 
+  // ── Project Lab ───────────────────────────────────────────────────────────
+  { id: 'projectlab', tab: 'projectlab', icon: '⌁', kind: 'module', title: 'Project Lab — Churn Prediction Notebook',
+    desc: 'End-to-end DS notebook in the browser. Phase 1: schema inspection, EDA, correlation heatmap, 2 judgment checkpoints on data quality and multicollinearity decisions. Real Python via Pyodide.' },
+  { id: 'projectlab-cp1', tab: 'projectlab', icon: '⌁', kind: 'scenario', title: 'Project Lab: Data Quality Decision (Checkpoint 1)',
+    desc: 'TotalCharges stored as string, tenure=0 new customers, 11 blank rows — which two issues do you fix before training?' },
+  { id: 'projectlab-cp2', tab: 'projectlab', icon: '⌁', kind: 'scenario', title: 'Project Lab: Feature Collinearity Decision (Checkpoint 2)',
+    desc: 'TotalCharges and tenure are r=0.83 correlated. For logistic regression vs tree models — do you drop, keep, or engineer?' },
+
   // ── Take-Home ─────────────────────────────────────────────────────────────
   { id: 'th-1',  tab: 'takehome', icon: '📝', kind: 'tool', title: 'Take-Home: Feature store for ride-sharing',
     desc: 'Design a real-time feature store serving 50M daily rides — freshness, backfill, <10ms serving latency.' },
@@ -473,6 +481,7 @@ const TAB_LABELS = {
   casestudies: 'Case Studies', stafflayer: 'Staff Layer',
   verbal: 'Verbal Practice', takehome: 'Take-Home', defense: 'Defense Plan',
   spottheflaw: 'Spot the Flaw',
+  projectlab: 'Project Lab',
 }
 
 function match(item, q) {

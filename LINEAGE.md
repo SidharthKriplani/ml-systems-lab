@@ -46,6 +46,25 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.33 — Project Lab Phase 1 — end-to-end DS notebook, Telco Churn (2026-05-30)
+
+**What shipped:** New tab `ProjectLabTab.jsx` (practice zone, ML Engineering domain, premium). Sequential Pyodide notebook for churn prediction — Phase 1 covers data ingestion and EDA.
+
+**Structure:**
+- Cell 1 — Schema Inspection: dtypes, nulls, cardinality, class balance. Surfaces the TotalCharges dtype issue (stored as object, must be cast to float) and the ~26% churn rate.
+- Judgment Checkpoint 1 — Data Quality Decision: TotalCharges dtype vs blank rows vs SeniorCitizen recoding vs tenure=0. Correct answer: fix dtype + treat tenure=0 as signal, not error.
+- Cell 2 — EDA Dashboard (matplotlib, `withPlot=true`): 6-panel figure — class balance pie, tenure/MonthlyCharges distributions by churn, contract type churn rates, internet service churn rates, avg charges by churn.
+- Cell 3 — Correlation Heatmap + Outlier Flags (matplotlib, `withPlot=true`): correlation matrix with annotations, IQR outlier detection on numeric columns. Surfaces TotalCharges × tenure r=0.83 multicollinearity.
+- Judgment Checkpoint 2 — Feature Collinearity Decision: how to handle r=0.83 correlated features. Correct answer: depends on model class — LR needs intervention, trees don't.
+
+**Progress tracking:** `msl_projectlab_churn_data` localStorage key (JSON: `{ cellsDone: [...], checkpointsDone: [...] }`). Phase progress bar (done/5). Phase complete callout + reset button + forward pointer to FeatureEngTab.
+
+**Roadmap panel:** Phases 2–5 stubs shown (Features, Model, Monitoring, Deployment) — dim cards with descriptions, not yet built.
+
+**App.jsx wiring:** `projectlab` added to ALL_TABS, PREMIUM_TABS, PRACTICE_DOMAINS (ML Engineering domain). GlobalSearch: tab entry + 2 checkpoint scenarios indexed. All brace-balanced at 0. One commit.
+
+---
+
 ### v4.32 — Oracle identity refactor: Batch 2 — remaining 6 tabs + 5 unstaged (2026-05-30)
 
 **What shipped:** Completed the Oracle color refactor across the remaining high-hit tabs. All decorative multi-color accents now replaced with single amber (`var(--prime)`) + warm gray neutrals across the full codebase. Two-session effort totaling 21 tabs refactored.

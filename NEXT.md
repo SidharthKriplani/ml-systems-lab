@@ -8,17 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. ProjectLab tab — Phase 1 skeleton (2–3 hours)
-New tab `ProjectLabTab.jsx`. Sequential notebook. Phase 1: data ingestion + EDA — 3 Pyodide cells (load sklearn churn dataset → shape/dtypes/nulls → correlation heatmap via matplotlib). 2 AccordionMCQ judgment checkpoints between cells. LocalStorage key `msl_projectlab_churn_data`. Add to App.jsx (practice zone, premium). See IDEAS.md Tier 1 for full spec.
-
-### 3. New user cold-state banner (45 min)
+### 1. New user cold-state banner (45 min)
 Detect first visit: no `msl_tab`, no `msl_score:*`, no `msl_access` in localStorage. Show one-time orientation banner at top of HomeTab: "New here? Start with Feature Engineering (free) or enter code DAI2026 for full access." Disappears after first tab visit (write `msl_onboarded: 1`). HomeTab only — not Today sidebar.
 
-### 4. Role Readiness Score on HomeTab (1.5 hours)
+### 2. Role Readiness Score on HomeTab (1.5 hours)
 Aggregate cross-tab scores into per-domain seniority signal. Read all `msl_score:*` keys + `msl_trainer_history` + `msl_combinator_history`. Compute a 0–100 "readiness" per domain (ML Eng, Data Eng, Deep Learning, MLOps, Data Science, Interview). Render as compact bar-per-domain on HomeTab below the TODAY row. No new localStorage keys needed — derives from existing data.
 
-### 5. Audit #021 — post-v4.31 state check (1 hour)
-Run a focused audit: (a) confirm all brace-balanced files from v4.29–v4.31 still pass, (b) check METRICS.md for any missing localStorage keys from v4.29/v4.30, (c) verify SpotTheFlaw scenario count in GlobalSearch matches 12, (d) spot-check `.msl-cloud-map` renders correctly in MonitoringTab on mobile (no overflow). Log findings in AUDITS.md.
+### 3. Project Lab Phase 2 — Feature Engineering (2 hours)
+Continue `ProjectLabTab.jsx`. Phase 2: 3 cells (OHE + target encoding → feature scaling + imputation → permutation importance) + 1 judgment checkpoint (leakage: does `avg_spend_last_7d` computed on full dataset before split constitute leakage?). LocalStorage key extension: `checkpointsDone` adds `cp3`. Cell IDs: `cell4`, `cell5`, `cell6`.
+
+### 4. Audit #021 — post-v4.33 state check (1 hour)
+Run a focused audit: (a) confirm ProjectLabTab brace-balance and routing correct, (b) verify `msl_projectlab_churn_data` key registered in METRICS.md, (c) check SpotTheFlaw scenario count in GlobalSearch matches 12, (d) spot-check `.msl-cloud-map` renders in MonitoringTab on mobile. Log findings in AUDITS.md.
+
+### 5. Pre-Eval callouts — 3 tabs (1.5 hours)
+Add per-scenario diagnostic hint between "option selected" and "explanation revealed" in SystemDesignTab, ModelEvalTab, CausalInferenceTab. Fires as an inline `.msl-hint` callout after pick, before reveal click. Content: one sentence pointing at the most common reasoning error for that specific scenario. ~5 scenarios each tab.
 
 ---
 
@@ -30,6 +33,7 @@ Nothing currently blocked.
 
 ## Done this session
 
+- ~~Project Lab Phase 1 (v4.33) — ProjectLabTab.jsx built. 3 Pyodide cells (schema inspection, EDA dashboard, correlation heatmap + outlier flags) + 2 judgment checkpoints (data quality decision, feature collinearity decision). msl_projectlab_churn_data localStorage key. App.jsx wired (ALL_TABS, PREMIUM_TABS, PRACTICE_DOMAINS ML Eng). GlobalSearch indexed. Phases 2–5 roadmap shown. All brace-balanced at 0.~~
 - ~~Oracle identity refactor COMPLETE (v4.31 + v4.32) — All 21 tabs across 2 sessions. Batch 1: MonitoringTab, CausalInferenceTab, FeatureEngTab, ClassicalMLTab, GradientTab. Batch 2: SystemDesignTab, ModelsMathTab, DataScienceTab, dbtTab, DLServingTab, DeepLearningTab + MLOpsPipelinesTab, ModelEvalTab, TimeSeriesTab, GradientTab + MLOpsDeployTab, SparkLabTab, AirflowTab, DataModelingTab, DLFineTuningTab, DefenseDocTab, CaseStudiesTab, TrainerTab, CodeBugsTab, SpotTheFlawTab, InterviewPrepTab, CombinatorTab. All decorative mint/sky/ember/rose/violet/gold → prime/amber/ink-low. All MCQ correct/wrong, semantic status, data series preserved. All brace-balanced at 0. Commits ca888fc + 6b56b33.~~
 - ~~Apply .msl-option-btn to remaining MCQ tabs (v4.30) — FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab all migrated from inline styles~~
 - ~~Cloud/AWS callouts — 3 tabs (v4.30) — .msl-cloud-map + .msl-cloud-chip added to index.css; 30+ scenario reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab got AWS service callouts~~
