@@ -46,6 +46,32 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.22 — Skeleton mode — COMING_SOON stubs across 16 tabs (2026-05-29)
+
+**The problem this solves:**
+The app had rich live content but zero signal about what was coming. New users saw a finished product with no growth trajectory. Returning users had no visibility into planned modules. And internally, planned features existed only in IDEAS.md — disconnected from the code they'd eventually live in.
+
+**The pattern introduced:**
+A `COMING_SOON` data constant (placed outside the component function) with three fields per stub:
+- `label` — the module nav name
+- `userBrief` — 1–2 sentences rendered to users explaining what the module will cover and why it matters in production
+- `devBrief: { micro, macro }` — **not rendered** — internal build guidance. `micro` is the build spec (format, scenario count, component pattern). `macro` is how the module fits in the tab and the wider app — what gap it fills and what it connects to.
+
+Rendered as a "What's building" card grid at the bottom of each tab, consistent with the existing AirflowTab ROADMAP style but leaner (soon-only, no live cards mixed in).
+
+**Files touched and what was added:**
+- **12 tabs with new COMING_SOON** (2 stubs each): DeepLearningTab (Attention Head Visualizer, Architecture Decision Lab), ClassicalMLTab (Decision Boundary Lab, Bayesian Classifier Clinic), SparkLabTab (Memory Pressure Simulator, Streaming Stability Lab), MonitoringTab (Alerting Decision Tree, Drift Attribution Lab), MLOpsPipelinesTab (Model Registry Patterns, Upstream Dependency Failures), SystemDesignTab (Do We Even Need ML?, Retrieval System Failures), CausalInferenceTab (Causal DAG Editor, Experiment Design Failures), FeatureEngTab (Feature Store Time-Travel Bug, Cross-Feature Interaction Design), StaffLayerTab (Multi-Team Incident Room, Platform Investment Decision), CombinatorTab (Company-Calibrated Tracks, Cross-Domain Challenge Mode), CodeBugsTab (Distributed Training Bugs, Silent Data Pipeline Bugs), TrainerTab (Spaced Repetition Queue, Weak Domain Drill).
+- **4 tabs with devBrief added to existing ROADMAP soon entries**: AirflowTab (3 soon entries), dbtTab (3 soon entries), DataModelingTab (3 soon entries), DataScienceTab (2 soon entries).
+
+**Total stubs:** 24 new (12 tabs × 2) + 11 upgraded (4 roadmap tabs with devBrief).
+
+**Why devBrief in the data, not in IDEAS.md:**
+IDEAS.md is a planning document that gets rewritten and pruned. The devBrief lives in the source next to the stub — when you come to build it, the spec is right there. The micro brief tells you what format and how many scenarios. The macro brief tells you why it belongs where it is and what it unlocks. No context lookup required.
+
+**Net change:** 16 files, 443 insertions, 11 deletions. Brace balance `0` on all 16.
+
+---
+
 ### v4.21 — Guidance completeness pass — final 4 tabs (2026-05-29)
 
 **What and why:**
