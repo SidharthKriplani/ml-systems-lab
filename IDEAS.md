@@ -20,6 +20,12 @@ Last updated: May 2026
 
 ## Tier 1 — High impact, buildable now
 
+### Emoji → SVG replacement (identified 2026-05-29, post v4.14 partial audit)
+- [ ] **Full emoji sweep + SVG replacement** — v4.14 cleaned `icon:` data fields and prefix emoji across 18 tabs. Residual emoji remain in rendered UI copy, button labels, section headers, and inline content. Next pass: grep all tab files for emoji codepoints, categorise (decorative → replace with inline SVG using CSS variable colors; functional glyphs like ✓ ✗ → keep; country flags → keep), then replace. SVGs should reference `currentColor` or CSS vars so they theme correctly. Run audit #009 first to get the full per-tab list before starting.
+
+### Mobile layout verification (identified 2026-05-29, after v4.16)
+- [ ] **HomeTab TODAY row on narrow screens** — Two-column `gridTemplateColumns: 'minmax(0, 1fr) auto'` not tested below 375px. Activity widget is ~90px; at 320px the case card gets ~220px which may be too narrow for the scenario text. Fix if needed: add `@media (max-width: 480px)` to stack columns vertically. All other v4.16 changes (flex-wrap role buttons, `minmax(240px)` track grid) are mobile-safe patterns — just the TODAY two-col needs a live check.
+
 ### HomeTab polish (identified 2026-05-29, post v4.16)
 - [ ] **Activity widget: hide heatmap when sparse** — For users with ≤3 days of activity, the 4-week grid is 27 dark squares and 1 lit dot. It looks broken, not informative. Either hide the grid until there are ≥7 active days, or replace it with a simple "Day 1" / "Day N" message for new users. The streak number alone is enough for early days.
 - [ ] **Continue bar: only show if pct > 0** — Currently shows "Spark Lab · 0%" which signals no progress. A 0% bar is noise. Should only render if `nextUp.pct > 0`, i.e., the user has genuinely started the track. If nothing has been started, suppress the bar entirely.

@@ -267,6 +267,26 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 ---
 
+### #009 — 2026-05-29 · Visual Consistency — Emoji residue + Mobile layout
+
+**Scope:** Post-v4.14 emoji audit follow-up + post-v4.16 HomeTab layout mobile check  
+**Trigger:** v4.14 cleaned `icon:` fields and decorative prefix emoji across 18 tabs. User confirmed residual emoji still present in multiple places. Mobile audit overdue after HomeTab layout redesign (per audit type reference: run Mobile after any CSS/layout change).  
+**Status:** Findings logged — not yet fixed.
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | Residual emoji in UI copy, button text, section labels, and inline content across multiple tabs — not caught by v4.14 `icon:` field pass, which only targeted module icon data fields and prefixes | All tabs (unsurveyed) | Medium | ⚠️ Open |
+| 2 | Emoji should be replaced with inline SVGs or unicode symbols — not just removed. SVGs allow color theming via CSS variables; bare unicode symbols are acceptable for ✓ ✗ → type glyphs | All tabs | Medium | ⚠️ Open |
+| 3 | Mobile audit not run since HomeTab v4.16 layout redesign — two-column TODAY row (`gridTemplateColumns: 'minmax(0, 1fr) auto'`) has not been tested on narrow screens (≤375px). Activity widget at ~90px wide may leave insufficient width for case card text on 320px devices | `HomeTab.jsx` | Medium | ⚠️ Open |
+| 4 | All other layout changes (role selector flex-wrap, track grid `minmax(240px, 1fr)`, gap 28px) use mobile-safe CSS patterns — low risk | `HomeTab.jsx` | Low | ✅ Likely clean — needs verification |
+
+**Priority actions:**
+1. *(Medium)* Full grep scan for emoji codepoints (`[\u{1F000}-\u{1FFFF}]`, `[\u{2600}-\u{27BF}]`) across all tab files. Categorise: decorative (replace with SVG), functional (keep or replace with unicode glyph), flag/country (keep). Log per-tab findings.
+2. *(Medium)* Replace decorative emoji with themed inline SVGs. Priority tabs: any tab where emoji appear in rendered UI (buttons, labels, section headers) rather than just data fields.
+3. *(Medium)* Mobile test: open app on 375px viewport (Chrome DevTools), check HomeTab TODAY row, role buttons, track grid. If case card text is too narrow, add `@media (max-width: 480px)` rule to stack TODAY columns vertically.
+
+---
+
 ---
 
 ## Part VI — Learning Quality Audit
