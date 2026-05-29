@@ -579,6 +579,27 @@ const MODULES = [
   { id: 'registry', label: 'Model Registry Patterns',  icon: '',  component: RegistryPatterns },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Model Registry Patterns',
+    userBrief: 'Version a model correctly before your promotion gates break. Semantic versioning vs hash-based, when each fails, and the state machine from shadow mode to production.',
+    devBrief: {
+      micro: 'AccordionMCQ, 3 scenarios: versioning strategy collapse, promotion gate misconfiguration, rollback trigger ambiguity. Same AccordionMCQ format as existing modules. ~1.5h content + ~30min wiring.',
+      macro: 'Pipelines tab covers testing and data quality gates. Registry Patterns covers the model lifecycle gate — promotion, rollback, versioning. Fills the gap in the CI/CD loop between "tests pass" and "model ships."',
+    },
+  },
+  {
+    label: 'Upstream Dependency Failures',
+    userBrief: 'A schema change in the upstream feature table breaks four downstream models without throwing an exception. Walk through the cascade and decide the right gating strategy.',
+    devBrief: {
+      micro: 'Single multi-part scenario with branching analysis. Decision: schema validation at ingestion vs at model serving vs at both. Reveals production config options: Great Expectations, dbt contracts, schema registries.',
+      macro: 'Complements the existing Schema Validation module with the production failure version of the same problem — what happens when the tests did not catch it. Reinforces why schema contracts matter upstream of the pipeline.',
+    },
+  },
+]
+
 export default function MLOpsPipelinesTab({ onNavigate }) {
   const [active, setActive] = useState('cicd')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? CiCdGates
@@ -611,6 +632,21 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

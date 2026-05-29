@@ -243,6 +243,27 @@ function initReveals() {
   return {}
 }
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Multi-Team Incident Room',
+    userBrief: 'A production ML incident spans feature engineering, model serving, and monitoring simultaneously. Coordinate the response across teams — IC3, IC5, and Staff each see a different part of the problem.',
+    devBrief: {
+      micro: 'Same sequential reveal format (IC3 → IC5 → Staff). Scenario: model latency SLA breached and accuracy drop detected simultaneously. IC3 diagnoses independently. IC5 coordinates. Staff escalates, assigns owners, runs postmortem framing.',
+      macro: 'Existing StaffLayer scenarios are single-domain. This is cross-domain — the failure mode that defines Staff-level system visibility. Most realistic Staff interview scenario type and currently absent from the bank.',
+    },
+  },
+  {
+    label: 'Platform Investment Decision',
+    userBrief: 'Build vs. buy: a new feature serving infrastructure. IC3 benchmarks options. IC5 adds cost and latency tradeoffs. Staff decides based on team velocity, vendor lock-in, and org-level technical debt.',
+    devBrief: {
+      micro: 'Sequential reveal, same format. Scenario: ML platform team evaluating feast vs. tecton vs. custom build. IC3 gives technical comparison. IC5 adds cost/latency. Staff answer introduces: total maintenance cost, eng-months to migrate, what you give up with each choice.',
+      macro: 'Build vs. buy is the signature Staff-level engineering framing. Absent from current StaffLayer and present in almost every Staff+ interview. High-signal addition that covers the org-level reasoning the tool is designed to teach.',
+    },
+  },
+]
+
 export default function StaffLayerTab({ onNavigate }) {
   const [reveals, setReveals] = useState(initReveals)
   const [expanded, setExpanded] = useState(new Set())
@@ -393,6 +414,21 @@ export default function StaffLayerTab({ onNavigate }) {
             </div>
           )
         })}
+      </div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

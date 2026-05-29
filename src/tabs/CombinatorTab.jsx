@@ -942,6 +942,27 @@ function formatTime(seconds) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Company-Calibrated Tracks',
+    userBrief: "Google MLE, Meta MLE, Stripe DS — question sets weighted by what each company's interview loop actually tests. No generic mix for targeted preparation.",
+    devBrief: {
+      micro: 'Add COMPANY_TRACKS config mapping company name to question ID subsets. UI: optional company selector on the config screen before session start. Questions biased toward that company\'s known focus domains based on public prep guides.',
+      macro: 'Current session is random-mix or manual domain selection. Company tracks give motivated preparation — "I\'m interviewing at Google in 2 weeks, give me their loop." Most requested feature category for interview prep tools.',
+    },
+  },
+  {
+    label: 'Cross-Domain Challenge Mode',
+    userBrief: 'A single session that forces answers across 3+ domains in sequence, simulating the breadth expected at Senior+ where back-to-back context switching is the actual test.',
+    devBrief: {
+      micro: 'Session config option: "Challenge Mode" enforces minimum 3 distinct domains, no domain repeat in first 15 questions. Post-debrief shows cross-domain reasoning gaps vs. single-domain performance delta.',
+      macro: 'Current Combinator is random-mix or single-domain. Challenge mode trains the breadth expected at Staff+ loops. Differentiated from Trainer (which is drill-focused) by the time constraint and cross-domain sequencing.',
+    },
+  },
+]
+
 export default function CombinatorTab({ onNavigate }) {
   // ── Restore saved session from localStorage ──
   const _saved = (() => {
@@ -1214,6 +1235,21 @@ export default function CombinatorTab({ onNavigate }) {
         >
           Start Session
         </button>
+        {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+        <div style={{ marginTop: '48px' }}>
+          <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+            {COMING_SOON.map(m => (
+              <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

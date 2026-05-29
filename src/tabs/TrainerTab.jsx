@@ -753,6 +753,27 @@ function shuffle(arr) {
 
 // ─── Setup Screen ────────────────────────────────────────────────────────────
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Spaced Repetition Queue',
+    userBrief: 'Surface questions you answered 3, 7, or 14 days ago for active recall. Forgetting-curve scheduling that turns each session into retention, not just practice.',
+    devBrief: {
+      micro: 'Read msl_sr_log localStorage (completion timestamps per question). Surface due questions as a prioritized queue before the random session. Intervals: 1, 3, 7, 14, 30 days. No backend required — pure localStorage + date arithmetic.',
+      macro: 'TrainerTab currently treats each session as independent. SR transforms it into a retention system. PAL confirmed this as the highest-leverage feature for long-term learning by engagement data.',
+    },
+  },
+  {
+    label: 'Weak Domain Drill',
+    userBrief: 'Auto-selects your two lowest-scoring domains from session history. Pure targeted remediation — no config required. Your practice adapts to your actual gaps, not your estimate of them.',
+    devBrief: {
+      micro: 'Read msl_score:trainer_* keys per domain. Sort ascending. Pre-select the bottom 2 domains in the domain picker. User can override but sees "your weak domains" framing. ~1h implementation.',
+      macro: 'Currently the user manually selects domains. Weak Domain Drill turns the setup screen into an adaptive system. Pairs with Spaced Repetition Queue to make TrainerTab a retention-oriented study tool rather than a random quiz.',
+    },
+  },
+]
+
 function SetupScreen({ onStart }) {
   const [selectedDomains, setSelectedDomains] = useState(new Set(ALL_DOMAINS))
   const [count, setCount] = useState('10')
@@ -870,6 +891,21 @@ function SetupScreen({ onStart }) {
       >
         Start Drill
       </button>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

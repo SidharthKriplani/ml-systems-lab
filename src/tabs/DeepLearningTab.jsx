@@ -719,6 +719,27 @@ const DL_MODULES = [
   { id: 'transformer', label: 'Transformer Architecture', icon: '', component: TransformerArchitecture },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Attention Head Visualizer',
+    userBrief: 'Run interactive self-attention on a sample sentence and inspect per-head weight patterns. Makes "what does an attention head actually attend to?" concrete before the interview asks.',
+    devBrief: {
+      micro: 'Pyodide numpy-only self-attention (no torch — no wasm build needed). Fixed tokenized input, single-layer multi-head, renders attention weight heatmap via matplotlib base64 export. User selects which head to inspect via radio buttons. ~3h.',
+      macro: 'Training Lab covers failure modes in training. This covers understanding the architecture post-training — completing the arc from "can\'t train it" to "can\'t explain it." Should be added between Transformer Architecture and a future Architecture Decisions module.',
+    },
+  },
+  {
+    label: 'Architecture Decision Lab',
+    userBrief: 'ConvNet vs RNN vs Transformer for non-NLP tasks. Given a problem spec — temporal signal, image patches, graph structure — choose and justify the architecture from first principles.',
+    devBrief: {
+      micro: 'AccordionMCQ, 4 scenarios. Framing: production context (latency budget, dataset size, team expertise). Each reveal explains the inductive bias that makes the architecture wrong or right for this input structure. ~2h content + ~30min wiring.',
+      macro: 'Bridges Training Lab (how models fail during training) with DL Serving (how models fail in production). The missing middle: when to choose each architecture family before you even start training.',
+    },
+  },
+]
+
 export default function DeepLearningTab({ onNavigate }) {
   const [active, setActive] = useState('diagnosis')
   const [, forceUpdate] = useState(0)
@@ -762,6 +783,21 @@ export default function DeepLearningTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

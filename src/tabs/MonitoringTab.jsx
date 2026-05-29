@@ -989,6 +989,27 @@ const MODULES = [
   { id: 'coverage',label: 'Coverage Audit',     icon: '', component: MonitorCoverageAudit },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Alerting Decision Tree',
+    userBrief: 'Given an alert — PSI spike, AUC drop, latency breach at 3am — decide: page immediately, log and watch, auto-rollback, or suppress. The right answer changes with context.',
+    devBrief: {
+      micro: 'Branching MCQ state machine — first choice determines next question. Inputs: alert type + business context (batch vs real-time serving, model role, time of day). Each branch reveals production reasoning. Adds a branching format not currently in MonitoringTab.',
+      macro: 'Existing modules cover detection — reading PSI, KS, accuracy signals. This covers response: the judgment that separates L4 from L5 oncall. Closes the detect → diagnose → decide loop that is currently incomplete.',
+    },
+  },
+  {
+    label: 'Drift Attribution Lab',
+    userBrief: 'PSI is elevated across your input feature distribution. Which features are actually driving it? Work through real attribution methods before filing the incident report.',
+    devBrief: {
+      micro: 'AccordionMCQ + data table scenarios. User is given a drift alert and a feature PSI table and must diagnose which feature subset to investigate. 3 scenarios. Univariate PSI per feature, SHAP interaction analysis, cohort comparison.',
+      macro: 'PSI/KS modules cover metric interpretation. Attribution is the next natural step — once you detect drift, where do you look? Fills the gap between alert detection and root-cause handoff to the feature team.',
+    },
+  },
+]
+
 export default function MonitoringTab({ onNavigate }) {
   const [active, setActive] = useState('drift')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? DriftDashboard
@@ -1021,6 +1042,21 @@ export default function MonitoringTab({ onNavigate }) {
           </button>
         </div>
       )}
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

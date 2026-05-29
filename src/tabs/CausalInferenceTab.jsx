@@ -838,6 +838,27 @@ const MODULES = [
   { id: 'obs_vs_exp',     label: 'Obs vs Experimental', component: ObsVsExperimental },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Causal DAG Editor',
+    userBrief: 'Draw a causal graph interactively. Identify confounders, colliders, and mediators by structure alone — no formula required. Intuition before identification.',
+    devBrief: {
+      micro: 'Pyodide-backed DAG builder. Fixed node set (5–7 nodes representing an ML system). User draws edges; code identifies d-separation, open paths, and valid adjustment sets. Similar scope to existing ModelsMathTab Pyodide cells.',
+      macro: 'Existing modules teach causal identification by scenario. This builds the visual/structural intuition first — the scaffold that makes Backdoor Criterion and Confounder or Collider comprehensible. Should be the second module (after Causal vs Predictive), not last.',
+    },
+  },
+  {
+    label: 'Experiment Design Failures',
+    userBrief: 'You designed the experiment correctly — now find the flaw. SUTVA violations, SRM, novelty effects, and interference between units: the failures that look fine until analysis.',
+    devBrief: {
+      micro: 'AccordionMCQ, 4 scenarios. Each presents an experiment design with a hidden flaw. Format: here is the setup — what is wrong? Reveals include: what the stat test showed vs. what actually happened, and how to detect it in practice.',
+      macro: 'Existing Obs vs Experimental module covers when to use observational methods. This covers when experimental methods fail — the failure mode that trips up candidates who know A/B testing but not its edge cases.',
+    },
+  },
+]
+
 export default function CausalInferenceTab({ onNavigate }) {
   const [active, setActive] = useState('causal_vs_pred')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? CausalVsPredictive
@@ -876,6 +897,21 @@ export default function CausalInferenceTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

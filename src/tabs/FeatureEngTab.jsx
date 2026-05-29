@@ -970,6 +970,27 @@ const MODULES = [
   { id: 'arch',     label: 'Architecture Diagram',   icon: '◈', component: FeatureStoreArchitecture },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Feature Store Time-Travel Bug',
+    userBrief: "Your feature store claims to return point-in-time-correct features. It doesn't. Walk through the failure signature — the model trains fine, but it's learning from the future.",
+    devBrief: {
+      micro: 'AccordionMCQ + timeline diagram, 3 scenarios. Feature retrieval with incorrect join key on timestamp, TTL expiry without invalidation, batch backfill that overwrites historical values. Builds directly on the existing time-leakage modules.',
+      macro: 'Existing modules cover feature engineering logic errors. This covers retrieval errors — the feature is correct at creation time but wrong at serving time. Universally cited as a production surprise by Senior+ ML engineers.',
+    },
+  },
+  {
+    label: 'Cross-Feature Interaction Design',
+    userBrief: 'When to engineer interaction features, when to let the model learn them, and when manually engineering interactions introduces the leakage you were trying to prevent.',
+    devBrief: {
+      micro: 'AccordionMCQ, 3 scenarios. Framing: gradient boosting under time pressure. When does manually engineering user × item interactions improve vs. hurt? Reveals include: what the model would have learned vs. what you force-encoded.',
+      macro: 'Existing modules cover individual feature failure modes. This covers composed features — the next level of engineering judgment. Connects Feature Engineering to System Design: when to push complexity to the feature layer vs. the model layer.',
+    },
+  },
+]
+
 export default function FeatureEngTab({ onNavigate }) {
   const [active, setActive] = useState('skew')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? SkewSimulator
@@ -1002,6 +1023,21 @@ export default function FeatureEngTab({ onNavigate }) {
           </button>
         </div>
       )}
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

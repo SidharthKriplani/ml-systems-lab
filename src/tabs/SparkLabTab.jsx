@@ -776,6 +776,27 @@ const MODULES = [
   { id: 'oom',       label: 'OOM Diagnosis',        icon: '', component: OOMDiagnosis },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Memory Pressure Simulator',
+    userBrief: 'Given an executor config and job spec, predict: OOM, slowdown, or healthy. Builds the mental model for Spark sizing without needing a live cluster.',
+    devBrief: {
+      micro: 'Rule-based deterministic engine (not ML). Inputs: executor cores, memory, memoryFraction + dataset size, shuffle width, join type. Reveal shows calculation chain: available → reserved → execution memory → spill threshold → verdict. Same UI pattern as existing SparkLab simulators.',
+      macro: 'Completes a production failure trilogy alongside ShuffleHell (data movement) and PartitionSkew (imbalance). Together these are the 3 Spark failure modes probed at Senior+ interviews. SparkLab becomes the most complete Spark interview prep available.',
+    },
+  },
+  {
+    label: 'Streaming Stability Lab',
+    userBrief: 'Stateful streaming edge cases that break silently: late data arriving past the watermark, checkpoint corruption, and state explosion on unbounded keyed streams.',
+    devBrief: {
+      micro: 'AccordionMCQ, 4 scenarios covering Spark Structured Streaming in production. Reveals include concrete config recommendations: watermarkDelay values, checkpointLocation patterns, state timeout settings.',
+      macro: 'SparkLab currently covers batch. Streaming is a separate failure-mode class that appears in 30–40% of Spark questions at FAANG. Adds the missing half of the Spark interview surface.',
+    },
+  },
+]
+
 export default function SparkLabTab({ onNavigate }) {
   const [active, setActive] = useState('shuffle')
   const [, forceUpdate] = useState(0)
@@ -817,6 +838,21 @@ export default function SparkLabTab({ onNavigate }) {
         ))}
       </div>
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

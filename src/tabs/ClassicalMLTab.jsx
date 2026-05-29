@@ -703,6 +703,27 @@ const MODULES = [
   { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Decision Boundary Lab',
+    userBrief: 'Adjust kernel and regularization on a live SVM and watch the boundary shift. The visualization that makes the kernel trick genuinely intuitive rather than just described.',
+    devBrief: {
+      micro: 'Pyodide sklearn SVC on a 2D Gaussian mixture dataset. C + gamma sliders update Python vars, re-run cell, re-render matplotlib contourf as base64 image. No server required. ~2–3h.',
+      macro: 'Model Failure Zoo covers when models break in production. This covers why — the geometry behind the failure. Pairs directly with the SVM card in the Zoo, turning the written failure mode into a live demonstration.',
+    },
+  },
+  {
+    label: 'Bayesian Classifier Clinic',
+    userBrief: 'Naive Bayes works until the independence assumption shatters. Real failure modes: text classification with bigrams, structured data with correlated features, numeric inputs with non-Gaussian distributions.',
+    devBrief: {
+      micro: 'AccordionMCQ, 3 scenarios. Focus: diagnosing when the i.i.d. assumption breaks in practice and which signals expose it. Each reveal includes a calibration plot or confusion matrix as context.',
+      macro: 'Completes classical ML failure mode coverage alongside the Zoo and Ensemble Lab. Every model in the Zoo has a failure scenario; this adds the Bayesian family which is currently absent.',
+    },
+  },
+]
+
 export default function ClassicalMLTab({ onNavigate }) {
   const [activeModule, setActiveModule] = useState('zoo')
 
@@ -770,6 +791,21 @@ export default function ClassicalMLTab({ onNavigate }) {
       {/* Module content */}
       <div className="animate-slide-up">
         {ActiveComponent && <ActiveComponent />}
+      </div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

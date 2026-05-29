@@ -894,6 +894,27 @@ function BugCard({ bug, answer, onAnswer }) {
   )
 }
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Distributed Training Bugs',
+    userBrief: 'Gradient aggregation errors, NaN in loss with gradient clipping, and device-mismatch assertions — the bugs that emerge when you move from single-GPU to multi-GPU training.',
+    devBrief: {
+      micro: 'Same CodeBugs format. 3–4 scenarios. Each shows a distributed training script with one buried bug. Bug taxonomy: gradient all-reduce ordering, device placement mismatch, SyncBatchNorm handling in DDP.',
+      macro: 'Current bugs are mostly data pipeline and single-device PyTorch/sklearn. Distributed bugs are a separate class that appears at FAANG+ when the model scales. Completes the production ML bug surface from data to distributed compute.',
+    },
+  },
+  {
+    label: 'Silent Data Pipeline Bugs',
+    userBrief: "Type coercions that lose precision, DataFrame column-order dependencies, schema drift between training and serving — bugs that don't raise exceptions but corrupt model behavior.",
+    devBrief: {
+      micro: 'Same format. 3 scenarios. Focus: pandas dtypes, numpy broadcasting edge cases, sklearn pipeline fit vs. transform assumptions. "The model trains fine but serves garbage" failure class.',
+      macro: 'Data bugs are harder to catch than code bugs because they are silent. This adds a stealth category that interviewers probe specifically with "when would you never know your model was wrong?" — the hardest class of production bugs.',
+    },
+  },
+]
+
 export default function CodeBugsTab({ onNavigate }) {
   const [answers, setAnswers] = useState(loadAnswers)
   const [filter, setFilter] = useState('All')
@@ -1052,6 +1073,21 @@ export default function CodeBugsTab({ onNavigate }) {
             onAnswer={handleAnswer}
           />
         ))}
+      </div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

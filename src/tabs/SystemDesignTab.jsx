@@ -2055,6 +2055,27 @@ const MODULES = [
   { id: 'two_tower_arch', label: 'Two-Tower Diagram', component: TwoTowerArchitecture },
 ]
 
+// ── Coming Soon ───────────────────────────────────────────────────────────────
+// devBrief fields are internal build guidance only — not rendered to users.
+const COMING_SOON = [
+  {
+    label: 'Do We Even Need ML?',
+    userBrief: 'A product request arrives framed as an ML problem. Judge whether ML is actually warranted — or whether a rules engine, lookup table, or simpler system dominates the counterfactual.',
+    devBrief: {
+      micro: 'AccordionMCQ, 3 scenarios: (1) churn prediction where action = send email to everyone anyway — ROI negative, (2) support ticket classifier at 2 tickets/day — regex + human triage wins, (3) fraud flagging at 0.001% rate — precision economics favor rules engine. Reveal models the PM/engineer dialogue.',
+      macro: 'The most senior judgment call in ML: counterfactual thinking before building. Existing SystemDesignTab scenarios cover the model is live and breaking. This is pre-production — when to not build at all. Critical gap in Staff-level preparation.',
+    },
+  },
+  {
+    label: 'Retrieval System Failures',
+    userBrief: 'Your embedding similarity returns results that are semantically similar but not contextually useful. Diagnose and fix: embedding space issues, index staleness, query-document domain mismatch.',
+    devBrief: {
+      micro: 'AccordionMCQ + embedding diagram, 3 scenarios. Covers two-tower embedding drift, HNSW index staleness under writes, and query-document domain mismatch. Builds directly on the existing Two-Tower Explorer module.',
+      macro: 'Two-Tower Explorer covers architecture selection. This covers operational failure — the system is built correctly but breaks in production. Closes the design → debug arc and is the most commonly cited production surprise in recommendation system interviews.',
+    },
+  },
+]
+
 export default function SystemDesignTab({ onNavigate }) {
   const [active, setActive] = useState('incident')
   const [, forceUpdate] = useState(0)
@@ -2098,6 +2119,21 @@ export default function SystemDesignTab({ onNavigate }) {
       </div>
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+      {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: '48px' }}>
+        <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          {COMING_SOON.map(m => (
+            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
