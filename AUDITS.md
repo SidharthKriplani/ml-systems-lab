@@ -608,6 +608,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 | 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
+| 021 | Post-v4.33 state check — ProjectLabTab routing + brace balance, msl_projectlab_churn_data in METRICS.md, SpotTheFlaw scenario count vs GlobalSearch, .msl-cloud-map mobile render | Planned (NEXT.md #4) | BUILD / Content Integrity | ⏳ Pending |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
@@ -632,7 +633,9 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 3 | #008.2 (distractors), #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) |
-| Low | 7 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex in App/dbt/ModelEval/InterviewPrep), #016.1-2 (emoji residue), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial), #020.8 (no fidelity badges on new interactive modules) |
+| Medium | 2 | #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) — #008.2 distractors resolved v4.29 |
+| Low | 6 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex literals in App/#000/#fff/dbt/ModelEval), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial) |
+
+**Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32 — all 36 files swept. Residual hex literals (#017.2) are structural `#000`/`#fff` values, not decorative accent drift; tracked separately.
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.

@@ -72,6 +72,7 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |
 | **Lock indicators — Interview grid** | Without code: all Interview tool cards show padlock icon (6 tools including Spot the Flaw) | ✓ required | — |
 | **Spot the Flaw** | Open SpotTheFlawTab → read scenario → select a flaw category → confirm reveal shows The Flaw + prevention | ✓ required | — |
+| **Project Lab** | Open ProjectLabTab (ML Engineering) → run Cell 1 (schema inspection) → answer Checkpoint 1 → confirm Pyodide output renders and progress bar updates | ✓ required | — |
 
 ---
 

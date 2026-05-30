@@ -15,6 +15,8 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 - [x] ~~**Share Score clipboard button**~~ — done (2026-05-29, CombinatorTab debrief + TrainerTab ResultsScreen, navigator.clipboard, copied/setCopied 2s toggle)
 - [x] ~~**Fidelity/simulation badges**~~ — done (2026-05-29, 6 tabs: ✓ Real execution on SparkLab + ModelsMath, ~ Simulated on Combinator/Trainer/Verbatim/StaffLayer)
 - [x] ~~**Streak tracking + 91-day heatmap**~~ — done (2026-05-29, HomeTab — msl_streak/msl_last_visit/msl_activity_YYYY-MM-DD, 7×13 GitHub-style grid, streak pill)
+- [x] ~~**ProjectLabTab Phase 1 — Telco Churn notebook**~~ — done (v4.33, 2026-05-30). Cell 1 schema inspection, Checkpoint 1 data quality, Cell 2 EDA dashboard (matplotlib), Cell 3 correlation heatmap + outlier flags, Checkpoint 2 collinearity decision. `msl_projectlab_churn_data`. App.jsx wired. Phases 2–5 remain (see NEXT.md item #3).
+- [x] ~~**Oracle identity refactor — single amber accent end-to-end**~~ — done (v4.31–v4.32, 2026-05-30). All 36 files. All decorative multi-color accents (mint/sky/ember/rose/violet/gold) → `var(--prime)`. index.css, HomeTab, App.jsx structural changes + 30 tab files. See LINEAGE.md v4.31.
 
 ---
 
@@ -87,7 +89,7 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 
 ### Project Lab — end-to-end DS/MLE notebook tab (identified 2026-05-29)
 
-- [ ] **New tab: `ProjectLabTab` in the Practice zone.** A sequential, runnable notebook experience covering the full production ML workflow — from raw data to deployment scaffold. This is the biggest gap between MSL's current judgment-simulation format and what DS/MLE roles actually test in take-homes and technical rounds.
+- [~] **`ProjectLabTab` — Phase 1 done (v4.33). Phases 2–5 in queue.** Sequential Pyodide notebook, Telco Churn dataset, practice zone ML Engineering. Phase 1 = data ingestion + EDA (3 cells + 2 checkpoints). Remaining phases:
 
 **Why this is Tier 1:** DS and MLE roles increasingly expect candidates to demonstrate the full loop — not just "what would you do?" (judgment) but "show me the code" (execution). MSL currently has the judgment layer. Project Lab adds the execution layer, with Pyodide handling data science and annotated scaffolds covering deployment.
 
@@ -148,7 +150,7 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 (Source: lab diagnosis + DS/MLE role analysis, May 2026)
 
 ### Cloud/service mapping layer (identified 2026-05-29, post lab diagnosis)
-- [ ] **AWS/cloud service callouts on MLOps/deployment/monitoring scenarios** — each scenario that involves a technology or architecture choice should include a "In production, this maps to:" reveal panel showing the concrete AWS (or equivalent) service. E.g., "Feature store staleness → SageMaker Feature Store, CloudWatch feature drift metric." E.g., "Model registry promotion gate → SageMaker Model Registry, approval workflow, shadow endpoint." Target tabs: MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, StaffLayerTab, SystemDesignTab. Implementation: new `.msl-cloud-map` panel (styled like `.msl-reveal-panel`) added inside relevant AccordionMCQ reveals. Pure content work — no architecture change. ~2–3 hours content, ~30 min UI. This closes the gap between judgment simulation and interview-ready AWS fluency: users learn not just "what breaks" but "what it's called in prod." (Source: lab diagnosis, May 2026)
+- [x] ~~**AWS/cloud service callouts on MLOps/deployment/monitoring scenarios**~~ — done (v4.30, 2026-05-30). `.msl-cloud-map` + `.msl-cloud-chip` added to index.css. 30+ scenario reveals across MonitoringTab (8 callouts), MLOpsDeployTab (18+ callouts), MLOpsPipelinesTab (12+ callouts) received AWS service panels. SageMaker Model Monitor, CloudWatch, SageMaker Pipelines, Feature Store, Clarify, ECR, CodeDeploy, Step Functions, MWAA, etc. StaffLayerTab and SystemDesignTab remain targets if cloud coverage is extended in a future pass.
 
 ### "Spot the Flaw" adversarial format (new tab in Interview zone)
 - [x] ~~**New format: Spot the Flaw**~~ — done (v4.28) — 10 scenarios across 5 flaw categories (Data Leakage, Evaluation Error, Distribution Shift, Metric Mismatch, Labeling Artifact). Interview zone, premium, full App.jsx routing + GlobalSearch. See LINEAGE.md v4.28.

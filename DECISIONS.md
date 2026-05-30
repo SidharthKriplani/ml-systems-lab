@@ -19,6 +19,9 @@ Tailwind is in the config for historical reasons. All component styling uses inl
 **CSS variables for every color and spacing token.**  
 Defined in `:root` in `index.css`. Never hardcode hex values in component files. Adding a new color = add it to `:root` first, then reference it.
 
+**Single amber accent — no decorative domain colors.**  
+All decorative UI accents (card borders, section eyebrows, badge backgrounds, progress fills, navigation highlights) use `var(--prime)` (#F0A500) only. Domain-specific color differentiation is explicitly prohibited — it creates visual noise and dilutes the Oracle identity. Established v4.31 after a full 36-file sweep. **Exempt from this rule (semantic, not decorative):** MCQ correct/wrong state (mint=correct, rose=wrong), chart data series (multi-color is required for readability), severity indicators (P0/P1 rose, PSI red/amber), PROS/CONS pairs, fidelity badges, video/read status tags in GradientTab.
+
 **Transition, shadow, and radius tokens — use the system variables.**  
 `--t-fast: 0.10s ease`, `--t: 0.16s ease`, `--t-slow: 0.26s ease`. Shadow: `--shadow-sm/md/lg`. Radius: `--r-sm: 5px`, `--r: 9px`, `--r-lg: 14px`. Never write hardcoded `transition: 0.2s` or `border-radius: 8px` in component files — reference the tokens.
 

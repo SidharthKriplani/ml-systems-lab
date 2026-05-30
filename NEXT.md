@@ -33,30 +33,7 @@ Nothing currently blocked.
 
 ## Done this session
 
-- ~~Project Lab Phase 1 (v4.33) — ProjectLabTab.jsx built. 3 Pyodide cells (schema inspection, EDA dashboard, correlation heatmap + outlier flags) + 2 judgment checkpoints (data quality decision, feature collinearity decision). msl_projectlab_churn_data localStorage key. App.jsx wired (ALL_TABS, PREMIUM_TABS, PRACTICE_DOMAINS ML Eng). GlobalSearch indexed. Phases 2–5 roadmap shown. All brace-balanced at 0.~~
-- ~~Oracle identity refactor COMPLETE (v4.31 + v4.32) — All 21 tabs across 2 sessions. Batch 1: MonitoringTab, CausalInferenceTab, FeatureEngTab, ClassicalMLTab, GradientTab. Batch 2: SystemDesignTab, ModelsMathTab, DataScienceTab, dbtTab, DLServingTab, DeepLearningTab + MLOpsPipelinesTab, ModelEvalTab, TimeSeriesTab, GradientTab + MLOpsDeployTab, SparkLabTab, AirflowTab, DataModelingTab, DLFineTuningTab, DefenseDocTab, CaseStudiesTab, TrainerTab, CodeBugsTab, SpotTheFlawTab, InterviewPrepTab, CombinatorTab. All decorative mint/sky/ember/rose/violet/gold → prime/amber/ink-low. All MCQ correct/wrong, semantic status, data series preserved. All brace-balanced at 0. Commits ca888fc + 6b56b33.~~
-- ~~Apply .msl-option-btn to remaining MCQ tabs (v4.30) — FeatureEngTab, ModelEvalTab, MonitoringTab, DataScienceTab all migrated from inline styles~~
-- ~~Cloud/AWS callouts — 3 tabs (v4.30) — .msl-cloud-map + .msl-cloud-chip added to index.css; 30+ scenario reveals in MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab got AWS service callouts~~
-- ~~SpotTheFlawTab → 12 scenarios (v4.30) — stf11 (NDCG/CTR divergence) + stf12 (annotator majority-vote bias) added~~
-- ~~BiasVarianceVisualizer in ClassicalMLTab (v4.30) — animated SVG, slider, Bias²/Variance regions, regime diagnosis~~
-- ~~SimpsonsParadoxViz in CausalInferenceTab (v4.30) — aggregate/segmented toggle, animated bars, confounding explanation~~
-- ~~Footer cross-links — added to App.jsx, copy "Also by the same team:", LINEAGE.md v4.18, committed~~
-- ~~Interaction guidance pass — all 23 tabs, LINEAGE.md v4.17, AUDITS.md #010~~
-- ~~Audit #017 — full codebase health sweep; CLAUDE.md filenames fixed, AUDITS.md numbering fixed, 5 new findings logged, LINEAGE.md v4.19~~
-- ~~Audit #018 — mobile hover sticky bug sweep; PAL fix pattern applied to InterviewPrepTab, VerbatimTab, AskTab (3 fixes), GradientTab crash guard; LINEAGE.md v4.20~~
-- ~~GlobalSearch expansion — went from ~70 to 192 entries; entire Interview zone was invisible; all 9 Interview tools + scenarios now indexed~~
-- ~~Audit #019 — guidance completeness final sweep; 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean; LINEAGE.md v4.21~~
-- ~~Skeleton mode — COMING_SOON stubs across 16 tabs (24 new + 11 upgraded); userBrief rendered to users, devBrief{micro,macro} in-code dev guidance; LINEAGE.md v4.22~~
-- ~~Nav + progress overhaul — flat sidebar, guided paths, domain bars, HomeTab polish, ForwardPointer CTAs on 5 tabs; LINEAGE.md v4.23~~
-- ~~PAL-modeled polish (v4.24+v4.25) — transition/shadow/radius tokens, sidebar-item-active left-border, lock icons removed, role pills collapsed, progress bar animations, Space Grotesk dropped, shared utility classes (.msl-option-btn, .msl-reveal-panel, .msl-scenario-card, .msl-hint), .section-eyebrow applied to 17 instances across 4 tabs, dark theme token audit (6 replacements)~~
-- ~~Systematic design-system pass (v4.26) — .section-eyebrow (~44 instances), .msl-option-btn, .msl-reveal-panel applied across remaining 14 tabs; all 30 tabs brace-balanced~~
-- ~~Fill 10 COMING_SOON stubs (v4.27) — SystemDesign, MLOpsPipelines, Monitoring, FeatureEng, CodeBugs; 18 new scenarios + 6 new bugs; all COMING_SOON arrays cleared~~
-- ~~README rewrite (v4.28) — judgment-gap hook, 4 differentiators foregrounded, Interview zone flagship, domain grid moved lower~~
-- ~~HomeTab mobile fix (v4.28) — @media 480px TODAY row stacks vertically; sparse heatmap guard~~
-- ~~Apply .msl-option-btn to ClassicalMLTab (v4.28) — NaiveBayes module + option-btn + ForwardPointer~~
-- ~~ForwardPointers to MLOpsDeployTab, CombinatorTab, DataScienceTab (v4.28)~~
-- ~~Spot the Flaw tab full build (v4.28) — 10 scenarios, 5 flaw categories, Interview zone routing, GlobalSearch indexed~~
-- ~~All COMING_SOON stubs cleared (v4.29) — 10 modules across 6 tabs: AttentionHeadVisualizer, ArchDecisionLab, ExperimentDesignFailures, CausalDAGExplorer, StreamingStabilityLab, DecisionBoundaryLab, CompanyTracks, CrossDomainChallenge, SpacedRepQueue, WeakDomainDrill~~
+- ~~LINEAGE.md — core Oracle structural changes (index.css, HomeTab.jsx, App.jsx) documented and committed (92fc5e0). Completes the v4.31 entry which agents had left incomplete.~~
 
 ---
 
