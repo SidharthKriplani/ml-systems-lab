@@ -462,7 +462,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
       background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.94) 110px, rgba(8,6,4,0.96) 100%)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
       borderRight: '1px solid rgba(255,255,255,0.10)',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'none',
     }}>
 

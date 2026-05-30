@@ -571,7 +571,7 @@
 /* ─── Desktop: sidebar replaces bottom nav ───────────────────────────────── */
 @media (min-width: 769px) {
   /* Show sidebar, hide bottom nav */
-  .desktop-sidebar  { display: flex; }
+  .desktop-sidebar  { display: flex; flex-direction: column; }
   .bottom-nav-safe  { display: none; }
 
   /* Main wrapper shifts right to clear the 220px sidebar */
