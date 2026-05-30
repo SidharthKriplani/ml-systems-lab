@@ -86,6 +86,7 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 ### Modules
 - [ ] Behavioral question bank in Interview zone — ML-specific situations (disagreed with a metric, shipped despite uncertainty, stakeholder conflict over model decision)
 - [ ] Causal Inference: DAG editor — draw causal graph, identify confounders/colliders/mediators interactively (Pyodide)
+- [ ] **ML Interview Coding Rounds** — problem bank scoped tightly to ML-specific Python that appears in real senior/staff interviews: implement a custom loss function, write vectorized feature engineering without a loop, build cross-validation from scratch, debug a broadcasting error, write a custom sklearn transformer. Explicitly NOT generic Python (no algorithms, no string manipulation) and NOT LeetCode-style DSA. Runs in Pyodide with real output validation; judgment checkpoint fires after each correct solution ("your implementation is correct — but what breaks if the input has NaN?"). The gap this fills: StrataScratch owns SQL, LeetCode owns DSA, nothing owns ML-specific Python execution for interview prep. **Build trigger:** open-cell infrastructure exists (ProjectLabTab v2) AND problem set is validated against documented ML interview failure modes — don't build until both conditions hold. (Source: session discussion, 2026-05-30)
 
 ### Project Lab — end-to-end DS/MLE notebook tab (identified 2026-05-29)
 
@@ -146,6 +147,8 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 - Estimated build: 2–3 days. Content (Python scripts, annotations, judgment questions) is the long pole.
 
 **What this is not:** A Jupyter replacement or a generic coding sandbox. Every cell has a purpose tied to a production decision. The notebook is the vehicle; the judgment checkpoints are the product.
+
+**Companion Gradient posts:** Each ProjectLabTab phase ships with a corresponding Gradient post — narrative walkthrough of the same pipeline phase, ending with a CTA back to the tab. This is the ProjectPro read→run loop, correctly scoped: ProjectLabTab IS the end-to-end notebook, Gradient posts ARE the explanatory layer. No separate "ProjectPro-style notebooks track" needed.
 
 (Source: lab diagnosis + DS/MLE role analysis, May 2026)
 
