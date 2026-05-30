@@ -82,6 +82,15 @@ Closed = title + domain badge. Open = description + code/context + 4 options. Af
 **Sequential notebook pattern for execution modules (Project Lab).**  
 A second interaction pattern exists for tabs where the user runs code step-by-step through a complete workflow (Project Lab: data → features → model → monitoring → deployment scaffold). Format: numbered cells run in order, each cell's output feeds the next, judgment checkpoints (`msl-option-btn` + `msl-reveal-panel`) woven between execution phases. Do not mix this pattern with AccordionMCQ in the same tab — they serve different learning modes. Pyodide (`PythonCell.jsx`) handles execution; deployment cells are annotated code blocks (not runnable until backend lands).
 
+**Fixed notebook ships before open cells — always.**  
+For any execution-mode feature (Project Lab, datamart practice, future Pyodide modules), the fixed notebook with pre-written cells is v1. Open cells ("write it yourself" mode) are v2, added as a toggle on the same content after v1 ships. Reason: fixed notebook requires no output validation infrastructure, no test case authoring, no arbitrary-code error handling. Open cells require all three. Building both simultaneously produces one done and one half-built. The pre-written cell in the fixed notebook IS the solution that gets revealed in open cell mode — no duplicate content work.
+
+**Pyodide is the execution layer for all in-browser ML computation.**  
+`PythonCell.jsx` is the single abstraction. numpy, pandas, matplotlib, sklearn, scipy all run natively via Pyodide WASM. Data ships as JS arrays, loaded as `pd.DataFrame(DATA)` inside cells. Cold start ~4–6s on first load; acceptable for practice sessions. Do not introduce a second execution runtime (sql.js, etc.) while Pyodide usage is still being established — one runtime, measured first.
+
+**Execution content must test judgment, not syntax.**  
+Pyodide cells run code and produce output. The product value is the judgment checkpoint that fires after the output — "given this correlation matrix, which feature do you drop?" not "write the code to compute a correlation matrix." The cell is the vehicle; the checkpoint is the product. Any execution module where the hard part is remembering the API call, not interpreting the result, is in the wrong category.
+
 **Per-option explanations, not just "correct answer" reveals.**  
 Every wrong option gets an explanation of why it's wrong. This is the core learning mechanism.
 

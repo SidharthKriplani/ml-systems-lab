@@ -187,6 +187,43 @@ Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-r
 
 ## Tier 2 — High impact, more effort
 
+### Datamart-based ML practice (identified 2026-05-30)
+
+**Concept:** Wide, low-cardinality datamarts (100–200 rows, 15–25 columns, 3–5 tables) as the grounding layer for ML judgment modules. Instead of reading "the dataset has a column `avg_spend_last_7d` computed before the split," users see the actual schema, sample rows, null counts, and dtypes before answering. The data is the scenario.
+
+**Why it fits MSL:** Judgment questions grounded in real-ish data are harder and more realistic than prose descriptions. A user inspecting a 22-column SaaS datamart with a `plan_cancelled_at` column before answering "which feature constitutes leakage for churn?" is doing real ML reasoning. Pure MCQ against a text description is not.
+
+**Datamart inventory (target: 10–15):**
+- E-commerce — orders, users, sessions, products (wide, denormalized)
+- SaaS — subscriptions, feature_usage, accounts, churned_users
+- Fintech — transactions, wallets, fraud_signals, user_profiles
+- Consumer app — events, dau_snapshots, content, follows
+- Healthtech — appointments, outcomes, engagement, providers
+
+Each datamart: 3–5 tables, 100–200 rows, 15–25 columns, deliberate messiness baked in — nulls in meaningful places, one dtype issue, one obvious leakage column, edge cases in the target distribution.
+
+**Execution layer:** Pyodide (already in codebase via `PythonCell.jsx`). Data ships as a JS array, loaded as `pd.DataFrame(DATA)` in the cell. numpy, pandas, matplotlib, sklearn, scipy all supported natively. Cold start ~4-6s on first load; negligible after that given tiny dataset size.
+
+**Format — v1 (fixed notebook with judgment checkpoints):**
+Same architecture as ProjectLabTab. 2–3 short notebooks per datamart, each covering one ML phase (feature engineering, or model selection, or calibration/monitoring). Cells run pre-written code and show output; judgment checkpoints fire after each cell asking what you'd do with that output. Format owns the difficulty — it's on the decision, not the implementation.
+
+**Format — v2 (open cell challenge mode):**
+Toggle on the same problems. "Write it yourself" mode — blank cell, same expected output. User submits, pre-written solution revealed for comparison. Same StrataScratch "attempt → reveal" pattern. Costs almost nothing to add once fixed notebook exists, because the pre-written cell IS the solution.
+
+**Problems that work per datamart (same schema, escalating judgment):**
+- Feature Engineering: which columns constitute leakage for target Y? which encoding strategy for this cardinality?
+- Model Selection: given this class imbalance, what metric do you optimise? what split strategy?
+- Calibration: reliability diagram shows ECE=0.14 — does this model ship?
+- Monitoring: which feature in this schema drifts first if the business changes pricing tier?
+
+**Scope constraint (critical):** ML pipeline problems only — feature engineering, model selection, calibration, drift detection. NOT analytics SQL (DAU, funnels, cohort analysis) — that belongs in PAL, not MSL.
+
+**Sequencing:** Build after ProjectLabTab phases 2–5 are shipped. Those phases are the prototype — modeling, calibration, monitoring on Telco Churn. Datamart practice is that architecture generalised to multiple datasets. Don't build in parallel. Establish user engagement signal on ProjectLab first.
+
+**Build trigger:** ProjectLabTab Phase 3 (modeling + calibration) shipped and at least one user engagement data point from PostHog. One datamart sprint = 1 datamart designed + 2–3 fixed notebooks + v1 judgment checkpoints. Estimate: 2–3 sessions.
+
+(Source: session discussion, 2026-05-30)
+
 ### Modules
 - [x] ~~**Classical ML: Decision boundary visualizer**~~ — done (v4.29) — `DecisionBoundaryLab` in ClassicalMLTab. Pure React SVG (not Pyodide). XOR-structure 2D dataset (47 points), 5 classifier modes (Linear SVM, RBF SVM, DT depth=1, DT depth=5, Random Forest), 20×20 grid of `GridCell` named components with fill colors, accuracy badge. `msl_score:classical_boundary`. Stores `{completed:true, ts}` on completion.
 - [x] ~~**Spark Lab: Memory pressure simulator**~~ — done (v4.28) — `MemoryPressureSimulator` in SparkLabTab. Pure React (not Pyodide). 5 controls: executor memory, cores, dataset size, shuffle partitions, join type. Full Spark memory model chain (reserved→usable→user pool→Spark pool→execution budget→per-task). 4 verdicts (OOM Risk/Spill/OOM-Undersized/Healthy). Memory breakdown table.

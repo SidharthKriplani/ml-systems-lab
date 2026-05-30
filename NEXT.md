@@ -34,6 +34,9 @@ Nothing currently blocked.
 ## Done this session
 
 - ~~LINEAGE.md — core Oracle structural changes (index.css, HomeTab.jsx, App.jsx) documented and committed (92fc5e0). Completes the v4.31 entry which agents had left incomplete.~~
+- ~~Mobile sidebar always-visible bug fixed (v4.34, 7c8eae8) — inline `display:'flex'` on DesktopSidebar overrode CSS `display:none`; removed from inline style, added `flex-direction:column` to desktop media query.~~
+- ~~MD files end-of-session update (0395d98) — NEXT, IDEAS, DECISIONS, AUDITS, ROLLOUT, README all updated.~~
+- ~~Datamart-based ML practice concept specced and logged — IDEAS.md Tier 2, DECISIONS.md execution rules added (fixed-notebook-first, Pyodide as single runtime, judgment-over-syntax principle).~~
 
 ---
 

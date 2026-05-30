@@ -46,6 +46,17 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.34 — Mobile sidebar bug fix + MD files update (2026-05-30)
+
+**What shipped:** One-line bug fix for the desktop sidebar rendering on mobile, plus end-of-session MD file updates across 6 files.
+
+**Bug fixed — sidebar always visible on mobile (commit `7c8eae8`):**
+`DesktopSidebar` had `display: 'flex'` in its inline style. Inline styles always beat CSS class selectors in specificity, so `.desktop-sidebar { display: none; }` was silently overridden — the sidebar rendered on every viewport. Fix: removed `display: 'flex'` from the inline style; added `flex-direction: column` to the `@media (min-width: 769px)` CSS rule so desktop layout is preserved. The CSS class now fully owns the `display` property for both breakpoints.
+
+**MD files updated (commit `0395d98`):** NEXT.md (Done this session wiped to this session only), IDEAS.md (ProjectLab Phase 1 + Oracle refactor added to In Progress; cloud callouts marked done; ProjectLab Tier 1 spec updated to partial), DECISIONS.md (Oracle single-amber-accent rule added with exemptions list), AUDITS.md (#021 added to summary as pending; #016.1-2 color drift closed by Oracle refactor; open finding counts corrected), ROLLOUT.md (ProjectLabTab added to Batch 0 checklist), README.md (10 interview tools, 300+ scenarios, Q&A count corrected, Spot the Flaw listed, Project Lab in ML Engineering domain).
+
+---
+
 ### v4.33 — Project Lab Phase 1 — end-to-end DS notebook, Telco Churn (2026-05-30)
 
 **What shipped:** New tab `ProjectLabTab.jsx` (practice zone, ML Engineering domain, premium). Sequential Pyodide notebook for churn prediction — Phase 1 covers data ingestion and EDA.

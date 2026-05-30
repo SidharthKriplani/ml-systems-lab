@@ -609,6 +609,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 | 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
 | 021 | Post-v4.33 state check — ProjectLabTab routing + brace balance, msl_projectlab_churn_data in METRICS.md, SpotTheFlaw scenario count vs GlobalSearch, .msl-cloud-map mobile render | Planned (NEXT.md #4) | BUILD / Content Integrity | ⏳ Pending |
+| 022 | Mobile sidebar always-visible bug — `display:'flex'` inline style on DesktopSidebar overrode CSS `display:none` on all viewports | 2026-05-30 | Mobile / BUILD | ✅ Fixed v4.34 |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
@@ -637,5 +638,19 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Low | 6 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex literals in App/#000/#fff/dbt/ModelEval), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial) |
 
 **Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32 — all 36 files swept. Residual hex literals (#017.2) are structural `#000`/`#fff` values, not decorative accent drift; tracked separately.
+
+---
+
+### #022 — 2026-05-30 · Mobile — Sidebar always visible on mobile
+
+**Scope:** `DesktopSidebar` component in `src/App.jsx`  
+**Trigger:** User reported sidebar rendering on mobile and never closing  
+**Root cause:** `display: 'flex'` in the `<aside>` element's inline style overrides the CSS class rule `.desktop-sidebar { display: none; }`. Inline styles have higher specificity than class selectors — the CSS media query was correctly written but silently losing to the inline style on every viewport.
+
+| # | Finding | File | Severity | Status |
+|---|---------|------|----------|--------|
+| 1 | `display: 'flex'` in `DesktopSidebar` inline style overrides `.desktop-sidebar { display: none }` CSS class on mobile | `App.jsx` line ~460 | High | ✅ Fixed v4.34 — removed `display` from inline style; added `flex-direction: column` to the `@media (min-width: 769px)` CSS rule |
+
+**Fix:** Removed `display: 'flex'` from the `<aside>` inline style object. Added `flex-direction: column` to `.desktop-sidebar` inside the `@media (min-width: 769px)` block in `index.css`. CSS class now fully owns the `display` property. Brace balance: 0. Commit `7c8eae8`.
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.
