@@ -30,6 +30,7 @@ const DEPLOY_SCENARIOS = [
     id: 1,
     title: 'Fraud detection model',
     body: "New fraud detection model. Can't test offline — fraud patterns require live traffic. Need to limit blast radius if it fires too aggressively.",
+    hint: 'Which strategy lets you test against real traffic while controlling exposure — and can halt the ramp automatically if a business metric breaches a threshold?',
     correct: 'canary',
     reasoning: "Start at 1%, watch false positive rate and block rate vs champion. Shadow would generate no real decisions so you can't measure business impact. Feature flag requires explicit user targeting which doesn't make sense for fraud.",
     awsCallout: { service: 'SageMaker Deployment Guardrails', desc: 'configure automatic traffic shifting with metric-gated rollback — halt the canary ramp if false positive rate exceeds your threshold.' },
@@ -38,6 +39,7 @@ const DEPLOY_SCENARIOS = [
     id: 2,
     title: 'New embedding architecture',
     body: 'Updated recommendation model. New embedding architecture — completely different score distribution. You need to compare engagement metrics over 2 weeks.',
+    hint: 'A completely different score distribution means you cannot trust offline metrics to predict live behaviour. Which strategy collects live predictions without serving them to users?',
     correct: 'shadow',
     reasoning: 'Shadow Mode first, then Canary. Shadow lets you collect predictions without impacting users. After offline comparison passes, canary 5% → 20% → 50% → 100% with engagement guardrails. Never go straight to canary on a completely different score distribution.',
     awsCallout: { service: 'SageMaker Shadow Testing', desc: 'routes a copy of live traffic to the shadow variant and logs predictions without serving them — the managed AWS primitive for this exact pattern.' },
@@ -46,6 +48,7 @@ const DEPLOY_SCENARIOS = [
     id: 3,
     title: 'Critical serving code bug fix',
     body: 'Critical bug fix in the model serving code (NaN handling). Identical model weights, just a one-line code fix.',
+    hint: 'No model change = no need for gradual traffic ramping. Ask which strategy is appropriate when the only risk is infrastructure continuity during the update, not prediction quality.',
     correct: 'rolling',
     reasoning: 'Rolling Update (or Blue-Green). No model change means no need for gradual traffic ramp. Rolling is standard; Blue-Green if you want instant rollback capability.',
     awsCallout: { service: 'SageMaker Endpoints', desc: 'support rolling updates natively; pair with CodeDeploy blue/green if you need instant rollback without instance churn.' },
@@ -54,6 +57,7 @@ const DEPLOY_SCENARIOS = [
     id: 4,
     title: 'Multi-surface ranking model',
     body: 'New content ranking model. Different teams own different user surfaces (homepage, search, notifications). You want team leads to control when their surface gets the new model.',
+    hint: 'Traffic percentage ramps do not express team or surface ownership. Which strategy is designed for user-segment or surface-level rollout with independent owner control?',
     correct: 'featureflag',
     reasoning: "Segment by surface. Each team lead can flip their surface independently. Canary can't express this ownership structure.",
     awsCallout: { service: 'SageMaker Multi-Model Endpoints', desc: 'let each surface route to a distinct model variant on the same endpoint — team leads swap their variant without touching others.' },
@@ -62,6 +66,7 @@ const DEPLOY_SCENARIOS = [
     id: 5,
     title: 'Internal analyst tool',
     body: 'Model passed all offline evals. Deploying to an internal tool used by 20 data analysts. No external customers affected.',
+    hint: 'Ask whether the blast radius justifies the overhead of a gradual rollout. What is the actual risk if this model behaves unexpectedly on 20 internal users?',
     correct: 'immediate',
     reasoning: 'Low blast radius, known user base, internal only. Over-engineering deployment here wastes time. Ship it, monitor it.',
     awsCallout: { service: 'SageMaker Serverless Inference', desc: 'ideal for low-traffic internal tools — zero idle cost, auto-scaling, no instance management overhead.' },
@@ -145,6 +150,10 @@ function DeployStrategy() {
           {scenario.body}
         </p>
       </div>
+
+      {!isRevealed && scenario.hint && (
+        <div className="msl-hint" style={{ margin: '0 0 4px' }}>{scenario.hint}</div>
+      )}
 
       {/* Strategy options */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>

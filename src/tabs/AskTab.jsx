@@ -395,7 +395,7 @@ function ResultCard({ item, faded, onNavigate }) {
         lineHeight: 1.65,
         color: 'var(--ink-hi)',
         whiteSpace: 'pre-line',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'var(--font-sans)',
       }}>
         {item.a}
       </p>
@@ -428,7 +428,7 @@ function ResultCard({ item, faded, onNavigate }) {
         marginTop: 10,
         fontSize: 11,
         color: 'var(--ink-ghost)',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'var(--font-sans)',
         fontStyle: 'italic',
       }}>
         LLM integration coming soon — responses are currently from a curated knowledge base.
@@ -524,7 +524,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
             fontSize: 14,
             lineHeight: 1.65,
             color: 'var(--ink-hi)',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'var(--font-sans)',
           }}>
             {challenge.q}
           </p>
@@ -552,7 +552,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
               margin: '10px 0 0',
               fontSize: 13,
               color: 'var(--ink-mid)',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'var(--font-sans)',
               lineHeight: 1.6,
               fontStyle: 'italic',
             }}>
@@ -583,7 +583,7 @@ function SurpriseModal({ challenge, onClose, onNavigate }) {
               margin: '10px 0 0',
               fontSize: 13,
               color: 'var(--ink-hi)',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'var(--font-sans)',
               lineHeight: 1.65,
               whiteSpace: 'pre-line',
             }}>
@@ -772,7 +772,7 @@ export default function AskTab({ onNavigate }) {
                 style={{
                   textAlign: 'left',
                   fontSize: 13,
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'var(--font-sans)',
                   color: hoveredSugg === i ? 'var(--ink-hi)' : 'var(--ink-mid)',
                   background: 'var(--depth)',
                   border: `1px solid ${hoveredSugg === i ? 'var(--rim-hi)' : 'var(--rim)'}`,
@@ -820,7 +820,7 @@ export default function AskTab({ onNavigate }) {
                     margin: 0,
                     fontSize: 13,
                     color: 'var(--prime)',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'var(--font-sans)',
                     lineHeight: 1.5,
                     fontWeight: 500,
                   }}>
@@ -846,7 +846,7 @@ export default function AskTab({ onNavigate }) {
                     margin: 0,
                     fontSize: 13,
                     color: 'var(--ink-low)',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'var(--font-sans)',
                     lineHeight: 1.55,
                   }}>
                     I don't have a specific answer for this. Try searching in the modules — the knowledge base covers ML fundamentals, Spark, system design, evaluation, causal inference, and more.
@@ -908,7 +908,7 @@ export default function AskTab({ onNavigate }) {
             border: 'none',
             outline: 'none',
             fontSize: 14,
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'var(--font-sans)',
             color: 'var(--ink-hi)',
             lineHeight: 1.5,
           }}

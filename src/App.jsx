@@ -298,7 +298,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
   return (
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '6px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
+        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Practice</div>
         <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '8px', color: 'var(--ink-hi)' }}>
           200+ production scenarios.
         </h2>
@@ -308,11 +308,11 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
       </div>
       {totalScenarios > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "'JetBrains Mono',monospace" }}>Your progress</span>
+          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)" }}>Your progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(240,165,0,0.45)' }} />
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", flexShrink: 0 }}>
             {totalAttempted}/{totalScenarios}
           </span>
         </div>
@@ -320,7 +320,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
       {PRACTICE_DOMAINS.map(domain => (
         <div key={domain.id} style={{ marginBottom: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, textShadow: `0 0 18px ${domain.accent}90`, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '10px', fontFamily: "var(--font-mono)", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, textShadow: `0 0 18px ${domain.accent}90`, whiteSpace: 'nowrap' }}>
               {domain.label}
             </span>
             <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, ${domain.accent}50, transparent)` }} />
@@ -365,7 +365,7 @@ function InterviewToolCard({ tool, onSelect, isUnlocked }) {
         {locked
           ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-ghost)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           : tool.step && (
-            <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono',monospace", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
+            <span style={{ fontSize: '10px', fontFamily: "var(--font-mono)", color: tool.accent, background: `${tool.accent}18`, border: `1px solid ${tool.accent}35`, borderRadius: '5px', padding: '2px 7px', letterSpacing: '0.06em', flexShrink: 0 }}>
               STEP {tool.step}
             </span>
           )
@@ -384,7 +384,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
   return (
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '28px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "'JetBrains Mono',monospace", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
+        <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
         <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', color: 'var(--ink-hi)' }}>
           Nine tools. One loop.
         </h2>
@@ -485,7 +485,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
           background: 'var(--prime)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: '#000',
+          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--void)',
           boxShadow: '0 0 18px rgba(240,165,0,0.50), 0 2px 8px rgba(0,0,0,0.6)',
         }}>ML</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
@@ -852,7 +852,7 @@ export default function App() {
             </>
           ) : (
             <button onClick={() => handleZoneNav('today')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'var(--prime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: '8px', color: '#fff', flexShrink: 0 }}>ML</div>
+              <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'var(--prime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: '8px', color: 'var(--white)', flexShrink: 0 }}>ML</div>
               <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
             </button>
           )}
@@ -862,7 +862,7 @@ export default function App() {
           {!showBackBtn && (
             <a href="https://github.com/SidharthKriplani/ml-systems-lab" target="_blank" rel="noopener noreferrer"
               className="hide-mobile"
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "'JetBrains Mono',monospace", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "var(--font-mono)", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2.02c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.83.57C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
               GitHub
             </a>
@@ -872,7 +872,7 @@ export default function App() {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "var(--font-sans)" }}>
             <span style={{ fontSize: '13px' }}>⌕</span>
             <span style={{ display: 'inline' }}>Search</span>
-            <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '10px', background: 'rgba(255,255,255,0.14)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
+            <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'rgba(255,255,255,0.14)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
           </button>
         </div>
       </header>

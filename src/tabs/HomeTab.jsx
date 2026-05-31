@@ -501,7 +501,7 @@ export default function HomeTab({ onNavigate }) {
 
 
       {/* ── All tracks ── */}
-      <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
+      <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '40px' }}>
         {/* Domain completion overview */}
         <div style={{ marginBottom: '24px' }}>
           <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Readiness by domain</div>
@@ -535,6 +535,7 @@ export default function HomeTab({ onNavigate }) {
           </div>
         </div>
 
+        <hr style={{ border: 'none', borderTop: '1px solid var(--rim)', margin: '0 0 16px' }} />
         <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '16px' }}>All tracks</div>
         {DOMAIN_LABELS.map(domain => {
           const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))

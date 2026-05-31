@@ -645,7 +645,7 @@ export default function InterviewPrepTab({ onNavigate }) {
           <button key={m.key} onClick={() => setMode(m.key)}
             style={{ padding: '7px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.15s',
               background: mode === m.key ? 'var(--prime)' : 'transparent',
-              color: mode === m.key ? '#000' : 'var(--ink-mid)' }}>
+              color: mode === m.key ? 'var(--void)' : 'var(--ink-mid)' }}>
             {m.label}
           </button>
         ))}

@@ -1066,6 +1066,10 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
 
                 <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
 
+                {!item.revealed && sc.hint && (
+                  <div className="msl-hint" style={{ margin: '0 0 4px' }}>{sc.hint}</div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {sc.options.map((opt, j) => {
                     let stateClass = ''
@@ -1117,6 +1121,7 @@ const ALERTING_SCENARIOS = [
     id: 'alert1',
     title: 'PSI spike on user_age at 3am',
     context: 'Your monitoring system fires at 3:12am: PSI = 0.31 on `user_age` for the fraud detection model. Model AUC has dropped from 0.83 to 0.79 over the last 6 hours. P95 serving latency is unchanged. The upstream user profile pipeline had a scheduled maintenance window from 2am–3am.',
+    hint: 'Before acting, ask whether the timing of this alert overlaps with any known system event — a maintenance window that caused a data gap would produce the exact same PSI signature as real distribution drift.',
     question: 'What is the correct immediate action?',
     options: [
       'Page the on-call ML engineer and roll back the model immediately.',
@@ -1143,6 +1148,7 @@ const ALERTING_SCENARIOS = [
     id: 'alert2',
     title: 'AUC drops 8 points — batch vs. real-time serving',
     context: 'A content recommendation model shows AUC dropping from 0.76 to 0.68 over 48 hours. PSI is stable across all input features. The model serves batch pre-computed recommendations refreshed every 4 hours. Investigation shows that a new content category was launched 3 days ago and now represents 18% of user interactions.',
+    hint: 'PSI monitors input feature distributions. Ask what PSI physically cannot detect — then trace the mechanism that would cause AUC to fall while feature distributions look unchanged.',
     question: 'Why is PSI stable while AUC degrades?',
     options: [
       'PSI is calculated incorrectly — the monitoring system has a bug.',
@@ -1169,6 +1175,7 @@ const ALERTING_SCENARIOS = [
     id: 'alert3',
     title: 'Latency breach at peak — auto-rollback or hold?',
     context: 'P95 serving latency for your real-time pricing model breaches SLA (>200ms) for 8 consecutive minutes during peak load at 6pm. The breach started immediately after a model update was promoted to 100% traffic. PSI and AUC are both stable. Infrastructure team confirms no server-side issues.',
+    hint: 'Focus on the timing correlation, not the alert itself. What changed in the system at the exact moment P95 spiked — and what does that tell you about root cause?',
     question: 'Should you auto-rollback the model or hold and investigate?',
     options: [
       'Hold — latency breaches are infrastructure problems, not model problems.',
@@ -1216,6 +1223,7 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     id: 'drift1',
     title: 'PSI elevated — which feature is actually driving it?',
     context: 'Your aggregate monitoring dashboard shows overall PSI = 0.22 across 47 input features for a credit scoring model. The alert threshold is 0.20. You need to identify which features are driving the drift before filing an incident.',
+    hint: 'PSI measures shift magnitude — that is only half the signal. What is the second variable that determines whether a shifting feature actually harms model performance?',
     question: 'What is the correct attribution approach?',
     options: [
       'Compute PSI for each feature individually and rank by PSI value descending.',
@@ -1268,6 +1276,7 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     id: 'drift3',
     title: 'Concept drift without input drift',
     context: 'A fraud detection model shows stable input feature distributions (all PSI < 0.10) and stable serving latency. But precision on confirmed fraud cases has dropped from 0.81 to 0.63 over 6 weeks. The fraud team reports that fraud patterns have changed — new account takeover techniques using legitimate-looking session behaviour.',
+    hint: 'PSI measures the distribution of feature values. Ask what PSI cannot possibly detect even when the feature distributions are perfectly stable.',
     question: 'Why did input feature monitoring fail to catch this?',
     options: [
       'The monitoring system computed PSI incorrectly.',

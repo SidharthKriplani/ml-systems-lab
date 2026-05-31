@@ -44,6 +44,19 @@ const CHECKPOINT_3 = {
   explanation: 'This is train-test contamination, not target leakage — but it\'s still leakage. The issue: when you compute avg_spend_last_7d on the full dataset, test rows contribute to the global mean and variance used in aggregation (if using group-based stats). More critically, if the computation involves any aggregation that crosses the train/test boundary (e.g. user-level rolling windows that span both splits), test-set information leaks into training features. The AUC jump from 0.76 to 0.89 is the red flag — a legitimate feature rarely produces a 13-point gain. In production, this feature would be computed on a rolling basis from data available at inference time only. The fix: split first, then compute features independently on each fold. For time series data, always use a time-based split and compute features only from data before the split point.',
 }
 
+const CHECKPOINT_4 = {
+  id: 'cp4',
+  question: 'Your GradientBoosting churn model is trained. Val set: AUC=0.81, ECE=0.12 (before Platt scaling). The downstream system gates retention offers on raw probabilities — customers with score > 0.6 get an offer. P95 inference latency=38ms on 2 vCPUs. Class imbalance in training data is 1:4. Do you ship this model?',
+  options: [
+    { id: 'a', text: 'Ship — AUC 0.81 is strong. 38ms is within SLA. Class imbalance 1:4 was handled with class_weight during training. System is ready.' },
+    { id: 'b', text: 'Block — ECE=0.12 makes the probability threshold (>0.6) unreliable. The system gates on raw probabilities; an uncalibrated model will systematically mis-trigger. Run Platt scaling, re-measure ECE < 0.05 in the 0.5-0.7 range, then ship.' },
+    { id: 'c', text: 'Block — 38ms P95 is too slow for a real-time churn scoring system. Optimize the model or switch to LogisticRegression.' },
+    { id: 'd', text: 'Ship with caveats — document the calibration gap. AUC 0.81 means ranking is reliable; just switch to a relative threshold (top-20% of scores) instead of absolute >0.6.' },
+  ],
+  correct: 'b',
+  explanation: 'The blocker is the downstream usage pattern, not the AUC. When business logic is gated on raw probabilities (score > 0.6 → offer), ECE directly determines whether that threshold behaves as designed. ECE=0.12 means the model\'s predicted 60% confidence maps to actual churn rates anywhere from 48-72% — the threshold is effectively arbitrary. Correct call: run Platt scaling (Cell 10), measure ECE specifically in the 0.5-0.7 bucket, ship if < 0.05. Option D is valid only if the system is redesigned to use ranking — but the problem states absolute thresholds. Option A ignores how the model will actually be used. Option C: 38ms is fine for batch or near-real-time scoring.',
+}
+
 // ─── Python cell code strings ─────────────────────────────────────────────────
 
 const CELL_1_CODE = `# Cell 1 — Schema Inspection
@@ -570,6 +583,282 @@ print("  Note: correlated features share importance — tenure & TotalCharges")
 print("  may both appear lower than expected because each can substitute for the other.")
 `
 
+const CELL_7_CODE = `# Cell 7 — Train / Val / Test Split (Stratified)
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+# Synthetic churn dataset — 600 rows, fixed seed, churn-like signal
+# Phase 3 cells use synthetic data to enable real ML training in-browser
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])  # 0=mtm, 1=1yr, 2=2yr
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+X = np.column_stack([tenure, monthly, contract_c])
+y = churn
+
+# Stratified 60 / 20 / 20 split
+X_temp, X_test,  y_temp, y_test  = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+X_train, X_val,  y_train, y_val  = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42, stratify=y_temp)
+# 0.25 of 0.80 = 0.20 of total
+
+print("=" * 52)
+print("TRAIN / VAL / TEST SPLIT  —  STRATIFIED")
+print("=" * 52)
+for name, y_split in [('Train', y_train), ('Val  ', y_val), ('Test ', y_test)]:
+    n_pos = y_split.sum()
+    n_tot = len(y_split)
+    print(f"  {name}  {n_tot:4d} rows  |  churn={n_pos} ({100*n_pos/n_tot:.1f}%)  no-churn={n_tot-n_pos} ({100*(n_tot-n_pos)/n_tot:.1f}%)")
+
+print()
+print("─── Why stratify=y? ───")
+print("  Churn rate is ~27% overall. Without stratify, random splits")
+print("  create 3-6pp variance in class balance per fold — enough")
+print("  to inflate reported AUC by 1-2 points.")
+print()
+print("─── Seed discipline ───")
+print("  random_state=42 on both splits. Changing either seed creates a")
+print("  different test set — invalidates all prior results. In production:")
+print("  pin seeds and log them as run metadata, not just code.")
+`
+
+const CELL_8_CODE = `# Cell 8 — Model Training: LR, RandomForest, GradientBoosting
+import numpy as np
+import time
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import roc_auc_score, f1_score
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+X = np.column_stack([tenure, monthly, contract_c])
+y = churn
+
+X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42, stratify=y_temp)
+
+scaler    = StandardScaler()
+X_train_s = scaler.fit_transform(X_train)
+X_val_s   = scaler.transform(X_val)
+
+models = [
+    ('LogisticRegression', LogisticRegression(class_weight='balanced', max_iter=500, random_state=42), True),
+    ('RandomForest',       RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42), False),
+    ('GradientBoosting',   GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42), False),
+]
+
+print("=" * 64)
+print("MODEL TRAINING  —  VAL SET SCORES")
+print("=" * 64)
+print(f"  {'Model':<22}  {'Val AUC':>8}  {'Val F1':>7}  {'Time':>8}")
+print("  " + "─"*58)
+
+for name, clf, needs_scale in models:
+    Xtr = X_train_s if needs_scale else X_train
+    Xv  = X_val_s   if needs_scale else X_val
+    t0  = time.time()
+    clf.fit(Xtr, y_train)
+    elapsed = time.time() - t0
+    proba = clf.predict_proba(Xv)[:, 1]
+    pred  = (proba >= 0.5).astype(int)
+    auc   = roc_auc_score(y_val, proba)
+    f1    = f1_score(y_val, pred, zero_division=0)
+    print(f"  {name:<22}  {auc:>8.4f}  {f1:>7.4f}  {elapsed:>7.3f}s")
+
+print()
+print("─── Reading these numbers ───")
+print("  Val AUC: how well the model ranks churners above non-churners.")
+print("  Val F1: precision-recall balance at 0.5 threshold.")
+print("  Threshold=0.5 is usually wrong for imbalanced classes — see Cell 9.")
+print()
+print("─── Why class_weight='balanced'? ───")
+print("  Upweights minority class (churners) during training.")
+print("  Without it, LR and RF optimize for majority (no-churn) accuracy,")
+print("  producing a high overall accuracy but poor recall on churners.")
+`
+
+const CELL_9_CODE = `# Cell 9 — Eval Metrics: ROC, Precision-Recall, Confusion Matrix, Threshold
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import (roc_auc_score, precision_recall_curve,
+                              roc_curve, confusion_matrix, f1_score)
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+X = np.column_stack([tenure, monthly, contract_c])
+y = churn
+
+X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42, stratify=y_temp)
+
+clf = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42)
+clf.fit(X_train, y_train)
+proba_val = clf.predict_proba(X_val)[:, 1]
+
+fpr, tpr, _ = roc_curve(y_val, proba_val)
+auc = roc_auc_score(y_val, proba_val)
+prec, rec, pr_thresh = precision_recall_curve(y_val, proba_val)
+
+# Best threshold: maximize F1
+f1s      = 2 * prec * rec / (prec + rec + 1e-9)
+best_idx = f1s[:-1].argmax()  # last element has no corresponding threshold
+best_thresh = pr_thresh[best_idx]
+
+pred_best = (proba_val >= best_thresh).astype(int)
+cm = confusion_matrix(y_val, pred_best)
+
+fig = plt.figure(figsize=(13, 4.5))
+gs  = gridspec.GridSpec(1, 3, figure=fig, wspace=0.42)
+
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(fpr, tpr, color='#f0a500', lw=2, label=f'AUC={auc:.3f}')
+ax1.plot([0, 1], [0, 1], '--', color='#4b5563', lw=1)
+ax1.set_title('ROC Curve', fontsize=11, fontweight='bold')
+ax1.set_xlabel('FPR', fontsize=9); ax1.set_ylabel('TPR', fontsize=9)
+ax1.legend(fontsize=9); ax1.grid(True, alpha=0.2)
+
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(rec, prec, color='#f0a500', lw=2)
+ax2.axvline(rec[best_idx], color='#6b7280', lw=1, linestyle='--', label=f'thresh={best_thresh:.2f}')
+ax2.set_title('Precision-Recall', fontsize=11, fontweight='bold')
+ax2.set_xlabel('Recall', fontsize=9); ax2.set_ylabel('Precision', fontsize=9)
+ax2.legend(fontsize=9); ax2.grid(True, alpha=0.2)
+
+ax3 = fig.add_subplot(gs[0, 2])
+im = ax3.imshow(cm, cmap='YlOrBr', aspect='auto')
+for i in range(2):
+    for j in range(2):
+        c = 'white' if cm[i, j] > cm.max() * 0.6 else 'black'
+        ax3.text(j, i, str(cm[i, j]), ha='center', va='center', fontsize=14, fontweight='bold', color=c)
+ax3.set_xticks([0, 1]); ax3.set_yticks([0, 1])
+ax3.set_xticklabels(['Pred 0', 'Pred 1'], fontsize=9)
+ax3.set_yticklabels(['True 0', 'True 1'], fontsize=9)
+ax3.set_title('Confusion Matrix', fontsize=11, fontweight='bold')
+plt.colorbar(im, ax=ax3, shrink=0.8)
+
+plt.tight_layout()
+plt.show()
+
+tn, fp, fn, tp = cm.ravel()
+print(f"Val AUC = {auc:.4f}    Best threshold (max F1) = {best_thresh:.3f}")
+print(f"  Precision: {tp/(tp+fp+1e-9):.3f}  Recall: {tp/(tp+fn+1e-9):.3f}  F1: {2*tp/(2*tp+fp+fn+1e-9):.3f}")
+print(f"  TN={tn}  FP={fp}  FN={fn}  TP={tp}")
+print()
+print("─── Threshold selection ───")
+print("  Default 0.5 misses many churners (high FN) on imbalanced data.")
+print(f"  At {best_thresh:.2f}: recall improves — we catch more churners")
+print("  at cost of more false alarms (FP = retention offers on non-churners).")
+print("  Business call: compare cost(miss churner) vs cost(wasted offer).")
+`
+
+const CELL_10_CODE = `# Cell 10 — Calibration: Reliability Diagram, ECE, Platt Scaling
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+X = np.column_stack([tenure, monthly, contract_c])
+y = churn
+
+X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42, stratify=y_temp)
+
+# Uncalibrated
+clf = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42)
+clf.fit(X_train, y_train)
+p_uncal = clf.predict_proba(X_val)[:, 1]
+
+# Platt scaling (sigmoid, cv=5)
+cal = CalibratedClassifierCV(
+    GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42),
+    method='sigmoid', cv=5
+)
+cal.fit(X_train, y_train)
+p_cal = cal.predict_proba(X_val)[:, 1]
+
+def ece(proba, labels, n_bins=10):
+    bins = np.linspace(0, 1, n_bins + 1)
+    result = 0.0
+    for i in range(n_bins):
+        mask = (proba >= bins[i]) & (proba < bins[i + 1])
+        if mask.sum() == 0: continue
+        result += (mask.sum() / len(labels)) * abs(proba[mask].mean() - labels[mask].mean())
+    return result
+
+ece_before = ece(p_uncal, y_val)
+ece_after  = ece(p_cal, y_val)
+
+fp_u, mp_u = calibration_curve(y_val, p_uncal, n_bins=8)
+fp_c, mp_c = calibration_curve(y_val, p_cal,   n_bins=8)
+
+fig = plt.figure(figsize=(10, 4.5))
+gs  = gridspec.GridSpec(1, 2, figure=fig, wspace=0.42)
+
+for ax, fp_, mp_, label in [
+    (fig.add_subplot(gs[0, 0]), fp_u, mp_u, f'Uncalibrated  ECE={ece_before:.3f}'),
+    (fig.add_subplot(gs[0, 1]), fp_c, mp_c, f'Platt-scaled  ECE={ece_after:.3f}'),
+]:
+    ax.plot([0, 1], [0, 1], '--', color='#4b5563', lw=1.5, label='Perfect')
+    ax.plot(mp_, fp_, 'o-', color='#f0a500', lw=2, ms=6, label=label)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.set_xlabel('Mean predicted probability', fontsize=9)
+    ax.set_ylabel('Fraction of positives', fontsize=9)
+    ax.set_title('Reliability Diagram', fontsize=11, fontweight='bold')
+    ax.legend(fontsize=8); ax.grid(True, alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+
+print(f"ECE before calibration: {ece_before:.4f}")
+print(f"ECE after  calibration: {ece_after:.4f}")
+print(f"Improvement:            {ece_before - ece_after:+.4f}")
+print()
+print("─── What ECE tells you ───")
+print("  ECE = avg absolute gap between predicted confidence")
+print("  and actual fraction of positives in each probability bin.")
+print("  ECE < 0.05: well-calibrated. 0.05-0.10: acceptable.")
+print("  ECE > 0.10: raw probabilities should not be used as")
+print("  absolute thresholds without recalibration first.")
+print()
+print("─── Platt scaling ───")
+print("  Fits a logistic curve on held-out (cv) fold predictions.")
+print("  Low cost, often effective for tree models that produce")
+print("  overconfident scores near 0 and 1.")
+print("  Alternative: isotonic regression (non-parametric, better")
+print("  for large datasets; needs more data to fit reliably).")
+`
+
 // ─── AccordionMCQ checkpoint component ────────────────────────────────────────
 function JudgmentCheckpoint({ checkpoint, onComplete }) {
   const [picked, setPicked]   = useState(null)
@@ -733,6 +1022,12 @@ export default function ProjectLabTab({ onNavigate }) {
     + ['cp3'].filter(c => state.checkpointsDone.includes(c)).length
 
   const phase1Complete = phase1DoneSteps === phase1TotalSteps
+
+  // Phase 3: cells 7-10 + checkpoint cp4
+  const phase3TotalSteps = 5
+  const phase3DoneSteps  = ['cell7','cell8','cell9','cell10'].filter(c => state.cellsDone.includes(c)).length
+    + ['cp4'].filter(c => state.checkpointsDone.includes(c)).length
+  const phase2Complete = phase2DoneSteps === phase2TotalSteps
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -1092,34 +1387,182 @@ export default function ProjectLabTab({ onNavigate }) {
 
       </div>
 
-      {/* ── Roadmap: phases 3–5 ── */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── Phase 3 — Model Training & Evaluation ── */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px', marginTop: '8px' }}>
+
+        {/* Phase 3 header */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--prime)', fontWeight: 700 }}>
+              ML Engineering
+            </span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              Phase 3 of 5
+            </span>
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px', lineHeight: 1.15, color: 'var(--ink-hi)' }}>
+            Phase 3 — Model Training &amp; Evaluation
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '680px', marginBottom: '14px' }}>
+            Train three model classes side-by-side, evaluate with ROC / PR curves and confusion matrices, tune the decision threshold, then assess calibration. Ship-or-not judgment at the checkpoint.
+          </p>
+          {/* Phase 3 progress bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 3 progress</span>
+            <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+              <div style={{ width: `${Math.round((phase3DoneSteps / phase3TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase3DoneSteps}/{phase3TotalSteps}</span>
+          </div>
+        </div>
+
+        {/* Synthetic data callout */}
+        <div style={{ border: '1px solid var(--rim)', borderRadius: '10px', padding: '12px 16px', background: 'rgba(240,165,0,0.04)', marginBottom: '28px', borderLeft: '3px solid var(--prime)' }}>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Note — Synthetic dataset</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+            Phase 3 cells generate 600 rows of synthetic churn-like data (fixed seed) because the 20-row Telco sample is too small to train meaningfully. Features mirror the real dataset: tenure, monthly charges, contract type. Class balance ~27% churn matches Telco production.
+          </p>
+        </div>
+
+        {/* ── Cell 7 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell7') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell7') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell7') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell7') ? '✓' : '7'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Train / Val / Test Split</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>stratified 60/20/20 · reproducible seed · class balance verification</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_7_CODE}
+            height={200}
+            label="Cell 7 — Split"
+            onResult={r => { if (r.ok) markCellDone('cell7') }}
+          />
+        </div>
+
+        {/* ── Cell 8 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell8') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell8') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell8') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell8') ? '✓' : '8'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Model Training</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>LogisticRegression · RandomForest · GradientBoosting · val AUC + F1</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_8_CODE}
+            height={200}
+            label="Cell 8 — Training"
+            onResult={r => { if (r.ok) markCellDone('cell8') }}
+          />
+        </div>
+
+        {/* ── Cell 9 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell9') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell9') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell9') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell9') ? '✓' : '9'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Eval Metrics</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>ROC · Precision-Recall · confusion matrix · threshold selection</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_9_CODE}
+            height={200}
+            withPlot={true}
+            label="Cell 9 — Eval"
+            onResult={r => { if (r.ok) markCellDone('cell9') }}
+          />
+        </div>
+
+        {/* ── Cell 10 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell10') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell10') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell10') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell10') ? '✓' : '10'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Calibration</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>reliability diagram · ECE · Platt scaling · before vs after</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_10_CODE}
+            height={200}
+            withPlot={true}
+            label="Cell 10 — Calibration"
+            onResult={r => { if (r.ok) markCellDone('cell10') }}
+          />
+        </div>
+
+        {/* ── Checkpoint 4 ── */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.checkpointsDone.includes('cp4') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.08)',
+              border: `1px solid ${state.checkpointsDone.includes('cp4') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.25)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp4') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.checkpointsDone.includes('cp4') ? '✓' : '?'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Ship-or-Not Decision</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>AUC=0.81 · ECE=0.12 · p95=38ms · probability-gated downstream — ship?</div>
+            </div>
+          </div>
+          <JudgmentCheckpoint
+            checkpoint={CHECKPOINT_4}
+            onComplete={() => markCheckpointDone('cp4')}
+          />
+        </div>
+
+      </div>
+
+      {/* ── Roadmap: phases 4–5 ── */}
       <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '16px' }}>What's next in Project Lab</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-          {/* Phase 3 */}
-          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.72 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>3</span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Model Training &amp; Evaluation</div>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              {[
-                ['cell7', 'Train/val/test split — stratified, reproducible seed'],
-                ['cell8', 'LogisticRegression + RandomForest + XGBoost training'],
-                ['cell9', 'Eval metrics — precision, recall, AUC, F1, confusion matrix'],
-                ['cell10', 'Calibration — reliability diagram, ECE, Platt scaling'],
-                ['cp4', 'Judgment checkpoint — AUC=0.81, ECE=0.12, class imbalance 1:20 — ship?'],
-              ].map(([id, label]) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Phase 4 */}
           <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.6 }}>
