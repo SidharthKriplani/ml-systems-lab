@@ -25,6 +25,12 @@ All decorative UI accents (card borders, section eyebrows, badge backgrounds, pr
 **Transition, shadow, and radius tokens — use the system variables.**  
 `--t-fast: 0.10s ease`, `--t: 0.16s ease`, `--t-slow: 0.26s ease`. Shadow: `--shadow-sm/md/lg`. Radius: `--r-sm: 5px`, `--r: 9px`, `--r-lg: 14px`. Never write hardcoded `transition: 0.2s` or `border-radius: 8px` in component files — reference the tokens.
 
+**Design token enforcement — grep check before committing.**  
+The build succeeds regardless of hardcoded values; enforcement must be manual. Before any commit touching component files, run: `grep -rn --include="*.jsx" "#[0-9a-fA-F]\{3,6\}" src/tabs/` for stray hex and `grep -rn --include="*.jsx" "fontFamily:.*['\"]" src/tabs/` for hardcoded font strings. Any hit is a violation — fix it or add the value to `:root` as a token first. This is the enforcement complement to the "never hardcode colors" rule; without it, violations compound silently across sessions.
+
+**Structural token extraction threshold — 5+ repetitions.**  
+When the same raw CSS value (padding, gap, background, border-radius) appears 5 or more times across tab files with identical intent, extract it to a `:root` variable. The three structural tokens most likely to earn extraction next: `--card-bg` (repeated card background), `--section-gap` (top-of-section padding), and `--card-pad` (card inner padding). Do not extract speculatively — wait for the repetition threshold to be hit.
+
 **Shared utility classes for repeated UI patterns.**  
 Defined in `index.css`, never redefined inline in tab files:
 - `.section-eyebrow` — 10px monospace uppercase label with `--ink-low` color and 0.09em spacing. Apply to section headings that match this exact pattern. Colour overrides stay inline.

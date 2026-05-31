@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.35.2 — ProjectLabTab Vercel build hotfixes (2026-05-31)
+
+**What shipped (commits `2a3ca86`, `1922b9e`):** Two consecutive Vercel build failures caused by Python f-strings containing `${` inside JavaScript template literals. esbuild treats any unescaped `${` in a backtick string as a JS interpolation expression and fails when the content is not valid JS (e.g., `${val:.0f}` → "Expected } but found :").
+
+**Root cause:** `CELL_2_CODE` and `CELL_1_CODE` in `ProjectLabTab.jsx` are defined as JS template literals (backtick strings). Python f-strings inside those cells that format dollar amounts (`f'${val:.0f}'`, `f"...${mean:.2f}..."`) each contain `${` which esbuild intercepts before Python ever sees it. The brace-balance check (`node -e "..."`) does NOT catch this class of error — `{` and `}` are still balanced from JS's perspective.
+
+**Fix:** Escape the dollar sign in every Python f-string dollar-amount formatter inside a JS template literal: `f'\${val:.0f}'`. In the final string Python receives, `\$` in a JS template literal resolves to a literal `$`, so Python sees a valid f-string.
+
+**Pattern to watch:** Any future Pyodide cell that formats currency or uses `${...}` in a Python f-string will have this issue. Pre-commit: `grep -n '\${' src/tabs/ProjectLabTab.jsx | grep "f['\"]"` catches unescaped instances.
+
+---
+
 ### v4.35 — Cold-state banner, Role Readiness Score, ProjectLab Phase 2, Pre-Eval callouts, Audit #021 (2026-05-31)
 
 **What shipped (commit `183bc93`):** Five NEXT.md items completed in a single session.

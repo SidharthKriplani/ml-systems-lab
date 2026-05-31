@@ -54,6 +54,9 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 **Audit types not yet run (high value):**
 - First-Time User, Source Material, Coverage, Analytics, MVP / Weight, IP / Moat, Architecture, Guidance Completeness, Content Linkage
 
+**Recurring Build Safety risk — Python f-string `${` in JS template literals:**  
+`ProjectLabTab.jsx` defines Pyodide cell code as JS template literals (backtick strings). Any Python f-string inside those cells that formats a dollar amount (e.g., `f'${val:.0f}'`) contains `${` which esbuild interprets as a JS interpolation — build fails with "Expected } but found :". The brace-balance check does NOT catch this (braces remain balanced). Fix: escape to `f'\${val:.0f}'`. Pre-commit check: `grep -n '\${' src/tabs/ProjectLabTab.jsx | grep "f['\"]"` — any hit needs escaping. First hit: v4.35 build, fixed in v4.35.2 (two occurrences).
+
 ---
 
 ## Guidance Completeness — Audit Spec
@@ -629,13 +632,13 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 8 | CausalDAGExplorer and StreamingStabilityLab have no fidelity badges — both are Conceptual/Simplified fidelity, not mathematically faithful | `CausalInferenceTab.jsx`, `SparkLabTab.jsx` | Low | ⚠️ Open — fidelity badge upgrade (3-tier) is a separate Ideas.md item |
 | 9 | ROLLOUT.md Batch 0 checklist referenced removed "Learning Paths" (removed v4.15) in HomeTab test item | `ROLLOUT.md` | Low | ✅ Fixed 2026-05-30 |
 
-**Open findings by severity:**
+**Open findings by severity (updated 2026-05-31):**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 2 | #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) — #008.2 distractors resolved v4.29 |
-| Low | 6 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex literals in App/#000/#fff/dbt/ModelEval), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial) |
+| Medium | 2 | #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) |
+| Low | 7 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex literals in App/#000/#fff/dbt/ModelEval/InterviewPrep), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial), #021.5 (.msl-cloud-map mobile overflow) |
 
 **Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32 — all 36 files swept. Residual hex literals (#017.2) are structural `#000`/`#fff` values, not decorative accent drift; tracked separately.
 
