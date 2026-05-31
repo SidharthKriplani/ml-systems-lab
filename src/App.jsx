@@ -881,7 +881,7 @@ export default function App() {
       <main
         className="fade-in main-content"
         style={{
-          maxWidth: '900px', width: '100%',
+          maxWidth: '1080px', width: '100%',
           margin: '0 auto',
           padding: '32px 20px 80px',
           boxSizing: 'border-box',

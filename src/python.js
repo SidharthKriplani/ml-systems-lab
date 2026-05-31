@@ -26,8 +26,8 @@ export async function loadPython(onProgress) {
       indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/',
     })
 
-    onProgress?.('Loading numpy...')
-    await pyodideInstance.loadPackage(['numpy'])
+    onProgress?.('Loading numpy + pandas...')
+    await pyodideInstance.loadPackage(['numpy', 'pandas'])
 
     onProgress?.('Loading scikit-learn...')
     await pyodideInstance.loadPackage(['scikit-learn'])
