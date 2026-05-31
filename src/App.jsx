@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { trackTabSwitch } from './analytics.js'
 import GlobalSearch from './components/GlobalSearch.jsx'
+import ContentMap   from './components/ContentMap.jsx'
 import AccessGate from './components/AccessGate.jsx'
 
 import HomeTab           from './tabs/HomeTab.jsx'
@@ -903,8 +904,17 @@ export default function App() {
 
       </div>{/* end desktop-main-wrapper */}
 
-      {/* ── Global search ── */}
-      {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} onNavigate={goTo} />}
+      {/* ── Content map (Cmd+K) ── */}
+      {searchOpen && (
+        <ContentMap
+          onClose={() => setSearchOpen(false)}
+          onNavigate={goTo}
+          isUnlocked={isUnlocked}
+          practiceDomains={PRACTICE_DOMAINS}
+          interviewTools={INTERVIEW_TOOLS}
+          premiumTabs={PREMIUM_TABS}
+        />
+      )}
     </div>
   )
 }
