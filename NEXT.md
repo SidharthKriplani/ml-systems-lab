@@ -36,8 +36,9 @@ Nothing currently blocked.
 
 ## Done this session
 
-- ~~ProjectLabTab build hotfixes (v4.35.2, 2a3ca86 + 1922b9e) — escaped f-string `${` in CELL_2_CODE and CELL_1_CODE template literals; Vercel parse errors resolved.~~
-- ~~ContentMap — visual content map overlay (v4.36, 08db55e) — `Cmd+K` now opens domain-grouped tab inventory. Replaces GlobalSearch as primary navigation shortcut. Filters live on type. `src/components/ContentMap.jsx` new file; App.jsx wired with practiceDomains, interviewTools, premiumTabs props.~~
+- ~~ProjectLabTab build hotfixes (v4.35.2) — escaped f-string `${` in CELL_2_CODE and CELL_1_CODE template literals; Vercel parse errors resolved.~~
+- ~~ContentMap — visual content map overlay (v4.36) — `Cmd+K` opens domain-grouped tab inventory. Replaces GlobalSearch. Filters live on type. `src/components/ContentMap.jsx`.~~
+- ~~pandas + maxWidth + ContentMap mobile (v4.36.2) — pandas added to Pyodide init; maxWidth 900→1080px; ContentMap `.map-grid` CSS class collapses to 1-col ≤480px; input font-size 16px (iOS zoom fix).~~
 
 ---
 

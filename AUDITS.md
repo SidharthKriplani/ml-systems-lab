@@ -57,6 +57,12 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 **Recurring Build Safety risk — Python f-string `${` in JS template literals:**  
 `ProjectLabTab.jsx` defines Pyodide cell code as JS template literals (backtick strings). Any Python f-string inside those cells that formats a dollar amount (e.g., `f'${val:.0f}'`) contains `${` which esbuild interprets as a JS interpolation — build fails with "Expected } but found :". The brace-balance check does NOT catch this (braces remain balanced). Fix: escape to `f'\${val:.0f}'`. Pre-commit check: `grep -n '\${' src/tabs/ProjectLabTab.jsx | grep "f['\"]"` — any hit needs escaping. First hit: v4.35 build, fixed in v4.35.2 (two occurrences).
 
+**Recurring Runtime risk — Pyodide package omissions:**  
+`python.js` `loadPython()` must explicitly load every package used across all Pyodide cells. Missing a package produces `ModuleNotFoundError` at runtime (not at build time). Current load list: `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `scipy`. When adding new cells that import new packages (e.g., `xgboost`, `statsmodels`), update the `loadPackage` call in `python.js` first — the cell code won't warn you. pandas was missing until v4.36.2.
+
+**Mobile input font-size rule:**  
+Any `<input>` or `<textarea>` rendered inside an overlay or modal must have `fontSize: '16px'` minimum. iOS Safari auto-zooms the viewport on focus when input font-size is below 16px — this breaks overlay positioning and is jarring on mobile. ContentMap input was 15px; fixed to 16px in v4.36.2. Apply same check to any future overlays.
+
 ---
 
 ## Guidance Completeness — Audit Spec

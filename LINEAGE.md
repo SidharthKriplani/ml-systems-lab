@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.36.2 — Mobile + pandas fixes (2026-05-31)
+
+**What shipped (commits `dbb3b11`, `dc4c464`):**
+
+**pandas not loading in Pyodide (`python.js`):** `loadPython()` loaded numpy, sklearn, matplotlib, scipy but omitted pandas. All ProjectLabTab cells that `import pandas as pd` failed with `ModuleNotFoundError`. Fix: added `pandas` to the first `loadPackage` call alongside numpy — `await pyodideInstance.loadPackage(['numpy', 'pandas'])`. Progress message updated to "Loading numpy + pandas...".
+
+**Main content maxWidth too narrow (`App.jsx`):** `maxWidth: '900px'` left visible blank space on the right on typical desktop widths (1300px+) with the 220px sidebar consuming left space. Bumped to `1080px` — fills a 1300px screen cleanly, still readable for MCQ tabs, and gives code cells in ProjectLabTab meaningful horizontal space.
+
+**ContentMap mobile layout (`ContentMap.jsx` + `index.css`):** Two issues: (1) the 2-column tab card grid would be cramped on phones (375px → ~171px per card with description text). Fix: extracted grid to `.map-grid` CSS class in `index.css`, collapses to `1fr` below 480px — matching the existing `.grid-cards` breakpoint pattern. (2) `input` `fontSize: '15px'` triggers iOS auto-zoom on focus. Fixed to `16px`.
+
+---
+
 ### v4.36 — ContentMap — visual content map overlay (2026-05-31)
 
 **What shipped (commit `08db55e`):** New component `src/components/ContentMap.jsx` — a command palette overlay that replaces GlobalSearch as the `Cmd+K` target in App.jsx.
