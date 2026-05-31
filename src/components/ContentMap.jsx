@@ -1,73 +1,99 @@
 import { useState, useEffect, useRef } from 'react'
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Tree components ────────────────────────────────────────────────────────────
 
-function SectionHeader({ label }) {
-  return (
-    <div style={{
-      fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
-      textTransform: 'uppercase', letterSpacing: '0.13em',
-      color: 'var(--ink-ghost)', padding: '10px 4px 5px', userSelect: 'none',
-    }}>
-      {label}
-    </div>
-  )
-}
-
-function TabCard({ label, desc, isPro, onNav }) {
+function TabLeaf({ label, desc, isPro, onNav }) {
   const [hov, setHov] = useState(false)
   return (
-    <button
-      onClick={onNav}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        textAlign: 'left', padding: '10px 12px', width: '100%',
-        background: hov ? 'rgba(240,165,0,0.08)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${hov ? 'rgba(240,165,0,0.30)' : 'rgba(255,255,255,0.07)'}`,
-        borderRadius: 'var(--r-sm)', cursor: 'pointer',
-        transition: 'background var(--t-fast), border-color var(--t-fast)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 600, color: 'var(--ink-hi)' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', position: 'relative' }}>
+      {/* horizontal connector */}
+      <div style={{ width: '16px', flexShrink: 0, borderBottom: '1px solid var(--rim)', marginTop: '13px' }} />
+      <button
+        onClick={onNav}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          flex: 1, textAlign: 'left', padding: '5px 8px',
+          background: hov ? 'rgba(240,165,0,0.07)' : 'none',
+          border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
+          borderRadius: 'var(--r-sm)', cursor: 'pointer',
+          transition: 'background var(--t-fast), border-color var(--t-fast)',
+          display: 'flex', alignItems: 'baseline', gap: '6px',
+        }}
+      >
+        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 600, color: 'var(--ink-hi)', flexShrink: 0 }}>
           {label}
         </span>
         {isPro && (
           <span style={{
             fontSize: '8px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)',
-            border: '1px solid var(--rim)', borderRadius: '3px', padding: '1px 4px',
+            border: '1px solid var(--rim)', borderRadius: '3px', padding: '1px 4px', flexShrink: 0,
           }}>pro</span>
         )}
-      </div>
-      <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>
-        {desc}
-      </p>
-    </button>
-  )
-}
-
-function DomainSection({ domain, checkPro, onNav }) {
-  return (
-    <div style={{ marginBottom: '14px' }}>
-      <SectionHeader label={domain.label} />
-      <div className="map-grid">
-        {domain.tabs.map(t => (
-          <TabCard
-            key={t.id}
-            label={t.label}
-            desc={t.desc}
-            isPro={checkPro(t.id)}
-            onNav={() => onNav(t.id)}
-          />
-        ))}
-      </div>
-
+        {desc && (
+          <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            — {desc}
+          </span>
+        )}
+      </button>
     </div>
   )
 }
 
-function TabRow({ item, isPro, onNav }) {
+function DomainBranch({ domain, checkPro, onNav }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', position: 'relative', marginBottom: '2px' }}>
+      {/* horizontal connector to domain label */}
+      <div style={{ width: '14px', flexShrink: 0, borderBottom: '1px solid var(--rim)', marginTop: '12px' }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* domain label */}
+        <div style={{
+          fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.09em',
+          color: 'var(--ink-low)', padding: '4px 0 4px 4px',
+          userSelect: 'none',
+        }}>
+          {domain.label}
+        </div>
+        {/* tab leaves with vertical spine */}
+        <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '4px', paddingLeft: 0 }}>
+          {domain.tabs.map(t => (
+            <TabLeaf
+              key={t.id}
+              label={t.label}
+              desc={t.desc}
+              isPro={checkPro(t.id)}
+              onNav={() => onNav(t.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ZoneSection({ zoneLabel, children }) {
+  return (
+    <div style={{ marginBottom: '18px' }}>
+      <div style={{
+        fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
+        textTransform: 'uppercase', letterSpacing: '0.14em',
+        color: 'var(--prime)', padding: '0 0 6px 0',
+        userSelect: 'none',
+      }}>
+        {zoneLabel}
+      </div>
+      {/* zone children with vertical spine */}
+      <div style={{ borderLeft: '1px solid rgba(240,165,0,0.25)', marginLeft: '3px' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Search result row ─────────────────────────────────────────────────────────
+
+function SearchRow({ item, isPro, onNav }) {
   const [hov, setHov] = useState(false)
   return (
     <button
@@ -76,7 +102,7 @@ function TabRow({ item, isPro, onNav }) {
       onMouseLeave={() => setHov(false)}
       style={{
         width: '100%', textAlign: 'left',
-        padding: '9px 12px', marginBottom: '3px',
+        padding: '8px 12px', marginBottom: '2px',
         background: hov ? 'rgba(240,165,0,0.07)' : 'none',
         border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
         borderRadius: 'var(--r-sm)', cursor: 'pointer',
@@ -96,9 +122,11 @@ function TabRow({ item, isPro, onNav }) {
             }}>pro</span>
           )}
         </div>
-        <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', lineHeight: 1.4, fontFamily: 'var(--font-sans)' }}>
-          {item.desc}
-        </p>
+        {item.desc && (
+          <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', lineHeight: 1.4, fontFamily: 'var(--font-sans)' }}>
+            {item.desc}
+          </p>
+        )}
       </div>
       <span style={{
         fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--prime)',
@@ -110,13 +138,15 @@ function TabRow({ item, isPro, onNav }) {
   )
 }
 
-// ── ContentMap ────────────────────────────────────────────────────────────────
+// ── Static tabs ───────────────────────────────────────────────────────────────
 
 const STATIC_TABS = [
   { id: 'gradient',  label: 'Gradient ∇', desc: 'Production ML essays — read, then practice', domain: 'Read' },
   { id: 'landscape', label: 'Landscape',  desc: 'ML tools and infrastructure landscape map', domain: 'Today' },
   { id: 'home',      label: 'Home',       desc: 'Dashboard — streak, role, tracks, continue',  domain: 'Today' },
 ]
+
+// ── ContentMap ────────────────────────────────────────────────────────────────
 
 export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDomains, interviewTools, premiumTabs }) {
   const [query, setQuery] = useState('')
@@ -160,7 +190,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: '100%', maxWidth: '700px',
+          width: '100%', maxWidth: '620px',
           background: 'var(--depth)',
           border: '1px solid var(--rim)',
           borderRadius: 'var(--r-lg)',
@@ -208,7 +238,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
         <div style={{ maxHeight: '65vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
           {filtered ? (
-            /* ── Filtered results ── */
+            /* ── Filtered results (flat list) ── */
             filtered.length === 0 ? (
               <div style={{
                 padding: '48px 24px', textAlign: 'center',
@@ -220,34 +250,47 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
             ) : (
               <div style={{ padding: '8px 12px' }}>
                 {filtered.map(item => (
-                  <TabRow key={item.id + item.domain} item={item} isPro={checkPro(item.id)} onNav={go} />
+                  <SearchRow key={item.id + item.domain} item={item} isPro={checkPro(item.id)} onNav={go} />
                 ))}
               </div>
             )
           ) : (
-            /* ── Full map view ── */
-            <div style={{ padding: '12px' }}>
+            /* ── Tree view ── */
+            <div style={{ padding: '16px 16px 8px' }}>
 
-              {/* Practice domains */}
-              {practiceDomains.map(domain => (
-                <DomainSection key={domain.id} domain={domain} checkPro={checkPro} onNav={go} />
-              ))}
-
-              {/* Interview tools */}
-              <SectionHeader label="Interview" />
-              <div className="map-grid" style={{ marginBottom: '14px' }}>
-                {interviewTools.map(t => (
-                  <TabCard key={t.id} label={t.label} desc={t.desc} isPro={checkPro(t.id)} onNav={() => go(t.id)} />
+              {/* Practice zone */}
+              <ZoneSection zoneLabel="Practice">
+                {practiceDomains.map(domain => (
+                  <DomainBranch key={domain.id} domain={domain} checkPro={checkPro} onNav={go} />
                 ))}
-              </div>
+              </ZoneSection>
 
-              {/* Read · Today */}
-              <SectionHeader label="Read · Today" />
-              <div className="map-grid">
-                {STATIC_TABS.filter(t => t.id !== 'home').map(t => (
-                  <TabCard key={t.id} label={t.label} desc={t.desc} isPro={false} onNav={() => go(t.id)} />
-                ))}
-              </div>
+              {/* Interview zone */}
+              <ZoneSection zoneLabel="Interview">
+                <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '4px', paddingLeft: 0 }}>
+                  {interviewTools.map(t => (
+                    <TabLeaf key={t.id} label={t.label} desc={t.desc} isPro={checkPro(t.id)} onNav={() => go(t.id)} />
+                  ))}
+                </div>
+              </ZoneSection>
+
+              {/* Read zone */}
+              <ZoneSection zoneLabel="Read">
+                <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '4px', paddingLeft: 0 }}>
+                  {STATIC_TABS.filter(t => t.id === 'gradient').map(t => (
+                    <TabLeaf key={t.id} label={t.label} desc={t.desc} isPro={false} onNav={() => go(t.id)} />
+                  ))}
+                </div>
+              </ZoneSection>
+
+              {/* Today zone */}
+              <ZoneSection zoneLabel="Today">
+                <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '4px', paddingLeft: 0 }}>
+                  {STATIC_TABS.filter(t => t.id === 'landscape' || t.id === 'home').map(t => (
+                    <TabLeaf key={t.id} label={t.label} desc={t.desc} isPro={false} onNav={() => go(t.id)} />
+                  ))}
+                </div>
+              </ZoneSection>
 
             </div>
           )}

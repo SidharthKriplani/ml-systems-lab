@@ -1095,22 +1095,80 @@ export default function ProjectLabTab({ onNavigate }) {
       {/* ── Roadmap: phases 3–5 ── */}
       <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '16px' }}>What's next in Project Lab</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {[
-            { phase: 3, label: 'Model Training & Evaluation', desc: 'LogisticRegression + RandomForest + XGBoost, AUC/F1/calibration, threshold selection, ship-or-not checkpoint' },
-            { phase: 4, label: 'Monitoring', desc: 'PSI on held-out split, KS test, prediction drift, alerting decision checkpoint' },
-            { phase: 5, label: 'Deployment Scaffold', desc: 'FastAPI /predict endpoint, Dockerfile, K8s manifest, CI/CD stub, AWS mapping callout' },
-          ].map(p => (
-            <div key={p.phase} style={{ display: 'flex', gap: '12px', padding: '12px 14px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '8px', opacity: 0.7 }}>
-              <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>{p.phase}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+          {/* Phase 3 */}
+          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.72 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>3</span>
               </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', marginBottom: '3px' }}>{p.label}</div>
-                <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{p.desc}</div>
-              </div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Model Training &amp; Evaluation</div>
             </div>
-          ))}
+            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {[
+                ['cell7', 'Train/val/test split — stratified, reproducible seed'],
+                ['cell8', 'LogisticRegression + RandomForest + XGBoost training'],
+                ['cell9', 'Eval metrics — precision, recall, AUC, F1, confusion matrix'],
+                ['cell10', 'Calibration — reliability diagram, ECE, Platt scaling'],
+                ['cp4', 'Judgment checkpoint — AUC=0.81, ECE=0.12, class imbalance 1:20 — ship?'],
+              ].map(([id, label]) => (
+                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Phase 4 */}
+          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>4</span>
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Monitoring</div>
+            </div>
+            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {[
+                ['cell11', 'PSI on held-out split — population stability index per feature'],
+                ['cell12', 'KS test — distribution shift detection, p-value threshold'],
+                ['cell13', 'Prediction drift — score distribution before vs. after'],
+                ['cell14', 'Label drift — delayed feedback, proxy signals'],
+                ['cp5', 'Judgment checkpoint — p95 PSI=0.18, KS p=0.03 — alert or wait?'],
+              ].map(([id, label]) => (
+                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Phase 5 */}
+          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>5</span>
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Deployment Scaffold</div>
+            </div>
+            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {[
+                ['cell15', 'FastAPI /predict endpoint — pydantic schema, response model'],
+                ['cell16', 'Dockerfile — multi-stage build, model artifact bake-in'],
+                ['cell17', 'K8s manifest — Deployment + Service + HPA stub'],
+                ['cell18', 'CI/CD stub — GitHub Actions: lint → test → build → push'],
+                ['cell19', 'AWS mapping callout — ECR, EKS, SageMaker, Batch tradeoffs'],
+              ].map(([id, label]) => (
+                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
