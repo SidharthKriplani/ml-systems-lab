@@ -541,8 +541,8 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
 | 1 | `CLAUDE.md` file structure had 3 wrong filenames (`MathFoundationsTab.jsx` → `ModelsMathTab.jsx`, `DeploymentTab.jsx` → `MLOpsDeployTab.jsx`, `CICDTab.jsx` → `MLOpsPipelinesTab.jsx`) and `LandscapeTab.jsx` completely absent | `CLAUDE.md` | High | ✅ Fixed — corrected in this session |
-| 2 | Hardcoded font literal strings in `App.jsx` — 8+ instances of `"'Space Grotesk',sans-serif"` and `"'JetBrains Mono',monospace"` instead of `var(--font-sans)` / `var(--font-mono)`. Tab files were cleaned in v4.2/v4.3; App.jsx was not updated. Also 3 instances of `'Inter, sans-serif'` in `AskTab.jsx`. | `App.jsx`, `AskTab.jsx` | Medium | ⚠️ Open |
-| 3 | Residual hardcoded hex in 4 files: `color: '#000'`/`'#fff'` in `App.jsx` (lines 441, 781), `#f97316` in `dbtTab.jsx` DANGER_COLORS (should be `var(--ember)`), `color: '#000'` in `InterviewPrepTab.jsx` (line 649), `#6366f1`/`#22d3ee` in `ModelEvalTab.jsx` progress bar gradient. | `App.jsx`, `dbtTab.jsx`, `InterviewPrepTab.jsx`, `ModelEvalTab.jsx` | Low | ⚠️ Open |
+| 2 | Hardcoded font literal strings in `App.jsx` — 8+ instances of `"'Space Grotesk',sans-serif"` and `"'JetBrains Mono',monospace"` instead of `var(--font-sans)` / `var(--font-mono)`. Tab files were cleaned in v4.2/v4.3; App.jsx was not updated. Also 3 instances of `'Inter, sans-serif'` in `AskTab.jsx`. | `App.jsx`, `AskTab.jsx` | Medium | ✅ Fixed v4.38 — all `'JetBrains Mono',monospace` → `var(--font-mono)` in App.jsx (5 occurrences); all `Inter, sans-serif` → `var(--font-sans)` in AskTab.jsx (8 occurrences) |
+| 3 | Residual hardcoded hex in 4 files: `color: '#000'`/`'#fff'` in `App.jsx` (lines 441, 781), `#f97316` in `dbtTab.jsx` DANGER_COLORS (should be `var(--ember)`), `color: '#000'` in `InterviewPrepTab.jsx` (line 649), `#6366f1`/`#22d3ee` in `ModelEvalTab.jsx` progress bar gradient. | `App.jsx`, `dbtTab.jsx`, `InterviewPrepTab.jsx`, `ModelEvalTab.jsx` | Low | ✅ Partially fixed v4.38 — App.jsx `#000`→`var(--void)`, `#fff`→`var(--white)`; InterviewPrepTab.jsx `#000`→`var(--void)`. dbtTab.jsx `#f97316` not found (already cleaned in prior session). ModelEvalTab gradient hex (`#6366f1`/`#22d3ee`) still open — deferred. |
 | 4 | `LandscapeTab.jsx` has no entry in `LINEAGE.md` — 684-line career intelligence tab (roles, salaries, market data, ML timeline) in `today` zone with no documented build history | `LINEAGE.md` | Medium | ⚠️ Open |
 | 5 | Bundle size risk — 28,757 total lines across all tab files + App.jsx, no lazy loading. At current growth rate, will exceed 1.5MB bundle threshold within ~3 content sprints. Already tracked in IDEAS.md/NEXT.md. | — | Low | ⚠️ Tracked — deferred pending bundle audit |
 
@@ -649,10 +649,10 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 2 | #017.1 (hardcoded fonts App.jsx/AskTab), #017.3 (LandscapeTab undocumented in LINEAGE) |
-| Low | 7 | #001 index keys, #015.7 (Pyodide mobile), #015.10 (InterviewPrep line length), #017.2 (residual hex literals in App/#000/#fff/dbt/ModelEval/InterviewPrep), #020.2 (AttentionViz rgba), #020.4 (TrainerTab SR partial), #021.5 (.msl-cloud-map mobile overflow) |
+| Medium | 1 | #017.3 (LandscapeTab undocumented in LINEAGE) |
+| Low | 2 | #001 index keys, #017.2 partial (ModelEvalTab `#6366f1`/`#22d3ee` gradient hex still open) |
 
-**Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32 — all 36 files swept. Residual hex literals (#017.2) are structural `#000`/`#fff` values, not decorative accent drift; tracked separately.
+**Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32. #017.1 (hardcoded fonts) closed v4.38. #017.2 partially closed v4.38 — App.jsx/InterviewPrepTab fixed; dbtTab was already clean; ModelEvalTab gradient hex deferred. #015.7, #015.10, #020.2, #020.4, #021.5 resolved in earlier sessions.
 
 ---
 
@@ -690,5 +690,5 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 2 | #017.1 hardcoded fonts App.jsx/AskTab, #017.3 LandscapeTab undocumented in LINEAGE |
-| Low | 7 | #001 index keys, #015.7 Pyodide mobile, #015.10 InterviewPrep line length, #017.2 residual hex, #020.2 AttentionViz rgba, #020.4 TrainerTab SR partial, #021.5 .msl-cloud-map mobile overflow |
+| Medium | 1 | #017.3 LandscapeTab undocumented in LINEAGE |
+| Low | 2 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex) |

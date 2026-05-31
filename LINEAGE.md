@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.38 — Phase 3 model training, pre-eval callouts, HomeTab divider, token fixes (2026-05-31)
+
+**What shipped (commit `8c474f5`):**
+
+**ProjectLabTab Phase 3 — Model Training & Evaluation (`ProjectLabTab.jsx`):** Full Phase 3 section built and wired. `CHECKPOINT_4` constant: ship-or-not judgment — AUC=0.81, ECE=0.12, probability-gated downstream (score > 0.6 gates retention offer), p95=38ms, class imbalance 1:4; correct answer is Block (ECE=0.12 makes the >0.6 threshold unreliable when downstream uses raw probabilities; calibrate first). Four new Python cell code strings: `CELL_7_CODE` (stratified 60/20/20 split, class balance verification, seed discipline note), `CELL_8_CODE` (LogisticRegression + RandomForest + GradientBoostingClassifier side-by-side, val AUC + F1, class_weight='balanced' rationale), `CELL_9_CODE` (ROC + PR curves + confusion matrix via matplotlib, max-F1 threshold selection, business framing), `CELL_10_CODE` (reliability diagram before/after, ECE computation function, Platt scaling via `CalibratedClassifierCV(method='sigmoid', cv=5)`, ECE interpretation). All cells use 600-row synthetic churn dataset generated at fixed seed (numpy, sklearn) — 20-row CSV too small for ML training. Phase 3 progress bar (phase3DoneSteps / phase3TotalSteps=5). Synthetic data callout card explains why. Phase 3 roadmap card removed; roadmap now shows only Phases 4–5.
+
+**Pre-eval callouts — MonitoringTab + MLOpsDeployTab (`MonitoringTab.jsx`, `MLOpsDeployTab.jsx`):** Completed 5-tab coverage from IDEAS.md. `hint` fields added to 5 MonitoringTab scenarios: alert1 (maintenance window vs drift), alert2 (what PSI cannot detect), alert3 (timing correlation), drift1 (PSI magnitude vs feature-to-target link), drift3 (PSI blind spot on stable features). Render wired: `{!item.revealed && sc.hint && <div className="msl-hint" style={{ margin: '0 0 4px' }}>{sc.hint}</div>}`. `hint` fields added to 5 MLOpsDeployTab DEPLOY_SCENARIOS (fraud/canary, recommendation/shadow, bug-fix/rolling, ranking/feature-flag, internal/immediate). Render wired in `DeployStrategy`: `{!isRevealed && scenario.hint && <div className="msl-hint" style={{ margin: '0 0 4px' }}>{scenario.hint}</div>}`.
+
+**HomeTab visual hierarchy divider (`HomeTab.jsx`):** `paddingTop` on "All tracks" section `28px` → `40px`. Added `<hr style={{ border: 'none', borderTop: '1px solid var(--rim)', margin: '0 0 16px' }} />` above the "All tracks" section-eyebrow div, signalling the shift from session-context sections (Today, Role, Continue) to browse-everything territory.
+
+**Token fixes — #017.1 + #017.2 (`App.jsx`, `AskTab.jsx`, `InterviewPrepTab.jsx`):** `App.jsx`: all `"'JetBrains Mono',monospace"` → `var(--font-mono)` (5 occurrences); `color: '#000'` → `var(--void)` (ML badge); `color: '#fff'` → `var(--white)` (sidebar badge). `AskTab.jsx`: all `fontFamily: 'Inter, sans-serif'` → `var(--font-sans)` (8 occurrences). `InterviewPrepTab.jsx`: `color: mode === m.key ? '#000' : ...` → `var(--void)`. Audits #017.1 and #017.2 closed.
+
+**Brace balance:** All 7 modified files verified at delta `0` before commit.
+
+---
+
 ### v4.37 — ContentMap tree view + ProjectLab phase skeletons + mobile polish (2026-05-31)
 
 **What shipped (commits `e91cbd2`, `34dd023`, and mobile fix):**

@@ -8,23 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. ProjectLabTab Phase 3 — Model Training & Evaluation (2.5 hours)
-Continue `ProjectLabTab.jsx`. Phase 3: 4 cells (train/val/test split → LogisticRegression + RandomForest + XGBoost → evaluation metrics (precision/recall/AUC/F1/confusion matrix) → calibration (reliability diagram, ECE, Platt scaling)) + 1 judgment checkpoint ("AUC=0.81, ECE=0.12, p95 latency=38ms, class imbalance 1:20 — would you ship?"). `checkpointsDone` adds `cp4`. Cell IDs: `cell7`, `cell8`, `cell9`, `cell10`. Phase 3 header shows "Phase 3 of 5". `phase3TotalSteps = 5`.
+### 1. ProjectLabTab Phase 4 — Monitoring (2.5 hours)
+Continue `ProjectLabTab.jsx`. Phase 4: 4 cells + 1 checkpoint. Cell IDs: `cell11`–`cell14`. Checkpoint: `cp5`. Steps: (cell11) PSI per feature on held-out split — compute Population Stability Index, print per-feature breakdown; (cell12) KS test — Kolmogorov-Smirnov distribution shift detection, p-value interpretation; (cell13) Prediction drift — score distribution before vs. after a simulated deployment shift; (cell14) Label drift — delayed feedback problem, proxy signal patterns; (cp5) judgment checkpoint: "PSI=0.18 on tenure, KS p=0.03 on monthly_charges — alert or wait?" Correct: alert + investigate (both signals above threshold; PSI > 0.2 is critical but 0.18 warrants triage, KS p=0.03 below alpha=0.05 is statistically significant). Same synthetic data generation pattern as Phase 3 (fixed seed, 600 rows). Progress bar: `phase4TotalSteps = 5`. Phase 4 roadmap card → remove from roadmap after building.
 
-### 2. Pre-Eval callouts — MonitoringTab + MLOpsDeployTab (1 hour)
-Complete the 5-tab Pre-Eval Callout coverage from IDEAS.md. Add `.msl-hint` between option pick and reveal button in MonitoringTab (~5 scenarios) and MLOpsDeployTab (~5 scenarios). Same pattern as v4.35: one diagnostic sentence per scenario pointing at the most common reasoning error. `{picked && !revealed && hint && <div className="msl-hint">...</div>}`. Brace balance check after each file.
+### 2. ProjectLabTab Phase 5 — Deployment Scaffold (2 hours)
+Phase 5: 5 cells, no checkpoint. Cell IDs: `cell15`–`cell19`. Content is reference/educational (no Pyodide execution — these cells show code templates the user reads, not runs): (cell15) FastAPI `/predict` endpoint — pydantic schema, response model, async handler; (cell16) Dockerfile — multi-stage build, model artifact bake-in, uvicorn CMD; (cell17) Kubernetes manifest — Deployment + Service + HPA stub; (cell18) CI/CD — GitHub Actions: lint → test → build → push to ECR; (cell19) AWS mapping callout — ECR/ECS vs EKS vs SageMaker Batch tradeoffs. Cells use `PythonCell` with `initialCode` (static code template) but no `onResult` (display only, no execution). Mark done via a "Mark as read" button instead of run-to-complete. Phase 5 roadmap card → remove. Roadmap section disappears when Phase 5 complete.
 
-### 3. Premium unlock animation (30 min)
-After valid DAI2026 code entry in `AccessGate.jsx` (or wherever confirm fires), replace the current text confirmation with: scale + fade-in transition (~300ms) on the unlocked content, glow pulse on `var(--prime)`, "You're in" heading before content renders. No new localStorage keys. No navigation change.
+### 3. Domain completion bars on HomeTab (1 hour)
+In `HomeTab.jsx`, add per-tab progress bars inside the "All tracks" grid section. Each track card shows: tab name, `X / N scenarios` completed, a thin 2px progress bar. Data source: read `msl_score:{tabPrefix}` keys from localStorage (already exist per-tab), map against a hardcoded `TAB_SCENARIO_COUNTS` object in HomeTab (approximate counts — 10 scenarios per basic tab, exact counts where known). Only show the bar if `N > 0`. No new localStorage keys. ~1 hour. This surfaces the domain-progress data that already exists but isn't visible on HomeTab.
 
-### 4. HomeTab visual hierarchy divider (20 min)
-In `HomeTab.jsx`, signal the shift from session-context sections (TODAY, Role, Guided Paths, Continue, Bookmarks) to the browse section. Increase `paddingTop` on the "All tracks" outer section from `28px` to `40px`, and add a 1px `var(--rim)` horizontal rule above the "All tracks" eyebrow label. Minimal — this is a hierarchy clarification, not a new feature.
+### 4. GradientTab — add 2 new posts (1 hour)
+Add to `src/data/gradientPosts.js`: (1) "Feature Store Time-Travel Bug" — covers temporal leakage via point-in-time joins, correct vs incorrect feature retrieval, Feast/Hopsworks pattern. Practice CTA → FeatureEngTab. (2) "Validation Set Leakage — Why Your AUC Lied" — covers train-test contamination vs target leakage distinction, the avg_spend example from ProjectLab cp3, split-first discipline. Practice CTA → ProjectLabTab. Follow the existing `gradientPosts.js` schema: `{id, title, subtitle, date, readTime, tags, youtubeId:'', body, practiceLink}`. Body format: 4–6 paragraphs, inline `<code>` tags. Both posts tie directly to existing checkpoints in the lab.
 
-### 5. Housekeeping — close #017.1 + #017.2 (30 min)
-Fix two open audit findings:
-- **#017.1:** `App.jsx` — replace `"'Space Grotesk',sans-serif"` → `var(--font-sans)`, `"'JetBrains Mono',monospace"` → `var(--font-mono)`. `AskTab.jsx` — replace `'Inter, sans-serif'` → `var(--font-sans)`.
-- **#017.2:** `App.jsx` `'#000'`/`'#fff'` → `var(--void)`/`var(--white)`. `dbtTab.jsx` `#f97316` → `var(--ember)`. `InterviewPrepTab.jsx` `'#000'` → `var(--void)`.
-Brace balance on each modified file. Mark resolved in AUDITS.md summary table.
+### 5. Emoji → SVG — top 3 traffic tabs only (45 min)
+Replace remaining rendered-UI emoji in `HomeTab.jsx`, `CombinatorTab.jsx`, `TrainerTab.jsx`. Pattern: grep each file for emoji codepoints in JSX strings/labels. Decorative emoji → inline SVG referencing `currentColor` or CSS variables (simple shapes only — no external assets). Functional glyphs (✓ ✗ · →) stay as text characters. Brace balance check on each file. Scope-limited to these 3 files — don't expand.
 
 ---
 
@@ -34,20 +31,20 @@ Nothing currently blocked.
 
 ---
 
-## Done this session
+## Done this session (v4.38)
 
-- ~~ProjectLabTab build hotfixes (v4.35.2) — escaped f-string `${` in CELL_2_CODE and CELL_1_CODE template literals; Vercel parse errors resolved.~~
-- ~~ContentMap — visual content map overlay (v4.36) — `Cmd+K` opens domain-grouped tab inventory. Replaces GlobalSearch. Filters live on type. `src/components/ContentMap.jsx`.~~
-- ~~pandas + maxWidth + ContentMap mobile (v4.36.2) — pandas added to Pyodide init; maxWidth 900→1080px; ContentMap `.map-grid` CSS class collapses to 1-col ≤480px; input font-size 16px (iOS zoom fix).~~
-- ~~ContentMap tree view + ProjectLab roadmap expansion (v4.37) — ContentMap rewritten as zone→domain→tab tree with amber zone spines, connecting lines, inline desc truncation; ProjectLab phase 3/4/5 cards expanded with numbered cell/checkpoint skeletons.~~
-- ~~ContentMap mobile polish (v4.37.1) — touch targets minHeight 40/44px, desc hidden <480px via .map-leaf-desc CSS class, kbd hints hidden via .map-kbd-hints, overlay top padding compressed on narrow screens, flex truncation fixed with minWidth:0.~~
+- ~~ProjectLabTab Phase 3 — Model Training & Evaluation: cell7 (stratified split), cell8 (LR+RF+GBC training), cell9 (ROC/PR/confusion matrix/threshold), cell10 (reliability diagram/ECE/Platt scaling), cp4 (ship-or-not: AUC=0.81, ECE=0.12, probability-gated downstream). Synthetic 600-row dataset.~~
+- ~~Pre-eval callouts — MonitoringTab (5 scenarios) + MLOpsDeployTab (5 scenarios): `.msl-hint` wired pre-pick. 5-tab coverage complete.~~
+- ~~Premium unlock animation — confirmed already done in prior session (AccessGate.jsx has showMoment, ag-unlock-in, ag-prime-glow). No action needed.~~
+- ~~HomeTab visual hierarchy divider: `paddingTop` 28px → 40px, `<hr var(--rim)>` above "All tracks" eyebrow.~~
+- ~~Housekeeping #017.1 + #017.2: App.jsx font-mono tokens + void/white hex fixes. AskTab.jsx font-sans. InterviewPrepTab.jsx #000→var(--void). dbtTab already clean.~~
 
 ---
 
 ## What comes after (not for this session)
 
-- **ProjectLabTab Phase 4 — Monitoring** — PSI, KS test, prediction drift, label drift, alerting checkpoint.
-- **ProjectLabTab Phase 5 — Deployment Scaffold** — FastAPI, Dockerfile, K8s, CI/CD, AWS mapping callout.
-- **Emoji → SVG — highest-traffic tabs only** — HomeTab, CombinatorTab, TrainerTab, StaffLayerTab.
-- **Datamart-based ML practice** — build after ProjectLabTab phases 3-5 complete.
+- **Datamart-based ML practice** — build after ProjectLabTab phases 4–5 complete.
 - **DefenseDocTab v2** — gap-mapped prep plan, resume cross-reference, round-type selector.
+- **Freemium gate v2** — difficulty tags on scenarios, PremiumGate wrapper per-tab.
+- **Social proof signal** — single line in README when verifiable usage numbers exist.
+- **ModelEvalTab gradient hex** — last open #017.2 finding (`#6366f1`/`#22d3ee` in progress bar gradient).
