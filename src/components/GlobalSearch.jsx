@@ -424,7 +424,7 @@ const INDEX = [
 
   // ── Spot the Flaw ─────────────────────────────────────────────────────────
   { id: 'spottheflaw', tab: 'spottheflaw', icon: '◎', kind: 'tool', title: 'Spot the Flaw',
-    desc: '10 real ML analyses with exactly one buried methodological flaw each. Data leakage, evaluation errors, distribution shift, metric mismatch, labeling artifacts.' },
+    desc: '12 real ML analyses with exactly one buried methodological flaw each. Data leakage, evaluation errors, distribution shift, metric mismatch, labeling artifacts.' },
 
   // ── Project Lab ───────────────────────────────────────────────────────────
   { id: 'projectlab', tab: 'projectlab', icon: '⌁', kind: 'module', title: 'Project Lab — Churn Prediction Notebook',

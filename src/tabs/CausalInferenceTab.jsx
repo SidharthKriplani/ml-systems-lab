@@ -5,6 +5,7 @@ const CAUSAL_SCENARIOS = [
   {
     id: 'churn',
     scenario: 'A product team asks: "Which users are most likely to churn next month?" They want to send a discount to at-risk users.',
+    hint: 'The phrasing says "most likely to churn" — ask whether knowing who will churn is the same question as knowing who will respond to a discount.',
     options: ['Predictive modeling', 'Causal inference'],
     correct: 1,
     answer: 'Causal inference — specifically, you need to estimate the effect of sending a discount, not just predict who churns. A predictive model identifies at-risk users but tells you nothing about whether the discount will work. Users who churn regardless get free discounts. Users who would have stayed anyway get unnecessary discounts. You need to estimate the ITT (intention-to-treat) effect via experiment or uplift modeling.',
@@ -50,6 +51,7 @@ const CAUSAL_SCENARIOS = [
   {
     id: 'email_open',
     scenario: 'You notice that users who open your onboarding emails have 40% higher day-30 retention. The team says "great, let\'s send more onboarding emails."',
+    hint: 'Before picking, ask whether the 40% lift was measured on users who chose to open or on users who were randomly assigned to receive the email.',
     options: ['Predictive modeling', 'Causal inference'],
     correct: 1,
     answer: 'Causal inference — and the team\'s reasoning is wrong. Email opens are a proxy for user engagement and intent. Users who open emails are already more motivated — they would have higher retention even without the email. Sending more emails to disengaged users won\'t replicate the correlation. You need to measure the effect of sending (not opening) emails, via an experiment.',
@@ -68,6 +70,7 @@ const CAUSAL_SCENARIOS = [
   {
     id: 'price_elasticity',
     scenario: 'Finance wants to know: if we reduce price by 10%, how much will demand increase?',
+    hint: 'Consider whether the word "if" in the question implies a counterfactual — and whether historical price-demand correlation in observational data answers a counterfactual.',
     options: ['Predictive modeling', 'Causal inference'],
     correct: 1,
     answer: 'Causal inference — price elasticity is fundamentally a causal quantity. You want the counterfactual: what demand would be at a different price, holding everything else constant. Observational data is heavily confounded (prices change during promotions, which affect demand independently; prices are higher in peak periods when demand is naturally higher).',
@@ -157,6 +160,7 @@ const DAG_SCENARIOS = [
   {
     id: 'coll1',
     q: 'You study whether coding ability causes job offers. You sample only from people who were interviewed at top tech companies. Coding ability and job offers seem weakly correlated. Is something wrong?',
+    hint: 'Ask what "interview invitation" has in common structurally with the outcome — and whether filtering your sample on it could create a spurious association.',
     options: ['You\'re conditioning on a collider (interview invitation)', 'The sample size is too small', 'Coding ability is mismeasured', 'There is no confounding here'],
     correct: 0,
     answer: 'Collider bias. "Got an interview" is caused by BOTH coding ability AND other factors (referrals, connections, strong portfolio). By restricting to interviewed people, you\'ve conditioned on this collider. Within the interviewed population, high coding ability and strong connections are negatively correlated (you can get in without great coding if you have connections), masking the real positive causal effect.',
@@ -175,6 +179,7 @@ const DAG_SCENARIOS = [
   {
     id: 'med1',
     q: 'You study whether exercise causes lower blood pressure. Exercise reduces weight, and lower weight reduces blood pressure. You include weight in your regression. What did you just do?',
+    hint: 'Before picking, ask whether weight is a cause of exercise or a consequence of it — that structural distinction changes everything about whether controlling for it is correct.',
     options: ['Controlled for a mediator — this blocks part of the causal path', 'Correctly removed a confounder', 'Added instrumental variable', 'Reduced multicollinearity'],
     correct: 0,
     answer: 'You controlled for a mediator, which is a mistake if you want the total effect of exercise. Weight is ON the causal path from exercise to blood pressure (exercise → weight → BP). Controlling for it gives you only the direct effect of exercise (bypassing weight), not the total effect. This is called "over-controlling" or "mediator bias."',
@@ -471,6 +476,12 @@ function CausalVsPredictive() {
         })}
       </div>
 
+      {picked !== null && !revealed && s.hint && (
+        <div className="msl-hint" style={{ margin: '0 0 10px' }}>
+          {s.hint}
+        </div>
+      )}
+
       {!revealed && (
         <button className="btn-primary" onClick={reveal} disabled={picked === null}>Reveal answer</button>
       )}
@@ -605,6 +616,12 @@ function ConfounderOrCollider() {
           )
         })}
       </div>
+      {picked !== null && !revealed && s.hint && (
+        <div className="msl-hint" style={{ margin: '0 0 10px' }}>
+          {s.hint}
+        </div>
+      )}
+
       {!revealed && <button className="btn-primary" onClick={reveal} disabled={picked === null}>Reveal</button>}
       {revealed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

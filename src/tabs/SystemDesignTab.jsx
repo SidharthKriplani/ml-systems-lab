@@ -748,6 +748,14 @@ function IncidentScenarios() {
 
 // ─── Design Review (DesignCanvas) ─────────────────────────────────────────────
 
+const DESIGN_REVIEW_HINTS = {
+  objective:   'Before picking, ask whether optimising a single engagement proxy might create an incentive the business did not intend.',
+  cold_start:  'Consider what happens to a new item after the initial fallback strategy runs — does your answer close the feedback loop or leave it permanently open?',
+  recall_drop: 'Think about what two components in a retrieval pipeline must stay in sync for recall to be valid at all.',
+  skew:        'Ask whether your answer detects skew before it reaches production or only after it has already caused harm.',
+  diversity:   'Trace the mechanism: what caused the training data to become less diverse, and does your fix address that cause or only the symptom?',
+}
+
 const DESIGN_REVIEW_SECTIONS = [
   {
     id: 'objective',
@@ -1012,6 +1020,13 @@ function DesignCanvas() {
                 )
               })}
             </div>
+
+            {/* Pre-reveal hint */}
+            {hasAnswer && !isRevealed && DESIGN_REVIEW_HINTS[section.id] && (
+              <div className="msl-hint" style={{ margin: '0 0 10px' }}>
+                {DESIGN_REVIEW_HINTS[section.id]}
+              </div>
+            )}
 
             {/* Reveal button */}
             {hasAnswer && !isRevealed && (

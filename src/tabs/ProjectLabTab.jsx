@@ -31,6 +31,19 @@ const CHECKPOINT_2 = {
   explanation: 'This is a model-class question, not a correlation question. For logistic regression: high multicollinearity inflates coefficient standard errors, makes coefficients unstable across samples, and distorts feature importance — dropping or engineering is the right call. For tree-based models (Random Forest, XGBoost): each split is univariate; multicollinearity doesn\'t affect split quality, only how importance is allocated across correlated features. The production rule: check your model class before dropping correlated features. Option A is defensible for LR but wrong as a universal rule. Option C (avg_monthly) is a clever domain-aware feature worth trying. PCA destroys interpretability — rarely the right call in production churn models.',
 }
 
+const CHECKPOINT_3 = {
+  id: 'cp3',
+  question: 'You computed avg_spend_last_7d — the customer\'s average daily spend over the 7 days before the observation date — using the FULL dataset before splitting into train/test. Your model\'s AUC jumped from 0.76 to 0.89. Does this feature constitute data leakage?',
+  options: [
+    { id: 'a', text: 'Yes — leakage. The feature was computed on the full dataset including test rows. The model has indirectly seen test-set spend patterns during training, inflating AUC.' },
+    { id: 'b', text: 'No — it\'s fine. The feature uses only historical spend data (7 days before observation), which would be available at prediction time. Temporal correctness is all that matters.' },
+    { id: 'c', text: 'Depends — if the 7-day window uses only pre-observation data, there\'s no target leakage. But computing it on the full dataset before splitting is still train-test leakage: test rows influenced the aggregation.' },
+    { id: 'd', text: 'No — leakage only occurs when future target values are used. Spend data is a feature, not the target. This is standard feature engineering practice.' },
+  ],
+  correct: 'c',
+  explanation: 'This is train-test contamination, not target leakage — but it\'s still leakage. The issue: when you compute avg_spend_last_7d on the full dataset, test rows contribute to the global mean and variance used in aggregation (if using group-based stats). More critically, if the computation involves any aggregation that crosses the train/test boundary (e.g. user-level rolling windows that span both splits), test-set information leaks into training features. The AUC jump from 0.76 to 0.89 is the red flag — a legitimate feature rarely produces a 13-point gain. In production, this feature would be computed on a rolling basis from data available at inference time only. The fix: split first, then compute features independently on each fold. For time series data, always use a time-based split and compute features only from data before the split point.',
+}
+
 // ─── Python cell code strings ─────────────────────────────────────────────────
 
 const CELL_1_CODE = `# Cell 1 — Schema Inspection
@@ -328,6 +341,235 @@ for i, c1 in enumerate(num_cols):
             print(f"  {c1} × {c2}: r = {r:.3f}  ← multicollinearity risk")
 `
 
+const CELL_4_CODE = `# Cell 4 — Feature Encoding: OHE + Target Encoding
+# OneHotEncoder for low-cardinality cols, target encoding for medium-cardinality
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+import io
+
+CSV = """customerID,gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges,Churn
+7590-VHVEG,Female,0,Yes,No,1,No,No phone service,DSL,No,Yes,No,No,No,No,Month-to-month,Yes,Electronic check,29.85,29.85,No
+5575-GNVDE,Male,0,No,No,34,Yes,No,DSL,Yes,No,Yes,No,No,No,One year,No,Mailed check,56.95,1889.5,No
+3668-QPYBK,Male,0,No,No,2,Yes,No,DSL,Yes,Yes,No,No,No,No,Month-to-month,Yes,Mailed check,53.85,108.15,Yes
+7795-CFOCW,Male,0,No,No,45,No,No phone service,DSL,Yes,No,Yes,Yes,No,No,One year,No,Bank transfer (automatic),42.3,1840.75,No
+9237-HQITU,Female,0,No,No,2,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,70.7,151.65,Yes
+9305-CDSKC,Female,0,No,No,8,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Electronic check,99.65,820.5,Yes
+1452-KIOVK,Male,0,No,Yes,22,Yes,Yes,Fiber optic,No,Yes,No,No,Yes,No,Month-to-month,Yes,Credit card (automatic),89.1,1949.4,No
+6713-OKOMC,Female,0,No,No,10,No,No phone service,DSL,Yes,No,No,No,No,No,Month-to-month,No,Mailed check,29.75,301.9,No
+7892-POOKP,Female,0,Yes,No,28,Yes,Yes,Fiber optic,No,No,Yes,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,104.8,3046.05,Yes
+6388-TABGU,Male,0,No,Yes,62,Yes,No,DSL,Yes,Yes,No,No,No,No,One year,No,Bank transfer (automatic),56.15,3487.95,No
+9763-GRSKD,Male,0,Yes,Yes,13,Yes,No,DSL,Yes,No,No,No,No,No,Month-to-month,Yes,Mailed check,49.95,587.45,Yes
+7469-LKBCI,Male,0,No,No,16,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,No,Credit card (automatic),18.95,326.8,No
+8091-TTVAX,Male,0,Yes,No,58,Yes,Yes,Fiber optic,No,Yes,Yes,No,Yes,Yes,One year,No,Credit card (automatic),100.35,5979.55,No
+0280-XJGEX,Male,0,No,No,49,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Bank transfer (automatic),103.7,5100.75,Yes
+5129-JLPIS,Male,0,No,No,25,Yes,No,Fiber optic,Yes,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,79.85,2100.0,No
+3655-SNQYZ,Female,0,Yes,No,69,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Credit card (automatic),105.95,7382.25,No
+8191-XWSZG,Female,0,No,No,52,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,One year,No,Mailed check,20.65,1022.95,No
+9959-WOFKT,Male,0,No,Yes,71,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Bank transfer (automatic),113.25,8107.9,No
+4190-MFLUW,Female,0,Yes,No,10,Yes,No,DSL,No,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,59.9,541.9,Yes
+4183-MYFRB,Female,0,No,No,21,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,69.65,1397.475,No
+"""
+
+df = pd.read_csv(io.StringIO(CSV))
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+df['ChurnBinary'] = (df['Churn'] == 'Yes').astype(int)
+
+# ── OHE: binary + low-cardinality cols
+ohe_cols = ['gender', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']
+ohe = OneHotEncoder(sparse_output=False, drop='if_binary', handle_unknown='ignore')
+ohe_arr = ohe.fit_transform(df[ohe_cols])
+ohe_names = ohe.get_feature_names_out(ohe_cols)
+df_ohe = pd.DataFrame(ohe_arr, columns=ohe_names, index=df.index)
+
+# ── Target encoding: medium-cardinality (mean of ChurnBinary per category)
+te_cols = ['InternetService', 'Contract', 'PaymentMethod']
+df_te = df[te_cols].copy()
+for col in te_cols:
+    means = df.groupby(col)['ChurnBinary'].mean()
+    df_te[f'{col}_te'] = df[col].map(means)
+df_te = df_te[[f'{c}_te' for c in te_cols]]
+
+# ── Combine
+numeric_keep = ['tenure', 'MonthlyCharges', 'TotalCharges', 'SeniorCitizen']
+df_model = pd.concat([df[numeric_keep], df_ohe, df_te], axis=1)
+
+print(f"Shape before encoding: {df[numeric_keep + ohe_cols + te_cols].shape}")
+print(f"Shape after encoding:  {df_model.shape}")
+print()
+print("─── OHE columns created ───")
+for col in ohe_names:
+    print(f"  {col}")
+print()
+print("─── Target encoding — Contract (mean churn rate per value) ───")
+contract_te = df.groupby('Contract')['ChurnBinary'].mean().sort_values(ascending=False)
+for contract, rate in contract_te.items():
+    print(f"  {contract:<25}  te = {rate:.3f}  ({rate*100:.0f}% churn rate)")
+print()
+print("─── Feature matrix preview (first 3 rows, selected cols) ───")
+preview_cols = list(ohe_names[:4]) + ['Contract_te', 'tenure', 'MonthlyCharges']
+print(df_model[preview_cols].head(3).round(3).to_string())
+`
+
+const CELL_5_CODE = `# Cell 5 — Scaling + Imputation
+# StandardScaler on numeric features, SimpleImputer for missing values
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+import io
+
+CSV = """customerID,gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges,Churn
+7590-VHVEG,Female,0,Yes,No,1,No,No phone service,DSL,No,Yes,No,No,No,No,Month-to-month,Yes,Electronic check,29.85,29.85,No
+5575-GNVDE,Male,0,No,No,34,Yes,No,DSL,Yes,No,Yes,No,No,No,One year,No,Mailed check,56.95,1889.5,No
+3668-QPYBK,Male,0,No,No,2,Yes,No,DSL,Yes,Yes,No,No,No,No,Month-to-month,Yes,Mailed check,53.85,108.15,Yes
+7795-CFOCW,Male,0,No,No,45,No,No phone service,DSL,Yes,No,Yes,Yes,No,No,One year,No,Bank transfer (automatic),42.3,1840.75,No
+9237-HQITU,Female,0,No,No,2,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,70.7,151.65,Yes
+9305-CDSKC,Female,0,No,No,8,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Electronic check,99.65,820.5,Yes
+1452-KIOVK,Male,0,No,Yes,22,Yes,Yes,Fiber optic,No,Yes,No,No,Yes,No,Month-to-month,Yes,Credit card (automatic),89.1,1949.4,No
+6713-OKOMC,Female,0,No,No,10,No,No phone service,DSL,Yes,No,No,No,No,No,Month-to-month,No,Mailed check,29.75,301.9,No
+7892-POOKP,Female,0,Yes,No,28,Yes,Yes,Fiber optic,No,No,Yes,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,104.8,3046.05,Yes
+6388-TABGU,Male,0,No,Yes,62,Yes,No,DSL,Yes,Yes,No,No,No,No,One year,No,Bank transfer (automatic),56.15,3487.95,No
+9763-GRSKD,Male,0,Yes,Yes,13,Yes,No,DSL,Yes,No,No,No,No,No,Month-to-month,Yes,Mailed check,49.95,587.45,Yes
+7469-LKBCI,Male,0,No,No,16,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,No,Credit card (automatic),18.95,326.8,No
+8091-TTVAX,Male,0,Yes,No,58,Yes,Yes,Fiber optic,No,Yes,Yes,No,Yes,Yes,One year,No,Credit card (automatic),100.35,5979.55,No
+0280-XJGEX,Male,0,No,No,49,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Bank transfer (automatic),103.7,5100.75,Yes
+5129-JLPIS,Male,0,No,No,25,Yes,No,Fiber optic,Yes,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,79.85,2100.0,No
+3655-SNQYZ,Female,0,Yes,No,69,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Credit card (automatic),105.95,7382.25,No
+8191-XWSZG,Female,0,No,No,52,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,One year,No,Mailed check,20.65,1022.95,No
+9959-WOFKT,Male,0,No,Yes,71,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Bank transfer (automatic),113.25,8107.9,No
+4190-MFLUW,Female,0,Yes,No,10,Yes,No,DSL,No,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,59.9,541.9,Yes
+4183-MYFRB,Female,0,No,No,21,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,69.65,1397.475,No
+"""
+
+df = pd.read_csv(io.StringIO(CSV))
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+
+numeric_cols = ['tenure', 'MonthlyCharges', 'TotalCharges']
+
+# ── Imputation (median strategy — robust to skew)
+imputer = SimpleImputer(strategy='median')
+df_imp = df[numeric_cols].copy()
+n_before = df_imp.isnull().sum().sum()
+df_imp_arr = imputer.fit_transform(df_imp)
+df_imp = pd.DataFrame(df_imp_arr, columns=numeric_cols, index=df.index)
+n_after = df_imp.isnull().sum().sum()
+
+# ── Scaling
+scaler = StandardScaler()
+df_scaled_arr = scaler.fit_transform(df_imp)
+df_scaled = pd.DataFrame(df_scaled_arr, columns=[f'{c}_scaled' for c in numeric_cols], index=df.index)
+
+print("─── Imputation ───")
+print(f"  Missing values before: {n_before}")
+print(f"  Missing values after:  {n_after}")
+print(f"  Strategy: median  |  Medians: " + ", ".join(f"{c}={v:.2f}" for c, v in zip(numeric_cols, imputer.statistics_)))
+print()
+print("─── Scaling (StandardScaler) ───")
+print(f"  Means:  " + ", ".join(f"{c}={v:.2f}" for c, v in zip(numeric_cols, scaler.mean_)))
+print(f"  Stdevs: " + ", ".join(f"{c}={v:.2f}" for c, v in zip(numeric_cols, scaler.scale_)))
+print()
+print("─── Before vs After scaling (tenure) ───")
+comparison = pd.DataFrame({
+    'tenure_raw': df['tenure'].values,
+    'tenure_scaled': df_scaled['tenure_scaled'].values
+}).head(5).round(3)
+print(comparison.to_string(index=False))
+print()
+print("─── Why median imputation? ───")
+print("  Mean imputation is sensitive to outliers.")
+print("  Median is robust — for TotalCharges (right-skewed), median imputation")
+print("  preserves the central tendency better than mean.")
+print("  In production: fit imputer on TRAIN set only, transform both train and test.")
+`
+
+const CELL_6_CODE = `# Cell 6 — Permutation Importance
+# Train a simple RandomForest, compute permutation importance on held-out rows
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.inspection import permutation_importance
+from sklearn.preprocessing import LabelEncoder
+import io
+
+CSV = """customerID,gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges,Churn
+7590-VHVEG,Female,0,Yes,No,1,No,No phone service,DSL,No,Yes,No,No,No,No,Month-to-month,Yes,Electronic check,29.85,29.85,No
+5575-GNVDE,Male,0,No,No,34,Yes,No,DSL,Yes,No,Yes,No,No,No,One year,No,Mailed check,56.95,1889.5,No
+3668-QPYBK,Male,0,No,No,2,Yes,No,DSL,Yes,Yes,No,No,No,No,Month-to-month,Yes,Mailed check,53.85,108.15,Yes
+7795-CFOCW,Male,0,No,No,45,No,No phone service,DSL,Yes,No,Yes,Yes,No,No,One year,No,Bank transfer (automatic),42.3,1840.75,No
+9237-HQITU,Female,0,No,No,2,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,70.7,151.65,Yes
+9305-CDSKC,Female,0,No,No,8,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Electronic check,99.65,820.5,Yes
+1452-KIOVK,Male,0,No,Yes,22,Yes,Yes,Fiber optic,No,Yes,No,No,Yes,No,Month-to-month,Yes,Credit card (automatic),89.1,1949.4,No
+6713-OKOMC,Female,0,No,No,10,No,No phone service,DSL,Yes,No,No,No,No,No,Month-to-month,No,Mailed check,29.75,301.9,No
+7892-POOKP,Female,0,Yes,No,28,Yes,Yes,Fiber optic,No,No,Yes,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,104.8,3046.05,Yes
+6388-TABGU,Male,0,No,Yes,62,Yes,No,DSL,Yes,Yes,No,No,No,No,One year,No,Bank transfer (automatic),56.15,3487.95,No
+9763-GRSKD,Male,0,Yes,Yes,13,Yes,No,DSL,Yes,No,No,No,No,No,Month-to-month,Yes,Mailed check,49.95,587.45,Yes
+7469-LKBCI,Male,0,No,No,16,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,No,Credit card (automatic),18.95,326.8,No
+8091-TTVAX,Male,0,Yes,No,58,Yes,Yes,Fiber optic,No,Yes,Yes,No,Yes,Yes,One year,No,Credit card (automatic),100.35,5979.55,No
+0280-XJGEX,Male,0,No,No,49,Yes,Yes,Fiber optic,No,No,Yes,No,Yes,Yes,Month-to-month,Yes,Bank transfer (automatic),103.7,5100.75,Yes
+5129-JLPIS,Male,0,No,No,25,Yes,No,Fiber optic,Yes,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,79.85,2100.0,No
+3655-SNQYZ,Female,0,Yes,No,69,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Credit card (automatic),105.95,7382.25,No
+8191-XWSZG,Female,0,No,No,52,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,One year,No,Mailed check,20.65,1022.95,No
+9959-WOFKT,Male,0,No,Yes,71,Yes,Yes,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Bank transfer (automatic),113.25,8107.9,No
+4190-MFLUW,Female,0,Yes,No,10,Yes,No,DSL,No,No,Yes,Yes,No,No,Month-to-month,Yes,Electronic check,59.9,541.9,Yes
+4183-MYFRB,Female,0,No,No,21,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,69.65,1397.475,No
+"""
+
+df = pd.read_csv(io.StringIO(CSV))
+df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce').fillna(0)
+df['ChurnBinary']  = (df['Churn'] == 'Yes').astype(int)
+
+# Encode categoricals simply for this demo
+cat_cols = ['gender','Partner','Dependents','PhoneService','MultipleLines',
+            'InternetService','OnlineSecurity','OnlineBackup','DeviceProtection',
+            'TechSupport','StreamingTV','StreamingMovies','Contract',
+            'PaperlessBilling','PaymentMethod']
+df_enc = df.copy()
+for col in cat_cols:
+    df_enc[col] = LabelEncoder().fit_transform(df_enc[col].astype(str))
+
+feature_cols = ['tenure','MonthlyCharges','TotalCharges','SeniorCitizen'] + cat_cols
+X = df_enc[feature_cols].values
+y = df_enc['ChurnBinary'].values
+
+# Small dataset — use all rows for fitting, permutation importance on same rows
+rf = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=4)
+rf.fit(X, y)
+
+result = permutation_importance(rf, X, y, n_repeats=10, random_state=42)
+imp_mean = result.importances_mean
+imp_std  = result.importances_std
+
+# Sort
+idx_sorted = np.argsort(imp_mean)[::-1]
+top_k = 10  # show top 10
+
+fig, ax = plt.subplots(figsize=(9, 5))
+bars = ax.barh(
+    [feature_cols[i] for i in idx_sorted[:top_k]][::-1],
+    [imp_mean[i] for i in idx_sorted[:top_k]][::-1],
+    xerr=[imp_std[i] for i in idx_sorted[:top_k]][::-1],
+    color='#f0a500', alpha=0.85, edgecolor='none', capsize=3
+)
+ax.set_xlabel('Mean accuracy decrease on permutation', fontsize=10)
+ax.set_title('Permutation Feature Importance (RF, 50 trees)', fontsize=12, fontweight='bold')
+ax.grid(True, alpha=0.2, axis='x')
+plt.tight_layout()
+
+print("─── Top 10 Features by Permutation Importance ───")
+for rank, i in enumerate(idx_sorted[:top_k], 1):
+    bar = '█' * max(1, int(imp_mean[i] * 200))
+    print(f"  {rank:2}. {feature_cols[i]:<22}  {imp_mean[i]:.4f} ± {imp_std[i]:.4f}  {bar}")
+print()
+print("─── Interpretation ───")
+print("  Permutation importance: shuffle one feature column, measure accuracy drop.")
+print("  High importance = model relies heavily on this feature.")
+print("  Low/negative = feature adds noise or is redundant given other features.")
+print("  Note: correlated features share importance — tenure & TotalCharges")
+print("  may both appear lower than expected because each can substitute for the other.")
+`
+
 // ─── AccordionMCQ checkpoint component ────────────────────────────────────────
 function JudgmentCheckpoint({ checkpoint, onComplete }) {
   const [picked, setPicked]   = useState(null)
@@ -480,8 +722,17 @@ export default function ProjectLabTab({ onNavigate }) {
     })
   }
 
-  const totalSteps = 5  // 3 cells + 2 checkpoints
-  const doneSteps  = state.cellsDone.length + state.checkpointsDone.length
+  // Phase 1: cells 1-3 + checkpoints cp1, cp2
+  const phase1TotalSteps = 5
+  const phase1DoneSteps  = ['cell1','cell2','cell3'].filter(c => state.cellsDone.includes(c)).length
+    + ['cp1','cp2'].filter(c => state.checkpointsDone.includes(c)).length
+
+  // Phase 2: cells 4-6 + checkpoint cp3
+  const phase2TotalSteps = 4
+  const phase2DoneSteps  = ['cell4','cell5','cell6'].filter(c => state.cellsDone.includes(c)).length
+    + ['cp3'].filter(c => state.checkpointsDone.includes(c)).length
+
+  const phase1Complete = phase1DoneSteps === phase1TotalSteps
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -517,9 +768,9 @@ export default function ProjectLabTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ width: `${Math.round((doneSteps / totalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
+            <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{doneSteps}/{totalSteps}</span>
+          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase1DoneSteps}/{phase1TotalSteps}</span>
         </div>
       </div>
 
@@ -668,13 +919,13 @@ export default function ProjectLabTab({ onNavigate }) {
       </div>
 
       {/* ── Phase complete callout ── */}
-      {doneSteps === totalSteps && (
+      {phase1Complete && (
         <div className="card animate-slide-up" style={{ padding: '20px 22px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.30)', borderLeft: '3px solid var(--prime)', marginBottom: '32px' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', marginBottom: '8px', fontWeight: 700 }}>
             Phase 1 Complete
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: '0 0 12px' }}>
-            You've run schema inspection, EDA, and correlation analysis — and made two production data decisions. Phase 2 (Feature Engineering) covers OHE, target encoding, scaling, imputation strategy, and leakage detection. Coming next session.
+            You've run schema inspection, EDA, and correlation analysis — and made two production data decisions. Phase 2 (Feature Engineering) continues below.
           </p>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
@@ -688,19 +939,164 @@ export default function ProjectLabTab({ onNavigate }) {
                 onClick={() => onNavigate('features')}
                 style={{ fontSize: '12px', color: 'var(--prime)', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '6px', padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}
               >
-                Practice feature engineering →
+                Continue below ↓
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Roadmap: phases 2–5 ── */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── Phase 2 — Feature Engineering ── */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px', marginTop: '8px' }}>
+
+        {/* Phase 2 header */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--prime)', fontWeight: 700 }}>
+              ML Engineering
+            </span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              Phase 2 of 5
+            </span>
+          </div>
+          <h2 style={{
+            fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800,
+            letterSpacing: '-0.04em', marginBottom: '8px', lineHeight: 1.15,
+            color: 'var(--ink-hi)',
+          }}>
+            Phase 2 — Feature Engineering
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '680px', marginBottom: '14px' }}>
+            OHE and target encoding, numeric scaling and imputation, and permutation importance. Make a production call on data leakage at the judgment checkpoint.
+          </p>
+
+          {/* Phase 2 progress bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 2 progress</span>
+            <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+              <div style={{ width: `${Math.round((phase2DoneSteps / phase2TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase2DoneSteps}/{phase2TotalSteps}</span>
+          </div>
+        </div>
+
+        {/* ── Cell 4 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell4') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell4') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell4') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell4') ? '✓' : '4'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Encoding</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>OHE for binary/low-cardinality · target encoding for medium-cardinality</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_4_CODE}
+            height={200}
+            label="Cell 4 — Encoding"
+            onResult={r => { if (r.ok) markCellDone('cell4') }}
+          />
+        </div>
+
+        {/* ── Cell 5 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell5') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell5') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell5') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell5') ? '✓' : '5'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Scaling + Imputation</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>StandardScaler · median imputation · before vs after comparison</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_5_CODE}
+            height={200}
+            label="Cell 5 — Scaling"
+            onResult={r => { if (r.ok) markCellDone('cell5') }}
+          />
+        </div>
+
+        {/* ── Cell 6 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell6') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell6') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell6') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell6') ? '✓' : '6'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Permutation Importance</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>RandomForest · permutation importance · feature ranking chart</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_6_CODE}
+            height={200}
+            withPlot={true}
+            label="Cell 6 — Importance"
+            onResult={r => { if (r.ok) markCellDone('cell6') }}
+          />
+        </div>
+
+        {/* ── Checkpoint 3 ── */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.checkpointsDone.includes('cp3') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.08)',
+              border: `1px solid ${state.checkpointsDone.includes('cp3') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.25)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp3') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.checkpointsDone.includes('cp3') ? '✓' : '?'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Data Leakage Decision</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>train-test contamination vs target leakage — spot the difference</div>
+            </div>
+          </div>
+          <JudgmentCheckpoint
+            checkpoint={CHECKPOINT_3}
+            onComplete={() => markCheckpointDone('cp3')}
+          />
+        </div>
+
+      </div>
+
+      {/* ── Roadmap: phases 3–5 ── */}
       <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '16px' }}>What's next in Project Lab</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[
-            { phase: 2, label: 'Feature Engineering', desc: 'OHE, target encoding, imputation, interaction terms, leakage detection checkpoint' },
             { phase: 3, label: 'Model Training & Evaluation', desc: 'LogisticRegression + RandomForest + XGBoost, AUC/F1/calibration, threshold selection, ship-or-not checkpoint' },
             { phase: 4, label: 'Monitoring', desc: 'PSI on held-out split, KS test, prediction drift, alerting decision checkpoint' },
             { phase: 5, label: 'Deployment Scaffold', desc: 'FastAPI /predict endpoint, Dockerfile, K8s manifest, CI/CD stub, AWS mapping callout' },

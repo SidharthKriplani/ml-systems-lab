@@ -191,6 +191,13 @@ export default function HomeTab({ onNavigate }) {
   const [streak,         setStreak]         = useState(0)
   const [activityGrid,   setActivityGrid]   = useState([])
   const [jumpBackTab,    setJumpBackTab]    = useState(null)
+  const [showBanner,     setShowBanner]     = useState(() => {
+    if (localStorage.getItem('msl_onboarded')) return false
+    if (localStorage.getItem('msl_tab')) return false
+    if (localStorage.getItem('msl_access')) return false
+    const hasScore = Object.keys(localStorage).some(k => k.startsWith('msl_score:'))
+    return !hasScore
+  })
 
   function refresh() {
     setProgress(getAllProgress())
@@ -249,9 +256,71 @@ export default function HomeTab({ onNavigate }) {
 
   const jumpBackLabel = jumpBackTab ? (TRACKS.find(t => t.id === jumpBackTab)?.label ?? jumpBackTab) : null
 
+  function computeReadiness() {
+    const DOMAIN_MAP = {
+      mle:   ['Feature Engineering', 'Model Evaluation', 'ML Systems'],
+      dl:    ['Deep Learning'],
+      mlops: ['MLOps'],
+      ds:    ['Experiment Design', 'Statistics & Probability', 'Ranking & Retrieval'],
+      de:    ['SQL & Data'],
+    }
+    let trainerHistory = []
+    let combHistory = []
+    try { trainerHistory = JSON.parse(localStorage.getItem('msl_trainer_history') || '[]').slice(-10) } catch (_) {}
+    try { combHistory = JSON.parse(localStorage.getItem('msl_combinator_history') || '[]').slice(-10) } catch (_) {}
+
+    const sessionDomains = {}
+    for (const session of [...trainerHistory, ...combHistory]) {
+      const bd = session.domainBreakdown || {}
+      for (const [d, stats] of Object.entries(bd)) {
+        if (!sessionDomains[d]) sessionDomains[d] = { correct: 0, total: 0 }
+        sessionDomains[d].correct += (stats.correct || 0)
+        sessionDomains[d].total  += (stats.total || 0)
+      }
+    }
+
+    const result = {}
+    for (const [key, domainStrings] of Object.entries(DOMAIN_MAP)) {
+      let sessCorrect = 0, sessTotal = 0
+      for (const d of domainStrings) {
+        if (sessionDomains[d]) { sessCorrect += sessionDomains[d].correct; sessTotal += sessionDomains[d].total }
+      }
+      result[key] = sessTotal > 0 ? Math.round((sessCorrect / sessTotal) * 100) : null
+    }
+    return result
+  }
+
+  const readinessScores = computeReadiness()
+
+  function dismissBanner() {
+    localStorage.setItem('msl_onboarded', '1')
+    setShowBanner(false)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <style>{`@media (max-width: 480px) { .today-row { grid-template-columns: 1fr !important; } }`}</style>
+
+      {/* ── Cold-state orientation banner ── */}
+      {showBanner && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 'var(--r)', gap: '12px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>
+            New here? Start with{' '}
+            <button
+              onClick={() => { dismissBanner(); onNavigate('features') }}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--prime)', fontWeight: 700, fontSize: '13px', fontFamily: 'var(--font-sans)', textDecoration: 'underline' }}
+            >Feature Engineering</button>
+            {' '}(free) or enter code{' '}
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '4px', padding: '1px 6px', color: 'var(--prime)' }}>DAI2026</span>
+            {' '}for full access.
+          </span>
+          <button
+            onClick={dismissBanner}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '16px', lineHeight: 1, padding: '0 4px', flexShrink: 0, fontFamily: 'var(--font-mono)' }}
+            aria-label="Dismiss"
+          >×</button>
+        </div>
+      )}
 
       {/* ── Jump Back In ── */}
       {jumpBackLabel && (
@@ -439,18 +508,26 @@ export default function HomeTab({ onNavigate }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {DOMAIN_LABELS.filter(d => d.key !== 'resources').map(domain => {
               const domainTracks = TRACKS.filter(t => domain.tracks.includes(t.id))
-              const avgPct = domainTracks.length > 0
+              const completionPct = domainTracks.length > 0
                 ? Math.round(domainTracks.reduce((sum, t) => sum + getTrackPct(t.id), 0) / domainTracks.length)
                 : 0
               const started = domainTracks.filter(t => getTrackPct(t.id) > 0).length
+              const sessScore = readinessScores[domain.key] ?? null
               return (
                 <div key={domain.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)', minWidth: '130px', flexShrink: 0 }}>{domain.label}</span>
-                  <div style={{ flex: 1, height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div className="progress-fill-animated" style={{ width: `${avgPct}%`, height: '100%', background: domain.accent, borderRadius: '2px', boxShadow: avgPct > 0 ? `0 0 8px ${domain.accent}60` : 'none' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div className="progress-fill-animated" style={{ width: `${completionPct}%`, height: '100%', background: domain.accent, borderRadius: '2px', boxShadow: completionPct > 0 ? `0 0 8px ${domain.accent}60` : 'none' }} />
+                    </div>
+                    {sessScore !== null && (
+                      <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginTop: '2px' }}>
+                        {started}/{domainTracks.length} modules
+                      </div>
+                    )}
                   </div>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: avgPct > 0 ? domain.accent : 'var(--ink-ghost)', minWidth: '60px', textAlign: 'right', flexShrink: 0 }}>
-                    {started}/{domainTracks.length} started
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: sessScore !== null ? 'var(--prime)' : 'var(--ink-ghost)', minWidth: '80px', textAlign: 'right', flexShrink: 0 }}>
+                    {sessScore !== null ? `${sessScore}% accuracy` : `${started}/${domainTracks.length} started`}
                   </span>
                 </div>
               )

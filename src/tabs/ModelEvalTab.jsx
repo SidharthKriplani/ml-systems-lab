@@ -117,6 +117,13 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
                 {/* Question */}
                 <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
 
+                {/* Pre-pick hint */}
+                {!item.revealed && sc.hint && (
+                  <div className="msl-hint" style={{ margin: '0 0 4px' }}>
+                    {sc.hint}
+                  </div>
+                )}
+
                 {/* Options */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {sc.options.map((opt, j) => {
@@ -323,6 +330,7 @@ const CALIBRATION_SCENARIOS = [
   {
     id: 'overconfident',
     title: 'Model outputs 0.95 but only 60% of those examples are positive',
+    hint: 'Before picking, ask whether the mismatch between the predicted probability and the actual rate is a training problem or a post-hoc correction problem.',
     tier: 'Senior',
     context: [
       'Reliability diagram: predicted 0.95 bucket → actual positive rate 0.61',
@@ -340,6 +348,7 @@ const CALIBRATION_SCENARIOS = [
   {
     id: 'underconfident',
     title: 'All model outputs cluster between 0.42 and 0.58 — nothing extreme',
+    hint: 'Consider whether a low ECE here is genuinely good news or whether ECE can look healthy even when the model is practically useless for ranking.',
     tier: 'Analyst',
     context: [
       'Model: neural network classifier, output after sigmoid',
@@ -374,6 +383,7 @@ const CALIBRATION_SCENARIOS = [
   {
     id: 'calibration_drift',
     title: 'Model calibrated on val set, but miscalibrated 3 months after deploy',
+    hint: 'Ask what the calibration mapping was fitted to — and whether that assumption can silently become false over time without touching model weights.',
     tier: 'Staff',
     context: [
       'Initial ECE (validation, October): 0.03',
@@ -479,6 +489,7 @@ const THRESHOLD_SCENARIOS = [
   {
     id: 'churn_discount',
     title: 'Churn model: offer 10% discount to predicted churners',
+    hint: 'Consider whether minimising classification error is the same objective as maximising the revenue impact of the intervention.',
     tier: 'Senior',
     context: [
       'Intervention: 10% discount coupon sent to predicted churners',
@@ -514,6 +525,7 @@ const THRESHOLD_SCENARIOS = [
   {
     id: 'moving_threshold',
     title: 'Fraud rate doubles on weekends — static threshold underperforms',
+    hint: 'Think about what a fixed threshold implicitly assumes about the base rate — and whether that assumption holds when the prior changes.',
     tier: 'Staff',
     context: [
       'Weekday fraud rate: 2%, Weekend fraud rate: 4–5%',
