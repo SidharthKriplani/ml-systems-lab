@@ -237,7 +237,7 @@ plt.tight_layout()
 churn_rate = df['ChurnBinary'].mean() * 100
 print(f"Overall churn rate: {churn_rate:.1f}%")
 print(f"Avg tenure — Churned: {churn_yes['tenure'].mean():.1f} mo  |  Retained: {churn_no['tenure'].mean():.1f} mo")
-print(f"Avg monthly charges — Churned: ${churn_yes['MonthlyCharges'].mean():.2f}  |  Retained: ${churn_no['MonthlyCharges'].mean():.2f}")
+print(f"Avg monthly charges — Churned: \${churn_yes['MonthlyCharges'].mean():.2f}  |  Retained: \${churn_no['MonthlyCharges'].mean():.2f}")
 print()
 print("Contract type churn rates:")
 for contract, rate in contract_churn.items():
