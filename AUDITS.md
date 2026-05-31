@@ -63,6 +63,12 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 **Mobile input font-size rule:**  
 Any `<input>` or `<textarea>` rendered inside an overlay or modal must have `fontSize: '16px'` minimum. iOS Safari auto-zooms the viewport on focus when input font-size is below 16px — this breaks overlay positioning and is jarring on mobile. ContentMap input was 15px; fixed to 16px in v4.36.2. Apply same check to any future overlays.
 
+**Mobile touch target rule:**  
+Any interactive button in an overlay or compact list must have `minHeight: '40px'` (leaf/tab items) or `minHeight: '44px'` (primary action rows). Found in ContentMap tree `TabLeaf` (was ~22px effective height from `padding: '5px 8px'`) — fixed in v4.37 to `padding: '8px 8px'` + `minHeight: '40px'`. `SearchRow` fixed to `minHeight: '44px'`. Apply same check to any new compact list components.
+
+**Mobile overlay affordance rule:**  
+Desktop-only hints (keyboard shortcut legends like `↵ open / esc close`) must be hidden on mobile via a CSS class — they are meaningless on touchscreens and waste footer space. Pattern: add a `.map-kbd-hints` class (or similar) and `@media (max-width: 480px) { display: none }` in `index.css`. Inline desc text in compact tree rows should also be hidden on narrow screens (`<480px`) — the label alone is sufficient for navigation. Pattern established in ContentMap v4.37.
+
 ---
 
 ## Guidance Completeness — Audit Spec

@@ -603,6 +603,14 @@
   .map-grid { grid-template-columns: 1fr; }
 }
 
+/* ContentMap tree — mobile overrides */
+@media (max-width: 480px) {
+  /* hide inline desc text — tree label alone is enough on narrow screens */
+  .map-leaf-desc { display: none; }
+  /* hide desktop-only keyboard hint hints in footer */
+  .map-kbd-hints { display: none; }
+}
+
 /* Responsive grids used across Practice/Interview zones */
 .grid-cards {
   display: grid;

@@ -7,18 +7,20 @@ function TabLeaf({ label, desc, isPro, onNav }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', position: 'relative' }}>
       {/* horizontal connector */}
-      <div style={{ width: '16px', flexShrink: 0, borderBottom: '1px solid var(--rim)', marginTop: '13px' }} />
+      <div style={{ width: '16px', flexShrink: 0, borderBottom: '1px solid var(--rim)', marginTop: '19px' }} />
       <button
         onClick={onNav}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
-          flex: 1, textAlign: 'left', padding: '5px 8px',
+          flex: 1, textAlign: 'left', padding: '8px 8px',
+          minHeight: '40px',
           background: hov ? 'rgba(240,165,0,0.07)' : 'none',
           border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
           borderRadius: 'var(--r-sm)', cursor: 'pointer',
           transition: 'background var(--t-fast), border-color var(--t-fast)',
-          display: 'flex', alignItems: 'baseline', gap: '6px',
+          display: 'flex', alignItems: 'center', gap: '6px',
+          overflow: 'hidden',
         }}
       >
         <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 600, color: 'var(--ink-hi)', flexShrink: 0 }}>
@@ -31,7 +33,14 @@ function TabLeaf({ label, desc, isPro, onNav }) {
           }}>pro</span>
         )}
         {desc && (
-          <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            className="map-leaf-desc"
+            style={{
+              fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)',
+              lineHeight: 1.4, flex: 1, minWidth: 0,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}
+          >
             — {desc}
           </span>
         )}
@@ -102,7 +111,8 @@ function SearchRow({ item, isPro, onNav }) {
       onMouseLeave={() => setHov(false)}
       style={{
         width: '100%', textAlign: 'left',
-        padding: '8px 12px', marginBottom: '2px',
+        padding: '10px 12px', marginBottom: '2px',
+        minHeight: '44px',
         background: hov ? 'rgba(240,165,0,0.07)' : 'none',
         border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
         borderRadius: 'var(--r-sm)', cursor: 'pointer',
@@ -176,6 +186,11 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
 
   function go(id) { onNavigate(id); onClose() }
 
+  // Overlay top padding: compress on small phones to leave more room
+  const overlayPad = typeof window !== 'undefined' && window.innerWidth < 480
+    ? '16px 12px'
+    : '48px 16px 48px'
+
   return (
     <div
       onClick={onClose}
@@ -184,7 +199,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
         background: 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '48px 16px 48px', overflowY: 'auto',
+        padding: overlayPad, overflowY: 'auto',
       }}
     >
       <div
@@ -306,7 +321,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
           <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>
             {allItems.length - 1} destinations
           </span>
-          <div style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
+          <div className="map-kbd-hints" style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
             {[['↵', 'open'], ['esc', 'close']].map(([k, v]) => (
               <span key={k} style={{
                 fontSize: '11px', color: 'var(--ink-ghost)',

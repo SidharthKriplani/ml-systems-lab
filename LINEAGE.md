@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.37 — ContentMap tree view + ProjectLab phase skeletons + mobile polish (2026-05-31)
+
+**What shipped (commits `e91cbd2`, `34dd023`, and mobile fix):**
+
+**ContentMap tree rewrite (`ContentMap.jsx`):** Replaced the 2-column `TabCard` grid layout with a hierarchical zone→domain→tab tree. Zone labels (Practice / Interview / Read / Today) in amber `var(--prime)` mono at top of each section; zone children hang off a `rgba(240,165,0,0.25)` amber borderLeft spine. Domain branches connect via a 14px horizontal `var(--rim)` line → monospaced uppercase domain label → tab leaves hanging off a second `var(--rim)` borderLeft spine. Each leaf has a 16px horizontal connector and a compact button row (label + faint inline desc, truncated on overflow). Sub-components: `ZoneSection`, `DomainBranch`, `TabLeaf`, `SearchRow`. Search mode unchanged (flat `SearchRow` list with domain badge). Panel narrowed 700px→620px. Removes `.map-grid` CSS class from tree view (class retained in `index.css` for backwards compat).
+
+**ContentMap mobile fixes (`ContentMap.jsx` + `index.css`):** Three issues fixed. (1) Touch targets too small — `TabLeaf` button `padding: '5px 8px'` → `'8px 8px'` + `minHeight: '40px'`; `SearchRow` `padding: '8px 12px'` → `'10px 12px'` + `minHeight: '44px'`. (2) Inline desc text hidden on narrow screens via `.map-leaf-desc` CSS class — `@media (max-width: 480px) { .map-leaf-desc { display: none } }` in `index.css`; tree label alone is sufficient for navigation on 375px. (3) Keyboard shortcut hints (`↵ open / esc close`) hidden on mobile via `.map-kbd-hints` class — keyboard hints are desktop-only affordances. (4) Overlay top padding compressed: `48px 16px 48px` → `16px 12px` on `window.innerWidth < 480`, computed once on render. (5) Fixed flex truncation: desc span gets `flex: 1, minWidth: 0` so `textOverflow: 'ellipsis'` fires correctly on desktop.
+
+**ProjectLab phase 3/4/5 roadmap expansion (`ProjectLabTab.jsx`):** Replaced 3 dim single-line phase cards with expanded skeletons showing numbered cell IDs and descriptions. Phase 3 (0.72 opacity): cell7–cell10 + cp4 (train/val/test split, LR+RF+XGB training, eval metrics, calibration, ship-or-not checkpoint). Phase 4 (0.60 opacity): cell11–cell14 + cp5 (PSI, KS test, prediction drift, label drift, alert checkpoint). Phase 5 (0.50 opacity): cell15–cell19 (FastAPI, Dockerfile, K8s, CI/CD, AWS callout). Opacity steps down per phase to signal increasing distance. Cell IDs in `var(--font-mono)` `var(--ink-ghost)`, step label in `var(--font-sans)` `var(--ink-low)`.
+
+---
+
 ### v4.36.2 — Mobile + pandas fixes (2026-05-31)
 
 **What shipped (commits `dbb3b11`, `dc4c464`):**
