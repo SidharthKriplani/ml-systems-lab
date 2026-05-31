@@ -39,6 +39,7 @@ Nothing currently blocked.
 - ~~ProjectLabTab build hotfixes (v4.35.2) — escaped f-string `${` in CELL_2_CODE and CELL_1_CODE template literals; Vercel parse errors resolved.~~
 - ~~ContentMap — visual content map overlay (v4.36) — `Cmd+K` opens domain-grouped tab inventory. Replaces GlobalSearch. Filters live on type. `src/components/ContentMap.jsx`.~~
 - ~~pandas + maxWidth + ContentMap mobile (v4.36.2) — pandas added to Pyodide init; maxWidth 900→1080px; ContentMap `.map-grid` CSS class collapses to 1-col ≤480px; input font-size 16px (iOS zoom fix).~~
+- ~~ContentMap tree view + ProjectLab roadmap expansion (v4.37) — ContentMap rewritten as zone→domain→tab tree with amber zone spines, connecting lines, inline desc truncation; ProjectLab phase 3/4/5 cards expanded with numbered cell/checkpoint skeletons.~~
 
 ---
 
