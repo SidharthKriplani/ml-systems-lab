@@ -51,7 +51,7 @@ function DomainSection({ domain, checkPro, onNav }) {
   return (
     <div style={{ marginBottom: '14px' }}>
       <SectionHeader label={domain.label} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+      <div className="map-grid">
         {domain.tabs.map(t => (
           <TabCard
             key={t.id}
@@ -62,6 +62,7 @@ function DomainSection({ domain, checkPro, onNav }) {
           />
         ))}
       </div>
+
     </div>
   )
 }
@@ -188,7 +189,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
               color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)',
-              fontSize: '15px', caretColor: 'var(--prime)',
+              fontSize: '16px', caretColor: 'var(--prime)',
             }}
           />
           <kbd
@@ -234,7 +235,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
 
               {/* Interview tools */}
               <SectionHeader label="Interview" />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginBottom: '14px' }}>
+              <div className="map-grid" style={{ marginBottom: '14px' }}>
                 {interviewTools.map(t => (
                   <TabCard key={t.id} label={t.label} desc={t.desc} isPro={checkPro(t.id)} onNav={() => go(t.id)} />
                 ))}
@@ -242,7 +243,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
 
               {/* Read · Today */}
               <SectionHeader label="Read · Today" />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+              <div className="map-grid">
                 {STATIC_TABS.filter(t => t.id !== 'home').map(t => (
                   <TabCard key={t.id} label={t.label} desc={t.desc} isPro={false} onNav={() => go(t.id)} />
                 ))}

@@ -593,6 +593,16 @@
   }
 }
 
+/* ContentMap 2-col grid — collapses to 1-col on small phones */
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .map-grid { grid-template-columns: 1fr; }
+}
+
 /* Responsive grids used across Practice/Interview zones */
 .grid-cards {
   display: grid;
