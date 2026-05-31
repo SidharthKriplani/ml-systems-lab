@@ -43,6 +43,9 @@ Nothing currently blocked.
 
 ## What comes after (not for this session)
 
+- **Testimonials & Feedback system** — floating "Rate this" chip → Tally/Formspree → admin reviews → `src/data/testimonials.js` → HomeTab social proof section. Full spec in IDEAS.md. Pre-requisite: select Tally vs Formspree, confirm 3 rating questions.
+- **Interview Experiences — v1 (submit + curate)** — Tally form with company/role/level/round fields → admin reviews → tags with fixed 10-skill taxonomy → adds to `src/data/interviewExperiences.js`. Full spec in IDEAS.md. Do NOT build the frequency chart until 15+ approved submissions exist.
+- **Interview Experiences — v2 (skills frequency chart)** — bubble/bar chart from `interviewExperiences.js`, filtered by role/level/company tier. Build only after N≥15.
 - **Datamart-based ML practice** — build after ProjectLabTab phases 4–5 complete.
 - **DefenseDocTab v2** — gap-mapped prep plan, resume cross-reference, round-type selector.
 - **Freemium gate v2** — difficulty tags on scenarios, PremiumGate wrapper per-tab.

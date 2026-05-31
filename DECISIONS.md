@@ -189,3 +189,25 @@ iOS Safari auto-zooms the viewport on focus when an input's font-size is below 1
 **No mobile sidebar.** The v3 persistent sidebar scaled poorly on mobile and was replaced with the bottom-nav 5-zone architecture in v4. A desktop-only accordion sidebar was re-added alongside the bottom nav (≥769px breakpoint) as a secondary navigation aid — it mirrors the same zone/tab state. Bottom-nav is the primary navigation and is permanent.
 
 **No external component libraries (MUI, shadcn, etc.)** All UI is custom — inline styles + CSS variables. This keeps the visual language consistent and the bundle lean.
+
+---
+
+## Community features
+
+**Community features route through form services, not a backend.**  
+Any feature that requires collecting user-generated content (feedback, testimonials, interview experiences) uses a free external form service (Tally.so or Formspree) as the intake layer — not a backend API or database. The form service emails the submission to the admin. Admin reviews, edits if needed, and manually adds approved entries to a hardcoded JS data file in `src/data/`. Vercel deploys the file on next push. This is not a limitation — it is the correct v1 architecture for a solo-maintained product with no ops overhead and no risk of spam, PII exposure, or unreviewed content reaching production.
+
+**Admin approval = editing a data file and pushing to main.**  
+There is no admin panel. Approval is the act of adding an entry to `src/data/testimonials.js` or `src/data/interviewExperiences.js` and deploying. Rejection is the act of not adding it. This is intentional — admin tooling would be over-engineering for the current scale.
+
+**Feedback entry point is a floating chip, not end-of-tab.**  
+A persistent "Rate this" floating chip (bottom-right, visible across all tabs) is the correct UX pattern for feedback collection. "At the end of every tab" was evaluated and rejected: it disrupts flow, it is intrusive on short sessions, and it creates inconsistent UI across 30+ tabs. One global entry point is easier to build, easier to maintain, and less annoying.
+
+**Maximum 3 rating questions in any feedback form.**  
+Completion rate on in-app feedback drops sharply after 3 questions. Rating questions for ML Systems Lab: (1) session usefulness for interview prep, (2) difficulty realism vs. actual interviews, (3) likelihood to recommend. These three are fixed — do not add more without removing one.
+
+**Interview Experiences use a fixed skill taxonomy, not free-form tags.**  
+The 10-tag taxonomy (`ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`) is agreed and fixed. Tags are assigned by admin during review — not by submitters. This prevents taxonomy drift and keeps the frequency chart meaningful. Do not expand the taxonomy without auditing the existing distribution first.
+
+**Build the visualization only after 15+ approved submissions.**  
+A frequency chart built from fewer than 15 data points is misleading — one outlier submission can skew a category by 10+ percentage points. The submission form and admin curation process (v1) ships independently of the visualization (v2). The chart is not built until the corpus is large enough to tell a real story.

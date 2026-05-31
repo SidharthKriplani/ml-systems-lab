@@ -1,7 +1,7 @@
 # IDEAS.md — Build Backlog
 
 Future-facing. Prioritized. Feeds from AUDITS.md findings and creative sessions.  
-Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-systems-lab)
+Last updated: 2026-05-31
 
 **Rule:** AUDITS.md feeds this file, not the reverse. Audit findings that are buildable features go into Tier 1 here. Features you want to build don't go into AUDITS.md.
 
@@ -90,7 +90,7 @@ Last updated: 2026-05-29 (repo analysis: genai-systems-lab + experimentation-sys
 
 ### Project Lab — end-to-end DS/MLE notebook tab (identified 2026-05-29)
 
-- [~] **`ProjectLabTab` — Phases 1 + 2 done (v4.33–v4.35). Phases 3–5 in queue.** Sequential Pyodide notebook, Telco Churn dataset, practice zone ML Engineering. Phase 1 = data ingestion + EDA (3 cells + 2 checkpoints). Remaining phases:
+- [~] **`ProjectLabTab` — Phases 1 + 2 + 3 done (v4.33–v4.38). Phases 4–5 in queue.** Sequential Pyodide notebook, Telco Churn dataset, practice zone ML Engineering. Phase 1 = data ingestion + EDA (3 cells + 2 checkpoints). Phase 2 = feature engineering (3 cells + 1 checkpoint). Phase 3 = model training & evaluation (4 cells + 1 checkpoint, synthetic 600-row data, v4.38). Remaining phases:
 
 **Why this is Tier 1:** DS and MLE roles increasingly expect candidates to demonstrate the full loop — not just "what would you do?" (judgment) but "show me the code" (execution). MSL currently has the judgment layer. Project Lab adds the execution layer, with Pyodide handling data science and annotated scaffolds covering deployment.
 
@@ -175,7 +175,7 @@ Original spec (archived):
 - [x] ~~**91-day practice heatmap**~~ — done (2026-05-29, HomeTab, 7×13 grid, msl_activity_YYYY-MM-DD)
 - [x] ~~**Streak tracking**~~ — done (2026-05-29, HomeTab, msl_streak / msl_last_visit)
 - [x] ~~**Fidelity/simulation badges on module headers**~~ — done (2026-05-29, 6 tabs)
-- [ ] **Premium unlock moment** — the AccessGate code entry currently confirms with a text message and the content appears. Replace with a brief animated transition: scale + fade in (~300ms), glow pulse on `--prime`, "You're in" heading before content renders. One interaction, no navigation. This is the branding gap — the unlock should feel like crossing a threshold, not submitting a form. ~30 min. (Session: 2026-05-29)
+- [x] ~~**Premium unlock moment**~~ — confirmed done in prior session (pre-v4.38). `AccessGate.jsx` has `showMoment` state, `ag-unlock-in` CSS animation (scale 0.88→1, fade-in 0.35s cubic-bezier), `ag-prime-glow` animation (amber glow pulse 1.1s), "You're in." heading, "Everything is unlocked on this device." message. No additional work needed.
 - [ ] **RSS feed for Gradient posts** — generate `/rss.xml` at build time from `gradientPosts.js` metadata. 20 most recent posts. Adds a distribution channel for free. ~30 min to write a Vite plugin or pre-build script. (Source: GenAI Systems Lab, May 2026)
 
 ---
@@ -187,6 +187,58 @@ Original spec (archived):
 ### ~~JDPrepTab + DefenseDocTab → unified Interview Strategy tool~~ — done (2026-05-29, Defense Plan, v4.10)
 
 Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-rate + horizon → gated day plan. Internal gate at 35% of plan sections. JDPrepTab retired (redirect stub). See LINEAGE.md v4.10.
+
+### Testimonials & User Feedback system (session discussion, 2026-05-31)
+
+**Concept:** In-app feedback form (3 rating questions + written comment) → external form service → admin review → hardcoded `src/data/testimonials.js` → public testimonials section in the app.
+
+**Why this matters now:** The product has no social proof signal. A user arriving from a cold referral sees nothing that tells them other engineers have used and found this valuable. A single curated testimonials section (even 4–5 real quotes) changes the trust signal completely. This is the minimum viable credibility layer.
+
+**Implementation architecture (no backend required):**
+- In-app form: floating "Rate this" chip (bottom-right of screen, persistent across all tabs) — not "at the end of every tab" (too aggressive, disrupts flow). Chip opens a modal with: (1) 3 rating sliders on 1–5 scale — "How useful was this session?", "How close to real interview difficulty?", "Would you recommend to a peer?"; (2) optional written comment field (min 20 chars, max 500). Form submits to **Tally.so** (free, embeddable, no backend) or **Formspree** — both support JSON/form-POST to email + spreadsheet.
+- Admin flow: Tally/Formspree forwards submission to Avinash's email → review for quality and substance → add approved entries to `src/data/testimonials.js` array with fields `{ name, role, company, rating, text, date, approved: true }` → Vercel deploy picks up the change automatically.
+- Testimonials display: new section on HomeTab (or a standalone card in the Today zone) — reads from `src/data/testimonials.js`, shows 3–5 rotating quotes, amber accent, name + role + company. Zero localStorage keys. Zero backend.
+
+**Rating questions (final, max 3):**
+1. "How useful was this session for your interview prep?" (1–5)
+2. "How realistic is the difficulty compared to actual interviews?" (1–5)
+3. "Would you recommend ML Systems Lab to a peer?" (1–5)
+
+**What makes a submission approvable:** Specific mention of a feature or scenario, actual use context (e.g. "prepping for [company]"), non-generic text. Generic ("great app!") gets discarded. Edited for brevity before publishing — name field allows first-name-only or anonymous.
+
+**Build trigger:** Tally/Formspree service selected, 3 rating questions finalized, testimonials.js schema agreed. ~2 hours total. (Source: session discussion, 2026-05-31)
+
+---
+
+### Interview Experiences — submission, curation, and skills frequency visualization (session discussion, 2026-05-31)
+
+**Concept:** Community-sourced interview experience database. Users paste their interview experience as free text → completeness check → admin processes and tags → structured data base → bubble/radar chart showing which skills appear most frequently across real ML interviews.
+
+**Why this is valuable:** No existing resource aggregates ML interview skill frequency from actual reported experiences in a structured, visual way. Glassdoor is noise. Reddit is scattered. A curated, visually-represented frequency map ("45% of ML interviews in this dataset covered system design; 72% covered statistics") built from real reports is a defensible data moat that gets richer over time.
+
+**Implementation architecture (no backend required, manual curation v1):**
+- **Submission:** User clicks "Submit Interview Experience" (button in Interview zone or Today zone) → redirects to a Tally form with fields: company (dropdown + freetext), role (MLE/DS/MLS/Research), level (L3/L4/L5/Staff/Principal/Other), round type (phone screen/take-home/virtual onsite/onsite), experience text (freetext, 100–1500 words). Tally sends to Avinash's email.
+- **Completeness heuristic (client-side pre-filter):** Before opening the external form, a brief client-side check: minimum 50 words in the preview text field, at least one of a short keyword list present (`question`, `round`, `asked`, `interview`, `problem`, `assessment`). Completeness check is advisory — it tells the user "this looks thin, are you sure?" rather than hard-blocking. The real filter is admin review.
+- **Admin processing:** Avinash reads submission → if substantive (specific questions asked, round type clear, company identifiable) → extracts skill tags from a fixed taxonomy → adds to `src/data/interviewExperiences.js` with schema `{ id, company, role, level, roundType, skills: string[], rawText: string, date, approved: true }`. Skill taxonomy (fixed, agreed before build): `ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`.
+- **Skills frequency visualization:** React component reading from `interviewExperiences.js` — counts skill tag frequency across all approved entries, normalizes, renders as a horizontal bar chart or bubble chart (bubble size = frequency). Filters: by role, level, company tier (FAANG / growth / startup). Shows "based on N interview reports." Updates automatically as more entries are approved and deployed. No real-time, no backend — just a Vite build picking up the updated data file.
+
+**Schema decision — required before build:**
+```js
+{ id: 'exp_001', company: 'Google', companyTier: 'faang', role: 'MLE', level: 'L5',
+  roundType: 'virtual_onsite', skills: ['system_design', 'ml_fundamentals', 'coding_ml'],
+  rawText: '...', date: '2026-05-31', approved: true }
+```
+
+**What makes a submission processable:** Company named (anonymous ok if role + level clear), round type identified, at least 2 distinct question topics mentioned. Pure sentiment ("the interviewer was nice") without technical content = discarded.
+
+**What "complete enough" means in practice:** If Avinash can extract ≥2 skill tags from it, it's processable. If it's one sentence or purely emotional content, it's discarded. No AI processing in v1 — manual extraction is fast once the taxonomy is fixed.
+
+**Phase gating:**
+- v1 (submit + curate): Tally form + admin adds to data file + no visualization yet. Start collecting before building the chart — wait for 15–20 real submissions before the chart has signal.
+- v2 (visualization): Bubble/bar chart component, filters by role/level/company tier. Build when N≥15 approved entries.
+- v3 (open): Consider showing individual experience cards (with permission) alongside the aggregate chart.
+
+**Build trigger:** Tally form schema agreed, skill taxonomy finalized, `interviewExperiences.js` schema confirmed. v1 ~1 hour. v2 ~2 hours. (Source: session discussion, 2026-05-31)
 
 ---
 

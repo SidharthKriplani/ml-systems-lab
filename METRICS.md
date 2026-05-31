@@ -78,13 +78,32 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_last_visit` | `string` (ISO date) | `HomeTab` | Date of the most recent HomeTab mount in `YYYY-MM-DD` format. Used to compute streak continuity. |
 | `msl_activity_YYYY-MM-DD` | `number` (as string) | `HomeTab` | Visit count for a specific calendar day. Key is dynamic — one key per day. Incremented on every HomeTab mount. Powers the activity heatmap (currently 28-day / 4-week window — changed from 91-day in v4.16 because 91 mostly-empty squares looked broken for new users). Keys older than 28 days are still written but not rendered. |
 | `msl_casestudies` | `JSON object` | `CaseStudiesTab` | Map of `{ caseId: { q0: answered, q1: answered, ... } }` — persists which questions in each case study have been expanded/answered across sessions. |
-| `msl_projectlab_churn_data` | `JSON { cellsDone: string[], checkpointsDone: string[] }` | `ProjectLabTab` | Phase 1 progress for the Telco Churn notebook. `cellsDone` ∈ `['cell1','cell2','cell3']`. `checkpointsDone` ∈ `['cp1','cp2']`. Written on every cell run (ok result) and every correct checkpoint reveal. Cleared by the "Reset notebook" button. |
+| `msl_projectlab_churn_data` | `JSON { cellsDone: string[], checkpointsDone: string[] }` | `ProjectLabTab` | Progress across all phases of the Telco Churn notebook. `cellsDone` ∈ `['cell1'…'cell10']` (grows as phases ship). `checkpointsDone` ∈ `['cp1'…'cp5']`. Written on every cell run (ok result) and every correct checkpoint reveal. Cleared by the "Reset notebook" button. Phase 1: cell1–3, cp1–cp2. Phase 2: cell4–6, cp3. Phase 3: cell7–10, cp4. Phase 4 (planned): cell11–14, cp5. Phase 5 (planned): cell15–19, no checkpoint. |
 | `msl_onboarded` | `string ('1')` | `HomeTab` | Written once when a first-time user dismisses the cold-state orientation banner or clicks through to a tab. Prevents the banner from showing on subsequent HomeTab visits. Never expires. |
 | `msl_spot_the_flaw` | `JSON object` | `SpotTheFlawTab` | Map of `{ scenarioId: { selected: string, correct: boolean } }` — persists which scenarios have been attempted and whether the flaw category was identified correctly. Powers score strip (`attempted/total` and percentage). |
 | `msl_score:causal_dag` | `JSON` | `CausalInferenceTab` — CausalDAGExplorer | Custom score for the DAG node-role identification module. Tracks correct/attempted across 3 pre-built DAGs. |
 | `msl_score:causal_exp` | `JSON` | `CausalInferenceTab` — ExperimentDesignFailures | AccordionMCQ score for experiment design failures module (SRM, novelty effect, SUTVA). |
 | `msl_score:dl_arch` | `JSON` | `DeepLearningTab` — ArchDecisionLab | AccordionMCQ score for architecture decision scenarios (CNN vs ViT, TFT vs LSTM, MoE vs dense). |
 | `msl_score:classical_boundary` | `JSON {completed:true, ts:number}` | `ClassicalMLTab` — DecisionBoundaryLab | Written once when user has explored all 5 classifier modes. `ts` is Unix timestamp of completion. |
+
+---
+
+## Planned data files (not localStorage — static JS arrays, admin-managed)
+
+These are not localStorage keys. They are source files in `src/data/` that Vercel deploys as part of the bundle. Admin edits them to add approved content. Documented here because they are part of the data taxonomy.
+
+| File | Schema | Managed by | Purpose |
+|------|--------|------------|---------|
+| `src/data/testimonials.js` | `{ name, role, company, rating, text, date, approved: true }` | Admin (Avinash) | Curated testimonials for HomeTab social proof section. Approved entries only — admin reviews Tally/Formspree submissions and manually adds. |
+| `src/data/interviewExperiences.js` | `{ id, company, companyTier, role, level, roundType, skills: string[], rawText, date, approved: true }` | Admin (Avinash) | Curated interview experience reports. Admin extracts skill tags from fixed taxonomy (`ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`). Skills frequency chart reads from this file. |
+
+## Planned PostHog events (not yet implemented)
+
+| Event | When to fire | Properties | Purpose |
+|-------|-------------|------------|---------|
+| `feedback_chip_opened` | User clicks floating "Rate this" chip | — | Track how often feedback entry point is discovered |
+| `feedback_submitted` | User submits feedback form (before redirect to Tally) | `rating_usefulness, rating_realism, rating_recommend, has_comment` | Submission funnel |
+| `interview_exp_form_opened` | User clicks "Submit Interview Experience" | — | Track submission intent |
 
 ---
 

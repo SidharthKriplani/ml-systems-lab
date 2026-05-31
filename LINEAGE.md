@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### Design decisions — Testimonials/Feedback + Interview Experiences (2026-05-31, no code)
+
+Two new features fully specced in session discussion. No code shipped — design decisions locked and written into DECISIONS.md + IDEAS.md.
+
+**Testimonials & Feedback:** Floating "Rate this" chip (not per-tab, not end-of-page — one global entry point). Max 3 rating questions. External form service (Tally/Formspree) as intake. Admin approval = editing `src/data/testimonials.js` and pushing to main. No backend, no admin panel. Full spec in IDEAS.md Tier 1.
+
+**Interview Experiences:** User pastes experience text → Tally form with structured fields (company, role, level, round type, freetext). Client-side heuristic pre-filter (50+ words, keyword presence) is advisory not hard-blocking. Admin extracts skill tags from fixed 10-tag taxonomy and adds to `src/data/interviewExperiences.js`. v1 = submission + curation only. v2 = skills frequency visualization, built only when N≥15 approved entries exist. Skill taxonomy finalized: `ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`. Full spec in IDEAS.md Tier 1.
+
+**Key architectural decision:** Both features route through form services, not a backend. Admin approval = data file edit + deploy. Documented in DECISIONS.md "Community features" section.
+
+---
+
 ### v4.38 — Phase 3 model training, pre-eval callouts, HomeTab divider, token fixes (2026-05-31)
 
 **What shipped (commit `8c474f5`):**
