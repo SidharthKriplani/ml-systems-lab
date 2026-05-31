@@ -608,7 +608,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 | 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
-| 021 | Post-v4.33 state check — ProjectLabTab routing + brace balance, msl_projectlab_churn_data in METRICS.md, SpotTheFlaw scenario count vs GlobalSearch, .msl-cloud-map mobile render | Planned (NEXT.md #4) | BUILD / Content Integrity | ⏳ Pending |
+| 021 | Post-v4.33 state check — ProjectLabTab routing + brace balance, msl_projectlab_churn_data in METRICS.md, SpotTheFlaw scenario count vs GlobalSearch, .msl-cloud-map mobile render | 2026-05-31 | BUILD / Content Integrity | 1 open ⚠️ |
 | 022 | Mobile sidebar always-visible bug — `display:'flex'` inline style on DesktopSidebar overrode CSS `display:none` on all viewports | 2026-05-30 | Mobile / BUILD | ✅ Fixed v4.34 |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
@@ -654,3 +654,26 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 **Fix:** Removed `display: 'flex'` from the `<aside>` inline style object. Added `flex-direction: column` to `.desktop-sidebar` inside the `@media (min-width: 769px)` block in `index.css`. CSS class now fully owns the `display` property. Brace balance: 0. Commit `7c8eae8`.
 
 **Note:** Any similar `correct: <number>` vs string-ID mismatch should be checked in ForecastFailureZoo-style components if added in future. Pattern to watch: options array using `{ id: '...', label: '...' }` structure requires string IDs in `correct` field.
+
+---
+
+### #021 — 2026-05-31 · Post-v4.33 State Check
+
+**Scope:** ProjectLabTab routing + brace balance, METRICS.md key registration, SpotTheFlaw count vs GlobalSearch, .msl-cloud-map mobile rendering.  
+**Trigger:** NEXT.md item #4.
+
+| # | Finding | File | Severity | Status |
+|---|---------|------|----------|--------|
+| 1 | ProjectLabTab brace balance: 0 ✓ | `ProjectLabTab.jsx` | — | ✅ Clean |
+| 2 | ProjectLabTab routing in App.jsx: imported, in PREMIUM_TABS, ML Engineering domain, correct zone | `App.jsx` | — | ✅ Clean |
+| 3 | `msl_projectlab_churn_data` present in METRICS.md key registry | `METRICS.md` | — | ✅ Clean |
+| 4 | GlobalSearch SpotTheFlaw description said "10 real ML analyses" but tab has 12 scenarios | `GlobalSearch.jsx` | Low | ✅ Fixed — updated to "12" in this session (183bc93) |
+| 5 | `.msl-cloud-map` CSS is defined but has no `overflow-x: auto` or `max-width` constraint — wide service chip rows may overflow on narrow mobile viewports | `index.css` lines 524–540 | Low | ⚠️ Open — needs browser verification on 375px viewport |
+
+**Open findings (carry forward):**
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| High | 0 | — |
+| Medium | 2 | #017.1 hardcoded fonts App.jsx/AskTab, #017.3 LandscapeTab undocumented in LINEAGE |
+| Low | 7 | #001 index keys, #015.7 Pyodide mobile, #015.10 InterviewPrep line length, #017.2 residual hex, #020.2 AttentionViz rgba, #020.4 TrainerTab SR partial, #021.5 .msl-cloud-map mobile overflow |

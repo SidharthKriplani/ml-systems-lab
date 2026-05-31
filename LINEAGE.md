@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.35 — Cold-state banner, Role Readiness Score, ProjectLab Phase 2, Pre-Eval callouts, Audit #021 (2026-05-31)
+
+**What shipped (commit `183bc93`):** Five NEXT.md items completed in a single session.
+
+**Cold-state orientation banner (HomeTab):** First-time-user detection: no `msl_tab` + no `msl_score:*` + no `msl_access` + no `msl_onboarded`. Amber-tinted banner at top of HomeTab showing "New here? Start with Feature Engineering (free) or enter code DAI2026 for full access." Feature Engineering is a clickable nav link. Dismiss writes `msl_onboarded: '1'` permanently. Banner never shows again after dismissal or after any tab visit sets `msl_tab`.
+
+**Role Readiness Score (HomeTab):** The existing "Readiness by domain" section enhanced with real session accuracy data. `computeReadiness()` reads last 10 entries from `msl_trainer_history` + `msl_combinator_history`, aggregates `domainBreakdown` stats, maps combinator/trainer domain strings to HomeTab domain keys (mle/dl/mlops/ds/de). When session data exists, the right-side label shows `N% accuracy` in amber; when no session data, falls back to `X/Y started`. Secondary label `X/Y modules` shown below bar when accuracy data present.
+
+**ProjectLabTab Phase 2 — Feature Engineering:** Three new Pyodide cells + one judgment checkpoint added to the Telco Churn notebook. Cell 4: OHE + target encoding (sklearn OneHotEncoder, target encoding via groupby mean). Cell 5: imputation (SimpleImputer median strategy) + StandardScaler, before/after comparison, production reasoning printout. Cell 6: permutation importance (RandomForestClassifier 50 trees, permutation_importance, horizontal matplotlib bar chart, ASCII importance bars). Checkpoint 3: data leakage judgment — "avg_spend_last_7d computed on full dataset before split" (answer: train-test contamination, not target leakage). Phase 1 complete callout updated to "Continue below ↓". Roadmap now shows phases 3-5. Phase 2 has its own progress bar (4 steps: 3 cells + 1 checkpoint). Brace balance: 0.
+
+**Pre-Eval callouts:** Inline `.msl-hint` callout added between option pick and reveal button in 3 tabs. SystemDesignTab: 5 hints keyed to DesignCanvas section IDs. ModelEvalTab: 5 hints on `hint` field in scenario objects. CausalInferenceTab: 5 hints across CausalVsPredictive + ConfounderOrCollider components. All fire after pick, before reveal — one diagnostic sentence redirecting the most common reasoning error per scenario. Brace balance: 0 on all three.
+
+**Audit #021:** All four checks passed. GlobalSearch SpotTheFlaw count was "10" but actual scenario count is 12 — fixed in `GlobalSearch.jsx`. `.msl-cloud-map` mobile overflow noted as open finding (#021.5).
+
+---
+
 ### v4.34 — Mobile sidebar bug fix + MD files update (2026-05-30)
 
 **What shipped:** One-line bug fix for the desktop sidebar rendering on mobile, plus end-of-session MD file updates across 6 files.
