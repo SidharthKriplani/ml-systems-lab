@@ -192,6 +192,30 @@ Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-r
 
 ## Tier 2 — High impact, more effort
 
+### Content map / command palette (identified 2026-05-31)
+
+**The problem:** The app has 30+ tabs across 5 zones. GlobalSearch exists but is query-driven — you need to know what to search for. New users don't know half the content exists. Power users can't jump tabs without 3-4 clicks. The app has become dense enough that navigation friction is real and discoverability is a genuine gap.
+
+**The amusement park framing:** The map serves two purposes simultaneously — navigation (get there fast once you know where you're going) and discoverability (see the whole territory before you've explored it). Both are solved by a single overlay. Neither is solved by GlobalSearch alone.
+
+**Proposed implementation — command palette overlay:**
+- Triggered by `Cmd+K` (or `Ctrl+K`) OR a persistent `?` button in the header
+- Opens a full-screen overlay showing all tabs grouped by domain — visual inventory, not a search box
+- While open: typing 1-2 characters filters the visible tabs in real time; Enter or click navigates
+- The shortcuts exist within the overlay only — NOT as global hotkeys — this sidesteps focus-state conflicts with free-text inputs (VerbatimTab, AskTab, CodeBugsTab, TakeHomeTab)
+- No shortcut memorization required; the map shows you what to type
+- Premium tabs shown but marked (same FOMO mechanic as domain grid)
+
+**Why NOT global keyboard shortcuts:** Multiple tabs have free-text inputs. Global shortcuts interfere with typing. Overlay-scoped shortcuts avoid this entirely while still delivering the 1-2 keypress navigation the proposal calls for.
+
+**What this adds over GlobalSearch:** Visual layout (domain grouping), full content inventory visible without a query, clear sense of what's premium vs. free, zero activation cost for new users (they see the map, not a blank search field).
+
+**Scope:** One new component `ContentMap.jsx`, wired into `App.jsx`. Tab data comes from the existing `PRACTICE_DOMAINS` + `INTERVIEW_TOOLS` arrays — no new data needed. Estimated: ~2 hours.
+
+**Build trigger:** NEXT.md queue cleared (specifically Phase 3 + #017 housekeeping) AND discoverability feedback from testers confirms the gap. (Source: session discussion, 2026-05-31)
+
+---
+
 ### Datamart-based ML practice (identified 2026-05-30)
 
 **Concept:** Wide, low-cardinality datamarts (100–200 rows, 15–25 columns, 3–5 tables) as the grounding layer for ML judgment modules. Instead of reading "the dataset has a column `avg_spend_last_7d` computed before the split," users see the actual schema, sample rows, null counts, and dtypes before answering. The data is the scenario.
