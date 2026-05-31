@@ -36,11 +36,8 @@ Nothing currently blocked.
 
 ## Done this session
 
-- ~~Cold-state banner on HomeTab (v4.35, 183bc93) — msl_onboarded key, amber banner with Feature Engineering link + DAI2026 badge, dismisses on click or first tab visit.~~
-- ~~Role Readiness Score on HomeTab (v4.35, 183bc93) — computeReadiness() reads trainer/combinator history, maps to domain keys, shows % accuracy label when session data exists.~~
-- ~~ProjectLabTab Phase 2 — Feature Engineering (v4.35, 183bc93) — cells 4/5/6 (OHE+target encoding, scaling+imputation, permutation importance) + Checkpoint 3 (train-test contamination judgment).~~
-- ~~Audit #021 — post-v4.33 state check (183bc93) — all checks passed; GlobalSearch SpotTheFlaw count fixed 10→12.~~
-- ~~Pre-Eval callouts — SystemDesignTab, ModelEvalTab, CausalInferenceTab (v4.35, 183bc93) — 5 per-scenario .msl-hint callouts per tab.~~
+- ~~ProjectLabTab build hotfixes (v4.35.2, 2a3ca86 + 1922b9e) — escaped f-string `${` in CELL_2_CODE and CELL_1_CODE template literals; Vercel parse errors resolved.~~
+- ~~ContentMap — visual content map overlay (v4.36, 08db55e) — `Cmd+K` now opens domain-grouped tab inventory. Replaces GlobalSearch as primary navigation shortcut. Filters live on type. `src/components/ContentMap.jsx` new file; App.jsx wired with practiceDomains, interviewTools, premiumTabs props.~~
 
 ---
 

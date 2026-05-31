@@ -192,27 +192,9 @@ Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-r
 
 ## Tier 2 — High impact, more effort
 
-### Content map / command palette (identified 2026-05-31)
+### ~~Content map / command palette~~ — done (v4.36, 2026-05-31)
 
-**The problem:** The app has 30+ tabs across 5 zones. GlobalSearch exists but is query-driven — you need to know what to search for. New users don't know half the content exists. Power users can't jump tabs without 3-4 clicks. The app has become dense enough that navigation friction is real and discoverability is a genuine gap.
-
-**The amusement park framing:** The map serves two purposes simultaneously — navigation (get there fast once you know where you're going) and discoverability (see the whole territory before you've explored it). Both are solved by a single overlay. Neither is solved by GlobalSearch alone.
-
-**Proposed implementation — command palette overlay:**
-- Triggered by `Cmd+K` (or `Ctrl+K`) OR a persistent `?` button in the header
-- Opens a full-screen overlay showing all tabs grouped by domain — visual inventory, not a search box
-- While open: typing 1-2 characters filters the visible tabs in real time; Enter or click navigates
-- The shortcuts exist within the overlay only — NOT as global hotkeys — this sidesteps focus-state conflicts with free-text inputs (VerbatimTab, AskTab, CodeBugsTab, TakeHomeTab)
-- No shortcut memorization required; the map shows you what to type
-- Premium tabs shown but marked (same FOMO mechanic as domain grid)
-
-**Why NOT global keyboard shortcuts:** Multiple tabs have free-text inputs. Global shortcuts interfere with typing. Overlay-scoped shortcuts avoid this entirely while still delivering the 1-2 keypress navigation the proposal calls for.
-
-**What this adds over GlobalSearch:** Visual layout (domain grouping), full content inventory visible without a query, clear sense of what's premium vs. free, zero activation cost for new users (they see the map, not a blank search field).
-
-**Scope:** One new component `ContentMap.jsx`, wired into `App.jsx`. Tab data comes from the existing `PRACTICE_DOMAINS` + `INTERVIEW_TOOLS` arrays — no new data needed. Estimated: ~2 hours.
-
-**Build trigger:** NEXT.md queue cleared (specifically Phase 3 + #017 housekeeping) AND discoverability feedback from testers confirms the gap. (Source: session discussion, 2026-05-31)
+`Cmd+K` now opens `ContentMap.jsx` — domain-grouped visual inventory of all 30+ tabs. Default state: grouped by Practice domains, Interview tools, Read·Today. Filtered state: live filter on label/desc/domain string. Pro badge on locked tabs. Replaces GlobalSearch as primary Cmd+K target. GlobalSearch retained in codebase but no longer wired. (Source: session discussion, 2026-05-31)
 
 ---
 

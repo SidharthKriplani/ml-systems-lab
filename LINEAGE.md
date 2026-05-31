@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.36 — ContentMap — visual content map overlay (2026-05-31)
+
+**What shipped (commit `08db55e`):** New component `src/components/ContentMap.jsx` — a command palette overlay that replaces GlobalSearch as the `Cmd+K` target in App.jsx.
+
+**What it does:** Opens a full-screen blurred overlay. Default state shows all 30+ tabs grouped by domain (6 Practice domains, Interview tools, Read·Today static tabs). Typing anything filters the list live by tab label, description, or domain name. Pro badge appears on locked tabs for users without the access code. Click or Enter navigates and closes. Esc closes. `allItems` count shows in the footer.
+
+**Architecture:** Props-driven — receives `practiceDomains={PRACTICE_DOMAINS}`, `interviewTools={INTERVIEW_TOOLS}`, `premiumTabs={PREMIUM_TABS}`, `isUnlocked` from App.jsx. No new localStorage keys, no new routes. Sub-components (`SectionHeader`, `DomainSection`, `TabCard`, `TabRow`) defined at module level to avoid hook-in-map violations. INTERVIEW_TOOLS SVG fields are ignored (only `id`, `label`, `desc` used). GlobalSearch is retained as an unused file — not deleted, in case module-level deep search is wanted later.
+
+**App.jsx change:** One import added, one render line changed (`searchOpen && <ContentMap .../>` replaces `searchOpen && <GlobalSearch .../>`). Keyboard shortcut (`Cmd+K`) and `searchOpen` state unchanged.
+
+---
+
 ### v4.35.2 — ProjectLabTab Vercel build hotfixes (2026-05-31)
 
 **What shipped (commits `2a3ca86`, `1922b9e`):** Two consecutive Vercel build failures caused by Python f-strings containing `${` inside JavaScript template literals. esbuild treats any unescaped `${` in a backtick string as a JS interpolation expression and fails when the content is not valid JS (e.g., `${val:.0f}` → "Expected } but found :").
