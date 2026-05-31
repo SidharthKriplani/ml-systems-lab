@@ -227,7 +227,7 @@ bars6 = ax6.bar(avg_charges.index, avg_charges.values,
 ax6.set_title('Avg Monthly Charge', fontsize=11, fontweight='bold')
 ax6.set_ylabel('USD / month', fontsize=9)
 for bar, val in zip(bars6, avg_charges.values):
-    ax6.text(bar.get_x() + bar.get_width()/2, val + 0.5, f'${val:.0f}', ha='center', fontsize=10, fontweight='bold')
+    ax6.text(bar.get_x() + bar.get_width()/2, val + 0.5, f'\${val:.0f}', ha='center', fontsize=10, fontweight='bold')
 ax6.grid(True, alpha=0.2, axis='y')
 
 fig.suptitle('Telco Churn — EDA Dashboard', fontsize=13, fontweight='bold', y=1.01)
