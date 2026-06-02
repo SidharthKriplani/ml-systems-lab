@@ -376,7 +376,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
 
                 <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }} onKeyDown={(e) => { if (['1','2','3','4'].includes(e.key) \&\& !it.revealed) { e.preventDefault(); pick(i, parseInt(e.key)-1) } else if (e.key === 'Enter' \&\& !it.revealed \&\& it.picked !== null) { e.preventDefault(); reveal(i) } }} tabIndex={0}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }} onKeyDown={(e) => { if (['1','2','3','4'].includes(e.key) && !it.revealed) { e.preventDefault(); pick(i, parseInt(e.key)-1) } else if (e.key === 'Enter' && !it.revealed && it.picked !== null) { e.preventDefault(); reveal(i) } }} tabIndex={0}>
                   {sc.options.map((opt, oi) => {
                     const isAns    = oi === sc.answer
                     const isPicked = oi === it.picked
