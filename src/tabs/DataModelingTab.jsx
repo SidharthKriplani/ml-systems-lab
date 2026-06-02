@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { CheckMark, CrossMark } from '../components/Icons'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module 1: Star vs OBT Judgment
@@ -416,8 +417,8 @@ function SCDSelector() {
                 fontFamily: 'var(--font-mono)', fontWeight: 700,
                 cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s',
               }}>
-              {revealed && type === scenario.answer && '✓ '}
-              {revealed && type === picked && type !== scenario.answer && '✗ '}
+              {revealed && type === scenario.answer && <CheckMark />}
+              {revealed && type === picked && type !== scenario.answer && '<CrossIcon />{' '}'}
               Type {type}
             </button>
           )
@@ -429,7 +430,7 @@ function SCDSelector() {
         <div className="animate-slide-up" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px' }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)', marginBottom: '10px' }}>
-              {picked === scenario.answer ? '✓ Correct — ' : `✗ Wrong — `}Type {scenario.answer} is correct
+              {picked === scenario.answer ? <><CheckMark /> Correct — </> : <><CrossMark /> Wrong — </>}Type {scenario.answer} is correct
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px 0' }}>{scenario.reasoning}</p>
             <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.20)', borderRadius: '8px' }}>
@@ -651,9 +652,9 @@ function OLAPShowdown() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ padding: '6px 10px', color: fmt.features.acid ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.acid ? '✓ Yes' : '✗ No'}</td>
-                      <td style={{ padding: '6px 10px', color: fmt.features.timetravel ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.timetravel ? '✓ Yes' : '✗ No'}</td>
-                      <td style={{ padding: '6px 10px', color: fmt.features.upserts ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.upserts ? '✓ Yes' : '✗ No'}</td>
+                      <td style={{ padding: '6px 10px', color: fmt.features.acid ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.acid ? <><CheckMark /> Yes</> : <><CrossMark /> No</>}</td>
+                      <td style={{ padding: '6px 10px', color: fmt.features.timetravel ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.timetravel ? <><CheckMark /> Yes</> : <><CrossMark /> No</>}</td>
+                      <td style={{ padding: '6px 10px', color: fmt.features.upserts ? 'var(--mint)' : 'var(--rose)' }}>{fmt.features.upserts ? <><CheckMark /> Yes</> : <><CrossMark /> No</>}</td>
                       <td style={{ padding: '6px 10px', color: 'var(--ink-mid)' }}>{fmt.features.compaction}</td>
                       <td style={{ padding: '6px 10px', color: 'var(--ink-mid)' }}>{fmt.features.engines}</td>
                     </tr>

@@ -391,7 +391,7 @@ Useful applications: explaining individual predictions to fraud analysts, auditi
 Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
     tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
     domain: 'eval',
-    youtube: [], // VaIXMiNMEJU was private/removed — replace with correct StatQuest SHAP video ID when found
+    youtube: [{ id: 'EY2FGHjOL-M', title: 'SHAP Values — StatQuest with Josh Starmer' }],
   },
   {
     id: 11,
@@ -1683,7 +1683,7 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantizati
 **What interviewers test:** Can you distinguish between "the feature store has point-in-time support" and "the pipeline is using it correctly"? Knowing Feast exists is not the answer. Knowing why \`entity_df\` must have \`event_timestamp\`, what happens if it doesn\'t, and how to verify correctness with a holdout split — that is the answer.`,
     tags: ['Feature Stores', 'Data Leakage', 'Point-in-Time', 'Feast'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines — OpML 2020' }],
   },
   {
     id: 32,
@@ -1709,7 +1709,7 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantizati
 **What interviewers probe:** "Your AUC is 0.91 in cross-validation but 0.76 in the A/B test. Walk me through how you\'d diagnose this." The correct answer starts with the split order, not the model.`,
     tags: ['Data Leakage', 'Train-Test Split', 'AUC', 'Evaluation'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'fE_25esn-5U', title: 'Data Leakage — StatQuest with Josh Starmer' }],
   },
   {
     id: 33,
@@ -2488,7 +2488,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
           ← Back to Gradient
         </button>
         <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(240,165,0,0.12)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
-          {isRead ? '✓ Read' : 'Mark as read'}
+          {isRead ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Read' : 'Mark as read'}
         </button>
       </div>
 
@@ -2605,7 +2605,7 @@ function PostCard({ post, featured, onClick, isRead }) {
         {post.youtube && post.youtube.length > 0 && (
           <span style={{ fontSize: '9px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '4px', padding: '1px 6px', letterSpacing: '0.04em' }}>▶ VIDEO</span>
         )}
-        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '4px', padding: '1px 6px' }}>✓ READ</span>}
+        {isRead && <span style={{ fontSize: '9px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '4px', padding: '1px 6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>READ</span>}
         <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{post.readMin} min</span>
       </div>
       <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', lineHeight: 1.35, marginBottom: '10px', letterSpacing: '-0.03em' }}>{post.title}</h2>

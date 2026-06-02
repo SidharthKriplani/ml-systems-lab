@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { CheckMark, CrossMark } from '../components/Icons'
 
 // ── Module 1: Freeze vs Fine-tune vs LoRA ─────────────────────────────────────
 
@@ -465,8 +466,8 @@ function LRStrategyModule() {
           return (
             <button key={opt.id} onClick={() => choose(opt.id)} disabled={revealed}
               style={{ padding: '11px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', lineHeight: 1.4 }}>
-              {revealed && opt.id === scenario.answer && '✓ '}
-              {revealed && opt.id === picked && opt.id !== scenario.answer && '✗ '}
+              {revealed && opt.id === scenario.answer && <CheckMark />}
+              {revealed && opt.id === picked && opt.id !== scenario.answer && '<CrossIcon />{' '}'}
               {opt.label}
             </button>
           )
@@ -477,7 +478,7 @@ function LRStrategyModule() {
       {revealed && (
         <div className="card animate-slide-up" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: picked === scenario.answer ? 'var(--mint)' : 'var(--rose)' }}>
-            {picked === scenario.answer ? '✓ Correct — ' : '✗ Wrong — '}{LR_OPTIONS.find(o => o.id === scenario.answer)?.label}
+            {picked === scenario.answer ? <><CheckMark /> Correct — </> : <><CrossMark /> Wrong — </>}{LR_OPTIONS.find(o => o.id === scenario.answer)?.label}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0 }}>{scenario.explanation}</p>
           <div style={{ padding: '12px 14px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
@@ -577,8 +578,14 @@ const PEFT_METHODS = [
   },
 ]
 
-const SCORE_LABELS = ['', '✗', '△', '◇', '✓', '✓✓']
+// SCORE_LABELS replaced with renderScoreLabel function below
 const SCORE_COLORS = ['', 'var(--rose)', 'var(--ember)', 'var(--ink-low)', 'var(--mint)', 'var(--mint)']
+
+
+function renderScoreLabel(score) {
+  const labels = ['', <CrossMark />, '△', '◇', <CheckMark />, <><CheckMark /><CheckMark /></>]
+  return labels[score]
+}
 
 function PEFTComparisonModule() {
   const [constraint, setConstraint] = useState(null)
@@ -665,7 +672,7 @@ function PEFTComparisonModule() {
                 {constraint && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '48px' }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', color: SCORE_COLORS[method.scores[constraint]], fontWeight: 700 }}>
-                      {SCORE_LABELS[method.scores[constraint]]}
+                      {renderScoreLabel(method.scores[constraint])}
                     </span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-low)' }}>{method.scores[constraint]}/5</span>
                   </div>

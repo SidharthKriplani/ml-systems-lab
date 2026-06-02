@@ -99,8 +99,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '16px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4 }}>{sc.title}</span>
               {sc.tier && <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '3px', background: 'rgba(255,255,255,0.11)', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{sc.tier}</span>}
-              {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}>✓</span>}
-              {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}>✗</span>}
+              {isCorrect && <span style={{ color: 'var(--mint)', fontSize: '13px', flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+              {isWrong   && <span style={{ color: 'var(--rose)', fontSize: '13px', flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
               <span style={{ color: 'var(--ink-ghost)', fontSize: '11px', flexShrink: 0 }}>{item.open ? '▲' : '▼'}</span>
             </button>
 
@@ -135,8 +135,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
                         className={`msl-option-btn${optClass}`}
                         style={{ marginBottom: '0px' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
-                        {item.revealed && j === sc.answer         && <span>✓ </span>}
-                        {item.revealed && j === item.picked && j !== sc.answer && <span>✗ </span>}
+                        {item.revealed && j === sc.answer         && <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+                        {item.revealed && j === item.picked && j !== sc.answer && <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
                         {opt}
                       </button>
                     )
@@ -147,7 +147,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
                 {item.revealed && (
                   <div style={{ padding: '14px 16px', background: isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(244,63,94,0.11)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>
-                      {isCorrect ? '✓ Correct' : '✗ Wrong'} — {sc.diagnosis}
+                      {isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Correct' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Wrong'} — {sc.diagnosis}
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{sc.explanation}</p>
                     {sc.fix && (
@@ -193,9 +193,9 @@ function MetricSelector() {
   }, [imbalance, threshold])
 
   const METRICS = [
-    { id: 'accuracy', name: 'Accuracy', value: (metrics.accuracy * 100).toFixed(1) + '%', good: imbalance > 20, note: imbalance < 10 ? '⚠ Misleading here — a model that predicts all negative gets ' + (100 - imbalance).toFixed(0) + '% accuracy for free.' : '✓ OK when classes are roughly balanced.' },
+    { id: 'accuracy', name: 'Accuracy', value: (metrics.accuracy * 100).toFixed(1) + '%', good: imbalance > 20, note: imbalance < 10 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Misleading here — a model that predicts all negative gets ' + (100 - imbalance).toFixed(0) + '% accuracy for free.' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> OK when classes are roughly balanced.' },
     { id: 'auc',      name: 'ROC-AUC',  value: metrics.auc.toFixed(2), good: true, note: 'Measures rank ordering — does the model score positives higher than negatives? ' + (imbalance < 5 ? 'With severe imbalance, AUC can be high while your positive recall is terrible. Use PR-AUC instead.' : 'Good general choice.') },
-    { id: 'prauc',    name: 'PR-AUC',   value: '~' + (metrics.precision * metrics.recall * 1.4).toFixed(2), good: imbalance < 15, note: imbalance < 10 ? '✓ Best choice for imbalanced classes — focuses on the minority class you actually care about.' : '✓ Good. Focuses on precision-recall tradeoff at different thresholds.' },
+    { id: 'prauc',    name: 'PR-AUC',   value: '~' + (metrics.precision * metrics.recall * 1.4).toFixed(2), good: imbalance < 15, note: imbalance < 10 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Best choice for imbalanced classes — focuses on the minority class you actually care about.' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Good. Focuses on precision-recall tradeoff at different thresholds.' },
     { id: 'f1',       name: 'F1 Score', value: metrics.f1.toFixed(3), good: imbalance < 30, note: 'Harmonic mean of precision and recall at threshold ' + threshold + '. Threshold-dependent.' },
   ]
 
@@ -209,7 +209,7 @@ function MetricSelector() {
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--prime)', fontWeight: 600 }}>{imbalance}%</span>
-            {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}>⚠ imbalanced</span>}
+            {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>imbalanced</span>}
           </label>
           <input type="range" min={1} max={50} value={imbalance} onChange={e => { setImbalance(+e.target.value); setRevealed(false); setPicked(null) }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
@@ -249,7 +249,7 @@ function MetricSelector() {
       {revealed && picked && (
         <div className="card animate-slide-up" style={{ padding: '18px', background: METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.13)' : 'rgba(244,63,94,0.13)', border: `1px solid ${METRICS.find(m => m.id === picked)?.good ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)'}` }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '15px', color: METRICS.find(m => m.id === picked)?.good ? 'var(--mint)' : 'var(--rose)', marginBottom: '8px' }}>
-            {METRICS.find(m => m.id === picked)?.good ? '✓ Good choice' : '⚠ Think again'}
+            {METRICS.find(m => m.id === picked)?.good ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Good choice' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Think again'}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{METRICS.find(m => m.id === picked)?.note}</p>
         </div>
@@ -311,10 +311,10 @@ function ShadowModeSim() {
         <div className="card animate-slide-up" style={{ padding: '20px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '16px', color: 'var(--ink-hi)', marginBottom: '12px' }}>Shadow run complete — promote?</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Precision: +11pp</p>
-            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Recall: +9pp</p>
-            <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}>⚠ P99 latency: +37ms (82ms vs 45ms)</p>
-            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}>✓ Error rate: lower (0.15% vs 0.3%)</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Precision: +11pp</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Recall: +9pp</p>
+            <p style={{ fontSize: '13px', color: 'var(--gold)', margin: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>P99 latency: +37ms (82ms vs 45ms)</p>
+            <p style={{ fontSize: '13px', color: 'var(--mint)', margin: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Error rate: lower (0.15% vs 0.3%)</p>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
             Recommendation: <strong style={{ color: 'var(--ink-hi)' }}>Promote</strong> — quality gains outweigh latency increase. But gate on SLA: if P99 &gt; 100ms violates your SLA, investigate model quantization first.
@@ -333,6 +333,7 @@ const CALIBRATION_SCENARIOS = [
     hint: 'Before picking, ask whether the mismatch between the predicted probability and the actual rate is a training problem or a post-hoc correction problem.',
     tier: 'Senior',
     difficulty: 'mid',
+    isFree: false,
     context: [
       'Reliability diagram: predicted 0.95 bucket → actual positive rate 0.61',
       'Model: gradient boosted tree, trained on 500k samples',
@@ -352,6 +353,7 @@ const CALIBRATION_SCENARIOS = [
     hint: 'Consider whether a low ECE here is genuinely good news or whether ECE can look healthy even when the model is practically useless for ranking.',
     tier: 'Analyst',
     difficulty: 'mid',
+    isFree: false,
     context: [
       'Model: neural network classifier, output after sigmoid',
       'Probability histogram: 95% of outputs in [0.4, 0.6]',
@@ -370,6 +372,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'Choosing calibration method: 300-sample calibration set available',
     tier: 'Staff',
     difficulty: 'senior',
+    isFree: false,
     context: [
       'Model: random forest (known to be poorly calibrated)',
       'Calibration set: 300 samples (20% holdout from 1500-sample dataset)',
@@ -389,6 +392,7 @@ const CALIBRATION_SCENARIOS = [
     hint: 'Ask what the calibration mapping was fitted to — and whether that assumption can silently become false over time without touching model weights.',
     tier: 'Staff',
     difficulty: 'senior',
+    isFree: false,
     context: [
       'Initial ECE (validation, October): 0.03',
       'Current ECE (production, January): 0.21',
@@ -407,6 +411,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'Averaging 5 models — are the averaged probabilities calibrated?',
     tier: 'Senior',
     difficulty: 'mid',
+    isFree: false,
     context: [
       'Model: ensemble of 5 independently trained neural networks',
       'Each model individually calibrated (ECE ~0.03 per model)',
@@ -425,6 +430,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'ECE is 0.01 but Brier score is 0.28 — conflicting signals',
     tier: 'Senior',
     difficulty: 'senior',
+    isFree: false,
     context: [
       'Classification task: customer churn prediction',
       'ECE: 0.01 (excellent)',
@@ -461,6 +467,7 @@ const THRESHOLD_SCENARIOS = [
     title: 'Fraud detection: FN costs $500, FP costs $5 (manual review)',
     tier: 'Analyst',
     difficulty: 'junior',
+    isFree: true,
     context: [
       'Model: fraud classifier, binary output',
       'False Negative (missed fraud): $500 average loss',
@@ -480,6 +487,7 @@ const THRESHOLD_SCENARIOS = [
     title: 'Cancer screening model — missing a positive is catastrophic',
     tier: 'Senior',
     difficulty: 'senior',
+    isFree: false,
     context: [
       'Task: binary cancer screening from imaging',
       'Positive: likely malignant → biopsy ordered',
@@ -500,6 +508,7 @@ const THRESHOLD_SCENARIOS = [
     hint: 'Consider whether minimising classification error is the same objective as maximising the revenue impact of the intervention.',
     tier: 'Senior',
     difficulty: 'senior',
+    isFree: false,
     context: [
       'Intervention: 10% discount coupon sent to predicted churners',
       'Revenue per customer: $50/month',
@@ -721,11 +730,11 @@ function RankingMetrics() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector, difficulty: 'junior' },
-  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic, difficulty: 'mid' },
-  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner, difficulty: 'mid' },
-  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics, difficulty: 'mid' },
-  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim, difficulty: 'junior' },
+  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector, difficulty: 'junior', isFree: true },
+  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic, difficulty: 'mid', isFree: false },
+  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner, difficulty: 'mid', isFree: false },
+  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics, difficulty: 'mid', isFree: false },
+  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim, difficulty: 'junior', isFree: true },
 ]
 
 

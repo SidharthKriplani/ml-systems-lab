@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { trackModuleStart, trackModuleComplete } from '../analytics.js'
+import { CheckMark, CrossMark } from '../components/Icons'
 
 // ─── Shuffle Hell (simulation engine) ───────────────────────────────────────
 function computeShuffleResult({ dataGB, partitions, joinStrategy, broadcastThresholdMB, skewFactor }) {
@@ -87,7 +88,7 @@ function ShuffleHell() {
 
   const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.15)'    : result?.spillRisk ? 'rgba(245,158,11,0.15)'  : result?.healthy ? 'rgba(16,185,129,0.15)'    : 'rgba(255,255,255,0.07)'
   const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : 'var(--rim)'
-  const statusMsg    = result?.oomRisk ? 'JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '⚠ Significant spill to disk' : result?.healthy ? '✓ Job looks healthy' : '~ Suboptimal — will run'
+  const statusMsg    = result?.oomRisk ? 'JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Significant spill to disk' : result?.healthy ? '<CheckMark /> Job looks healthy' : '~ Suboptimal — will run'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -358,7 +359,7 @@ function PartitionTuner() {
             ['By data size', bySize, 'partitions to hit target size'],
             ['By parallelism', byParallelism, '2× total executor slots'],
             ['Total slots', totalSlots, `${executors} execs × ${coresPerExec} cores`],
-            ['Partition size', `${partSizeMB.toFixed(0)} MB`, isSmall ? '⚠ too small — task overhead' : isLarge ? '⚠ too large — spill risk' : '✓ good'],
+            ['Partition size', `${partSizeMB.toFixed(0)} MB`, isSmall ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> too small — task overhead' : isLarge ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> too large — spill risk' : '<CheckMark /> good'],
             ['Wave count', waveCount, 'stages per shuffle'],
           ].map(([k, v, hint]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', borderBottom: '1px solid var(--rim)', paddingBottom: '8px' }}>
@@ -494,7 +495,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? <CheckMark /> : <CrossMark />}</span>}
               <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-ghost)', transition: 'transform 0.2s', transform: it.open ? 'rotate(90deg)' : 'rotate(0deg)' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 2l4 3-4 3"/></svg></span>
             </button>
 
@@ -529,7 +530,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                         style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
-                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
                       </button>
                     )
                   })}
@@ -808,7 +809,7 @@ function MemoryPressureSimulator() {
   if (joinType === 'broadcast' && datasetGB > 2) {
     verdict = 'OOM Risk'
     verdictColor = 'var(--rose)'
-    verdictIcon = '✗'
+    verdictIcon = <CrossMark />
     explanation = `Broadcast join on ${datasetGB}GB dataset will exceed the default broadcast threshold (10MB). Spark will attempt to broadcast the full table to every executor — each executor needs ${datasetGB * 1024}MB for the broadcast copy. With only ${executorMemoryGB}GB executor memory, this will OOM.`
   } else if (joinMemMB > memPerTaskMB * 0.8) {
     verdict = 'Spill / Slowdown'
@@ -818,12 +819,12 @@ function MemoryPressureSimulator() {
   } else if (memPerTaskMB < 100) {
     verdict = 'OOM — Undersized'
     verdictColor = 'var(--rose)'
-    verdictIcon = '✗'
+    verdictIcon = <CrossMark />
     explanation = `Only ${memPerTaskMB}MB per task. With ${tasksPerExecutor} cores and ${executorMemoryGB}GB total, there is not enough memory to run tasks without OOM. Reduce cores per executor or increase executor memory.`
   } else {
     verdict = 'Healthy'
     verdictColor = 'var(--mint)'
-    verdictIcon = '✓'
+    verdictIcon = <CheckMark />
     explanation = `Each task has ~${memPerTaskMB}MB execution memory. Partition size is ~${partitionSizeMB}MB. Join requires ~${joinMemMB}MB per task. Memory headroom: ~${memPerTaskMB - joinMemMB}MB. No spill expected.`
   }
 
@@ -1199,7 +1200,7 @@ export default function SparkLabTab({ onNavigate }) {
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module has interactive controls. Adjust the parameters, pick a strategy, and observe the outcome — build intuition for configurations that fail before you hit them in production.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Real execution</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (

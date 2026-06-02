@@ -292,14 +292,14 @@ function PreprocessingLab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px', color: 'var(--prime)' }}>✓</span>
+            <span style={{ fontSize: '16px', color: 'var(--prime)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>
             <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--prime)', fontSize: '14px' }}>Correct pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_CORRECT} height={280} label="sklearn Pipeline (correct)" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px', color: 'var(--ink-low)' }}>✗</span>
+            <span style={{ fontSize: '16px', color: 'var(--ink-low)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
             <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--ink-low)', fontSize: '14px' }}>Leaky pipeline</span>
           </div>
           <PythonCell initialCode={PREPROC_LEAKY} height={280} label="sklearn (data leakage bug)" />
@@ -686,13 +686,13 @@ function CalibrationCurves() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'pca',     label: 'PCA Explorer', component: PCAExplorer, difficulty: 'junior' },
-  { id: 'svd',     label: 'SVD Decomposer', component: SVDDecomposer, difficulty: 'junior' },
-  { id: 'preproc', label: 'Preprocessing Lab', component: PreprocessingLab, difficulty: 'mid' },
-  { id: 'reg',     label: 'Regularization Lab', component: RegularizationLab, difficulty: 'junior' },
-  { id: 'numpy',   label: 'NumPy Internals', component: NumPyInternals, difficulty: 'junior' },
-  { id: 'calib',   label: 'Calibration Curves', component: CalibrationCurves, difficulty: 'mid' },
-  { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL, difficulty: 'easy' },
+  { id: 'pca',     label: 'PCA Explorer', component: PCAExplorer, difficulty: 'junior', isFree: true },
+  { id: 'svd',     label: 'SVD Decomposer', component: SVDDecomposer, difficulty: 'junior', isFree: true },
+  { id: 'preproc', label: 'Preprocessing Lab', component: PreprocessingLab, difficulty: 'mid', isFree: false },
+  { id: 'reg',     label: 'Regularization Lab', component: RegularizationLab, difficulty: 'junior', isFree: true },
+  { id: 'numpy',   label: 'NumPy Internals', component: NumPyInternals, difficulty: 'junior', isFree: true },
+  { id: 'calib',   label: 'Calibration Curves', component: CalibrationCurves, difficulty: 'mid', isFree: false },
+  { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL, difficulty: 'easy', isFree: true },
 ]
 
 export default function ModelsMathTab({ onNavigate }) {
@@ -709,7 +709,7 @@ export default function ModelsMathTab({ onNavigate }) {
           The math behind the decisions — why PCA fails with outliers, when regularization helps vs hurts, what the scree plot is actually telling you, and why calibration breaks after threshold tuning.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a real scenario. Pick your answer — then run the Python cell to verify your intuition against the actual numbers.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>✓ Real execution</span>
+        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Real execution</span>
       </div>
 
       {/* Module picker */}

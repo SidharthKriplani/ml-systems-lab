@@ -477,7 +477,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
                         <div key={iIdx} onClick={() => toggleDone(key)}
                           style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '5px 0', cursor: 'pointer', borderTop: iIdx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                           <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${isDone ? 'var(--mint)' : 'var(--rim-hi)'}`, background: isDone ? 'rgba(52,211,153,0.2)' : 'transparent', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isDone && <span style={{ fontSize: 9, color: 'var(--mint)' }}>✓</span>}
+                            {isDone && <span style={{ fontSize: 9, color: 'var(--mint)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
                           </div>
                           <span style={{ fontSize: 12, color: isDone ? 'var(--ink-ghost)' : 'var(--ink-mid)', textDecoration: isDone ? 'line-through' : 'none', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{item.text}</span>
                         </div>

@@ -1,3 +1,19 @@
+/**
+ * Interview Experiences — Community submissions
+ *
+ * v1 (seed): 15 hardcoded sample records for demo/testing purposes
+ * v2 (planned): Replace with real Tally submissions once N >= 15 real submissions collected
+ *
+ * Data flows from Tally form submission (https://tally.so/r/wMRZzZ):
+ * 1. Real submissions downloaded as JSON from Tally dashboard
+ * 2. Each submission formatted to this schema
+ * 3. Merged into this array
+ * 4. Commit triggers Vercel deploy
+ * 5. TagFrequencyChart automatically updates skill coverage visualization
+ *
+ * Admin: See InterviewGrid() in src/App.jsx for full workflow details
+ */
+
 export const INTERVIEW_EXPERIENCES = [
   {
     id: 'exp001',

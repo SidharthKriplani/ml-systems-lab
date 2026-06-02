@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { CheckMark, CrossMark, WarningMark } from '../components/Icons'
 import PythonCell from '../components/PythonCell.jsx'
 
 // ─── LocalStorage key ─────────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ print(f"  {'Feature':<22}  {'KS stat':>9}  {'p-value':>10}  {'Result (α=0.05)'}
 print("  " + "─"*58)
 for feat, (train, prod) in features.items():
     stat, pval = stats.ks_2samp(train, prod)
-    result = "✗ Significant shift" if pval < 0.05 else "✓ No significant shift"
+    result = "<CrossMark />Significant shift" if pval < 0.05 else "<CheckMark />No significant shift"
     print(f"  {feat:<22}  {stat:>9.4f}  {pval:>10.4f}  {result}")
 
 print()
@@ -1143,7 +1144,7 @@ function JudgmentCheckpoint({ checkpoint, onComplete }) {
           </span>
           {revealed && (
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)', marginLeft: '4px' }}>
-              {isCorrect ? '✓ Correct' : '✗ See explanation'}
+              {isCorrect ? <><CheckMark /> Correct</> : <><CrossMark /> See explanation</>}
             </span>
           )}
         </div>
@@ -1188,8 +1189,8 @@ function JudgmentCheckpoint({ checkpoint, onComplete }) {
                 {opt.id.toUpperCase()}.
               </span>
               {opt.text}
-              {revealed && isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
-              {revealed && isSelected && !isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--rose)', fontSize: '12px' }}>✗</span>}
+              {revealed && isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+              {revealed && isSelected && !isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--rose)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
             </button>
           )
         })}
@@ -1308,7 +1309,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Phase 1 of 5
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-            ✓ Real execution
+            <CheckMark /> Real execution
           </span>
         </div>
         <h1 style={{
@@ -1356,7 +1357,7 @@ export default function ProjectLabTab({ onNavigate }) {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell1') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('cell1') ? '✓' : '1'}
+              {state.cellsDone.includes('cell1') ? <CheckMark /> : '1'}
             </span>
           </div>
           <div>
@@ -1383,7 +1384,7 @@ export default function ProjectLabTab({ onNavigate }) {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp1') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.checkpointsDone.includes('cp1') ? '✓' : '?'}
+              {state.checkpointsDone.includes('cp1') ? <CheckMark /> : '?'}
             </span>
           </div>
           <div>
@@ -1408,7 +1409,7 @@ export default function ProjectLabTab({ onNavigate }) {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell2') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('cell2') ? '✓' : '2'}
+              {state.cellsDone.includes('cell2') ? <CheckMark /> : '2'}
             </span>
           </div>
           <div>
@@ -1436,7 +1437,7 @@ export default function ProjectLabTab({ onNavigate }) {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell3') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('cell3') ? '✓' : '3'}
+              {state.cellsDone.includes('cell3') ? <CheckMark /> : '3'}
             </span>
           </div>
           <div>
@@ -1464,7 +1465,7 @@ export default function ProjectLabTab({ onNavigate }) {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp2') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.checkpointsDone.includes('cp2') ? '✓' : '?'}
+              {state.checkpointsDone.includes('cp2') ? <CheckMark /> : '?'}
             </span>
           </div>
           <div>
@@ -1554,7 +1555,7 @@ export default function ProjectLabTab({ onNavigate }) {
               flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell4') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell4') ? '✓' : '4'}
+                {state.cellsDone.includes('cell4') ? <CheckMark /> : '4'}
               </span>
             </div>
             <div>
@@ -1581,7 +1582,7 @@ export default function ProjectLabTab({ onNavigate }) {
               flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell5') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell5') ? '✓' : '5'}
+                {state.cellsDone.includes('cell5') ? <CheckMark /> : '5'}
               </span>
             </div>
             <div>
@@ -1608,7 +1609,7 @@ export default function ProjectLabTab({ onNavigate }) {
               flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell6') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell6') ? '✓' : '6'}
+                {state.cellsDone.includes('cell6') ? <CheckMark /> : '6'}
               </span>
             </div>
             <div>
@@ -1636,7 +1637,7 @@ export default function ProjectLabTab({ onNavigate }) {
               flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp3') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.checkpointsDone.includes('cp3') ? '✓' : '?'}
+                {state.checkpointsDone.includes('cp3') ? <CheckMark /> : '?'}
               </span>
             </div>
             <div>
@@ -1702,7 +1703,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell7') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell7') ? '✓' : '7'}
+                {state.cellsDone.includes('cell7') ? <CheckMark /> : '7'}
               </span>
             </div>
             <div>
@@ -1728,7 +1729,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell8') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell8') ? '✓' : '8'}
+                {state.cellsDone.includes('cell8') ? <CheckMark /> : '8'}
               </span>
             </div>
             <div>
@@ -1754,7 +1755,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell9') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell9') ? '✓' : '9'}
+                {state.cellsDone.includes('cell9') ? <CheckMark /> : '9'}
               </span>
             </div>
             <div>
@@ -1781,7 +1782,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell10') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell10') ? '✓' : '10'}
+                {state.cellsDone.includes('cell10') ? <CheckMark /> : '10'}
               </span>
             </div>
             <div>
@@ -1808,7 +1809,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp4') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.checkpointsDone.includes('cp4') ? '✓' : '?'}
+                {state.checkpointsDone.includes('cp4') ? <CheckMark /> : '?'}
               </span>
             </div>
             <div>
@@ -1873,7 +1874,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell11') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell11') ? '✓' : '11'}
+                {state.cellsDone.includes('cell11') ? <CheckMark /> : '11'}
               </span>
             </div>
             <div>
@@ -1899,7 +1900,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell12') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell12') ? '✓' : '12'}
+                {state.cellsDone.includes('cell12') ? <CheckMark /> : '12'}
               </span>
             </div>
             <div>
@@ -1925,7 +1926,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell13') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell13') ? '✓' : '13'}
+                {state.cellsDone.includes('cell13') ? <CheckMark /> : '13'}
               </span>
             </div>
             <div>
@@ -1952,7 +1953,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell14') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell14') ? '✓' : '14'}
+                {state.cellsDone.includes('cell14') ? <CheckMark /> : '14'}
               </span>
             </div>
             <div>
@@ -1979,7 +1980,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp5') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.checkpointsDone.includes('cp5') ? '✓' : '?'}
+                {state.checkpointsDone.includes('cp5') ? <CheckMark /> : '?'}
               </span>
             </div>
             <div>
@@ -2037,7 +2038,7 @@ export default function ProjectLabTab({ onNavigate }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell15') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell15') ? '✓' : '15'}
+                {state.cellsDone.includes('cell15') ? <CheckMark /> : '15'}
               </span>
             </div>
             <div>
@@ -2050,11 +2051,11 @@ export default function ProjectLabTab({ onNavigate }) {
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>python</span>
               {!state.cellsDone.includes('cell15') && (
                 <button onClick={() => markCellDone('cell15')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                  Mark as read ✓
+                  Mark as read <CheckMark />
                 </button>
               )}
               {state.cellsDone.includes('cell15') && (
-                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
             <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — FastAPI prediction endpoint
@@ -2106,7 +2107,7 @@ async def health():
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell16') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell16') ? '✓' : '16'}
+                {state.cellsDone.includes('cell16') ? <CheckMark /> : '16'}
               </span>
             </div>
             <div>
@@ -2119,11 +2120,11 @@ async def health():
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>dockerfile</span>
               {!state.cellsDone.includes('cell16') && (
                 <button onClick={() => markCellDone('cell16')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                  Mark as read ✓
+                  Mark as read <CheckMark />
                 </button>
               )}
               {state.cellsDone.includes('cell16') && (
-                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
             <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Stage 1: build dependencies ────────────────────────────────────────────
@@ -2167,7 +2168,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--worker
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell17') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell17') ? '✓' : '17'}
+                {state.cellsDone.includes('cell17') ? <CheckMark /> : '17'}
               </span>
             </div>
             <div>
@@ -2180,11 +2181,11 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--worker
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
               {!state.cellsDone.includes('cell17') && (
                 <button onClick={() => markCellDone('cell17')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                  Mark as read ✓
+                  Mark as read <CheckMark />
                 </button>
               )}
               {state.cellsDone.includes('cell17') && (
-                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
             <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Deployment ────────────────────────────────────────────────────────────────
@@ -2253,7 +2254,7 @@ spec:
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell18') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell18') ? '✓' : '18'}
+                {state.cellsDone.includes('cell18') ? <CheckMark /> : '18'}
               </span>
             </div>
             <div>
@@ -2266,11 +2267,11 @@ spec:
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
               {!state.cellsDone.includes('cell18') && (
                 <button onClick={() => markCellDone('cell18')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                  Mark as read ✓
+                  Mark as read <CheckMark />
                 </button>
               )}
               {state.cellsDone.includes('cell18') && (
-                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
             <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy.yml
@@ -2327,7 +2328,7 @@ jobs:
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell19') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                {state.cellsDone.includes('cell19') ? '✓' : '19'}
+                {state.cellsDone.includes('cell19') ? <CheckMark /> : '19'}
               </span>
             </div>
             <div>
@@ -2340,11 +2341,11 @@ jobs:
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>aws — service mapping</span>
               {!state.cellsDone.includes('cell19') && (
                 <button onClick={() => markCellDone('cell19')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                  Mark as read ✓
+                  Mark as read <CheckMark />
                 </button>
               )}
               {state.cellsDone.includes('cell19') && (
-                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>

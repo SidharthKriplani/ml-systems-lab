@@ -77,7 +77,7 @@ src/
     LoanDefaultTab.jsx          ← ML Engineering, second ProjectLab dataset — Loan Default (credit risk, ECOA). ALL 4 PHASES COMPLETE (v4.42–v4.44).
                                    Phase 1: Schema + EDA + Proxy Audit · Phase 2: Model Training + ECOA threshold · Phase 3: PSI/KS/Prediction Drift
                                    Phase 4: Deployment Scaffold + Regulatory Model Card (7 ECOA fields). `msl_projectlab_loan_data`.
-    FraudDetectionTab.jsx       ← ML Engineering, third ProjectLab dataset — Fraud Detection (1:200 imbalance, precision@K). Phase 1 complete (v4.44).
+    FraudDetectionTab.jsx       ← ML Engineering, third ProjectLab dataset — Fraud Detection (1:200 imbalance, precision@K). ALL 4 PHASES COMPLETE (v4.44–v4.45).
                                    Phases 2–4 planned: Model + SMOTE → Monitoring → Deployment + Ops Runbook. `msl_projectlab_fraud_data`.
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/

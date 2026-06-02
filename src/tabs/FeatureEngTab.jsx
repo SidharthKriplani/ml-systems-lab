@@ -174,8 +174,8 @@ function FeatureStoreDesigner() {
           {st.label} for {s.label}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-          <div><div style={{ fontSize: '11px', color: 'var(--mint)', fontWeight: 600, marginBottom: '4px' }}>✓ PROS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.pros}</div></div>
-          <div><div style={{ fontSize: '11px', color: 'var(--rose)', fontWeight: 600, marginBottom: '4px' }}>✗ CONS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.cons}</div></div>
+          <div><div style={{ fontSize: '11px', color: 'var(--mint)', fontWeight: 600, marginBottom: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>PROS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.pros}</div></div>
+          <div><div style={{ fontSize: '11px', color: 'var(--rose)', fontWeight: 600, marginBottom: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>CONS</div><div style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{st.cons}</div></div>
         </div>
         {featureType === 'session' && storage !== 'redis' && (
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0 }}>Note: For session features with sub-second staleness requirements, Redis is usually the right choice. {st.latency} P50 may violate your serving SLA.</p>
@@ -343,7 +343,7 @@ result = (df
               <button key={k} onClick={() => setAgg(k)}
                 style={{ textAlign: 'left', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${agg === k ? 'rgba(240,165,0,0.4)' : 'transparent'}`, background: agg === k ? 'rgba(240,165,0,0.13)' : 'transparent', cursor: 'pointer', fontSize: '11px', color: agg === k ? 'var(--prime)' : 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>
                 {v.label}
-                {v.warn && <span style={{ fontSize: '9px', color: 'var(--ink-low)', marginLeft: '4px' }}>⚠</span>}
+                {v.warn && <span style={{ fontSize: '9px', color: 'var(--ink-low)', marginLeft: '4px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>}
               </button>
             ))}
           </div>
@@ -417,7 +417,7 @@ result = (df
 
       {/* Gotchas */}
       <div>
-        <div style={{ fontSize: '13px', color: 'var(--prime)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}>⚠ Gotchas for this configuration</div>
+        <div style={{ fontSize: '13px', color: 'var(--prime)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Gotchas for this configuration</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {GOTCHAS.map((g, i) => (
             <div key={i} style={{ display: 'flex', gap: '10px', padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
@@ -1045,7 +1045,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}</span>}
               <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-ghost)', transition: 'transform 0.2s', transform: it.open ? 'rotate(90deg)' : 'rotate(0deg)' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 2l4 3-4 3"/></svg></span>
             </button>
             {it.open && (
@@ -1067,7 +1067,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                         style={{ marginBottom: '0px' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
-                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
                       </button>
                     )
                   })}
@@ -1108,6 +1108,7 @@ const FEATURE_STORE_SCENARIOS = [
     ],
     answer: 1,
     difficulty: 'mid',
+    isFree: false,
     diagnosis: 'Point-in-time correctness is only as good as the timestamp used. If the feature store is accidentally joining on `label_available_date` instead of `application_date`, post-outcome features (e.g., account behaviour after default) are included in training. The 8-point AUC jump is a red flag — legitimate feature improvements rarely produce gains this large without leakage.',
     fix: 'Audit every feature\'s computation timestamp against the event timestamp used in the join. For each feature, verify: (1) the feature was computed using only data available before the application date, and (2) the feature store join key is the application event timestamp, not any derived timestamp. A temporal holdout test — train on months 1–18, evaluate on months 19–24 — should produce similar AUC to the full-period evaluation if no leakage exists.',
   },
@@ -1124,6 +1125,7 @@ const FEATURE_STORE_SCENARIOS = [
     ],
     answer: 1,
     difficulty: 'mid',
+    isFree: false,
     diagnosis: 'Training-serving skew from feature staleness: the model learned that `user_transaction_count_24h = 15` is highly predictive of card testing. In production, by the time the fraud detection fires, the stale feature store still shows count = 3 from 5 minutes ago. The fraud signal is invisible to the model in real-time serving.',
     fix: 'For latency-sensitive fraud features: (1) measure actual feature staleness at serving time — log the delta between feature computation time and serving time, (2) if staleness exceeds the fraud attack window, add a direct database lookup at inference time bypassing the feature store cache for high-velocity features, (3) in training, inject realistic staleness by artificially lagging feature values by the observed serving lag — this trains the model on the actual distribution it will see in production.',
   },
@@ -1140,6 +1142,7 @@ const FEATURE_STORE_SCENARIOS = [
     ],
     answer: 1,
     difficulty: 'senior',
+    isFree: false,
     diagnosis: 'Immutability violation: the feature store should be append-only for historical data. Backfilling with updated values using original timestamps breaks the audit trail and invalidates all model evaluations that used those historical features. You can no longer reproduce the exact training or evaluation dataset the model was promoted on.',
     fix: 'Implement feature store immutability for historical records: backfills should write new records with a `backfill_timestamp` alongside the original `event_timestamp`, not overwrite. Models that need the improved LTV computation should be retrained and re-evaluated on the new backfilled data explicitly. The currently deployed model\'s offline evaluation should remain reproducible using the original feature values.',
   },
@@ -1175,6 +1178,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
     ],
     answer: 1,
     difficulty: 'junior',
+    isFree: true,
     diagnosis: 'Near-future leakage: churning customers often stop spending in the 30 days before cancelling. `revenue_30d` decreases, making `support_calls_per_dollar_spent` spike — but this spike occurs because the customer is already leaving, not because they are at risk. The model is partly learning post-churn behaviour rather than pre-churn risk signals.',
     fix: 'Shift revenue features to earlier windows: use `revenue_60d` or `revenue_90d` to reduce sensitivity to end-of-tenure spend reduction. Alternatively, use `support_call_count` and `revenue_30d` as separate features and let the model learn the interaction — if the interaction is genuine, the model will find it without needing a manually constructed ratio that amplifies the leakage.',
   },
@@ -1191,6 +1195,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
     ],
     answer: 2,
     difficulty: 'mid',
+    isFree: false,
     diagnosis: 'Tree-based models learn piecewise interactions via splits — they can approximate `age × income` through a sequence of splits but may need many splits to do so accurately, especially with continuous features. Ratio and difference features are harder for splits to approximate. Manual engineering is justified when the transformation is non-linear and the tree would need exponential depth to learn it.',
     fix: 'Guideline: for gradient boosting, manually engineer ratio and difference features where the ratio has known business meaning and is hard to approximate via splits. Avoid engineering polynomial products — trees handle these naturally. Always compare: train with and without the engineered feature, evaluate on a held-out set, and keep it only if it provides consistent lift across folds. SHAP analysis should confirm the feature is learning signal, not noise.',
   },
@@ -1206,6 +1211,8 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
       'The production data has different merchant IDs than the training data.',
     ],
     answer: 1,
+    difficulty: 'junior',
+    isFree: true,
     diagnosis: 'Target encoding leakage: when you compute `mean(target | merchant_id)` on the full training set, the encoding for any given merchant already incorporates that merchant\'s labels in the validation fold. The model sees a "contaminated" feature during validation — one that implicitly encodes the label. This makes the encoded feature appear extremely predictive during cross-validation but is unavailable in production for new or rare merchants.',
     fix: 'Apply target encoding inside the cross-validation loop: for each fold, compute encodings only from the training portion of that fold, not the full dataset. Use smoothed target encoding (blend fold-level mean with global mean) to handle low-frequency merchants. For production, apply the encoding learned from the full training set — but always evaluate on out-of-fold predictions to get an honest AUC estimate.',
   },
@@ -1227,14 +1234,14 @@ function InteractionLeakage() {
 }
 
 const MODULES = [
-  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator, difficulty: 'senior' },
-  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner, difficulty: 'junior' },
-  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder, difficulty: 'mid' },
-  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo, difficulty: 'mid' },
-  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider, difficulty: 'senior' },
-  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture, difficulty: 'senior' },
-  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug, difficulty: 'mid' },
-  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage, difficulty: 'junior' },
+  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator, difficulty: 'senior', isFree: false },
+  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner, difficulty: 'junior', isFree: true },
+  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder, difficulty: 'mid', isFree: false },
+  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo, difficulty: 'mid', isFree: false },
+  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider, difficulty: 'senior', isFree: false },
+  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture, difficulty: 'senior', isFree: false },
+  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug, difficulty: 'mid', isFree: false },
+  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage, difficulty: 'junior', isFree: true },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────

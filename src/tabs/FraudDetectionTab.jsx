@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CheckMark, CrossMark, WarningMark } from '../components/Icons'
 import PythonCell from '../components/PythonCell.jsx'
 
 // ─── LocalStorage key ─────────────────────────────────────────────────────────
@@ -1230,7 +1231,7 @@ function ReferenceCellDisplay({ title, code, onMarkRead, isDone }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ fontSize: '14px', color: isDone ? 'var(--mint)' : 'var(--prime)' }}>
-              {isDone ? '✓' : '⟨⟩'}
+              {isDone ? <CheckMark /> : '⟨⟩'}
             </span>
           </div>
           <div>
@@ -1315,7 +1316,7 @@ function JudgmentCheckpoint({ checkpoint, onComplete }) {
           </span>
           {revealed && (
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)', marginLeft: '4px' }}>
-              {isCorrect ? '✓ Correct' : '✗ See explanation'}
+              {isCorrect ? <><CheckMark /> Correct</> : <><CrossMark /> See explanation</>}
             </span>
           )}
         </div>
@@ -1359,8 +1360,8 @@ function JudgmentCheckpoint({ checkpoint, onComplete }) {
                 {opt.id.toUpperCase()}.
               </span>
               {opt.text}
-              {revealed && isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
-              {revealed && isSelected && !isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--rose)', fontSize: '12px' }}>✗</span>}
+              {revealed && isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+              {revealed && isSelected && !isCorrectOpt && <span style={{ marginLeft: '8px', color: 'var(--rose)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
             </button>
           )
         })}
@@ -1447,7 +1448,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             Phase 1 of 4
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-            ✓ Real execution
+            <CheckMark /> Real execution
           </span>
         </div>
         <h1 style={{
@@ -1492,7 +1493,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell1') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('fraud_cell1') ? '✓' : '1'}
+              {state.cellsDone.includes('fraud_cell1') ? <CheckMark /> : '1'}
             </span>
           </div>
           <div>
@@ -1518,7 +1519,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell2') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('fraud_cell2') ? '✓' : '2'}
+              {state.cellsDone.includes('fraud_cell2') ? <CheckMark /> : '2'}
             </span>
           </div>
           <div>
@@ -1545,7 +1546,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell3') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.cellsDone.includes('fraud_cell3') ? '✓' : '3'}
+              {state.cellsDone.includes('fraud_cell3') ? <CheckMark /> : '3'}
             </span>
           </div>
           <div>
@@ -1571,7 +1572,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cpF1') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-              {state.checkpointsDone.includes('cpF1') ? '✓' : '?'}
+              {state.checkpointsDone.includes('cpF1') ? <CheckMark /> : '?'}
             </span>
           </div>
           <div>
@@ -1620,7 +1621,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 Phase 2 of 4
               </span>
               <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-                ✓ Real execution
+                <CheckMark /> Real execution
               </span>
             </div>
             <h2 style={{
@@ -1645,7 +1646,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
                 <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell4') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                  {state.cellsDone.includes('fraud_cell4') ? '✓' : '4'}
+                  {state.cellsDone.includes('fraud_cell4') ? <CheckMark /> : '4'}
                 </span>
               </div>
               <div>
@@ -1671,7 +1672,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
                 <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell5') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                  {state.cellsDone.includes('fraud_cell5') ? '✓' : '5'}
+                  {state.cellsDone.includes('fraud_cell5') ? <CheckMark /> : '5'}
                 </span>
               </div>
               <div>
@@ -1697,7 +1698,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
                 <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell6') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                  {state.cellsDone.includes('fraud_cell6') ? '✓' : '6'}
+                  {state.cellsDone.includes('fraud_cell6') ? <CheckMark /> : '6'}
                 </span>
               </div>
               <div>
@@ -1724,7 +1725,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
                 <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cpF2') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                  {state.checkpointsDone.includes('cpF2') ? '✓' : '?'}
+                  {state.checkpointsDone.includes('cpF2') ? <CheckMark /> : '?'}
                 </span>
               </div>
               <div>
@@ -1755,7 +1756,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     Phase 3 of 4
                   </span>
                   <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-                    ✓ Real execution
+                    <CheckMark /> Real execution
                   </span>
                 </div>
                 <h2 style={{
@@ -1780,7 +1781,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell7') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                      {state.cellsDone.includes('fraud_cell7') ? '✓' : '7'}
+                      {state.cellsDone.includes('fraud_cell7') ? <CheckMark /> : '7'}
                     </span>
                   </div>
                   <div>
@@ -1806,7 +1807,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell8') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                      {state.cellsDone.includes('fraud_cell8') ? '✓' : '8'}
+                      {state.cellsDone.includes('fraud_cell8') ? <CheckMark /> : '8'}
                     </span>
                   </div>
                   <div>
@@ -1832,7 +1833,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell9') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                      {state.cellsDone.includes('fraud_cell9') ? '✓' : '9'}
+                      {state.cellsDone.includes('fraud_cell9') ? <CheckMark /> : '9'}
                     </span>
                   </div>
                   <div>
@@ -1859,7 +1860,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cpF3') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                      {state.checkpointsDone.includes('cpF3') ? '✓' : '?'}
+                      {state.checkpointsDone.includes('cpF3') ? <CheckMark /> : '?'}
                     </span>
                   </div>
                   <div>
@@ -1890,7 +1891,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         Phase 4 of 4
                       </span>
                       <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-                        ✓ Real execution
+                        <CheckMark /> Real execution
                       </span>
                     </div>
                     <h2 style={{
@@ -1915,7 +1916,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell10') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                          {state.cellsDone.includes('fraud_cell10') ? '✓' : '10'}
+                          {state.cellsDone.includes('fraud_cell10') ? <CheckMark /> : '10'}
                         </span>
                       </div>
                       <div>
@@ -1941,7 +1942,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell11') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                          {state.cellsDone.includes('fraud_cell11') ? '✓' : '11'}
+                          {state.cellsDone.includes('fraud_cell11') ? <CheckMark /> : '11'}
                         </span>
                       </div>
                       <div>
@@ -1967,7 +1968,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell12') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                          {state.cellsDone.includes('fraud_cell12') ? '✓' : '12'}
+                          {state.cellsDone.includes('fraud_cell12') ? <CheckMark /> : '12'}
                         </span>
                       </div>
                       <div>
@@ -1993,7 +1994,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell13') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                          {state.cellsDone.includes('fraud_cell13') ? '✓' : '13'}
+                          {state.cellsDone.includes('fraud_cell13') ? <CheckMark /> : '13'}
                         </span>
                       </div>
                       <div>
@@ -2019,7 +2020,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('fraud_cell14') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
-                          {state.cellsDone.includes('fraud_cell14') ? '✓' : '14'}
+                          {state.cellsDone.includes('fraud_cell14') ? <CheckMark /> : '14'}
                         </span>
                       </div>
                       <div>
@@ -2039,7 +2040,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                   {state.cellsDone.includes('fraud_cell14') && (
                     <div className="card animate-slide-up" style={{ padding: '20px 22px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.30)', borderLeft: '3px solid var(--mint)', marginBottom: '32px' }}>
                       <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--mint)', marginBottom: '8px', fontWeight: 700 }}>
-                        ✓ Phase 4 Complete
+                        <CheckMark /> Phase 4 Complete
                       </div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: '0 0 12px' }}>
                         Fraud Detection lab complete. You have mastered imbalance handling (class_weight vs SMOTE), precision@K thinking (operational metrics vs statistical metrics), drift detection (PSI + KS + prediction shift), and deployment architecture (FastAPI, Docker, K8s, ops runbook). The key judgment: when analyst feedback conflicts with statistical signals, trust the data — they only see what the model flagged, not what it missed.

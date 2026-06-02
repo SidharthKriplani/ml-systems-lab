@@ -526,7 +526,7 @@ function StackSection() {
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{s.philosophy}</p>
           </div>
           <div className="card" style={{ padding: '16px 20px', background: 'rgba(240,165,0,0.06)', borderColor: 'rgba(240,165,0,0.2)' }}>
-            <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>⚠ Anti-pattern at this stage</div>
+            <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Anti-pattern at this stage</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>{s.antipattern}</p>
           </div>
         </div>

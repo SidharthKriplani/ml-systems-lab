@@ -188,7 +188,7 @@ function IncidentRoom() {
                   fontFamily: "'Inter',sans-serif", fontSize: '13.5px', opacity: selected && !isSelected ? 0.4 : 1,
                   transition: 'all 0.15s',
                 }}>
-                {isRight && '✓ '}{isWrong && '✗ '}{opt.label}
+                {isRight && '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>'}{isWrong && '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}{opt.label}
               </button>
             )
           })}
@@ -209,7 +209,7 @@ function IncidentRoom() {
       {showFix && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ borderColor: 'rgba(240,165,0,0.30)', background: 'rgba(240,165,0,0.10)' }}>
-            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--prime)', marginBottom: '8px' }}>✓ Correct diagnosis. Here's the fix:</div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--prime)', marginBottom: '8px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Correct diagnosis. Here's the fix:</div>
             <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.75, margin: 0 }}>{inc.fix}</p>
           </div>
           <div className="card" style={{ borderColor: 'rgba(240,165,0,0.20)', background: 'rgba(240,165,0,0.07)' }}>
@@ -506,7 +506,7 @@ function DSOwnershipChain() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '36px', flexShrink: 0 }}>
                 <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
                   style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${isDone ? 'var(--prime)' : isOpen ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'var(--prime)' : 'var(--depth)', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: isDone ? 'var(--void)' : 'var(--ink-low)', fontWeight: 700, zIndex: 1 }}>
-                  {isDone ? '✓' : String(i + 1).padStart(2,'0').slice(-2)}
+                  {isDone ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : String(i + 1).padStart(2,'0').slice(-2)}
                 </button>
                 {i < DS_CHAIN.length - 1 && (
                   <div style={{ width: '2px', flex: 1, minHeight: '16px', background: isDone ? 'rgba(52,211,153,0.35)' : 'var(--rim)', marginTop: '2px', marginBottom: '2px' }} />
@@ -546,7 +546,7 @@ function DSOwnershipChain() {
                     </div>
                     <button onClick={() => setReviewed(r => ({ ...r, [node.id]: !r[node.id] }))}
                       style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '5px 14px', borderRadius: '6px', border: `1px solid ${isDone ? 'var(--prime)' : 'var(--rim)'}`, background: isDone ? 'rgba(240,165,0,0.15)' : 'transparent', color: isDone ? 'var(--prime)' : 'var(--ink-low)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                      {isDone ? '✓ Marked as reviewed' : 'Mark as reviewed'}
+                      {isDone ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Marked as reviewed' : 'Mark as reviewed'}
                     </button>
                   </div>
                 )}
@@ -1668,7 +1668,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
             <button onClick={() => toggle(i)} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: it.open ? accentColor + '08' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.15s' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '20px' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>{sc.title}</span>
-              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '✓' : '✗'}</span>}
+              {it.revealed && <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}</span>}
               <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--ink-ghost)', transition: 'transform 0.2s', transform: it.open ? 'rotate(90deg)' : 'rotate(0deg)' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 2l4 3-4 3"/></svg></span>
             </button>
 
@@ -1696,7 +1696,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                         style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
-                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}>✓</span>}
+                        {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
                       </button>
                     )
                   })}

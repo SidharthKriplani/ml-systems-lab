@@ -96,8 +96,8 @@ function DriftDashboard() {
         <div className="card" style={{ padding: '16px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             PSI alert threshold: <span style={{ color: psiThreshold < 0.1 ? 'var(--rose)' : psiThreshold > 0.3 ? 'var(--gold)' : 'var(--mint)', fontWeight: 600 }}>{psiThreshold}</span>
-            {psiThreshold < 0.1 && <span style={{ color: 'var(--rose)', fontSize: '10px', marginLeft: '6px' }}>⚠ alert fatigue</span>}
-            {psiThreshold > 0.3 && <span style={{ color: 'var(--gold)', fontSize: '10px', marginLeft: '6px' }}>⚠ too loose</span>}
+            {psiThreshold < 0.1 && <span style={{ color: 'var(--rose)', fontSize: '10px', marginLeft: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>alert fatigue</span>}
+            {psiThreshold > 0.3 && <span style={{ color: 'var(--gold)', fontSize: '10px', marginLeft: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>too loose</span>}
           </label>
           <input type="range" min={0.05} max={0.5} step={0.01} value={psiThreshold} onChange={e => setPsiThreshold(+e.target.value)} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '4px' }}>
@@ -154,7 +154,7 @@ function DriftDashboard() {
           </div>
           <div style={{ marginTop: '10px', fontSize: '12px', color: missed ? 'var(--rose)' : alertDelay !== null && alertDelay > 7 ? 'var(--gold)' : 'var(--mint)' }}>
             {missed ? 'No alert fired — drift undetected' :
-             alertDelay === 0 ? '✓ Alert fired same day as drift onset' :
+             alertDelay === 0 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Alert fired same day as drift onset' :
              `⚠ Alert fired ${alertDelay} day${alertDelay !== 1 ? 's' : ''} after drift onset`}
           </div>
         </div>
@@ -935,7 +935,7 @@ function MonitorCoverageAudit() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {stage.monitored.map((m, i) => (
                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <span style={{ color: 'var(--prime)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: 'var(--prime)', fontWeight: 700, flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>
                   <span style={{ fontSize: '13px', color: 'var(--ink-hi)' }}>{m}</span>
                 </div>
               ))}

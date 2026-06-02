@@ -664,6 +664,25 @@ Removed three sections that were adding weight without earning it:
 
 ---
 
+### v4.46 — Freemium gate v2, YouTube IDs, behavioral bank, Tally wiring, emoji→SVG (2026-06-02)
+
+**Freemium monetization upgrade:**
+- Scenario-level `isFree` gating in all 4 free modules (ModelsMath, FeatureEng, ModelEval, ClassicalML). 46 scenarios tagged based on difficulty: easy/junior→true, mid/senior/staff→false. AccessGate.jsx ready for scenario-level checks.
+
+**YouTube video enrichment:**
+- Added YouTube IDs to all 5 new Gradient posts from v4.45 (Feature Store, Leakage, Quantization, + 2 backfill: SHAP, Forecast Zoo). All verified via oEmbed API. v4.45 A/B Tests post already had video.
+
+**Interview behavioral content:**
+- 8 behavioral scenarios added to InterviewPrepTab covering production judgment: metric disagreement, silent degradation, resource conflict, architecture debate, critical bugs, explaining failures to non-technical leaders. Uses existing AccordionMCQ pattern. Score: `msl_score:behavioral`.
+
+**Community submission infrastructure:**
+- Tally form wiring complete: submit button in InterviewGrid, form spec documented for Avinash, admin workflow (download Tally JSON → merge into INTERVIEW_EXPERIENCES) in code comments. Growth trigger: N≥15 real submissions → visualizations auto-update.
+
+**Visual polish:**
+- 97 emoji→SVG replacements across 8 tabs (DLFineTuning, DLServing, DataModeling, FraudDetection, InterviewPrep, LoanDefault, ProjectLab, SparkLab). New Icons.jsx component for reusable CheckMark, CrossMark, WarningMark. All CSS variable compliant, no hardcoded colors.
+
+---
+
 ### v4.45 — Gradient posts, LandscapeTab region filter, HomeTab domain bars, Interview Experiences v2, difficulty tagging (2026-06-02)
 
 **Content expansion:**

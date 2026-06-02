@@ -428,7 +428,37 @@ function TagFrequencyChart({ experiences }) {
   )
 }
 
-// ── InterviewGrid ─────────────────────────────────────────────────────────────
+/**
+ * ── Admin Workflow: Interview Experience Submissions ──
+ *
+ * When real submissions arrive from Tally form (https://tally.so/r/wMRZzZ):
+ *
+ * 1. Monitor submissions via Tally dashboard
+ * 2. Once N >= 15 real submissions collected, download as JSON export
+ * 3. For each submission, create an entry in src/data/interviewExperiences.js with schema:
+ *    {
+ *      id: 'exp_XXX',
+ *      name: string,
+ *      company: string,
+ *      role: string,
+ *      yearsExp: number (0-20),
+ *      round: string (Behavioral, System Design, Coding, Deep Dive, Take-home),
+ *      date: string (YYYY-MM format),
+ *      tags: string[] (selected from skills covered checkboxes),
+ *      prepSource: string (mapped from "How did you prepare?" field),
+ *      result: string (Offer, Reject, Pending, Advance to next round)
+ *    }
+ * 4. Tally field mapping:
+ *    - "Skills covered" (checkboxes) → tags array
+ *    - "How did you prepare?" (optional text) → prepSource
+ *    - "Outcome" (multiple choice) → result
+ * 5. Add new entries to INTERVIEW_EXPERIENCES array in src/data/interviewExperiences.js
+ * 6. Commit + push to trigger Vercel deploy
+ * 7. TagFrequencyChart automatically re-renders with updated data
+ *
+ * Growth metric: Track when N >= 15 real submissions reached to enable
+ * visualization v2 (currently seeds with 15 sample records for demo)
+ */
 function InterviewGrid({ onSelect, isUnlocked }) {
   return (
     <div style={{ paddingTop: '8px' }}>
@@ -463,11 +493,11 @@ function InterviewGrid({ onSelect, isUnlocked }) {
             Share your interview experience
           </div>
           <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.6, maxWidth: '480px' }}>
-            Paste what happened — questions asked, rounds, company, role. We review and add it to the ML interview experience base, building a skill frequency map over time.
+            Help others prepare by sharing your interview journey. We'll add your experience to our community insights and build a skill frequency map over time.
           </div>
         </div>
         <a
-          href="https://tally.so/r/REPLACE_WITH_YOUR_TALLY_ID"
+          href="https://tally.so/r/wMRZzZ"
           target="_blank"
           rel="noopener noreferrer"
           style={{

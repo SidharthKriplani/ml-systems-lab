@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { CheckMark, CrossMark } from '../components/Icons'
 
 // ─── Shared styles ─────────────────────────────────────────────────────────────
 const ACCENT = 'var(--prime)'
@@ -745,8 +746,8 @@ function ServingModule() {
                       gap: '8px',
                     }}
                   >
-                    {isRevealed && isAnswer && <span style={{ color: 'var(--mint)' }}>✓</span>}
-                    {isRevealed && isPicked && !isAnswer && <span style={{ color: 'var(--rose)' }}>✗</span>}
+                    {isRevealed && isAnswer && <span style={{ color: 'var(--mint)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+                    {isRevealed && isPicked && !isAnswer && <span style={{ color: 'var(--rose)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
                     {arch}
                   </button>
                 )
@@ -776,7 +777,7 @@ function ServingModule() {
                   color: 'var(--ink-hi)',
                   fontWeight: 600,
                 }}>
-                  {isCorrect ? '✓ Correct.' : `✗ Not quite. Correct: ${scenario.answer}`}
+                  {isCorrect ? <><CheckMark /> Correct.</> : <><CrossMark /> Not quite. Correct: {scenario.answer}</> }
                 </div>
                 <div style={{
                   padding: '12px 14px',

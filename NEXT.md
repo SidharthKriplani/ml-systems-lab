@@ -38,6 +38,17 @@ Nothing currently blocked.
 
 ---
 
+## Done this session (v4.46)
+
+- ~~Freemium gate v2 — per-scenario `isFree` flags (46 scenarios tagged easy/junior=true, mid/senior/staff=false)~~
+- ~~YouTube IDs for Gradient posts — 5 new + 2 backfill, all verified via oEmbed~~
+- ~~Behavioral question bank — 8 scenarios covering production judgment (metrics, degradation, resources, architecture, bugs, leadership)~~
+- ~~Tally form wiring — submit button, form spec, admin workflow documented~~
+- ~~Emoji → SVG sweep — 97 replacements across 8 tabs, new Icons.jsx component~~
+- ~~LINEAGE.md v4.46 entry, IDEAS.md items marked done, METRICS.md keys added, NEXT.md batch complete~~
+
+---
+
 ## Done this session (v4.45)
 
 - ~~Fraud Detection phases 2–4 (3 cells per phase + checkpoints) — SMOTE vs class_weight, PSI/KS drift, FastAPI + K8s + Ops Runbook~~
@@ -52,10 +63,23 @@ Nothing currently blocked.
 
 ---
 
-## What comes after (not for this session)
+## Next session (v4.47+)
 
-- **Difficulty + industry filter** — tag 200+ scenarios; content work prerequisite.
-- **Freemium gate v2** — per-scenario `isFree` flags.
-- **Interview Experiences v2** — frequency chart (after N≥15 Tally submissions).
-- **LandscapeTab country filter** — India/UK/US/EU region field.
-- **Simplify toggle for Gradient posts** — build trigger: ≥10 complete posts.
+### 1. Polish freemium gate integration (1.5 hours)
+Wire scenario-level gating into tab renders. Check scenario `isFree` at render time; wrap answer reveals with gate logic: show gate if `!isFree && accessCode !== 'DAI2026'`. Update 4 free modules to use new gating. Test: easy/junior flow free, mid/senior require code.
+
+### 2. Difficulty filter UI — practice zone sidebar (2 hours)
+Add difficulty filter pills (easy/junior/mid/senior/staff) to PracticeDomainCard sidebar. Filter visible modules by difficulty. Persist selection in localStorage (`msl_difficulty_filter`). Chains with freemium gate v2 (users see difficulty before hitting paywall).
+
+### 3. Interview Experiences — real Tally submissions (1.5 hours)
+Monitor Tally form for submissions. When N≥15 real submissions collected: download as JSON, format to INTERVIEW_EXPERIENCES schema, merge into array, commit + deploy. TagFrequencyChart auto-updates. Growth metric: track submission velocity.
+
+### 4. Mobile responsiveness audit + fixes (1.5 hours)
+Test all v4.46 changes on mobile (375px, 768px breakpoints). Check: domain bars layout, emoji icon sizing, Tally button tap target, behavioral scenarios overflow, frequency chart responsiveness. Fix any layout breaks.
+
+### 5. Gradient posts — add 3 more posts (2 hours)
+Priority from IDEAS.md backlog: "Feature Importance Drift" (FeatureEngTab), "Training-Serving Skew" (SystemDesignTab), "Calibration Loss in Production" (ModelEvalTab). Each post: scenario, production consequence, practice tab link, YouTube ID if found.
+
+---
+
+## What comes after (not for this session)

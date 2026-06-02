@@ -82,12 +82,14 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_onboarded` | `string ('1')` | `HomeTab` | Written once when a first-time user dismisses the cold-state orientation banner or clicks through to a tab. Prevents the banner from showing on subsequent HomeTab visits. Never expires. |
 | `msl_feedback_last` | `string (Unix timestamp)` | `FeedbackChip` | Timestamp (ms) of last feedback form submission. Chip re-shows after 30 days. Set on successful Formspree POST. Never expires — just determines cooldown window. |
 | `msl_projectlab_loan_data` | `JSON { cellsDone: string[], checkpointsDone: string[] }` | `LoanDefaultTab` | Progress for the Loan Default notebook. All 4 phases complete. `cellsDone` ∈ `['loan_cell1'…'loan_cell14']`. `checkpointsDone` ∈ `['cpL1','cpL2','cpL3']`. Phase 1: loan_cell1–3, cpL1. Phase 2: loan_cell4–6, cpL2. Phase 3: loan_cell7–9, cpL3. Phase 4: loan_cell10–14 (mark-as-read, no checkpoint). |
-| `msl_projectlab_fraud_data` | `JSON { cellsDone: string[], checkpointsDone: string[] }` | `FraudDetectionTab` | Progress for the Fraud Detection notebook. `cellsDone` ∈ `['fraud_cell1'…'fraud_cell(N)']` (grows as phases ship). `checkpointsDone` ∈ `['cpF1'…'cpF(N)']`. Phase 1: fraud_cell1–3, cpF1. Phases 2–4 planned. |
+| `msl_projectlab_fraud_data` | `JSON { cellsDone: string[], checkpointsDone: string[] }` | `FraudDetectionTab` | Progress for the Fraud Detection notebook. ALL 4 PHASES COMPLETE (v4.45). `cellsDone` ∈ `['fraud_cell1'…'fraud_cell14']`. `checkpointsDone` ∈ `['cpF1','cpF2','cpF3']`. Phase 1: fraud_cell1–3, cpF1. Phase 2: fraud_cell4–6, cpF2. Phase 3: fraud_cell7–9, cpF3. Phase 4: fraud_cell10–14, mark-as-read (no checkpoint). |
 | `msl_spot_the_flaw` | `JSON object` | `SpotTheFlawTab` | Map of `{ scenarioId: { selected: string, correct: boolean } }` — persists which scenarios have been attempted and whether the flaw category was identified correctly. Powers score strip (`attempted/total` and percentage). |
 | `msl_score:causal_dag` | `JSON` | `CausalInferenceTab` — CausalDAGExplorer | Custom score for the DAG node-role identification module. Tracks correct/attempted across 3 pre-built DAGs. |
 | `msl_score:causal_exp` | `JSON` | `CausalInferenceTab` — ExperimentDesignFailures | AccordionMCQ score for experiment design failures module (SRM, novelty effect, SUTVA). |
 | `msl_score:dl_arch` | `JSON` | `DeepLearningTab` — ArchDecisionLab | AccordionMCQ score for architecture decision scenarios (CNN vs ViT, TFT vs LSTM, MoE vs dense). |
 | `msl_score:classical_boundary` | `JSON {completed:true, ts:number}` | `ClassicalMLTab` — DecisionBoundaryLab | Written once when user has explored all 5 classifier modes. `ts` is Unix timestamp of completion. |
+| `msl_landscape_region` | `string` | `LandscapeTab` — Region selector | Selected region for career data filtering: 'Global' (default) or 'India'/'UK'/'US'/'EU'. Persists across sessions. |
+| `msl_score:behavioral` | `JSON {completed:true, ts:number}` | `InterviewPrepTab` — Behavioral scenarios | Interview behavioral judgment score. Written when behavioral scenario is completed. Tracks correctness and timestamps. |
 
 ---
 

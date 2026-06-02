@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { CheckMark } from '../components/Icons'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
 
@@ -180,6 +181,169 @@ const QUESTIONS = [
   { id: 128, cat: 'Regression', company: 'Any', level: 'Senior', q: "How do you approach a regression problem where the target is highly right-skewed (e.g., revenue, lifetime value)?", answer: "Right-skewed targets create problems for OLS: residuals are non-normal, a few large values dominate the MSE loss, and the model may overfit to outliers. Options: (1) Log-transform the target: fit on log(y), predict log(y_hat), back-transform with exp(y_hat). Handles multiplicative relationships well. Caveat: back-transforming gives the median, not the mean — add a smearing correction (Duan's smearing estimator) if you need E[y] not median. (2) Use a model with a natural right-skew assumption: Gamma regression (for positive continuous targets with multiplicative variance), Tweedie regression (for mix of zeros and positives — e.g., insurance claims). (3) Quantile regression: predict P50 (or any quantile) directly. Robust to outliers, no back-transform bias. Use L1 loss (absolute value, which minimises the median). (4) Robust loss: Huber loss — behaves like MSE for small residuals, MAE for large ones. Reduces influence of outliers without throwing them away. (5) Winsorise the target at a high percentile (e.g., 99th), train on winsorised values, accept that you're modelling the typical case and not extreme tails. Practical advice: always plot residual distribution before choosing. Log-transform + linear model often beats a complex model on a raw skewed target." },
 ]
 
+const BEHAVIORAL_SCENARIOS = [
+  {
+    id: 'behav_1',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'Your fraud model has AUC 0.91 but the VP of Risk demands recall ≥ 95%. Your best model only hits 0.72 recall. How do you handle this conversation?',
+    options: {
+      A: 'Ship the model anyway — AUC is the superior metric; stakeholders do not understand ML.',
+      B: 'Retrain with a lower classification threshold to hit 95% recall, accept the precision drop.',
+      C: 'Schedule a meeting to align on metric definition first, present tradeoff curves showing AUC vs recall vs precision.',
+      D: 'Use an ensemble of multiple models to optimize both metrics simultaneously.',
+    },
+    correct: 'C',
+    explanation: {
+      C: 'This is the production-grade response. You do not ship a model to an undefined specification. Present the tradeoff curve — show what recall rate is achievable at different precision levels. Let the VP choose the operating point based on business cost (cost of missing fraud vs cost of false positives). Then retrain with the agreed threshold. Alignment before modeling saves weeks of rework.',
+      A: 'Dismissing stakeholder input is how models accumulate hidden debt. AUC alone is insufficient for this use case — the business cares about operational cost, not statistical purity. Shipping without alignment will be blocked in production.',
+      B: 'You can hit 95% recall, but at what precision cost? If you blindly retrain for the metric without understanding the cost tradeoff, you may produce a model that flags 80% of transactions as fraud — operationally useless.',
+      D: 'Ensembles do not create non-existent tradeoff points. You still have the same precision-recall frontier; an ensemble just explores it differently. The real problem is undefined business requirements, not model architecture.',
+    },
+  },
+  {
+    id: 'behav_2',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'Your fraud model shipped 2 weeks ago. You just discovered it is degrading silently — precision dropped from 0.75 to 0.52 due to merchant/geography distribution shift. Users are complaining about too many false positives. Your first move?',
+    options: {
+      A: 'Emergency revert the model immediately to the previous version.',
+      B: 'Alert your manager and hand off to leadership; the technical investigation is not your responsibility.',
+      C: 'Silently retrain on the new data and ship an update; let the degradation stabilize naturally.',
+      D: 'Investigate root cause first — is this a data pipeline issue, real user behavior change, or label drift?',
+    },
+    correct: 'D',
+    explanation: {
+      D: 'Investigate before you act. Root cause determines the fix. If it is a data pipeline bug (missing merchants, schema drift), revert is correct. If it is real distribution shift (new geographies, new merchant types), you need retraining. If it is label drift (definition of fraud changed), you need relabeling. Acting without diagnosis wastes time.',
+      A: 'Reverting is safe but may be unnecessary. If the degradation is due to natural distribution shift and labels are correct, reverting just postpones the problem. Investigate first.',
+      B: 'You are the owner. Hand-off to leadership without a technical understanding of the issue is abdication. Leadership needs your analysis to decide rollback vs retrain vs pipeline fix.',
+      C: 'Silent retraining hides the incident from stakeholders. If precision continues to degrade, you have no audit trail and no stakeholder awareness. The issue will surface when a bigger failure occurs.',
+    },
+  },
+  {
+    id: 'behav_3',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'Your model is slated for production in 5 days. You have just been handed a new dataset that could improve performance significantly, but proper evaluation will take 10 days. The PM says the go-live date is fixed. How do you proceed?',
+    options: {
+      A: 'Ignore the new dataset and ship with the old data on schedule.',
+      B: 'Demand 10 days and miss the deadline; unvalidated models are too risky.',
+      C: 'Propose a phased approach: ship with proven data in 5 days, integrate new data in v2 two weeks later with parallel training.',
+      D: 'Train on partial new data in 5 days and accept less rigorous validation.',
+    },
+    correct: 'C',
+    explanation: {
+      C: 'This is how mature teams balance speed and rigor. Shipping on time with proven data is better than missing deadline with unvalidated improvements. Version the approach: v1 = current data, v2 = new data after proper validation. This keeps the product launch on track and gives you time to validate properly.',
+      A: 'Missed opportunity, but safe. If the new data is materially better, shipping without it is leaving value on the table.',
+      B: 'Blocking the launch for unvalidated improvements is also risky — missed business windows are costly. A phased approach de-risks both speed and quality.',
+      D: 'Partial validation is a middle ground but creates technical debt. You ship with uncertainty about the new data; if it causes problems in production, you have no fallback and no validation evidence.',
+    },
+  },
+  {
+    id: 'behav_4',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'Your ML engineer wants to serve the model via batch inference (daily, 1M predictions cached). You prefer online inference (real-time, <100ms). The engineer argues batch is cheaper. How do you resolve this?',
+    options: {
+      A: 'Defer to their preference — they own the infrastructure.',
+      B: 'Demand online serving; real-time is always the right choice.',
+      C: 'Lay out cost, latency, staleness, and complexity tradeoffs; let product decide based on requirements.',
+      D: 'Build both and let users choose which model to call.',
+    },
+    correct: 'C',
+    explanation: {
+      C: 'The choice depends on product requirements. Batch is cheaper and simpler but predictions are stale (up to 24h old). Online is fresher and enables personalization but costs more and is operationally complex. Create a matrix: cost per prediction, latency, update frequency, and operational burden. Let the product owner decide based on use case. Your job is clarity on tradeoffs, not mandate.',
+      A: 'Deferring on a strategic architectural choice is abdication. Infrastructure is a means to meet product requirements, not an end in itself.',
+      B: 'Online is not always right. For recommendation feeds (users expect stale lists) or batch reports (no latency requirement), batch is perfectly appropriate. Demanding online adds unnecessary cost.',
+      D: 'Offering both models creates dual maintenance burden and confuses the product roadmap. One model per use case is the right constraint.',
+    },
+  },
+  {
+    id: 'behav_5',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'You are on holiday. A critical bug surfaces — the model silently outputs NaN for 0.5% of requests due to missing value handling. The team is deciding: (A) revert to previous model (safe, loses recent improvements), or (B) hotfix and redeploy (risky, preserves improvements). You are asked to decide. What do you do?',
+    options: {
+      A: 'Tell them to revert immediately; you will debug offline.',
+      B: 'The fix is simple; revert is overkill. Tell them to ship the hotfix.',
+      C: 'Set up a call to understand scope and impact, then let the on-call engineer and PM decide with you as a backup.',
+      D: 'Stay out of it; your team can handle production issues without you.',
+    },
+    correct: 'C',
+    explanation: {
+      C: 'You are backup, not the decision-maker. On-call engineers own the incident. Understand the scope (0.5% is material but not catastrophic) and impact (NaN predictions hitting users?), then let them decide based on risk tolerance and current severity. Your input: "Revert is safer, hotfix is faster. Your call." This empowers the team and distributes decision authority.',
+      A: 'Deferring to revert is safe but you are making the decision remotely without understanding current context. On-call teams have better information.',
+      B: 'You do not know the hotfix quality or testing coverage. Dismissing revert because "the fix is simple" is overconfident.',
+      D: 'Staying completely out means you are not available if they need escalation. You are backup; available but delegated.',
+    },
+  },
+  {
+    id: 'behav_6',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'The CFO asks in a meeting: "Why did we shut down the churn prediction model? I thought it was working." You disabled it because it degraded 6 months post-launch (PSI > 0.25). She is skeptical — "Can\'t you just retrain?" Explain in 2 minutes why it is not simple.',
+    options: {
+      A: 'Give her the technical details — distribution shift, PSI calculation, retraining overhead.',
+      B: '"It stopped working, we shut it down, we\'re building v2."',
+      C: '"The data the model learned from 6 months ago is not valid anymore. It\'s like predicting last quarter\'s stock price with this quarter\'s economy. We need to learn a new model from current data, which takes time."',
+      D: 'Blame the data team for not maintaining data quality.',
+    },
+    correct: 'C',
+    explanation: {
+      C: 'Analogies work with non-technical audiences. The model is stale. Data changed. You are not abandoning ML, you are building a new one from current data. This frames the issue in business terms — outdated information — not technical jargon. She understands the intuition immediately.',
+      A: 'PSI calculations and technical terms will lose her. You are answering the question she did not ask.',
+      B: 'Too vague. She will ask follow-up questions and think you do not understand the problem.',
+      D: 'Blaming the data team (and implicitly yourself) is not credible and does not answer her question. Own it.',
+    },
+  },
+  {
+    id: 'behav_7',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'A senior scientist on your team insists you need a Transformer for a tabular fraud detection task. You think LightGBM with good features will match or beat it at a fraction of the latency. How do you resolve this without it becoming a personality clash?',
+    options: {
+      A: 'Argue in the abstract that tree models are proven for tabular data.',
+      B: 'Propose a structured comparison: both on the same training data, same evaluation set, metrics on PR-AUC, P99 latency, and training cost.',
+      C: 'Build LightGBM as a baseline to prove trees are competitive, then use that as the champion model.',
+      D: 'Escalate to your manager to decide which architecture to pursue.',
+    },
+    correct: 'B',
+    explanation: {
+      B: 'Make it empirical, not opinionated. Build both models on identical data with identical evaluation. Compare on metrics that matter: accuracy, latency, cost. Let the data decide, not opinion. This is how mature teams settle architecture debates.',
+      A: 'Abstract arguments devolve into opinion battles. "Trees are proven" is not more convincing than "Transformers are flexible."',
+      C: 'You are not being impartial if you build only LightGBM. Build both, or propose they build Transformer while you build LightGBM, then compare.',
+      D: 'Escalating a technical decision to management wastes their time and sidesteps the point: you have the skills to decide this, and a fair comparison will resolve it.',
+    },
+  },
+  {
+    id: 'behav_8',
+    cat: 'Behavioral',
+    company: 'Any',
+    level: 'Senior',
+    q: 'You discover data leakage in production 3 weeks after deploying a lead scoring model. Offline AUC was 0.94, but you found that a feature was computed using data that arrived AFTER the prediction event. Corrected AUC drops to 0.81. What do you do?',
+    options: {
+      A: 'Quietly retrain and ship the corrected model; no need to disclose an internal mistake.',
+      B: 'Flag it immediately, put the model in read-only mode, fix the feature pipeline, retrain, and disclose internally.',
+      C: 'Investigate more before alerting anyone; you might be wrong about the leakage.',
+      D: 'Revert to the previous model and ask for a comprehensive audit of all features.',
+    },
+    correct: 'B',
+    explanation: {
+      B: 'This is the production-grade response. (1) Acknowledge immediately — silence makes it worse when discovered later. (2) Disable the model to prevent leakage from propagating downstream. (3) Fix the root cause (feature pipeline timestamp bug). (4) Retrain with corrected features. (5) Document the incident and add validation to prevent recurrence. Transparency builds trust; cover-ups destroy it.',
+      A: 'Quiet retraining is a cover-up. If discovered later, it looks like intentional deception and kills credibility.',
+      C: 'You have evidence (feature timestamp > prediction timestamp). Verify once more if you are uncertain, but do not delay disclosure.',
+      D: 'Do a comprehensive audit as a follow-up, but do not gate immediate response on it. Disable the broken model now, audit later.',
+    },
+  },
+]
+
 const CATEGORIES = ['All', 'System Design', 'Features', 'Evaluation', 'Spark', 'Statistics', 'Trees & Ensembles', 'SQL', 'Regression', 'Coding', 'Architecture', 'Behavioral']
 const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netflix', 'Amazon', 'Any']
 const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
@@ -291,6 +455,124 @@ function FluencyDrills() {
             title={`Drill ${i + 1}`}
             style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < idx ? 'var(--prime)' : i === idx ? 'var(--prime)' : 'var(--rim)', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
         ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Behavioral Scenarios Component ──────────────────────────────────────
+function BehavioralScenarios() {
+  const [answers, setAnswers] = useState({})
+
+  useEffect(() => {
+    const saved = localStorage.getItem('msl_score:behavioral')
+    if (saved) setAnswers(JSON.parse(saved))
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('msl_score:behavioral', JSON.stringify(answers))
+  }, [answers])
+
+  const handleAnswer = (scenarioId, option) => {
+    setAnswers(prev => ({ ...prev, [scenarioId]: option }))
+  }
+
+  const score = BEHAVIORAL_SCENARIOS.filter(s => answers[s.id] === s.correct).length
+
+  return (
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 22, color: 'var(--ink-hi)', margin: '0 0 4px' }}>
+          Behavioral Scenarios
+        </h2>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--ink-mid)', margin: '0 0 4px' }}>
+          {BEHAVIORAL_SCENARIOS.length} ML-specific behavioral judgment questions. Real situations, right and wrong approaches.
+        </p>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-sans)' }}>
+          Metric disagreements with stakeholders. Silent model degradation. Balancing deadline pressure with rigor. Architecture decisions. Production incidents while on holiday.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, color: 'var(--prime)', lineHeight: 1 }}>
+          {score}
+          <span style={{ fontSize: 16, color: 'var(--ink-ghost)', fontWeight: 400 }}>/{BEHAVIORAL_SCENARIOS.length}</span>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-hi)' }}>
+            Correct answers
+          </div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--ink-low)' }}>
+            {Object.keys(answers).length} of {BEHAVIORAL_SCENARIOS.length} answered
+          </div>
+        </div>
+        {Object.keys(answers).length > 0 && (
+          <div style={{ marginLeft: 'auto' }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 4, height: 6, width: 120, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(score / BEHAVIORAL_SCENARIOS.length) * 100}%`, background: 'var(--prime)', borderRadius: 4, transition: 'width 0.4s ease' }} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--ink-ghost)', marginTop: 3, textAlign: 'right' }}>
+              {Math.round((score / BEHAVIORAL_SCENARIOS.length) * 100)}%
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {BEHAVIORAL_SCENARIOS.map(scenario => {
+          const answered = answers[scenario.id]
+          const isCorrect = answered === scenario.correct
+          const bgColor = 'rgba(240,165,0,0.08)'
+          const borderColor = 'rgba(240,165,0,0.20)'
+
+          return (
+            <div key={scenario.id} className="card" style={{ padding: '20px', overflow: 'hidden', border: `1px solid ${borderColor}`, background: bgColor }}>
+              <div style={{ marginBottom: '14px' }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, marginBottom: '12px' }}>
+                  {scenario.q}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {Object.entries(scenario.options).map(([key, text]) => (
+                    <button
+                      key={key}
+                      className={`msl-option-btn${answered && key === scenario.correct ? ' correct' : answered && key === answered ? ' wrong' : ''}`}
+                      style={{ marginBottom: 0, cursor: answered ? 'default' : 'pointer' }}
+                      onClick={() => !answered && handleAnswer(scenario.id, key)}
+                      disabled={answered}
+                    >
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, marginRight: 8, color: answered && key === scenario.correct ? 'var(--mint)' : answered && key === answered ? 'var(--rose)' : 'var(--ink-ghost)' }}>
+                        {key})
+                      </span>
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {answered && (
+                <div className="msl-reveal-panel" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(240,165,0,0.20)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                    {isCorrect ? 'Correct' : 'Wrong'} — {scenario.correct}
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, marginBottom: '10px' }}>
+                    {scenario.explanation[scenario.correct]}
+                  </p>
+                  {scenario.explanation[answered] && answered !== scenario.correct && (
+                    <>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', marginTop: '10px' }}>
+                        Why {answered} is wrong
+                      </div>
+                      <p style={{ fontSize: 13, color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+                        {scenario.explanation[answered]}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -425,7 +707,7 @@ function TimedPractice({ questions, onExit }) {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: TIER_LEVELS.find(t => t.key === tierSelected)?.color, fontWeight: 700 }}>
-                ✓ {tierSelected.toUpperCase()}
+                <CheckMark /> {tierSelected.toUpperCase()}
               </span>
               <button className="btn-primary" onClick={nextQ} disabled={isLast}>
                 {isLast ? 'View summary →' : 'Next question →'}
@@ -599,7 +881,7 @@ function SystemDesignJudgment() {
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function InterviewPrepTab({ onNavigate }) {
-  const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency' | 'design'
+  const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency' | 'design' | 'behavioral'
   const [cat,     setCat]     = useState('All')
   const [company, setCompany] = useState('All')
   const [level,   setLevel]   = useState('All')
@@ -626,6 +908,7 @@ export default function InterviewPrepTab({ onNavigate }) {
     { key: 'practice',label: 'Timed Practice' },
     { key: 'fluency', label: 'Fluency Drills' },
     { key: 'design',  label: 'Design Judgment' },
+    { key: 'behavioral', label: 'Behavioral' },
   ]
 
   return (
@@ -656,6 +939,9 @@ export default function InterviewPrepTab({ onNavigate }) {
 
       {/* Design Judgment mode */}
       {mode === 'design' && <SystemDesignJudgment />}
+
+      {/* Behavioral Scenarios mode */}
+      {mode === 'behavioral' && <BehavioralScenarios />}
 
       {/* Bank mode */}
       {mode === 'bank' && (

@@ -1380,7 +1380,7 @@ export default function CombinatorTab({ onNavigate }) {
           color: 'var(--ink-mid)',
           lineHeight: 1.5,
         }}>
-          <span style={{ color: 'var(--prime)' }}>⚠</span>{' '}
+          <span style={{ color: 'var(--prime)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>{' '}
           All answers are locked until the timer runs out. You must attempt every question.
         </div>
 
@@ -1748,7 +1748,7 @@ export default function CombinatorTab({ onNavigate }) {
             color: copied ? 'var(--prime)' : 'var(--ink-mid)', cursor: 'pointer',
             fontFamily: 'var(--font-mono)', transition: 'color 0.2s',
           }}>
-            {copied ? '✓ Copied!' : '⎘ Share Score'}
+            {copied ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Copied!' : '⎘ Share Score'}
           </button>
         </div>
 
@@ -1823,8 +1823,8 @@ export default function CombinatorTab({ onNavigate }) {
                           {['A', 'B', 'C', 'D'][optIdx]}
                         </span>
                         {opt}
-                        {isCorrectOpt && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓ correct</span>}
-                        {isUserOpt && !isCorrectOpt && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✗ your answer</span>}
+                        {isCorrectOpt && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>correct</span>}
+                        {isUserOpt && !isCorrectOpt && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>your answer</span>}
                       </div>
                     )
                   })}

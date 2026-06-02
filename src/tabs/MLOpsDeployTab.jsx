@@ -127,7 +127,7 @@ function DeployStrategy() {
                 color: active === i ? 'var(--prime)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
-              {done ? (correct ? '✓' : '✗') : '·'} {i + 1}
+              {done ? (correct ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>') : '·'} {i + 1}
             </button>
           )
         })}
@@ -178,8 +178,8 @@ function DeployStrategy() {
                 transition: 'all 0.15s',
               }}>
               <div style={{ ...grotesk, fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '3px' }}>
-                {isRevealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '5px' }}>✓</span>}
-                {isRevealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '5px' }}>✗</span>}
+                {isRevealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '5px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+                {isRevealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '5px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
                 {s.label}
               </div>
               <div style={{ ...mono, fontSize: '11px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{s.desc}</div>
@@ -197,7 +197,7 @@ function DeployStrategy() {
             border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
           }}>
             <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
-              {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Engineering reasoning
+              {picks[scenario.id] === scenario.correct ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Correct' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Not quite'} — Engineering reasoning
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
               <strong style={{ color: 'var(--ink-hi)' }}>
@@ -231,14 +231,14 @@ function DeployStrategy() {
 
 // ─── Module 2: Champion-Challenger ────────────────────────────────────────────
 const METRICS_TABLE = [
-  { metric: 'AUC-PR',              champion: '0.847',  challenger: '0.861', delta: '+1.7%',  status: '✓ Better', statusColor: 'var(--mint)' },
-  { metric: 'Calibration (ECE)',   champion: '0.043',  challenger: '0.038', delta: '-12%',   status: '✓ Better', statusColor: 'var(--mint)' },
-  { metric: 'p50 latency',         champion: '12ms',   challenger: '18ms',  delta: '+50%',   status: '⚠ Worse',  statusColor: 'var(--gold)' },
-  { metric: 'p99 latency',         champion: '45ms',   challenger: '89ms',  delta: '+98%',   status: '✗ Bad',    statusColor: 'var(--rose)' },
-  { metric: 'Memory per instance', champion: '420MB',  challenger: '780MB', delta: '+86%',   status: '⚠ Worse',  statusColor: 'var(--gold)' },
-  { metric: 'False positive rate', champion: '4.2%',   challenger: '3.8%',  delta: '-10%',   status: '✓ Better', statusColor: 'var(--mint)' },
-  { metric: 'Coverage (% scored)', champion: '99.1%',  challenger: '99.3%', delta: '+0.2%',  status: '✓ Better', statusColor: 'var(--mint)' },
-  { metric: 'Training time',       champion: '4h',     challenger: '7h',    delta: '+75%',   status: '⚠ Worse',  statusColor: 'var(--gold)' },
+  { metric: 'AUC-PR',              champion: '0.847',  challenger: '0.861', delta: '+1.7%',  status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
+  { metric: 'Calibration (ECE)',   champion: '0.043',  challenger: '0.038', delta: '-12%',   status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
+  { metric: 'p50 latency',         champion: '12ms',   challenger: '18ms',  delta: '+50%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
+  { metric: 'p99 latency',         champion: '45ms',   challenger: '89ms',  delta: '+98%',   status: '<CrossIcon />{' '}Bad',    statusColor: 'var(--rose)' },
+  { metric: 'Memory per instance', champion: '420MB',  challenger: '780MB', delta: '+86%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
+  { metric: 'False positive rate', champion: '4.2%',   challenger: '3.8%',  delta: '-10%',   status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
+  { metric: 'Coverage (% scored)', champion: '99.1%',  challenger: '99.3%', delta: '+0.2%',  status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
+  { metric: 'Training time',       champion: '4h',     challenger: '7h',    delta: '+75%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
 ]
 
 const CC_QUESTIONS = [
@@ -384,7 +384,7 @@ function ChampionChallenger() {
                 color: i < step ? 'var(--mint)' : i === step ? 'var(--prime)' : 'var(--ink-low)',
                 border: i === step ? '1.5px solid var(--prime)' : '1.5px solid transparent',
               }}>
-                {i < step ? '✓' : i + 1}
+                {i < step ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : i + 1}
               </div>
             ))}
             <span style={{ ...mono, fontSize: '11px', color: 'var(--prime)', marginLeft: '6px' }}>Decision {step + 1} of 4</span>
@@ -412,8 +412,8 @@ function ChampionChallenger() {
                       textAlign: 'left', opacity: revealed && !isPicked && !isCorrect ? 0.4 : 1,
                       transition: 'all 0.15s', ...grotesk, fontSize: '13px', color: 'var(--ink-hi)',
                     }}>
-                    {revealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '6px' }}>✓</span>}
-                    {revealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '6px' }}>✗</span>}
+                    {revealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+                    {revealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
                     {opt.label}
                   </button>
                 )
@@ -456,7 +456,7 @@ function ChampionChallenger() {
           <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
             {answers.map((a, i) => (
               <span key={i} style={{ ...pill(a.pick === a.correct ? 'var(--mint)' : 'var(--rose)') }}>
-                Q{i + 1} {a.pick === a.correct ? '✓' : '✗'}
+                Q{i + 1} {a.pick === a.correct ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
               </span>
             ))}
           </div>
@@ -591,7 +591,7 @@ function RollbackDecision() {
                 color: active === i ? 'var(--prime)' : done ? (correct ? 'var(--mint)' : 'var(--rose)') : 'var(--ink-low)',
                 cursor: 'pointer',
               }}>
-              {done ? (correct ? '✓' : '✗') : '·'} {i + 1}
+              {done ? (correct ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>') : '·'} {i + 1}
             </button>
           )
         })}
@@ -635,8 +635,8 @@ function RollbackDecision() {
                 opacity: isRevealed && !isPicked && !isCorrect ? 0.4 : 1, transition: 'all 0.15s',
               }}>
               <div style={{ ...grotesk, fontSize: '13px', fontWeight: 600, color: opt.color }}>
-                {isRevealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '5px' }}>✓</span>}
-                {isRevealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '5px' }}>✗</span>}
+                {isRevealed && isCorrect && <span style={{ color: 'var(--mint)', marginRight: '5px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
+                {isRevealed && isPicked && !isCorrect && <span style={{ color: 'var(--rose)', marginRight: '5px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
                 {opt.label}
               </div>
             </button>
@@ -653,7 +653,7 @@ function RollbackDecision() {
             border: `1px solid ${picks[scenario.id] === scenario.correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
           }}>
             <div style={{ ...grotesk, fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
-              {picks[scenario.id] === scenario.correct ? '✓ Correct' : '✗ Not quite'} — Reasoning
+              {picks[scenario.id] === scenario.correct ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Correct' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Not quite'} — Reasoning
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
               <strong style={{ color: 'var(--ink-hi)' }}>
