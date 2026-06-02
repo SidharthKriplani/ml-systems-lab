@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import PythonCell from '../components/PythonCell.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -1053,7 +1054,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'var(--card-tint)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}
@@ -1343,6 +1344,143 @@ function DriftAttribution() {
 }
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
+// ─── Live Drift Lab (real Pyodide execution) ──────────────────────────────────
+const DRIFT_LAB_CELL1 = `import numpy as np
+np.random.seed(42)
+N = 1000
+
+# Reference distribution (training-era annual income feature)
+ref_income  = np.random.lognormal(mean=10.8, sigma=0.60, size=N)
+# Production — shifted upward (simulates macro-economic change 6 months post-deploy)
+prod_income = np.random.lognormal(mean=11.1, sigma=0.65, size=N)
+
+def compute_psi(ref, prod, n_bins=10):
+    bins = np.percentile(ref, np.linspace(0, 100, n_bins + 1))
+    bins[0], bins[-1] = -np.inf, np.inf
+    exp = np.histogram(ref,  bins=bins)[0] / len(ref)
+    act = np.histogram(prod, bins=bins)[0] / len(prod)
+    exp = np.where(exp == 0, 0.001, exp)
+    act = np.where(act == 0, 0.001, act)
+    return round(float(np.sum((act - exp) * np.log(act / exp))), 4)
+
+psi = compute_psi(ref_income, prod_income)
+print(f"PSI = {psi}")
+if   psi < 0.10: print("Status: STABLE  — no action needed")
+elif psi < 0.20: print("Status: MONITOR — review feature health")
+else:            print("Status: ALERT   — significant shift, page on-call")
+print(f"\\nRef mean:  {np.mean(ref_income):,.0f}   Prod mean: {np.mean(prod_income):,.0f}")
+`
+
+const DRIFT_LAB_CELL2 = `from scipy import stats
+import numpy as np
+np.random.seed(42)
+N = 1000
+
+# Model score distributions: training-era vs production
+ref_scores  = np.random.beta(2.0, 5.0, N)
+prod_scores = np.random.beta(2.8, 4.2, N)   # shift: model inflating scores in prod
+
+ks_stat, ks_p = stats.ks_2samp(ref_scores, prod_scores)
+print(f"KS statistic : {ks_stat:.4f}")
+print(f"KS p-value   : {ks_p:.6f}")
+
+if   ks_p < 0.01: print("Status: ALERT — prediction distribution significantly shifted")
+elif ks_p < 0.05: print("Status: WARN  — borderline shift, monitor closely")
+else:             print("Status: OK    — no significant shift detected")
+
+print(f"\\nRef median score  : {np.median(ref_scores):.4f}")
+print(f"Prod median score : {np.median(prod_scores):.4f}")
+print(f"\\nDiagnosis:")
+print(f"  High PSI + low KS p → covariate shift (input feature changed)")
+print(f"  High KS  + stable PSI → concept drift (target relationship changed)")
+print(f"  Both flagging → investigate pipeline AND consider retraining")
+`
+
+function LiveDriftLab() {
+  const [cp1Revealed, setCp1Revealed] = useState(false)
+  const [cp1Pick, setCp1Pick]         = useState(null)
+
+  const CP1_OPTIONS = [
+    { id: 'a', text: 'PSI > 0.10 alone is sufficient — page on-call immediately' },
+    { id: 'b', text: 'Run both PSI (feature drift) and KS (score drift) before deciding — each catches a different failure mode' },
+    { id: 'c', text: 'KS p-value is the only reliable signal — PSI depends on binning choices' },
+    { id: 'd', text: 'Neither test is needed if accuracy is tracked directly' },
+  ]
+  const CP1_CORRECT = 'b'
+  const CP1_EXPLAIN = 'PSI detects covariate shift (input features changed). KS detects prediction score drift (model output distribution changed). They are complementary — PSI can be stable while concept drift shifts scores, and vice versa. Accurate labels are often delayed by weeks; proxy signals like score drift let you act before accuracy data arrives.'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Live Drift Lab</div>
+        <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '580px', margin: '0 0 4px' }}>
+          Real PSI and KS computation in the browser via Pyodide. Run each cell, observe the output, then answer the judgment checkpoint.
+        </p>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="faithful" /></div>
+      </div>
+
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '8px', fontFamily: 'var(--font-sans)' }}>
+          Cell 1 — PSI: feature distribution drift
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.55, marginBottom: '12px', maxWidth: '560px' }}>
+          Compares reference vs production distribution of an <code>annual_income</code> feature using Population Stability Index (quantile-based bins). PSI &lt; 0.10 = stable, 0.10–0.20 = monitor, &gt;0.20 = alert.
+        </p>
+        <PythonCell initialCode={DRIFT_LAB_CELL1} label="PSI Computation" height={220} />
+      </div>
+
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '8px', fontFamily: 'var(--font-sans)' }}>
+          Cell 2 — KS test: prediction score drift
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.55, marginBottom: '12px', maxWidth: '560px' }}>
+          Kolmogorov-Smirnov two-sample test on model output score distributions. Detects concept drift even when input features appear stable.
+        </p>
+        <PythonCell initialCode={DRIFT_LAB_CELL2} label="KS Test" height={240} />
+      </div>
+
+      {/* Judgment checkpoint */}
+      <div style={{ padding: 'var(--card-pad-secondary)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderLeft: '3px solid var(--prime)', borderRadius: '8px' }}>
+        <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Checkpoint — when both tests flag</div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.65, marginBottom: '14px' }}>
+          PSI = 0.23 on <code>annual_income</code> and KS p = 0.003 on prediction scores. Both are flagging simultaneously. What is the correct first action?
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+          {CP1_OPTIONS.map(opt => {
+            const picked = cp1Pick === opt.id
+            const correct = opt.id === CP1_CORRECT
+            const wrong   = cp1Pick && picked && !correct
+            const right   = cp1Pick && picked && correct
+            return (
+              <button
+                key={opt.id}
+                className={`msl-option-btn${right ? ' correct' : wrong ? ' wrong' : ''}`}
+                onClick={() => { if (!cp1Pick) setCp1Pick(opt.id) }}
+                disabled={!!cp1Pick}
+              >
+                {opt.text}
+              </button>
+            )
+          })}
+        </div>
+        {cp1Pick && !cp1Revealed && (
+          <button className="btn-primary" onClick={() => setCp1Revealed(true)} style={{ fontSize: '12px' }}>
+            Reveal explanation
+          </button>
+        )}
+        {cp1Revealed && (
+          <div className="msl-reveal-panel" style={{ padding: '12px 16px', marginTop: '8px' }}>
+            <div style={{ fontWeight: 700, color: 'var(--prime)', marginBottom: '6px', fontSize: '12px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
+              {cp1Pick === CP1_CORRECT ? '✓ Correct' : '✗ Incorrect'}
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0 }}>{CP1_EXPLAIN}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const MODULES = [
   { id: 'drift',    label: 'Drift Dashboard',   icon: '', component: DriftDashboard },
   { id: 'psi',     label: 'PSI Lab',            icon: '', component: PSILab },
@@ -1352,6 +1490,7 @@ const MODULES = [
   { id: 'coverage',       label: 'Coverage Audit',     icon: '', component: MonitorCoverageAudit },
   { id: 'alerting_tree',  label: 'Alerting Decisions', component: AlertingDecisionTree },
   { id: 'drift_attribution', label: 'Drift Attribution', component: DriftAttribution },
+  { id: 'live_drift', label: 'Live Drift Lab ✓', component: LiveDriftLab },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -1421,7 +1560,7 @@ export default function MonitoringTab({ onNavigate }) {
             <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--card-tint)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
             </div>

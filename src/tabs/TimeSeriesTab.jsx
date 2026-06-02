@@ -470,7 +470,7 @@ function AnomalyDetectionTiers() {
               <span style={{ fontSize: '11px', padding: '3px 10px', background: s.accent + '18', color: s.accent, border: `1px solid ${s.accent}35`, borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>Use: {tierLabels[s.correct]}</span>
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'var(--card-tint)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.when_to_upgrade}</span>
             </div>
@@ -548,7 +548,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
           {diffFilter === 'all' ? scenarios.length : scenarios.filter((_,i) => getDiff(i, scenarios.length) === diffFilter).length} scenarios
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, var(--card-tint) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
         {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
@@ -570,7 +570,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
 
             {it.open && (
               <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
+                <div style={{ padding: '12px 16px', background: 'var(--card-tint)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {sc.context.map((line, li) => <p key={`ctx-${li}-${line.slice(0,10)}`} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}

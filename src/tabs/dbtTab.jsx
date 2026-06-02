@@ -524,7 +524,7 @@ function SchemaDriftClinic() {
           <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', margin: 0, lineHeight: 1.4 }}>{scenario.title}</h4>
           <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: DANGER_COLORS[scenario.danger] + '18', color: DANGER_COLORS[scenario.danger], fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', flexShrink: 0 }}>{scenario.danger}</span>
         </div>
-        <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+        <div style={{ padding: '12px 14px', background: 'var(--card-tint)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Scenario</div>
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>{scenario.context}</p>
         </div>

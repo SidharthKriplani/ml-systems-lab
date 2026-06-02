@@ -1325,7 +1325,7 @@ export default function ProjectLabTab({ onNavigate }) {
         </p>
 
         {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1534,7 +1534,7 @@ export default function ProjectLabTab({ onNavigate }) {
           </p>
 
           {/* Phase 2 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 2 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase2DoneSteps / phase2TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1675,7 +1675,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Train three model classes side-by-side, evaluate with ROC / PR curves and confusion matrices, tune the decision threshold, then assess calibration. Ship-or-not judgment at the checkpoint.
           </p>
           {/* Phase 3 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 3 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase3DoneSteps / phase3TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1846,7 +1846,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Compute PSI and KS drift statistics on a simulated production sample. Track prediction score distribution shift. Understand the label delay problem and proxy signal strategy.
           </p>
           {/* Phase 4 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 4 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase4DoneSteps / phase4TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -2018,7 +2018,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Reference implementation for taking the trained churn model to production. Read each scaffold, understand the production decisions embedded in it. Mark each section as read when done.
           </p>
           {/* Phase 5 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 5 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase5DoneSteps / phase5TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />

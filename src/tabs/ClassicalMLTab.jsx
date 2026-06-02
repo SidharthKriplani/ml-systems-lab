@@ -336,7 +336,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
         </span>
       </div>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'var(--card-tint)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: 'var(--prime)' }}>
             {score.correct}/{score.attempted}
@@ -578,7 +578,7 @@ function ModelFailureZoo() {
 
           {/* Story */}
           <div style={{
-            background: 'rgba(0,0,0,0.2)',
+            background: 'var(--card-scrim)',
             border: '1px solid var(--rim)',
             borderRadius: '8px',
             padding: '14px 16px',
@@ -1421,7 +1421,7 @@ function BiasVarianceVisualizer() {
           </span>
         </div>
         {/* In-production callout */}
-        <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--r-sm)', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+        <div style={{ padding: '12px 14px', background: 'var(--card-scrim)', borderRadius: 'var(--r-sm)', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '12px', color: 'var(--prime)', flexShrink: 0, marginTop: '1px' }}>→</span>
           <div>
             <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: '5px', fontWeight: 600 }}>IN PRODUCTION</div>
@@ -1535,7 +1535,7 @@ export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
             <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--card-tint)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
             </div>

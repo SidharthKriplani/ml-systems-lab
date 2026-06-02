@@ -511,6 +511,15 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **IncidentRoomTab** (v4.58) — 3 cross-domain incidents, Interview zone, msl_score:incidentroom. Multi-step diagnosis: AUC+latency/feature migration, silent CTR/catalog coverage, A/B SRM.
+- [x] **MLCodingTab** (v4.58) — 3 ML Python problems (BCE loss, vectorised features, k-fold), live Pyodide, judgment checkpoints. Interview zone, msl_score:mlcoding.
+- [x] **Live Drift Lab in MonitoringTab** (v4.58) — real PSI + KS computation via Pyodide, faithful tier, judgment checkpoint. Closes simulation gap for monitoring module.
+- [x] **Design tokens --card-tint + --card-scrim** (v4.58) — 42 replacements, light-theme-safe versions in [data-theme="light"].
+- [x] **RSS feed** (v4.58) — `scripts/generate-rss.cjs` parses GradientTab at build time, 50 posts, prebuild hook, autodiscovery in index.html.
+- [x] **PWA manifest + service worker** (v4.58) — installable on iOS/Android, stale-while-revalidate cache, theme-color token.
+- [x] **Practice zone overall %** (v4.58) — overall % + per-domain % in PracticeGrid headers.
+- [x] **Interview zone session history** (v4.58) — sessions run + avg score pills in InterviewGrid header.
+- [x] **Gradient code posts 8/12/18/35/36/37** (v4.58) — PSI+KS monitoring, DDP loop, salary comparison, walk-forward CV, SRM checklist, BF16 mixed precision.
 - [x] **FidelityBadge ×7 interview tabs** (v4.57) — Combinator/Trainer/CodeBugs/Verbatim(faithful)/SpotTheFlaw/Staff/CaseStudies. Old `~ Simulated` spans replaced.
 - [x] **Gradient code examples posts 5/15/24** (v4.57) — compute_psi() with quantile bins, NetflixStyleRetriever two-tower, step4_audit feature checker.
 - [x] **Company logos** (v4.57) — Clearbit API + monogram fallback in CombinatorTab company tracks and LandscapeTab all 6 companies. CompanyLogo inline component, no hooks.

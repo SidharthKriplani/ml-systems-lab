@@ -1,0 +1,20 @@
+{
+  "name": "ML Systems Lab",
+  "short_name": "MSL",
+  "description": "Production ML judgment patterns for engineers who ship models.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#e8a030",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "en"
+}

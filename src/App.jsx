@@ -39,8 +39,10 @@ const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
 const JDPrepTab      = lazy(() => import('./tabs/JDPrepTab.jsx'))
 const DefenseDocTab  = lazy(() => import('./tabs/DefenseDocTab.jsx'))
 const VerbatimTab    = lazy(() => import('./tabs/VerbatimTab.jsx'))
-const SpotTheFlawTab = lazy(() => import('./tabs/SpotTheFlawTab.jsx'))
-const ProjectLabTab  = lazy(() => import('./tabs/ProjectLabTab.jsx'))
+const SpotTheFlawTab    = lazy(() => import('./tabs/SpotTheFlawTab.jsx'))
+const IncidentRoomTab   = lazy(() => import('./tabs/IncidentRoomTab.jsx'))
+const MLCodingTab       = lazy(() => import('./tabs/MLCodingTab.jsx'))
+const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 
@@ -79,8 +81,10 @@ const ALL_TABS = [
   { id: 'jdprep',      component: JDPrepTab },
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
-  { id: 'spottheflaw', component: SpotTheFlawTab },
-  { id: 'projectlab',  component: ProjectLabTab },
+  { id: 'spottheflaw',   component: SpotTheFlawTab },
+  { id: 'incidentroom',  component: IncidentRoomTab },
+  { id: 'mlcoding',      component: MLCodingTab },
+  { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
   { id: 'fraud_detection', component: FraudDetectionTab },
 ]
@@ -90,7 +94,7 @@ const ALL_TABS = [
 // Premium: all Interview zone, all interview tools, all advanced practice modules
 const PREMIUM_TABS = new Set([
   // Interview zone (Defense Plan is free — has internal gate)
-  'interview', 'takehome', 'combinator', 'verbal', 'spottheflaw',
+  'interview', 'takehome', 'combinator', 'verbal', 'spottheflaw', 'incidentroom', 'mlcoding',
   // Interview tools (Practice > Drills domain)
   'trainer', 'codebugs', 'casestudies', 'stafflayer',
   // Advanced practice modules
@@ -110,6 +114,8 @@ const TAB_TO_ZONE = {
   takehome: 'interview', combinator: 'interview',
   jdprep: 'interview', defense: 'interview', verbal: 'interview',
   spottheflaw: 'interview',
+  incidentroom: 'interview',
+  mlcoding: 'interview',
   ask: 'ask',
 }
 const ZONE_DEFAULTS = {
@@ -199,6 +205,10 @@ const INTERVIEW_TOOLS = [
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
   { id: 'spottheflaw', label: 'Spot the Flaw', desc: '12 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> },
+  { id: 'incidentroom', label: 'Incident Room', desc: '3 cross-domain production incidents. Each requires reasoning across Feature Eng, Monitoring, Serving, and Experimentation — multi-step diagnosis with branching findings.', step: null, accent: 'var(--prime)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
+  { id: 'mlcoding', label: 'ML Coding', desc: '3 ML-specific Python problems that appear in real senior/staff interviews — custom loss, vectorised features, k-fold from scratch. Live execution via Pyodide.', step: null, accent: 'var(--prime)',
+    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> },
 ]
 
 // all practice tabs flat, for label lookup
@@ -439,23 +449,33 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
         </p>
       </div>
       {totalScenarios > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)" }}>Your progress</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)" }}>Overall</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px var(--prime-glow)' }} />
           </div>
           <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", flexShrink: 0 }}>
-            {totalAttempted}/{totalScenarios}
+            {Math.round((totalAttempted / totalScenarios) * 100)}% &nbsp;
+            <span style={{ color: 'var(--ink-ghost)' }}>{totalAttempted}/{totalScenarios}</span>
           </span>
         </div>
       )}
-      {PRACTICE_DOMAINS.map(domain => (
+      {PRACTICE_DOMAINS.map(domain => {
+        const domAttempted = domain.tabs.reduce((s, t) => s + (tabProgress?.[t.id]?.attempted || 0), 0)
+        const domTotal     = domain.tabs.reduce((s, t) => s + (tabProgress?.[t.id]?.total     || 0), 0)
+        const domPct       = domTotal > 0 ? Math.round((domAttempted / domTotal) * 100) : 0
+        return (
         <div key={domain.id} style={{ marginBottom: '28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
             <span style={{ fontSize: '10px', fontFamily: "var(--font-mono)", fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: domain.accent, textShadow: `0 0 18px ${domain.accent}90`, whiteSpace: 'nowrap' }}>
               {domain.label}
             </span>
             <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, ${domain.accent}50, transparent)` }} />
+            {domTotal > 0 && (
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: domPct >= 80 ? 'var(--mint)' : domPct >= 40 ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0 }}>
+                {domPct}%
+              </span>
+            )}
           </div>
           <div className="grid-cards">
             {domain.tabs.map(tab => (
@@ -463,7 +483,8 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
             ))}
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -584,6 +605,17 @@ function TagFrequencyChart({ experiences }) {
  * visualization v2 (currently seeds with 15 sample records for demo)
  */
 function InterviewGrid({ onSelect, isUnlocked }) {
+  const sessionStats = (() => {
+    try {
+      const combHistory = JSON.parse(localStorage.getItem('msl_combinator_history') || '[]')
+      const sessions    = combHistory.length
+      if (sessions === 0) return null
+      const avgScore    = Math.round(combHistory.reduce((s, h) => s + (h.correct / Math.max(h.total, 1)), 0) / sessions * 100)
+      const lastDate    = combHistory[combHistory.length - 1]?.date
+      return { sessions, avgScore, lastDate }
+    } catch { return null }
+  })()
+
   return (
     <div style={{ paddingTop: '8px' }}>
       <div style={{ marginBottom: '28px' }}>
@@ -594,6 +626,16 @@ function InterviewGrid({ onSelect, isUnlocked }) {
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
           Steps 01–03 are a sequence: Defense Plan → Combinator → Verbal. Run them in order starting two weeks before your interview. The other tools work any time. Drills (Trainer, Code Bugs, Case Studies, Staff Layer) live in Practice.
         </p>
+        {sessionStats && (
+          <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', padding: '3px 10px', border: '1px solid var(--rim)', borderRadius: '999px', background: 'var(--surface)' }}>
+              <span style={{ color: 'var(--prime)' }}>{sessionStats.sessions}</span> session{sessionStats.sessions !== 1 ? 's' : ''} run
+            </span>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', padding: '3px 10px', border: '1px solid var(--rim)', borderRadius: '999px', background: 'var(--surface)' }}>
+              avg score <span style={{ color: sessionStats.avgScore >= 70 ? 'var(--mint)' : sessionStats.avgScore >= 50 ? 'var(--prime)' : 'var(--rose)' }}>{sessionStats.avgScore}%</span>
+            </span>
+          </div>
+        )}
       </div>
       <div className="grid-cards-wide">
         {INTERVIEW_TOOLS.map(tool => (

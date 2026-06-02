@@ -100,25 +100,36 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.58 — Next sprint
+## v4.58 — Done this session
+
+- [x] ~~RSS feed~~ — done (`scripts/generate-rss.cjs`, `public/rss.xml`, 50 posts, prebuild hook)
+- [x] ~~PWA manifest + service worker~~ — done (`public/manifest.json`, `public/sw.js`, index.html wired)
+- [x] ~~ROLLOUT Batch 1 checklist~~ — done (6 new rows: theme, logos, FidelityBadge, PWA, RSS)
+- [x] ~~Practice zone progress %~~ — done (overall % + per-domain % in PracticeGrid)
+- [x] ~~Interview zone session history~~ — done (sessions run + avg score pills from msl_combinator_history)
+- [x] ~~Gradient code posts 8/12/18/35/36/37~~ — done
+- [x] ~~Design tokens --card-tint + --card-scrim~~ — done (42 replacements, light-theme-safe)
+- [x] ~~Live Drift Lab (MonitoringTab Pyodide)~~ — done (PSI + KS real execution, faithful tier)
+- [x] ~~IncidentRoomTab~~ — done (3 cross-domain incidents, msl_score:incidentroom)
+- [x] ~~MLCodingTab~~ — done (3 ML Python problems, live Pyodide, msl_score:mlcoding)
+- [x] ~~Bundle audit~~ — done (React.lazy already wired v4.48, healthy)
+- [x] ~~LINEAGE v4.58~~ — done
+
+---
+
+## v4.59 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **ROLLOUT.md — Batch 1 readiness check**
-   - Batch 0 checklist updated; read Batch 1 tester brief and confirm it reflects current product before inviting anyone
-   - Light/dark theme now present — add to Batch 1 check: "toggle switches theme, preference persists"
+2. **isFree per-case gating first pass** — tag first 2 scenarios in each module across 5 highest-traffic practice tabs. Update AccessGate to filter not block when isFree cases exist.
 
-3. **RSS feed for Gradient posts**
-   - 30-min Vite plugin: generate `/rss.xml` at build time from the POSTS array
-   - 50 posts × title/excerpt/date/slug — adds a distribution channel for free
+3. **Incident Room + ML Coding — expand to 6 scenarios each** — 3 more incidents + 3 more coding problems.
 
-4. **Gradient post code pass — posts 8, 12, 18**
-   - Continue code example coverage; posts 5/7/11/15/24 done — pick next 3 highest-traffic posts without code
+4. **Social proof signal** — add "Used by N engineers" to README once verifiable number available.
 
-5. **Social proof signal**
-   - Add "Used by N engineers" to README once verifiable number is available (Ideas.md Tier 1)
+5. **IDEAS.md stale cleanup** — many `[ ]` Tier 2 items already done. Clean pass.
 
 ---
 

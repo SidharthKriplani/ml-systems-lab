@@ -111,7 +111,7 @@ function ShuffleHell() {
     if (r.healthy) trackModuleComplete('Shuffle Hell', 'spark', 100)
   }
 
-  const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.15)'    : result?.spillRisk ? 'rgba(245,158,11,0.15)'  : result?.healthy ? 'rgba(16,185,129,0.15)'    : 'rgba(255,255,255,0.07)'
+  const statusBg    = result?.oomRisk ? 'rgba(244,63,94,0.15)'    : result?.spillRisk ? 'rgba(245,158,11,0.15)'  : result?.healthy ? 'rgba(16,185,129,0.15)'    : 'var(--card-tint)'
   const statusBorder = result?.oomRisk ? 'rgba(244,63,94,0.3)'    : result?.spillRisk ? 'rgba(245,158,11,0.3)'  : result?.healthy ? 'rgba(16,185,129,0.3)'    : 'var(--rim)'
   const statusMsg    = result?.oomRisk ? 'JOB FAILED — OutOfMemoryError' : result?.spillRisk ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Significant spill to disk' : result?.healthy ? '<CheckMark /> Job looks healthy' : '~ Suboptimal — will run'
 
@@ -503,7 +503,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
       </div>
 
       {/* Score strip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, var(--card-tint) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 4px 14px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.11)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{scenarios.length} attempted</span>
         {attempted > 0 && <span style={{ fontSize: '11px', color: pct >= 70 ? 'var(--mint)' : 'var(--ember)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({pct}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
@@ -528,7 +528,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
             {it.open && (
               <div className="accordion-enter" style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {/* Context */}
-                <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
+                <div style={{ padding: '12px 16px', background: 'var(--card-tint)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
@@ -1255,7 +1255,7 @@ export default function SparkLabTab({ onNavigate }) {
             <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--card-tint)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
             </div>

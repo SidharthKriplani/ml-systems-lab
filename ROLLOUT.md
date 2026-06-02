@@ -221,6 +221,12 @@ What we're listening for: Did the tier ranking and day plan feel specific to the
 | Defense Plan gate fires correctly at ~35% and unlocks inline with DAI2026 | ✓ required | — |
 | All three features work end-to-end on real iOS and Android | ✓ required | — |
 | Tester brief written and reviewed — one prompt, no instructions | — | — |
+| Theme toggle switches between parchment light and charcoal dark | ✓ required | — |
+| Theme preference persists across page reload (msl_theme localStorage) | ✓ required | — |
+| Company logos load in CombinatorTab company tracks and LandscapeTab cards | — | — |
+| FidelityBadge visible on all 7 interview zone tabs (click opens tooltip) | — | — |
+| PWA: "Add to Home Screen" prompt appears on iOS Safari and Android Chrome | ✓ required | — |
+| RSS: `[site]/rss.xml` returns valid XML with 50 posts | — | — |
 
 **Tester brief (send verbatim):**
 

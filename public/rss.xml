@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ML Systems Lab — Gradient</title>
+    <link>https://ml-systems-lab-v9xe.vercel.app</link>
+    <description>Production ML judgment patterns for engineers who ship models. 50 posts on drift, retrieval, feature engineering, system design, and ML careers.</description>
+    <language>en-us</language>
+    <ttl>1440</ttl>
+    <atom:link href="https://ml-systems-lab-v9xe.vercel.app/rss.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Tue, 02 Jun 2026 13:01:44 GMT</lastBuildDate>
+
+  <item>
+    <title><![CDATA[When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-failures</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-failures</guid>
+    <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Recsys Feedback Loop You Can't Escape]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=recsys-feedback-loop</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=recsys-feedback-loop</guid>
+    <pubDate>Tue, 03 Mar 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Cold-Start Is Not a Model Problem, It's a Product Problem]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-product-not-model</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-product-not-model</guid>
+    <pubDate>Thu, 26 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[When Difference-in-Differences Breaks: Parallel Trends Violations in Practice]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=did-parallel-trends-violations</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=did-parallel-trends-violations</guid>
+    <pubDate>Sat, 21 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Six Ways a Recommendation System Silently Stops Recommending]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-silent-failures</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-silent-failures</guid>
+    <pubDate>Mon, 16 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=silent-model-staleness</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=silent-model-staleness</guid>
+    <pubDate>Wed, 11 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Cold-Start Trap: Why Personalization Systems Fail the Users Who Need Them Most]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-trap-personalization</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-trap-personalization</guid>
+    <pubDate>Fri, 06 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Concept Drift: The Invisible Enemy That Stalks Every Production Model]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-invisible-enemy</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-invisible-enemy</guid>
+    <pubDate>Sun, 01 Feb 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Label Noise in Production: When Your Ground Truth Lies]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=label-noise-in-production</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=label-noise-in-production</guid>
+    <pubDate>Tue, 27 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=offline-eval-vs-online-performance</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=offline-eval-vs-online-performance</guid>
+    <pubDate>Thu, 22 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Calibration Loss in Production: When 95% AUC Predicts 60% Precision]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=calibration-loss-production-auc-mismatch</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=calibration-loss-production-auc-mismatch</guid>
+    <pubDate>Sat, 17 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Training-Serving Skew: The Complete Taxonomy and Detection Framework]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew-comprehensive</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew-comprehensive</guid>
+    <pubDate>Mon, 12 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Feature Importance Drift: When Your Top Features Become Noise]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=feature-importance-drift-production</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=feature-importance-drift-production</guid>
+    <pubDate>Wed, 07 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Quantization from First Principles: What FP16 Throws Away and When It Matters]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=quantization-fp16-first-principles</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=quantization-fp16-first-principles</guid>
+    <pubDate>Fri, 02 Jan 2026 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Two Silent Killers of A/B Tests: Peeking and SRM]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes</guid>
+    <pubDate>Sun, 28 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Forecast Failure Zoo: Six Silent Killers of Time Series Models]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=forecast-failure-modes</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=forecast-failure-modes</guid>
+    <pubDate>Tue, 23 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=walk-forward-validation-honest-backtest</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=walk-forward-validation-honest-backtest</guid>
+    <pubDate>Thu, 18 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=late-arriving-data-retroactive-corruption</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=late-arriving-data-retroactive-corruption</guid>
+    <pubDate>Sat, 13 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Group-Level Contamination: The Leakage Nobody Catches Until Production]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=group-level-leakage</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=group-level-leakage</guid>
+    <pubDate>Mon, 08 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Feature Store API Trap: Why Calling the Wrong Function Silently Corrupts Fintech Models]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel</guid>
+    <pubDate>Wed, 03 Dec 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Quantization from First Principles: What FP16 Actually Throws Away]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=fp16-quantization-first-principles</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=fp16-quantization-first-principles</guid>
+    <pubDate>Fri, 28 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=time-series-model-selection</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=time-series-model-selection</guid>
+    <pubDate>Sun, 23 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Two Failure Modes of A/B Tests (And How to Catch Them)]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes</guid>
+    <pubDate>Tue, 18 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Validation Set Leakage: Why Your Offline Metrics Are Lying to You]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=validation-set-leakage</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=validation-set-leakage</guid>
+    <pubDate>Thu, 13 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel-bug</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel-bug</guid>
+    <pubDate>Sat, 08 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=why-forecasts-fail</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=why-forecasts-fail</guid>
+    <pubDate>Mon, 03 Nov 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The 6-Step Framework That Answers Any ML System Design Question]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=ml-system-design-6-step-framework</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=ml-system-design-6-step-framework</guid>
+    <pubDate>Wed, 29 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Three Drift Signals That Predict Model Failure Before It Happens]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=three-drift-signals-model-failure</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=three-drift-signals-model-failure</guid>
+    <pubDate>Fri, 24 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=reading-spark-execution-dag</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=reading-spark-execution-dag</guid>
+    <pubDate>Sun, 19 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Feature Store Time-Travel Bug That Quietly Corrupts Your Models]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel-bug</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel-bug</guid>
+    <pubDate>Tue, 14 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=validation-set-leakage</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=validation-set-leakage</guid>
+    <pubDate>Thu, 09 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The MLE Career Ladder: What L3 to L7 Actually Means in Practice]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=mle-career-ladder-l3-to-l7</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=mle-career-ladder-l3-to-l7</guid>
+    <pubDate>Sat, 04 Oct 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Where in the World to Be an ML Engineer in 2025]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=where-in-the-world-to-be-mle</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=where-in-the-world-to-be-mle</guid>
+    <pubDate>Mon, 29 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[AlexNet to Agents: The Twelve Years That Rewrote Everything]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=alexnet-to-agents-ml-decade</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=alexnet-to-agents-ml-decade</guid>
+    <pubDate>Wed, 24 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Real ML Stack: From Jupyter Notebook to $10B Infrastructure]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=real-ml-stack-seed-to-scale</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=real-ml-stack-seed-to-scale</guid>
+    <pubDate>Fri, 19 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[How Netflix Became an ML Company (and What Every Engineer Can Learn From It)]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=how-netflix-became-an-ml-company</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=how-netflix-became-an-ml-company</guid>
+    <pubDate>Sun, 14 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The ML Engineer Salary Map 2025: Where the Money Is, and Why It's There]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=ml-engineer-salary-map-2025</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=ml-engineer-salary-map-2025</guid>
+    <pubDate>Tue, 09 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[10 ML Interview Mistakes Even Senior Engineers Make]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=ml-interview-mistakes</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=ml-interview-mistakes</guid>
+    <pubDate>Thu, 04 Sep 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Distributed Training: Data Parallel vs Model Parallel]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=distributed-training-patterns</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=distributed-training-patterns</guid>
+    <pubDate>Sat, 30 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The Cold Start Problem: Beyond Popularity Heuristics]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-problem</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-problem</guid>
+    <pubDate>Mon, 25 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[SHAP Values: Feature Importance That Actually Makes Sense]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=shap-feature-importance</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=shap-feature-importance</guid>
+    <pubDate>Wed, 20 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Gradient Descent: What Your Intuition Gets Wrong]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=gradient-descent-intuition</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=gradient-descent-intuition</guid>
+    <pubDate>Fri, 15 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[The MLE Interview Framework: What Top Companies Actually Ask]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=mle-interview-system-design-prep</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=mle-interview-system-design-prep</guid>
+    <pubDate>Sun, 10 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Feature Store Architecture: What the Tutorials Skip]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-architecture</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-architecture</guid>
+    <pubDate>Tue, 05 Aug 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[PCA: The Intuition No One Teaches]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=pca-intuition</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=pca-intuition</guid>
+    <pubDate>Thu, 31 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Concept Drift: How to Detect It Before It Destroys Your Model]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-detection</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-detection</guid>
+    <pubDate>Sat, 26 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[How to Design a Recommendation System (The MLE Interview Framework)]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=rec-system-design-framework</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=rec-system-design-framework</guid>
+    <pubDate>Mon, 21 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[AUC Is Not Your Friend: A Guide to ML Metric Selection]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=auc-is-not-your-friend</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=auc-is-not-your-friend</guid>
+    <pubDate>Wed, 16 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[PySpark Shuffle: The Complete Mental Model]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=spark-shuffle-mental-model</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=spark-shuffle-mental-model</guid>
+    <pubDate>Fri, 11 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  <item>
+    <title><![CDATA[Why Training-Serving Skew Silently Kills Production Models]]></title>
+    <link>https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew</link>
+    <guid isPermaLink="true">https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew</guid>
+    <pubDate>Sun, 06 Jul 2025 00:00:00 GMT</pubDate>
+  </item>
+  </channel>
+</rss>

@@ -98,7 +98,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
         </span>
       </div>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'var(--card-tint)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--mint)' : 'var(--gold)' }}>
             {score.correct}/{score.attempted}

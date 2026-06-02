@@ -71,6 +71,8 @@
   --card-pad-primary:   10px 14px;
   --card-pad-secondary: 16px;
   --prime-bg-light:     rgba(232,160,48,0.12);
+  --card-tint:          rgba(255,255,255,0.07);  /* subtle raised card bg — light-theme safe */
+  --card-scrim:         rgba(0,0,0,0.20);        /* dark overlay on card sections             */
 }
 
 /* ─── Parchment light theme ────────────────────────────────────────────── */
@@ -86,6 +88,8 @@
   --prime-glow:  rgba(154,104,0,0.15);
   --prime-faint: rgba(154,104,0,0.05);
   --prime-bg-light: rgba(154,104,0,0.09);
+  --card-tint:      rgba(0,0,0,0.04);    /* light mode: subtle raised bg */
+  --card-scrim:     rgba(0,0,0,0.06);    /* light mode: dark overlay     */
 
   --mint:   #0d7a4d;
   --sky:    #1a6fa8;

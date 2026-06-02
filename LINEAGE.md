@@ -46,6 +46,34 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.58 — RSS feed, PWA, Gradient code ×6, design tokens, Live Drift Lab, Incident Room, ML Coding (2026-06-02)
+
+**RSS feed (`scripts/generate-rss.cjs` + `public/rss.xml`):** Node script parses GradientTab.jsx at build time, extracts all 50 post titles/slugs, writes `/public/rss.xml`. Handles both single and double-quoted title strings. `package.json` build script wired: `node scripts/generate-rss.cjs && vite build`. RSS autodiscovery `<link>` added to `index.html`. 50 posts.
+
+**PWA manifest + service worker:** `public/manifest.json` (name, short_name, theme_color #e8a030, display standalone, SVG icon). `public/sw.js` (stale-while-revalidate for same-origin GET assets, cache named `msl-v1`). `<link rel="manifest">` + `<meta name="theme-color">` + SW registration script added to `index.html`. App installable on iOS Safari + Android Chrome.
+
+**ROLLOUT.md Batch 1 checklist updated:** 6 new rows — theme toggle, msl_theme persistence, company logos, FidelityBadge tooltips, PWA prompt, RSS validity.
+
+**Practice zone overall %:** `PracticeGrid` progress bar now shows `X% (attempted/total)` with ghost-colored fraction. Each domain header row shows per-domain `%` (mint ≥80%, prime ≥40%, ghost otherwise).
+
+**Interview zone session history:** `InterviewGrid` reads `msl_combinator_history` localStorage, shows "X sessions run" + "avg score X%" pill badges in the header when history exists.
+
+**Gradient code examples — posts 8, 12, 18, 35, 36, 37:** PSI+KS monitoring check (post 8), DDP gradient accumulation loop (post 12), PPP-adjusted salary comparison (post 18), walk-forward CV (post 35), SRM pre-analysis checklist (post 36), BF16 mixed precision training (post 37). Brace delta 0.
+
+**Design tokens — `--card-tint` + `--card-scrim`:** Two new CSS variables added to `:root` and `[data-theme="light"]`. `--card-tint: rgba(255,255,255,0.07)` → light: `rgba(0,0,0,0.04)`. `--card-scrim: rgba(0,0,0,0.20)` → light: `rgba(0,0,0,0.06)`. 27 raw rgba(255,255,255,0.07) and 15 raw rgba(0,0,0,0.2) instances bulk-replaced across all tab files via sed. Hex audit confirmed: no stray hex in rendered JSX (all hits are in print CSS or Python matplotlib strings — intentional).
+
+**Live Drift Lab (MonitoringTab):** New `LiveDriftLab` module with real Pyodide execution. Cell 1: PSI on lognormal reference vs shifted production income distribution. Cell 2: KS two-sample test on model score distributions. Both cells run real scipy/numpy — `faithful` fidelity tier. Judgment checkpoint: "PSI=0.23 + KS p=0.003 — what is the correct first action?" Wired into MODULES array as `live_drift`. `PythonCell` import added to MonitoringTab.
+
+**IncidentRoomTab.jsx (new):** Interview zone. 3 cross-domain production incidents — each requires reasoning across Feature Eng, Monitoring, Serving, and Experimentation simultaneously. Multi-step diagnosis: user picks action → sees finding → picks next action → sees resolution + lesson. Incidents: (1) AUC drop + latency spike after feature store migration, (2) silent CTR drop — catalog coverage collapse, (3) A/B SRM caused by treatment performance regression. `msl_score:incidentroom`. Wired into App.jsx: lazy import, ALL_TABS, PREMIUM_TABS, TAB_TO_ZONE, INTERVIEW_TOOLS card. Brace delta 0.
+
+**MLCodingTab.jsx (new):** Interview zone. 3 ML-specific Python problems with live Pyodide execution. Custom BCE loss (numerical stability), vectorised feature engineering without loops (self-join velocity features), k-fold cross-validation from scratch. Each problem: starter code cell + show-solution cell + judgment checkpoint ("your code works — what breaks in production?"). `msl_score:mlcoding`. `faithful` fidelity tier. Wired into App.jsx. Brace delta 0.
+
+**Bundle audit:** React.lazy() already wired across all 36 tabs (v4.48). No further splitting needed. Source is 3.2MB uncompressed across tabs; with lazy chunks, initial load is only App.jsx + selected tab. Architecture confirmed healthy.
+
+**Brace balance:** All modified and new files at delta 0.
+
+---
+
 ### v4.57 — FidelityBadge ×7 interview tabs, Gradient code posts 5/15/24, company logos, emoji audit close (2026-06-02)
 
 **FidelityBadge — 7 interview zone tabs:** CombinatorTab, TrainerTab, CodeBugsTab, VerbatimTab (faithful tier — real Web Speech API), SpotTheFlawTab, StaffLayerTab, CaseStudiesTab. Replaced old `~ Simulated` inline spans in 4 tabs; added fresh badge in 3. Import + render added to all 7. All brace delta 0.

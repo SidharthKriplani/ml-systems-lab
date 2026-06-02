@@ -178,7 +178,7 @@ function DAGFailureRoom() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.symptoms.map((s, i) => (
-            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'var(--card-tint)', borderRadius: '4px' }}>
               {s}
             </div>
           ))}

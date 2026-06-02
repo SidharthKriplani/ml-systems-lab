@@ -390,7 +390,36 @@ Weak: Jumps to neural network architecture before understanding the problem. Use
 
 **The calibration question (often asked):**
 
-"If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."`,
+"If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."
+
+\`\`\`python
+# The monitoring answer interviewers want to hear — show this, don't just describe it
+import numpy as np
+from scipy import stats
+
+def production_health_check(ref_features, prod_features, ref_scores, prod_scores):
+    """Three-signal check: feature drift, score drift, proxy metric."""
+    report = {}
+
+    # 1. Feature drift (PSI on most important feature)
+    bins = np.percentile(ref_features, np.linspace(0, 100, 11))
+    bins[0], bins[-1] = -np.inf, np.inf
+    exp = np.histogram(ref_features,  bins=bins)[0] / len(ref_features)
+    act = np.histogram(prod_features, bins=bins)[0] / len(prod_features)
+    exp, act = np.where(exp==0, 0.001, exp), np.where(act==0, 0.001, act)
+    psi = float(np.sum((act - exp) * np.log(act / exp)))
+    report['feature_psi'] = round(psi, 3)
+    report['feature_status'] = 'ALERT' if psi > 0.2 else 'WARN' if psi > 0.1 else 'OK'
+
+    # 2. Prediction score drift (KS test)
+    ks_stat, ks_p = stats.ks_2samp(ref_scores, prod_scores)
+    report['score_ks_p']   = round(ks_p, 4)
+    report['score_status'] = 'ALERT' if ks_p < 0.01 else 'WARN' if ks_p < 0.05 else 'OK'
+
+    return report
+
+# In the interview: walk through each signal, name thresholds, explain the label delay problem
+\`\`\``,
     tags: ['Interview Prep', 'System Design', 'MLE', 'Career'],
     domain: 'interview',
     youtube: [{ id: 's-MaQ6S9_DA', title: 'ML Engineer Interviews Explained — Exponent' }],
@@ -588,7 +617,40 @@ Simulates a larger batch size by computing gradients over multiple micro-batches
 
 **Practical guidance:**
 
-Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.`,
+Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.
+
+\`\`\`python
+import torch
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+def train_ddp(rank, world_size, model, dataset, accum_steps=4):
+    """Minimal DDP loop with gradient accumulation.
+    accum_steps=4 with micro_batch=8 → effective batch = 32 × world_size."""
+    dist.init_process_group('nccl', rank=rank, world_size=world_size)
+    model = model.to(rank)
+    model = DDP(model, device_ids=[rank])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+    loader = torch.utils.data.DataLoader(
+        dataset,
+        sampler=torch.utils.data.distributed.DistributedSampler(dataset),
+        batch_size=8,
+    )
+
+    for step, batch in enumerate(loader):
+        loss = model(batch.to(rank)).loss / accum_steps   # scale loss
+        loss.backward()
+        if (step + 1) % accum_steps == 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            optimizer.zero_grad()
+
+    dist.destroy_process_group()
+
+# Production note: unused params in DDP cause a hang — set find_unused_parameters=True
+# only as a debug fallback; fix the architecture instead.
+\`\`\``,
     tags: ['Distributed Training', 'Data Parallel', 'Model Parallel', 'ZeRO', 'Deep Learning'],
     domain: 'dl',
     youtube: [{ id: 'SivkGd6LQoU', title: 'Distributed Data Parallel Training in PyTorch' }],
@@ -1037,7 +1099,29 @@ The geography of ML jobs changed in 2020 and did not fully revert. Many ML engin
 
 Choose where you want to live first. Then optimise your career for that location. The ML engineer who moves to San Francisco purely for the money, dislikes the city, and burns out in 18 months loses more than the ML engineer in Berlin who stays for 10 years and builds expertise in AI regulation that becomes valuable post-AI-Act.
 
-Geography is not destiny. But it is the context in which everything else happens, and context shapes outcomes more than most people want to admit.`,
+Geography is not destiny. But it is the context in which everything else happens, and context shapes outcomes more than most people want to admit.
+
+\`\`\`python
+# The honest comparison: PPP-adjusted, tax-adjusted effective ML salary
+CITIES = {
+    'San Francisco': {'gross_usd': 280_000, 'tax_rate': 0.40, 'rent_usd': 3_600, 'ppp_index': 1.00},
+    'London':        {'gross_usd': 160_000, 'tax_rate': 0.42, 'rent_usd': 2_400, 'ppp_index': 0.72},
+    'Berlin':        {'gross_usd': 110_000, 'tax_rate': 0.38, 'rent_usd': 1_500, 'ppp_index': 0.68},
+    'Bangalore':     {'gross_usd':  50_000, 'tax_rate': 0.30, 'rent_usd':   400, 'ppp_index': 0.29},
+    'Lisbon':        {'gross_usd':  90_000, 'tax_rate': 0.35, 'rent_usd':  1_200, 'ppp_index': 0.58},
+}
+
+def compare_cities():
+    print(f"{'City':<16} {'Gross':>10} {'Net':>10} {'Net-rent':>10} {'PPP-adj':>10}")
+    for city, d in CITIES.items():
+        net        = d['gross_usd'] * (1 - d['tax_rate'])
+        net_rent   = net - d['rent_usd'] * 12
+        ppp_adj    = net_rent / d['ppp_index']
+        print(f"{city:<16} \${d['gross_usd']:>9,} \${net:>9,.0f} \${net_rent:>9,.0f} \${ppp_adj:>9,.0f}")
+
+compare_cities()
+# Lisbon + remote US salary often wins on PPP-adjusted take-home
+\`\`\``,
     tags: ['Global', 'ML Jobs', 'Salary', 'London', 'Berlin', 'Bangalore', 'San Francisco', 'Career'],
     domain: 'career',
     youtube: [{ id: 'v45cTIDbj9E', title: 'Advice From a Top 1% Machine Learning Engineer' }],
@@ -2202,7 +2286,29 @@ Fix: start with simpler models (ARIMA, Prophet) that have explicit seasonal comp
 
 Before deploying a forecast model: (1) Plot the series and identify obvious structural breaks or seasonality changes. (2) Run stationarity tests. (3) Backtest with a proper walk-forward validation where the model never sees future data. (4) Verify your evaluation metric aligns with what operations actually cares about. (5) Validate that your holdout MAPE is within 20% of your cross-validation MAPE. If not, you have a problem — likely one of the six above.
 
-**Practice this in Time Series to diagnose failures and apply the right preventive checks for your data.**`,
+**Practice this in Time Series to diagnose failures and apply the right preventive checks for your data.**
+
+\`\`\`python
+import numpy as np
+
+def walk_forward_cv(series, model_fn, horizon=7, min_train=90):
+    """Walk-forward validation — the only honest time series backtest.
+    Never lets the model see future data. Each fold: fit on [0:t], predict [t:t+h]."""
+    errors = []
+    for t in range(min_train, len(series) - horizon):
+        train  = series[:t]
+        actual = series[t : t + horizon]
+        model  = model_fn(train)
+        pred   = model.predict(horizon)
+        mape   = np.mean(np.abs((actual - pred) / (np.abs(actual) + 1e-9))) * 100
+        errors.append(mape)
+
+    cv_mape   = np.mean(errors)
+    # Sanity check: if holdout MAPE >> cv_mape, you likely have leakage or non-stationarity
+    return {'cv_mape': round(cv_mape, 2), 'n_folds': len(errors)}
+
+# Red flag: cv_mape=4.2% but holdout_mape=38.1% → one of the 6 failure modes above
+\`\`\``,
     tags: ['Time Series', 'Forecasting', 'ARIMA', 'Prophet', 'Stationarity', 'Seasonality', 'Production Failures'],
     domain: 'eval',
     youtube: [{ id: 'DeORzP0go5I', title: 'Time Series Fundamentals: Stationarity and Differencing' }],
@@ -2274,7 +2380,36 @@ Fix: run experiments for at least 2 full novelty cycles. For products with weekl
 
 3. Then: look at your primary metric. It's only trustworthy if the SRM check passed and you ran for the full duration.
 
-**Practice this in Experimentation frameworks to understand how to design bulletproof A/B tests and catch these failure modes before they corrupt your decisions.**`,
+**Practice this in Experimentation frameworks to understand how to design bulletproof A/B tests and catch these failure modes before they corrupt your decisions.**
+
+\`\`\`python
+from scipy.stats import chi2_contingency, norm
+import numpy as np
+
+def pre_analysis_checklist(control_n, treatment_n, target_split=0.5,
+                            observed_metric=None, alpha=0.05):
+    """Run this BEFORE looking at your primary metric. Always."""
+    results = {}
+
+    # 1. SRM check — chi-squared on traffic split
+    total = control_n + treatment_n
+    expected_c = total * target_split
+    expected_t = total * (1 - target_split)
+    chi2, srm_p, *_ = chi2_contingency([[control_n, treatment_n],
+                                         [expected_c, expected_t]])
+    results['srm_p']     = round(srm_p, 4)
+    results['srm_pass']  = srm_p >= 0.01   # fail → stop, do not analyse primary metric
+
+    # 2. Minimum detectable effect check
+    if observed_metric is not None:
+        se  = np.sqrt(observed_metric * (1 - observed_metric) * (1/control_n + 1/treatment_n))
+        mde = norm.ppf(1 - alpha/2) * se * 2
+        results['mde_pct'] = round(mde * 100, 2)
+
+    return results
+
+# Never peek at conversion rate before running this first
+\`\`\``,
     tags: ['A/B Testing', 'Experimentation', 'SRM', 'Peeking', 'Statistical Validity', 'Data Science'],
     domain: 'eval',
     youtube: [{ id: 'DUNk4GPZ9bw', title: 'A/B Testing Mistakes: Peeking and SRM' }],
@@ -2354,7 +2489,33 @@ A calibration dataset that doesn\'t match your production distribution produces 
 
 TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantisation. Using these correctly requires knowing which layers are quantisation-sensitive (attention, layer norm) and keeping them in higher precision.
 
-**Practice this in Deep Learning serving to understand when quantization is safe, how to detect failures, and how to optimise inference for your specific model and hardware.**`,
+**Practice this in Deep Learning serving to understand when quantization is safe, how to detect failures, and how to optimise inference for your specific model and hardware.**
+
+\`\`\`python
+import torch
+from torch.cuda.amp import autocast, GradScaler
+
+def train_mixed_precision(model, loader, optimizer, epochs=3):
+    """BF16/FP16 mixed precision: FP16 forward pass, FP32 master weights.
+    ~2× faster, ~50% less GPU memory. GradScaler prevents underflow."""
+    scaler = GradScaler()   # dynamic loss scaling — handles FP16 underflow
+
+    for epoch in range(epochs):
+        for batch in loader:
+            optimizer.zero_grad()
+
+            with autocast(dtype=torch.float16):  # use bfloat16 on Ampere+ GPUs
+                loss = model(batch).loss          # forward in FP16
+
+            scaler.scale(loss).backward()         # backward scales gradients
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            scaler.step(optimizer)                # updates in FP32 master weights
+            scaler.update()
+
+# Production note: bf16 is preferred over fp16 on A100/H100 — larger dynamic range,
+# no gradient underflow, no GradScaler needed. Use torch.bfloat16 where hardware allows.
+\`\`\``,
     tags: ['Deep Learning', 'Quantization', 'FP16', 'BF16', 'INT8', 'LLM Inference', 'Serving'],
     domain: 'dl',
     youtube: [{ id: 'IxrlHAJtqKE', title: '8-bit Optimizers via Block-wise Quantization' }],

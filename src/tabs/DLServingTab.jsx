@@ -977,7 +977,7 @@ function MLServingArchitecture() {
                 <g key={n.id} onClick={() => setSelected(isSel ? null : n.id)} style={{ cursor: 'pointer' }}>
                   <rect
                     x={x} y={y} width={NODE_W} height={NODE_H} rx="8"
-                    fill={isSel ? n.bg : 'rgba(255,255,255,0.07)'}
+                    fill={isSel ? n.bg : 'var(--card-tint)'}
                     stroke={isSel ? n.color : 'rgba(255,255,255,0.1)'}
                     strokeWidth={isSel ? 2 : 1}
                   />

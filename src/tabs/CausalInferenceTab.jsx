@@ -389,7 +389,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                   })}
                 </div>
                 {it.revealed && (
-                  <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
+                  <div style={{ padding: '12px 14px', background: 'var(--card-scrim)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
                     <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Correct' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Incorrect'}</div>
                     <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.exp}</p>
                   </div>
@@ -630,7 +630,7 @@ function ConfounderOrCollider() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${TYPE_COLORS[s.type]}30`, background: TYPE_COLORS[s.type] + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'var(--card-tint)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -813,7 +813,7 @@ function BackdoorCriterion() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${accent}30`, background: accent + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'var(--card-tint)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -952,7 +952,7 @@ function ExperimentFailureCard({ s, accentColor, onPick }) {
           {/* Reveal panel */}
           {revealed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ padding: '12px 14px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
+              <div style={{ padding: '12px 14px', background: 'var(--card-scrim)', border: `1px solid ${isCorrect ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: '8px' }}>
                 <div style={{ fontSize: '10px', color: isCorrect ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>{isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Correct' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Incorrect'}</div>
                 <div style={{ fontSize: '10px', color: accentColor, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>Diagnosis</div>
                 <p style={{ margin: '0 0 10px', fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.diagnosis}</p>
@@ -1490,7 +1490,7 @@ export default function CausalInferenceTab({ onNavigate }) {
             <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--card-tint)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
             </div>

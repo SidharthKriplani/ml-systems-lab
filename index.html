@@ -23,6 +23,9 @@
 
     <!-- Canonical -->
     <link rel="canonical" href="https://ml-systems-lab.vercel.app/" />
+    <link rel="alternate" type="application/rss+xml" title="ML Systems Lab — Gradient" href="/rss.xml" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#e8a030" />
 
     <title>ML Systems Lab — Production ML Engineering</title>
     <link rel="preconnect" href="https://api.fontshare.com" />
@@ -32,6 +35,11 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'))
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

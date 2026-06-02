@@ -74,7 +74,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
         </span>
       </div>
       {score.attempted > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px', background: 'var(--card-tint)', borderRadius: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-low)' }}>Score:</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: score.correct / score.attempted >= 0.7 ? 'var(--prime)' : 'var(--ink-low)' }}>
             {score.correct}/{score.attempted}
@@ -211,7 +211,7 @@ function TrainingFailureDiagnosis() {
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
           <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: TIER_COLORS[scenario.tier] + '18', color: TIER_COLORS[scenario.tier], fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{scenario.tier}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'var(--card-tint)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -297,7 +297,7 @@ function GradientDebugger() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 700, color: 'var(--ink-hi)' }}>{scenario.title}</span>
         </div>
-        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
+        {scenario.symptoms.map((s, i) => <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '4px 10px', background: 'var(--card-tint)', borderRadius: '4px', marginBottom: '4px' }}>{s}</div>)}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -1086,7 +1086,7 @@ export default function DeepLearningTab({ onNavigate }) {
             <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
+                <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--card-tint)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.userBrief}</p>
             </div>

@@ -440,7 +440,7 @@ export default function SpotTheFlawTab({ onNavigate }) {
       </div>
 
       {/* Score strip */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid var(--rim)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, var(--card-tint) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid var(--rim)' }}>
         <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>{attempted}/{SCENARIOS.length} attempted</span>
         {attempted > 0 && <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{correct} correct ({Math.round(correct / attempted * 100)}%)</span>}
         <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>

@@ -447,7 +447,7 @@ function LRStrategyModule() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {scenario.details.map((d, i) => (
-            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: '4px' }}>
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', padding: '3px 10px', background: 'var(--card-tint)', borderRadius: '4px' }}>
               {d}
             </div>
           ))}

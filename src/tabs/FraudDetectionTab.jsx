@@ -1256,7 +1256,7 @@ function ReferenceCellDisplay({ title, code, onMarkRead, isDone }) {
       </div>
 
       {expanded && !isDone && (
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--rim)', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--rim)', background: 'var(--card-scrim)' }}>
           <pre style={{
             fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-mid)',
             overflow: 'auto', maxHeight: '300px', margin: 0, lineHeight: 1.5,
@@ -1463,7 +1463,7 @@ export default function FraudDetectionTab({ onNavigate }) {
         </p>
 
         {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
