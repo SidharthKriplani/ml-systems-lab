@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ── Shared pill helper ─────────────────────────────────────────────────────────
 function pill(label, active, onClick, activeColor = 'var(--prime)') {
@@ -851,6 +852,7 @@ export default function DbtTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>dbt &amp; Transformations</h1>
           <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Transformation bugs are silent. Wrong materialization costs 10x. Schema drift breaks downstream without warning. This lab teaches you to make the right call before it is a 3am incident.

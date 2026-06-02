@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ── Model Selection Oracle ────────────────────────────────────────────────────
 const MODELS = [
@@ -1012,6 +1013,7 @@ export default function DataScienceTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Data Science</h1>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px' }}>
           Statistics courses teach you the math. This domain teaches you the judgment — when each model is the wrong choice, which tests are being misused, and why your calibration is broken.

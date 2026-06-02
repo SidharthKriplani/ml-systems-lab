@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { CheckMark, CrossMark } from '../components/Icons'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module 1: Star vs OBT Judgment
@@ -736,6 +737,7 @@ export default function DataModelingTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Data Modeling & Storage</h1>
           <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Star schema or OBT? Which SCD type for this business rule? What breaks when you put 10TB through Hive without compaction? Real decisions, not definitions.

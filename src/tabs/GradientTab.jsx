@@ -1100,6 +1100,29 @@ Click into the slow job. You see its stages, each corresponding to a shuffle bou
 
 The ratio that matters most: if Shuffle Read is 10x the Input size, you have a skewed join or explosion in cardinality. If Shuffle Write is large but Shuffle Read is small in the next stage, data is being generated and discarded — look for unnecessary explode() calls.
 
+\`\`\`python
+# Read key Spark UI metrics programmatically
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
+sc = spark.sparkContext
+
+# After a job completes, check stage metrics
+status = sc.statusTracker()
+for job_id in status.getActiveJobIds() or status.getJobIdsForGroup(None):
+    info = status.getJobInfo(job_id)
+    for stage_id in info.stageIds:
+        stage = status.getStageInfo(stage_id)
+        if stage:
+            print(f"Stage {stage_id}: tasks={stage.numActiveTasks}, "
+                  f"shuffle_read={stage.inputBytes}, "
+                  f"shuffle_write={stage.shuffleWriteBytes}")
+
+# The two metrics that tell you the most:
+# 1. shuffleWriteBytes >> shuffleReadBytes → skewed partition
+# 2. max(taskDuration) / median(taskDuration) > 5 → data skew
+\`\`\`
+
 **The Task Duration Histogram: skew detector**
 
 Click into a stage and scroll to the task metrics. The task duration histogram is the single most useful chart in Spark debugging. It shows the distribution of time spent across all tasks.
@@ -1197,7 +1220,37 @@ You don\'t need an expensive MLOps platform for this. You need:
 3. Compute prediction KS weekly vs launch week distribution
 4. When labels arrive: compute residuals by score decile, alert if calibration error > 0.05
 
-The teams that catch model failures early aren\'t the ones with the most sophisticated tooling. They\'re the ones who consistently run these three checks and act on the alerts rather than explaining them away.`,
+The teams that catch model failures early aren\'t the ones with the most sophisticated tooling. They\'re the ones who consistently run these three checks and act on the alerts rather than explaining them away.
+
+\`\`\`python
+import numpy as np
+import pandas as pd
+from scipy.stats import ks_2samp
+
+def compute_psi(expected, actual, buckets=10):
+    """Population Stability Index — PSI > 0.2 means retrain."""
+    breakpoints = np.percentile(expected, np.linspace(0, 100, buckets + 1))
+    breakpoints[0] = -np.inf
+    breakpoints[-1] = np.inf
+
+    exp_counts = np.histogram(expected, bins=breakpoints)[0] / len(expected)
+    act_counts = np.histogram(actual,   bins=breakpoints)[0] / len(actual)
+
+    # Clip to avoid log(0)
+    exp_counts = np.clip(exp_counts, 1e-6, None)
+    act_counts = np.clip(act_counts, 1e-6, None)
+
+    psi = np.sum((act_counts - exp_counts) * np.log(act_counts / exp_counts))
+    return psi
+
+# Usage: compare training distribution vs last 7 days of production
+psi = compute_psi(train_feature_values, prod_feature_values_last_7d)
+print(f"PSI: {psi:.3f} — {'STABLE' if psi < 0.1 else 'MONITOR' if psi < 0.2 else 'RETRAIN'}")
+
+# KS test for distribution shift
+ks_stat, p_value = ks_2samp(train_feature_values, prod_feature_values_last_7d)
+print(f"KS p-value: {p_value:.4f} — {'SHIFT DETECTED' if p_value < 0.05 else 'stable'}")
+\`\`\``,
     tags: ['Monitoring', 'Drift Detection', 'PSI', 'KS Test', 'Production ML', 'Calibration'],
     domain: 'monitor',
     youtube: [{ id: '_xjtxnFJakY', title: 'The Day After Deployment: Model Monitoring — Emeli Dral' }],
@@ -1304,6 +1357,30 @@ Here are the 8 patterns that corrupt forecasting pipelines before the model gets
 You\'re predicting sales tomorrow. One of your features is "average sales over the past 7 days" — computed using the 7 days before the prediction date. In training, you compute this lazily using the full history. In production, the pipeline that materialises this feature runs at 06:00 UTC, including transactions that came in at 23:55 the previous night.
 
 Result: training features are computed with a slightly different time boundary than production features. The model learns patterns that don\'t exist in the production data. Your MAPE looks fine in backtest; it degrades 15% in production.
+
+\`\`\`python
+import pandas as pd
+from sklearn.linear_model import Ridge
+
+def make_temporal_features(df, target_col, lag_days=[7, 14, 28]):
+    """Safe temporal feature engineering — no future leakage."""
+    df = df.sort_values('date').copy()
+    for lag in lag_days:
+        # shift(lag) ensures we only use data from lag days ago
+        df[f'target_lag_{lag}d'] = df[target_col].shift(lag)
+    # Rolling mean must be shifted by 1 to avoid using today's value
+    df['rolling_mean_7d'] = df[target_col].shift(1).rolling(7).mean()
+    return df
+
+# Common mistake — leaks the target into features:
+# df['rolling_mean'] = df[target_col].rolling(7).mean()  # BUG: uses today
+# df['lag_1'] = df[target_col].shift(0)                  # BUG: is today
+
+# Safe train/test split for time series — never shuffle
+cutoff = pd.Timestamp('2024-01-01')
+train = df[df['date'] < cutoff]
+test  = df[df['date'] >= cutoff]  # strictly after — no overlap
+\`\`\`
 
 **2. Non-stationarity ignored at training time**
 
@@ -2234,6 +2311,42 @@ Small difference per user. Consistent bias across aggregate features. The model 
 **Step 4: Implement a feature parity test.** Take 100 historical events. Compute features for each event using the training pipeline AND the serving pipeline (retroactively, with the same data the serving pipeline would have received at that time). Compare. Any feature with mean difference > 0.05 on a normalised scale is suspect.
 
 **Step 5: Establish a feature store baseline.** Use a feature store (Feast, Tecton, Hopsworks) that enforces identical code paths for training and serving. Invest the time upfront; it pays for itself in prevented incidents.
+
+\`\`\`python
+import pandas as pd
+import numpy as np
+
+def detect_training_serving_skew(train_features: pd.DataFrame,
+                                  serving_log: pd.DataFrame,
+                                  threshold: float = 0.1) -> dict:
+    """
+    Compare training feature distributions vs logged serving features.
+    Returns per-feature PSI. PSI > 0.1 = investigate. PSI > 0.2 = incident.
+    """
+    results = {}
+    common_cols = set(train_features.columns) & set(serving_log.columns)
+
+    for col in common_cols:
+        train_vals = train_features[col].dropna().values
+        serve_vals = serving_log[col].dropna().values
+
+        if len(serve_vals) < 100:
+            results[col] = {'psi': None, 'status': 'INSUFFICIENT_DATA'}
+            continue
+
+        # Compute PSI using training distribution as reference
+        breakpoints = np.percentile(train_vals, np.linspace(0, 100, 11))
+        breakpoints[0], breakpoints[-1] = -np.inf, np.inf
+
+        exp = np.clip(np.histogram(train_vals, bins=breakpoints)[0] / len(train_vals), 1e-6, None)
+        act = np.clip(np.histogram(serve_vals, bins=breakpoints)[0] / len(serve_vals), 1e-6, None)
+        psi = float(np.sum((act - exp) * np.log(act / exp)))
+
+        status = 'STABLE' if psi < 0.1 else 'INVESTIGATE' if psi < 0.2 else 'INCIDENT'
+        results[col] = {'psi': round(psi, 4), 'status': status}
+
+    return results
+\`\`\`
 
 **Prevention through feature stores:**
 
@@ -3587,6 +3700,24 @@ export default function GradientTab({ onNavigate }) {
     causal:   ['causal'],
   }
 
+  // Trainer/Combinator domainBreakdown label → post domain mapping
+  const HISTORY_DOMAIN_MAP = {
+    'Feature Engineering':       'features',
+    'Model Evaluation':          'eval',
+    'ML Systems':                'design',
+    'System Design':             'design',
+    'Spark / Data Engineering':  'spark',
+    'Data Engineering':          'spark',
+    'Deep Learning':             'dl',
+    'MLOps':                     'monitor',
+    'Monitoring':                'monitor',
+    'Classical ML':              'eval',
+    'Statistics':                'eval',
+    'Causal Inference':          'causal',
+    'Time Series':               'ts',
+    'Data Science':              'ts',
+  }
+
   function getPersonalisedPosts(pm) {
     // Collect all msl_score:* keys and determine weak / practiced / untouched domains
     let weakDomains = new Set()
@@ -3612,6 +3743,34 @@ export default function GradientTab({ onNavigate }) {
           }
         } catch { /* non-JSON value — ignore */ }
       }
+
+      // Also read trainer + combinator domain breakdowns for richer weak-domain signal
+      try {
+        const trainerRaw = localStorage.getItem('msl_trainer_history')
+        const combRaw    = localStorage.getItem('msl_combinator_history')
+        const histories  = [
+          ...(trainerRaw ? JSON.parse(trainerRaw) : []),
+          ...(combRaw    ? JSON.parse(combRaw)    : []),
+        ]
+        // Aggregate correct/total per domain across last 10 sessions
+        const domainAgg = {}
+        histories.slice(-10).forEach(session => {
+          if (!session.domainBreakdown) return
+          Object.entries(session.domainBreakdown).forEach(([label, stats]) => {
+            if (!stats || typeof stats.correct !== 'number') return
+            const domain = HISTORY_DOMAIN_MAP[label]
+            if (!domain) return
+            if (!domainAgg[domain]) domainAgg[domain] = { correct: 0, total: 0 }
+            domainAgg[domain].correct += stats.correct
+            domainAgg[domain].total   += stats.total
+            practicedDomains.add(domain)
+          })
+        })
+        // Mark domains as weak if aggregate accuracy < 60%
+        Object.entries(domainAgg).forEach(([domain, { correct, total }]) => {
+          if (total > 0 && correct / total < 0.6) weakDomains.add(domain)
+        })
+      } catch { /* ignore */ }
     } catch { /* localStorage unavailable */ }
 
     if (pm === 'revise') {

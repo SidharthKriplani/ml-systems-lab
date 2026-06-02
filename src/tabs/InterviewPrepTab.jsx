@@ -189,7 +189,7 @@ const BEHAVIORAL_SCENARIOS = [
     level: 'Senior',
     q: 'Your fraud model has AUC 0.91 but the VP of Risk demands recall ≥ 95%. Your best model only hits 0.72 recall. How do you handle this conversation?',
     options: {
-      A: 'Ship the model anyway — AUC is the superior metric; stakeholders do not understand ML.',
+      A: 'Ship the model anyway — AUC 0.91 already proves the model is highly discriminating; the recall target is based on a misunderstanding of how AUC and recall relate.',
       B: 'Retrain with a lower classification threshold to hit 95% recall, accept the precision drop.',
       C: 'Schedule a meeting to align on metric definition first, present tradeoff curves showing AUC vs recall vs precision.',
       D: 'Use an ensemble of multiple models to optimize both metrics simultaneously.',
@@ -197,7 +197,7 @@ const BEHAVIORAL_SCENARIOS = [
     correct: 'C',
     explanation: {
       C: 'This is the production-grade response. You do not ship a model to an undefined specification. Present the tradeoff curve — show what recall rate is achievable at different precision levels. Let the VP choose the operating point based on business cost (cost of missing fraud vs cost of false positives). Then retrain with the agreed threshold. Alignment before modeling saves weeks of rework.',
-      A: 'Dismissing stakeholder input is how models accumulate hidden debt. AUC alone is insufficient for this use case — the business cares about operational cost, not statistical purity. Shipping without alignment will be blocked in production.',
+      A: 'AUC and recall are related but not interchangeable: a 0.91 AUC means the model ranks fraudsters ahead of legitimate users 91% of the time, but at a 0.5 threshold you may still miss 28% of fraud. High AUC does not guarantee any particular recall level. Shipping without agreeing on the operating threshold means the model will be reconfigured post-deployment — that alignment conversation still happens, just later and under pressure.',
       B: 'You can hit 95% recall, but at what precision cost? If you blindly retrain for the metric without understanding the cost tradeoff, you may produce a model that flags 80% of transactions as fraud — operationally useless.',
       D: 'Ensembles do not create non-existent tradeoff points. You still have the same precision-recall frontier; an ensemble just explores it differently. The real problem is undefined business requirements, not model architecture.',
     },
@@ -210,7 +210,7 @@ const BEHAVIORAL_SCENARIOS = [
     q: 'Your fraud model shipped 2 weeks ago. You just discovered it is degrading silently — precision dropped from 0.75 to 0.52 due to merchant/geography distribution shift. Users are complaining about too many false positives. Your first move?',
     options: {
       A: 'Emergency revert the model immediately to the previous version.',
-      B: 'Alert your manager and hand off to leadership; the technical investigation is not your responsibility.',
+      B: 'Alert your manager immediately and propose an emergency retrain on the last 7 days of labeled data to quickly adapt to the distribution shift, then deploy as a hotfix.',
       C: 'Silently retrain on the new data and ship an update; let the degradation stabilize naturally.',
       D: 'Investigate root cause first — is this a data pipeline issue, real user behavior change, or label drift?',
     },
@@ -218,7 +218,7 @@ const BEHAVIORAL_SCENARIOS = [
     explanation: {
       D: 'Investigate before you act. Root cause determines the fix. If it is a data pipeline bug (missing merchants, schema drift), revert is correct. If it is real distribution shift (new geographies, new merchant types), you need retraining. If it is label drift (definition of fraud changed), you need relabeling. Acting without diagnosis wastes time.',
       A: 'Reverting is safe but may be unnecessary. If the degradation is due to natural distribution shift and labels are correct, reverting just postpones the problem. Investigate first.',
-      B: 'You are the owner. Hand-off to leadership without a technical understanding of the issue is abdication. Leadership needs your analysis to decide rollback vs retrain vs pipeline fix.',
+      B: 'Alerting your manager is correct, but retraining immediately on 7 days of data skips root cause. If the distribution shift is from a data pipeline bug (e.g., missing merchants), retraining on the corrupted data bakes the bug into the model. You need to identify the cause first — then the fix is obvious. Retraining on clean data, fixing the pipeline, or both.',
       C: 'Silent retraining hides the incident from stakeholders. If precision continues to degrade, you have no audit trail and no stakeholder awareness. The issue will surface when a bigger failure occurs.',
     },
   },
@@ -250,7 +250,7 @@ const BEHAVIORAL_SCENARIOS = [
     q: 'Your ML engineer wants to serve the model via batch inference (daily, 1M predictions cached). You prefer online inference (real-time, <100ms). The engineer argues batch is cheaper. How do you resolve this?',
     options: {
       A: 'Defer to their preference — they own the infrastructure.',
-      B: 'Demand online serving; real-time is always the right choice.',
+      B: 'Argue for online serving: daily batch predictions will be stale for users who change behavior intraday — e.g., a user who just made a purchase should not still see a high recommendation score for that item for 24 hours.',
       C: 'Lay out cost, latency, staleness, and complexity tradeoffs; let product decide based on requirements.',
       D: 'Build both and let users choose which model to call.',
     },
@@ -258,7 +258,7 @@ const BEHAVIORAL_SCENARIOS = [
     explanation: {
       C: 'The choice depends on product requirements. Batch is cheaper and simpler but predictions are stale (up to 24h old). Online is fresher and enables personalization but costs more and is operationally complex. Create a matrix: cost per prediction, latency, update frequency, and operational burden. Let the product owner decide based on use case. Your job is clarity on tradeoffs, not mandate.',
       A: 'Deferring on a strategic architectural choice is abdication. Infrastructure is a means to meet product requirements, not an end in itself.',
-      B: 'Online is not always right. For recommendation feeds (users expect stale lists) or batch reports (no latency requirement), batch is perfectly appropriate. Demanding online adds unnecessary cost.',
+      B: 'Stale predictions are a real problem, but the right response is to quantify the impact: how often do users act on recommendations within hours of behavioral change? If intraday freshness genuinely moves the needle, that is a valid business case for online serving — but the decision should be driven by measured staleness impact, not a general freshness preference. Cost and operational complexity are real constraints that need to be in the tradeoff table.',
       D: 'Offering both models creates dual maintenance burden and confuses the product roadmap. One model per use case is the right constraint.',
     },
   },
@@ -272,14 +272,14 @@ const BEHAVIORAL_SCENARIOS = [
       A: 'Tell them to revert immediately; you will debug offline.',
       B: 'The fix is simple; revert is overkill. Tell them to ship the hotfix.',
       C: 'Set up a call to understand scope and impact, then let the on-call engineer and PM decide with you as a backup.',
-      D: 'Stay out of it; your team can handle production issues without you.',
+      D: 'Do not engage at all — being on holiday means zero on-call obligations; this is a team process and escalation decision, not yours.',
     },
     correct: 'C',
     explanation: {
       C: 'You are backup, not the decision-maker. On-call engineers own the incident. Understand the scope (0.5% is material but not catastrophic) and impact (NaN predictions hitting users?), then let them decide based on risk tolerance and current severity. Your input: "Revert is safer, hotfix is faster. Your call." This empowers the team and distributes decision authority.',
       A: 'Deferring to revert is safe but you are making the decision remotely without understanding current context. On-call teams have better information.',
       B: 'You do not know the hotfix quality or testing coverage. Dismissing revert because "the fix is simple" is overconfident.',
-      D: 'Staying completely out means you are not available if they need escalation. You are backup; available but delegated.',
+      D: 'Total disengagement assumes the on-call team has all context they need — but 0.5% NaN on critical fraud predictions may need an architectural judgment call (is this safe to hotfix or does it require a data pipeline fix first?) that only you know. Being backup does not mean being unreachable; it means being available for escalation with bounded interruption, not full incident ownership.',
     },
   },
   {
@@ -290,7 +290,7 @@ const BEHAVIORAL_SCENARIOS = [
     q: 'The CFO asks in a meeting: "Why did we shut down the churn prediction model? I thought it was working." You disabled it because it degraded 6 months post-launch (PSI > 0.25). She is skeptical — "Can\'t you just retrain?" Explain in 2 minutes why it is not simple.',
     options: {
       A: 'Give her the technical details — distribution shift, PSI calculation, retraining overhead.',
-      B: '"It stopped working, we shut it down, we\'re building v2."',
+      B: '"The model degraded because churn patterns shifted — we retrained on recent data but it did not meet the accuracy bar for production, so we pulled it while building a corrected version."',
       C: '"The data the model learned from 6 months ago is not valid anymore. It\'s like predicting last quarter\'s stock price with this quarter\'s economy. We need to learn a new model from current data, which takes time."',
       D: 'Blame the data team for not maintaining data quality.',
     },
@@ -298,7 +298,7 @@ const BEHAVIORAL_SCENARIOS = [
     explanation: {
       C: 'Analogies work with non-technical audiences. The model is stale. Data changed. You are not abandoning ML, you are building a new one from current data. This frames the issue in business terms — outdated information — not technical jargon. She understands the intuition immediately.',
       A: 'PSI calculations and technical terms will lose her. You are answering the question she did not ask.',
-      B: 'Too vague. She will ask follow-up questions and think you do not understand the problem.',
+      B: 'Closer, but incomplete. You explained the why (patterns changed) and the what happened (retrain failed the bar) — but you skipped the key question she actually needs answered: what is the status and when will it be back? A CFO-level response requires three parts: why it broke, what you are doing about it, and when she can expect it back. Missing the plan and timeline leaves her unable to decide whether to escalate or wait.',
       D: 'Blaming the data team (and implicitly yourself) is not credible and does not answer her question. Own it.',
     },
   },
@@ -329,7 +329,7 @@ const BEHAVIORAL_SCENARIOS = [
     level: 'Senior',
     q: 'You discover data leakage in production 3 weeks after deploying a lead scoring model. Offline AUC was 0.94, but you found that a feature was computed using data that arrived AFTER the prediction event. Corrected AUC drops to 0.81. What do you do?',
     options: {
-      A: 'Quietly retrain and ship the corrected model; no need to disclose an internal mistake.',
+      A: 'Fix the feature pipeline, retrain with corrected point-in-time joins, validate that the corrected AUC is 0.81, and then ship the updated model with a release note describing the feature methodology change — disclosure is optional since the model performance improved.',
       B: 'Flag it immediately, put the model in read-only mode, fix the feature pipeline, retrain, and disclose internally.',
       C: 'Investigate more before alerting anyone; you might be wrong about the leakage.',
       D: 'Revert to the previous model and ask for a comprehensive audit of all features.',
@@ -337,7 +337,7 @@ const BEHAVIORAL_SCENARIOS = [
     correct: 'B',
     explanation: {
       B: 'This is the production-grade response. (1) Acknowledge immediately — silence makes it worse when discovered later. (2) Disable the model to prevent leakage from propagating downstream. (3) Fix the root cause (feature pipeline timestamp bug). (4) Retrain with corrected features. (5) Document the incident and add validation to prevent recurrence. Transparency builds trust; cover-ups destroy it.',
-      A: 'Quiet retraining is a cover-up. If discovered later, it looks like intentional deception and kills credibility.',
+      A: 'The fix is technically sound — you corrected the pipeline and validated the retrained model — but the disclosure framing is wrong. The 0.94 AUC was never real; any decisions made based on that number (model selection, A/B test design, product commitments) were made on false data. Downstream teams and stakeholders who acted on 0.94 need to know so they can reassess. A release note framed as a "methodology change" also obscures the severity — this was a data integrity failure, not an improvement. Transparency is the only path that preserves trust.',
       C: 'You have evidence (feature timestamp > prediction timestamp). Verify once more if you are uncertain, but do not delay disclosure.',
       D: 'Do a comprehensive audit as a follow-up, but do not gate immediate response on it. Disable the broken model now, audit later.',
     },
@@ -1010,6 +1010,17 @@ export default function InterviewPrepTab({ onNavigate }) {
             })}
           </div>
         </>
+      )}
+
+      {onNavigate && (
+        <div style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>10 ML Interview Mistakes Even Senior Engineers Make</strong> in Gradient
+          </span>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Read in Gradient →
+          </button>
+        </div>
       )}
     </div>
   )

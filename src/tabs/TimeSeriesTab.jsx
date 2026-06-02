@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ── Forecast Failure Zoo ──────────────────────────────────────────────────────
 const FORECAST_FAILURES = [
@@ -891,6 +892,7 @@ export default function TimeSeriesTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Time Series</h2>
           <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(240,165,0,0.1)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
           Why good forecasts fail in production — and how to diagnose it. Stationarity decisions, anomaly detection tier selection, and the failure modes that look fine in testing but break in the field.

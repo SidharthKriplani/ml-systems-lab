@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─── Shared style helpers ─────────────────────────────────────────────────────
 const mono = { fontFamily: 'var(--font-mono)' }
@@ -942,6 +943,7 @@ export default function MLOpsPipelinesTab({ onNavigate }) {
             display: 'inline-block', padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600,
             background: 'rgba(240,165,0,0.2)', color: 'var(--prime)', ...mono,
           }}>MLOps</span>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           CI/CD gate design, infrastructure selection, and model registry patterns. The plumbing decisions that determine whether a model makes it from training to production reliably.

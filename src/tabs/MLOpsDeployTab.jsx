@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { WarningMark, CrossMark } from '../components/Icons'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -750,6 +751,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
             MLOps: Deploy & Promote
           </h1>
           <span style={{ ...pill('var(--prime)'), fontSize: '12px' }}>MLOps</span>
+          <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '600px' }}>
           Deployment strategy, champion-challenger promotion, and rollback decisions. The judgment calls that separate careful operators from cowboy deploys.
