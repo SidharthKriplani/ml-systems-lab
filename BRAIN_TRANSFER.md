@@ -188,11 +188,11 @@ git add -A && git commit -m "v4.X: [what shipped — be specific]" && git push
   - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
 
 ### Next batch (v4.59) — already queued in NEXT.md
-1. Unblock Interview Experiences (if credentials available)
-2. isFree per-case gating first pass (5 highest-traffic tabs)
+1. **"What's being tested" + anti-pattern pass — InterviewPrepTab first** — `whatsTested` field (renders as `.msl-hint` before reveal) + `antiPattern` field (rose-bordered callout inside reveal). One tab done right this sprint. Then Combinator/Trainer/Staff in subsequent sprints. Source: Quantiphi defense pack analysis.
+2. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
 3. Incident Room + ML Coding — expand to 6 scenarios each (currently 3)
-4. Social proof signal in README (when verifiable number available)
-5. IDEAS.md stale cleanup (many Tier 2 `[ ]` items already done)
+4. Unblock Interview Experiences (awaiting Formspree + Tally credentials)
+5. isFree per-case gating first pass (5 highest-traffic tabs)
 
 ---
 

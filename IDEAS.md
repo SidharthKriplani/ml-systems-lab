@@ -53,8 +53,37 @@ Last updated: 2026-06-02
 - [x] ~~**Add StaffLayerTab scenarios in thin domains**~~ — done (2026-05-27, 6 new scenarios: Experiment Design ×4 (SRM, novelty effect, 12 simultaneous tests, SUTVA), Feature Engineering ×2 (covariate shift, leakage). Total 17 → 23)
 - [x] ~~**Fix IC3 strawman reveals in StaffLayerTab**~~ — done (2026-05-27, s1 and s2 IC3 revised to competent-but-incomplete responses)
 
-### Content
-- [x] ~~**Freemium gate v2 — per-scenario difficulty gating**~~ — done (v4.46, 2026-06-02). All 46 scenarios in 4 free modules tagged with `isFree: true/false` based on difficulty. AccessGate.jsx ready for scenario-level checks.
+### Interview quality: "What's being tested" + anti-pattern format (from Quantiphi defense pack, 2026-06-02)
+
+**Concept:** Two additions to every interview scenario reveal:
+1. `whatsTested` — one sentence before the reveal button: "What the interviewer is evaluating: whether you know X not just Y." Renders as `.msl-hint` style callout, fires after pick but before reveal. Same pattern already used in SystemDesignTab/ModelEvalTab.
+2. `antiPattern` — inside the reveal panel: the overclaim or shallow answer that fails, paired with the better framing. Rendered as a `rose`-bordered callout block. Source format: "Don't say X → say Y instead."
+
+**Why this is Tier 1:** The defense pack showed that every good question has a trap — the candidate who answers correctly but shallowly still loses. MSL currently teaches the right answer but doesn't model the failure mode of someone who almost got it right. This closes that gap and directly mirrors how real interviewers evaluate.
+
+**Scope (in priority order):**
+1. **InterviewPrepTab** — highest-traffic interview tool, 128 questions already written. Add `whatsTested` + `antiPattern` to each question object. Render in existing AccordionMCQ reveal.
+2. **CombinatorTab + TrainerTab** — 160+ questions combined. Same field additions.
+3. **StaffLayerTab** — 23 scenarios. Staff-level anti-patterns are especially valuable (e.g., "I'd retrain the model" when the correct answer is "I'd escalate and find root cause first").
+4. **CodeBugsTab** — add `whatsTested` to each bug (e.g., "What's being tested: whether you distinguish OOM from spill before optimizing").
+
+**New scenario candidates from same source (add to respective tabs):**
+- Bagging vs Boosting + hyperparameter judgment (ClassicalMLTab — bagging module thin)
+- Feature engineering pipeline order + leakage prevention (FeatureEngTab — spoken-answer format)
+- Model metric selection by problem type with imbalance caveat (ModelEvalTab)
+- SageMaker train→register→endpoint flow (MLOpsDeployTab — no SageMaker content currently)
+- Glue vs Lambda ETL decision tree (AirflowTab or dbtTab — clean judgment scenario)
+- Retry decorator with exponential backoff (MLCodingTab — P6 from defense pack, production resilience)
+- ModelConfig class with Pydantic validation (MLCodingTab — P9, good complement to existing BCE loss problem)
+- Pandas dedup keeping latest record per user (MLCodingTab — P10, CDC deduplication pattern)
+
+**Format decision needed before build:** Does `antiPattern` live inside the existing `.msl-reveal-panel` or get its own collapsible? Recommendation: inline, `rose`-bordered sub-section at the bottom of the reveal — no new interaction required, no additional click. (Source: Quantiphi JD-Gap + Python Coding Interview Defense Pack, 2026-06-02)
+
+- [ ] **"What's being tested" label on every interview scenario** — `whatsTested` field + `.msl-hint` render before reveal button. InterviewPrepTab first, then Combinator/Trainer/Staff/CodeBugs.
+- [ ] **"Do Not Say This" anti-pattern callout** — `antiPattern` field + rose-bordered reveal sub-section. Same tab rollout order.
+- [ ] **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow/dbt), P6/P9/P10 Python problems (MLCoding).
+
+### Content — done (v4.46, 2026-06-02). All 46 scenarios in 4 free modules tagged with `isFree: true/false` based on difficulty. AccessGate.jsx ready for scenario-level checks.
 - [x] ~~**Behavioral question bank for Interview zone**~~ — done (v4.46, 2026-06-02). 8 scenarios covering metric disagreement, silent degradation, resource conflict, architecture debate, critical bugs, explaining to execs. Score: `msl_score:behavioral`.
 - [x] ~~**YouTube IDs on Gradient posts**~~ — done (v4.46, 2026-06-02). All 5 new posts + 2 backfill (7 total). All verified via oEmbed.
 - [x] ~~**Interview Experiences — Tally form wiring**~~ — done (v4.46, 2026-06-02). Submit button in InterviewGrid, form spec documented, admin workflow in code.
