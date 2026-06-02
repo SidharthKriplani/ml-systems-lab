@@ -217,9 +217,9 @@ const UPLIFT_SCENARIOS = [
   {
     id: 'u3',
     q: 'An X-learner is preferred over a T-learner when:',
-    options: ['The outcome is binary', 'Treatment and control group sizes are very imbalanced', 'The data has many features', 'The treatment effect is homogeneous'],
+    options: ['The outcome is binary and class-imbalanced', 'Treatment and control group sizes are very imbalanced', 'The base learners overfit on high-dimensional feature spaces', 'The treatment effect is expected to be heterogeneous across subgroups'],
     correct: 1,
-    exp: 'X-learner (Künzel et al.) is designed for imbalanced treatment assignment. It imputes counterfactual outcomes for each unit using the other group\'s model, then uses propensity-weighted averaging to combine estimates. When one group is much larger, X-learner leverages the larger group\'s model to impute better counterfactuals for the smaller group.',
+    exp: 'X-learner (Künzel et al.) is designed for imbalanced treatment assignment. It imputes counterfactual outcomes for each unit using the other group\'s model, then uses propensity-weighted averaging to combine estimates. When one group is much larger, X-learner leverages the larger group\'s model to impute better counterfactuals for the smaller group. Option D is a common trap — both T-learner and X-learner can capture heterogeneous treatment effects; the advantage of X-learner is specifically about sample size imbalance, not heterogeneity.',
   },
   {
     id: 'u4',
@@ -231,9 +231,9 @@ const UPLIFT_SCENARIOS = [
   {
     id: 'u5',
     q: 'A user segment shows high predicted churn (0.8) AND high predicted uplift (+0.4). What is the correct targeting decision?',
-    options: ['Don\'t target — churn risk is too high to recover', 'Target — high uplift means the intervention will have meaningful impact', 'Target only if uplift > churn probability', 'Cannot decide without knowing discount cost'],
+    options: ['Don\'t target — they will likely churn regardless, making the intervention ROI-negative', 'Target — high uplift means the intervention will have meaningful impact', 'Target only if churn probability minus uplift exceeds a business-defined threshold', 'Cannot decide without the propensity score to de-bias the uplift estimate'],
     correct: 1,
-    exp: 'High uplift + high churn is the ideal targeting combination: the user is genuinely at risk AND the intervention is likely to change their behavior. This is the "persuadable high-risk" quadrant — the reason you ran the uplift model. High churn alone (low uplift) = lost cause. Low churn + high uplift = "sleeping dog" (intervening might backfire).',
+    exp: 'High uplift + high churn is the ideal targeting combination: the user is genuinely at risk AND the intervention is likely to change their behavior. This is the "persuadable high-risk" quadrant — the reason you ran the uplift model. Option A confuses high predicted churn with "lost cause" — lost causes have high churn AND low uplift. Option C describes a plausible-sounding threshold rule but inverts the logic: you target when uplift is high relative to cost, not when churn minus uplift is high.',
   },
   {
     id: 'u6',
@@ -263,9 +263,9 @@ const OBS_EXP_SCENARIOS = [
   {
     id: 'oe3',
     q: 'You want to know if an ML-recommended article causes users to read more content long-term. You can\'t randomize recommendations (the rec system is live). What is a viable design?',
-    options: ['Regression of reading on historical recommendation rate', 'IV: use rec system algorithm version rollout as instrument for recommendation exposure', 'Match users by reading history and compare', 'A/B test with 5% holdout receiving random recommendations'],
+    options: ['Propensity score matching on pre-exposure reading history to control for engagement bias', 'IV: use rec system algorithm version rollout as instrument for recommendation exposure', 'DiD: compare reading growth of high-recommendation users vs low-recommendation users before and after the rec system launched', 'A/B test with 5% holdout receiving random recommendations'],
     correct: 3,
-    exp: 'A holdout group receiving random or no recommendations is the gold standard — it creates an experimental control group within your live system. IV (using algorithm rollout) is the second-best: the rollout affected recommendation exposure but shouldn\'t directly affect reading except through recommendations (exclusion restriction). Pure observational regression won\'t work — engagement level is a confounder.',
+    exp: 'A holdout group receiving random or no recommendations is the gold standard — it creates an experimental control group within your live system. Option B (IV with rollout) is the second-best: the rollout affected recommendation exposure but shouldn\'t directly affect reading except through recommendations (exclusion restriction). Option A (PSM) is a real and commonly used technique but fails here because engagement level is both what drives recommendation exposure AND what drives reading — a classic unmeasured confounder. Option C (DiD) has the same problem: parallel trends assumption likely fails because high-rec and low-rec users differ systematically in engagement trajectory.',
   },
   {
     id: 'oe4',
@@ -277,9 +277,9 @@ const OBS_EXP_SCENARIOS = [
   {
     id: 'oe5',
     q: 'When is observational causal inference definitively preferable to an A/B test?',
-    options: ['When the sample is large (n > 100k)', 'When randomization is unethical, impossible, or would take too long to detect effects', 'When the outcome is continuous rather than binary', 'When propensity scores are well-calibrated'],
+    options: ['When the sample is large enough that statistical power is not a concern', 'When randomization is unethical, impossible, or would take too long to detect effects', 'When the treatment already occurred historically and no holdout was run at the time', 'When propensity scores can be computed from rich pre-treatment covariates'],
     correct: 1,
-    exp: 'Observational methods are the only option when: (1) ethics prevent randomization (e.g., withholding a known-effective medical treatment), (2) the treatment already happened historically, (3) the effect is long-term and you can\'t wait years for an experiment, (4) regulatory or business constraints prevent a holdout. Large sample size doesn\'t make observational data causal — it just gives you a more precise biased estimate.',
+    exp: 'Observational methods are the only option when: (1) ethics prevent randomization (e.g., withholding a known-effective medical treatment), (2) the treatment already happened historically, (3) the effect is long-term and you can\'t wait years for an experiment, (4) regulatory or business constraints prevent a holdout. Option C describes a valid scenario where observational methods become necessary, but option B is the broader and correct answer that encompasses it. Option A is a trap: large sample size doesn\'t make observational data causal — it gives a more precise biased estimate. Option D is also a trap: rich covariates enable PSM but cannot address unobserved confounders.',
   },
   {
     id: 'oe6',
@@ -1495,6 +1495,17 @@ export default function CausalInferenceTab({ onNavigate }) {
           ))}
         </div>
       </div>
+
+      {onNavigate && (
+        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>When Difference-in-Differences Breaks: Parallel Trends Violations in Practice</strong> in Gradient
+          </span>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Read in Gradient →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

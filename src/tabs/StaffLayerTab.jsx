@@ -439,6 +439,17 @@ export default function StaffLayerTab({ onNavigate }) {
           ))}
         </div>
       </div>
+
+      {onNavigate && (
+        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>The 6-Step Framework That Answers Any ML System Design Question</strong> in Gradient
+          </span>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Read in Gradient →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

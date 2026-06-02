@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { trackModuleStart, trackModuleComplete } from '../analytics.js'
 import { CheckMark, CrossMark } from '../components/Icons'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -1186,13 +1187,13 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--prime)' }) {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'shuffle',         label: 'Shuffle Hell',             icon: '', component: ShuffleHell },
-  { id: 'skew',            label: 'Skew Doctor',              icon: '', component: SkewDoctor },
-  { id: 'partition',       label: 'Partition Tuner',          icon: '', component: PartitionTuner },
-  { id: 'broadcast',       label: 'Broadcast Joins',          icon: '', component: BroadcastJoinDecisions },
-  { id: 'oom',             label: 'OOM Diagnosis',            icon: '', component: OOMDiagnosis },
-  { id: 'memory_pressure', label: 'Memory Pressure',          icon: '', component: MemoryPressureSimulator },
-  { id: 'streaming',       label: 'Streaming Stability Lab',  icon: '', component: StreamingStabilityLab },
+  { id: 'shuffle',         label: 'Shuffle Hell',             icon: '', component: ShuffleHell,              fidelityTier: 'faithful' },
+  { id: 'skew',            label: 'Skew Doctor',              icon: '', component: SkewDoctor,               fidelityTier: 'faithful' },
+  { id: 'partition',       label: 'Partition Tuner',          icon: '', component: PartitionTuner,           fidelityTier: 'faithful' },
+  { id: 'broadcast',       label: 'Broadcast Joins',          icon: '', component: BroadcastJoinDecisions,   fidelityTier: 'faithful' },
+  { id: 'oom',             label: 'OOM Diagnosis',            icon: '', component: OOMDiagnosis,             fidelityTier: 'faithful' },
+  { id: 'memory_pressure', label: 'Memory Pressure',          icon: '', component: MemoryPressureSimulator,  fidelityTier: 'simplified' },
+  { id: 'streaming',       label: 'Streaming Stability Lab',  icon: '', component: StreamingStabilityLab,    fidelityTier: 'faithful' },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -1225,7 +1226,7 @@ export default function SparkLabTab({ onNavigate }) {
           Interactive PySpark execution mechanics. Configure shuffles, diagnose skew, tune partitions, watch jobs fail.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module has interactive controls. Adjust the parameters, pick a strategy, and observe the outcome — build intuition for configurations that fail before you hit them in production.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Real execution</span>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier={activeModuleData?.fidelityTier ?? 'faithful'} /></div>
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (

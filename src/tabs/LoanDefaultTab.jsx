@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CheckMark, CrossMark, WarningMark } from '../components/Icons'
 import PythonCell from '../components/PythonCell.jsx'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─── LocalStorage key ─────────────────────────────────────────────────────────
 const LS_KEY = 'msl_projectlab_loan_data'

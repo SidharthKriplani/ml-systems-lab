@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CheckMark, CrossMark, WarningMark } from '../components/Icons'
 import PythonCell from '../components/PythonCell.jsx'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─── LocalStorage key ─────────────────────────────────────────────────────────
 const LS_KEY = 'msl_projectlab_churn_data'
@@ -1308,9 +1309,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 1 of 5
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-            <CheckMark /> Real execution
-          </span>
+          <FidelityBadge tier="faithful" />
         </div>
         <h1 style={{
           fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900,

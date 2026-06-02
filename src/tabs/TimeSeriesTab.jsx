@@ -25,13 +25,13 @@ const FORECAST_FAILURES = [
     context: 'Your demand forecast missed Black Friday by 4×. The model was trained on 18 months of data and uses ARIMA with weekly seasonality. It performs well 48 weeks of the year.',
     clue: 'Black Friday and Cyber Monday are in the 4 weeks it misses. Training data had only one prior Black Friday (last year).',
     options: [
-      { id: 'arima', label: 'ARIMA cannot model multiplicative seasonality' },
+      { id: 'arima', label: 'ARIMA cannot model multiplicative seasonality — use SARIMA instead' },
       { id: 'sparse', label: 'One training example of Black Friday is not enough to learn the pattern' },
-      { id: 'lag', label: 'The model\'s lag window doesn\'t reach back 52 weeks' },
-      { id: 'scale', label: 'The forecast model doesn\'t scale predictions for high-demand periods' },
+      { id: 'lag', label: 'The model\'s seasonal lag window only covers 7 days, missing the 52-week annual cycle' },
+      { id: 'horizon', label: 'ARIMA forecasts degrade beyond 4 weeks ahead — the holiday was too far in the future to predict' },
     ],
     correct: 'sparse',
-    answer: 'One training example of Black Friday is statistically insufficient — the model has no reliable estimate of how extreme the holiday effect is. ARIMA\'s seasonal component learned from a single Black Friday is highly unstable. You need either: multiple years of holiday data, or an explicit holiday feature/regressor in the model.',
+    answer: 'One training example of Black Friday is statistically insufficient — the model has no reliable estimate of how extreme the holiday effect is. ARIMA\'s seasonal component learned from a single Black Friday is highly unstable. You need either: multiple years of holiday data, or an explicit holiday feature/regressor in the model. Option A is a real ARIMA limitation but not the primary cause — the model performs fine 48/52 weeks. Option C is a real problem worth fixing (a 52-week lag should be included) but even with it, one data point for the holiday effect is still statistically unreliable.',
     fix: 'Add a binary holiday indicator as an external regressor. Use Prophet or a SARIMAX model with explicit holiday effects. Or use a hybrid: statistical model + holiday multipliers from business knowledge.',
     lesson: 'Rare high-magnitude events (Black Friday, Super Bowl, product launches) are underrepresented in any training set. Model them explicitly with calendar features, not from seasonal patterns.',
   },
@@ -630,13 +630,13 @@ const TS_MODEL_SCENARIOS = [
     context: 'You have 3 years of weekly sales data for a single product. The series is stationary (ADF p < 0.05). No obvious seasonal pattern. You need next-12-week point forecasts.',
     question: 'Which model family is the best starting point?',
     options: [
-      'Prophet — it handles a wide range of time series automatically.',
+      'Prophet — it handles stationarity and autocorrelation automatically without manual parameter selection.',
       'ARIMA — stationary data with no seasonality is a natural ARIMA use case.',
-      'LSTM — deep learning will capture the autocorrelation structure better.',
-      'Linear regression with time index as the only feature.',
+      'LSTM — deep learning will capture non-linear autocorrelation structures better at this horizon.',
+      'Exponential smoothing (ETS) — it models autocorrelated stationary series with fewer parameters than ARIMA.',
     ],
     answer: 1,
-    diagnosis: 'ARIMA is purpose-built for stationary univariate series. Box-Jenkins ACF/PACF analysis gives you the p,d,q parameters directly. Prophet adds trend and seasonality components you don\'t need here — it will overfit. LSTMs need far more data (thousands of timesteps) to outperform ARIMA.',
+    diagnosis: 'ARIMA is purpose-built for stationary univariate series. Box-Jenkins ACF/PACF analysis gives you the p,d,q parameters directly. Prophet adds trend and seasonality components you don\'t need here — it will overfit to noise. LSTMs need far more data (thousands of timesteps) to outperform ARIMA. ETS (option D) is a legitimate alternative: simple ETS (SES) handles stationary series and works well, but ARIMA is preferred because ACF/PACF analysis directly diagnoses the autocorrelation structure rather than treating it as a hyperparameter.',
     fix: 'Fit ARIMA(p,0,q): d=0 because series is already stationary. Use auto_arima (pmdarima) or plot ACF/PACF to select p and q. Validate with expanding-window cross-validation, not random split. Baseline: ARIMA(1,0,1) as starting point.',
   },
   {
@@ -675,13 +675,14 @@ const TS_MODEL_SCENARIOS = [
     context: 'You are forecasting energy consumption at 5-minute intervals over 3 years (315,000 timesteps). The series has complex non-linear patterns, multiple driver variables (temperature, humidity, day_of_week), and regime changes (COVID lockdowns).',
     question: 'When does a neural time series model beat classical methods here?',
     options: [
-      'Neural models always beat ARIMA at any sample size.',
+      'When the series is long enough that gradient descent converges reliably — 315k points is more than sufficient.',
       'When the sample size is large (100k+), multivariate inputs are available, and non-linear interactions between drivers are expected.',
-      'When the series has regime changes — neural models handle changepoints better than ARIMA.',
-      'Neural models are not appropriate here because the series is non-stationary.',
+      'When the series has regime changes — neural models handle changepoints better than ARIMA because they learn from context.',
+      'Neural models are not appropriate here because the series is non-stationary and needs differencing first.',
     ],
     answer: 1,
-    diagnosis: 'The three conditions for neural TS models to win: (1) large training data (100k+ points), (2) multivariate inputs with non-linear interactions, (3) complex patterns that parametric models cannot represent. All three hold here. 315k timesteps is sufficient for TFT or N-BEATS training. Regime changes are a challenge for all model families; neural models don\'t inherently handle them better without explicit treatment.',
+    diagnosis: 'The three conditions for neural TS models to win: (1) large training data (100k+ points), (2) multivariate inputs with non-linear interactions, (3) complex patterns that parametric models cannot represent. All three hold here. 315k timesteps is sufficient for TFT or N-BEATS training. Option A confuses sample size with the correct justification — data volume is necessary but not sufficient; the advantage comes from multi-variate non-linear modeling. Option C is a common practitioner belief but is wrong: regime changes are hard for all model families, and neural models don\'t handle them better without explicit indicators.',
+    fix: 'Temporal Fusion Transformer (TFT) or N-BEATS for this use case. TFT natively handles multi-horizon forecasting with multi-variate inputs and produces interpretable attention weights. Add lockdown as a binary covariate. Use PyTorch Forecasting library. Validate on the last 6 months only — not a random split.',
     fix: 'Temporal Fusion Transformer (TFT) or N-BEATS for this use case. TFT natively handles multi-horizon forecasting with multi-variate inputs and produces interpretable attention weights. Add lockdown as a binary covariate. Use PyTorch Forecasting library. Validate on the last 6 months only — not a random split.',
   },
   {
@@ -916,6 +917,17 @@ export default function TimeSeriesTab({ onNavigate }) {
       )}
 
       <div key={active} className="tab-enter"><ActiveModule /></div>
+
+      {onNavigate && (
+        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+            Go deeper → Read <strong style={{ color: 'var(--prime)' }}>The Forecast Failure Zoo: Six Silent Killers of Time Series Models</strong> in Gradient
+          </span>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Read in Gradient →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
