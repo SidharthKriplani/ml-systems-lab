@@ -74,9 +74,11 @@ src/
     ProjectLabTab.jsx           ← ML Engineering, Pyodide sequential notebook, all 5 phases complete (v4.40)
                                    Phase 1: EDA · Phase 2: Features · Phase 3: Model · Phase 4: Monitoring · Phase 5: Deployment scaffold
                                    19 cells, 5 judgment checkpoints, Telco Churn dataset (synthetic 600-row for training phases)
-    LoanDefaultTab.jsx          ← ML Engineering, second ProjectLab dataset — Loan Default (credit risk, ECOA). Phases 1–3 complete (v4.42–v4.43).
+    LoanDefaultTab.jsx          ← ML Engineering, second ProjectLab dataset — Loan Default (credit risk, ECOA). ALL 4 PHASES COMPLETE (v4.42–v4.44).
                                    Phase 1: Schema + EDA + Proxy Audit · Phase 2: Model Training + ECOA threshold · Phase 3: PSI/KS/Prediction Drift
-                                   Phase 4 planned: Deployment Scaffold + Regulatory Model Card. `msl_projectlab_loan_data`.
+                                   Phase 4: Deployment Scaffold + Regulatory Model Card (7 ECOA fields). `msl_projectlab_loan_data`.
+    FraudDetectionTab.jsx       ← ML Engineering, third ProjectLab dataset — Fraud Detection (1:200 imbalance, precision@K). Phase 1 complete (v4.44).
+                                   Phases 2–4 planned: Model + SMOTE → Monitoring → Deployment + Ops Runbook. `msl_projectlab_fraud_data`.
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/
     testimonials.js             Admin-managed testimonials array. Displayed on HomeTab "What engineers say" section.

@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.44 — Loan Default Phase 4, Fraud Detection Phase 1, HomeTab changelog (2026-06-02)
+
+**What shipped (commit `08c1d91`):**
+
+**Loan Default Phase 4 — Deployment Scaffold + Regulatory Model Card (`LoanDefaultTab.jsx`):** 5 display-only reference cells, mark-as-read pattern. loan_cell10: FastAPI `/predict` with 3-tier decision logic (DENY/REVIEW/APPROVE at 0.35/0.25 thresholds). loan_cell11: Dockerfile with access-log flag (ECOA audit trail note). loan_cell12: K8s Deployment + HPA with ECOA compliance annotations in metadata (`compliance/model-version`, `compliance/disparate-impact-tested`, `compliance/ecoa-model-card` S3 link). loan_cell13: GitHub Actions CI/CD with `compliance-check` job as first gate — verifies model card JSON exists and disparate impact results pass before any test or build runs. loan_cell14: **Regulatory Model Card** — styled amber left-border card (not a code block), 7 ECOA required fields: model name, training data demographics, disparate impact test results (4/5ths ratios per group), decision threshold documentation, monitoring cadence, known limitations, appeal process. Mark-as-read button at bottom right. Completion card ("Loan Default Lab Complete") on `phase4Complete`. Roadmap section fully removed. LoanDefaultTab is now a complete 4-phase pipeline.
+
+**Fraud Detection Phase 1 (`FraudDetectionTab.jsx`, new file):** Third ProjectLab dataset. `LS_KEY = 'msl_projectlab_fraud_data'`. 10,000-row synthetic transaction dataset, 0.5% positive rate (50 fraud — 1:200 imbalance). 3 Pyodide cells: Cell F1 (schema inspection, imbalance framing — why accuracy=99.5% is a useless baseline, precision@K intro), Cell F2 (6-panel EDA: amount distribution, fraud rate by merchant/hour/international, user tenure, device fingerprint age — `withPlot=true`), Cell F3 (model comparison table printing AUC + precision@50/100/200 for LR+RF+GBC). `CHECKPOINT_F1`: "accuracy=99.3%, AUC=0.91, F1=0.48, precision@100=0.62 — which metric drives deployment?" Correct: precision@K where K=team review capacity (100/day) — AUC selects the model, precision@K drives the operating threshold. Roadmap shows Phases 2–4. Wired into App.jsx: ALL_TABS, PREMIUM_TABS, ML Engineering domain.
+
+**HomeTab changelog** — June 2026 entry added: "Project Lab complete — 5-phase Telco Churn pipeline. Loan Default lab (credit risk, ECOA, 3 of 4 phases). Fraud Detection lab (1:200 imbalance, precision@K). 2 new Gradient posts. 20 scenario framings rewritten."
+
+**Brace balance:** All 4 files (LoanDefaultTab, FraudDetectionTab, App.jsx, HomeTab) at delta 0.
+
+---
+
 ### v4.43 — Loan Default Phases 2+3, SystemDesign RAG audit (2026-06-02)
 
 **What shipped (commit `7caee8d`):**

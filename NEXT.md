@@ -8,27 +8,27 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. Loan Default Phase 4 — Deployment Scaffold (1.5 hours)
-Final phase of `LoanDefaultTab.jsx`. Phase 4: 5 display-only reference cells, mark-as-read pattern (no PythonCell execution — same as ProjectLab Phase 5). Cell IDs: `loan_cell10`–`loan_cell14`. (loan_cell10) FastAPI `/predict` endpoint with Pydantic request schema including all 6 loan features + response model with `default_probability`, `decision`, `model_version`; (loan_cell11) Dockerfile — same multi-stage pattern as ProjectLab but with loan model artifact; (loan_cell12) K8s Deployment + HPA; (loan_cell13) CI/CD GitHub Actions; (loan_cell14) Regulatory compliance callout — ECOA model card fields: training data demographics, disparate impact test results, threshold documentation, monitoring cadence, appeal process. This last cell is the key differentiator from the Churn lab — no credit model ships without a model card covering regulatory requirements. After Phase 4: render full completion card ("Loan Default Lab Complete"), phase4 state derivations, remove Phase 4 roadmap card.
+### 1. Fraud Detection Phase 2 — Model Training + SMOTE (2 hours)
+Continue `FraudDetectionTab.jsx`. Phase 2: 3 cells + 1 checkpoint. Cell IDs: `fraud_cell4`, `fraud_cell5`, `fraud_cell6`, checkpoint `cpF2`. (fraud_cell4) stratified split — note that at 1:200 ratio, stratify is critical to preserve fraud cases in val/test; print fraud count per split; (fraud_cell5) compare two approaches: (a) class_weight='balanced' (upweights each fraud case 200x), (b) SMOTE (Synthetic Minority Oversampling) on training set only — print val AUC and P@100 for both approaches with 3 model classes; (fraud_cell6) precision@K curves — plot P@K for K=10 to K=500 for the best model, annotate the team's review capacity (K=100); checkpoint cpF2: "GBC with class_weight achieves AUC=0.93, P@100=0.64. GBC with SMOTE achieves AUC=0.91, P@100=0.71. The fraud ops team reviews 100 transactions/day and measures success by the fraction of reviewed transactions that are real fraud. Which model do you deploy?" Correct: SMOTE model — lower AUC but higher P@100 (the operational metric). This is the key judgment: don't confuse model selection metric (AUC) with deployment metric (precision@K).
 
-### 2. Loan Default — CLAUDE.md update (5 min)
-`CLAUDE.md` file structure section shows `LoanDefaultTab.jsx` as "Phase 1 complete (v4.42)". Update to reflect Phases 1–3 complete (v4.43), Phase 4 in queue.
+### 2. CLAUDE.md — add FraudDetectionTab entry (5 min)
+`CLAUDE.md` file structure section is missing `FraudDetectionTab.jsx`. Add after `LoanDefaultTab.jsx` entry: `FraudDetectionTab.jsx ← ML Engineering, third ProjectLab dataset — Fraud Detection (1:200 imbalance, precision@K). Phase 1 complete (v4.44). `msl_projectlab_fraud_data`.`
 
-### 3. Fraud Detection ProjectLab — Phase 1 (2 hours)
-Third ProjectLab dataset. New file `FraudDetectionTab.jsx`. Synthetic 10,000-row transaction dataset (class imbalance 1:200 — 50 fraud out of 10,000). Features: `amount`, `merchant_category`, `hour_of_day`, `user_tenure_days`, `is_international`, `device_fingerprint_age`, `fraud` (binary). Phase 1: schema inspection (note extreme imbalance — SMOTE alone insufficient at 1:200, must use precision/recall tradeoff framing), EDA (fraud distribution by amount tier and merchant category), imbalance audit checkpoint ("with 50 fraud cases in training, which evaluation metric is most informative — AUC, accuracy, F1, or precision@K?"). Correct: precision@K — at 1:200 imbalance, accuracy is misleading (99.5% by predicting all negative), AUC can look good while recall is unusable, F1 at default threshold is meaningless. Precision@K (top K transactions by score that are actually fraud) is the business metric for a fraud operations team with finite review capacity.
+### 3. METRICS.md — add msl_projectlab_fraud_data key (5 min)
+`METRICS.md` localStorage key table is missing `msl_projectlab_fraud_data`. Add: `{ cellsDone: string[], checkpointsDone: string[] }`, set by FraudDetectionTab, same schema as churn and loan default keys. fraud_cell1–fraud_cell(N) + cpF1–cpF(N).
 
-### 4. GradientTab changelog entry (10 min)
-Add a June 2026 entry to the `CHANGELOG` constant in `HomeTab.jsx` to reflect the major additions this session: Project Lab complete (5 phases), Loan Default lab (3 phases), 2 new Gradient posts, RAG scenarios removed from SystemDesign. Keep entries concise (one sentence each).
+### 4. Fraud Detection Phase 3 — Monitoring (1.5 hours)
+Phase 3: PSI + KS test on transaction amount and merchant category distribution. Prediction drift. Checkpoint cpF3: "PSI=0.31 on transaction amount (red zone), 48h after model deployment. No KS significance on other features. Fraud rate in production appears unchanged based on analyst feedback. What do you do?" Correct: alert + investigate — PSI=0.31 is above the 0.25 retrain threshold, even if analyst feedback is positive (they only see what the model flags, not what it misses). Must check if the amount distribution shift is moving fraud cases above or below the model's operating threshold.
 
-### 5. AUDITS.md — log SystemDesign RAG removal as resolved finding (10 min)
-Add audit #024 to AUDITS.md documenting the RAG content boundary audit: 6 RAGArchitecture scenarios (`rag1`–`rag6`) removed from SystemDesignTab, transferred to GAL. RetrievalFailures module (HNSW, embedding drift in recommendation) confirmed MSL. Update open findings summary table.
+### 5. Fraud Detection Phase 4 — Deployment Scaffold (1 hour)
+Same pattern as Loan Default Phase 4: display-only cells, mark-as-read. Key differentiator cell: Fraud Ops Runbook — real-time vs batch scoring decision (transactions need <100ms response), escalation path (auto-deny vs flag-for-review vs allow), feedback loop (analyst decisions feed back into retraining data), latency budget. No regulatory model card (fraud is not a credit decision under ECOA) but does need an alert suppression protocol for known false-positive patterns.
 
 ---
 
 ## Pending from Avinash's side
 
-- **Formspree ID** — sign up at formspree.io, create a new form, copy the ID (part after `/f/`), replace `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx` line 5, then push.
-- **Tally form ID** — create form at tally.so with fields: Company, Role (MLE/DS/MLS/Research), Level (L3/L4/L5/Staff/Principal), Round Type (phone screen/take-home/virtual onsite/onsite), Experience text (paragraph). Publish → copy ID from share URL (part after `/r/`), replace `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid, then push.
+- **Formspree ID** — sign up at formspree.io, replace `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx` line 5.
+- **Tally form ID** — create form at tally.so, replace `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid.
 
 ---
 
@@ -38,24 +38,25 @@ Nothing currently blocked.
 
 ---
 
-## Done this session (v4.42 + v4.43)
+## Done this session (v4.42 → v4.44)
 
-- ~~CLAUDE.md + ROLLOUT.md staleness sweep — LoanDefaultTab, data/ dir, FeedbackChip check, Phase 5 check.~~
-- ~~Loan Default Phase 1 — schema + EDA + proxy audit (4/5ths rule) + cpL1 ECOA judgment.~~
-- ~~Loan Default Phase 2 — split + LR/RF/GBC training + eval/threshold + cpL2 ECOA threshold check.~~
+- ~~Loan Default Phase 1 — schema + EDA + proxy audit (4/5ths) + cpL1 ECOA judgment.~~
+- ~~Loan Default Phase 2 — split + model training + eval/threshold + cpL2 ECOA threshold check.~~
 - ~~Loan Default Phase 3 — PSI + KS + prediction drift + denial rate shift + cpL3 alert-or-wait.~~
-- ~~SystemDesign RAG audit — 6 rag1–rag6 scenarios removed (LLM context retrieval = GAL). RetrievalFailures kept.~~
+- ~~Loan Default Phase 4 — deployment scaffold + regulatory model card (7 ECOA fields) — lab complete.~~
+- ~~Fraud Detection Phase 1 — schema + EDA + precision@K comparison + cpF1 metric selection judgment.~~
+- ~~SystemDesign RAG audit — rag1–rag6 removed (GAL), RetrievalFailures kept (MSL).~~
 - ~~Two new Gradient posts — Feature Store Time-Travel Bug + Validation Set Leakage.~~
-- ~~HomeTab domain completion bars — 2px amber fill + done/total count on each track card.~~
-- ~~Testimonials section on HomeTab — src/data/testimonials.js + "What engineers say" card grid.~~
+- ~~HomeTab domain bars + changelog June 2026 entry + testimonials section.~~
+- ~~AUDITS #024, CLAUDE.md staleness sweep, METRICS.md keys updated.~~
 
 ---
 
 ## What comes after (not for this session)
 
-- **Fraud Detection ProjectLab** (extreme imbalance, precision@K, threshold economics) — after Loan Default Phase 4.
-- **Difficulty + industry filter** — requires tagging 200+ scenarios; content work is prerequisite.
-- **Freemium gate v2** — per-scenario `isFree` flags, first 2 per module free.
-- **Interview Experiences v2** — frequency chart (after N≥15 approved Tally submissions).
+- **Difficulty + industry filter** — tag 200+ scenarios; content work prerequisite.
+- **Freemium gate v2** — per-scenario `isFree` flags.
+- **Interview Experiences v2** — frequency chart (after N≥15 Tally submissions).
 - **LandscapeTab country filter** — India/UK/US/EU region field.
-- **ModelEvalTab gradient hex** — `#6366f1`/`#22d3ee` (open AUDITS #017.2 finding).
+- **ModelEvalTab gradient hex** — `#6366f1`/`#22d3ee` (open AUDITS #017.2).
+- **Simplify toggle for Gradient posts** — build trigger: ≥10 complete posts.

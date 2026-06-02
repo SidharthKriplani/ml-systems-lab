@@ -188,7 +188,9 @@ Original spec (archived):
 
 Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-rate + horizon → gated day plan. Internal gate at 35% of plan sections. JDPrepTab retired (redirect stub). See LINEAGE.md v4.10.
 
-### Second ProjectLab dataset — Loan Default (Phases 1–3 done v4.42–v4.43, Phase 4 in queue)
+### ~~Second ProjectLab dataset — Loan Default~~ — ALL 4 PHASES COMPLETE (v4.42–v4.44). See LINEAGE.md.
+
+### Third ProjectLab dataset — Fraud Detection (Phase 1 done v4.44)
 
 **Phase 1 shipped (v4.42):** `LoanDefaultTab.jsx` — schema inspection, EDA, proxy feature audit (4/5ths rule on home_ownership + employment_length), cpL1 ECOA judgment checkpoint. Synthetic 800-row dataset. Wired into App.jsx as premium tab in ML Engineering domain. Phases 2–4 remain.
 
