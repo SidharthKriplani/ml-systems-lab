@@ -567,6 +567,20 @@ export default function HomeTab({ onNavigate }) {
                         ))}
                         {t.modules.length > 3 && <span style={{ fontSize: '9px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>+{t.modules.length - 3}</span>}
                       </div>
+                      {pct > 0 && (() => {
+                        const tp = progress.find(p => p.tab === t.id)
+                        return (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                              <span style={{ fontSize: '9px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{tp?.done ?? 0}/{tp?.total ?? 0}</span>
+                              <span style={{ fontSize: '9px', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{pct}%</span>
+                            </div>
+                            <div style={{ width: '100%', height: '2px', background: 'var(--rim)', borderRadius: '1px', marginTop: '4px' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'var(--prime)', borderRadius: '1px', transition: 'width 0.5s ease' }} />
+                            </div>
+                          </>
+                        )
+                      })()}
                     </button>
                   )
                 })}

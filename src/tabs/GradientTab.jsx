@@ -1659,6 +1659,58 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantizati
     domain: 'dl',
     youtube: [{ id: 'IxrlHAJtqKE', title: '8-bit Optimizers via Block-wise Quantization — Tim Dettmers' }],
   },
+  {
+    id: 31,
+    slug: 'feature-store-time-travel',
+    title: 'The Feature Store Time-Travel Bug',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Your feature store has a timestamp on every row. That does not mean your pipeline is using it correctly. The time-travel bug — computing features on data that would not have been available at prediction time — is the most common silent killer in production ML.',
+    body: `**The setup:** You have a feature store with a \`user_avg_spend_7d\` feature — average daily spend over the 7 days before the observation date. The table has an \`event_timestamp\` column. You join it to your training dataset and your AUC jumps from 0.74 to 0.89. You ship.
+
+**What went wrong:** The join was on user_id, not on user_id AND event_timestamp. Every training row got the user\'s most recent \`avg_spend_7d\` value — not the value as of the prediction date. A customer who spent heavily in December got that December value appended to their June observation. The model learned from the future.
+
+**Point-in-time correctness:** A feature store query must return the feature value as it existed at or before the observation timestamp. This is called a point-in-time join (also: as-of join, temporal join). Feast calls it \`get_historical_features\` with an \`entity_df\` that includes an \`event_timestamp\` column. Hopsworks calls it \`feature_view.get_batch_data(start_time, end_time)\`. Without this, you get the current value — not the historical one.
+
+**The canonical Feast pattern:** The wrong approach: \`feature_store.get_online_features\` gets current feature values. The right approach for training: \`feature_store.get_historical_features\` with an entity_df that must include an \`event_timestamp\` column. Feast uses it to look up each user\'s feature values as of that timestamp — not the latest available. Features: \`user_stats:avg_spend_7d\`, \`user_stats:login_count_30d\`.
+
+**How to detect it:** Run your training pipeline with a deliberate 7-day lag between event_timestamp and label timestamp. If AUC drops significantly (more than 3–4 points), you had future leakage. Also: sort your training data by time, hold out the last 20% chronologically, and check if holdout AUC matches cross-validation AUC. A large gap is the tell.
+
+**The production failure mode:** The model trains on features it cannot access at inference time. In production, \`avg_spend_7d\` is computed on data available right now — not on future data. The model\'s predictions immediately degrade because the feature distribution at inference looks nothing like what it saw at training. You will not notice this in offline metrics. You will notice it when the model\'s lift curve flatlines in production.
+
+**What interviewers test:** Can you distinguish between "the feature store has point-in-time support" and "the pipeline is using it correctly"? Knowing Feast exists is not the answer. Knowing why \`entity_df\` must have \`event_timestamp\`, what happens if it doesn\'t, and how to verify correctness with a holdout split — that is the answer.`,
+    tags: ['Feature Stores', 'Data Leakage', 'Point-in-Time', 'Feast'],
+    domain: 'features',
+    youtube: [],
+  },
+  {
+    id: 32,
+    slug: 'validation-set-leakage',
+    title: 'Validation Set Leakage — Why Your AUC Lied',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'There are two kinds of leakage. Target leakage is using features that contain the label. Train-test contamination is subtler — and more common. It is what happens when test data influences training in any way, even indirectly.',
+    body: `**Two leakages, one name:** Data leakage gets discussed as a single concept, but the failure modes are different. Target leakage: you include a feature that is derived from or highly correlated with the label — \`claim_approved\` in a fraud model, \`refund_requested\` in a churn model. Train-test contamination: the test set influences the training process in some way, even without target information directly.
+
+**The contamination mechanism:** The most common form: you compute a feature on the full dataset before splitting. Suppose you engineer \`avg_spend_last_7d\` as a user-level rolling mean. If you compute it on all 10,000 rows before calling \`train_test_split\`, the rolling mean for a training-set user absorbs spend patterns from test-set time windows. The test rows contributed to the computation that produced a training feature. They are no longer truly held out.
+
+**Why AUC lies:** The reported val AUC reflects how well the model performs on data whose signal already leaked into the features. When you deploy, that signal is absent — the production feature is computed on data available at inference time only, which looks different. The offline-online gap is not random noise. It is the systematic gap between "what the model learned" and "what production data looks like."
+
+**The red flags:** A feature that produces a sudden 10+ point AUC gain is suspicious by definition. Legitimate features rarely move AUC that much. A training AUC much higher than val AUC is overfitting. But training AUC and val AUC both high while holdout AUC (time-based, computed after the fact) is significantly lower — that is contamination.
+
+**The fix — split first, engineer second:** Always call \`train_test_split\` before computing any aggregate features. Compute training features on training data only. For test features, use only training-set statistics — never refit on test rows. For imputers, scalers, and encoders: \`scaler.fit_transform(X_train)\`, then \`scaler.transform(X_test)\`. Never \`fit_transform\` on the full dataset.
+
+**The time-split discipline:** For any dataset with a temporal component, replace random splits with time-based splits. Everything before date D is training. Everything after is test. Features for test rows are computed using only data from before D. This is the only split that fully eliminates both contamination and target leakage simultaneously.
+
+**What interviewers probe:** "Your AUC is 0.91 in cross-validation but 0.76 in the A/B test. Walk me through how you\'d diagnose this." The correct answer starts with the split order, not the model.`,
+    tags: ['Data Leakage', 'Train-Test Split', 'AUC', 'Evaluation'],
+    domain: 'eval',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
