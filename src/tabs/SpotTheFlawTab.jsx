@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 const SCENARIOS = [
   {
@@ -435,6 +436,7 @@ export default function SpotTheFlawTab({ onNavigate }) {
           Every scenario looks reasonable. Each contains exactly one buried methodological flaw. Find it before the interviewer does.
         </p>
         <p style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>Not code bugs — methodology errors. Data leakage, evaluation mistakes, distribution shift, metric mismatch, labeling artifacts.</p>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
 
       {/* Score strip */}

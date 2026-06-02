@@ -90,27 +90,35 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.57 — Next sprint
+## v4.57 — Done this session
+
+- [x] ~~FidelityBadge ×7 interview zone tabs~~ — done (Combinator, Trainer, CodeBugs, Verbatim/faithful, SpotTheFlaw, Staff, CaseStudies)
+- [x] ~~Gradient code examples posts 5/15/24~~ — done (PSI compute_psi, Netflix two-tower retriever, step4_audit feature checker)
+- [x] ~~Company logos~~ — done (CombinatorTab tracks + LandscapeTab all 6 companies; Clearbit + monogram fallback)
+- [x] ~~Emoji audit #009 close~~ — done (all remaining non-ASCII are functional glyphs or country flags)
+- [x] ~~LINEAGE v4.57~~ — done
+
+---
+
+## v4.58 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **Fidelity badges — interview zone tabs**
-   - CombinatorTab, TrainerTab, CodeBugsTab, VerbatimTab, SpotTheFlawTab, StaffLayerTab, CaseStudiesTab not yet badged
-   - All AccordionMCQ/judgment → `conceptual`; VerbatimTab speech → `faithful`
-
-3. **Gradient post code pass — posts 5, 15, 24**
-   - Posts 4/7/11 done; posts 5 (PSI drift detection), 15 (Netflix ML stack), 24 (system design checklist) still have no code
-   - 1 verified Python snippet each
-
-4. **ROLLOUT.md — Batch 1 readiness check**
+2. **ROLLOUT.md — Batch 1 readiness check**
    - Batch 0 checklist updated; read Batch 1 tester brief and confirm it reflects current product before inviting anyone
    - Light/dark theme now present — add to Batch 1 check: "toggle switches theme, preference persists"
 
-5. **RSS feed for Gradient posts**
+3. **RSS feed for Gradient posts**
    - 30-min Vite plugin: generate `/rss.xml` at build time from the POSTS array
    - 50 posts × title/excerpt/date/slug — adds a distribution channel for free
+
+4. **Gradient post code pass — posts 8, 12, 18**
+   - Continue code example coverage; posts 5/7/11/15/24 done — pick next 3 highest-traffic posts without code
+
+5. **Social proof signal**
+   - Add "Used by N engineers" to README once verifiable number is available (Ideas.md Tier 1)
 
 ---
 

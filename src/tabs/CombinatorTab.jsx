@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { trackModuleComplete } from '../analytics'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─── Question Bank ──────────────────────────────────────────────────────────
 
@@ -950,6 +951,7 @@ const COMPANY_TRACKS = [
     desc: 'System Design + Spark + MLOps heavy. Production scale, latency constraints.',
     domains: ['ML Systems', 'MLOps', 'Optimization', 'Model Evaluation'],
     icon: 'G',
+    domain: 'google.com',
   },
   {
     id: 'meta_mle',
@@ -957,6 +959,7 @@ const COMPANY_TRACKS = [
     desc: 'Feature Engineering + Model Eval + ranking systems + A/B at scale.',
     domains: ['Feature Engineering', 'Model Evaluation', 'Ranking & Retrieval', 'Experiment Design'],
     icon: 'M',
+    domain: 'meta.com',
   },
   {
     id: 'stripe_ds',
@@ -964,6 +967,7 @@ const COMPANY_TRACKS = [
     desc: 'Causal inference, A/B testing, fraud modeling, business metrics.',
     domains: ['Statistics & Probability', 'Model Evaluation', 'MLOps', 'Experiment Design'],
     icon: 'S',
+    domain: 'stripe.com',
   },
   {
     id: 'startup_ml',
@@ -971,8 +975,35 @@ const COMPANY_TRACKS = [
     desc: 'Full-stack ML: features → model → deploy → monitor. Breadth over depth.',
     domains: ['Feature Engineering', 'MLOps', 'Model Evaluation', 'ML Systems'],
     icon: 'L',
+    domain: null,
   },
 ]
+
+function CompanyLogo({ domain, fallback, size = 24, radius = 6 }) {
+  if (!domain) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, borderRadius: radius, background: 'var(--depth)', border: '1px solid var(--rim)', fontSize: size * 0.45, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', flexShrink: 0 }}>
+        {fallback}
+      </span>
+    )
+  }
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, borderRadius: radius, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--rim)', flexShrink: 0 }}>
+      <img
+        src={`https://logo.clearbit.com/${domain}`}
+        alt=""
+        width={size}
+        height={size}
+        style={{ objectFit: 'contain', display: 'block' }}
+        onError={e => {
+          e.target.style.display = 'none'
+          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'
+        }}
+      />
+      <span style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: size * 0.45, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{fallback}</span>
+    </span>
+  )
+}
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 const COMING_SOON = []
@@ -1204,7 +1235,7 @@ export default function CombinatorTab({ onNavigate }) {
           <p style={{ color: 'var(--ink-low)', marginTop: '0.5rem', fontSize: '0.825rem', lineHeight: 1.55, fontFamily: 'var(--font-sans)', maxWidth: '520px' }}>
             Choose a duration, then start the session. Questions are served one at a time — you can't change a submitted answer. When time runs out (or you end early), review your domain breakdown in the debrief.
           </p>
-          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.25rem', letterSpacing: '0.04em' }}>~ Simulated</span>
+          <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
         </div>
 
         {_saved?.screen === 'session' && (
@@ -1288,13 +1319,7 @@ export default function CombinatorTab({ onNavigate }) {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 26, height: 26, borderRadius: 6,
-                      background: active ? 'var(--prime)' : 'var(--depth)',
-                      color: active ? 'var(--void)' : 'var(--ink-mid)',
-                      fontSize: '0.75rem', fontWeight: 700,
-                    }}>{track.icon}</span>
+                    <CompanyLogo domain={track.domain} fallback={track.icon} size={26} radius={6} />
                     <span style={{ fontSize: '0.88rem', fontWeight: 700, color: active ? 'var(--prime)' : 'var(--ink-hi)' }}>
                       {track.label}
                     </span>

@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.57 — FidelityBadge ×7 interview tabs, Gradient code posts 5/15/24, company logos, emoji audit close (2026-06-02)
+
+**FidelityBadge — 7 interview zone tabs:** CombinatorTab, TrainerTab, CodeBugsTab, VerbatimTab (faithful tier — real Web Speech API), SpotTheFlawTab, StaffLayerTab, CaseStudiesTab. Replaced old `~ Simulated` inline spans in 4 tabs; added fresh badge in 3. Import + render added to all 7. All brace delta 0.
+
+**Gradient code examples — posts 5, 15, 24:** One verified Python snippet per post. Post 5 (Concept Drift): `compute_psi()` with quantile-based bins + production threshold logic. Post 15 (Netflix): `NetflixStyleRetriever` two-tower cosine similarity retrieval class. Post 24 (6-step design framework): `step4_audit()` feature checklist with serving-skew + leakage detection. Brace delta 0.
+
+**Company logos — Clearbit API:** `CompanyLogo` inline component added to CombinatorTab (Google, Meta, Stripe track cards) and LandscapeTab (all 6 companies — Netflix, Spotify, Uber, Airbnb, Google, Meta). Uses `https://logo.clearbit.com/{domain}`. On load error: `onError` hides `<img>` and shows letter monogram fallback — no hooks, safe inside `.map()`. Logo appears in selector buttons (18px) and detail card header (48px). All brace delta 0.
+
+**Emoji sweep — Audit #009 closed:** Full grep across all tab/component files. All remaining non-ASCII characters are functional glyphs (✓ ✗ ★ ✕ ⚠) or country flags — no decorative emoji remain in rendered UI. Audit #009 resolved.
+
+**Brace balance:** All modified files at delta 0.
+
+---
+
 ### v4.56 — light mode visual pass, build fixes ×4, code examples posts 4/7/11, sidebar cleanup (2026-06-02)
 
 **Light mode visual audit:**
@@ -63,6 +77,8 @@ Key routing architecture:
 **Code examples in posts 4, 7, 11:** TwoTowerScorer class, Feast FeatureStore API, cold/warm/hot router function.
 
 **HomeTab changelog updated.** AUDITS.md: 4 build safety risks documented with grep commands.
+
+**Audit #021.5 resolved: mobile overflow fix**
 
 **Brace balance:** All files at delta 0.
 

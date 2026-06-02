@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 const LS_KEY = 'msl_score:codebugs'
 
@@ -1093,6 +1094,7 @@ export default function CodeBugsTab({ onNavigate }) {
           Real ML code with exactly one bug buried in it. Read the snippet, identify the failure — Python &amp; SQL.</p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-sans)' }}>
           Expand a scenario, read the code, pick what's wrong — then see the fix and the production failure mode it would have caused.</p>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
 
       {/* Score summary */}

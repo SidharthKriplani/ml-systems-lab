@@ -511,6 +511,10 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **FidelityBadge ×7 interview tabs** (v4.57) — Combinator/Trainer/CodeBugs/Verbatim(faithful)/SpotTheFlaw/Staff/CaseStudies. Old `~ Simulated` spans replaced.
+- [x] **Gradient code examples posts 5/15/24** (v4.57) — compute_psi() with quantile bins, NetflixStyleRetriever two-tower, step4_audit feature checker.
+- [x] **Company logos** (v4.57) — Clearbit API + monogram fallback in CombinatorTab company tracks and LandscapeTab all 6 companies. CompanyLogo inline component, no hooks.
+- [x] **Emoji sweep Audit #009** (v4.57) — closed. All remaining non-ASCII in rendered UI are functional glyphs (✓ ✗ ★ ✕) or country flags.
 - [x] **Light mode visual pass** (v4.56) — ink contrast fixed, sidebar accordion removed, all white/amber rgba → CSS tokens in App.jsx, TimeSeriesTab, DefenseDocTab.
 - [x] **Build safety documented** (v4.56) — 4 recurring risks in AUDITS.md: f-string `${}`, `\&\&` entities, bare `<digit`, triple backticks in template literals.
 - [x] **Code examples posts 4, 7, 11** (v4.56) — TwoTowerScorer, Feast FeatureStore API, cold/warm/hot router.

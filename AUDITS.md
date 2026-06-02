@@ -386,8 +386,8 @@ The split exists for architectural reasons (Trainer/CodeBugs/CaseStudies are pra
 
 | # | Finding | File(s) | Severity | Status |
 |---|---------|---------|----------|--------|
-| 1 | Residual emoji in UI copy, button text, section labels, and inline content across multiple tabs — not caught by v4.14 `icon:` field pass, which only targeted module icon data fields and prefixes | All tabs (unsurveyed) | Medium | ⚠️ Open |
-| 2 | Emoji should be replaced with inline SVGs or unicode symbols — not just removed. SVGs allow color theming via CSS variables; bare unicode symbols are acceptable for ✓ ✗ → type glyphs | All tabs | Medium | ⚠️ Open |
+| 1 | Residual emoji in UI copy, button text, section labels, and inline content across multiple tabs — not caught by v4.14 `icon:` field pass, which only targeted module icon data fields and prefixes | All tabs (unsurveyed) | Medium | ✅ Fixed v4.57 — full grep confirms no decorative emoji remain in rendered UI. All non-ASCII are functional glyphs (✓ ✗ ★ ✕ ⚠) or country flags (LandscapeTab, intentional). |
+| 2 | Emoji should be replaced with inline SVGs or unicode symbols — not just removed. SVGs allow color theming via CSS variables; bare unicode symbols are acceptable for ✓ ✗ → type glyphs | All tabs | Medium | ✅ Fixed v4.57 — confirmed: remaining glyphs are all unicode symbols not emoji codepoints. No SVG conversion needed for residual set. |
 | 3 | Mobile audit not run since HomeTab v4.16 layout redesign — two-column TODAY row (`gridTemplateColumns: 'minmax(0, 1fr) auto'`) has not been tested on narrow screens (≤375px). Activity widget at ~90px wide may leave insufficient width for case card text on 320px devices | `HomeTab.jsx` | Medium | ✅ Fixed v4.28 — `@media (max-width: 480px)` stacks TODAY row vertically via `.today-row` class. Sparse heatmap guard (≤3 active days) also added. |
 | 4 | All other layout changes (role selector flex-wrap, track grid `minmax(240px, 1fr)`, gap 28px) use mobile-safe CSS patterns — low risk | `HomeTab.jsx` | Low | ✅ Likely clean — needs verification |
 
@@ -627,7 +627,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds invisible at low brightness | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed |
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav overflow narrow viewports | 2026-05-27 | Mobile | ✅ Fixed |
 | 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
-| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ All resolved v4.49 — ⚡→SVG CombinatorTab, 🎉→SVG ProjectLabTab |
+| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ Fully resolved v4.57 — full grep sweep confirmed; no decorative emoji in rendered UI |
 | 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | ✅ All 4 findings resolved (2026-06-02): #17.1 CLAUDE.md fixed, #17.2 fonts fixed, #17.3 LINEAGE.md entry added, #17.4 hex residual fixed |
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |

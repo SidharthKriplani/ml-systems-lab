@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 const QUESTIONS = [
   { id: 1, category: 'System Design', text: 'Walk me through how you would design a real-time recommendation system for a platform with 100 million users.' },
@@ -253,7 +254,7 @@ export default function VerbatimTab({ onNavigate }) {
             Record yourself answering interview questions, then self-rate.
           </p>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--ink-low)', margin: '0 0 4px', lineHeight: 1.5 }}>Pick a question, speak your answer aloud, then rate yourself on clarity, completeness, conciseness, and confidence. Your transcript is saved so you can compare takes over time.</p>
-          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.25rem', letterSpacing: '0.04em' }}>~ Simulated</span>
+          <div style={{ marginTop: '8px' }}><FidelityBadge tier="faithful" /></div>
           {history.length > 0 && (
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ink-low)', margin: 0 }}>
               {history.length} session{history.length !== 1 ? 's' : ''} recorded · avg score {avgScore}/20

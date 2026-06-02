@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { trackModuleComplete } from '../analytics'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ─── MCQ Bank ────────────────────────────────────────────────────────────────
 
@@ -813,7 +814,7 @@ function SetupScreen({ onStart }) {
           Sharpen your ML interview skills with targeted MCQ drills.
         </p>
         <p style={{ color: 'var(--ink-low)', marginTop: '0.3rem', fontSize: '0.8rem', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>Select your domains and question count, work through each question one at a time, then review your accuracy per domain in the debrief.</p>
-        <span style={{ display: 'inline-block', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: 4, padding: '0.15rem 0.5rem', marginTop: '0.5rem', letterSpacing: '0.04em' }}>~ Simulated</span>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
 
       {/* ── Weak Domain Drill ─────────────────────────────────────────────── */}

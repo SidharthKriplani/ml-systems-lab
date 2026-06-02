@@ -184,10 +184,30 @@ const STAGES = [
   },
 ]
 
+function CompanyLogo({ domain, fallback, size = 40, radius = 8 }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, borderRadius: radius, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--rim)', flexShrink: 0 }}>
+      <img
+        src={`https://logo.clearbit.com/${domain}`}
+        alt=""
+        width={size}
+        height={size}
+        style={{ objectFit: 'contain', display: 'block' }}
+        onError={e => {
+          e.target.style.display = 'none'
+          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'
+        }}
+      />
+      <span style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: size * 0.42, fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{fallback}</span>
+    </span>
+  )
+}
+
 const COMPANIES = [
   {
     name: 'Netflix',
-    icon: '',
+    icon: 'N',
+    domain: 'netflix.com',
     sector: 'Streaming',
     mlMotto: '"Every second of content you\'ve watched was predicted."',
     headline: 'ML is Netflix\'s core product, not a feature.',
@@ -204,7 +224,8 @@ const COMPANIES = [
   },
   {
     name: 'Spotify',
-    icon: '',
+    icon: 'S',
+    domain: 'spotify.com',
     sector: 'Music Streaming',
     mlMotto: '"Every Monday morning, 456 million people get a playlist made just for them."',
     headline: 'Discovery is the product. ML is how discovery works.',
@@ -221,7 +242,8 @@ const COMPANIES = [
   },
   {
     name: 'Uber',
-    icon: '',
+    icon: 'U',
+    domain: 'uber.com',
     sector: 'Ride-sharing / Logistics',
     mlMotto: '"Every price, every ETA, every match — ML."',
     headline: 'Real-time marketplace optimisation at planetary scale.',
@@ -238,7 +260,8 @@ const COMPANIES = [
   },
   {
     name: 'Airbnb',
-    icon: '',
+    icon: 'A',
+    domain: 'airbnb.com',
     sector: 'Marketplace',
     mlMotto: '"Every price, every search ranking, every trust decision."',
     headline: 'Trust and discovery are ML problems. Solving them is Airbnb\'s business.',
@@ -255,7 +278,8 @@ const COMPANIES = [
   },
   {
     name: 'Google',
-    icon: '',
+    icon: 'G',
+    domain: 'google.com',
     sector: 'Search / Ads / Cloud',
     mlMotto: '"ML is foundational, not a feature."',
     headline: 'Google is a machine learning company that also does search.',
@@ -272,7 +296,8 @@ const COMPANIES = [
   },
   {
     name: 'Meta',
-    icon: '',
+    icon: 'M',
+    domain: 'meta.com',
     sector: 'Social / VR',
     mlMotto: '"Every feed, every ad, every content moderation decision."',
     headline: 'Four billion users generate the world\'s largest labelled social graph.',
@@ -550,8 +575,9 @@ function CompaniesSection() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {COMPANIES.map((co, i) => (
           <button key={co.name} onClick={() => setSelected(i)}
-            className={`sub-tab ${selected === i ? 'active' : 'inactive'}`} style={{ fontSize: '13px' }}>
-            {co.icon} {co.name}
+            className={`sub-tab ${selected === i ? 'active' : 'inactive'}`} style={{ fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <CompanyLogo domain={co.domain} fallback={co.icon} size={18} radius={4} />
+            {co.name}
           </button>
         ))}
       </div>
@@ -559,7 +585,7 @@ function CompaniesSection() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div className="card" style={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '36px', lineHeight: 1 }}>{c.icon}</span>
+            <CompanyLogo domain={c.domain} fallback={c.icon} size={48} radius={10} />
             <div style={{ flex: 1, minWidth: '200px' }}>
               <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '22px', color: 'var(--ink-hi)', margin: '0 0 4px' }}>{c.name}</h3>
               <div style={{ fontSize: '13px', color: 'var(--prime)', fontStyle: 'italic', marginBottom: '8px' }}>{c.mlMotto}</div>

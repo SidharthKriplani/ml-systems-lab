@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 const STORAGE_KEY = 'msl_casestudies'
 
@@ -309,6 +310,7 @@ export default function CaseStudiesTab({ onNavigate }) {
         <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>Case Studies</h2>
         <p style={{ margin: '4px 0 0', color: 'var(--ink-mid)', fontSize: '13px' }}>Real ML system failures — multi-part analysis</p>
         <p style={{ margin: '4px 0 0', color: 'var(--ink-low)', fontSize: '12px', lineHeight: 1.5, fontFamily: 'var(--font-sans)', maxWidth: '540px' }}>Expand a case, read the situation, then work through 4 connected diagnostic questions — each one builds on the last. Answer all 4 to complete the case.</p>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
 
       {/* Progress bar */}

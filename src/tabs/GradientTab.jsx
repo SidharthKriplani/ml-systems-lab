@@ -223,7 +223,34 @@ The 0.2 PSI threshold assumes your reference distribution is stable. If your dat
 
 **Distinguishing data drift from concept drift in production:**
 
-You can observe data drift immediately (compare feature distributions). Concept drift requires labels, which often come with a lag. Bridge: use proxy metrics. For a revenue model, track predicted vs actual revenue. For a ranking model, track predicted CTR vs observed CTR on the same items. Divergence = concept drift signal, no labels required.`,
+You can observe data drift immediately (compare feature distributions). Concept drift requires labels, which often come with a lag. Bridge: use proxy metrics. For a revenue model, track predicted vs actual revenue. For a ranking model, track predicted CTR vs observed CTR on the same items. Divergence = concept drift signal, no labels required.
+
+\`\`\`python
+import numpy as np
+
+def compute_psi(expected, actual, n_bins=10):
+    """PSI with quantile-based bins — avoids the equal-width trap on skewed data."""
+    bins = np.percentile(expected, np.linspace(0, 100, n_bins + 1))
+    bins[0], bins[-1] = -np.inf, np.inf  # open-ended edges
+
+    exp_cnt = np.histogram(expected, bins=bins)[0]
+    act_cnt = np.histogram(actual,   bins=bins)[0]
+
+    exp_pct = np.where(exp_cnt == 0, 0.001, exp_cnt / len(expected))
+    act_pct = np.where(act_cnt == 0, 0.001, act_cnt / len(actual))
+
+    psi = np.sum((act_pct - exp_pct) * np.log(act_pct / exp_pct))
+    return psi
+
+# Production usage
+psi = compute_psi(reference_scores, production_scores)
+label = ("Stable"               if psi < 0.1
+         else "Monitor closely" if psi < 0.2
+         else "Significant drift — page on-call")
+print(f"PSI={psi:.3f}  →  {label}")
+
+# Tip: use same-weekday reference to avoid false positives on seasonal data
+\`\`\``,
     tags: ['Monitoring', 'Drift', 'PSI', 'KS Test', 'Production ML'],
     domain: 'monitor',
     youtube: [{ id: 'QJTRNxUxmuc', title: 'Concept Drift & Data Drift in ML — Explained' }],
@@ -757,7 +784,32 @@ If you work at Netflix in any product capacity, you eventually learn about one m
 
 The entire Netflix ML enterprise, which now employs several hundred ML and data scientists, exists in service of improving that one number by fractions of a percent. A 1% improvement in that probability is estimated to retain millions of subscribers who would otherwise churn. At $15–20 per month per subscriber, the math on a single basis point of recommendation quality is extraordinary.
 
-This is the third and most important lesson from Netflix: find the one number, instrument it perfectly, and align everything — engineering, product, content, design — around moving it. The ML follows naturally.`,
+This is the third and most important lesson from Netflix: find the one number, instrument it perfectly, and align everything — engineering, product, content, design — around moving it. The ML follows naturally.
+
+\`\`\`python
+import numpy as np
+
+class NetflixStyleRetriever:
+    """Two-tower retrieval: user tower + item tower → ANN candidate set."""
+
+    def __init__(self, user_tower, item_embeddings: dict):
+        self.user_tower  = user_tower                          # callable: features → (d,)
+        self.item_ids    = list(item_embeddings.keys())
+        self.item_matrix = np.stack(list(item_embeddings.values()))  # (N, d)
+        # In prod: item_matrix lives in an ANN index (FAISS / ScaNN).
+        # You never do exact search over 200M items — ANN retrieves top-1000 in <50ms.
+
+    def retrieve(self, user_features: dict, k: int = 100) -> list:
+        u      = self.user_tower(user_features)                # (d,)
+        u_norm = u / (np.linalg.norm(u) + 1e-9)
+        item_norms = self.item_matrix / (
+            np.linalg.norm(self.item_matrix, axis=1, keepdims=True) + 1e-9)
+        scores  = item_norms @ u_norm                          # cosine similarity
+        top_idx = np.argpartition(scores, -k)[-k:]
+        ranked  = top_idx[np.argsort(scores[top_idx])[::-1]]
+        return [self.item_ids[i] for i in ranked]
+        # Next stage: pass these k candidates to a heavier ranking model (GBM / transformer)
+\`\`\``,
     tags: ['Netflix', 'Case Study', 'Recommendation Systems', 'ML Industry', 'Feature Stores'],
     domain: 'design',
     youtube: [{ id: 'IByC2keY3vo', title: 'Trends in Recommendation & Personalization at Netflix — Justin Basilico' }],
@@ -1422,7 +1474,37 @@ Step 4: Features — user embedding (historical engagement), post embedding (BER
 Step 5: Model — two-tower for retrieval, 6-layer transformer ranker for top-100 candidates. Retrain daily.
 Step 6: Evaluation — NDCG@10 offline; A/B on weekly active days online with 2-week exposure minimum.
 
-The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?`,
+The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?
+
+\`\`\`python
+from dataclasses import dataclass
+from typing import Literal
+
+@dataclass
+class Feature:
+    name: str
+    available_at_serving: bool    # exists at inference time (not post-hoc)?
+    point_in_time_correct: bool   # no future data bleeds into training rows?
+    source: Literal['realtime', 'batch_precomputed', 'derived']
+
+def step4_audit(features: list) -> None:
+    """Call this before training, not after debugging a production incident."""
+    for f in features:
+        flags = []
+        if not f.available_at_serving:
+            flags.append("SERVING SKEW — not available at inference")
+        if not f.point_in_time_correct:
+            flags.append("LEAKAGE — future data contaminates training rows")
+        print(f"{'✓' if not flags else '✗'} {f.name}: {flags or 'OK'}")
+
+# News feed ranking — step 4 audit
+step4_audit([
+    Feature('user_click_history_7d',   True,  True,  'batch_precomputed'),
+    Feature('post_engagement_rate',    True,  False, 'derived'),          # leakage!
+    Feature('avg_session_duration',    False, True,  'batch_precomputed'), # serving skew
+    Feature('realtime_trending_score', True,  True,  'realtime'),
+])
+\`\`\``,
     tags: ['Interview', 'System Design', 'ML Interview', 'Framework', 'Recommendation', 'Evaluation'],
     domain: 'interview',
     youtube: [{ id: 'ZjNoipQAqRM', title: 'ML System Design Mock Interview: Tweet Toxicity — Exponent' }],
