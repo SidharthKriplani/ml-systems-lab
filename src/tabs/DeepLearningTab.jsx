@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { CheckMark, CrossMark } from '../components/Icons'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 // ── Shared accordion MCQ ──────────────────────────────────────────────────────
 function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
@@ -973,13 +974,13 @@ function ArchDecisionLab() {
 
 // ── Tab shell ─────────────────────────────────────────────────────────────────
 const DL_MODULES = [
-  { id: 'diagnosis',    label: 'Training Failures',       icon: '', component: TrainingFailureDiagnosis },
-  { id: 'gradient',    label: 'Backprop Debugging',       icon: '', component: GradientDebugger },
-  { id: 'optimizer',   label: 'Optimizer Comparison',     icon: '', component: OptimizerComparison },
-  { id: 'regularize',  label: 'Regularization Decisions', icon: '', component: RegularizationDecisions },
-  { id: 'transformer', label: 'Transformer Architecture', icon: '', component: TransformerArchitecture },
-  { id: 'attention',   label: 'Attention Head Visualizer', icon: '', component: AttentionHeadVisualizer },
-  { id: 'arch_decisions', label: 'Architecture Decision Lab', icon: '', component: ArchDecisionLab },
+  { id: 'diagnosis',      label: 'Training Failures',        icon: '', component: TrainingFailureDiagnosis, fidelityTier: 'conceptual' },
+  { id: 'gradient',       label: 'Backprop Debugging',        icon: '', component: GradientDebugger,         fidelityTier: 'conceptual' },
+  { id: 'optimizer',      label: 'Optimizer Comparison',      icon: '', component: OptimizerComparison,       fidelityTier: 'conceptual' },
+  { id: 'regularize',     label: 'Regularization Decisions',  icon: '', component: RegularizationDecisions,   fidelityTier: 'conceptual' },
+  { id: 'transformer',    label: 'Transformer Architecture',  icon: '', component: TransformerArchitecture,   fidelityTier: 'conceptual' },
+  { id: 'attention',      label: 'Attention Head Visualizer', icon: '', component: AttentionHeadVisualizer,   fidelityTier: 'simplified' },
+  { id: 'arch_decisions', label: 'Architecture Decision Lab', icon: '', component: ArchDecisionLab,           fidelityTier: 'conceptual' },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -1069,7 +1070,8 @@ export default function DeepLearningTab({ onNavigate }) {
       </div>
 
       {activeModuleData && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+          <FidelityBadge tier={activeModuleData.fidelityTier ?? 'conceptual'} />
           <BookmarkButton tabId="dl" moduleId={active} label={activeModuleData.label} />
         </div>
       )}

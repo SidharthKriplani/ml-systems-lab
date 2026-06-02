@@ -511,6 +511,10 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **Fidelity badge 3-tier upgrade** (v4.53) — FidelityBadge.jsx component; faithful/simplified/conceptual; dynamic per-module in SparkLab, ClassicalML, DeepLearning; static in ModelsMath, FeatureEng, ModelEval, ProjectLab, LoanDefault, FraudDetection.
+- [x] **ForwardPointers ×8 tabs** (v4.53) — Airflow, dbt, DataModeling, Causal, TimeSeries, Staff, Trainer, CaseStudies all have "Go deeper →" Gradient links.
+- [x] **Distractor quality round 3** (v4.53) — 21 questions improved: DS×4, Causal×4, TS×5, Pipelines×4, Deploy×4. Total 65 across 3 rounds, 11 files.
+- [x] **YouTube IDs all 50 posts** (v4.53) — posts 46-49 filled; 0 empty arrays remaining across all 50 posts.
 - [x] **Revise / Learn / What's Next reading mode** (v4.52) — 3 lenses using msl_score:* + msl_read localStorage. Reading mode selector above series filter. Graceful fallback for fresh users.
 - [x] **Distractor quality pass round 2** (v4.52) — 21 questions improved: Spark×5, Airflow×5, dbt×5, DeepLearning×6. Total across all sessions: 44 questions.
 - [x] **YouTube IDs posts 41/42/45** (v4.52) — all 3 verified via oEmbed. Posts 46/47/48/49 still [].

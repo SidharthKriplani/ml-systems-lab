@@ -46,6 +46,29 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.53 — YouTube IDs complete, distractor round 3, ForwardPointers ×8, fidelity badges 3-tier, Revise mode verified (2026-06-02)
+
+**What shipped:**
+
+**YouTube IDs — all 50 posts now have verified IDs (`GradientTab.jsx`):**
+- Post 46 (recsys silent failures): `zeruHyJbOLA` — Feedback Loop in Recommendation Systems
+- Post 47 (DiD parallel trends): `V-DuH-Wr0x0` — Intuitive Guide to DiD Estimation
+- Post 48 (cold-start product): `TSnYO34b3TA` — Andrew Chen: Cold Start Problem (Talks at Google)
+- Post 49 (recsys feedback loop): `8RQWEykGAjM` — Causality: Difference-in-Differences
+All 50 posts now have `youtube` populated. Zero empty arrays remaining.
+
+**Distractor quality pass round 3 (`DataScienceTab`, `CausalInferenceTab`, `TimeSeriesTab`, `MLOpsPipelinesTab`, `MLOpsDeployTab`):** 21 questions improved (DS×4, Causal×4, TS×5, MLOpsPipelines×4, MLOpsDeploy×4). Total across all 3 rounds: 65 questions improved across 11 tab files. All brace delta 0.
+
+**ForwardPointers — 8 tabs (`AirflowTab`, `dbtTab`, `DataModelingTab`, `CausalInferenceTab`, `TimeSeriesTab`, `StaffLayerTab`, `TrainerTab`, `CaseStudiesTab`):** "Go deeper →" CTA added at bottom of each, linking to the most relevant Gradient post. All use `var(--prime-bg-light)` token, `onNavigate` guard, no hardcoded hex. All brace delta 0.
+
+**Fidelity badge upgrade — 3-tier system:** New `src/components/FidelityBadge.jsx` component (clickable pill + popover tooltip). 3 tiers: Mathematically Faithful (mint), Simplified (amber), Conceptual (ink-low). Applied across 8 tab files (SparkLab, ModelsMath, ProjectLab, LoanDefault, FraudDetection, ClassicalML, DeepLearning, FeatureEng, ModelEval) + 1 new component file. Dynamic tier-per-module in tabs with multiple module types. Replaces old binary `✓ Real execution / ~ Simulated` badges. All brace delta 0.
+
+**Revise mode smoke test:** `getPersonalisedPosts()` logic verified. `{correct, total}` check correct; `{completed, ts}` objects correctly treated as practiced-only (no ratio). Graceful fallback to all posts when `weakDomains.size === 0`. Known v1 limitation: `msl_trainer_history` and `msl_combinator_history` not in `msl_score:*` namespace, so not factored into weak domain detection — acceptable, documents for v2.
+
+**Brace balance:** GradientTab delta 0; all other files at 0.
+
+---
+
 ### v4.52 — YouTube IDs posts 41-45, series assignment, distractor round 2, ROLLOUT update, Revise/Learn/Next mode (2026-06-02)
 
 **What shipped:**

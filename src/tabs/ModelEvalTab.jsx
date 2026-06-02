@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import AccessGate from '../components/AccessGate.jsx'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -805,6 +806,7 @@ export default function ModelEvalTab({ onNavigate, accessCode = null }) {
           Offline metrics lie. Pick the wrong metric and you'll ship a model that looks great on paper while failing in production.
         </p>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a production scenario. Pick your answer — then see what breaks in production and why every wrong option fails.</p>
+        <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

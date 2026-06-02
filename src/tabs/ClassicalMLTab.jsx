@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -1435,12 +1436,12 @@ function BiasVarianceVisualizer() {
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
-  { id: 'zoo', icon: '', label: 'Model Failure Zoo', component: ModelFailureZoo, difficulty: 'junior', isFree: true },
-  { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab, difficulty: 'mid', isFree: false },
-  { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority, difficulty: 'senior', isFree: false },
-  { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures, difficulty: 'mid', isFree: false },
-  { id: 'decision_boundary', label: 'Decision Boundary Lab', component: DecisionBoundaryLab, difficulty: 'mid', isFree: false },
-  { id: 'bias_variance', label: 'Bias-Variance Tradeoff', component: BiasVarianceVisualizer, difficulty: 'junior', isFree: true },
+  { id: 'zoo',              label: 'Model Failure Zoo',        component: ModelFailureZoo,       difficulty: 'junior', isFree: true,  fidelityTier: 'conceptual' },
+  { id: 'ensemble',         label: 'Ensemble Decision Lab',    component: EnsembleDecisionLab,   difficulty: 'mid',    isFree: false, fidelityTier: 'conceptual' },
+  { id: 'hyperparam',       label: 'Hyperparameter Priority',  component: HyperparamPriority,    difficulty: 'senior', isFree: false, fidelityTier: 'conceptual' },
+  { id: 'naive_bayes',      label: 'Naive Bayes Failures',     component: NaiveBayesFailures,    difficulty: 'mid',    isFree: false, fidelityTier: 'conceptual' },
+  { id: 'decision_boundary',label: 'Decision Boundary Lab',    component: DecisionBoundaryLab,   difficulty: 'mid',    isFree: false, fidelityTier: 'simplified' },
+  { id: 'bias_variance',    label: 'Bias-Variance Tradeoff',   component: BiasVarianceVisualizer,difficulty: 'junior', isFree: true,  fidelityTier: 'conceptual' },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -1512,7 +1513,8 @@ export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
         ))}
       </div>
       {activeModuleData && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+          <FidelityBadge tier={activeModuleData.fidelityTier ?? 'conceptual'} />
           <BookmarkButton tabId="classical" moduleId={activeModule} label={activeModuleData.label} />
         </div>
       )}

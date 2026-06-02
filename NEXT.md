@@ -28,6 +28,17 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
+## v4.53 — Done this session
+
+- [x] ~~YouTube IDs posts 46/47/48/49~~ — done; all 50 posts now have YouTube IDs (0 empty arrays)
+- [x] ~~Distractor quality round 3~~ — done (21 questions: DS×4, Causal×4, TS×5, Pipelines×4, Deploy×4; total 65 across 11 files)
+- [x] ~~ForwardPointers ×8 tabs~~ — done (Airflow, dbt, DataModeling, Causal, TimeSeries, Staff, Trainer, CaseStudies)
+- [x] ~~Fidelity badge 3-tier upgrade~~ — done (FidelityBadge.jsx + 8 tabs; faithful/simplified/conceptual)
+- [x] ~~Revise mode smoke test~~ — done (logic verified; v1 limitation: trainer/combinator history not in msl_score:* namespace)
+- [x] ~~LINEAGE v4.53~~ — done
+
+---
+
 ## v4.52 — Done this session
 
 - [x] ~~YouTube IDs posts 41/42/45~~ — done (rjGGSHhKDMM, 7iaCLi0Kdd4, cgc3dSEAel0; all oEmbed verified)
@@ -49,28 +60,28 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.53 — Next sprint
+## v4.54 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **YouTube IDs backfill — posts 46, 47, 48, 49**
-   - These 4 posts still have `youtube: []` (recsys feedback loop, DiD violations, cold-start framing, recsys loop)
-   - Posts 41/42/45 are now filled (done v4.52)
+2. **Revise mode v2 — draw from trainer/combinator history**
+   - v1 only reads `msl_score:*` (tab-level); v2 should also read `msl_trainer_history` + `msl_combinator_history`
+   - Those arrays have `{ domainBreakdown: { [domain]: { correct, total } } }` — richer weak-domain signal
+   - ~45 min in GradientTab `getPersonalisedPosts()`
 
-3. **Distractor quality pass — round 3**
-   - Remaining tabs: DataScienceTab, CausalInferenceTab, TimeSeriesTab, MLOpsPipelinesTab, MLOpsDeployTab
-   - Same standard: 2-of-3 wrong options require real judgment to eliminate
+3. **Fidelity badge — expand to remaining 10 practice tabs**
+   - Done: SparkLab, ModelsMath, ProjectLab, LoanDefault, FraudDetection, ClassicalML, DeepLearning, FeatureEng, ModelEval
+   - Remaining: SystemDesignTab, MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, DataScienceTab, CausalInferenceTab, TimeSeriesTab, AirflowTab, dbtTab, DataModelingTab
+   - All AccordionMCQ tabs → `conceptual`
 
-4. **ForwardPointers audit — remaining tabs**
-   - AirflowTab, dbtTab, DataModelingTab, CausalInferenceTab, TimeSeriesTab, StaffLayerTab, TrainerTab, CaseStudiesTab still missing Gradient post back-links
-   - Add "Go deeper →" CTA linking to relevant Gradient post at bottom of active module
+4. **Gradient post body pass — add code examples to 5 posts**
+   - Posts 22, 23, 25, 39, 40 have strong conceptual bodies but no code blocks
+   - Add 1 concrete code snippet per post (PSI computation, drift detection, calibration check)
 
-5. **"Revise" mode smoke test**
-   - After pushing, verify Revise/Learn/What's Next mode against real localStorage data
-   - Confirm `msl_score:*` key parsing handles both numeric scores and JSON `{completed, ts}` objects
-   - Ensure domain mapping covers all score key prefixes correctly
+5. **METRICS.md — FidelityBadge tier notes**
+   - Document the 3-tier system and which tabs use which tier
 
 ---
 
@@ -83,8 +94,9 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 ## Notes for next session
 
 - All changes staged but NOT committed — run from terminal:
-  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.52: YouTube IDs 41-45, series fix, distractors x21, ROLLOUT, Revise/Learn/Next mode" && git push`
+  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.53: YouTube IDs complete, distractor r3 x21, ForwardPointers x8, fidelity 3-tier" && git push`
 - Brace balance: all files at 0
-- 50 Gradient posts; all series assigned; posts 46/47/48/49 still have youtube: []
-- Revise/Learn/What's Next live — smoke test after push
-- 44 total distractor questions improved across 6 tab files this session
+- All 50 Gradient posts now have YouTube IDs — 0 empty arrays remaining
+- 65 total distractor questions improved across 11 tab files (3 rounds)
+- FidelityBadge.jsx is a new src/components/ file — verify git add includes it
+- Revise mode v1 live; v2 (trainer/combinator history integration) queued for v4.54

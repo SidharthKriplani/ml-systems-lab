@@ -691,13 +691,14 @@ const TS_MODEL_SCENARIOS = [
     context: 'A spare parts retailer forecasts demand for 5,000 low-velocity SKUs. Many SKUs sell 0 units in most weeks — demand is sporadic and lumpy. Traditional MAPE blows up on zero-demand weeks.',
     question: 'Which approach is designed for intermittent/lumpy demand?',
     options: [
-      'Prophet with floor = 0 to prevent negative forecasts.',
+      'Prophet with logistic growth and floor = 0 to prevent negative forecasts.',
       'Croston\'s method — separates non-zero demand size from inter-demand interval.',
-      'ARIMA with log transform to handle the zeros.',
-      'LSTM trained on the raw count data with sparse inputs.',
+      'LightGBM with Tweedie loss objective — handles zero-inflated count-like distributions natively.',
+      'SARIMA with seasonal differencing to remove the periodic zero-demand pattern.',
     ],
     answer: 1,
-    diagnosis: 'Intermittent demand violates ARIMA and Prophet assumptions (both assume relatively continuous observations). Log transform of zero-heavy series is undefined or distorting. Croston\'s method models the non-zero demand level and the average inter-demand interval separately — purpose-built for this distribution.',
+    diagnosis: 'Intermittent demand violates ARIMA and Prophet assumptions (both assume relatively continuous observations). Croston\'s method models the non-zero demand level and the average inter-demand interval separately — purpose-built for this distribution. Option C (LightGBM + Tweedie) is a legitimate production approach and can outperform Croston at scale — it earns credit as a strong alternative. Option A (Prophet with floor) is a common team decision but Prophet\'s Fourier-based seasonality is poorly suited to series that are zero 90% of the time.',
+    fix: 'Use Croston\'s method or its improved variant ADIDA (Aggregate-Disaggregate Intermittent Demand Approach). In Python: statsforecast library has CrostonClassic and CrostonOptimized. Evaluate with Mean Absolute Scaled Error (MASE) which handles zeros, not MAPE. For the ML approach: Tweedie regression (LightGBM with tweedie objective) handles zero-inflated continuous approximations of count data.',
     fix: 'Use Croston\'s method or its improved variant ADIDA (Aggregate-Disaggregate Intermittent Demand Approach). In Python: statsforecast library has CrostonClassic and CrostonOptimized. Evaluate with Mean Absolute Scaled Error (MASE) which handles zeros, not MAPE. For the ML approach: Tweedie regression (LightGBM with tweedie objective) handles zero-inflated continuous approximations of count data.',
   },
   {

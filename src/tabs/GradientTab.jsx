@@ -2687,7 +2687,7 @@ None of these metrics come from your infrastructure monitoring stack. They all r
 **Practice this in System Design to work through how to architect a two-tower recommendation system with freshness constraints, diversity mechanisms, and position bias correction built in from the start.**`,
     tags: ['Recommendations', 'ML System Design', 'Observability', 'Embedding Drift', 'Position Bias', 'Catalog Coverage', 'Silent Failures'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'zeruHyJbOLA', title: 'Feedback Loop in Recommendation Systems' }],
   },
   {
     id: 47,
@@ -2755,7 +2755,7 @@ Event study plot: rather than a single pre/post comparison, estimate the treatme
 **Practice this in Causal Inference to work through experiment design under violation conditions, placebo test construction, and the event study diagnostic.**`,
     tags: ['Causal Inference', 'DiD', 'Parallel Trends', 'Experiment Design', 'Confounding', 'Econometrics'],
     domain: 'causal',
-    youtube: [],
+    youtube: [{ id: 'V-DuH-Wr0x0', title: 'The Intuitive Guide to Difference in Differences Estimation' }],
   },
   {
     id: 48,
@@ -2827,7 +2827,7 @@ A cold-start solution that reduces median time-to-personalization from session 8
 **Practice this in System Design to work through the routing architecture, onboarding signal collection design, and time-to-personalization measurement for a real product cold-start scenario.**`,
     tags: ['Cold-Start', 'ML System Design', 'Recommendations', 'Personalization', 'Onboarding', 'Exploration-Exploitation'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'TSnYO34b3TA', title: 'The Cold Start Problem: How to Start and Scale Network Effects — Andrew Chen, Talks at Google' }],
   },
   {
     id: 49,
@@ -2897,7 +2897,7 @@ These three checks take 20 minutes to run. They will tell you more about the hea
 **Practice this in System Design → Two-Tower Explorer**`,
     tags: ['Recommendations', 'ML System Design', 'Feedback Loop', 'Exploration', 'Bias', 'Diversity'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: '8RQWEykGAjM', title: 'Causality: Difference-in-Differences' }],
   },
   {
     id: 50,
