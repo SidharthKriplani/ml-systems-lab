@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { WarningMark, CrossMark } from '../components/Icons'
 
 // ─── Shared style helpers ─────────────────────────────────────────────────────
 const mono = { fontFamily: 'var(--font-mono)' }
@@ -231,14 +232,14 @@ function DeployStrategy() {
 
 // ─── Module 2: Champion-Challenger ────────────────────────────────────────────
 const METRICS_TABLE = [
-  { metric: 'AUC-PR',              champion: '0.847',  challenger: '0.861', delta: '+1.7%',  status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
-  { metric: 'Calibration (ECE)',   champion: '0.043',  challenger: '0.038', delta: '-12%',   status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
-  { metric: 'p50 latency',         champion: '12ms',   challenger: '18ms',  delta: '+50%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
-  { metric: 'p99 latency',         champion: '45ms',   challenger: '89ms',  delta: '+98%',   status: '<CrossIcon />{' '}Bad',    statusColor: 'var(--rose)' },
-  { metric: 'Memory per instance', champion: '420MB',  challenger: '780MB', delta: '+86%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
-  { metric: 'False positive rate', champion: '4.2%',   challenger: '3.8%',  delta: '-10%',   status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
-  { metric: 'Coverage (% scored)', champion: '99.1%',  challenger: '99.3%', delta: '+0.2%',  status: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Better', statusColor: 'var(--mint)' },
-  { metric: 'Training time',       champion: '4h',     challenger: '7h',    delta: '+75%',   status: '<WarningIcon />{' '}Worse',  statusColor: 'var(--gold)' },
+  { metric: 'AUC-PR',              champion: '0.847',  challenger: '0.861', delta: '+1.7%',  statusType: 'better', statusLabel: 'Better', statusColor: 'var(--mint)' },
+  { metric: 'Calibration (ECE)',   champion: '0.043',  challenger: '0.038', delta: '-12%',   statusType: 'better', statusLabel: 'Better', statusColor: 'var(--mint)' },
+  { metric: 'p50 latency',         champion: '12ms',   challenger: '18ms',  delta: '+50%',   statusType: 'warning', statusLabel: 'Worse',  statusColor: 'var(--gold)' },
+  { metric: 'p99 latency',         champion: '45ms',   challenger: '89ms',  delta: '+98%',   statusType: 'error', statusLabel: 'Bad',    statusColor: 'var(--rose)' },
+  { metric: 'Memory per instance', champion: '420MB',  challenger: '780MB', delta: '+86%',   statusType: 'warning', statusLabel: 'Worse',  statusColor: 'var(--gold)' },
+  { metric: 'False positive rate', champion: '4.2%',   challenger: '3.8%',  delta: '-10%',   statusType: 'better', statusLabel: 'Better', statusColor: 'var(--mint)' },
+  { metric: 'Coverage (% scored)', champion: '99.1%',  challenger: '99.3%', delta: '+0.2%',  statusType: 'better', statusLabel: 'Better', statusColor: 'var(--mint)' },
+  { metric: 'Training time',       champion: '4h',     challenger: '7h',    delta: '+75%',   statusType: 'warning', statusLabel: 'Worse',  statusColor: 'var(--gold)' },
 ]
 
 const CC_QUESTIONS = [
@@ -364,7 +365,11 @@ function ChampionChallenger() {
                 <td style={{ ...mono, padding: '8px 14px', color: 'var(--ink-mid)' }}>{row.champion}</td>
                 <td style={{ ...mono, padding: '8px 14px', color: 'var(--ink-mid)' }}>{row.challenger}</td>
                 <td style={{ ...mono, padding: '8px 14px', color: row.statusColor, fontWeight: 600 }}>{row.delta}</td>
-                <td style={{ ...mono, padding: '8px 14px', color: row.statusColor, fontWeight: 600 }}>{row.status}</td>
+                <td style={{ ...mono, padding: '8px 14px', color: row.statusColor, fontWeight: 600 }}>
+                  {row.statusType === 'better' && <><CheckMark /> {row.statusLabel}</> }
+                  {row.statusType === 'warning' && <><WarningMark /> {row.statusLabel}</> }
+                  {row.statusType === 'error' && <><CrossMark /> {row.statusLabel}</> }
+                </td>
               </tr>
             ))}
           </tbody>

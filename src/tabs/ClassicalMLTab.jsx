@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import AccessGate from '../components/AccessGate.jsx'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -1409,21 +1410,23 @@ function BiasVarianceVisualizer() {
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
-  { id: 'zoo', icon: '', label: 'Model Failure Zoo', component: ModelFailureZoo },
-  { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab },
-  { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority },
-  { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures },
-  { id: 'decision_boundary', label: 'Decision Boundary Lab', component: DecisionBoundaryLab },
-  { id: 'bias_variance', label: 'Bias-Variance Tradeoff', component: BiasVarianceVisualizer },
+  { id: 'zoo', icon: '', label: 'Model Failure Zoo', component: ModelFailureZoo, difficulty: 'junior', isFree: true },
+  { id: 'ensemble', icon: '', label: 'Ensemble Decision Lab', component: EnsembleDecisionLab, difficulty: 'mid', isFree: false },
+  { id: 'hyperparam', icon: '', label: 'Hyperparameter Priority', component: HyperparamPriority, difficulty: 'senior', isFree: false },
+  { id: 'naive_bayes', label: 'Naive Bayes Failures', component: NaiveBayesFailures, difficulty: 'mid', isFree: false },
+  { id: 'decision_boundary', label: 'Decision Boundary Lab', component: DecisionBoundaryLab, difficulty: 'mid', isFree: false },
+  { id: 'bias_variance', label: 'Bias-Variance Tradeoff', component: BiasVarianceVisualizer, difficulty: 'junior', isFree: true },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 const COMING_SOON = []
 
-export default function ClassicalMLTab({ onNavigate }) {
+export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
   const [activeModule, setActiveModule] = useState('zoo')
+  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
 
   const ActiveComponent = MODULES.find(m => m.id === activeModule)?.component
+  const activeModuleData = MODULES.find(m => m.id === activeModule)
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 0 60px' }}>
@@ -1486,7 +1489,11 @@ export default function ClassicalMLTab({ onNavigate }) {
 
       {/* Module content */}
       <div className="animate-slide-up">
-        {ActiveComponent && <ActiveComponent />}
+        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
+          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        ) : (
+          ActiveComponent && <ActiveComponent />
+        )}
       </div>
       {/* ── Coming Soon ─────────────────────────────────────────────────────── */}
       <div style={{ marginTop: '48px' }}>

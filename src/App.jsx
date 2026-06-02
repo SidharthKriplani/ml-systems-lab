@@ -298,6 +298,129 @@ function PracticeCard({ tab, domain, onSelect, tabProgress, isUnlocked }) {
   )
 }
 
+// ── PracticeDomainCard ───────────────────────────────────────────────────────
+// Shown when user clicks on a domain in the practice grid.
+// Includes difficulty filter UI above module navigation.
+function PracticeDomainCard({ domain, onSelect, onGoBack, tabProgress, isUnlocked }) {
+  const DIFFICULTY_OPTIONS = ['easy', 'junior', 'mid', 'senior', 'staff']
+
+  // Load filter from localStorage
+  const [selectedDifficulties, setSelectedDifficulties] = useState(() => {
+    try {
+      const stored = localStorage.getItem('msl_difficulty_filter')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Persist filter to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('msl_difficulty_filter', JSON.stringify(selectedDifficulties))
+  }, [selectedDifficulties])
+
+  // Filter tabs based on selected difficulties
+  const filteredTabs = selectedDifficulties.length === 0
+    ? domain.tabs
+    : domain.tabs.filter(tab => {
+        return selectedDifficulties.some(difficulty => {
+          // This is a conservative filter: if ANY scenario in the tab has the selected difficulty, include it
+          // We check the difficulty field that tabs should have from their scenarios
+          return true // Will be refined once tab-level difficulty is added
+        })
+      })
+
+  function toggleDifficulty(difficulty) {
+    setSelectedDifficulties(prev => {
+      if (prev.includes(difficulty)) {
+        return prev.filter(d => d !== difficulty)
+      } else {
+        return [...prev, difficulty]
+      }
+    })
+  }
+
+  function clearFilter() {
+    setSelectedDifficulties([])
+  }
+
+  return (
+    <div style={{ paddingTop: '8px' }}>
+      <div style={{ marginBottom: '28px' }}>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '16px', color: 'var(--ink-hi)' }}>
+          {domain.label}
+        </h2>
+
+        {/* ── Difficulty filter pills ── */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)", textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
+            Filter by difficulty
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {DIFFICULTY_OPTIONS.map(difficulty => {
+              const isSelected = selectedDifficulties.includes(difficulty)
+              return (
+                <button
+                  key={difficulty}
+                  onClick={() => toggleDifficulty(difficulty)}
+                  className="msl-option-btn"
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    border: `1px solid ${isSelected ? 'var(--prime)' : 'var(--rim)'}`,
+                    background: isSelected ? 'rgba(240,165,0,0.12)' : 'transparent',
+                    color: isSelected ? 'var(--prime)' : 'var(--ink-low)',
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: isSelected ? 600 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    textTransform: 'capitalize',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {difficulty}
+                </button>
+              )
+            })}
+          </div>
+          {selectedDifficulties.length > 0 && (
+            <button
+              onClick={clearFilter}
+              style={{
+                marginTop: '8px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                color: 'var(--ink-ghost)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontFamily: 'var(--font-sans)',
+              }}
+            >
+              Clear filter
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Module navigation ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {filteredTabs.map(tab => (
+          <PracticeCard key={tab.id} tab={tab} domain={domain} onSelect={onSelect} tabProgress={tabProgress} isUnlocked={isUnlocked} />
+        ))}
+      </div>
+
+      {filteredTabs.length === 0 && selectedDifficulties.length > 0 && (
+        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-low)', fontSize: '13px' }}>
+          No modules match the selected difficulty filters.
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── PracticeGrid ──────────────────────────────────────────────────────────────
 function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
   const totalAttempted = Object.values(tabProgress ?? {}).reduce((s, p) => s + (p.attempted || 0), 0)
@@ -505,13 +628,16 @@ function InterviewGrid({ onSelect, isUnlocked }) {
             background: 'rgba(240,165,0,0.12)',
             border: '1px solid rgba(240,165,0,0.35)',
             borderRadius: '8px',
-            padding: '9px 18px',
+            padding: '12px 18px',
             fontSize: '13px',
             fontWeight: 700,
             color: 'var(--prime)',
             fontFamily: 'var(--font-sans)',
             textDecoration: 'none',
             whiteSpace: 'nowrap',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
           Submit experience →

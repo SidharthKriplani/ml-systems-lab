@@ -418,7 +418,7 @@ function SCDSelector() {
                 cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s',
               }}>
               {revealed && type === scenario.answer && <CheckMark />}
-              {revealed && type === picked && type !== scenario.answer && '<CrossIcon />{' '}'}
+              {revealed && type === picked && type !== scenario.answer && <CrossMark />}
               Type {type}
             </button>
           )

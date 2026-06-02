@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PythonCell from '../components/PythonCell.jsx'
+import AccessGate from '../components/AccessGate.jsx'
 
 // ─── PCA Explorer ────────────────────────────────────────────────────────────
 const PCA_CODE = (nComponents, nSamples, nFeatures, noise) => `
@@ -695,9 +696,11 @@ const MODULES = [
   { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL, difficulty: 'easy', isFree: true },
 ]
 
-export default function ModelsMathTab({ onNavigate }) {
+export default function ModelsMathTab({ onNavigate, accessCode = null }) {
   const [active, setActive] = useState('pca')
+  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? PCAExplorer
+  const activeModuleData = MODULES.find(m => m.id === active)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -729,7 +732,11 @@ export default function ModelsMathTab({ onNavigate }) {
         </p>
       </div>
 
-      <ActiveModule />
+      {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
+        <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+      ) : (
+        <ActiveModule />
+      )}
     </div>
   )
 }

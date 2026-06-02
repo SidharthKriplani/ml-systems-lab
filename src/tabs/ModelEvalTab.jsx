@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import AccessGate from '../components/AccessGate.jsx'
 
 // ─── Shared accordion MCQ component ──────────────────────────────────────────
 function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
@@ -752,10 +753,12 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
-export default function ModelEvalTab({ onNavigate }) {
+export default function ModelEvalTab({ onNavigate, accessCode = null }) {
   const [active, setActive] = useState('metric')
   const [, forceUpdate] = useState(0)
+  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
+  const activeModuleData = MODULES.find(m => m.id === active)
 
   useEffect(() => {
     const goto = localStorage.getItem('msl_goto_module')
@@ -793,7 +796,13 @@ export default function ModelEvalTab({ onNavigate }) {
         ))}
       </div>
 
-      <div key={active} className="tab-enter"><ActiveModule /></div>
+      <div key={active} className="tab-enter">
+        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
+          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        ) : (
+          <ActiveModule />
+        )}
+      </div>
       {onNavigate && (
         <div style={{ background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>

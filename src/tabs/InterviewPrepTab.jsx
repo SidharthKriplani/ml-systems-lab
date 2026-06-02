@@ -493,12 +493,12 @@ function BehavioralScenarios() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '12px 16px', marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, color: 'var(--prime)', lineHeight: 1 }}>
           {score}
           <span style={{ fontSize: 16, color: 'var(--ink-ghost)', fontWeight: 400 }}>/{BEHAVIORAL_SCENARIOS.length}</span>
         </div>
-        <div>
+        <div style={{ flex: '1 1 auto', minWidth: 160 }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--ink-hi)' }}>
             Correct answers
           </div>
@@ -507,8 +507,8 @@ function BehavioralScenarios() {
           </div>
         </div>
         {Object.keys(answers).length > 0 && (
-          <div style={{ marginLeft: 'auto' }}>
-            <div style={{ background: 'var(--surface)', borderRadius: 4, height: 6, width: 120, overflow: 'hidden' }}>
+          <div style={{ marginLeft: 'auto', minWidth: 100 }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 4, height: 6, width: 100, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${(score / BEHAVIORAL_SCENARIOS.length) * 100}%`, background: 'var(--prime)', borderRadius: 4, transition: 'width 0.4s ease' }} />
             </div>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--ink-ghost)', marginTop: 3, textAlign: 'right' }}>

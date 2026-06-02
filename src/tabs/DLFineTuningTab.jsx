@@ -467,7 +467,7 @@ function LRStrategyModule() {
             <button key={opt.id} onClick={() => choose(opt.id)} disabled={revealed}
               style={{ padding: '11px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', lineHeight: 1.4 }}>
               {revealed && opt.id === scenario.answer && <CheckMark />}
-              {revealed && opt.id === picked && opt.id !== scenario.answer && '<CrossIcon />{' '}'}
+              {revealed && opt.id === picked && opt.id !== scenario.answer && <CrossMark />}
               {opt.label}
             </button>
           )

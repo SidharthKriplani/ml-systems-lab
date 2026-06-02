@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import { CheckMark, CrossMark } from '../components/Icons'
 
 // ── Shared accordion MCQ ──────────────────────────────────────────────────────
 function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
@@ -222,8 +223,8 @@ function TrainingFailureDiagnosis() {
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
               style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-              {revealed && i === scenario.answer && '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>'}
-              {revealed && i === picked && i !== scenario.answer && '<CrossIcon />{' '}'}
+              {revealed && i === scenario.answer && <CheckMark />}
+              {revealed && i === picked && i !== scenario.answer && <CrossMark />}
               {opt}
             </button>
           )
@@ -308,8 +309,8 @@ function GradientDebugger() {
           return (
             <button key={i} onClick={() => choose(i)} disabled={revealed}
               style={{ padding: '12px 14px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-              {revealed && i === scenario.answer && '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>'}
-              {revealed && i === picked && i !== scenario.answer && '<CrossIcon />{' '}'}
+              {revealed && i === scenario.answer && <CheckMark />}
+              {revealed && i === picked && i !== scenario.answer && <CrossMark />}
               {opt}
             </button>
           )

@@ -2051,6 +2051,258 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantisati
     domain: 'dl',
     youtube: [{ id: 'IxrlHAJtqKE', title: '8-bit Optimizers via Block-wise Quantization' }],
   },
+  {
+    id: 38,
+    slug: 'feature-importance-drift-production',
+    title: 'Feature Importance Drift: When Your Top Features Become Noise',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Your model\'s top 3 features — the ones that dominate predictions and deliver 60% of the model\'s lift — silently stopped working in production. They\'re still in the model. They\'re still computing. But their relationship with the target has decayed. This is feature importance drift, and it\'s invisible to PSI monitoring because the feature distributions haven\'t changed — only their predictive power has.',
+    body: `Feature importance drift is different from covariate shift. Covariate shift means your input features X are moving away from the training distribution. Feature importance drift means the features are stable in distribution, but their predictive relationship with the target has shifted. P(X) is unchanged. P(Y|X) is not.
+
+**The concrete scenario:**
+
+Your model predicts loan default. The top feature by SHAP importance is \`debt_to_income_ratio\`. During training, users with debt-to-income > 0.5 had a 42% default rate. Users with ratio < 0.3 had a 2% default rate. The feature is powerful.
+
+Six months post-launch, the feature's SHAP importance has fallen 30%. The distribution of \`debt_to_income_ratio\` is identical to training (PSI = 0.08, well below the alert threshold). But the predictive relationship has decayed: users with ratio > 0.5 now have a 15% default rate. The ratio still matters — but half as much.
+
+Why? A regulatory change, a macro event, or a shift in the user population (new marketing channel attracting a different segment) has altered the causal relationship between the feature and the outcome. The feature didn't go stale — it went uncorrelated.
+
+**Why this is invisible to standard monitoring:**
+
+PSI (Population Stability Index) checks if P(feature_value_today) matches P(feature_value_at_training). It does. Your alert doesn't fire.
+
+KS (Kolmogorov-Smirnov) test checks if the distributions differ. They don't. No alert.
+
+Prediction distribution monitoring checks if P(score_today) differs from P(score_at_training). It does slightly, but you attribute this to base rate changes.
+
+The signal that matters — P(Y|X) drift — requires labeled data. And labels arrive with delay (30 days for loan default, weeks for churn, days for fraud).
+
+**The three detection patterns:**
+
+1. SHAP importance divergence: compute SHAP values on recent data and compare to training-era SHAP values. If your top features have dropped > 20% in importance while maintaining stable distribution, concept drift has likely occurred.
+
+2. Calibration loss: train a calibration curve (reliability diagram) on training data. Apply it to recent predictions. If the actual event rate for a given score bucket diverges from the calibration curve, the model's P(Y|X) mapping has shifted.
+
+3. Residual analysis by feature segment: stratify recent data (with available labels) by your top 5 features. For each segment, compute mean residual (actual - predicted). If residuals diverge across segments in a way that differs from training, P(Y|X) has shifted.
+
+**The production failure mode:**
+
+A model with decayed feature importance keeps shipping predictions, keeps making decisions, keeps affecting customers — but with reduced signal. A default model that should catch 85% of defaults now catches 60%. A churn model that should identify 70% of churners now identifies 40%. The degradation is silent because the model's plumbing is intact.
+
+**How to prevent it:**
+
+1. Log feature values alongside predictions. Ship a feature importance sidecar that recomputes SHAP importance weekly on logged data.
+
+2. Implement a feature importance regression test: if any of your top-10 features drops more than 15% in importance, trigger a retraining review (not automatic retrain — review).
+
+3. Implement calibration monitoring: for high-confidence predictions (score > 0.9), track the actual positive rate. If it's < 0.7, your model is overconfident — recalibration or retraining needed.
+
+4. Use a holdout set with labels: label a sample of recent predictions (even if labels are delayed) and compare residuals against training baseline. This is the only direct way to detect P(Y|X) drift.
+
+**The business signal:**
+
+The earliest indication of feature importance drift is often a business metric diverging from the model's own metrics. Model precision looks stable. Fraud ops reports that the flagged transactions are increasingly hard to review. The signal-to-noise ratio on the model's output has degraded. This is feature importance drift.
+
+**Practice this in Feature Engineering to understand how to monitor and detect shifts in feature predictive power, not just shifts in distribution.**`,
+    tags: ['Feature Importance', 'Concept Drift', 'Monitoring', 'SHAP', 'Calibration', 'Production ML'],
+    domain: 'features',
+    youtube: [{ id: 'EY2FGHjOL-M', title: 'SHAP Values Explained — StatQuest with Josh Starmer' }],
+  },
+  {
+    id: 39,
+    slug: 'training-serving-skew-comprehensive',
+    title: 'Training-Serving Skew: The Complete Taxonomy and Detection Framework',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    excerpt: 'Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference between how features are computed at training time and how they\'re computed at serving time. It\'s the single most common source of production ML failure, and it hides in four distinct forms that each require different prevention strategies.',
+    body: `Training-serving skew is the gap between model quality in an offline evaluation environment and model quality in a production serving environment. The model is the same. The code that computes features at training time and serving time is different — and that difference is what breaks the model.
+
+**Why this happens systematically:**
+
+Training happens once. An engineer (or a team) writes a feature computation pipeline. It runs on historical data, generates training examples, the model trains and validates offline, and metrics look good.
+
+Serving happens continuously. A different engineer (or a different team, or the same engineer months later without context) writes serving code that computes features at prediction time. They have incomplete information about the training pipeline. They make different assumptions. The two code paths diverge.
+
+The model has learned from training features. Production features look different. Predictions degrade.
+
+**The four canonical forms of training-serving skew:**
+
+**1. Timestamp boundary bugs**
+
+Training computes a 7-day rolling window with \`WHERE timestamp <= event_ts\`. Serving computes a 7-day rolling window with \`WHERE timestamp <= NOW() - INTERVAL 7 DAYS\`. Both are "7 days" — they should be identical.
+
+They're not. At midnight UTC, they diverge by up to 24 hours. A training event at 08:00 UTC gets a 7-day window from [T-7d 08:00, T 08:00]. A serving request at 08:05 UTC gets a window from [NOW-7d 00:00, NOW 00:00]. Boundary mismatch → feature value difference.
+
+Production signal: features shift noticeably at midnight UTC. Your model's prediction for the same user differs by a few percentage points depending on when the request arrives relative to UTC midnight.
+
+**2. Different null handling**
+
+Training imputes missing \`customer_age\` with the column mean (34 years). Serving code uses 0 for missing values "for simplicity." A user with missing age gets 34 in training (looks like an adult) and 0 in serving (looks like invalid/new user). The model has learned separate patterns for age 0 and age 34 — they are different in its decision boundary.
+
+Production signal: new users and edge cases (null demographic fields) perform worse than average. A slice analysis shows precision drops 15% for users where a demographic field is missing.
+
+**3. Scaler fitted on wrong data**
+
+Training: \`scaler.fit(X_train)\` then \`scaler.transform(X_train)\` and \`scaler.transform(X_val)\`. All features are standardised to zero mean and unit variance across the training distribution.
+
+Serving: \`scaler.fit_transform([single_row])\` every request. A single row has mean = itself and std ≈ 0. Every scaled feature becomes near-zero or NaN. The model receives a feature vector that it has never seen: all zeros.
+
+Production signal: scaled features disappear (become NaN or 0). Model performance is random. This is the most catastrophic form.
+
+**4. Aggregation window timezone or calendar mismatch**
+
+Training: "daily active users" computed as users active between [calendar_day_start_UTC, calendar_day_end_UTC]. A user active on Dec 31 at 23:55 UTC and Jan 1 at 00:05 UTC is counted as 2 calendar days.
+
+Serving: "daily active users" computed as a rolling 24-hour window from wall-clock time. Same user is counted in a single 24-hour window.
+
+Small difference per user. Consistent bias across aggregate features. The model learns patterns from calendar-day aggregation; production receives rolling-window aggregation.
+
+**Detection framework:**
+
+**Step 1: Log serving features.** Alongside every prediction, log the feature vector. Use the same precision and serialisation as training. Send to a central store.
+
+**Step 2: Compute daily PSI.** For each feature: compute PSI(training_distribution, serving_distribution_from_logs). PSI > 0.1: investigate.
+
+**Step 3: Identify features with unexplained drift.** Features where PSI is high but you haven't deployed changes. Compare the feature computation code between training and serving. Document differences.
+
+**Step 4: Implement a feature parity test.** Take 100 historical events. Compute features for each event using the training pipeline AND the serving pipeline (retroactively, with the same data the serving pipeline would have received at that time). Compare. Any feature with mean difference > 0.05 on a normalised scale is suspect.
+
+**Step 5: Establish a feature store baseline.** Use a feature store (Feast, Tecton, Hopsworks) that enforces identical code paths for training and serving. Invest the time upfront; it pays for itself in prevented incidents.
+
+**Prevention through feature stores:**
+
+A proper feature store provides a single Python function that:
+- Runs during training to generate training data
+- Runs during serving to compute features at prediction time
+- Logs its outputs so you can audit alignment
+
+The code path is identical. Bugs are caught once. Deployment is safer. The engineering cost is front-loaded (weeks of setup). The cost of not having one compounds indefinitely (months of debugging).
+
+**The production checkpoint:**
+
+Before you ship a model:
+1. Log the serving feature vector for 100 predictions
+2. Recompute those features using the training pipeline on the same data
+3. Compare: if any feature differs by > 5% in normalised space, fix the serving code
+4. Ship feature logging infrastructure alongside the model
+5. Set up daily PSI monitoring on the top-10 features by importance
+
+**Practice this in System Design to understand production-grade feature pipelines and how to architect them for safety.**`,
+    tags: ['Training-Serving Skew', 'Feature Engineering', 'Feature Store', 'Production ML', 'System Design'],
+    domain: 'design',
+    youtube: [{ id: 'pqe-HB7ZcUI', title: 'Training-Serving Skew in Production ML Systems' }],
+  },
+  {
+    id: 40,
+    slug: 'calibration-loss-production-auc-mismatch',
+    title: 'Calibration Loss in Production: When 95% AUC Predicts 60% Precision',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn\'t predict absolute precision because AUC only measures rank ordering — it doesn\'t care about calibration. A model can have perfect AUC and completely miscalibrated probabilities. Here\'s what calibration actually means, why production systems need it, and how to detect and fix calibration loss before it breaks your downstream decisions.',
+    body: `Calibration is a property that nearly every ML engineer misunderstands. Here\'s the correct definition: a model is calibrated if, when it predicts probability p, the actual frequency of the positive outcome among those predictions is approximately p.
+
+Example: if a model predicts P(fraud) = 0.8 for 1000 transactions, and 800 of them are actually fraudulent, the model is well-calibrated. If only 200 are fraudulent, the model is vastly overconfident.
+
+AUC measures rank ordering, not calibration. A perfectly ranked model with AUC 0.99 can be completely miscalibrated — assigning probabilities 100× too high or 100× too low while maintaining perfect rank order.
+
+**Why calibration matters in production:**
+
+A fraud model with miscalibrated scores produces downstream effects:
+- If scores are 10× too high, fraud ops spends time reviewing obviously legitimate transactions
+- If scores are 10× too low, the model misses actual frauds because its score threshold is too conservative
+- If scores are sometimes too high and sometimes too low (systemic miscalibration), decision rules downstream break
+
+**How calibration loss happens:**
+
+1. **Class imbalance without calibration:** A model trained on 1% fraud learns to output probabilities in [0.001, 0.05] — matching the base rate. If you deploy it to a segment with 10% fraud (different population), the same scores now calibrate to [0.01, 0.5]. The model has shifted segments without recalibration.
+
+2. **Probability scaling mismatch:** A neural network trained with sigmoid activation outputs probabilities. A tree-based model using LightGBM outputs raw scores. If you mix them in an ensemble without recalibration, the ensemble probabilities are nonsense.
+
+3. **Train-test distribution shift without adjustment:** A model trained on data with P(Y=1) = 0.02 learns to scale its outputs toward that base rate. Deployed to a segment with P(Y=1) = 0.15, the same scores now underestimate probability.
+
+4. **Threshold calibration without probability calibration:** You choose a threshold (e.g., 0.5) to maximise F1. That threshold is optimal for your training data's base rate. Deployed to a different base rate, the same threshold is suboptimal — and worse, your probability estimates are still miscalibrated.
+
+**Detection: reliability diagrams**
+
+A reliability diagram plots predicted probability vs observed frequency:
+- Divide predictions into 10 bins by predicted probability (0–0.1, 0.1–0.2, ... 0.9–1.0)
+- For each bin, compute the mean predicted probability and the actual positive rate
+- Plot the two against each other
+- A perfectly calibrated model produces a diagonal line from (0,0) to (1,1)
+- A miscalibrated model deviates
+
+Production signal: your reliability diagram shows that predictions in the 0.8–0.9 bin actually have 0.4–0.5 positive rate. The model is massively overconfident in this range.
+
+**Three forms of miscalibration and their fixes:**
+
+**1. Confidence miscalibration (model too confident)**
+
+The model's high-confidence predictions occur less frequently than predicted. Scores of 0.9 correspond to actual rates of 0.5.
+
+Fix: Platt scaling. Train a logistic regression: targets = true labels, features = model scores. The fitted logistic curve rescales the model's scores to match reality.
+
+```python
+from sklearn.calibration import CalibratedClassifierCV
+calibrated_model = CalibratedClassifierCV(model, cv='precomputed', method='sigmoid')
+calibrated_model.fit(X_val, y_val)
+```
+
+Cost: minimal. One additional logistic regression fit on a validation set.
+
+**2. Systematic base-rate shift (deployed to different segment)**
+
+Model trained on 2% base rate, deployed to 20% base rate. Same scores, very different calibration.
+
+Fix: re-fit a calibration curve on data from the target segment (if available). If labels are delayed, retrain the entire model on segment-representative data.
+
+**3. Probability output type mismatch (mixing different model families)**
+
+An ensemble mixes a neural network (sigmoid outputs) with LightGBM (raw scores). The ensemble aggregates them naively without scaling.
+
+Fix: calibrate each model separately to [0, 1] before ensembling. Use isotonic regression (more flexible than Platt scaling) if you have enough calibration data (500+ examples).
+
+```python
+from sklearn.calibration import IsotonicRegression
+iso_reg = IsotonicRegression(out_of_bounds='clip')
+iso_reg.fit(lgbm_scores, y_val)
+lgbm_probs = iso_reg.transform(lgbm_scores)
+```
+
+**The production checkpoint:**
+
+Before shipping a model:
+1. Generate a reliability diagram on a validation set
+2. For each decile of predicted probability, verify that actual positive rate ≈ predicted probability
+3. If any decile has actual rate that diverges > 0.1 from predicted, apply Platt scaling or isotonic regression
+4. Recompute the reliability diagram after calibration — all deciles should align with the diagonal
+5. Ship the calibrated model
+
+**In production:**
+1. Log predictions and outcomes (with label delay)
+2. Monthly: recompute reliability diagram on recent data with available labels
+3. If calibration has drifted (decile actual rates diverge from predicted), retrain the calibration curve or retrain the full model
+
+**Why this is critical downstream:**
+
+If your fraud model outputs uncalibrated probabilities (0.8 when true probability is 0.3), downstream systems break:
+- An alert rule "flag if score > 0.7" flags 30% legitimate — ops burnout
+- A revenue impact model "revenue_impact = transaction_value × P(fraud)" vastly overestimates risk
+- An ensemble that uses these scores as features learns from noise
+
+Calibration is invisible to AUC. It's visible to precision, to downstream decision rules, and to any system that uses probabilities rather than rankings.
+
+**Practice this in Model Evaluation to understand the difference between rank-ordering metrics (AUC) and probability metrics (calibration), and how to detect and fix calibration loss before production.**`,
+    tags: ['Calibration', 'Model Evaluation', 'Probability', 'AUC vs Calibration', 'Production ML', 'Reliability Diagrams'],
+    domain: 'eval',
+    youtube: [{ id: '4jRBRDbJemM', title: 'ROC and AUC, Clearly Explained! — StatQuest with Josh Starmer' }],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']

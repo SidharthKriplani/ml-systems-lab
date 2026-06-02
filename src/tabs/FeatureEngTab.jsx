@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import AccessGate from '../components/AccessGate.jsx'
 
 // ─── Training-Serving Skew Simulator ─────────────────────────────────────────
 function SkewSimulator() {
@@ -1263,9 +1264,11 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
-export default function FeatureEngTab({ onNavigate }) {
+export default function FeatureEngTab({ onNavigate, accessCode = null }) {
   const [active, setActive] = useState('skew')
+  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? SkewSimulator
+  const activeModuleData = MODULES.find(m => m.id === active)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -1284,7 +1287,13 @@ export default function FeatureEngTab({ onNavigate }) {
           </button>
         ))}
       </div>
-      <div key={active} className="tab-enter"><ActiveModule /></div>
+      <div key={active} className="tab-enter">
+        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
+          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        ) : (
+          <ActiveModule />
+        )}
+      </div>
       {onNavigate && (
         <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
