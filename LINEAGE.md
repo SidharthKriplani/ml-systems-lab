@@ -46,6 +46,25 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### Ideas triage + cross-lab review (2026-06-02, no code)
+
+Ideation session covering 6 MSL-specific ideas and a full cross-lab scan (PAL, GAL, India Wealth Architecture). No code shipped — all findings logged into IDEAS.md, AUDITS.md, DECISIONS.md.
+
+**6 MSL ideas evaluated and logged:**
+1. **More project labs / extend each lab** — decision: finish all 5 Churn phases first, then Loan Default (not Fraud — Loan Default adds regulatory framing not yet in MSL), then Fraud. Ordering rationale documented in IDEAS.md Tier 1.
+2. **Simplify toggle for Gradient posts** — decision: pre-generate at build time (not runtime API call). Build trigger: ≥10 complete posts. Full spec in IDEAS.md Tier 1.
+3. **Retrieval failures in SystemDesignTab — belongs in GAL?** — decision: audit per-scenario. ANN/recommendation-scale retrieval stays MSL; RAG-specific scenarios (chunking, embedding drift, hallucination from retrieval gaps) move to GAL. Content boundary audit logged as Tier 1 action item.
+4. **AttentionHeadVisualizer — belongs in MSL?** — decision: don't remove now (built, working, not causing harm). Retirement candidate when a replacement production-judgment module is ready. Architecture Decision Lab (CNN vs ViT, etc.) stays. Logged in Tier 1.
+5. **Company logos in LandscapeTab** — decision: yes, Clearbit Logo API or Simple Icons, LandscapeTab only. Logged in Tier 1.
+6. **SHAP values YouTube embed broken** — logged as AUDITS.md #023.1 (Low). Fix: verify all `youtubeId` values in one pass.
+
+**Cross-lab learnings logged into IDEAS.md new section "Cross-lab learnings":**
+- India Wealth Architecture: animation/visual cue patterns worth studying before building any new interactive module; country-curated content angle for LandscapeTab
+- PAL: about/onboarding section, difficulty+industry filter, question framing quality pass (LeetCode/DataLemur/StrataScratch style), chart interpretation scenarios for DataScience modules, guesstimates bank in InterviewPrepTab, autocomplete/CodeMirror for Pyodide mobile (deferred pending usage data)
+- GAL: Simplify toggle (already specced), 3-tier fidelity badge (already specced), company logos (already specced), cross-repo sync cadence established
+
+---
+
 ### Design decisions — Testimonials/Feedback + Interview Experiences (2026-05-31, no code)
 
 Two new features fully specced in session discussion. No code shipped — design decisions locked and written into DECISIONS.md + IDEAS.md.

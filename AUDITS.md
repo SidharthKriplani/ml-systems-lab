@@ -691,4 +691,18 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 |----------|-------|-------|
 | High | 0 | — |
 | Medium | 1 | #017.3 LandscapeTab undocumented in LINEAGE |
-| Low | 2 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex) |
+| Low | 4 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube embed) |
+
+---
+
+### #023 — 2026-06-02 · Content Integrity Spot Check
+
+**Scope:** `src/data/gradientPosts.js` — YouTube embed validity  
+**Trigger:** User reported SHAP values post YouTube embed shows "video unavailable" despite `youtubeId` being set  
+**Method:** Visual check of live embed; full programmatic verification of all post IDs pending
+
+| # | Finding | File | Severity | Status |
+|---|---------|------|----------|--------|
+| 1 | SHAP values Gradient post has `youtubeId` set but embed renders "video unavailable" — video is likely private, unlisted, or has embeds disabled by uploader after the ID was added | `src/data/gradientPosts.js` — SHAP post | Low | ⚠️ Open — fix: verify `youtube.com/embed/{id}` for every post with a non-empty `youtubeId` in one pass, remove or replace broken IDs |
+
+**Action:** Read `gradientPosts.js`, extract all non-empty `youtubeId` values, verify each at `https://www.youtube.com/embed/{id}` (check for "Video unavailable" or redirect). Remove broken IDs (set to `''`). Scope: all posts in one pass — don't fix only SHAP. (Identified: session 2026-06-02)

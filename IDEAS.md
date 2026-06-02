@@ -188,6 +188,61 @@ Original spec (archived):
 
 Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-rate + horizon → gated day plan. Internal gate at 35% of plan sections. JDPrepTab retired (redirect stub). See LINEAGE.md v4.10.
 
+### Second ProjectLab dataset — Loan Default (after Phase 5 ships)
+
+**Ordering rationale (from session discussion, 2026-06-02):** Finish all 5 phases of Telco Churn first. Do not add a new dataset while Phase 4 or 5 are unbuilt — one complete pipeline is more valuable than two incomplete ones. After Phase 5: **Loan Default** is the highest-value next dataset, not Fraud Detection. Reasons: (1) introduces regulatory framing (fairness, disparate impact, model card requirements) that nothing in MSL currently covers, (2) business cost asymmetry (false negative = bad loan issued, false positive = credit denied) teaches threshold selection more viscerally than churn does, (3) calibration-critical context — a 5% ECE gap has compliance consequences here, not just business ones. Fraud Detection is strong for extreme imbalance (1:200) but that judgment is partially addressed in the churn cp4 checkpoint. Loan Default adds a genuinely new judgment dimension.
+
+**Ordering:** Churn (done through Phase 5) → Loan Default → Fraud Detection. Not all three simultaneously.
+
+**Build trigger:** ProjectLab Phase 5 (Deployment Scaffold) shipped. Loan Default dataset selected and bundled (~500 rows, 18 features). ~2–3 sessions. (Source: session discussion, 2026-06-02)
+
+---
+
+### Content boundary audit — SystemDesign retrieval scenarios vs GAL
+
+**Finding (session discussion, 2026-06-02):** SystemDesignTab contains scenarios about retrieval systems. Some of these belong in MSL; some belong in GAL (GenAI Systems Lab). The distinction:
+
+- **Belongs in MSL:** ANN / vector search for recommendation at scale — candidate generation, approximate nearest neighbor, HNSW vs IVF tradeoffs, index staleness, retrieval quality degradation. These are production ML infrastructure decisions that every MLE at a platform company faces.
+- **Belongs in GAL:** RAG-specific scenarios — chunking strategy, embedding drift, hallucination rate from retrieval gaps, context window budget allocation. These are LLM-systems concerns and belong in a GenAI-focused product.
+
+**Action required:** Audit every retrieval-related scenario in SystemDesignTab individually. Classify per-scenario (MSL vs GAL). Scenarios classified as GAL get removed from MSL on next SystemDesignTab content pass. Do not remove the whole retrieval module — the ANN/recommendation content is core MSL. (Source: session discussion, 2026-06-02)
+
+---
+
+### AttentionHeadVisualizer — audit and retirement candidate
+
+**Finding (session discussion, 2026-06-02):** The `AttentionHeadVisualizer` in DeepLearningTab (v4.29) is the weakest content in that tab from a production-judgment standpoint. Understanding what each attention head specializes in (local syntax, semantic clustering, boundary detection, subject-predicate) is research-level intuition, not a decision a production ML practitioner makes. It's impressive to look at but doesn't teach a choice you'd make in a real system.
+
+**What to keep:** Architecture Decision Lab (CNN vs ViT, TFT vs LSTM, MoE vs dense) is solid MSL content — these are real architecture choices practitioners make. DLFineTuning and DLServing content belongs. Transformers-in-production is absolutely MSL territory; pure attention visualization is not.
+
+**Recommended action:** Don't remove this sprint — it's built and working and not causing harm. Revisit when a replacement interactive module is ready (e.g., a "Fine-tuning cost vs. performance" judgment scenario, or a "when to quantize vs distil" decision tree). The retirement candidate is the `AttentionHeadVisualizer` module specifically, not all transformer content. (Source: session discussion, 2026-06-02)
+
+---
+
+### Company logos in LandscapeTab
+
+**Concept (session discussion, 2026-06-02):** Add company logos to LandscapeTab company cards (companies that hire ML engineers). Visual credibility — a user browsing "who hires ML engineers" sees recognisable logos next to role/salary data.
+
+**Implementation:** Use Clearbit Logo API (`https://logo.clearbit.com/{domain}`) — free for low-volume usage, returns a PNG given a company domain. Alternatively Simple Icons (open source SVGs). Fallback: first-letter monogram on `var(--prime)` background if logo fails to load.
+
+**Scope:** LandscapeTab company cards only — not Interview Experiences (logos there are fragile, companies rebrand) and not Defense Plan (too complex). One placement, one implementation pattern, evaluate before expanding.
+
+**Trademark note:** Every major job board (LinkedIn, Glassdoor, Levels.fyi) displays employer logos without issue. Risk is theoretical for a non-commercial learning tool.
+
+**Build trigger:** LandscapeTab company cards have domain name data available. ~1 hour. (Source: session discussion, 2026-06-02)
+
+---
+
+### Simplify toggle for Gradient posts (pre-generate at build time)
+
+**Concept (session discussion, 2026-06-02):** A toggle on each Gradient post that renders a simplified version of the content — same insight, plainer language, less assumed background. Borrowed from GAL's Ground Truth "Simplify" button.
+
+**Why MSL implementation differs from GAL:** GAL likely calls an AI API at runtime (exposes a key or requires a backend). MSL has neither. Correct approach: run a one-time build script that calls Claude API per post, stores `simplifiedBody` alongside `body` in `gradientPosts.js`, toggle just swaps which string renders. Zero runtime cost, zero API exposure. Pre-generate once per post, regenerate only if the post content changes.
+
+**Build trigger:** Post backlog reaches ≥10 complete posts. Do not build the toggle infrastructure while only 5 posts exist — the overhead outweighs the payoff. (Source: session discussion, 2026-06-02)
+
+---
+
 ### Testimonials & User Feedback system (session discussion, 2026-05-31)
 
 **Concept:** In-app feedback form (3 rating questions + written comment) → external form service → admin review → hardcoded `src/data/testimonials.js` → public testimonials section in the app.
@@ -373,6 +428,30 @@ Toggle on the same problems. "Write it yourself" mode — blank cell, same expec
 
 ---
 
+## Cross-lab learnings — patterns from PAL, GAL, India Wealth Architecture (session 2026-06-02)
+
+Ideas observed in sibling labs that have potential MSL application. Logged here for reference — evaluate each for fit before building. Not all are right for MSL even if they work elsewhere.
+
+### From India Wealth Architecture (`github.com/SidharthKriplani/india-wealth-architecture`)
+- [ ] **Animation and visual cue patterns** — the wealth architecture project uses animated transitions and visual metaphors to make abstract concepts (asset allocation, compounding) tangible and memorable. MSL's interactive modules (DeepLearningTab visualizer, ClassicalML decision boundary) are static or minimally animated. Study the animation approach from that repo before building any new interactive module — there are likely patterns (enter/exit transitions, state-driven SVG animations, stepped reveals) directly applicable to making MSL's Pyodide cell outputs and judgment reveals more viscerally clear. Review the repo specifically for: (a) how transitions are keyed to data state, (b) how visual metaphors are chosen for abstract quantities, (c) what CSS/React animation approach is used.
+- [ ] **Country-curated content angle** — the wealth architecture is India-specific. MSL's LandscapeTab has US-centric salary and hiring data. A country filter or region toggle (India / UK / US / EU) on LandscapeTab salary and company data would make the product meaningfully more useful for non-US users. Implementation: extend each LandscapeTab company/salary entry with a `region` field; add a region filter chip row. Data is the hard part — requires research per region. Low-effort UI, significant content work.
+
+### From PAL (Experimentation/Experimentation Systems Lab)
+- [ ] **About / why-this-is-different onboarding section** — PAL #6. PAL identified the need for a brief "what is this, why is it different from LeetCode/StatQuest/Chip's book, how to get maximum value from 30 minutes" explainer. For MSL, this is partially addressed by the cold-state banner (v4.35), but a more structured one-time walkthrough or persistent "How to use MSL" callout in the Today zone would reduce new-user friction. Content: (a) MSL trains judgment, not memory; (b) the right path for a user's specific role (Data Scientist vs MLE vs Research); (c) how to use the lab most effectively (30-min deep session > 5 min scattered). Candidate format: a collapsible card in HomeTab's Today row, visible until dismissed.
+- [ ] **Difficulty + industry filter on practice tabs** — PAL #10. MSL's practice tabs currently assume intermediate-level users. Adding a difficulty filter (Foundational / Practitioner / Staff) and optionally an industry filter (Fintech / Consumer / Platform / Research) to the AccordionMCQ modules would widen the accessible user base. The difficulty filter is already in the Features Tier 2 list; industry is new. Implementation note: scenarios need a `difficulty` and optionally an `industry` tag before filters are useful — content tagging is the prerequisite, not the UI.
+- [ ] **Question framing quality pass — borrow from LeetCode, DataLemur, StrataScratch, Namaste SQL style** — PAL #13. The framing of MSL scenario questions could be substantially improved. Compare an MSL scenario prompt with a DataLemur or StrataScratch problem: the latter gives you a business context, a specific decision to make, and optionally sample input/output. MSL prompts are often good but sometimes too abstract or too "textbook setup." A content audit pass specifically on question framing — rewording scenario setup text to match the specificity and business grounding of best-in-class platforms — would increase perceived difficulty realism. Target: every scenario prompt should name a specific situation, not a category.
+- [ ] **Chart interpretation scenarios for DataScience / BI content** — PAL #5 (BI and reporting should be visual because BI is inherently visual). For MSL, this applies to DataScienceTab and any future datamart content: scenarios where the user is shown an actual chart (confusion matrix, calibration curve, feature importance bar, drift histogram) and must interpret it, not just answer an MCQ about what the chart "means in theory." Pyodide cells already produce matplotlib output — the gap is judgment checkpoints that fire on that visual output and ask "given this chart, what do you do next?" This is what Phase 3 cell9 started (ROC/PR curves + confusion matrix → threshold selection). Extend this pattern to DataScienceTab and MonitoringTab modules.
+- [ ] **Guesstimates bank in InterviewPrepTab** — PAL #14 (Guesstimates). Fermi estimation / guesstimate questions appear frequently in DS/MLE interviews at FAANG and growth companies. MSL currently has no guesstimate content. A bank of 15–20 guesstimate problems (market sizing, product estimation, capacity planning) with a structured approach reveal (given assumptions → calculation path → sanity check) would extend the Interview zone without requiring Pyodide. Format: plain text reveal, same `.msl-reveal-panel` pattern. Could be a new mode in InterviewPrepTab or a standalone mini-tab. Low build effort, real interview coverage gap.
+- [ ] **Autocomplete / code assist for Pyodide cells on mobile** — PAL #9. MSL's ProjectLab cells are editable but typing Python on mobile is painful without autocomplete. Integrating CodeMirror 6 (lightweight, has mobile touch support + basic Python completion) would make the cells usable on phones. Trade-off: CodeMirror adds bundle weight. Evaluate only after ProjectLab Phase 5 is complete and mobile usage data exists. Don't pre-optimize for mobile Pyodide before validating that users actually edit cells on mobile.
+
+### From GAL (GenAI Systems Lab)
+- [ ] **Simplify toggle for blog posts** — already specced in Tier 1 above (pre-generate at build time, not runtime API call).
+- [ ] **Fidelity badge 3-tier system** — already in Tier 2 Design section above.
+- [ ] **Company logos** — already specced in Tier 1 above (LandscapeTab, Clearbit/Simple Icons).
+- [ ] **Cross-repo learning sessions** — GAL and MSL have diverged architecturally (different component patterns, different animation approaches, different content structures). A periodic sync pass — reading each other's LINEAGE.md and IDEAS.md — would surface patterns applicable to both. Candidate cross-pollination: GAL's Simplify toggle → MSL Gradient posts; MSL's Pyodide execution layer → GAL's code examples; MSL's judgment checkpoint pattern → GAL's concept exercises; GAL's visual design patterns → MSL's interactive modules. **Schedule:** at the start of any new feature sprint, spend 20 min reading the other lab's LINEAGE since last sync.
+
+---
+
 ## Known Bugs
 
 - [ ] `window.scrollTo` on zone switch can feel jarring mid-scroll — consider only triggering on user-initiated nav, not programmatic `onNavigate`
@@ -380,6 +459,7 @@ Toggle on the same problems. "Write it yourself" mode — blank cell, same expec
 - [x] ~~VerbatimTab: SpeechRecognition `onend` fires unexpectedly on some Chrome versions after silence — needs auto-restart~~ — fixed v4.8 (isStoppingRef guard)
 - [x] ~~CombinatorTab: countdown timer continues running if user switches zones — should pause~~ — fixed v4.8 (savedAt timestamp + elapsed subtraction on restore)
 - [x] ~~DefenseDocTab: `@media print` PDF export — needs cross-browser verification (Safari, Firefox)~~ — fixed v4.8 (visibility pattern + @page margins)
+- [ ] **SHAP values Gradient post — YouTube embed shows "video unavailable"** despite a `youtubeId` being set. Likely causes: video set to private/unlisted after being linked, region-blocked, or embed disabled by uploader. Fix: read `gradientPosts.js`, verify every `youtubeId` by loading `youtube.com/embed/{id}` — remove or replace IDs for unavailable videos. Run this check for all posts in one pass, not just SHAP. (Identified: session 2026-06-02)
 
 ---
 

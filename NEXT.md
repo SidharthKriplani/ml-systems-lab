@@ -50,4 +50,9 @@ Nothing currently blocked.
 - **DefenseDocTab v2** — gap-mapped prep plan, resume cross-reference, round-type selector.
 - **Freemium gate v2** — difficulty tags on scenarios, PremiumGate wrapper per-tab.
 - **Social proof signal** — single line in README when verifiable usage numbers exist.
+- **SHAP YouTube embed bug fix** (#023.1) — read `gradientPosts.js`, verify all non-empty `youtubeId` values at `youtube.com/embed/{id}`, clear broken ones. One-pass fix, ~20 min.
+- **SystemDesign retrieval scenarios content boundary audit** — classify each retrieval scenario as MSL (ANN/recommendation) vs GAL (RAG-specific). Remove GAL scenarios on next SystemDesignTab content pass.
+- **AttentionHeadVisualizer retirement** — defer until a replacement production-judgment DL module is ready.
+- **Company logos in LandscapeTab** — Clearbit Logo API. ~1 hour.
+- **LandscapeTab country filter** — region field on company/salary data; filter chip row for India/UK/US/EU. Significant content work.
 - **ModelEvalTab gradient hex** — last open #017.2 finding (`#6366f1`/`#22d3ee` in progress bar gradient).
