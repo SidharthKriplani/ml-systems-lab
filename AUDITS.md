@@ -55,7 +55,16 @@ Resolved findings that become buildable features go into **IDEAS.md**. Findings 
 - First-Time User, Source Material, Coverage, Analytics, MVP / Weight, IP / Moat, Architecture, Guidance Completeness, Content Linkage
 
 **Recurring Build Safety risk — Python f-string `${` in JS template literals:**  
-`ProjectLabTab.jsx` defines Pyodide cell code as JS template literals (backtick strings). Any Python f-string inside those cells that formats a dollar amount (e.g., `f'${val:.0f}'`) contains `${` which esbuild interprets as a JS interpolation — build fails with "Expected } but found :". The brace-balance check does NOT catch this (braces remain balanced). Fix: escape to `f'\${val:.0f}'`. Pre-commit check: `grep -n '\${' src/tabs/ProjectLabTab.jsx | grep "f['\"]"` — any hit needs escaping. First hit: v4.35 build, fixed in v4.35.2 (two occurrences).
+Any Python f-string inside a JS template literal (backtick string) that formats a dollar amount — `f"${val:.0f}"` — causes esbuild to interpret `${` as JS interpolation and fail with "Expected } but found :". The brace-balance check does NOT catch this. Fix: escape to `f"\${val:.0f}"`. Pre-commit check: `grep -rn '\${' src/tabs/ | grep "f['\"]"` — any hit needs escaping. Hits: v4.35 (ProjectLabTab ×2), v4.56 (FraudDetectionTab ×2 — `${fraud['amount'].median():.0f}`).
+
+**Recurring Build Safety risk — escaped HTML entities `\&\&` in JSX:**  
+If an agent or editor writes `\&\&` (HTML-escaped ampersands) inside JSX attribute strings or event handlers, esbuild fails with "Syntax error &". Pre-commit check: `grep -rn '\\&\\&' src/tabs/ src/App.jsx` — any hit must be replaced with `&&`. Hit: v4.56 (ClassicalMLTab onKeyDown handler).
+
+**Recurring Build Safety risk — bare `<digit` in JSX text content:**  
+Writing `<100ms` or `<50%` as JSX text content (between tags) causes esbuild to parse `<100` as an invalid JSX opening tag. Fix: use `&lt;100ms` or `{'<'}100ms`. Pre-commit check: `grep -rn '}>[^<{]*<[0-9]' src/tabs/` — hits in JSX context need escaping. Hit: v4.56 (FraudDetectionTab `<100ms latency`).
+
+**Recurring Build Safety risk — unescaped triple backticks in template literals:**  
+Triple backticks (` ``` `) inside a JS template literal close the literal prematurely. In Gradient post body strings, code fences must be written as `\`\`\`` (three escaped backticks). Pre-commit check: `grep -rn "^\`\`\`\|^ *\`\`\`" src/tabs/` — any match inside a template literal is a build failure. Hit: v4.56 (GradientTab post 40 ×4 lines).
 
 **Recurring Runtime risk — Pyodide package omissions:**  
 `python.js` `loadPython()` must explicitly load every package used across all Pyodide cells. Missing a package produces `ModuleNotFoundError` at runtime (not at build time). Current load list: `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `scipy`. When adding new cells that import new packages (e.g., `xgboost`, `statsmodels`), update the `loadPackage` call in `python.js` first — the cell code won't warn you. pandas was missing until v4.36.2.

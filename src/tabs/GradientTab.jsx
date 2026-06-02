@@ -162,7 +162,34 @@ Engagement metrics (CTR, completion rate, time spent) — leading indicators.
 Satisfaction metrics (ratings, explicit feedback, return visits) — lagging but reliable.
 Diversity metrics (ILD, coverage, long-tail ratio) — prevents filter bubbles.
 Data quality: feature freshness, null rates, embedding staleness.
-Model performance: prediction score distribution drift, AUC on logged feedback.`,
+Model performance: prediction score distribution drift, AUC on logged feedback.
+
+\`\`\`python
+import numpy as np
+
+class TwoTowerScorer:
+    """Minimal two-tower scoring at inference time."""
+
+    def __init__(self, user_tower, item_tower):
+        self.user_tower = user_tower   # returns 128-dim embedding
+        self.item_tower = item_tower   # returns 128-dim embedding
+
+    def get_user_embedding(self, user_features: dict) -> np.ndarray:
+        return self.user_tower.predict([user_features])[0]   # (128,)
+
+    def score_candidates(self, user_emb: np.ndarray,
+                          item_ids: list) -> list[tuple]:
+        """Dot-product scores for a candidate set. O(k * d)."""
+        item_embs = self.item_tower.predict(item_ids)         # (k, 128)
+        scores    = item_embs @ user_emb                       # (k,)
+        ranked    = sorted(zip(item_ids, scores),
+                           key=lambda x: x[1], reverse=True)
+        return ranked  # [(item_id, score), ...]
+
+# Production note: item embeddings are pre-computed and stored in
+# an ANN index (HNSW/ScaNN). You never score the full catalog —
+# you retrieve top-1000 candidates, then rerank with a heavier model.
+\`\`\``,
     tags: ['System Design', 'Recommendations', 'Two-Tower', 'Interview Prep', 'Retrieval'],
     domain: 'design',
     youtube: [{ id: 'jkKAeIx7F8c', title: 'ML System Design Interview: YouTube Recommendations' }],
@@ -272,7 +299,35 @@ Event timestamps and processing timestamps differ. A purchase that happened at 1
 
 **Feature versioning:**
 
-Training run 42 used features_v3. Training run 57 used features_v5. When you investigate why run 57 underperformed in production, you need to reproduce the exact features that run 42 used. This requires: (1) Store feature definitions with immutable versioning. (2) Log which feature version was used in each training run. (3) Keep old feature computation code runnable.`,
+Training run 42 used features_v3. Training run 57 used features_v5. When you investigate why run 57 underperformed in production, you need to reproduce the exact features that run 42 used. This requires: (1) Store feature definitions with immutable versioning. (2) Log which feature version was used in each training run. (3) Keep old feature computation code runnable.
+
+\`\`\`python
+from datetime import datetime
+from feast import FeatureStore
+
+store = FeatureStore(repo_path=".")
+
+# ── Training: point-in-time correct historical features ──────────────────
+# Each row gets features as of its own event_timestamp — no future leakage
+training_df = store.get_historical_features(
+    entity_df=training_events,          # must have entity_id + event_timestamp
+    features=[
+        "user_stats:purchase_count_7d",
+        "user_stats:avg_session_duration",
+        "item_stats:view_count_24h",
+    ],
+).to_df()
+
+# ── Serving: real-time features for a single prediction ─────────────────
+# Uses the SAME feature computation logic as training — no skew
+online_features = store.get_online_features(
+    features=["user_stats:purchase_count_7d", "item_stats:view_count_24h"],
+    entity_rows=[{"user_id": "u_123", "item_id": "i_456"}],
+).to_dict()
+
+# The guarantee: training_df and online_features compute the same way.
+# This is the core promise of a feature store.
+\`\`\``,
     tags: ['Feature Store', 'Architecture', 'Online Features', 'Data Engineering'],
     domain: 'features',
     youtube: [{ id: 'qh7bh4YVI2E', title: 'Rethinking Feature Stores with Feast and Tecton — apply() 2021' }],
@@ -431,7 +486,40 @@ This is the hardest form. You have no historical interactions at all.
 
 Sequence of phases: (1) Popularity-based serving. Log everything. (2) Content-based model. Build from item metadata + contextual features. No interaction data needed. (3) Collaborative signals. Once you have enough interactions (typically 100k+ user-item events), matrix factorisation or two-tower starts outperforming content-based. (4) Hybrid model. Blend content-based scores with collaborative scores, weighting toward collaborative as interaction data grows.
 
-The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.`,
+The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.
+
+\`\`\`python
+def route_recommendation_request(user_id: str,
+                                   interaction_count: int,
+                                   catalog_metadata: dict) -> dict:
+    """
+    Route cold vs warm vs hot users to the right model.
+    Cold  = < 5 interactions  → content-based + UCB exploration
+    Warm  = 5–50 interactions → hybrid collaborative + content
+    Hot   = 50+ interactions  → full collaborative filtering
+    """
+    if interaction_count < 5:
+        # Cold start: use item content features + explore broadly
+        candidates = content_based_retrieval(catalog_metadata)
+        # UCB score = estimated_reward + sqrt(log(t) / n_shown)
+        candidates = ucb_explore(candidates, user_id)
+        model_used = "content_ucb"
+
+    elif interaction_count < 50:
+        # Transitional: blend collaborative signal with content fallback
+        collab_score   = collaborative_model.score(user_id, candidates)
+        content_score  = content_model.score(catalog_metadata, candidates)
+        blended        = 0.6 * collab_score + 0.4 * content_score
+        model_used     = "hybrid"
+
+    else:
+        # Full collaborative: user embedding has enough signal
+        candidates = two_tower_retrieve(user_id, top_k=500)
+        model_used = "collaborative"
+
+    return {"candidates": candidates, "model": model_used,
+            "interaction_count": interaction_count}
+\`\`\``,
     tags: ['Cold Start', 'Recommendation Systems', 'ML System Design', 'Exploration'],
     domain: 'design',
     youtube: [{ id: 'UFpF108gyaw', title: 'Mitigating Cold Start in TensorFlow Recommenders' }],

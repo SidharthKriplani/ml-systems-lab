@@ -480,10 +480,10 @@ function InterviewToolCard({ tool, onSelect, isUnlocked }) {
       style={{
         textAlign: 'left', padding: '20px 22px',
         background: hov
-          ? `linear-gradient(160deg, rgba(255,255,255,0.13) 0%, var(--depth) 30%)`
-          : `linear-gradient(160deg, rgba(255,255,255,0.07) 0%, var(--depth) 40%)`,
-        border: `1px solid ${hov ? tool.accent + '55' : 'rgba(255,255,255,0.15)'}`,
-        borderTop: `1px solid ${hov ? tool.accent + '80' : 'rgba(255,255,255,0.11)'}`,
+          ? `linear-gradient(160deg, rgba(255,255,255,0.06) 0%, var(--depth) 30%)`
+          : `var(--surface)`,
+        border: `1px solid ${hov ? tool.accent + '55' : 'var(--rim)'}`,
+        borderTop: `1px solid ${hov ? tool.accent + '80' : 'var(--rim)'}`,
         borderRadius: '14px', cursor: 'pointer',
         transition: 'all 0.18s ease', width: '100%',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
@@ -827,15 +827,15 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
       </nav>
 
       {/* ── Search — PAL-style bottom bar ── */}
-      <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+      <div style={{ padding: '8px 10px 12px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
         <button
           onClick={() => goTo('ask')}
           className={isSearchActive ? 'sidebar-item-active' : ''}
           style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             width: '100%', textAlign: 'left',
-            background: isSearchActive ? undefined : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${isSearchActive ? 'var(--prime)' : 'rgba(255,255,255,0.10)'}`,
+            background: isSearchActive ? undefined : 'var(--prime-faint)',
+            border: `1px solid ${isSearchActive ? 'var(--prime)' : 'var(--rim)'}`,
             borderRadius: 'var(--r-sm)',
             padding: '7px 10px',
             cursor: 'pointer',
@@ -843,13 +843,13 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           }}
           onMouseEnter={e => {
             if (!isSearchActive) {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'
+              e.currentTarget.style.borderColor = 'var(--rim-hi)'
               e.currentTarget.style.boxShadow = '0 0 0 2px var(--prime-bg-light)'
             }
           }}
           onMouseLeave={e => {
             if (!isSearchActive) {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'
+              e.currentTarget.style.borderColor = 'var(--rim)'
               e.currentTarget.style.boxShadow = 'none'
             }
           }}
@@ -858,7 +858,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: '12px', color: isSearchActive ? undefined : 'var(--ink-low)' }}>Search</span>
-          <kbd style={{ fontSize: '9px', padding: '2px 5px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '3px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
+          <kbd style={{ fontSize: '9px', padding: '2px 5px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '3px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
         </button>
       </div>
 
@@ -886,7 +886,7 @@ function BottomNav({ activeZone, onZoneNav }) {
               flex: 1, display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: '4px',
               background: 'none', border: 'none', cursor: 'pointer',
-              color: isActive ? zone.accent : 'rgba(255,255,255,0.62)',
+              color: isActive ? zone.accent : 'var(--ink-low)',
               transition: 'color 0.15s',
               padding: '8px 2px 10px',
               position: 'relative',
@@ -1127,7 +1127,7 @@ export default function App() {
           {!showBackBtn && (
             <a href="https://github.com/SidharthKriplani/ml-systems-lab" target="_blank" rel="noopener noreferrer"
               className="hide-mobile"
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "var(--font-mono)", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "var(--font-mono)", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2.02c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.83.57C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
               GitHub
             </a>
@@ -1137,7 +1137,7 @@ export default function App() {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "var(--font-sans)" }}>
             <span style={{ fontSize: '13px' }}>⌕</span>
             <span style={{ display: 'inline' }}>Search</span>
-            <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'rgba(255,255,255,0.14)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
+            <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
           </button>
         </div>
       </header>

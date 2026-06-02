@@ -18,7 +18,8 @@ const ROLES = [
 
 // ── Changelog ─────────────────────────────────────────────────────────────────
 const CHANGELOG = [
-  { date: 'Jun 2026', text: 'Project Lab complete — 5-phase Telco Churn pipeline (EDA → Features → Model → Monitoring → Deployment). Loan Default lab (credit risk, ECOA fairness audit, 3 of 4 phases). Fraud Detection lab (1:200 imbalance, precision@K). 2 new Gradient posts. 20 scenario framings rewritten.' },
+  { date: 'Jun 2026', text: 'Dual theme — parchment light + charcoal dark. 50 Gradient posts with full YouTube coverage and 5-series navigation. Bookmarking on all 18 practice tabs. Revise/Learn/What\'s Next reading mode. Fidelity badges across all tabs. 77 distractor improvements. ForwardPointers on every tab. Code examples in key posts.' },
+  { date: 'Jun 2026', text: 'Project Lab complete — 5-phase Telco Churn pipeline (EDA → Features → Model → Monitoring → Deployment). Loan Default lab (credit risk, ECOA fairness audit, all 4 phases). Fraud Detection lab (1:200 imbalance, precision@K, all 4 phases).' },
   { date: 'May 2026', text: '100 interview questions + bookmarking on every judgment tab. 5 new modules: Broadcast Join Decisions, OOM Diagnosis, TS Model Selector, TS Feature Engineering, RAG Architecture.' },
   { date: 'May 2026', text: 'YouTube embeds for all 25 Gradient posts. Difficulty filter (easy/medium/hard), keyboard nav (1–4), module bookmarks, and progress export across all judgment modules.' },
   { date: 'May 2026', text: 'Causal Inference tab: causal vs predictive, identification strategies (RCT/DiD/PSM/IV/RDD/SC), DAG confounder/collider/mediator.' },
