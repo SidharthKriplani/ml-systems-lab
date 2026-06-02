@@ -79,6 +79,28 @@ git add -A && git commit -m "v4.X: [what shipped — be specific]" && git push
 
 ---
 
+## Update Order (end of session — this order matters)
+
+Later files reference earlier ones. Always update in this sequence:
+
+1. **LINEAGE.md** — build history is foundational; write version entry first
+2. **METRICS.md** — document all new localStorage keys + PostHog events
+3. **DECISIONS.md** — update rules; flip any "planned" entries that shipped
+4. **AUDITS.md** — log findings from this session
+5. **IDEAS.md** — move completed items to Done section, promote audit findings to Tier 1
+6. **NEXT.md** — queue 5 items for next session
+7. **CLAUDE.md** — update last; only if something structural changed
+
+**Staleness red flags — check before committing:**
+1. **Version mismatch** — LINEAGE.md says "v4.5X" but DECISIONS.md still says "(planned)"
+2. **Missing doc** — new tab added, no LINEAGE.md entry
+3. **Incomplete status** — NEXT.md says "Done", IDEAS.md still has it "In Progress"
+4. **Orphaned key** — new localStorage key created, METRICS.md has no row
+5. **Audit gap** — bug fixed, not logged in AUDITS.md
+6. **Wrong tense** — "v2 enhancement (planned)" when v2 shipped last session
+
+---
+
 ## Three Rules You Cannot Break
 
 **Rule 1: No hardcoded colors in component files**

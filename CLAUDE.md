@@ -148,7 +148,7 @@ git push          # auto-deploys to Vercel
 **One session = one NEXT.md batch. Start fresh every time.**
 
 1. Open a new chat
-2. Say: *"Read CLAUDE.md and NEXT.md from the workspace folder, then confirm what's next and proceed."*
+2. Say: *"Read CLAUDE.md, BRAIN_TRANSFER.md, and NEXT.md from the workspace folder, then confirm what's next and proceed."*
 3. Execute the 5 queued items in NEXT.md — read other spine files **on demand** (see table below)
 4. Update all MD files (LINEAGE, NEXT, IDEAS, AUDITS, METRICS, CLAUDE as needed)
 5. Commit + push
@@ -192,4 +192,5 @@ The goal is a high-signal IDEAS.md backlog, not a long one.
 | `IDEAS.md` | 550+ | Build backlog | Read Done + Tier 1 sections only; skip Tier 2/3 unless planning |
 | `AUDITS.md` | 900+ | Health log | **Grep-first** — two greps: (1) `grep -n "⚠️" AUDITS.md` for any open findings across all audits; (2) `grep -n "^### #" AUDITS.md \| tail -3` for the latest entry. Never read in full. |
 | `METRICS.md` | ~190 | localStorage key registry | Read in full only when adding a new key or event |
-| `ROLLOUT.md` | ~240 | Beta rollout plan | Read only before opening a batch to testers |
+| `docs/ROLLOUT.md` | ~267 | Beta rollout plan (archived) | Read only before opening a batch to testers — not a session file |
+| `docs/TALLY_FORM_SPEC.md` | ~140 | Tally form field spec (archived) | Read only when setting up the Interview Experiences form |
