@@ -859,6 +859,11 @@ export default function LoanDefaultTab({ onNavigate }) {
     + ['cpL3'].filter(c => state.checkpointsDone.includes(c)).length
   const phase3Complete = phase3DoneSteps === phase3TotalSteps
 
+  // Phase 4: cells 10-14 (display-only, mark as read)
+  const phase4TotalSteps = 5
+  const phase4DoneSteps  = ['loan_cell10','loan_cell11','loan_cell12','loan_cell13','loan_cell14'].filter(c => state.cellsDone.includes(c)).length
+  const phase4Complete   = phase4DoneSteps === phase4TotalSteps
+
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '0' }}>
 
@@ -1324,25 +1329,371 @@ export default function LoanDefaultTab({ onNavigate }) {
         </div>
       )}
 
-      {/* ── Roadmap: Phase 4 ── */}
-      <div style={{ marginTop: '8px' }}>
-        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-ghost)', marginBottom: '14px', fontWeight: 700 }}>
-          Phases ahead
+      {/* ══════════════════════════════════════════════════════════════════════
+           PHASE 4 — Deployment Scaffold + Regulatory Model Card
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ marginTop: '48px' }}>
+
+        {/* Phase 4 header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', fontWeight: 700, background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '4px', padding: '2px 8px' }}>Phase 4 of 4</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {[
-            { phase: 'Phase 4', label: 'Deployment Scaffold', desc: 'Model serving · adverse action notices (ECOA requirement) · model card · AWS deployment scaffold' },
-          ].map(item => (
-            <div key={item.phase} style={{ padding: '14px 16px', border: '1px solid var(--rim)', borderRadius: '9px', background: 'transparent', opacity: 0.5 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.phase}</span>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{item.label}</span>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginLeft: 'auto' }}>coming soon</span>
-              </div>
-              <p style={{ fontSize: '12px', color: 'var(--ink-ghost)', margin: 0, lineHeight: 1.55, fontFamily: 'var(--font-sans)' }}>{item.desc}</p>
+        <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em', marginBottom: '8px' }}>
+          Phase 4 — Deployment Scaffold
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: '0 0 20px' }}>
+          Reference implementation for deploying the loan default model to production. The regulatory model card (Cell 14) is required for any credit decision model — it documents training data demographics, disparate impact test results, threshold documentation, and the appeal process. Read each scaffold, mark as done.
+        </p>
+
+        {/* Phase 4 progress bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+          <div style={{ flex: 1, height: '4px', background: 'var(--depth)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: `${Math.round((phase4DoneSteps / phase4TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
+          </div>
+          <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase4DoneSteps}/{phase4TotalSteps}</span>
+        </div>
+
+        {/* ── Cell 10 — FastAPI /predict ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('loan_cell10') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('loan_cell10') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('loan_cell10') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('loan_cell10') ? '✓' : '10'}
+              </span>
             </div>
-          ))}
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>FastAPI /predict</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>prediction endpoint · pydantic validation · APPROVE/DENY/REVIEW thresholds</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>python</span>
+              {!state.cellsDone.includes('loan_cell10') ? (
+                <button onClick={() => markCellDone('loan_cell10')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Mark as read ✓</button>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — Loan Default Prediction API
+from fastapi import FastAPI
+from pydantic import BaseModel, validator
+import joblib, numpy as np
+
+app = FastAPI(title="Loan Default API", version="1.0.0")
+model  = joblib.load("artifacts/loan_model.pkl")
+scaler = joblib.load("artifacts/loan_scaler.pkl")
+
+class LoanRequest(BaseModel):
+    annual_income:     float
+    loan_amount:       int
+    credit_score:      int
+    employment_length: float
+    home_ownership:    int   # 0=RENT, 1=OWN, 2=MORTGAGE
+    loan_purpose:      int   # 0=debt_consolidation, 1=home_improvement, 2=other
+
+    @validator('credit_score')
+    def score_in_range(cls, v):
+        if not (580 <= v <= 850):
+            raise ValueError('credit_score must be 580–850')
+        return v
+
+class LoanResponse(BaseModel):
+    default_probability: float
+    decision:            str   # APPROVE / DENY / REVIEW
+    model_version:       str = "1.0.0"
+
+# Decision threshold: >0.35 deny, 0.25–0.35 manual review, <0.25 approve
+DENY_THRESHOLD   = 0.35
+REVIEW_THRESHOLD = 0.25
+
+@app.post("/predict", response_model=LoanResponse)
+async def predict(req: LoanRequest):
+    X = np.array([[req.annual_income, req.loan_amount, req.credit_score,
+                   req.employment_length, req.home_ownership, req.loan_purpose]])
+    X_s  = scaler.transform(X)
+    prob = float(model.predict_proba(X_s)[0, 1])
+    if prob >= DENY_THRESHOLD:      decision = "DENY"
+    elif prob >= REVIEW_THRESHOLD:  decision = "REVIEW"
+    else:                           decision = "APPROVE"
+    return LoanResponse(default_probability=round(prob, 4), decision=decision)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}`}</pre>
+          </div>
         </div>
+
+        {/* ── Cell 11 — Dockerfile ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('loan_cell11') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('loan_cell11') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('loan_cell11') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('loan_cell11') ? '✓' : '11'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Dockerfile</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>multi-stage build · non-root user · audit log requirement (ECOA)</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>dockerfile</span>
+              {!state.cellsDone.includes('loan_cell11') ? (
+                <button onClick={() => markCellDone('loan_cell11')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Mark as read ✓</button>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --target=/build/deps -r requirements.txt
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /build/deps /usr/local/lib/python3.11/site-packages
+COPY app/ ./app/
+COPY artifacts/ ./artifacts/
+
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8000
+# Credit models: log every prediction for audit trail (required by ECOA)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
+     "--workers", "2", "--access-log"]`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 12 — K8s manifest ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('loan_cell12') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('loan_cell12') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('loan_cell12') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('loan_cell12') ? '✓' : '12'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Kubernetes Manifest</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>deployment + HPA · compliance annotations · liveness/readiness probes</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
+              {!state.cellsDone.includes('loan_cell12') ? (
+                <button onClick={() => markCellDone('loan_cell12')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Mark as read ✓</button>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-default-api
+  labels: { app: loan-default-api, version: "1.0.0" }
+  annotations:
+    # ECOA compliance: record model version in deployment metadata
+    compliance/model-version: "1.0.0"
+    compliance/disparate-impact-tested: "true"
+    compliance/ecoa-model-card: "s3://model-artifacts/loan-model-card-v1.0.0.pdf"
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: loan-default-api }
+  template:
+    metadata:
+      labels: { app: loan-default-api, version: "1.0.0" }
+    spec:
+      containers:
+        - name: loan-default-api
+          image: <ECR>.dkr.ecr.us-east-1.amazonaws.com/loan-default-api:1.0.0
+          ports: [{ containerPort: 8000 }]
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits:   { cpu: "1000m", memory: "1Gi" }
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: loan-default-api-hpa }
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: loan-default-api
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 13 — CI/CD ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('loan_cell13') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('loan_cell13') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('loan_cell13') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('loan_cell13') ? '✓' : '13'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>CI/CD Pipeline</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>compliance-check gate · model card verification · ECR push · EKS rollout</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
+              {!state.cellsDone.includes('loan_cell13') ? (
+                <button onClick={() => markCellDone('loan_cell13')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Mark as read ✓</button>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy-loan-model.yml
+name: Loan Model — Build and Deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "artifacts/**", "Dockerfile"]
+
+jobs:
+  compliance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify model card exists
+        run: |
+          [ -f "artifacts/model_card.json" ] || (echo "Model card missing — ECOA requires documentation before deployment" && exit 1)
+      - name: Verify disparate impact test results
+        run: |
+          python scripts/check_disparate_impact.py artifacts/model_card.json
+
+  test:
+    needs: compliance-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt && pip install pytest
+      - run: pytest tests/ -v
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Build and push to ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin \${{ secrets.ECR_REGISTRY }}
+          docker build -t loan-default-api:\${{ github.sha }} .
+          docker push \${{ secrets.ECR_REGISTRY }}/loan-default-api:\${{ github.sha }}
+      - name: Deploy to EKS
+        run: |
+          aws eks update-kubeconfig --name prod-cluster --region us-east-1
+          kubectl set image deployment/loan-default-api loan-default-api=\${{ secrets.ECR_REGISTRY }}/loan-default-api:\${{ github.sha }}
+          kubectl rollout status deployment/loan-default-api`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 14 — Regulatory Model Card ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('loan_cell14') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('loan_cell14') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('loan_cell14') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('loan_cell14') ? '✓' : '14'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Regulatory Model Card</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>ECOA required · training demographics · disparate impact results · appeal process</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', borderLeft: '3px solid var(--prime)', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700 }}>ECOA Model Card — Loan Default Predictor v1.0.0</span>
+            </div>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {[
+                { label: 'Model Name', value: 'Loan Default Predictor v1.0.0' },
+                { label: 'Training Data', value: '800-row synthetic dataset. Demographics: RENT 45%, OWN 20%, MORTGAGE 35%. Employment length median 3.5yr. Annual income $25k–$500k log-normal.' },
+                { label: 'Disparate Impact Test', value: '4/5ths rule applied to denial rates by home_ownership and employment_length quartile. RENT group denial rate / OWN group denial rate = 0.81 (passes threshold ≥0.80). Q1 employment / Q4 employment = 0.78 (marginally fails — business necessity documented).' },
+                { label: 'Decision Threshold', value: '>0.35 → DENY, 0.25–0.35 → REVIEW, <0.25 → APPROVE. Threshold selected to minimize FN cost ($5k) vs FP cost ($200) while maintaining 4/5ths compliance.' },
+                { label: 'Monitoring Cadence', value: 'PSI and KS test computed weekly on income and credit score. Alert if PSI > 0.20 on any feature. Disparate impact re-tested monthly. Model retrained if PSI > 0.25 or monthly disparate impact fails.' },
+                { label: 'Known Limitations', value: 'Synthetic training data — real deployment requires retraining on actual applicant data. Employment length proxy audit may not capture all age-proxying. Credit score itself is a composite that may embed historical bias.' },
+                { label: 'Appeal Process', value: 'Applicants denied automatically (DENY decision) receive written notice of adverse action within 30 days (ECOA §701). Manual review available on request.' },
+              ].map(row => (
+                <div key={row.label}>
+                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px' }}>{row.label}</div>
+                  <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{row.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '12px 16px', borderTop: '1px solid var(--rim)', display: 'flex', justifyContent: 'flex-end' }}>
+              {!state.cellsDone.includes('loan_cell14') ? (
+                <button onClick={() => markCellDone('loan_cell14')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Mark as read ✓</button>
+              ) : (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Phase 4 completion card ── */}
+        {phase4Complete && (
+          <div style={{ border: '1px solid rgba(52,211,153,0.35)', borderRadius: '10px', padding: '20px', background: 'rgba(52,211,153,0.06)', textAlign: 'center', marginTop: '8px' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>✓</div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--mint)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em', marginBottom: '6px' }}>Loan Default Lab Complete</div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              Full credit risk pipeline — schema inspection, fairness audit, model training, ECOA threshold analysis, monitoring with disparate impact framing, and a regulatory model card. This is what a credit model review actually looks like.
+            </p>
+          </div>
+        )}
+
       </div>
 
     </div>

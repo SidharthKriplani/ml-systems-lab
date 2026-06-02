@@ -40,6 +40,7 @@ import VerbatimTab    from './tabs/VerbatimTab.jsx'
 import SpotTheFlawTab from './tabs/SpotTheFlawTab.jsx'
 import ProjectLabTab  from './tabs/ProjectLabTab.jsx'
 import LoanDefaultTab from './tabs/LoanDefaultTab.jsx'
+import FraudDetectionTab from './tabs/FraudDetectionTab.jsx'
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -79,6 +80,7 @@ const ALL_TABS = [
   { id: 'spottheflaw', component: SpotTheFlawTab },
   { id: 'projectlab',  component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
+  { id: 'fraud_detection', component: FraudDetectionTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -94,7 +96,7 @@ const PREMIUM_TABS = new Set([
   'dl', 'dl_finetune', 'dl_serving',
   'ds', 'causal', 'ts',
   'monitor', 'mlops_deploy', 'mlops_pipes',
-  'projectlab', 'loan_default',
+  'projectlab', 'loan_default', 'fraud_detection',
 ])
 const ACCESS_CODE = 'DAI2026'
 
@@ -134,6 +136,7 @@ const PRACTICE_DOMAINS = [
       { id: 'classical',   label: 'Classical ML',        desc: 'Failure zoo, ensembles, hyperparams' },
       { id: 'projectlab',   label: 'Project Lab',         desc: 'End-to-end DS notebook — churn prediction with Pyodide' },
       { id: 'loan_default', label: 'Loan Default',          desc: 'Credit risk notebook — fairness audit, ECOA, disparate impact' },
+      { id: 'fraud_detection', label: 'Fraud Detection', desc: 'Transaction fraud notebook — extreme 1:200 imbalance, precision@K, ops team capacity' },
     ],
   },
   {
