@@ -657,16 +657,6 @@ function InterviewGrid({ onSelect, isUnlocked }) {
 // Guiding principle: user always knows where they are and what to do next.
 // Flat domain sections — one click to any tab. No lock icons. Progress inline.
 function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) {
-  const [openDomains, setOpenDomains] = useState(() => {
-    const initial = {}
-    PRACTICE_DOMAINS.forEach(d => { initial[d.id] = true })
-    return initial
-  })
-
-  function toggleDomain(domainId) {
-    setOpenDomains(prev => ({ ...prev, [domainId]: !prev[domainId] }))
-  }
-
   const activeTabId = zoneTab[activeZone]
 
   function getTabPct(tabId) {
@@ -690,7 +680,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
         style={{
           width: '100%', textAlign: 'left',
           padding: indent ? '4px 12px 4px 26px' : '6px 14px',
-          background: isActive ? undefined : hov ? 'rgba(255,255,255,0.04)' : 'none',
+          background: isActive ? undefined : hov ? 'var(--prime-faint)' : 'none',
           border: 'none', cursor: 'pointer',
           transition: 'background var(--t-fast), color var(--t-fast)',
         }}
@@ -752,43 +742,28 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
         {/* Home */}
         <NavBtn id="home" label="Home" accent="var(--prime)" isActive={isHomeActive} onClick={() => goTo('home')} />
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Practice</div>
+        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Practice</div>
 
         {/* Practice domains */}
         {PRACTICE_DOMAINS.map(domain => {
-          const isOpen = openDomains[domain.id] !== false
           const domainHasActive = domain.tabs.some(t => t.id === activeTabId) && activeZone === 'practice'
           return (
             <div key={domain.id}>
-              {/* Domain header */}
-              <button
-                onClick={() => toggleDomain(domain.id)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', padding: '4px 12px 3px 14px',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  transition: 'opacity var(--t-fast)',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.75' }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-              >
+              {/* Domain header — always expanded, no toggle */}
+              <div style={{
+                padding: '8px 14px 2px',
+              }}>
                 <span style={{
                   fontFamily: 'var(--font-sans)', fontSize: '11px',
                   fontWeight: domainHasActive ? 700 : 500,
                   color: domainHasActive ? domain.accent : 'var(--ink-mid)',
                   letterSpacing: '0.01em',
-                  transition: 'color var(--t-fast)',
                 }}>{domain.label}</span>
-                <span style={{
-                  fontSize: '8px', color: 'rgba(255,255,255,0.28)', display: 'inline-block',
-                  transition: 'transform var(--t)',
-                  transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                }}>▶</span>
-              </button>
+              </div>
 
-              {/* Tab items */}
-              {isOpen && domain.tabs.map(tab => {
+              {/* Tab items — always visible */}
+              {domain.tabs.map(tab => {
                 const isTabActive = activeTabId === tab.id && activeZone === 'practice'
                 const pct = getTabPct(tab.id)
                 const isDimmed = PREMIUM_TABS.has(tab.id) && !isUnlocked
@@ -814,8 +789,8 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           )
         })}
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Interview</div>
+        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Interview</div>
 
         {/* Interview tools */}
         {INTERVIEW_TOOLS.map(tool => {
@@ -838,8 +813,8 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           )
         })}
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'rgba(255,255,255,0.22)', userSelect: 'none' }}>Read</div>
+        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
+        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Read</div>
 
         {[
           { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--prime)', zone: 'read' },
