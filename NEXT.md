@@ -25,6 +25,13 @@ Replace remaining rendered-UI emoji in `HomeTab.jsx`, `CombinatorTab.jsx`, `Trai
 
 ---
 
+## Pending from Avinash's side
+
+- **Formspree ID** — sign up at formspree.io, create a new form, copy the ID (part after `/f/`), replace `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx` line 5, then push.
+- **Tally form ID** — create form at tally.so with fields: Company, Role (MLE/DS/MLS/Research), Level (L3/L4/L5/Staff/Principal), Round Type (phone screen/take-home/virtual onsite/onsite), Experience text (paragraph). Publish → copy ID from share URL (part after `/r/`), replace `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid, then push.
+
+---
+
 ## Blocked
 
 Nothing currently blocked.
