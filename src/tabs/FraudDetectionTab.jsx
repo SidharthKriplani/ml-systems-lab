@@ -1914,7 +1914,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                       </div>
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>FastAPI Scoring Endpoint</div>
-                        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>sync /score endpoint · <100ms latency · reference code</div>
+                        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>sync /score endpoint · &lt;100ms latency · reference code</div>
                       </div>
                     </div>
                     <ReferenceCellDisplay
