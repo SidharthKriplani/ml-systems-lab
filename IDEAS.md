@@ -511,6 +511,12 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **Revise mode v2** (v4.54) — trainer/combinator history wired; HISTORY_DOMAIN_MAP; aggregate accuracy < 60% = weak domain.
+- [x] **Fidelity badge ×10 remaining tabs** (v4.54) — all 20 practice tabs now have badges.
+- [x] **Code examples in posts 22/23/25/39** (v4.54) — Spark metrics, PSI+KS, temporal features, skew detection.
+- [x] **Distractor round 4** (v4.54) — 12 improved: StaffLayer×3 IC3 upgrades + InterviewPrep×9. Total 77 across 13 files.
+- [x] **ForwardPointers complete** (v4.54) — DLFineTune, DLServing, ModelsMath, InterviewPrep, SpotTheFlaw, CodeBugs. All 20 practice tabs covered.
+- [x] **METRICS.md domainBreakdown + FidelityBadge tier table** (v4.54).
 - [x] **Fidelity badge 3-tier upgrade** (v4.53) — FidelityBadge.jsx component; faithful/simplified/conceptual; dynamic per-module in SparkLab, ClassicalML, DeepLearning; static in ModelsMath, FeatureEng, ModelEval, ProjectLab, LoanDefault, FraudDetection.
 - [x] **ForwardPointers ×8 tabs** (v4.53) — Airflow, dbt, DataModeling, Causal, TimeSeries, Staff, Trainer, CaseStudies all have "Go deeper →" Gradient links.
 - [x] **Distractor quality round 3** (v4.53) — 21 questions improved: DS×4, Causal×4, TS×5, Pipelines×4, Deploy×4. Total 65 across 3 rounds, 11 files.

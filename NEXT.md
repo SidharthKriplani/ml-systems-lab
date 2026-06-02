@@ -28,6 +28,18 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
+## v4.54 — Done this session
+
+- [x] ~~Revise mode v2~~ — done (HISTORY_DOMAIN_MAP + trainer/combinator aggregation; weak domain detection now real)
+- [x] ~~Fidelity badge ×10 remaining tabs~~ — done (all 20 practice tabs now have badges)
+- [x] ~~Code examples in posts 22/23/25/39~~ — done (Spark metrics, PSI+KS, temporal features, skew detection)
+- [x] ~~Distractor round 4~~ — done (12: StaffLayer×3 + InterviewPrep×9; VerbatimTab confirmed no MCQ; total 77 across 13 files)
+- [x] ~~ForwardPointers remaining~~ — done (DLFineTune, DLServing, ModelsMath, InterviewPrep, SpotTheFlaw, CodeBugs; all 20 tabs now covered)
+- [x] ~~METRICS.md~~ — done (domainBreakdown schemas + FidelityBadge tier table)
+- [x] ~~LINEAGE v4.54~~ — done
+
+---
+
 ## v4.53 — Done this session
 
 - [x] ~~YouTube IDs posts 46/47/48/49~~ — done; all 50 posts now have YouTube IDs (0 empty arrays)
@@ -60,28 +72,27 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.54 — Next sprint
+## v4.55 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **Revise mode v2 — draw from trainer/combinator history**
-   - v1 only reads `msl_score:*` (tab-level); v2 should also read `msl_trainer_history` + `msl_combinator_history`
-   - Those arrays have `{ domainBreakdown: { [domain]: { correct, total } } }` — richer weak-domain signal
-   - ~45 min in GradientTab `getPersonalisedPosts()`
+2. **Gradient post code pass — remaining posts without code**
+   - Posts 4, 5, 7, 11, 15, 24 are high-value but have no code blocks
+   - Add 1 snippet per post: two-tower architecture (4), PSI drift (5), feature store API (7), cold-start routing (11), Netflix ML stack (15), system design checklist (24)
 
-3. **Fidelity badge — expand to remaining 10 practice tabs**
-   - Done: SparkLab, ModelsMath, ProjectLab, LoanDefault, FraudDetection, ClassicalML, DeepLearning, FeatureEng, ModelEval
-   - Remaining: SystemDesignTab, MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, DataScienceTab, CausalInferenceTab, TimeSeriesTab, AirflowTab, dbtTab, DataModelingTab
-   - All AccordionMCQ tabs → `conceptual`
+3. **Gradient post body pass — add code examples to 5 posts**
+   - Posts 4, 7, 11 are highest value (rec system, feature store, cold start)
+   - 1 Python snippet each
 
-4. **Gradient post body pass — add code examples to 5 posts**
-   - Posts 22, 23, 25, 39, 40 have strong conceptual bodies but no code blocks
-   - Add 1 concrete code snippet per post (PSI computation, drift detection, calibration check)
+4. **HomeTab changelog — update entry**
+   - Jun 2026 entry is stale (references v4.44 features)
+   - Update to reflect 50 posts, bookmarking ×18 tabs, series UI, Revise mode, fidelity badges, ForwardPointers on all tabs
 
-5. **METRICS.md — FidelityBadge tier notes**
-   - Document the 3-tier system and which tabs use which tier
+5. **ROLLOUT.md — Batch 1 readiness check**
+   - Batch 0 checklist is updated; run through it manually before inviting Batch 1 testers
+   - Batch 1 tester brief is written; confirm it still reflects current product
 
 ---
 
@@ -94,9 +105,9 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 ## Notes for next session
 
 - All changes staged but NOT committed — run from terminal:
-  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.53: YouTube IDs complete, distractor r3 x21, ForwardPointers x8, fidelity 3-tier" && git push`
+  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.54: Revise v2, fidelity x10, post code examples, distractor r4 x12, ForwardPointers all tabs" && git push`
 - Brace balance: all files at 0
-- All 50 Gradient posts now have YouTube IDs — 0 empty arrays remaining
-- 65 total distractor questions improved across 11 tab files (3 rounds)
-- FidelityBadge.jsx is a new src/components/ file — verify git add includes it
-- Revise mode v1 live; v2 (trainer/combinator history integration) queued for v4.54
+- All 20 practice tabs now have ForwardPointers + fidelity badges
+- 77 total distractor questions improved across 13 tab files (4 rounds)
+- Revise mode v2 now draws from trainer/combinator history — much more useful for active users
+- HomeTab changelog is stale — update as v4.55 Item 4

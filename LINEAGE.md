@@ -46,6 +46,26 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.54 — Revise mode v2, fidelity badges ×10, code examples in posts, distractor r4, ForwardPointers complete (2026-06-02)
+
+**What shipped:**
+
+**Revise mode v2 (`GradientTab.jsx`):** `getPersonalisedPosts()` now also reads `msl_trainer_history` + `msl_combinator_history`. Aggregates correct/total across last 10 sessions per domain via `HISTORY_DOMAIN_MAP` (14 label→domain mappings). Domains with aggregate accuracy < 60% added to `weakDomains`; any domain with history added to `practicedDomains`. Revise and Learn modes now surface meaningfully personalised content for users who have done Trainer/Combinator sessions. Brace delta 0.
+
+**Fidelity badge — 10 remaining tabs:** `FidelityBadge tier="conceptual"` added to SystemDesignTab, MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, DataScienceTab, CausalInferenceTab, TimeSeriesTab, AirflowTab, dbtTab, DataModelingTab. All 20 practice tabs now have fidelity badges. Brace delta 0 on all 10 files.
+
+**Code examples in Gradient posts 22, 23, 25, 39 (`GradientTab.jsx`):** One concrete Python code block added per post: Spark stage metrics via `sc.statusTracker()` (post 22), PSI + KS test functions (post 23), safe temporal feature engineering with shift() + strict time-based split (post 25), `detect_training_serving_skew()` function (post 39). Brace delta 0.
+
+**Distractor quality round 4 (`StaffLayerTab`, `InterviewPrepTab`):** 12 more questions/reveals improved. StaffLayerTab: 3 IC3 responses upgraded from straw-man to competent-but-incomplete. InterviewPrepTab: 9 behavioral MCQ options upgraded. VerbatimTab confirmed skip (no MCQ structure). Total across all rounds: 77 questions/options improved across 13 tab files.
+
+**ForwardPointers — remaining 6 tabs:** DLFineTuningTab, DLServingTab, ModelsMathTab, InterviewPrepTab, SpotTheFlawTab, CodeBugsTab all received "Go deeper →" CTAs. Read→practice loop now closed across all 20 practice tabs.
+
+**METRICS.md:** `msl_trainer_history` and `msl_combinator_history` domainBreakdown schema documented. FidelityBadge tier assignment table added.
+
+**Brace balance:** All modified files at delta 0.
+
+---
+
 ### v4.53 — YouTube IDs complete, distractor round 3, ForwardPointers ×8, fidelity badges 3-tier, Revise mode verified (2026-06-02)
 
 **What shipped:**

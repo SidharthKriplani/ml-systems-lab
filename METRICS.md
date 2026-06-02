@@ -59,9 +59,9 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | Key | Type | Set by | Purpose |
 |-----|------|--------|---------|
 | `msl_score:{tabPrefix}` | `number` \| `JSON` | Per-tab score logic | Cumulative score for each practice tab. `tabPrefix` examples: `spark`, `ts`, `classical`, `spark_broadcast`, `spark_oom`, `deeplearn_optimizer`, `deeplearn_regularize`, `deeplearn_transformer`, `dl_arch`, `causal_uplift`, `causal_obs_exp`, `causal_exp`, `classical_boundary` (JSON `{completed:true, ts}`). All keys use `msl_score:` prefix. |
-| `msl_trainer_history` | `JSON array` | `TrainerTab` | Last 50 MCQ session records: `{ date, score, total, domainBreakdown }` |
+| `msl_trainer_history` | `JSON array` | `TrainerTab` | Last 50 MCQ session records: `{ date, score, total, domainBreakdown }`. `domainBreakdown` schema: `{ [domainLabel: string]: { correct: number, total: number } }`. Domain labels match TrainerTab categories (e.g. `'Feature Engineering'`, `'Model Evaluation'`, `'Spark / Data Engineering'`). Used by GradientTab Revise mode v2 to identify weak domains. |
 | `msl_combinator_session` | `JSON` | `CombinatorTab` | Active in-progress session state: `{ screen, duration, questionIds, currentIdx, userAnswers, timeLeft, timePerQuestion, selfRatings, savedAt }`. `savedAt` is a Unix timestamp — elapsed time is subtracted on restore to correct timer drift across zone switches. Cleared on session end. |
-| `msl_combinator_history` | `JSON array` | `CombinatorTab` | Last 50 timed session records: `{ date, duration, score, total, domainBreakdown }` |
+| `msl_combinator_history` | `JSON array` | `CombinatorTab` | Last 50 timed session records: `{ date, duration, score, total, domainBreakdown }`. `domainBreakdown` same schema as `msl_trainer_history` — `{ [domainLabel]: { correct, total } }`. Also consumed by GradientTab Revise mode v2. |
 | `msl_verbal_history` | `JSON array` | `VerbatimTab` | Practice session history |
 | `msl_staff_reveals` | `JSON object` | `StaffLayerTab` | Map of `{ scenarioId: revealLevel }` — persists reveal state across sessions |
 | `msl_defense_progress` | `JSON` | `DefenseDocTab` | Defense doc generation state |
@@ -93,6 +93,36 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_difficulty_filter` | `string` | `PracticeDomainCard` | Active difficulty pill filter (easy/junior/mid/senior/staff). User-selected filter persists across sessions. |
 | `msl_readiness_score` | `JSON object` | `HomeTab` (computed) | Domain-by-domain seniority levels {mle: 'senior', features: 'mid', ...}. Computed from `msl_trainer_history` + `msl_combinator_history` aggregation, not persisted. Display-only for readiness badge grid. |
 | `msl_bookmarks` | `JSON array` | (infrastructure) | Bookmarked tab IDs `['defense', 'combinator', ...]`. Infrastructure ready for v4.49 "Save for Later" feature. Not yet populated. |
+
+---
+
+---
+
+## FidelityBadge tier assignments (src/components/FidelityBadge.jsx)
+
+Not localStorage — component-level metadata. Documents which tier each tab/module uses for consistency across future additions.
+
+| Tier | Label | Color | Meaning |
+|------|-------|-------|---------|
+| `faithful` | Mathematically Faithful | `var(--mint)` | Real computation — exact algorithm, live Pyodide output |
+| `simplified` | Simplified | `var(--prime)` | Correct concept, reduced scale or pre-computed data |
+| `conceptual` | Conceptual | `var(--ink-low)` | Judgment scenarios — builds mental model, not a runnable implementation |
+
+| Tab | Module(s) | Tier |
+|-----|-----------|------|
+| SparkLabTab | Pyodide execution cells | `faithful` |
+| SparkLabTab | MemoryPressureSimulator | `simplified` |
+| ModelsMathTab | All Pyodide cells | `faithful` |
+| ProjectLabTab | All phases | `faithful` |
+| LoanDefaultTab | All Pyodide cells | `faithful` |
+| FraudDetectionTab | All Pyodide cells | `faithful` |
+| ClassicalMLTab | DecisionBoundaryLab | `simplified` |
+| ClassicalMLTab | All AccordionMCQ modules | `conceptual` |
+| DeepLearningTab | AttentionHeadVisualizer | `simplified` |
+| DeepLearningTab | All other modules | `conceptual` |
+| FeatureEngTab | All modules | `conceptual` |
+| ModelEvalTab | All modules | `conceptual` |
+| SystemDesignTab, MonitoringTab, MLOpsDeployTab, MLOpsPipelinesTab, DataScienceTab, CausalInferenceTab, TimeSeriesTab, AirflowTab, dbtTab, DataModelingTab | All modules | `conceptual` |
 
 ---
 
