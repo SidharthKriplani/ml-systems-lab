@@ -8,7 +8,7 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. SHAP YouTube replacement ID (15 min)
+### 1. SHAP YouTube replacement ID (open — StatQuest has no public SHAP video)
 `GradientTab.jsx` line ~394: `youtube: []` — the original `VaIXMiNMEJU` was cleared (video private). Find the correct live StatQuest SHAP video ID. Best candidate: search YouTube for "StatQuest SHAP values" and verify via `youtube.com/oembed?url=https://www.youtube.com/watch?v={id}&format=json` (200 = live). Replace the empty array with `[{ id: 'CORRECT_ID', title: 'SHAP Values, Clearly Explained — StatQuest' }]`. Also AUDITS.md: mark #023.1 resolved.
 
 ### 2. Loan Default ProjectLab dataset — Phase 1 (2.5 hours)
@@ -46,6 +46,7 @@ Nothing currently blocked.
 - ~~ProjectLab Phase 4 (Monitoring): cell11 PSI, cell12 KS test, cell13 prediction drift, cell14 label drift + blind zone, cp5 alert-or-wait checkpoint.~~
 - ~~ProjectLab Phase 5 (Deployment Scaffold): cell15 FastAPI, cell16 Dockerfile, cell17 K8s manifest, cell18 GitHub Actions CI/CD, cell19 AWS mapping. Mark-as-read pattern. Completion card.~~
 - ~~Question framing quality pass: 20 scenarios rewritten across MonitoringTab (6), FeatureEngTab (6), SystemDesignTab (9) — specific, situation-first, production-decision-grounded.~~
+- ~~Testimonials: `src/data/testimonials.js` created (3 placeholder entries). HomeTab "What engineers say" section — auto-hides when empty, amber left-border cards, star rating display.~~
 
 ---
 

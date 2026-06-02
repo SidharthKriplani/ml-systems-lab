@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getAllProgress, getNextRecommendation, getTrackMastery, inferMastery } from '../utils/progress.js'
 import { getBookmarks, toggleBookmark } from '../utils/bookmarks.js'
+import TESTIMONIALS from '../data/testimonials.js'
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 const ROLES = [
@@ -575,6 +576,40 @@ export default function HomeTab({ onNavigate }) {
         })}
       </section>
 
+
+      {/* ── Testimonials ── */}
+      {TESTIMONIALS.length > 0 && (
+        <section style={{ paddingTop: '32px', borderTop: '1px solid var(--rim)' }}>
+          <div className="section-eyebrow" style={{ marginBottom: '16px' }}>What engineers say</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+            {TESTIMONIALS.filter(t => t.approved).map((t, i) => (
+              <div key={i} style={{
+                padding: '16px 18px',
+                border: '1px solid var(--rim)',
+                borderLeft: '3px solid var(--prime)',
+                borderRadius: '10px',
+                background: 'rgba(240,165,0,0.03)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>
+                  "{t.text}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{t.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>{t.role} · {t.company}</div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--prime)', letterSpacing: '1px', flexShrink: 0 }}>
+                    {'★'.repeat(t.rating)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Changelog ── */}
       <section>

@@ -147,7 +147,7 @@ For each practice tab (FeatureEngTab, ModelEvalTab, SystemDesignTab, MonitoringT
 | No orphaned modules | A module whose topic has no Gradient post and no Trainer/Combinator link is a dead end. At minimum add "Test this in Combinator →" so the user has an onward path. |
 
 ### How to run this audit
-1. Pull the full list of posts from `gradientPosts.js`. For each post: check `youtubeId` is populated, verify the practice CTA exists in the post body, note any missing external source links.
+1. Pull the full list of posts from the POSTS array in `GradientTab.jsx` (posts are embedded directly, not in a separate data file). For each post: check `youtubeId` is populated, verify the practice CTA exists in the post body, note any missing external source links.
 2. For each practice tab: grep for "Go deeper" or "gradient" — confirm at least one outbound link exists. Check module-level CTAs in the highest-traffic modules first (SystemDesign, FeatureEng, ModelEval, Monitoring, DeepLearning).
 3. Log: post ID / tab name, missing element, severity (High = no practice CTA at all; Medium = missing YouTube ID; Low = missing related post or source link).
 
@@ -697,12 +697,12 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 ### #023 — 2026-06-02 · Content Integrity Spot Check
 
-**Scope:** `src/data/gradientPosts.js` — YouTube embed validity  
+**Scope:** `src/tabs/GradientTab.jsx` — YouTube embed validity (note: posts are embedded directly in GradientTab.jsx, not in a separate data file)
 **Trigger:** User reported SHAP values post YouTube embed shows "video unavailable" despite `youtubeId` being set  
-**Method:** Visual check of live embed; full programmatic verification of all post IDs pending
+**Method:** oEmbed API verification (`youtube.com/oembed?url=...&format=json`) — 200=live, 404=unavailable. All 13 IDs verified programmatically.
 
 | # | Finding | File | Severity | Status |
 |---|---------|------|----------|--------|
-| 1 | SHAP values Gradient post had `youtubeId: 'VaIXMiNMEJU'` but embed was unavailable (404 via oEmbed). All 12 other post IDs verified live (200). | `GradientTab.jsx` SHAP post | Low | ⚠️ Partially fixed v4.39 — broken ID cleared to `[]`. Replacement StatQuest SHAP video ID still needed (NEXT.md item #1). |
+| 1 | SHAP values post had `youtubeId: 'VaIXMiNMEJU'` — 404 via oEmbed (private/removed). All other 12 post IDs returned 200. | `GradientTab.jsx` SHAP post | Low | ⚠️ Partially fixed v4.39 — broken ID cleared to `[]`. Replacement StatQuest SHAP video ID still needed (NEXT.md item #1). |
 
-**Action:** Read `gradientPosts.js`, extract all non-empty `youtubeId` values, verify each at `https://www.youtube.com/embed/{id}` (check for "Video unavailable" or redirect). Remove broken IDs (set to `''`). Scope: all posts in one pass — don't fix only SHAP. (Identified: session 2026-06-02)
+**Action:** Find live StatQuest SHAP video ID, verify via oEmbed, replace the empty `youtube: []` on the SHAP post in `GradientTab.jsx`. (Identified: session 2026-06-02)

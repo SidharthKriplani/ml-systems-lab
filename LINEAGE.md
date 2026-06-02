@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.41 — Testimonials section on HomeTab (2026-06-02)
+
+**What shipped (commit pending):**
+
+**`src/data/testimonials.js`** — new file, admin-managed. Ships with 3 placeholder entries (Rahul S. / MLE / Series B startup — monitoring scenarios; Priya M. / DS / Fintech — Project Lab calibration; Arjun K. / Senior MLE / E-commerce — Staff Layer scenarios). Schema: `{ name, role, company, rating, text, date, approved }`. Empty array = HomeTab section auto-hides. Replace placeholders with real Formspree submissions as they arrive.
+
+**HomeTab testimonials section** — imported `TESTIMONIALS` from data file. Section renders between "All tracks" and "Changelog" only when `TESTIMONIALS.length > 0`. `auto-fill minmax(280px, 1fr)` card grid, amber left-border cards (`3px solid var(--prime)`), italic quote text, name + role + company footer, amber star rating display. Section eyebrow "What engineers say". Brace delta 0.
+
+**SHAP YouTube replacement** — StatQuest does not appear to have a public SHAP-specific video. The post remains with `youtube: []` (no broken embed). AUDITS.md #023.1 noted as ongoing — will resolve if a suitable replacement video is found.
+
+---
+
 ### v4.40 — ProjectLab complete (Phases 4+5), question framing pass, FeedbackChip, SHAP fix (2026-06-02)
 
 **What shipped (commit `2483679`):**

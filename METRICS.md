@@ -95,7 +95,7 @@ These are not localStorage keys. They are source files in `src/data/` that Verce
 
 | File | Schema | Managed by | Purpose |
 |------|--------|------------|---------|
-| `src/data/testimonials.js` | `{ name, role, company, rating, text, date, approved: true }` | Admin (Avinash) | Curated testimonials for HomeTab social proof section. Approved entries only — admin reviews Tally/Formspree submissions and manually adds. |
+| `src/data/testimonials.js` | `{ name, role, company, rating, text, date, approved: true }` | Admin (Avinash) | Curated testimonials. Ships with 3 placeholder entries. Replace with real Formspree submissions. HomeTab section hidden automatically when array is empty. |
 | `src/data/interviewExperiences.js` | `{ id, company, companyTier, role, level, roundType, skills: string[], rawText, date, approved: true }` | Admin (Avinash) | Curated interview experience reports. Admin extracts skill tags from fixed taxonomy (`ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`). Skills frequency chart reads from this file. |
 
 ## Planned PostHog events (not yet implemented)
