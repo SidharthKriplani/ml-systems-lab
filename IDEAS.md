@@ -1,7 +1,7 @@
 # IDEAS.md — Build Backlog
 
 Future-facing. Prioritized. Feeds from AUDITS.md findings and creative sessions.  
-Last updated: 2026-05-31
+Last updated: 2026-06-02
 
 **Rule:** AUDITS.md feeds this file, not the reverse. Audit findings that are buildable features go into Tier 1 here. Features you want to build don't go into AUDITS.md.
 
@@ -15,7 +15,7 @@ Last updated: 2026-05-31
 - [x] ~~**Share Score clipboard button**~~ — done (2026-05-29, CombinatorTab debrief + TrainerTab ResultsScreen, navigator.clipboard, copied/setCopied 2s toggle)
 - [x] ~~**Fidelity/simulation badges**~~ — done (2026-05-29, 6 tabs: ✓ Real execution on SparkLab + ModelsMath, ~ Simulated on Combinator/Trainer/Verbatim/StaffLayer)
 - [x] ~~**Streak tracking + 91-day heatmap**~~ — done (2026-05-29, HomeTab — msl_streak/msl_last_visit/msl_activity_YYYY-MM-DD, 7×13 GitHub-style grid, streak pill)
-- [x] ~~**ProjectLabTab Phase 1 — Telco Churn notebook**~~ — done (v4.33, 2026-05-30). Cell 1 schema inspection, Checkpoint 1 data quality, Cell 2 EDA dashboard (matplotlib), Cell 3 correlation heatmap + outlier flags, Checkpoint 2 collinearity decision. `msl_projectlab_churn_data`. App.jsx wired. Phases 2–5 remain (see NEXT.md item #3).
+- [x] ~~**ProjectLabTab — Telco Churn notebook, all 5 phases**~~ — done (v4.33–v4.40). Phase 1: schema+EDA, Phase 2: features, Phase 3: model+calibration, Phase 4: monitoring, Phase 5: deployment scaffold. 19 cells, 5 checkpoints. `msl_projectlab_churn_data`.
 - [x] ~~**Oracle identity refactor — single amber accent end-to-end**~~ — done (v4.31–v4.32, 2026-05-30). All 36 files. All decorative multi-color accents (mint/sky/ember/rose/violet/gold) → `var(--prime)`. index.css, HomeTab, App.jsx structural changes + 30 tab files. See LINEAGE.md v4.31.
 
 ---

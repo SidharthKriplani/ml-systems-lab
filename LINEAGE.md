@@ -1,7 +1,7 @@
 # Lineage & Ideas
 
 Design history, inspiration, and future directions for ML Systems Lab.
-Last updated: May 2026
+Last updated: June 2026
 
 ---
 

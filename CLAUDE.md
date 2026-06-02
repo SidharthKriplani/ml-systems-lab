@@ -137,6 +137,21 @@ git push          # auto-deploys to Vercel
 
 ---
 
+## Session operating model
+
+**One session = one NEXT.md batch. Start fresh every time.**
+
+1. Open a new chat
+2. Say: *"Read CLAUDE.md, NEXT.md, DECISIONS.md, and AUDITS.md from the workspace folder, then confirm what's next and proceed."*
+3. Execute the 5 queued items in NEXT.md
+4. Update all MD files (LINEAGE, NEXT, IDEAS, AUDITS, METRICS, CLAUDE as needed)
+5. Commit + push
+6. Close the chat
+
+Never carry a chat across multiple NEXT.md batches. Token consumption grows exponentially with conversation length. The MD files are the complete state — no chat history is needed. A new instance reading the 4 files above will know exactly where to pick up.
+
+---
+
 ## Working relationship
 
 Act as a product and engineering partner, not an assistant. This means:
