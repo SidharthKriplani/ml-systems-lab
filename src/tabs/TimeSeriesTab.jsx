@@ -343,7 +343,7 @@ function ForecastFailureZoo() {
       <div className="card" style={{ padding: '22px 26px', borderLeft: '3px solid var(--prime)' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{s.title}</div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, marginBottom: '12px' }}>{s.context}</p>
-        <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+        <div style={{ padding: 'var(--card-pad-primary)', background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', borderRadius: '8px' }}>
           <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.clue}</span>
         </div>
@@ -357,7 +357,7 @@ function ForecastFailureZoo() {
           if (revealed) {
             if (isCorrect) { border = 'rgba(52,211,153,0.5)'; bg = 'rgba(52,211,153,0.13)'; color = 'var(--mint)' }
             else if (isPicked) { border = 'rgba(244,63,94,0.5)'; bg = 'rgba(244,63,94,0.13)'; color = 'var(--rose)' }
-          } else if (isPicked) { border = 'rgba(240,165,0,0.5)'; bg = 'rgba(240,165,0,0.13)'; color = 'var(--prime)' }
+          } else if (isPicked) { border = 'rgba(240,165,0,0.5)'; bg = 'var(--prime-bg-light)'; color = 'var(--prime)' }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
               style={{ padding: '13px 16px', borderRadius: '8px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '13px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -375,7 +375,7 @@ function ForecastFailureZoo() {
               <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.fix}</span>
             </div>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(240,165,0,0.10)', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.15)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'var(--prime-bg-light)', borderRadius: '8px', border: '1px solid var(--prime-glow)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -413,11 +413,11 @@ function StationaritySelector() {
               <span style={{ fontSize: '11px', padding: '2px 8px', background: s.accent + '15', color: s.accent, border: `1px solid ${s.accent}30`, borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>{s.issue}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-              <div style={{ padding: '14px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+              <div style={{ padding: '14px', background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', borderRadius: '8px' }}>
                 <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>Transform</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.transform}</p>
               </div>
-              <div style={{ padding: '14px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px' }}>
+              <div style={{ padding: '14px', background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', borderRadius: '8px' }}>
                 <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>How to check</div>
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.check}</p>
               </div>
@@ -444,7 +444,7 @@ function AnomalyDetectionTiers() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {['Rule-based', 'Statistical', 'ML-based'].map((tier, i) => (
-          <div key={tier} style={{ padding: '14px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)', textAlign: 'center' }}>
+          <div key={tier} style={{ padding: '14px', borderRadius: '10px', background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', textAlign: 'center' }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--prime)' }}>{tier}</div>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{['fast, explicit', 'distributional', 'correlational'][i]}</div>
           </div>
@@ -608,7 +608,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                       <div style={{ fontSize: '10px', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Diagnosis</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.diagnosis}</p>
                     </div>
-                    <div style={{ padding: '12px 16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px' }}>
+                    <div style={{ padding: '12px 16px', background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', borderRadius: '8px' }}>
                       <div style={{ fontSize: '10px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-mono)', marginBottom: '5px' }}>Production fix</div>
                       <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.fix}</p>
                     </div>
@@ -891,7 +891,7 @@ export default function TimeSeriesTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 700, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: 0 }}>Time Series</h2>
-          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(240,165,0,0.1)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
+          <span style={{ fontSize: '10px', padding: '2px 8px', background: 'var(--prime-bg-light)', color: 'var(--prime)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>judgment</span>
           <FidelityBadge tier="conceptual" />
         </div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '580px', margin: 0 }}>
@@ -922,7 +922,7 @@ export default function TimeSeriesTab({ onNavigate }) {
       <div key={active} className="tab-enter"><ActiveModule /></div>
 
       {onNavigate && (
-        <div style={{ background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+        <div style={{ background: 'var(--prime-bg-light)', border: '1px solid var(--prime-glow)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
             Go deeper → Read <strong style={{ color: 'var(--prime)' }}>The Forecast Failure Zoo: Six Silent Killers of Time Series Models</strong> in Gradient
           </span>

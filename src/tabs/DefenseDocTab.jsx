@@ -96,27 +96,27 @@ function generatePlan(skills, horizon) {
   const weak   = sorted.filter(s => s.rating === 'weak')
 
   if (horizon === 'cram') return [
-    { label: 'Priority Focus — highest gaps first', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 4) },
+    { label: 'Priority Focus — highest gaps first', accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(0, 4) },
   ]
   if (horizon === '3d') return [
-    { label: 'Day 1 — Biggest gaps', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2) },
-    { label: 'Day 2 — Core topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(2, 4) },
-    { label: 'Day 3 — Review',       accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(4, 6), bonus: 'Run a 30-min Combinator session to pressure-test.' },
+    { label: 'Day 1 — Biggest gaps', accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(0, 2) },
+    { label: 'Day 2 — Core topics',  accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(2, 4) },
+    { label: 'Day 3 — Review',       accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(4, 6), bonus: 'Run a 30-min Combinator session to pressure-test.' },
   ]
   if (horizon === '7d') return [
-    { label: 'Days 1–2 — Gap Focus',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2) },
-    { label: 'Days 3–4 — Build',      accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(2, 5) },
-    { label: 'Day 5 — Weak spots',    accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: weak.slice(0, 2) },
-    { label: 'Days 6–7 — Simulate',   accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(5), bonus: 'Day 7: full Combinator session + Verbal Practice run-through.' },
+    { label: 'Days 1–2 — Gap Focus',  accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(0, 2) },
+    { label: 'Days 3–4 — Build',      accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(2, 5) },
+    { label: 'Day 5 — Weak spots',    accent: 'var(--prime)', border: 'var(--prime-glow)', items: weak.slice(0, 2) },
+    { label: 'Days 6–7 — Simulate',   accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(5), bonus: 'Day 7: full Combinator session + Verbal Practice run-through.' },
   ]
   // 14d
   return [
-    { label: 'Week 1 — Days 1–3 — Must Know gaps',    accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.filter(s => s.tier === 'must').slice(0, 3) },
-    { label: 'Week 1 — Days 4–5 — Important topics',  accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.filter(s => s.tier === 'important').slice(0, 3) },
-    { label: 'Week 1 — Days 6–7 — Weak spots + mock', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: weak, bonus: 'Day 7: Combinator session.' },
-    { label: 'Week 2 — Days 8–10 — Breadth pass',     accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(4) },
-    { label: 'Week 2 — Days 11–13 — Rounds practice', accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: sorted.slice(0, 2), bonus: 'Interview Q&A + Take-Home Bank. Answer one question out loud per day.' },
-    { label: 'Day 14 — Full simulation',              accent: 'var(--prime)', border: 'rgba(240,165,0,0.28)', items: [], bonus: 'Full Combinator session + Verbal Practice. Re-read your Defense Plan from Day 1.' },
+    { label: 'Week 1 — Days 1–3 — Must Know gaps',    accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.filter(s => s.tier === 'must').slice(0, 3) },
+    { label: 'Week 1 — Days 4–5 — Important topics',  accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.filter(s => s.tier === 'important').slice(0, 3) },
+    { label: 'Week 1 — Days 6–7 — Weak spots + mock', accent: 'var(--prime)', border: 'var(--prime-glow)', items: weak, bonus: 'Day 7: Combinator session.' },
+    { label: 'Week 2 — Days 8–10 — Breadth pass',     accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(4) },
+    { label: 'Week 2 — Days 11–13 — Rounds practice', accent: 'var(--prime)', border: 'var(--prime-glow)', items: sorted.slice(0, 2), bonus: 'Interview Q&A + Take-Home Bank. Answer one question out loud per day.' },
+    { label: 'Day 14 — Full simulation',              accent: 'var(--prime)', border: 'var(--prime-glow)', items: [], bonus: 'Full Combinator session + Verbal Practice. Re-read your Defense Plan from Day 1.' },
   ]
 }
 
@@ -295,7 +295,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {HORIZONS.map(h => (
             <button key={h.id} onClick={() => setHorizon(h.id)}
-              style={{ padding: '9px 16px', borderRadius: 8, border: `1px solid ${horizon === h.id ? 'var(--prime)' : 'var(--rim)'}`, background: horizon === h.id ? 'rgba(240,165,0,0.14)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.14s' }}>
+              style={{ padding: '9px 16px', borderRadius: 8, border: `1px solid ${horizon === h.id ? 'var(--prime)' : 'var(--rim)'}`, background: horizon === h.id ? 'var(--prime-bg-light)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.14s' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: horizon === h.id ? 'var(--prime)' : 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{h.label}</div>
               <div style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)' }}>{h.sub}</div>
             </button>
@@ -424,7 +424,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
             <div key={sIdx}>
               {/* Gate wall — appears inline between sections */}
               {sIdx === gateAfterIdx && !unlocked && (
-                <div style={{ background: inlineSuccess ? 'rgba(240,165,0,0.10)' : 'var(--depth)', border: `1px solid ${inlineSuccess ? 'rgba(240,165,0,0.50)' : 'var(--rim-hi)'}`, borderRadius: 12, padding: '28px 20px', marginBottom: 14, textAlign: 'center', transition: 'background 0.3s, border-color 0.3s' }}>
+                <div style={{ background: inlineSuccess ? 'var(--prime-bg-light)' : 'var(--depth)', border: `1px solid ${inlineSuccess ? 'rgba(240,165,0,0.50)' : 'var(--rim-hi)'}`, borderRadius: 12, padding: '28px 20px', marginBottom: 14, textAlign: 'center', transition: 'background 0.3s, border-color 0.3s' }}>
                   {inlineSuccess ? (
                     <>
                       <style>{`@keyframes ig-unlock-in { from { opacity:0; transform:scale(0.90) } to { opacity:1; transform:scale(1) } }`}</style>
