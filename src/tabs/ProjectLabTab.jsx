@@ -57,6 +57,259 @@ const CHECKPOINT_4 = {
   explanation: 'The blocker is the downstream usage pattern, not the AUC. When business logic is gated on raw probabilities (score > 0.6 → offer), ECE directly determines whether that threshold behaves as designed. ECE=0.12 means the model\'s predicted 60% confidence maps to actual churn rates anywhere from 48-72% — the threshold is effectively arbitrary. Correct call: run Platt scaling (Cell 10), measure ECE specifically in the 0.5-0.7 bucket, ship if < 0.05. Option D is valid only if the system is redesigned to use ranking — but the problem states absolute thresholds. Option A ignores how the model will actually be used. Option C: 38ms is fine for batch or near-real-time scoring.',
 }
 
+const CHECKPOINT_5 = {
+  id: 'cp5',
+  question: 'PSI=0.18 on tenure (amber — above 0.10 monitor threshold), KS test p=0.03 on monthly_charges (statistically significant at α=0.05). P95 inference latency unchanged at 38ms. No upstream schema changes in the last 72 hours. No known business events. Both signals appeared simultaneously 6 hours after your last model deployment. What do you do?',
+  options: [
+    { id: 'a', text: 'Page the on-call engineer immediately. Two independent drift signals firing simultaneously post-deployment is a pattern — not noise. Investigate whether the deployment changed preprocessing behaviour before asserting it is real data drift.' },
+    { id: 'b', text: 'Log and watch for 24 hours. PSI=0.18 is amber not red (>0.25), and KS significance alone does not confirm harmful drift. A single monitoring window is not enough signal.' },
+    { id: 'c', text: 'Auto-rollback the model deployment immediately. Two signals = confirmed drift. Roll back to the prior version.' },
+    { id: 'd', text: 'Disable drift alerting for 48 hours to establish a new baseline — the deployment may have legitimately shifted the score distribution.' },
+  ],
+  correct: 'a',
+  explanation: 'Two independent signals firing simultaneously within hours of a deployment is the highest-priority pattern in production ML monitoring. PSI=0.18 alone is amber (watch); KS p=0.03 alone is a flag worth investigating; together immediately post-deployment they strongly suggest the deployment changed something — preprocessing logic, feature scaling, a code path — rather than organic data drift. The correct call is page + investigate, not rollback (rollback before diagnosis is expensive and may be wrong) and not watch-and-wait (simultaneous signals post-deployment is not a case for patience). Option D is dangerous — disabling alerting on a new baseline hides real future drift.',
+}
+
+const CELL_11_CODE = `# Cell 11 — Population Stability Index (PSI)
+import numpy as np
+import pandas as pd
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+# Simulate a "drifted" production sample — higher tenure, slightly different charges
+np.random.seed(99)
+n_prod = 300
+tenure_prod  = np.random.exponential(32, n_prod).clip(1, 72).round(1)
+monthly_prod = np.random.normal(70, 27, n_prod).clip(18, 120).round(2)
+contract_prod = np.random.choice([0, 1, 2], n_prod, p=[0.50, 0.27, 0.23])
+
+def compute_psi(expected, actual, n_bins=10):
+    bins = np.linspace(min(expected.min(), actual.min()),
+                       max(expected.max(), actual.max()) + 1e-9, n_bins + 1)
+    exp_counts, _ = np.histogram(expected, bins=bins)
+    act_counts, _ = np.histogram(actual, bins=bins)
+    exp_pct = (exp_counts + 1e-6) / len(expected)
+    act_pct = (act_counts + 1e-6) / len(actual)
+    psi_vals = (act_pct - exp_pct) * np.log(act_pct / exp_pct)
+    return psi_vals.sum()
+
+features = {
+    'tenure':        (tenure,  tenure_prod),
+    'monthly_charges': (monthly, monthly_prod),
+    'contract_code': (contract_c.astype(float), contract_prod.astype(float)),
+}
+
+print("=" * 56)
+print("POPULATION STABILITY INDEX (PSI)  —  FEATURE DRIFT")
+print("=" * 56)
+print(f"  {'Feature':<22}  {'PSI':>8}  {'Status'}")
+print("  " + "─"*50)
+for feat, (exp, act) in features.items():
+    psi = compute_psi(exp, act)
+    if psi < 0.10:   status = "✓ Stable      (<0.10)"
+    elif psi < 0.25: status = "⚠ Monitor     (0.10–0.25)"
+    else:            status = "✗ Retrain now (>0.25)"
+    print(f"  {feat:<22}  {psi:>8.4f}  {status}")
+
+print()
+print("─── PSI interpretation ───")
+print("  < 0.10  → distribution is stable. No action.")
+print("  0.10–0.25 → moderate shift. Increase monitoring frequency.")
+print("  > 0.25  → significant shift. Trigger retraining pipeline.")
+print()
+print("─── What PSI measures ───")
+print("  PSI quantifies how much a feature's distribution has shifted")
+print("  between training (expected) and production (actual).")
+print("  It does NOT tell you whether model performance has dropped —")
+print("  only that inputs have changed. A feature can drift without")
+print("  harming AUC if it is not predictive. Track PSI alongside")
+print("  performance metrics, not as a standalone signal.")
+`
+
+const CELL_12_CODE = `# Cell 12 — Kolmogorov-Smirnov Test for Distribution Shift
+import numpy as np
+from scipy import stats
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+
+np.random.seed(99)
+n_prod = 300
+tenure_prod  = np.random.exponential(32, n_prod).clip(1, 72).round(1)
+monthly_prod = np.random.normal(70, 27, n_prod).clip(18, 120).round(2)
+contract_prod = np.random.choice([0, 1, 2], n_prod, p=[0.50, 0.27, 0.23]).astype(float)
+
+features = {
+    'tenure':          (tenure,       tenure_prod),
+    'monthly_charges': (monthly,      monthly_prod),
+    'contract_code':   (contract_c.astype(float), contract_prod),
+}
+
+print("=" * 64)
+print("KOLMOGOROV-SMIRNOV TEST  —  DISTRIBUTION SHIFT DETECTION")
+print("=" * 64)
+print(f"  {'Feature':<22}  {'KS stat':>9}  {'p-value':>10}  {'Result (α=0.05)'}")
+print("  " + "─"*58)
+for feat, (train, prod) in features.items():
+    stat, pval = stats.ks_2samp(train, prod)
+    result = "✗ Significant shift" if pval < 0.05 else "✓ No significant shift"
+    print(f"  {feat:<22}  {stat:>9.4f}  {pval:>10.4f}  {result}")
+
+print()
+print("─── What KS tests ───")
+print("  The two-sample KS test measures the maximum distance between")
+print("  two empirical CDFs. H₀: both samples come from the same")
+print("  distribution. p < 0.05 → reject H₀ → statistically significant")
+print("  shift detected.")
+print()
+print("─── KS vs PSI ───")
+print("  PSI: magnitude of shift, binned. Good for monitoring dashboards.")
+print("  KS:  statistical significance of shift. Good for automated alerts.")
+print("  Use both: PSI gives you 'how much', KS gives you 'is this real'.")
+print("  A large dataset makes KS p-values tiny even for trivial shifts —")
+print("  always check the KS statistic alongside p-value.")
+`
+
+const CELL_13_CODE = `# Cell 13 — Prediction Drift: Score Distribution Shift
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
+
+np.random.seed(42)
+n = 600
+tenure     = np.random.exponential(25, n).clip(1, 72).round(1)
+monthly    = np.random.normal(65, 25, n).clip(18, 120).round(2)
+contract_c = np.random.choice([0, 1, 2], n, p=[0.55, 0.24, 0.21])
+p_churn    = (0.55 - 0.006*tenure - 0.15*(contract_c > 0) + np.random.normal(0, 0.08, n)).clip(0.04, 0.9)
+churn      = (np.random.uniform(size=n) < p_churn).astype(int)
+
+X = np.column_stack([tenure, monthly, contract_c])
+y = churn
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y)
+
+clf = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42)
+clf.fit(X_train, y_train)
+
+# Simulate a production drift — customers have shifted to longer tenures
+np.random.seed(99)
+n_prod = 300
+tenure_prod  = np.random.exponential(32, n_prod).clip(1, 72).round(1)
+monthly_prod = np.random.normal(70, 27, n_prod).clip(18, 120).round(2)
+contract_prod = np.random.choice([0, 1, 2], n_prod, p=[0.50, 0.27, 0.23])
+X_prod = np.column_stack([tenure_prod, monthly_prod, contract_prod])
+
+scores_val  = clf.predict_proba(X_val)[:, 1]
+scores_prod = clf.predict_proba(X_prod)[:, 1]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].hist(scores_val,  bins=20, color='#6b7280', alpha=0.7, edgecolor='none', label='Validation (training dist.)')
+axes[0].hist(scores_prod, bins=20, color='#f0a500', alpha=0.7, edgecolor='none', label='Production (shifted dist.)')
+axes[0].set_title('Score Distribution Overlap', fontsize=11, fontweight='bold')
+axes[0].set_xlabel('Predicted churn probability', fontsize=9)
+axes[0].legend(fontsize=8)
+axes[0].grid(True, alpha=0.2)
+
+val_sorted  = np.sort(scores_val)
+prod_sorted = np.sort(scores_prod)
+axes[1].plot(val_sorted,  np.linspace(0, 1, len(val_sorted)),  color='#6b7280', lw=2, label='Validation CDF')
+axes[1].plot(prod_sorted, np.linspace(0, 1, len(prod_sorted)), color='#f0a500', lw=2, label='Production CDF')
+axes[1].set_title('Cumulative Score Distribution', fontsize=11, fontweight='bold')
+axes[1].set_xlabel('Predicted churn probability', fontsize=9)
+axes[1].legend(fontsize=8)
+axes[1].grid(True, alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+
+print(f"Validation  — mean score: {scores_val.mean():.4f}  std: {scores_val.std():.4f}")
+print(f"Production  — mean score: {scores_prod.mean():.4f}  std: {scores_prod.std():.4f}")
+print(f"Mean shift: {scores_prod.mean() - scores_val.mean():+.4f}")
+print()
+print("─── What prediction drift tells you ───")
+print("  Score distribution shift → model is seeing different inputs.")
+print("  Shift LEFT (lower scores): customers churn less → business improved?")
+print("  or model degrades on high-risk segment.")
+print("  Shift RIGHT (higher scores): more customers scored as high-risk →")
+print("  true drift OR preprocessing change introduced bias.")
+print("  Always correlate prediction drift with feature PSI to diagnose cause.")
+`
+
+const CELL_14_CODE = `# Cell 14 — Label Drift: Delayed Feedback and Proxy Signals
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Label drift is the hardest monitoring problem in production ML:
+# ground truth labels arrive LATE (days, weeks, months after prediction).
+# You cannot directly measure AUC drift in real-time.
+# Solution: use PROXY SIGNALS that correlate with labels and arrive sooner.
+
+np.random.seed(42)
+days = 60
+
+# Simulate true churn rate over 60 days (ground truth — delayed by 30 days)
+true_churn_rate = 0.27 + 0.002 * np.arange(days) + np.random.normal(0, 0.015, days)
+true_churn_rate = true_churn_rate.clip(0.15, 0.60)
+
+# Proxy signal 1: support ticket rate (available same day, correlates with churn)
+proxy_support = 0.18 + 0.0015 * np.arange(days) + np.random.normal(0, 0.02, days)
+
+# Proxy signal 2: login frequency drop (available same day)
+proxy_login_drop = 0.10 + 0.0012 * np.arange(days) + np.random.normal(0, 0.01, days)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+
+# Left: label delay problem
+axes[0].plot(range(days), true_churn_rate, color='#f0a500', lw=2, label='True churn rate (ground truth)')
+axes[0].axvline(30, color='#6b7280', lw=1.5, linestyle='--', label='Labels available (30-day lag)')
+axes[0].fill_betweenx([0, 1], 0, 30, alpha=0.07, color='#f97316')
+axes[0].text(15, 0.50, 'BLIND\\nZONE', ha='center', va='center', fontsize=9,
+             color='#f97316', fontweight='bold', fontfamily='monospace')
+axes[0].set_ylim(0.10, 0.65)
+axes[0].set_title('Label Delay — The Blind Zone', fontsize=11, fontweight='bold')
+axes[0].set_xlabel('Day', fontsize=9)
+axes[0].set_ylabel('Churn rate', fontsize=9)
+axes[0].legend(fontsize=8)
+axes[0].grid(True, alpha=0.2)
+
+# Right: proxy signals bridge the gap
+axes[1].plot(range(days), true_churn_rate,  color='#f0a500', lw=2, label='True churn (lagged)')
+axes[1].plot(range(days), proxy_support,    color='#6b7280', lw=1.5, linestyle='--', label='Proxy: support tickets')
+axes[1].plot(range(days), proxy_login_drop, color='#374151', lw=1.5, linestyle=':',  label='Proxy: login drop rate')
+axes[1].set_ylim(0.05, 0.65)
+axes[1].set_title('Proxy Signals Bridge the Blind Zone', fontsize=11, fontweight='bold')
+axes[1].set_xlabel('Day', fontsize=9)
+axes[1].legend(fontsize=8)
+axes[1].grid(True, alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+
+print("─── Label drift in production ───")
+print("  Churn labels arrive 30 days after prediction (definition: cancelled")
+print("  within 30 days of observation). You cannot measure real AUC until")
+print("  then — but you need to detect model degradation NOW.")
+print()
+print("─── Proxy signal strategy ───")
+print("  Identify signals that correlate with labels and arrive sooner:")
+print("  - Support ticket rate → correlates with churn intent")
+print("  - Login frequency drop → leading indicator of disengagement")
+print("  - NPS survey score → lagged but less delayed than churn label")
+print("  Track proxy correlation coefficient over time. If proxy-label")
+print("  correlation drops, the proxies themselves may have drifted.")
+`
+
+
 // ─── Python cell code strings ─────────────────────────────────────────────────
 
 const CELL_1_CODE = `# Cell 1 — Schema Inspection
@@ -1029,6 +1282,18 @@ export default function ProjectLabTab({ onNavigate }) {
     + ['cp4'].filter(c => state.checkpointsDone.includes(c)).length
   const phase2Complete = phase2DoneSteps === phase2TotalSteps
 
+  // Phase 4: cells 11-14 + checkpoint cp5
+  const phase4TotalSteps = 5
+  const phase4DoneSteps  = ['cell11','cell12','cell13','cell14'].filter(c => state.cellsDone.includes(c)).length
+    + ['cp5'].filter(c => state.checkpointsDone.includes(c)).length
+  const phase3Complete = phase3DoneSteps === phase3TotalSteps
+
+  // Phase 5: cells 15-19 (mark-as-read, no checkpoint)
+  const phase5TotalSteps = 5
+  const phase5DoneSteps  = ['cell15','cell16','cell17','cell18','cell19'].filter(c => state.cellsDone.includes(c)).length
+  const phase4Complete = phase4DoneSteps === phase4TotalSteps
+  const phase5Complete = phase5DoneSteps === phase5TotalSteps
+
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '0' }}>
 
@@ -1559,61 +1824,572 @@ export default function ProjectLabTab({ onNavigate }) {
 
       </div>
 
-      {/* ── Roadmap: phases 4–5 ── */}
-      <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
-        <div className="section-eyebrow" style={{ marginBottom: '16px' }}>What's next in Project Lab</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* ── Phase 4: Monitoring ── */}
+      {phase3Complete && (
+      <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '32px', marginTop: '8px' }}>
 
-          {/* Phase 4 */}
-          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>4</span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Monitoring</div>
-            </div>
-            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              {[
-                ['cell11', 'PSI on held-out split — population stability index per feature'],
-                ['cell12', 'KS test — distribution shift detection, p-value threshold'],
-                ['cell13', 'Prediction drift — score distribution before vs. after'],
-                ['cell14', 'Label drift — delayed feedback, proxy signals'],
-                ['cp5', 'Judgment checkpoint — p95 PSI=0.18, KS p=0.03 — alert or wait?'],
-              ].map(([id, label]) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
-                </div>
-              ))}
-            </div>
+        {/* Phase 4 header */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--prime)', fontWeight: 700 }}>
+              ML Engineering
+            </span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              Phase 4 of 5
+            </span>
           </div>
-
-          {/* Phase 5 */}
-          <div style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--rim)', borderRadius: '9px', opacity: 0.5 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--depth)', border: '1px solid var(--rim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', fontWeight: 700 }}>5</span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Deployment Scaffold</div>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px', lineHeight: 1.15, color: 'var(--ink-hi)' }}>
+            Phase 4 — Monitoring
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '680px', marginBottom: '14px' }}>
+            Compute PSI and KS drift statistics on a simulated production sample. Track prediction score distribution shift. Understand the label delay problem and proxy signal strategy.
+          </p>
+          {/* Phase 4 progress bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 4 progress</span>
+            <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+              <div style={{ width: `${Math.round((phase4DoneSteps / phase4TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
             </div>
-            <div style={{ borderLeft: '1px solid var(--rim)', marginLeft: '11px', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              {[
-                ['cell15', 'FastAPI /predict endpoint — pydantic schema, response model'],
-                ['cell16', 'Dockerfile — multi-stage build, model artifact bake-in'],
-                ['cell17', 'K8s manifest — Deployment + Service + HPA stub'],
-                ['cell18', 'CI/CD stub — GitHub Actions: lint → test → build → push'],
-                ['cell19', 'AWS mapping callout — ECR, EKS, SageMaker, Batch tradeoffs'],
-              ].map(([id, label]) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', paddingTop: '2px', flexShrink: 0, minWidth: '32px' }}>{id}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5, fontFamily: 'var(--font-sans)' }}>{label}</span>
-                </div>
-              ))}
-            </div>
+            <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase4DoneSteps}/{phase4TotalSteps}</span>
           </div>
-
         </div>
+
+        {/* Synthetic data callout */}
+        <div style={{ border: '1px solid var(--rim)', borderRadius: '10px', padding: '12px 16px', background: 'rgba(240,165,0,0.04)', marginBottom: '28px', borderLeft: '3px solid var(--prime)' }}>
+          <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Note — Synthetic dataset</div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>
+            Phase 4 cells generate synthetic churn data (fixed seed 42 for training, seed 99 for a simulated production sample). The production sample has a shifted tenure distribution to simulate real-world drift.
+          </p>
+        </div>
+
+        {/* ── Cell 11 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell11') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell11') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell11') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell11') ? '✓' : '11'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Population Stability Index</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>PSI per feature · drift bands · what PSI cannot tell you</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_11_CODE}
+            height={200}
+            label="Cell 11 — PSI"
+            onResult={r => { if (r.ok) markCellDone('cell11') }}
+          />
+        </div>
+
+        {/* ── Cell 12 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell12') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell12') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell12') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell12') ? '✓' : '12'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>KS Test</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>scipy.stats.ks_2samp · significance vs magnitude · KS vs PSI</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_12_CODE}
+            height={200}
+            label="Cell 12 — KS Test"
+            onResult={r => { if (r.ok) markCellDone('cell12') }}
+          />
+        </div>
+
+        {/* ── Cell 13 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell13') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell13') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell13') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell13') ? '✓' : '13'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Prediction Drift</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>score distribution shift · histogram + CDF · diagnosis framing</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_13_CODE}
+            height={200}
+            withPlot={true}
+            label="Cell 13 — Prediction Drift"
+            onResult={r => { if (r.ok) markCellDone('cell13') }}
+          />
+        </div>
+
+        {/* ── Cell 14 ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell14') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell14') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell14') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell14') ? '✓' : '14'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Label Drift</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>delayed feedback · blind zone · proxy signal strategy</div>
+            </div>
+          </div>
+          <PythonCell
+            initialCode={CELL_14_CODE}
+            height={200}
+            withPlot={true}
+            label="Cell 14 — Label Drift"
+            onResult={r => { if (r.ok) markCellDone('cell14') }}
+          />
+        </div>
+
+        {/* ── Checkpoint 5 ── */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.checkpointsDone.includes('cp5') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.08)',
+              border: `1px solid ${state.checkpointsDone.includes('cp5') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.25)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.checkpointsDone.includes('cp5') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.checkpointsDone.includes('cp5') ? '✓' : '?'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Alert or Wait?</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>PSI=0.18 + KS p=0.03 simultaneous post-deployment — what do you do?</div>
+            </div>
+          </div>
+          <JudgmentCheckpoint
+            checkpoint={CHECKPOINT_5}
+            onComplete={() => markCheckpointDone('cp5')}
+          />
+        </div>
+
       </div>
+      )}
+
+      {/* ── Phase 5: Deployment Scaffold ── */}
+      {phase4Complete && (
+      <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '32px', marginTop: '8px' }}>
+
+        {/* Phase 5 header */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--prime)', fontWeight: 700 }}>
+              ML Engineering
+            </span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              Phase 5 of 5
+            </span>
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px', lineHeight: 1.15, color: 'var(--ink-hi)' }}>
+            Phase 5 — Deployment Scaffold
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '680px', marginBottom: '14px' }}>
+            Reference implementation for taking the trained churn model to production. Read each scaffold, understand the production decisions embedded in it. Mark each section as read when done.
+          </p>
+          {/* Phase 5 progress bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 5 progress</span>
+            <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
+              <div style={{ width: `${Math.round((phase5DoneSteps / phase5TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{phase5DoneSteps}/{phase5TotalSteps}</span>
+          </div>
+        </div>
+
+        {/* ── Cell 15: FastAPI /predict ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell15') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell15') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell15') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell15') ? '✓' : '15'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>FastAPI /predict</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>pydantic schema · response model · health endpoint</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>python</span>
+              {!state.cellsDone.includes('cell15') && (
+                <button onClick={() => markCellDone('cell15')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  Mark as read ✓
+                </button>
+              )}
+              {state.cellsDone.includes('cell15') && (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — FastAPI prediction endpoint
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, validator
+import joblib, numpy as np
+
+app = FastAPI(title="Churn Prediction API", version="1.0.0")
+model = joblib.load("artifacts/churn_model.pkl")
+scaler = joblib.load("artifacts/scaler.pkl")
+
+class PredictRequest(BaseModel):
+    tenure: float
+    monthly_charges: float
+    contract_code: int  # 0=month-to-month, 1=one-year, 2=two-year
+
+    @validator('contract_code')
+    def contract_must_be_valid(cls, v):
+        if v not in (0, 1, 2): raise ValueError('contract_code must be 0, 1, or 2')
+        return v
+
+class PredictResponse(BaseModel):
+    churn_probability: float
+    churn_predicted: bool
+    model_version: str = "1.0.0"
+
+@app.post("/predict", response_model=PredictResponse)
+async def predict(req: PredictRequest):
+    X = np.array([[req.tenure, req.monthly_charges, req.contract_code]])
+    prob = float(model.predict_proba(X)[0, 1])
+    return PredictResponse(
+        churn_probability=round(prob, 4),
+        churn_predicted=prob >= 0.42,  # threshold from Cell 9 threshold selection
+    )
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "model_loaded": model is not None}`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 16: Dockerfile ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell16') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell16') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell16') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell16') ? '✓' : '16'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>Dockerfile</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>multi-stage build · non-root user · lean final image</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>dockerfile</span>
+              {!state.cellsDone.includes('cell16') && (
+                <button onClick={() => markCellDone('cell16')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  Mark as read ✓
+                </button>
+              )}
+              {state.cellsDone.includes('cell16') && (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Stage 1: build dependencies ────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --target=/build/deps -r requirements.txt
+
+# ── Stage 2: production image ────────────────────────────────────────────
+FROM python:3.11-slim
+WORKDIR /app
+
+# Copy installed deps from builder (keeps final image lean)
+COPY --from=builder /build/deps /usr/local/lib/python3.11/site-packages
+
+# Copy application code and model artifact
+COPY app/ ./app/
+COPY artifacts/ ./artifacts/
+
+# Non-root user for security
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+
+# Build: docker build -t churn-api:1.0.0 .
+# Run:   docker run -p 8000:8000 churn-api:1.0.0
+# Key decisions: multi-stage (lean final image), non-root user,
+# workers=2 (tune to vCPU count in production)`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 17: K8s manifest ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell17') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell17') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell17') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell17') ? '✓' : '17'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>K8s Manifest</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Deployment + Service + HPA · resource limits · health probes</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
+              {!state.cellsDone.includes('cell17') && (
+                <button onClick={() => markCellDone('cell17')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  Mark as read ✓
+                </button>
+              )}
+              {state.cellsDone.includes('cell17') && (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Deployment ────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: churn-api
+  labels: { app: churn-api, version: "1.0.0" }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: churn-api }
+  template:
+    metadata:
+      labels: { app: churn-api, version: "1.0.0" }
+    spec:
+      containers:
+        - name: churn-api
+          image: <ECR_ACCOUNT>.dkr.ecr.us-east-1.amazonaws.com/churn-api:1.0.0
+          ports: [{ containerPort: 8000 }]
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits:   { cpu: "1000m", memory: "1Gi" }
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+---
+# ── Service ──────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata: { name: churn-api-svc }
+spec:
+  selector: { app: churn-api }
+  ports: [{ port: 80, targetPort: 8000 }]
+  type: ClusterIP
+---
+# ── HPA (Horizontal Pod Autoscaler) ────────────────────────────────────────────────
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: churn-api-hpa }
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: churn-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 18: CI/CD GitHub Actions ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell18') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell18') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell18') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell18') ? '✓' : '18'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>CI/CD — GitHub Actions</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>test → build → push → deploy · ECR · EKS rollout</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>yaml</span>
+              {!state.cellsDone.includes('cell18') && (
+                <button onClick={() => markCellDone('cell18')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  Mark as read ✓
+                </button>
+              )}
+              {state.cellsDone.includes('cell18') && (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy.yml
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "artifacts/**", "requirements.txt", "Dockerfile"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt && pip install pytest
+      - run: pytest tests/ -v
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Login to ECR
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin \${{ secrets.ECR_REGISTRY }}
+      - name: Build and push
+        run: |
+          docker build -t churn-api:\${{ github.sha }} .
+          docker tag churn-api:\${{ github.sha }} \${{ secrets.ECR_REGISTRY }}/churn-api:\${{ github.sha }}
+          docker push \${{ secrets.ECR_REGISTRY }}/churn-api:\${{ github.sha }}
+      - name: Deploy to EKS
+        run: |
+          aws eks update-kubeconfig --name prod-cluster --region us-east-1
+          kubectl set image deployment/churn-api churn-api=\${{ secrets.ECR_REGISTRY }}/churn-api:\${{ github.sha }}
+          kubectl rollout status deployment/churn-api`}</pre>
+          </div>
+        </div>
+
+        {/* ── Cell 19: AWS Mapping ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{
+              width: '26px', height: '26px', borderRadius: '50%',
+              background: state.cellsDone.includes('cell19') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              border: `1px solid ${state.cellsDone.includes('cell19') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: state.cellsDone.includes('cell19') ? 'var(--mint)' : 'var(--prime)', fontWeight: 700 }}>
+                {state.cellsDone.includes('cell19') ? '✓' : '19'}
+              </span>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>AWS Service Mapping</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>ECR · ECS vs EKS · S3 · SageMaker · CodePipeline</div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--void)', border: '1px solid var(--rim)', borderRadius: '9px', overflow: 'hidden', borderLeft: '3px solid rgba(240,165,0,0.6)' }}>
+            <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>aws — service mapping</span>
+              {!state.cellsDone.includes('cell19') && (
+                <button onClick={() => markCellDone('cell19')} style={{ fontSize: '11px', color: 'var(--prime)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  Mark as read ✓
+                </button>
+              )}
+              {state.cellsDone.includes('cell19') && (
+                <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}>✓ Read</span>
+              )}
+            </div>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { component: 'API container registry', aws: 'ECR (Elastic Container Registry)', note: 'Push Docker image here. ECR is free within-region; charges on data transfer out.' },
+                { component: 'Container orchestration', aws: 'ECS Fargate vs EKS', note: 'ECS Fargate: simpler, serverless, lower ops overhead. EKS: full K8s, better for multi-service ML platforms. For a single churn API, Fargate wins on simplicity.' },
+                { component: 'Model artifacts', aws: 'S3', note: 'Store .pkl model files in versioned S3 bucket. Load at container startup or mount via EFS for large models.' },
+                { component: 'Drift monitoring', aws: 'SageMaker Model Monitor + CloudWatch', note: 'SageMaker Model Monitor computes PSI and detects data quality issues automatically. CloudWatch for latency and error rate alarms.' },
+                { component: 'Feature store', aws: 'SageMaker Feature Store', note: 'Centralize feature computation. Online store for real-time inference; offline store for training. Eliminates train-serve skew.' },
+                { component: 'CI/CD pipeline', aws: 'CodePipeline + CodeBuild', note: 'AWS-native alternative to GitHub Actions. CodeBuild runs tests and builds Docker image; CodePipeline orchestrates source → build → deploy stages.' },
+              ].map((row, i) => (
+                <div key={i} style={{ display: 'flex', gap: '16px', paddingBottom: '12px', borderBottom: i < 5 ? '1px solid var(--rim)' : 'none' }}>
+                  <div style={{ flex: '0 0 160px' }}>
+                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>component</div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{row.component}</div>
+                  </div>
+                  <div style={{ flex: '0 0 180px' }}>
+                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>aws service</div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{row.aws}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>when to use / tradeoffs</div>
+                    <div style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.6, fontFamily: 'var(--font-sans)' }}>{row.note}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Phase 5 complete card */}
+        {phase5Complete && (
+          <div style={{ border: '1px solid rgba(52,211,153,0.35)', borderRadius: '10px', padding: '20px', background: 'rgba(52,211,153,0.06)', textAlign: 'center', marginTop: '8px' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎉</div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--mint)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
+              Project Lab Complete
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
+              You've run a complete ML pipeline — from raw data to a calibrated, monitored, deployment-ready model. That's the full loop: data → features → model → evaluation → monitoring → deployment scaffold.
+            </p>
+          </div>
+        )}
+
+      </div>
+      )}
 
     </div>
   )

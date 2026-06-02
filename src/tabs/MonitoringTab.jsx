@@ -1122,7 +1122,7 @@ const ALERTING_SCENARIOS = [
     title: 'PSI spike on user_age at 3am',
     context: 'Your monitoring system fires at 3:12am: PSI = 0.31 on `user_age` for the fraud detection model. Model AUC has dropped from 0.83 to 0.79 over the last 6 hours. P95 serving latency is unchanged. The upstream user profile pipeline had a scheduled maintenance window from 2am–3am.',
     hint: 'Before acting, ask whether the timing of this alert overlaps with any known system event — a maintenance window that caused a data gap would produce the exact same PSI signature as real distribution drift.',
-    question: 'What is the correct immediate action?',
+    question: 'The PSI spike and AUC drop overlap exactly with the 2am–3am maintenance window. Do you page on-call and roll back, or hold?',
     options: [
       'Page the on-call ML engineer and roll back the model immediately.',
       'The PSI spike and AUC drop are consistent with a data pipeline issue during the maintenance window — not a model failure. Log the alert, check whether the upstream pipeline has recovered post-maintenance, and monitor for 30 minutes before escalating.',
@@ -1149,7 +1149,7 @@ const ALERTING_SCENARIOS = [
     title: 'AUC drops 8 points — batch vs. real-time serving',
     context: 'A content recommendation model shows AUC dropping from 0.76 to 0.68 over 48 hours. PSI is stable across all input features. The model serves batch pre-computed recommendations refreshed every 4 hours. Investigation shows that a new content category was launched 3 days ago and now represents 18% of user interactions.',
     hint: 'PSI monitors input feature distributions. Ask what PSI physically cannot detect — then trace the mechanism that would cause AUC to fall while feature distributions look unchanged.',
-    question: 'Why is PSI stable while AUC degrades?',
+    question: 'All input feature PSI values are stable, but AUC dropped 8 points in 48 hours after a new content category launched. PSI shows nothing wrong — so where is the model failing?',
     options: [
       'PSI is calculated incorrectly — the monitoring system has a bug.',
       'Batch serving means the model never saw the new content category — it cannot recommend items it was never trained on. PSI measures input feature distributions, which are stable. AUC degradation comes from missing coverage, not feature drift.',
@@ -1176,7 +1176,7 @@ const ALERTING_SCENARIOS = [
     title: 'Latency breach at peak — auto-rollback or hold?',
     context: 'P95 serving latency for your real-time pricing model breaches SLA (>200ms) for 8 consecutive minutes during peak load at 6pm. The breach started immediately after a model update was promoted to 100% traffic. PSI and AUC are both stable. Infrastructure team confirms no server-side issues.',
     hint: 'Focus on the timing correlation, not the alert itself. What changed in the system at the exact moment P95 spiked — and what does that tell you about root cause?',
-    question: 'Should you auto-rollback the model or hold and investigate?',
+    question: 'P95 latency breached 200ms SLA at exactly the moment the new model went to 100% traffic. PSI and AUC are both stable. Do you rollback now or investigate first?',
     options: [
       'Hold — latency breaches are infrastructure problems, not model problems.',
       'Auto-rollback immediately — any SLA breach warrants rollback.',
@@ -1224,7 +1224,7 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     title: 'PSI elevated — which feature is actually driving it?',
     context: 'Your aggregate monitoring dashboard shows overall PSI = 0.22 across 47 input features for a credit scoring model. The alert threshold is 0.20. You need to identify which features are driving the drift before filing an incident.',
     hint: 'PSI measures shift magnitude — that is only half the signal. What is the second variable that determines whether a shifting feature actually harms model performance?',
-    question: 'What is the correct attribution approach?',
+    question: 'Aggregate PSI just crossed your 0.20 alert threshold across 47 features. You have 5 minutes before the incident ticket auto-escalates. How do you find which feature is actually threatening model performance?',
     options: [
       'Compute PSI for each feature individually and rank by PSI value descending.',
       'PSI is already computed per feature — sort by PSI descending, focus on features with PSI > 0.10, then cross-reference with feature importance from the trained model. A high-PSI feature that is also high-importance is the real risk; a high-PSI feature with near-zero importance is noise.',
@@ -1250,7 +1250,7 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     id: 'drift2',
     title: 'Covariate drift vs. label drift — different responses',
     context: 'A loan default model shows: (1) PSI = 0.28 on `debt_to_income_ratio` over the last 30 days — users applying for loans have higher DTI than training distribution. (2) Observed default rate has dropped from 3.2% to 2.1% over the same period. Model predicted default rate is still 3.1%.',
-    question: 'Is this covariate drift, label drift, or both — and what is the correct response?',
+    question: '`debt_to_income_ratio` PSI is 0.28 (high-DTI applicants are up). Simultaneously, observed default rate dropped from 3.2% to 2.1% while the model still predicts 3.1%. Are these the same problem or two separate failures requiring different fixes?',
     options: [
       'Covariate drift only — the feature distribution shifted. Retrain on recent data.',
       'Label drift only — the default rate changed. Update the decision threshold.',
@@ -1277,7 +1277,7 @@ const DRIFT_ATTRIBUTION_SCENARIOS = [
     title: 'Concept drift without input drift',
     context: 'A fraud detection model shows stable input feature distributions (all PSI < 0.10) and stable serving latency. But precision on confirmed fraud cases has dropped from 0.81 to 0.63 over 6 weeks. The fraud team reports that fraud patterns have changed — new account takeover techniques using legitimate-looking session behaviour.',
     hint: 'PSI measures the distribution of feature values. Ask what PSI cannot possibly detect even when the feature distributions are perfectly stable.',
-    question: 'Why did input feature monitoring fail to catch this?',
+    question: 'All 47 input feature PSI values are below 0.10 — your monitoring shows nothing wrong. But fraud precision has collapsed from 0.81 to 0.63 over 6 weeks. What is your monitoring blind spot, and why can PSI not detect this failure?',
     options: [
       'The monitoring system computed PSI incorrectly.',
       'Concept drift: the relationship between features and the fraud label has changed, even though the feature distributions are stable. New fraud techniques produce inputs that look identical to legitimate behaviour — the model\'s learned boundary is no longer valid.',

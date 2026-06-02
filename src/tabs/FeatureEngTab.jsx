@@ -1099,7 +1099,7 @@ const FEATURE_STORE_SCENARIOS = [
     id: 'fst1',
     title: 'Point-in-time join returns future features',
     context: 'A credit risk model is trained using a feature store with point-in-time correct joins. Training data spans 24 months. Each row is a loan application with a label (default/no-default) known 90 days after application. The feature store is queried with `as_of = application_date`. Offline evaluation shows AUC = 0.89 — much higher than the previous model\'s 0.81.',
-    question: 'Before promoting this model, what is the most important check?',
+    question: 'AUC jumped from 0.81 to 0.89 — an 8-point gain on a model that claims point-in-time correct joins. That gain is unusually large. What is the single check that determines whether this lift is real or leakage before you promote it?',
     options: [
       'Verify that AUC > 0.85 on the held-out test set.',
       'Confirm that the feature store\'s point-in-time join is using the application_date, not the label_date. If the join uses any timestamp derived from the outcome window, features computed after default events would be available at training time — this is look-ahead leakage disguised as feature store correctness.',
@@ -1114,7 +1114,7 @@ const FEATURE_STORE_SCENARIOS = [
     id: 'fst2',
     title: 'Feature store staleness in real-time serving',
     context: 'A real-time fraud model uses features from an online feature store. One feature, `user_transaction_count_24h`, is updated every 5 minutes via a streaming pipeline. The model was trained with this feature reflecting exact transaction counts at prediction time. In production, P&L team reports false negative rate is 40% higher than offline evaluation predicted.',
-    question: 'What is the most likely cause of the offline-online gap?',
+    question: 'False negative rate is 40% higher than offline predicted. The feature store refreshes `user_transaction_count_24h` every 5 minutes, but card-testing attacks complete in under 2 minutes. Offline training used exact counts at prediction time. What is failing, and why didn\'t offline eval catch it?',
     options: [
       'The model was trained on too little data.',
       'The online feature store has a 5-minute lag — for high-velocity fraud (card testing attacks happen in under 2 minutes), `user_transaction_count_24h` is stale at prediction time. The model trained on exact counts but serves on lagged counts, creating systematic offline-online skew.',
@@ -1129,7 +1129,7 @@ const FEATURE_STORE_SCENARIOS = [
     id: 'fst3',
     title: 'Backfill overwrites historical point-in-time features',
     context: 'The data engineering team backfills 6 months of `user_lifetime_value` features using an improved computation method. The backfill writes updated values into the feature store with the original event timestamps. A model that was trained last month and is currently in production now has its offline evaluation invalidated.',
-    question: 'What is the production risk from this backfill?',
+    question: 'The data engineering team just overwrote 6 months of `user_lifetime_value` history in the feature store using a new computation method, preserving original event timestamps. Your currently-deployed model was promoted based on offline eval using the old LTV values. What has actually broken?',
     options: [
       'The model will need to be retrained to use the improved LTV computation.',
       'The backfill invalidates the offline evaluation that justified the model\'s promotion. If the backfilled feature values differ significantly from the originals, the model was selected and tuned based on a feature distribution that no longer exists in the feature store. Online performance predictions are now unreliable.',
@@ -1163,7 +1163,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
     id: 'ifl1',
     title: 'Manual interaction feature introduces label leakage',
     context: 'For a churn prediction model, a feature engineer adds `support_calls_per_dollar_spent` = `support_call_count / revenue_30d`. This interaction feature tests as the #1 feature by importance (SHAP). Model AUC improves from 0.74 to 0.82.',
-    question: 'What is the leakage risk in this feature?',
+    question: '`support_calls_per_dollar_spent` just became your #1 SHAP feature and AUC jumped 8 points. A jump that large from a single hand-crafted ratio is a red flag. What specifically in the construction of this feature causes it to partially encode the label you\'re trying to predict?',
     options: [
       'There is no leakage — the feature uses legitimate historical data.',
       'Customers who are about to churn often reduce spending before churning. `revenue_30d` in the denominator captures end-of-tenure behaviour. The interaction amplifies a post-churn signal that would not be available at the time a retention action should be taken.',
@@ -1178,7 +1178,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
     id: 'ifl2',
     title: 'Let the model learn interactions vs. manual engineering',
     context: 'A senior engineer argues that for a gradient boosting model, manually engineering `age × income` and `tenure × product_count` interactions is unnecessary — tree-based models learn interactions automatically. A junior engineer counters that explicit interaction features always improve performance.',
-    question: 'Under what conditions does manual interaction engineering genuinely help tree-based models?',
+    question: 'The senior engineer says to drop `age × income` — GBM will learn it automatically. The junior insists explicit interactions always help. Who is right, and in what specific scenario would manually adding this interaction actually matter?',
     options: [
       'Always — explicit interactions reduce the number of splits the model needs, improving training speed and generalisation.',
       'Never — gradient boosting always discovers interactions at least as well as manual engineering.',
@@ -1193,7 +1193,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
     id: 'ifl3',
     title: 'Target encoding leaks label into cross-validation',
     context: 'A feature engineer applies target encoding to a high-cardinality categorical feature (`merchant_id`, 8,000 unique values) using the full training dataset before cross-validation. Validation AUC appears excellent at 0.91. When the model is deployed, production AUC is 0.76.',
-    question: 'What caused the AUC gap between validation and production?',
+    question: 'Validation AUC is 0.91. Production AUC is 0.76 — a 15-point gap that appeared on day one of deployment. The only unusual thing in preprocessing was target-encoding `merchant_id` (8,000 values) on the full training set before cross-validation. What broke, and why did your CV not catch it?',
     options: [
       'The model overfits to the training data due to high cardinality.',
       'Target encoding computed on the full training set before cross-validation leaks label information into the validation folds — the encoded values for validation-set merchants already incorporate those merchants\' labels. This inflates validation AUC and produces an overoptimistic evaluation.',

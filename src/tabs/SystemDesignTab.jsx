@@ -1729,7 +1729,7 @@ const RAG_SCENARIOS = [
     id: 'rag1',
     title: 'Chunk size decision',
     context: 'You are building a RAG system over 10,000 legal contracts. Each contract is 20–50 pages. Users ask highly specific questions ("What is the termination notice period in the Acme contract?"). Your initial system uses 2,000-token chunks and retrieves top-3.',
-    question: 'What chunk size strategy is most appropriate for this use case?',
+    question: 'Your current system uses 2,000-token chunks and retrieves top-3, but users asking "What is the termination notice period in the Acme contract?" are getting poor results. Users want specific clause-level answers from 20–50 page contracts. Does chunking larger or smaller fix this, and why?',
     options: [
       'Increase to 5,000-token chunks — bigger context is always better for long documents.',
       'Use 256-512 token chunks with sentence boundary awareness — small chunks improve retrieval precision for specific queries.',
@@ -1744,7 +1744,7 @@ const RAG_SCENARIOS = [
     id: 'rag2',
     title: 'Retrieval strategy for keyword-heavy queries',
     context: 'A RAG system over software documentation receives queries like "HTTPConnectionPool timeout error Python 3.11." Dense embedding retrieval (cosine similarity) misses the exact error message and returns semantically related but irrelevant documents. Recall@5 is 42%.',
-    question: 'What retrieval strategy would improve recall for keyword-heavy, exact-match queries?',
+    question: 'Recall@5 is 42% for queries like "HTTPConnectionPool timeout error Python 3.11." Dense embedding search returns semantically related but wrong documents — it can\'t find the exact error string. Do you switch to BM25, or is there a retrieval design that handles both?',
     options: [
       'Switch entirely to BM25 sparse retrieval — it handles exact keywords better than embeddings.',
       'Use hybrid search: combine BM25 sparse retrieval with dense embedding retrieval, fuse results with RRF or a weighted sum.',
@@ -1759,7 +1759,7 @@ const RAG_SCENARIOS = [
     id: 'rag3',
     title: 'Reranking decision',
     context: 'Your RAG pipeline retrieves top-20 chunks via ANN search, then passes all 20 to the LLM. The LLM context window fills up and you hit token limit errors. Reducing k to 3 drops answer quality significantly.',
-    question: 'How do you maintain answer quality while fitting within the context window?',
+    question: 'Retrieving top-20 chunks blows your context window. Cutting to top-3 tanks answer quality. You\'re stuck between token limits and coverage. What architectural component do you add between retrieval and generation to break this tradeoff?',
     options: [
       'Switch to a model with a larger context window (128k tokens) to fit all 20 chunks.',
       'Add a cross-encoder reranker between retrieval and generation: rerank top-20, pass top-3 to the LLM.',
@@ -1774,7 +1774,7 @@ const RAG_SCENARIOS = [
     id: 'rag4',
     title: 'Embedding model choice',
     context: 'A team building a RAG system for medical literature is choosing between: text-embedding-ada-002 (OpenAI), a general-purpose sentence transformer (all-mpnet-base-v2), and a domain-specific biomedical embedding model (BioLinkBERT). Budget is not a primary constraint.',
-    question: 'Which embedding model is most appropriate and why?',
+    question: 'ada-002 is available via API with no setup. all-mpnet-base-v2 is open-source and fast. BioLinkBERT is domain-specific but adds operational complexity. For a medical literature RAG system where queries reference drug names, disease codes, and biological pathways — which do you pick, and what is the concrete mechanism that makes the others lose?',
     options: [
       'text-embedding-ada-002 — it is the best general-purpose model and the simplest to use via API.',
       'all-mpnet-base-v2 — open-source, no API dependency, good general performance.',
@@ -1789,7 +1789,7 @@ const RAG_SCENARIOS = [
     id: 'rag5',
     title: 'RAG evaluation without labels',
     context: 'You have deployed a RAG system with no labeled evaluation dataset. Users are using it, but you have no ground truth question-answer pairs to measure quality. A stakeholder asks for a system quality metric.',
-    question: 'How do you evaluate RAG quality without a manually labeled dataset?',
+    question: 'Your RAG system is live with real users but you have zero labeled Q&A pairs. A stakeholder wants a quality number by end of week. You can\'t answer "not possible" — what do you actually measure, and how do you get a meaningful signal without ground truth?',
     options: [
       'You cannot evaluate RAG quality without labeled data — tell the stakeholder evaluation is not possible.',
       'Use LLM-as-judge metrics (RAGAS): faithfulness (does the answer contradict the retrieved context?), answer relevance (does the answer address the question?), and context precision (are retrieved chunks relevant?).',
@@ -1804,7 +1804,7 @@ const RAG_SCENARIOS = [
     id: 'rag6',
     title: 'Hallucination on out-of-scope queries',
     context: 'A RAG system built on company internal documentation is asked "What is the capital of France?" The system retrieves irrelevant documents and the LLM answers "Paris" — correctly, but from its parametric knowledge, not from the retrieved context. A week later it answers a similar out-of-scope question incorrectly.',
-    question: 'How do you prevent the RAG system from answering questions beyond its knowledge base?',
+    question: 'Your RAG system answered "What is the capital of France?" correctly — but from the LLM\'s parametric memory, not retrieved documents. A week later it answered a similar out-of-scope question incorrectly. A system prompt instruction to "only use the context" didn\'t stop it. What is the correct production gate?',
     options: [
       'Add "only answer from the provided context" to the system prompt — the LLM will comply.',
       'Implement a retrieval confidence gate: if the top retrieved chunk similarity is below threshold (e.g., 0.6 cosine), respond "I don\'t have information about this in the knowledge base."',
@@ -2070,7 +2070,7 @@ const DO_WE_NEED_ML_SCENARIOS = [
     id: 'dwml1',
     title: 'Churn prediction email campaign',
     context: 'A growth PM requests a churn prediction model. Users predicted as high-churn will receive a retention email. Your data team has 18 months of historical churn labels and 40 features. Training will take ~2 weeks.',
-    question: 'Is ML the right solution here?',
+    question: 'The PM wants a churn model. The intervention is a retention email. You have 18 months of labels and 40 features — the model is buildable. But should you build it? What question do you ask before committing 2 weeks of data team time?',
     options: [
       'Yes — a trained model will identify high-churn users more precisely than rules.',
       'No — if the action is sending an email to high-churn users, send it to everyone. The incremental lift from targeting is likely smaller than the cost of building the model.',
@@ -2085,7 +2085,7 @@ const DO_WE_NEED_ML_SCENARIOS = [
     id: 'dwml2',
     title: 'Support ticket classifier',
     context: 'A support team of 3 agents handles ~8 tickets per day across 6 categories (billing, technical, returns, complaints, general, escalation). A PM wants an ML classifier to auto-route tickets to the right agent.',
-    question: 'Should you build a text classification model?',
+    question: 'A PM wants a BERT classifier to auto-route support tickets across 6 categories. Volume is 8 tickets per day across 3 agents. The model is technically buildable. Do you build it?',
     options: [
       'Yes — even at low volume, a classifier eliminates manual routing overhead.',
       'Yes — train a fine-tuned BERT model; it will generalise better as volume grows.',
@@ -2100,7 +2100,7 @@ const DO_WE_NEED_ML_SCENARIOS = [
     id: 'dwml3',
     title: 'Fraud flagging at 0.001% base rate',
     context: 'A fintech product processes 500,000 transactions per day. Historical fraud rate is 0.001% — about 5 fraudulent transactions per day. The fraud team manually reviews flagged transactions. A data scientist proposes an XGBoost fraud classifier.',
-    question: 'What is the primary problem with building a fraud classifier at this base rate?',
+    question: '500,000 transactions per day, 5 actual frauds per day (0.001% rate), and a 3-person review team. A data scientist proposes an XGBoost classifier. Before approving the sprint, you run the precision-recall math — what does it tell you about whether this model can actually work at this base rate?',
     options: [
       'XGBoost is the wrong algorithm — neural networks handle imbalanced data better.',
       'The dataset is too small to train a reliable model.',
@@ -2134,7 +2134,7 @@ const RETRIEVAL_SCENARIOS = [
     id: 'ret1',
     title: 'Two-tower embedding drift',
     context: 'A two-tower recommendation model was trained 6 months ago. Item embeddings are recomputed weekly; user embeddings are recomputed daily. Users are complaining that recommendations feel stale — items they already purchased keep appearing.',
-    question: 'What is the most likely root cause?',
+    question: 'The two-tower model was trained 6 months ago. User embeddings refresh daily, item embeddings weekly. Users report already-purchased items keep appearing. Your embedding pipeline shows no errors and ANN index is current. What is broken in the system design?',
     options: [
       'The ANN index is using cosine similarity; switch to dot product.',
       'Item embeddings are updated weekly but user behaviour shifts faster — the embedding space mismatch means user vectors point toward item clusters that no longer reflect current inventory or user state.',
@@ -2149,7 +2149,7 @@ const RETRIEVAL_SCENARIOS = [
     id: 'ret2',
     title: 'HNSW index staleness under writes',
     context: 'A product search system uses HNSW (Hierarchical Navigable Small World) for approximate nearest-neighbour retrieval over 2M product embeddings. New products are added daily (~500/day). Engineers report that newly added products rarely appear in search results for the first 48 hours after ingestion.',
-    question: 'What is causing the retrieval gap for new products?',
+    question: '500 new products ingested daily, but they don\'t appear in search results for 48 hours after ingestion. Embeddings compute correctly, no pipeline errors, HNSW index shows all items present. What is the structural reason HNSW fails for newly added nodes, and what is the fastest fix?',
     options: [
       'New product embeddings are lower quality because they have fewer purchase signals.',
       'HNSW graph connectivity degrades when new nodes are inserted without a full index rebuild — new items are sparsely connected and rarely reached during beam search.',
@@ -2167,7 +2167,7 @@ const RETRIEVAL_SCENARIOS = [
       'A legal document search system embeds queries and documents using a general-purpose sentence-transformer (trained on web text and news). Retrieval precision is 0.41 on the legal domain benchmark.',
       'The same model achieves 0.78 precision on a general news retrieval benchmark.',
     ],
-    question: 'What is the primary cause of the precision gap?',
+    question: 'Precision is 0.41 on legal documents but 0.78 on general news — same model, same index, same infrastructure. Legal queries use "force majeure," "indemnification," Latin terms. What does this 37-point gap tell you about where the model is failing, and what is the fix?',
     options: [
       'The HNSW index needs more ef_construction parameter tuning.',
       'Legal queries use domain-specific terminology and Latin phrases not present in the model\'s training distribution — query and document embeddings land in different regions of the embedding space for the same legal concept.',
