@@ -92,7 +92,7 @@ function PCAExplorer() {
           { label: 'Features (dimensions)', value: nFeatures, set: setNFeatures, min: 4, max: 30, step: 1 },
           { label: 'Noise level', value: noise, set: setNoise, min: 0, max: 3, step: 0.1 },
         ].map(ctrl => (
-          <div key={ctrl.label} className="card" style={{ padding: '16px' }}>
+          <div key={ctrl.label} className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
             <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
               {ctrl.label}: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{ctrl.value}</span>
             </label>
@@ -107,7 +107,7 @@ function PCAExplorer() {
 
       <PythonCell key={key} initialCode={code} withPlot height={260} label="PCA · sklearn + matplotlib" />
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--prime)' }}>What to watch:</strong> Increase noise → PCA needs more components for 90% variance.
           Add more features with the same info → most variance concentrates in early PCs.
@@ -183,7 +183,7 @@ function SVDDecomposer() {
         </p>
       </div>
 
-      <div className="card" style={{ padding: '16px', maxWidth: '320px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', maxWidth: '320px' }}>
         <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
           Rank k: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{rank}</span>
         </label>
@@ -195,7 +195,7 @@ function SVDDecomposer() {
 
       <PythonCell key={rank} initialCode={SVD_CODE(rank)} withPlot height={200} label="SVD · numpy" />
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--prime)' }}>The insight:</strong> Most real-world matrices are approximately low-rank.
           A rank-4 approximation of a 20×25 matrix needs only {20*rank + rank + rank*25} numbers instead of {20*25}.
@@ -307,7 +307,7 @@ function PreprocessingLab() {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '16px', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(240,165,0,0.10)', border: '1px solid rgba(240,165,0,0.15)' }}>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.7, margin: 0 }}>
           <strong style={{ color: 'var(--prime)' }}>The bug:</strong> When you <code style={{ color: 'var(--ink-low)' }}>fit()</code> a scaler or imputer on the full dataset before splitting,
           test-set statistics leak into the transforms. Your reported metrics will be optimistically biased —
@@ -403,7 +403,7 @@ function RegularizationLab() {
       </div>
 
       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-        <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)', flex: '1', minWidth: '200px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Penalty type
           </label>
@@ -418,7 +418,7 @@ function RegularizationLab() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: '16px', flex: '1', minWidth: '200px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)', flex: '1', minWidth: '200px' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             α (strength): <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{alpha}</span>
           </label>
@@ -673,7 +673,7 @@ function CalibrationCurves() {
           { title: 'Platt scaling', body: 'Fits a logistic regression on top of the raw model scores. Fast, works well when miscalibration is monotone. Default in sklearn\'s CalibratedClassifierCV.' },
           { title: 'Isotonic regression', body: 'Fits a non-parametric monotone function. More flexible than Platt but needs more data (≥ 1000 test samples). Overfits on small datasets.' },
         ].map(c => (
-          <div key={c.title} className="card" style={{ padding: '16px' }}>
+          <div key={c.title} className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: 'var(--prime)', marginBottom: '6px' }}>{c.title}</div>
             <div style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.65 }}>{c.body}</div>
           </div>

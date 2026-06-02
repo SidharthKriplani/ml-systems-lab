@@ -813,7 +813,7 @@ export default function AskTab({ onNavigate }) {
                     background: 'rgba(212,175,55,0.10)',
                     border: '1px solid rgba(212,175,55,0.28)',
                     borderRadius: 12,
-                    padding: '10px 14px',
+                    padding: 'var(--card-pad-primary)',
                   }}
                 >
                   <p style={{

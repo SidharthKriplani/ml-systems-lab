@@ -875,10 +875,10 @@ export default function LoanDefaultTab({ onNavigate }) {
             ML Engineering
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 1 of 4
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             <CheckMark /> Real execution
           </span>
         </div>
@@ -895,7 +895,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         </p>
 
         {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -919,7 +919,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cellL1') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cellL1') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cellL1') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -945,7 +945,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cellL2') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cellL2') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cellL2') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -972,7 +972,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cellL3') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cellL3') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cellL3') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1043,7 +1043,7 @@ export default function LoanDefaultTab({ onNavigate }) {
             ML Engineering
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 2 of 4
           </span>
         </div>
@@ -1059,7 +1059,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         </p>
 
         {/* Phase 2 progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 2 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase2DoneSteps / phase2TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1073,7 +1073,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell4') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell4') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell4') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1099,7 +1099,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell5') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell5') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell5') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1125,7 +1125,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell6') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell6') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell6') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1190,7 +1190,7 @@ export default function LoanDefaultTab({ onNavigate }) {
             ML Engineering
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 3 of 4
           </span>
         </div>
@@ -1206,7 +1206,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         </p>
 
         {/* Phase 3 progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 3 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase3DoneSteps / phase3TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1220,7 +1220,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell7') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell7') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell7') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1246,7 +1246,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell8') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell8') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell8') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1272,7 +1272,7 @@ export default function LoanDefaultTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('loan_cell9') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('loan_cell9') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('loan_cell9') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1337,7 +1337,7 @@ export default function LoanDefaultTab({ onNavigate }) {
 
         {/* Phase 4 header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', fontWeight: 700, background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '4px', padding: '2px 8px' }}>Phase 4 of 4</span>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', fontWeight: 700, background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '4px', padding: '2px 8px' }}>Phase 4 of 4</span>
         </div>
         <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em', marginBottom: '8px' }}>
           Phase 4 — Deployment Scaffold
@@ -1359,7 +1359,7 @@ export default function LoanDefaultTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('loan_cell10') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('loan_cell10') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('loan_cell10') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1381,7 +1381,7 @@ export default function LoanDefaultTab({ onNavigate }) {
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — Loan Default Prediction API
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — Loan Default Prediction API
 from fastapi import FastAPI
 from pydantic import BaseModel, validator
 import joblib, numpy as np
@@ -1435,7 +1435,7 @@ async def health():
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('loan_cell11') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('loan_cell11') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('loan_cell11') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1457,7 +1457,7 @@ async def health():
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`FROM python:3.11-slim AS builder
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`FROM python:3.11-slim AS builder
 WORKDIR /build
 COPY requirements.txt .
 RUN pip install --no-cache-dir --target=/build/deps -r requirements.txt
@@ -1483,7 +1483,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('loan_cell12') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('loan_cell12') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('loan_cell12') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1505,7 +1505,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`apiVersion: apps/v1
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: loan-default-api
@@ -1560,7 +1560,7 @@ spec:
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('loan_cell13') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('loan_cell13') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('loan_cell13') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1582,7 +1582,7 @@ spec:
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy-loan-model.yml
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy-loan-model.yml
 name: Loan Model — Build and Deploy
 
 on:
@@ -1641,7 +1641,7 @@ jobs:
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('loan_cell14') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('loan_cell14') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('loan_cell14') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1658,7 +1658,7 @@ jobs:
             <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--rim)' }}>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700 }}>ECOA Model Card — Loan Default Predictor v1.0.0</span>
             </div>
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ padding: 'var(--card-pad-secondary)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {[
                 { label: 'Model Name', value: 'Loan Default Predictor v1.0.0' },
                 { label: 'Training Data', value: '800-row synthetic dataset. Demographics: RENT 45%, OWN 20%, MORTGAGE 35%. Employment length median 3.5yr. Annual income $25k–$500k log-normal.' },

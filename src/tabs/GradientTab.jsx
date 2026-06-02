@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { getRead, toggleRead, isRead } from '../utils/read.js'
 const POSTS = [
   {
     id: 1,
@@ -391,7 +392,7 @@ Useful applications: explaining individual predictions to fraud analysts, auditi
 Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
     tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
     domain: 'eval',
-    youtube: [{ id: 'EY2FGHjOL-M', title: 'SHAP Values — StatQuest with Josh Starmer' }],
+    youtube: [{ id: '3032t--_wsg', title: 'SHAP in Linear Regression Plots — StatQuest' }],
   },
   {
     id: 11,
@@ -2303,6 +2304,262 @@ Calibration is invisible to AUC. It's visible to precision, to downstream decisi
     domain: 'eval',
     youtube: [{ id: '4jRBRDbJemM', title: 'ROC and AUC, Clearly Explained! — StatQuest with Josh Starmer' }],
   },
+  {
+    id: 41,
+    slug: 'offline-eval-vs-online-performance',
+    title: 'Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. It is structural.',
+    body: `**Why Offline Metrics Lie to You**
+
+Offline evaluation measures how well your model ranks or classifies on a static, historical dataset. Online performance measures what users actually do in a live system. These are not the same thing — and the reasons they diverge are not random noise. They are systematic.
+
+**Failure Mode 1: Feedback Loops in Click-Through Rate Models**
+
+CTR models are trained on historical clicks. But historical clicks are already the output of a previous ranking model — users only see (and can click) items that were shown to them. Items that were never ranked highly never collected clicks. Your training data is not a random sample of the item space; it is a biased sample shaped by whatever model was running before.
+
+When you train on this data and deploy a new model, you are not evaluating on i.i.d. data. You are evaluating on a snapshot of the world as filtered by your predecessor. Offline AUC on this dataset tells you how well your model recovers the previous model's decisions — not how well it would serve users given full information.
+
+**Failure Mode 2: Novelty Effects and Position Bias**
+
+Users behave differently when something is new. A freshly deployed model may generate clicks just because the recommendations look different. Offline metrics cannot capture this. Conversely, users often click the first result regardless of quality — position bias inflates the apparent quality of top-ranked items in your training data. Models trained on this data learn to predict position, not relevance.
+
+**Failure Mode 3: Surrogate Label Problems**
+
+Clicks, watch time, and likes are surrogate labels for user satisfaction. They are measurable; satisfaction is not. A model that maximizes watch time may surface rage-bait. A model that maximizes clicks may optimize for misleading thumbnails. Offline AUC on surrogate labels can be high while the downstream outcome you actually care about (user satisfaction, retention, revenue) moves in the wrong direction.
+
+**Failure Mode 4: The A/B Test That Overrides the Offline Winner**
+
+This is the most important and most humbling failure mode. You run an offline experiment, pick the model with the best AUC, ship it behind a feature flag, run a proper A/B test with randomized traffic split — and the offline winner loses. Sometimes it loses badly. This is not rare. Studies from industrial recommendation systems suggest offline and online rankings agree on a winner less than 60% of the time when the offline improvement is small.
+
+The reason: offline evaluation does not account for how users respond to the model's actual outputs at serving time. The interaction between model decisions, user behavior, and system feedback is invisible to any static dataset.
+
+**The Only Ground Truth: Shadow Mode and Online A/B**
+
+Shadow mode (running the new model in parallel, logging its outputs without serving them) is an intermediate step that lets you validate prediction distributions and catch obvious failures before exposure. But it still cannot tell you about user response.
+
+Online A/B testing with proper randomization, holdout contamination control, and sufficient statistical power is the only way to measure what a model actually does in the world. Offline metrics are filters, not verdicts. Use them to eliminate bad candidates. Use online experiments to choose between good ones.
+
+**A Practical Framework**
+
+Treat offline evaluation as a necessary gate, not a sufficient one. Gate on: AUC above floor, no data leakage, calibration within tolerance, no obvious distribution mismatch between train and serving population. Then A/B test. Never skip the A/B test because the offline numbers look good.
+
+**Practice this in Model Evaluation to develop intuition for when offline metrics predict online performance and when they systematically mislead you.**`,
+    tags: ['Model Evaluation', 'A/B Testing', 'Feedback Loops', 'Online vs Offline', 'Position Bias', 'Production ML'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 42,
+    slug: 'label-noise-in-production',
+    title: 'Label Noise in Production: When Your Ground Truth Lies',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and it is harder to detect than feature drift.',
+    body: `**Three Types of Label Noise That Corrupt Production Models**
+
+Label noise is not a single problem. It comes in at least three distinct forms, each with different detection strategies and different remediation paths.
+
+**Type 1: Systematic Human Annotation Error**
+
+Human annotators make mistakes. They also make consistent mistakes — the same kind, over and over, often shaped by ambiguous guidelines, category fatigue, or unclear edge cases. When 30% of your "negative" class in a content moderation dataset was labeled by a single contractor working after midnight, you have systematic noise, not random noise. Random noise is tolerable at low rates; systematic noise creates a biased model that confidently learns the wrong pattern.
+
+Detection: run inter-annotator agreement scores (Cohen's kappa) on a random audit sample. If agreement is below 0.7 for your label category, your labels are not reliable enough to train on directly.
+
+**Type 2: Delayed Ground Truth**
+
+This is the most insidious form and the most commonly underestimated. The true label does not exist at training time — it arrives days, weeks, or months later. Fraud chargebacks arrive 30–90 days after a transaction. Loan defaults arrive months after origination. Medical diagnoses get revised after lab results return.
+
+Here is what happens in practice: you have a rolling training window of the last 6 months of transactions. Fraud labels for the last 30 days are incomplete — chargebacks have not all arrived yet. Your model trains on a dataset where the most recent 30 days has near-zero fraud rate by construction. It learns that recent transactions are safe. You deploy it and it systematically underscores recent fraud. The bug is invisible in standard AUC calculations because your validation set has the same recency structure as training.
+
+The fix requires temporal awareness: never use labels that have not had sufficient time to mature. If your label delay is 30 days, your training cutoff must be 30+ days before your evaluation period. Track label maturity as a first-class pipeline metric.
+
+**Type 3: Proxy Labels**
+
+You cannot measure what you want to predict, so you measure something correlated with it. Clicks as a proxy for relevance. Watch time as a proxy for content quality. Resolved tickets as a proxy for customer satisfaction. The proxy is observable; the true target is not.
+
+Proxy labels work until they do not. A churn prediction model trained on "cancelled subscription" might be predicting which users find the cancellation button rather than which users are genuinely dissatisfied. The model learns the proxy faithfully and fails on the target completely.
+
+**Detection Methods**
+
+Label audit: sample 200–500 labels per class, manually verify correctness, compute error rate. If error rate exceeds 5% for a critical class, the labels need cleaning before training.
+
+Temporal label consistency check: compare label rates for the same event cohort measured at 30 days, 60 days, and 90 days. If rates diverge significantly, you have label immaturity — your labels are not yet stable at your current cutoff.
+
+**Fixes**
+
+For systematic noise: noise-aware loss functions (generalized cross-entropy), label cleaning pipelines with human review of uncertain examples, confident learning to identify likely mislabeled samples.
+
+For delayed ground truth: enforce label maturity windows in your pipeline — fail the training job if label completeness for the training period is below a threshold.
+
+For proxy labels: invest in measuring the true target on a small sample, then evaluate whether your proxy is still predictive. If the correlation degrades over time, the proxy has drifted from the target.
+
+**Practice this in Feature Engineering to identify how label leakage and noisy ground truth are introduced into training pipelines and how to build defenses against them.**`,
+    tags: ['Label Noise', 'Feature Engineering', 'Ground Truth', 'Delayed Labels', 'Proxy Labels', 'Production ML'],
+    domain: 'features',
+    youtube: [],
+  },
+  {
+    id: 43,
+    slug: 'concept-drift-invisible-enemy',
+    title: 'Concept Drift: The Invisible Enemy That Stalks Every Production Model',
+    category: 'Monitoring',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone and is the leading cause of silent model degradation.',
+    body: `**Three Types of Drift — and Why Only One Is Fatal**
+
+Drift is overloaded. When engineers say "drift," they usually mean input distribution shift: the features your model receives in production look different from features it was trained on. This is measurable, monitorable, and often recoverable. But it is not the dangerous kind.
+
+**Input distribution drift** (covariate shift): P(X) changes. Your age distribution shifts. A new market segment appears. A feature pipeline changes encoding. PSI detects this. Retraining on recent data fixes it.
+
+**Label distribution drift**: P(Y) changes. Your fraud rate doubles due to a new attack vector. Class imbalance in production diverges from training. This is detectable by monitoring outcome rates, but only if you have outcomes — which requires label delay tolerance.
+
+**Concept drift**: P(Y|X) changes. The relationship between features and labels changes, even though the features themselves look the same. This is the dangerous kind. PSI cannot detect it. Feature histograms look fine. Your model was trained correctly on historical data — the problem is that the world has changed in a way that makes that history misleading.
+
+**The Credit Model Trained Pre-Pandemic**
+
+A credit risk model trained in 2019 on pre-pandemic consumer behavior was deployed into 2020. Income features looked similar. Employment features looked similar. Debt-to-income ratios were in-distribution. But the relationship between these features and default probability had fundamentally changed. Consumers who would have defaulted given their feature profile in 2019 were being kept afloat by stimulus payments. Consumers who looked safe by historical standards were being hit by sector-specific unemployment. PSI on individual features showed nothing alarming. The model's predictions were quietly wrong.
+
+This is concept drift. The inputs are stable. The world has changed. The mapping from inputs to outcomes no longer matches what the model learned.
+
+**Why PSI Cannot Help You Here**
+
+PSI (Population Stability Index) compares the distribution of a feature or score between two time windows. It tells you when P(X) has shifted. It tells you nothing about P(Y|X). You can have PSI=0 on every feature and still have severe concept drift if the world has changed in ways that leave your feature distributions intact while invalidating the relationships between them.
+
+The engineers who rely on PSI alone as their drift monitor are flying blind for the most important type of drift.
+
+**Detection: What Actually Works**
+
+Prediction distribution monitoring: track the distribution of your model's output scores over time. If the score distribution changes, something has changed — either in inputs or in the model's behavior on them.
+
+Outcome rate tracking: compare your model's predicted positive rate to the actual observed positive rate (with appropriate label delay). If your model predicts 8% fraud rate but you are observing 15%, your model is underestimating risk — either due to concept drift or label distribution shift.
+
+Residual drift: for regression models, track the distribution of residuals (predicted minus actual) over time. If residual mean drifts from zero, your model has become systematically biased in a specific direction.
+
+**Retrain vs Recalibrate vs Rollback**
+
+If prediction distribution has drifted but outcomes are stable: recalibrate. The model's rankings may still be correct; only its probability estimates have shifted.
+
+If outcome rate has diverged from model scores significantly: retrain on recent labeled data. The mapping P(Y|X) has changed and the model needs to relearn it.
+
+If performance has degraded catastrophically in a short window (days, not months): investigate before retraining. A sudden collapse suggests a data pipeline bug, not drift. Retraining on corrupted data will propagate the corruption.
+
+Rollback is the right call when: (1) a recent deployment is the suspected cause, (2) the performance regression is acute, and (3) you have a known-good prior model to fall back to. Rollback buys time for root-cause analysis — it is not a fix.
+
+**Practice this in Monitoring to build intuition for which drift signals fire for which types of model degradation, and how to triage drift alerts correctly.**`,
+    tags: ['Concept Drift', 'Monitoring', 'PSI', 'Covariate Shift', 'Model Degradation', 'Production ML'],
+    domain: 'monitor',
+    youtube: [],
+  },
+  {
+    id: 44,
+    slug: 'cold-start-trap-personalization',
+    title: 'The Cold-Start Trap: Why Personalization Systems Fail the Users Who Need Them Most',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'New users get bad recommendations. Bad recommendations cause churn. Churned users never provide the signal needed to improve recommendations for new users. This is the cold-start trap — a self-reinforcing failure that defeats most naive personalization systems.',
+    body: `**Three Cold-Start Variants You Must Design For Separately**
+
+Cold-start is not one problem. It is three distinct problems that share a name and require separate system-level responses.
+
+**New user cold-start**: a user with no history. You have no interaction signal, no preferences, no behavioral patterns. Collaborative filtering returns nothing useful. Content-based filtering requires knowing what the user likes — which you also do not know.
+
+**New item cold-start**: a newly published item with no engagement history. Two-tower models that rely on interaction embeddings cannot represent it. Popularity-based systems will never surface it. The item is invisible to your ranking system until it accumulates interactions it cannot get because it is invisible.
+
+**New system cold-start**: you are launching a new product with no historical data at all. Every user and every item is cold. This is the hardest variant and requires a different architecture from what you will use post-launch.
+
+**Why the Naive Fix Creates a Worse Problem**
+
+The most common response to new user cold-start is popularity fallback: show trending items to everyone without a profile. This works short-term and fails long-term. It creates a rich-get-richer feedback loop: popular items get shown to new users, collect more clicks, become more popular, get shown to more new users. Niche items with high relevance to specific users never get surfaced because they never accumulate the clicks needed to surface them. Your catalog diversity collapses. Your system becomes a hit machine, not a personalization system.
+
+This is the Matthew effect applied to recommendations: to those who have engagement, more engagement shall be given. Items without initial engagement never escape the cold zone.
+
+**Four Concrete Strategies**
+
+Content-based bootstrapping: use item metadata (genre, tags, description embeddings, creator attributes) to build a content-based representation for new items and a content-based preference profile for new users based on onboarding signals. This is weaker than collaborative filtering but does not require interaction history.
+
+Exploration-exploitation with UCB: treat cold-start as a multi-armed bandit problem. New items are arms with high uncertainty. UCB (Upper Confidence Bound) explicitly favors exploration of uncertain items over exploitation of known good items. Budget a fraction of your serving traffic to exploration and use it to collect signal on cold items.
+
+Onboarding signal collection: ask new users explicit questions during signup. Not "rate your interests on a 1-10 scale" (users skip this) but concrete, behavioral choices: "Pick three topics you want to see more of." Even 3–5 explicit preference signals dramatically reduce new user cold-start depth.
+
+Hybrid model with explicit cold-start branch: at serving time, route users through different model paths based on their interaction history depth. Users with fewer than N interactions go through the cold-start branch (content-based + onboarding signals + exploration policy). Users with N+ interactions go through the warm branch (full collaborative filtering + personalized ranking). This makes the cold-start problem explicit in your architecture rather than hoping your warm model degrades gracefully for cold users.
+
+**The Matthew Effect and Why Cold-Start Users Churn**
+
+The most damaging consequence of poor cold-start handling is not immediate. New users with bad first sessions churn before you collect enough signal to improve their experience. You never learn what they would have liked. The system has no opportunity to recover. The failure is self-sealing.
+
+This means the cost of cold-start failures compounds: you lose the user, you lose their signal, and you reinforce the popularity bias that created the problem. Investing in cold-start is not a product nice-to-have; it is a data quality and model health investment.
+
+**Production Architecture: Routing Cold vs Warm Users**
+
+At the serving layer, maintain a user interaction count in a low-latency store (Redis). At request time, check interaction count. Below threshold: invoke cold-start model path. Above threshold: invoke warm model path. Log which path was used in your inference telemetry so you can evaluate cold vs warm path performance separately. Set alerts if cold-start path traffic share stops decreasing over time — stalling cold-start graduation indicates a funnel problem.
+
+**Practice this in System Design to work through how a two-tower architecture handles new user and new item cold-start, and where the routing and fallback logic lives in the serving stack.**`,
+    tags: ['Cold Start', 'Personalization', 'System Design', 'Recommendations', 'Exploration vs Exploitation', 'Matthew Effect'],
+    domain: 'design',
+    youtube: [],
+  },
+  {
+    id: 45,
+    slug: 'silent-model-staleness',
+    title: 'Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality',
+    category: 'Monitoring',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. This is silent model staleness — and most teams discover it too late.',
+    body: `**What Silent Staleness Actually Means**
+
+A stale model is not a broken model. It passes your unit tests. It passes your integration tests. It serves predictions without errors. It is simply a model whose training data predates the world it is now being asked to describe, and that gap has grown large enough to matter.
+
+Silent staleness is dangerous precisely because nothing fails loudly. Errors accumulate in the output space (wrong predictions) rather than the system space (errors, latency spikes, availability issues). Without active monitoring of prediction quality, you will not see it in your dashboards until a business metric surfaces the damage.
+
+**Why Staleness Is Invisible Without Active Monitoring**
+
+Infrastructure monitoring — latency, error rate, memory, CPU — tells you about system health, not model health. A model can be perfectly healthy as a serving system while being completely wrong as a predictor. These are different things and require different monitoring strategies.
+
+The absence of staleness alerts does not mean the model is fresh. It means staleness monitoring is not implemented. Most teams conflate these two situations until a post-mortem forces the distinction.
+
+**Three Signals That Detect Staleness**
+
+Prediction distribution drift: track the distribution of your model's output scores week over week. Plot the 10th, 50th, and 90th percentiles. If the score distribution shifts without a corresponding model update, the model is seeing inputs that look different from training — a precursor to prediction quality degradation. This is not definitive, but it is an early warning.
+
+Feature importance shift over time: for tree-based models, log feature importance at training time and compute feature importance on recent serving traffic. If the rank ordering of important features has changed significantly, the model is operating in a regime where its learned relationships may no longer hold. This requires periodic offline analysis, not real-time monitoring.
+
+Outcome rate divergence from model score: if your labels arrive with any timeliness (even with delay), compare your model's predicted positive rate to the observed positive rate in cohorts where labels have matured. Divergence that grows monotonically over time is the clearest signal that the model has fallen out of step with reality.
+
+**The Recommendation Model Trained in December**
+
+A content recommendation model trained on December user behavior and deployed in January is already aging. By June, it has never seen summer behavioral patterns: longer evening sessions, different device usage, genre preferences that shift with season and school calendar. The feature distributions it receives in June are not dramatically different from December — users still have age, location, and watch history features. But the relationships between those features and what users want to watch have shifted. The model serves predictions that were calibrated for a December world. CTR metrics decline slowly, attributed to seasonality, until someone builds a June model and the improvement is unmistakable.
+
+**Scheduled vs Triggered Retraining**
+
+Scheduled retraining (retrain every N days regardless of performance) is simple, auditable, and safe. It ensures maximum staleness is bounded. The cost is retraining when unnecessary — wasted compute on stable patterns.
+
+Triggered retraining (retrain when a monitoring signal crosses a threshold) is more efficient but more complex. It requires you to trust your monitoring enough to act on it automatically. False triggers cause unnecessary retraining; missed triggers allow staleness to accumulate.
+
+**The Failure Modes of Each**
+
+Retraining too aggressively (daily or with a low trigger threshold): your model never stabilizes. Each new model is trained on slightly different data and produces slightly different scores. Downstream systems that depend on score distributions see instability. A/B tests are invalidated by model churn. The cure is worse than the disease.
+
+Retraining too rarely (quarterly scheduled or with a high trigger threshold): staleness accumulates silently between retraining cycles. Seasonal patterns, macro shifts, and behavioral drift go unaddressed for weeks or months.
+
+The right answer is almost always a scheduled cadence with monitoring-based early triggers: retrain on schedule, but also trigger retraining if outcome divergence exceeds a threshold before the next scheduled date.
+
+**Practice this in Monitoring to work through how staleness manifests in model score distributions, how to set up outcome divergence tracking with label delay, and how to design a retraining trigger that fires at the right time.**`,
+    tags: ['Model Staleness', 'Monitoring', 'Retraining', 'Production ML', 'Prediction Drift', 'Model Health'],
+    domain: 'monitor',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -2608,6 +2865,11 @@ const POST_PRACTICE = {
   28: { tab: 'causal',       label: 'Causal Inference — Experiment Design' },
   29: { tab: 'ts',           label: 'Time Series — Forecast Failure Zoo' },
   30: { tab: 'dl_serving',   label: 'DL Serving — Quantization Lab' },
+  41: { tab: 'eval',         label: 'Model Evaluation — Shadow Mode Sim' },
+  42: { tab: 'features',     label: 'Feature Engineering — Leakage Zoo' },
+  43: { tab: 'monitor',      label: 'Monitoring — Drift Dashboard' },
+  44: { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
+  45: { tab: 'monitor',      label: 'Monitoring — Incident Triage' },
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────
@@ -2739,7 +3001,7 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
           ← Back to Gradient
         </button>
-        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'rgba(240,165,0,0.12)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
+        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'var(--prime-bg-light)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
           {isRead ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Read' : 'Mark as read'}
         </button>
       </div>
@@ -2794,6 +3056,14 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
           </div>
         )}
       </article>
+
+        {/* Mark as read toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--rim)' }}>
+          <button onClick={onMarkRead} style={{ padding: '6px 14px', background: isRead ? 'rgba(52,211,153,0.12)' : 'var(--prime)10', border: isRead ? '1px solid rgba(52,211,153,0.35)' : '1px solid var(--prime)30', borderRadius: '6px', color: isRead ? 'var(--mint)' : 'var(--prime)', fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer', transition: 'all var(--t-fast)' }}>
+            {isRead ? '✓ Marked as read' : 'Mark as read'}
+          </button>
+          {isRead && <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Click to unmark</span>}
+        </div>
     </div>
   )
 }

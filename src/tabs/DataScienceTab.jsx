@@ -410,7 +410,7 @@ function StatisticalTestingPitfalls() {
               {isCorrect ? 'Correct — ' : 'Incorrect — '}{s.mistake}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 10px' }}>{s.explanation}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.10)', borderRadius: '6px', border: '1px solid rgba(240,165,0,0.15)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(240,165,0,0.10)', borderRadius: '6px', border: '1px solid rgba(240,165,0,0.15)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.fix}</span>
             </div>
@@ -564,7 +564,7 @@ function CalibrationInPractice() {
       </div>
 
       {/* Quick reference */}
-      <div className="card" style={{ padding: '16px', border: '1px solid var(--rim)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', border: '1px solid var(--rim)' }}>
         <button onClick={() => setRefOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}>
           <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>Quick reference</span>
@@ -634,7 +634,7 @@ function CalibrationInPractice() {
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: '0 0 12px' }}>{s.explanation}</p>
             {selected !== s.correct && s.wrong[selected] && (
-              <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.11)', borderRadius: '6px', border: '1px solid rgba(251,113,133,0.15)', marginBottom: '10px' }}>
+              <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(251,113,133,0.11)', borderRadius: '6px', border: '1px solid rgba(251,113,133,0.15)', marginBottom: '10px' }}>
                 <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Why {CALIB_OPTIONS.find(o => o.id === selected)?.label} is wrong: </span>
                 <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.7 }}>{s.wrong[selected]}</span>
               </div>
@@ -1010,11 +1010,11 @@ export default function DataScienceTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '16px' }}>What's being built</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
           {ROADMAP.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--prime-bg-light)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

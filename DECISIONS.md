@@ -25,11 +25,22 @@ All decorative UI accents (card borders, section eyebrows, badge backgrounds, pr
 **Transition, shadow, and radius tokens — use the system variables.**  
 `--t-fast: 0.10s ease`, `--t: 0.16s ease`, `--t-slow: 0.26s ease`. Shadow: `--shadow-sm/md/lg`. Radius: `--r-sm: 5px`, `--r: 9px`, `--r-lg: 14px`. Never write hardcoded `transition: 0.2s` or `border-radius: 8px` in component files — reference the tokens.
 
-**Design token enforcement — grep check before committing.**  
-The build succeeds regardless of hardcoded values; enforcement must be manual. Before any commit touching component files, run: `grep -rn --include="*.jsx" "#[0-9a-fA-F]\{3,6\}" src/tabs/` for stray hex and `grep -rn --include="*.jsx" "fontFamily:.*['\"]" src/tabs/` for hardcoded font strings. Any hit is a violation — fix it or add the value to `:root` as a token first. This is the enforcement complement to the "never hardcode colors" rule; without it, violations compound silently across sessions.
+**Design token enforcement — pre-commit grep habit.**  
+The build succeeds regardless of hardcoded values; enforcement must be manual. Before any commit touching component files, run these checks:
+
+1. **Hardcoded hex colors:** `grep -rn --include="*.jsx" "#[0-9a-fA-F]\{3,6\}" src/tabs/` — catches all 3 and 6-digit hex values. Any hit is a violation.
+2. **Hardcoded font strings:** `grep -rn --include="*.jsx" "fontFamily:.*['\"]" src/tabs/` — catches inline font family assignments. Any hit is a violation.
+
+Fix violations by adding the value to `:root` in `index.css` as a named token, then reference it as `var(--token-name)`. This is the enforcement complement to the "never hardcode colors" and "Satoshi + JetBrains Mono only" rules; without it, violations compound silently across sessions.
 
 **Structural token extraction threshold — 5+ repetitions.**  
-When the same raw CSS value (padding, gap, background, border-radius) appears 5 or more times across tab files with identical intent, extract it to a `:root` variable. The three structural tokens most likely to earn extraction next: `--card-bg` (repeated card background), `--section-gap` (top-of-section padding), and `--card-pad` (card inner padding). Do not extract speculatively — wait for the repetition threshold to be hit.
+When the same raw CSS value (padding, gap, background, border-radius) appears 5 or more times across tab files with identical intent, extract it to a `:root` variable. Current extraction candidates identified (v4.47 audit):
+
+1. **`--card-pad-primary`** — `padding: '10px 14px'` (46 occurrences) — card/item inner padding, used across AccordionMCQ option buttons, scenario cards, and hint blocks.
+2. **`--card-pad-secondary`** — `padding: '16px'` (63 occurrences) — uniform padding on larger cards, panels, and reveal sections. Most common padding value across tabs.
+3. **`--prime-bg-light`** — `background: 'rgba(240,165,0,0.12)'` (39 occurrences) — light amber background for cards, hint blocks, selected states. The most frequent prime-color background opacity.
+
+Audit snapshot: 606 total `rgba(240,165,0,...)` values across 41 files, with the above three tokens accounting for 148 instances (24% of total amber usage). Do not extract speculatively — wait for the repetition threshold to be hit; these three candidates exceed it and should be extracted in the next session.
 
 **Shared utility classes for repeated UI patterns.**  
 Defined in `index.css`, never redefined inline in tab files:
@@ -214,3 +225,16 @@ MSL covers production ML for traditional/statistical ML systems. GAL (GenAI Syst
 
 **Build the visualization only after 15+ approved submissions.**  
 A frequency chart built from fewer than 15 data points is misleading — one outlier submission can skew a category by 10+ percentage points. The submission form and admin curation process (v1) ships independently of the visualization (v2). The chart is not built until the corpus is large enough to tell a real story.
+
+**Structural token extraction — v4.48 Tier 1 candidates:**
+
+Three padding/spacing values identified in v4.48 Item 2 audit as exceeding 5+ repetition threshold. Extract when next refactor touches these areas:
+
+| Token | Current repetitions | Value | Recommendation |
+|-------|-------------------|-------|-----------------|
+| `--card-pad-primary` | 46 | `16px` (typical card padding) | Extract to `:root`, replace all `padding: '16px'` on card containers |
+| `--card-pad-secondary` | 63 | `12px` (compact card padding) | Extract to `:root`, replace all `padding: '12px'` on nested elements |
+| `--prime-bg-light` | 39 | `rgba(240,165,0,0.1)` (amber tint bg) | Extract to `:root`, replace all light amber backgrounds |
+
+**Extraction trigger:** When refactoring any tab file and touching card/section padding, extract these tokens first. Prevents future drift.
+

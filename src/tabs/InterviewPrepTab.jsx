@@ -349,17 +349,17 @@ const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netfl
 const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
 
 const CAT_COLORS = {
-  'System Design':      { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Features':           { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Evaluation':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Spark':              { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Statistics':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Trees & Ensembles':  { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'SQL':                { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Regression':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Coding':             { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Architecture':       { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
-  'Behavioral':         { bg: 'rgba(240,165,0,0.12)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'System Design':      { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Features':           { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Evaluation':         { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Spark':              { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Statistics':         { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Trees & Ensembles':  { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'SQL':                { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Regression':         { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Coding':             { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Architecture':       { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
+  'Behavioral':         { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },
 }
 
 // ─── Fluency Drills ──────────────────────────────────────────────────────────

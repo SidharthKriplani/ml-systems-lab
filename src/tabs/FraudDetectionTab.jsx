@@ -1226,7 +1226,7 @@ function ReferenceCellDisplay({ title, code, onMarkRead, isDone }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
             width: '32px', height: '32px', borderRadius: '6px',
-            background: isDone ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: isDone ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${isDone ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1444,10 +1444,10 @@ export default function FraudDetectionTab({ onNavigate }) {
             ML Engineering
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 1 of 4
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             <CheckMark /> Real execution
           </span>
         </div>
@@ -1464,7 +1464,7 @@ export default function FraudDetectionTab({ onNavigate }) {
         </p>
 
         {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1488,7 +1488,7 @@ export default function FraudDetectionTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('fraud_cell1') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('fraud_cell1') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('fraud_cell1') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1514,7 +1514,7 @@ export default function FraudDetectionTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('fraud_cell2') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('fraud_cell2') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('fraud_cell2') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1541,7 +1541,7 @@ export default function FraudDetectionTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('fraud_cell3') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('fraud_cell3') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('fraud_cell3') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
@@ -1617,10 +1617,10 @@ export default function FraudDetectionTab({ onNavigate }) {
                 ML Engineering
               </span>
               <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                 Phase 2 of 4
               </span>
-              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                 <CheckMark /> Real execution
               </span>
             </div>
@@ -1641,7 +1641,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '50%',
-                background: state.cellsDone.includes('fraud_cell4') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                background: state.cellsDone.includes('fraud_cell4') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                 border: `1px solid ${state.cellsDone.includes('fraud_cell4') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
@@ -1667,7 +1667,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '50%',
-                background: state.cellsDone.includes('fraud_cell5') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                background: state.cellsDone.includes('fraud_cell5') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                 border: `1px solid ${state.cellsDone.includes('fraud_cell5') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
@@ -1693,7 +1693,7 @@ export default function FraudDetectionTab({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '50%',
-                background: state.cellsDone.includes('fraud_cell6') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                background: state.cellsDone.includes('fraud_cell6') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                 border: `1px solid ${state.cellsDone.includes('fraud_cell6') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
@@ -1752,10 +1752,10 @@ export default function FraudDetectionTab({ onNavigate }) {
                     ML Engineering
                   </span>
                   <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                     Phase 3 of 4
                   </span>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                     <CheckMark /> Real execution
                   </span>
                 </div>
@@ -1776,7 +1776,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                   <div style={{
                     width: '26px', height: '26px', borderRadius: '50%',
-                    background: state.cellsDone.includes('fraud_cell7') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                    background: state.cellsDone.includes('fraud_cell7') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                     border: `1px solid ${state.cellsDone.includes('fraud_cell7') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
@@ -1802,7 +1802,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                   <div style={{
                     width: '26px', height: '26px', borderRadius: '50%',
-                    background: state.cellsDone.includes('fraud_cell8') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                    background: state.cellsDone.includes('fraud_cell8') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                     border: `1px solid ${state.cellsDone.includes('fraud_cell8') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
@@ -1828,7 +1828,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                   <div style={{
                     width: '26px', height: '26px', borderRadius: '50%',
-                    background: state.cellsDone.includes('fraud_cell9') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                    background: state.cellsDone.includes('fraud_cell9') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                     border: `1px solid ${state.cellsDone.includes('fraud_cell9') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
@@ -1887,10 +1887,10 @@ export default function FraudDetectionTab({ onNavigate }) {
                         ML Engineering
                       </span>
                       <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                         Phase 4 of 4
                       </span>
-                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
                         <CheckMark /> Real execution
                       </span>
                     </div>
@@ -1911,7 +1911,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        background: state.cellsDone.includes('fraud_cell10') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                        background: state.cellsDone.includes('fraud_cell10') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                         border: `1px solid ${state.cellsDone.includes('fraud_cell10') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
@@ -1937,7 +1937,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        background: state.cellsDone.includes('fraud_cell11') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                        background: state.cellsDone.includes('fraud_cell11') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                         border: `1px solid ${state.cellsDone.includes('fraud_cell11') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
@@ -1963,7 +1963,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        background: state.cellsDone.includes('fraud_cell12') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                        background: state.cellsDone.includes('fraud_cell12') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                         border: `1px solid ${state.cellsDone.includes('fraud_cell12') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
@@ -1989,7 +1989,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        background: state.cellsDone.includes('fraud_cell13') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                        background: state.cellsDone.includes('fraud_cell13') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                         border: `1px solid ${state.cellsDone.includes('fraud_cell13') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
@@ -2015,7 +2015,7 @@ export default function FraudDetectionTab({ onNavigate }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                       <div style={{
                         width: '26px', height: '26px', borderRadius: '50%',
-                        background: state.cellsDone.includes('fraud_cell14') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+                        background: state.cellsDone.includes('fraud_cell14') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
                         border: `1px solid ${state.cellsDone.includes('fraud_cell14') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>

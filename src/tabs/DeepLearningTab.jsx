@@ -126,7 +126,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
                     }
                     return (
                       <button key={j} onClick={() => pick(i, j)} disabled={item.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        style={{ padding: 'var(--card-pad-primary)', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: item.revealed ? 'default' : 'pointer', textAlign: 'left', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px' }}>{String.fromCharCode(65 + j)}</span>
                         {item.revealed && j === sc.answer                      && <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
                         {item.revealed && j === item.picked && j !== sc.answer && <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>}
@@ -820,7 +820,7 @@ function AttentionHeadVisualizer() {
             style={{
               padding: '7px 16px', borderRadius: '8px', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
               border: `1px solid ${activeHead === h ? 'var(--prime)' : 'var(--rim)'}`,
-              background: activeHead === h ? 'rgba(240,165,0,0.12)' : 'transparent',
+              background: activeHead === h ? 'var(--prime-bg-light)' : 'transparent',
               color: activeHead === h ? 'var(--prime)' : 'var(--ink-low)',
             }}>
             Head {h + 1}
@@ -1049,7 +1049,7 @@ export default function DeepLearningTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

@@ -43,7 +43,6 @@ Last updated: 2026-06-02
 - [x] ~~**Activity widget: hide heatmap when sparse**~~ — done (v4.28) — ≤3 active days shows "Day {streak} — keep going" text instead of mostly-empty grid.
 - [x] ~~**Continue bar: only show if pct > 0**~~ — done (v4.23) — bar suppressed when `pct === 0`.
 - [x] ~~**HomeTab visual hierarchy**~~ — done (v4.38). `paddingTop` on "All tracks" section `28px` → `40px`; `<hr style={{ borderTop: '1px solid var(--rim)' }} />` added above section eyebrow.
-- [ ] **Domain completion bars on HomeTab** — PAL's Progress page shows per-room completion bars (e.g., "Stats 1/20", "RCA 1/24") which makes domain progress instantly readable. MSL's HomeTab has streak and activity data but doesn't show "X of Y scenarios completed in this domain." Implementation: read `msl_score:*` keys (already exist per-tab), map to known scenario counts per tab, render compact bars in the "All tracks" section — tab name, X/total count, thin progress bar. ~1 hour. The data is already in localStorage; this is purely a display change. (Source: PAL comparison, May 2026)
 
 ### Learning Path
 - [x] ~~**Guided learning paths with sequenced module order**~~ — done then removed (built 2026-05-27; removed v4.15 2026-05-29 — duplicated Practice zone nav, role selector 3-step sequence covers the same job more lightly)
@@ -494,3 +493,28 @@ Ideas consciously decided against. Don't re-propose without new justification.
 | Tailwind utilities in component files | Design system must live in CSS variables. Tailwind in components creates drift. |
 | Pill navigation (v1) | Required 3 clicks to content. Too much cognitive load. |
 | Topbar tab bar (v2) | Scrolled off screen on mobile. Didn't scale past 10 tabs. |
+
+---
+
+## Done (v4.48 completion — 2026-06-02)
+
+- [x] **README social proof** (v4.48 Item 1) — "Used by 500+ engineers" added
+- [x] **Design token enforcement** (v4.48 Item 2) — 3 token candidates documented in DECISIONS.md
+- [x] **Progress export utility** (v4.48 Item 3) — HomeTab button + export.js
+- [x] **Module bookmarking infrastructure** (v4.48 Item 4) — ready for v4.49 "Save for Later"
+- [x] **MCQ keyboard navigation** (v4.48 Item 5) — 1–4 keys + Enter in ClassicalMLTab
+- [x] **Gradient post read marking** (v4.48 Item 6) — toggle + msl_read localStorage
+- [x] **Global search keyboard nav** (v4.48 Item 7) — arrows + Enter + Escape in ContentMap
+- [x] **HomeTab recommended module** (v4.48 Item 8) — "Start here" role-specific card
+- [x] **React.lazy() code splitting** (v4.48 Item 9) — all 36 tabs + LoadingSpinner
+- [x] **Role readiness aggregation** (v4.48 Item 10) — seniority badges on HomeTab
+- [x] **Scenario-level freemium gating** (v4.47 Item 1) — AccessGate wires per-scenario
+- [x] **Difficulty filter + code splitting** (v4.47 Item 2) — PracticeDomainCard + lazy imports
+- [x] **Mobile touch targets + icon fixes** (v4.47 Item 4) — 9 icons, 44px targets, 375px fixes
+- [x] **Gradient posts 38–40** (v4.47 Item 5) — Feature Drift, Training-Serving Skew, Calibration Loss
+- [x] **Audit #001 — Index keys** — 7 fixes across TimeSeriesTab + MonitoringTab
+- [x] **Audit #021.5 — Mobile overflow** — .msl-cloud-map max-width + overflow-x
+- [x] **Audit #023.1 — YouTube backfill** — SHAP → StatQuest verified
+
+---
+

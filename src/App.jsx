@@ -1,47 +1,48 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { trackTabSwitch } from './analytics.js'
 import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
+import LoadingSpinner from './components/LoadingSpinner.jsx'
 import { INTERVIEW_EXPERIENCES } from './data/interviewExperiences.js'
 
-import HomeTab           from './tabs/HomeTab.jsx'
-import SparkLabTab       from './tabs/SparkLabTab.jsx'
-import FeatureEngTab     from './tabs/FeatureEngTab.jsx'
-import ModelEvalTab      from './tabs/ModelEvalTab.jsx'
-import ModelsMathTab     from './tabs/ModelsMathTab.jsx'
-import SystemDesignTab   from './tabs/SystemDesignTab.jsx'
-import MonitoringTab     from './tabs/MonitoringTab.jsx'
-import InterviewPrepTab  from './tabs/InterviewPrepTab.jsx'
-import GradientTab       from './tabs/GradientTab.jsx'
-import LandscapeTab      from './tabs/LandscapeTab.jsx'
-import ClassicalMLTab    from './tabs/ClassicalMLTab.jsx'
-import MLOpsDeployTab    from './tabs/MLOpsDeployTab.jsx'
-import MLOpsPipelinesTab from './tabs/MLOpsPipelinesTab.jsx'
-import DeepLearningTab   from './tabs/DeepLearningTab.jsx'
-import DLFineTuningTab   from './tabs/DLFineTuningTab.jsx'
-import DLServingTab      from './tabs/DLServingTab.jsx'
-import DataScienceTab    from './tabs/DataScienceTab.jsx'
-import CausalInferenceTab from './tabs/CausalInferenceTab.jsx'
-import TimeSeriesTab     from './tabs/TimeSeriesTab.jsx'
-import AirflowTab        from './tabs/AirflowTab.jsx'
-import DbtTab            from './tabs/dbtTab.jsx'
-import DataModelingTab   from './tabs/DataModelingTab.jsx'
-import AskTab            from './tabs/AskTab.jsx'
-import TakeHomeTab    from './tabs/TakeHomeTab.jsx'
-import TrainerTab     from './tabs/TrainerTab.jsx'
-import CombinatorTab  from './tabs/CombinatorTab.jsx'
-import CodeBugsTab    from './tabs/CodeBugsTab.jsx'
-import CaseStudiesTab from './tabs/CaseStudiesTab.jsx'
-import StaffLayerTab  from './tabs/StaffLayerTab.jsx'
-import JDPrepTab      from './tabs/JDPrepTab.jsx'
-import DefenseDocTab  from './tabs/DefenseDocTab.jsx'
-import VerbatimTab    from './tabs/VerbatimTab.jsx'
-import SpotTheFlawTab from './tabs/SpotTheFlawTab.jsx'
-import ProjectLabTab  from './tabs/ProjectLabTab.jsx'
-import LoanDefaultTab from './tabs/LoanDefaultTab.jsx'
-import FraudDetectionTab from './tabs/FraudDetectionTab.jsx'
+const HomeTab           = lazy(() => import('./tabs/HomeTab.jsx'))
+const SparkLabTab       = lazy(() => import('./tabs/SparkLabTab.jsx'))
+const FeatureEngTab     = lazy(() => import('./tabs/FeatureEngTab.jsx'))
+const ModelEvalTab      = lazy(() => import('./tabs/ModelEvalTab.jsx'))
+const ModelsMathTab     = lazy(() => import('./tabs/ModelsMathTab.jsx'))
+const SystemDesignTab   = lazy(() => import('./tabs/SystemDesignTab.jsx'))
+const MonitoringTab     = lazy(() => import('./tabs/MonitoringTab.jsx'))
+const InterviewPrepTab  = lazy(() => import('./tabs/InterviewPrepTab.jsx'))
+const GradientTab       = lazy(() => import('./tabs/GradientTab.jsx'))
+const LandscapeTab      = lazy(() => import('./tabs/LandscapeTab.jsx'))
+const ClassicalMLTab    = lazy(() => import('./tabs/ClassicalMLTab.jsx'))
+const MLOpsDeployTab    = lazy(() => import('./tabs/MLOpsDeployTab.jsx'))
+const MLOpsPipelinesTab = lazy(() => import('./tabs/MLOpsPipelinesTab.jsx'))
+const DeepLearningTab   = lazy(() => import('./tabs/DeepLearningTab.jsx'))
+const DLFineTuningTab   = lazy(() => import('./tabs/DLFineTuningTab.jsx'))
+const DLServingTab      = lazy(() => import('./tabs/DLServingTab.jsx'))
+const DataScienceTab    = lazy(() => import('./tabs/DataScienceTab.jsx'))
+const CausalInferenceTab = lazy(() => import('./tabs/CausalInferenceTab.jsx'))
+const TimeSeriesTab     = lazy(() => import('./tabs/TimeSeriesTab.jsx'))
+const AirflowTab        = lazy(() => import('./tabs/AirflowTab.jsx'))
+const DbtTab            = lazy(() => import('./tabs/dbtTab.jsx'))
+const DataModelingTab   = lazy(() => import('./tabs/DataModelingTab.jsx'))
+const AskTab            = lazy(() => import('./tabs/AskTab.jsx'))
+const TakeHomeTab    = lazy(() => import('./tabs/TakeHomeTab.jsx'))
+const TrainerTab     = lazy(() => import('./tabs/TrainerTab.jsx'))
+const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
+const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
+const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
+const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
+const JDPrepTab      = lazy(() => import('./tabs/JDPrepTab.jsx'))
+const DefenseDocTab  = lazy(() => import('./tabs/DefenseDocTab.jsx'))
+const VerbatimTab    = lazy(() => import('./tabs/VerbatimTab.jsx'))
+const SpotTheFlawTab = lazy(() => import('./tabs/SpotTheFlawTab.jsx'))
+const ProjectLabTab  = lazy(() => import('./tabs/ProjectLabTab.jsx'))
+const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
+const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -196,7 +197,7 @@ const INTERVIEW_TOOLS = [
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
-  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '10 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--prime)',
+  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '12 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> },
 ]
 
@@ -368,7 +369,7 @@ function PracticeDomainCard({ domain, onSelect, onGoBack, tabProgress, isUnlocke
                     padding: '6px 12px',
                     borderRadius: '6px',
                     border: `1px solid ${isSelected ? 'var(--prime)' : 'var(--rim)'}`,
-                    background: isSelected ? 'rgba(240,165,0,0.12)' : 'transparent',
+                    background: isSelected ? 'var(--prime-bg-light)' : 'transparent',
                     color: isSelected ? 'var(--prime)' : 'var(--ink-low)',
                     fontSize: '12px',
                     fontFamily: 'var(--font-sans)',
@@ -438,7 +439,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
         </p>
       </div>
       {totalScenarios > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)" }}>Your progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(240,165,0,0.45)' }} />
@@ -588,10 +589,10 @@ function InterviewGrid({ onSelect, isUnlocked }) {
       <div style={{ marginBottom: '28px' }}>
         <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Interview prep</div>
         <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '10px', color: 'var(--ink-hi)' }}>
-          Nine tools. One loop.
+          Six tools. One loop.
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '560px' }}>
-          Steps 01–03 are a sequence: Defense Plan → Combinator → Verbal. Run them in order starting two weeks before your interview. The other tools work any time.
+          Steps 01–03 are a sequence: Defense Plan → Combinator → Verbal. Run them in order starting two weeks before your interview. The other tools work any time. Drills (Trainer, Code Bugs, Case Studies, Staff Layer) live in Practice.
         </p>
       </div>
       <div className="grid-cards-wide">
@@ -625,7 +626,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
           rel="noopener noreferrer"
           style={{
             flexShrink: 0,
-            background: 'rgba(240,165,0,0.12)',
+            background: 'var(--prime-bg-light)',
             border: '1px solid rgba(240,165,0,0.35)',
             borderRadius: '8px',
             padding: '12px 18px',
@@ -868,7 +869,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           onMouseEnter={e => {
             if (!isSearchActive) {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'
-              e.currentTarget.style.boxShadow = '0 0 0 2px rgba(240,165,0,0.12)'
+              e.currentTarget.style.boxShadow = '0 0 0 2px var(--prime-bg-light)'
             }
           }}
           onMouseLeave={e => {
@@ -1056,13 +1057,25 @@ export default function App() {
     if (isInterviewGrid) return <InterviewGrid onSelect={goTo} isUnlocked={isUnlocked} />
     // Defense Plan handles its own internal gate; jdprep redirects here
     if (currentTabId === 'defense' || currentTabId === 'jdprep') {
-      return <DefenseDocTab onNavigate={goTo} isUnlocked={isUnlocked} onUnlock={handleUnlock} />
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <DefenseDocTab onNavigate={goTo} isUnlocked={isUnlocked} onUnlock={handleUnlock} />
+        </Suspense>
+      )
     }
     if (currentTabId && PREMIUM_TABS.has(currentTabId) && !isUnlocked) {
       return <AccessGate onUnlock={handleUnlock} />
     }
     const Component = ALL_TABS.find(t => t.id === currentTabId)?.component
-    return Component ? <Component onNavigate={goTo} /> : <HomeTab onNavigate={goTo} />
+    return Component ? (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Component onNavigate={goTo} />
+      </Suspense>
+    ) : (
+      <Suspense fallback={<LoadingSpinner />}>
+        <HomeTab onNavigate={goTo} />
+      </Suspense>
+    )
   }
 
   return (

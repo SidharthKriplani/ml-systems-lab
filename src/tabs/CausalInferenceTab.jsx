@@ -379,7 +379,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                     } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
                     return (
                       <button key={oi} onClick={() => pick(i, oi)} disabled={it.revealed}
-                        style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: it.revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        style={{ padding: 'var(--card-pad-primary)', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: it.revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
                         <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
                         {opt}
                       </button>
@@ -469,7 +469,7 @@ function CausalVsPredictive() {
           }
           return (
             <button key={i} onClick={() => pick(i)} disabled={revealed}
-              style={{ padding: '16px', borderRadius: '10px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 600, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', textAlign: 'center' }}>
+              style={{ padding: 'var(--card-pad-secondary)', borderRadius: '10px', border: `1px solid ${border}`, background: bg, color, fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 600, cursor: revealed ? 'default' : 'pointer', transition: 'all 0.15s', textAlign: 'center' }}>
               {opt}
             </button>
           )
@@ -491,11 +491,11 @@ function CausalVsPredictive() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${picked === s.correct ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}`, background: picked === s.correct ? 'rgba(52,211,153,0.10)' : 'rgba(244,63,94,0.10)' }}>
             <div style={{ fontSize: '10px', color: picked === s.correct ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{picked === s.correct ? 'Correct' : 'Incorrect'}</div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.25)', borderRadius: '8px', border: '1px solid var(--rim)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Method: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.method}</span>
             </div>
-            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(244,63,94,0.10)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
+            <div style={{ marginTop: '10px', padding: 'var(--card-pad-primary)', background: 'rgba(244,63,94,0.10)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.15)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Common trap: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.trap}</span>
             </div>
@@ -628,7 +628,7 @@ function ConfounderOrCollider() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${TYPE_COLORS[s.type]}30`, background: TYPE_COLORS[s.type] + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: TYPE_COLORS[s.type] + '20', color: TYPE_COLORS[s.type], fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.type}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -811,7 +811,7 @@ function BackdoorCriterion() {
           <div className="card" style={{ padding: '20px', border: `1px solid ${accent}30`, background: accent + '06' }}>
             <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '999px', background: accent + '20', color: accent, fontFamily: 'var(--font-mono)', display: 'inline-block', marginBottom: '10px' }}>{s.nodeType}</span>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -940,7 +940,7 @@ function ExperimentFailureCard({ s, accentColor, onPick }) {
               } else if (isOpt) { border = accentColor + '60'; bg = accentColor + '08'; color = accentColor }
               return (
                 <button key={oi} onClick={() => pick(oi)} disabled={revealed}
-                  style={{ padding: '10px 14px', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                  style={{ padding: 'var(--card-pad-primary)', borderRadius: '7px', border: `1px solid ${border}`, background: bg, color, fontSize: '13px', fontFamily: 'var(--font-sans)', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
                   <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', minWidth: '14px', paddingTop: '1px', opacity: 0.6 }}>{oi + 1}.</span>
                   {opt}
                 </button>
@@ -1223,7 +1223,7 @@ function CausalDAGExplorer() {
       </div>
 
       {/* SVG DAG */}
-      <div style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
+      <div style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '12px' }}>
         <div style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
           Causal Graph — highlighted node is under question
         </div>
@@ -1335,7 +1335,7 @@ function SimpsonsParadoxViz() {
       <div style={{ display: 'flex', gap: '8px' }}>
         {['aggregate', 'segmented'].map(v => (
           <button key={v} onClick={() => setView(v)}
-            style={{ padding: '7px 18px', borderRadius: '7px', border: `1px solid ${view === v ? 'rgba(240,165,0,0.5)' : 'var(--rim)'}`, background: view === v ? 'rgba(240,165,0,0.12)' : 'transparent', color: view === v ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+            style={{ padding: '7px 18px', borderRadius: '7px', border: `1px solid ${view === v ? 'rgba(240,165,0,0.5)' : 'var(--rim)'}`, background: view === v ? 'var(--prime-bg-light)' : 'transparent', color: view === v ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.15s' }}>
             {v}
           </button>
         ))}
@@ -1452,7 +1452,7 @@ export default function CausalInferenceTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

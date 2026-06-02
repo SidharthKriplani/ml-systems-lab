@@ -350,14 +350,14 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
 
                 <p style={{ fontSize: '13px', color: 'var(--ink-low)', margin: 0, fontStyle: 'italic' }}>{sc.question}</p>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }} onKeyDown={(e) => { if (['1','2','3','4'].includes(e.key) \&\& !it.revealed) { e.preventDefault(); pick(i, parseInt(e.key)-1) } else if (e.key === 'Enter' \&\& !it.revealed \&\& it.picked !== null) { e.preventDefault(); reveal(i) } }} tabIndex={0}>
                   {sc.options.map((opt, oi) => {
                     const isAns    = oi === sc.answer
                     const isPicked = oi === it.picked
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
                         className={`msl-option-btn${it.revealed && isAns ? ' correct' : ''}${it.revealed && isPicked && !isAns ? ' wrong' : ''}${!it.revealed && isPicked ? ' selected' : ''}`}
-                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
+                        style={{ textAlign: 'left', padding: 'var(--card-pad-primary)', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', opacity: 0.6, minWidth: '14px', flexShrink: 0, marginTop: '2px' }}>{String.fromCharCode(65 + oi)}</span>
                         <span style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, lineHeight: 1.55 }}>
                           {it.revealed && isAns && <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
@@ -503,7 +503,7 @@ function ModelFailureZoo() {
               padding: '7px 14px',
               borderRadius: '20px',
               border: selectedModel === m.id ? '1px solid var(--prime)' : '1px solid var(--rim)',
-              background: selectedModel === m.id ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
+              background: selectedModel === m.id ? 'var(--prime-bg-light)' : 'var(--surface)',
               color: selectedModel === m.id ? 'var(--prime)' : 'var(--ink-mid)',
               fontSize: '13px',
               fontWeight: selectedModel === m.id ? 600 : 400,
@@ -1500,7 +1500,7 @@ export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

@@ -862,7 +862,7 @@ function SetupScreen({ onStart }) {
                   if (final.length > 0) onStart(final)
                 }}
                 style={{
-                  background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.3)',
+                  background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)',
                   borderRadius: 8, padding: '0.5rem 1.1rem',
                   fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
                   color: 'var(--prime)', fontFamily: 'var(--font-sans)',
@@ -911,7 +911,7 @@ function SetupScreen({ onStart }) {
                   {weakRecent.map(({ domain, pct }) => (
                     <span key={domain} style={{
                       padding: '0.25rem 0.65rem', borderRadius: 99,
-                      background: 'rgba(240,165,0,0.12)',
+                      background: 'var(--prime-bg-light)',
                       border: '1px solid rgba(240,165,0,0.25)',
                       fontSize: '0.78rem', color: 'var(--prime)',
                       fontFamily: 'var(--font-mono)',
@@ -928,7 +928,7 @@ function SetupScreen({ onStart }) {
                     if (final.length > 0) onStart(final)
                   }}
                   style={{
-                    background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
+                    background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)',
                     borderRadius: 8, padding: '0.5rem 1.1rem',
                     fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer',
                     color: 'var(--prime)', fontFamily: 'var(--font-sans)',

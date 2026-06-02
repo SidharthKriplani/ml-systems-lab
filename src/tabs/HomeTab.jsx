@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getAllProgress, getNextRecommendation, getTrackMastery, inferMastery } from '../utils/progress.js'
 import { getBookmarks, toggleBookmark } from '../utils/bookmarks.js'
+import { downloadProgressJSON } from '../utils/export.js'
 import TESTIMONIALS from '../data/testimonials.js'
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
@@ -258,6 +259,19 @@ export default function HomeTab({ onNavigate }) {
 
   const jumpBackLabel = jumpBackTab ? (TRACKS.find(t => t.id === jumpBackTab)?.label ?? jumpBackTab) : null
 
+
+  // ── Recommend first module based on role ──────────────────────────────────
+  const ROLE_FIRST_MODULES = {
+    mle_interview:  'defense',
+    production_ml:  'features',
+    data_engineer:  'spark',
+    deep_learning:  'dl',
+    data_scientist: 'classical',
+    mlops:          'mlops_deploy',
+    staff:          'design',
+  }
+  const recommendedFirstTab = role && ROLE_FIRST_MODULES[role] ? ROLE_FIRST_MODULES[role] : null
+  const recommendedFirstModule = recommendedFirstTab ? TRACKS.find(t => t.id === recommendedFirstTab) : null
   // ── Domain completion data ──────────────────────────────────────────────
   const DOMAIN_COMPLETION_MAP = [
     { name: 'ML Engineering', accent: 'var(--prime)', trackIds: ['models','features','eval','design','classical'] },
@@ -311,7 +325,42 @@ export default function HomeTab({ onNavigate }) {
       }
       result[key] = sessTotal > 0 ? Math.round((sessCorrect / sessTotal) * 100) : null
     }
+
+    // Store readiness snapshot in localStorage
+    try {
+      const readinessSnapshot = {}
+      for (const [key, accuracy] of Object.entries(result)) {
+        if (accuracy !== null) {
+          readinessSnapshot[key] = {
+            accuracy,
+            seniority: mapAccuracyToSeniority(accuracy),
+            timestamp: new Date().toISOString()
+          }
+        }
+      }
+      if (Object.keys(readinessSnapshot).length > 0) {
+        localStorage.setItem('msl_readiness_score', JSON.stringify(readinessSnapshot))
+      }
+    } catch (_) {}
+
     return result
+  }
+
+  function mapAccuracyToSeniority(accuracy) {
+    if (accuracy >= 90) return 'Staff'
+    if (accuracy >= 75) return 'Senior'
+    if (accuracy >= 60) return 'Mid'
+    return 'Junior'
+  }
+
+  function getSeniorityColor(seniority) {
+    const colors = {
+      'Junior': 'var(--ink-ghost)',
+      'Mid': 'var(--ink-low)',
+      'Senior': 'var(--prime)',
+      'Staff': 'var(--mint)'
+    }
+    return colors[seniority] || 'var(--ink-ghost)'
   }
 
   const readinessScores = computeReadiness()
@@ -431,7 +480,7 @@ export default function HomeTab({ onNavigate }) {
                 <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>Path:</span>
                 {ROLE_SEQUENCES[activeRole.key].map((step, i) => (
                   <span key={step.tab} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <button onClick={() => onNavigate(step.tab)} style={{ background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={() => onNavigate(step.tab)} style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer' }}>
                       {`${String(i + 1).padStart(2, '0')} ${step.label}`}
                     </button>
                     {i < ROLE_SEQUENCES[activeRole.key].length - 1 && <span style={{ color: 'var(--ink-ghost)', fontSize: '10px' }}>→</span>}
@@ -448,6 +497,23 @@ export default function HomeTab({ onNavigate }) {
       </section>
 
       {/* ── Guided Paths ── */}
+
+      {/* ── Start Here (role-based first module recommendation) ── */}
+      {role && recommendedFirstModule && (
+        <section>
+          <div style={{ padding: '16px 18px', background: 'linear-gradient(135deg, rgba(240,165,0,0.15) 0%, rgba(240,165,0,0.05) 100%)', border: '1px solid rgba(240,165,0,0.30)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all var(--t-fast)' }} onClick={() => onNavigate(recommendedFirstTab)} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(240,165,0,0.50)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(240,165,0,0.18) 0%, rgba(240,165,0,0.08) 100%)' }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(240,165,0,0.30)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(240,165,0,0.15) 0%, rgba(240,165,0,0.05) 100%)' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Start here</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '2px' }}>{recommendedFirstModule.label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{recommendedFirstModule.description}</div>
+            </div>
+            <button style={{ padding: '8px 16px', background: 'var(--prime)', border: 'none', borderRadius: '6px', color: 'var(--void)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 700, cursor: 'pointer', flexShrink: 0, transition: 'all var(--t-fast)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--prime-hi)'; e.currentTarget.style.transform = 'scale(1.05)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--prime)'; e.currentTarget.style.transform = 'scale(1)' }}>
+              Start →
+            </button>
+          </div>
+        </section>
+      )}
+
       <section>
         <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Guided Paths</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
@@ -577,6 +643,8 @@ export default function HomeTab({ onNavigate }) {
                 : 0
               const started = domainTracks.filter(t => getTrackPct(t.id) > 0).length
               const sessScore = readinessScores[domain.key] ?? null
+              const seniority = sessScore !== null ? mapAccuracyToSeniority(sessScore) : null
+              const seniorityColor = seniority ? getSeniorityColor(seniority) : null
               return (
                 <div key={domain.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)', minWidth: '130px', flexShrink: 0 }}>{domain.label}</span>
@@ -590,13 +658,97 @@ export default function HomeTab({ onNavigate }) {
                       </div>
                     )}
                   </div>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: sessScore !== null ? 'var(--prime)' : 'var(--ink-ghost)', minWidth: '80px', textAlign: 'right', flexShrink: 0 }}>
-                    {sessScore !== null ? `${sessScore}% accuracy` : `${started}/${domainTracks.length} started`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, minWidth: '140px', justifyContent: 'flex-end' }}>
+                    {sessScore !== null ? (
+                      <>
+                        <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
+                          {sessScore}%
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 700,
+                          color: seniorityColor,
+                          background: `${seniorityColor}18`,
+                          border: `1px solid ${seniorityColor}40`,
+                          borderRadius: '4px',
+                          padding: '2px 8px',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase'
+                        }}>
+                          {seniority}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>
+                        {started}/{domainTracks.length} started
+                      </span>
+                    )}
+                  </div>
                 </div>
               )
             })}
           </div>
+
+          {/* Role Readiness Summary */}
+          {Object.values(readinessScores).some(s => s !== null) && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
+              <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '10px' }}>Role Readiness Badges</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px' }}>
+                {DOMAIN_LABELS.filter(d => d.key !== 'resources').map(domain => {
+                  const sessScore = readinessScores[domain.key] ?? null
+                  const seniority = sessScore !== null ? mapAccuracyToSeniority(sessScore) : null
+                  const seniorityColor = seniority ? getSeniorityColor(seniority) : null
+
+                  if (sessScore === null) return null
+
+                  return (
+                    <div key={domain.key} style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px',
+                      background: 'var(--depth)',
+                      border: `1px solid ${seniorityColor}30`,
+                      borderRadius: '8px'
+                    }}>
+                      <span style={{
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-sans)',
+                        fontWeight: 600,
+                        color: 'var(--ink-hi)',
+                        textAlign: 'center'
+                      }}>
+                        {domain.label}
+                      </span>
+                      <span style={{
+                        fontSize: '12px',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        color: seniorityColor,
+                        background: `${seniorityColor}18`,
+                        border: `1.5px solid ${seniorityColor}50`,
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase'
+                      }}>
+                        {seniority}
+                      </span>
+                      <span style={{
+                        fontSize: '9px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--ink-ghost)'
+                      }}>
+                        {sessScore}% accuracy
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid var(--rim)', margin: '0 0 16px' }} />
@@ -653,6 +805,18 @@ export default function HomeTab({ onNavigate }) {
         })}
       </section>
 
+
+
+      {/* ── Export Progress ── */}
+      <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ margin: 0 }}>Export Progress</div>
+          <button onClick={downloadProgressJSON} style={{ padding: '6px 14px', background: 'var(--prime)10', border: '1px solid var(--prime)30', borderRadius: '6px', color: 'var(--prime)', fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer', transition: 'all var(--t-fast)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--prime)15'; e.currentTarget.style.borderColor = 'var(--prime)40' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--prime)10'; e.currentTarget.style.borderColor = 'var(--prime)30' }}>
+            Download JSON ↓
+          </button>
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, marginTop: '10px' }}>Backup all your progress, bookmarks, and settings. File includes all msl_* localStorage keys.</p>
+      </section>
 
       {/* ── Testimonials ── */}
       {TESTIMONIALS.length > 0 && (

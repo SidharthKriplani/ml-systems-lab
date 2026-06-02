@@ -586,7 +586,7 @@ function CompaniesSection() {
             <div style={{ fontSize: '12px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Tech highlights</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {c.techHighlights.map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.2)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{t}</span>
+                <span key={t} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '5px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.2)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{t}</span>
               ))}
             </div>
           </div>

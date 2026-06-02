@@ -429,7 +429,7 @@ function ChampionChallenger() {
           {revealed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div className="card animate-slide-up" style={{
-                padding: '16px',
+                padding: 'var(--card-pad-secondary)',
                 background: currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.13)' : 'rgba(244,63,94,0.13)',
                 border: `1px solid ${currentPick === CC_QUESTIONS[step].correct ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.25)'}`,
               }}>

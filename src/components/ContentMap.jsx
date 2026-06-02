@@ -15,8 +15,8 @@ function TabLeaf({ label, desc, isPro, onNav }) {
         style={{
           flex: 1, textAlign: 'left', padding: '8px 8px',
           minHeight: '40px',
-          background: hov ? 'rgba(240,165,0,0.07)' : 'none',
-          border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
+          background: isSelected ? 'var(--prime-bg-light)' : hov ? 'rgba(240,165,0,0.07)' : 'none',
+          border: `1px solid ${isSelected ? 'rgba(240,165,0,0.35)' : hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
           borderRadius: 'var(--r-sm)', cursor: 'pointer',
           transition: 'background var(--t-fast), border-color var(--t-fast)',
           display: 'flex', alignItems: 'center', gap: '6px',
@@ -102,7 +102,7 @@ function ZoneSection({ zoneLabel, children }) {
 
 // ── Search result row ─────────────────────────────────────────────────────────
 
-function SearchRow({ item, isPro, onNav }) {
+function SearchRow({ item, isPro, onNav, isSelected }) {
   const [hov, setHov] = useState(false)
   return (
     <button
@@ -160,6 +160,7 @@ const STATIC_TABS = [
 
 export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDomains, interviewTools, premiumTabs }) {
   const [query, setQuery] = useState('')
+  const [selectedIdx, setSelectedIdx] = useState(-1)
   const inputRef = useRef(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -227,9 +228,14 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
+        $1value={query}
+        onChange={e => { setQuery(e.target.value); setSelectedIdx(-1) }}
+        onKeyDown={e => {
+          if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx(idx => idx < (filtered?.length ?? 0) - 1 ? idx + 1 : idx) }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx(idx => idx > 0 ? idx - 1 : -1) }
+          else if (e.key === 'Enter' && filtered && filtered.length > 0 && selectedIdx >= 0) { e.preventDefault(); go(filtered[selectedIdx].id) }
+          else if (e.key === 'Escape') { onClose() }
+        }}
             placeholder="Jump to any tab..."
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
@@ -264,8 +270,8 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
               </div>
             ) : (
               <div style={{ padding: '8px 12px' }}>
-                {filtered.map(item => (
-                  <SearchRow key={item.id + item.domain} item={item} isPro={checkPro(item.id)} onNav={go} />
+                {filtered.map((item, idx) => (
+                  <SearchRow key={item.id + item.domain} item={item} isPro={checkPro(item.id)} onNav={go} isSelected={idx === selectedIdx} />
                 ))}
               </div>
             )

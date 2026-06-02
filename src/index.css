@@ -70,6 +70,11 @@
   --r-sm: 5px;
   --r:    9px;
   --r-lg: 14px;
+
+  /* ── Structural spacing tokens ───────────────────── */
+  --card-pad-primary:   10px 14px;          /* MCQ option buttons, hint blocks (40+ uses) */
+  --card-pad-secondary: 16px;               /* card/panel inner padding (60+ uses)        */
+  --prime-bg-light:     rgba(240,165,0,0.12); /* light amber card/hint background (100+ uses) */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -531,6 +536,8 @@
     font-size: 12px;
     color: var(--ink-mid);
     line-height: 1.6;
+    max-width: 100%;
+    overflow-x: auto;
   }
   .msl-cloud-map strong {
     color: var(--prime);

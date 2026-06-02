@@ -207,7 +207,7 @@ function MetricSelector() {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6 }}>Configure your dataset and pick a metric. Then see if you chose correctly — and why.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Positive class: <span style={{ color: imbalance < 10 ? 'var(--rose)' : 'var(--prime)', fontWeight: 600 }}>{imbalance}%</span>
             {imbalance < 10 && <span style={{ color: 'var(--rose)', marginLeft: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>imbalanced</span>}
@@ -217,14 +217,14 @@ function MetricSelector() {
             <span>1% (severe skew)</span><span>50% (balanced)</span>
           </div>
         </div>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Decision threshold: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{threshold}</span>
           </label>
           <input type="range" min={0.1} max={0.9} step={0.05} value={threshold} onChange={e => { setThreshold(+e.target.value); setRevealed(false); setPicked(null) }} />
         </div>
       </div>
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Confusion matrix (1,000 samples)</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', maxWidth: '360px' }}>
           {[{ label: 'TP', val: metrics.tp, color: 'var(--mint)' }, { label: 'FP', val: metrics.fp, color: 'var(--rose)' }, { label: 'FN', val: metrics.fn, color: 'var(--gold)' }, { label: 'TN', val: metrics.tn, color: 'var(--ink-low)' }].map(c => (
@@ -808,7 +808,7 @@ export default function ModelEvalTab({ onNavigate, accessCode = null }) {
           <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
             Go deeper → Read <strong style={{ color: 'var(--prime)' }}>AUC Is Not Your Friend: A Guide to ML Metric Selection</strong> in Gradient
           </span>
-          <button onClick={() => onNavigate('gradient')} style={{ background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button onClick={() => onNavigate('gradient')} style={{ background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', color: 'var(--prime)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Read in Gradient →
           </button>
         </div>

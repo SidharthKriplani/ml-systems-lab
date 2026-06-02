@@ -1,5 +1,30 @@
 import { useState, useMemo, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
+import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+
+function BookmarkButton({ tabId, moduleId, label }) {
+  const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
+  function handle() {
+    toggleBookmark(tabId, moduleId, label)
+    setSaved(isBookmarked(tabId, moduleId))
+  }
+  return (
+    <button onClick={handle} style={{
+      display: 'flex', alignItems: 'center', gap: '5px',
+      padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+      background: saved ? 'rgba(240,165,0,0.12)' : 'transparent',
+      border: saved ? '1px solid rgba(240,165,0,0.35)' : '1px solid var(--rim)',
+      color: saved ? 'var(--prime)' : 'var(--ink-ghost)',
+      fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600,
+      transition: 'all 0.15s'
+    }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      {saved ? 'Saved' : 'Save'}
+    </button>
+  )
+}
 
 // ─── Training-Serving Skew Simulator ─────────────────────────────────────────
 function SkewSimulator() {
@@ -148,7 +173,7 @@ function FeatureStoreDesigner() {
         ))}
       </div>
 
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Example features for this type</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {s.examples.map(ex => (
@@ -378,14 +403,14 @@ result = (df
       </div>
 
       {/* Window type note */}
-      <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.15)' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-primary)', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.15)' }}>
         <span style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600 }}>{wt.label}: </span>
         <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{wt.desc}</span>
       </div>
 
       {/* Agg warning */}
       {a.warn && (
-        <div className="card" style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.2)' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-primary)', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.2)' }}>
           <span style={{ fontSize: '12px', color: 'var(--prime)', fontWeight: 600 }}>{a.label}: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{a.warn}</span>
         </div>
@@ -409,7 +434,7 @@ result = (df
             </button>
           ))}
         </div>
-        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '0 6px 6px 6px', padding: '16px', overflowX: 'auto' }}>
+        <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '0 6px 6px 6px', padding: 'var(--card-pad-secondary)', overflowX: 'auto' }}>
           <pre style={{ margin: 0, fontSize: '12px', color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
             {codeTab === 'sql' ? sqlCode : sparkCode}
           </pre>
@@ -421,7 +446,7 @@ result = (df
         <div style={{ fontSize: '13px', color: 'var(--prime)', fontWeight: 600, marginBottom: '10px', fontFamily: 'var(--font-sans)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Gotchas for this configuration</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {GOTCHAS.map((g, i) => (
-            <div key={i} style={{ display: 'flex', gap: '10px', padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
+            <div key={i} style={{ display: 'flex', gap: '10px', padding: 'var(--card-pad-primary)', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: '8px' }}>
               <span style={{ fontSize: '13px', color: 'var(--ink-low)', flexShrink: 0 }}>→</span>
               <span style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{g}</span>
             </div>
@@ -742,7 +767,7 @@ const ARCH_NODES = [
   },
   {
     id: 'batch', label: 'Batch ETL', sub: 'Spark · dbt · hourly/daily jobs',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Scheduled jobs (Spark, dbt, SQL) that compute aggregated features over historical data windows. Example: "user\'s 30-day purchase count", "listing\'s 90-day average review score."',
     decisions: 'Materialization strategy: full recompute vs incremental. Full is safe and simple; incremental is cheaper but requires a reliable watermark. Partition by entity + date for efficient backfill.',
     failures: 'Recomputing on every run without partitioning scans the full table daily. At scale, this becomes the most expensive job in your org. Incremental updates with proper partitioning are non-negotiable.',
@@ -750,7 +775,7 @@ const ARCH_NODES = [
   },
   {
     id: 'stream', label: 'Streaming Ingest', sub: 'Kafka → Flink / Spark Streaming',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Real-time event processing pipeline that computes features as events arrive. Example: "session click count in last 10 minutes", "transaction velocity in last 60 seconds."',
     decisions: 'Exactly-once vs at-least-once semantics. Windowing strategy: tumbling (non-overlapping), sliding (overlapping), session (gap-based). Late data handling: watermarks define how long to wait.',
     failures: 'Watermark too tight → late events dropped silently. Watermark too wide → high latency. No exactly-once → duplicate feature updates corrupt aggregates. Test late-data scenarios explicitly.',
@@ -758,7 +783,7 @@ const ARCH_NODES = [
   },
   {
     id: 'offline', label: 'Offline Store', sub: 'S3 / Hive / BigQuery / Iceberg',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Columnar storage of historical feature values, partitioned by entity and timestamp. This is the source of truth for generating training datasets via point-in-time correct joins.',
     decisions: 'File format: Parquet or Iceberg (prefer Iceberg for time-travel). Partitioning: by entity_id + date is most common. Retention: keep enough history for retraining windows (typically 1–2 years).',
     failures: 'Storing only the latest feature value (no history) makes point-in-time correct retrieval impossible. This is the most common feature store implementation mistake.',
@@ -766,7 +791,7 @@ const ARCH_NODES = [
   },
   {
     id: 'online', label: 'Online Store', sub: 'Redis · Cassandra · DynamoDB · <5ms',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Low-latency key-value store holding the most recent pre-computed feature values for each entity. Queried at request time during model inference. Must return values in <5ms P99.',
     decisions: 'Storage system: Redis for <1ms latency + small data; Cassandra/DynamoDB for >10M entities or higher durability requirements. TTL per feature type (session features: 30min; user profile: 24h).',
     failures: 'No TTL on features → stale values served indefinitely. Cache stampede under load when many keys expire simultaneously. Hot partitions for popular entities in Cassandra.',
@@ -774,7 +799,7 @@ const ARCH_NODES = [
   },
   {
     id: 'pit', label: 'Point-in-Time Join', sub: 'as-of query · training data gen',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'For each (entity, label_timestamp) pair in your training dataset, retrieves the feature value that was valid at label_timestamp — not the current value. Prevents future data leakage into training.',
     decisions: 'Implementation: range join on (entity_id, feature_ts <= label_ts ORDER BY feature_ts DESC LIMIT 1). Feast calls this a point-in-time join. Without this, your offline metrics are inflated.',
     failures: 'Using latest-value join for training data is the single most common cause of inflated offline metrics that don\'t hold up in production. The gap can be 5–20% AUC.',
@@ -782,7 +807,7 @@ const ARCH_NODES = [
   },
   {
     id: 'servapi', label: 'Feature Serving API', sub: 'batch lookup · entity keys',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'The API layer that retrieves pre-computed features from the online store at inference time. Accepts entity keys (user_id, item_id), returns feature vectors. Must be sub-5ms P99.',
     decisions: 'Batch vs single lookup: fetch all features for an entity in one call to minimize round trips. Fallback strategy: what to return if a feature is missing (default value, or flag the request).',
     failures: 'Fallback to recompute on cache miss is a latency timebomb — works fine at low QPS, blows P99 at 10K+ QPS. Design explicit fallback values and test the miss path under load.',
@@ -806,7 +831,7 @@ const ARCH_NODES = [
   },
   {
     id: 'monitor', label: 'Feature Monitoring', sub: 'PSI · freshness · null rates',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Continuous monitoring of feature health across both stores: PSI to detect distribution drift, null rate tracking, freshness lag monitoring (how stale are online store values?), and schema drift alerts.',
     decisions: 'Monitor at the feature level, not just model level. PSI > 0.2 on any feature triggers investigation before it affects model performance. Set separate alerts for offline store freshness vs online store TTL.',
     failures: 'Monitoring only model output metrics (CTR, conversion) catches problems too late. Feature-level monitoring catches upstream data issues hours before they impact model performance.',
@@ -1287,6 +1312,11 @@ export default function FeatureEngTab({ onNavigate, accessCode = null }) {
           </button>
         ))}
       </div>
+      {activeModuleData && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <BookmarkButton tabId="features" moduleId={active} label={activeModuleData.label} />
+        </div>
+      )}
       <div key={active} className="tab-enter">
         {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
           <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
@@ -1310,7 +1340,7 @@ export default function FeatureEngTab({ onNavigate, accessCode = null }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

@@ -1305,10 +1305,10 @@ export default function ProjectLabTab({ onNavigate }) {
             ML Engineering
           </span>
           <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             Phase 1 of 5
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
             <CheckMark /> Real execution
           </span>
         </div>
@@ -1326,7 +1326,7 @@ export default function ProjectLabTab({ onNavigate }) {
         </p>
 
         {/* Progress bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 1 progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
             <div style={{ width: `${Math.round((phase1DoneSteps / phase1TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1351,7 +1351,7 @@ export default function ProjectLabTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cell1') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cell1') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cell1') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
@@ -1403,7 +1403,7 @@ export default function ProjectLabTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cell2') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cell2') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cell2') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
@@ -1431,7 +1431,7 @@ export default function ProjectLabTab({ onNavigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '26px', height: '26px', borderRadius: '50%',
-            background: state.cellsDone.includes('cell3') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+            background: state.cellsDone.includes('cell3') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
             border: `1px solid ${state.cellsDone.includes('cell3') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
@@ -1519,7 +1519,7 @@ export default function ProjectLabTab({ onNavigate }) {
               ML Engineering
             </span>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
               Phase 2 of 5
             </span>
           </div>
@@ -1535,7 +1535,7 @@ export default function ProjectLabTab({ onNavigate }) {
           </p>
 
           {/* Phase 2 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 2 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase2DoneSteps / phase2TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1549,7 +1549,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell4') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell4') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell4') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
@@ -1576,7 +1576,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell5') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell5') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell5') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
@@ -1603,7 +1603,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell6') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell6') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell6') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
@@ -1665,7 +1665,7 @@ export default function ProjectLabTab({ onNavigate }) {
               ML Engineering
             </span>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
               Phase 3 of 5
             </span>
           </div>
@@ -1676,7 +1676,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Train three model classes side-by-side, evaluate with ROC / PR curves and confusion matrices, tune the decision threshold, then assess calibration. Ship-or-not judgment at the checkpoint.
           </p>
           {/* Phase 3 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 3 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase3DoneSteps / phase3TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1698,7 +1698,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell7') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell7') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell7') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1724,7 +1724,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell8') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell8') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell8') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1750,7 +1750,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell9') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell9') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell9') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1777,7 +1777,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell10') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell10') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell10') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1836,7 +1836,7 @@ export default function ProjectLabTab({ onNavigate }) {
               ML Engineering
             </span>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
               Phase 4 of 5
             </span>
           </div>
@@ -1847,7 +1847,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Compute PSI and KS drift statistics on a simulated production sample. Track prediction score distribution shift. Understand the label delay problem and proxy signal strategy.
           </p>
           {/* Phase 4 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 4 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase4DoneSteps / phase4TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -1869,7 +1869,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell11') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell11') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell11') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1895,7 +1895,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell12') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell12') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell12') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1921,7 +1921,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell13') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell13') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell13') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -1948,7 +1948,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell14') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell14') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell14') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2008,7 +2008,7 @@ export default function ProjectLabTab({ onNavigate }) {
               ML Engineering
             </span>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>·</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--prime)', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
               Phase 5 of 5
             </span>
           </div>
@@ -2019,7 +2019,7 @@ export default function ProjectLabTab({ onNavigate }) {
             Reference implementation for taking the trained churn model to production. Read each scaffold, understand the production decisions embedded in it. Mark each section as read when done.
           </p>
           {/* Phase 5 progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px', maxWidth: '400px' }}>
             <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Phase 5 progress</span>
             <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
               <div style={{ width: `${Math.round((phase5DoneSteps / phase5TotalSteps) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px rgba(240,165,0,0.5)' }} />
@@ -2033,7 +2033,7 @@ export default function ProjectLabTab({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell15') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell15') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell15') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2058,7 +2058,7 @@ export default function ProjectLabTab({ onNavigate }) {
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — FastAPI prediction endpoint
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# app/main.py — FastAPI prediction endpoint
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, validator
 import joblib, numpy as np
@@ -2102,7 +2102,7 @@ async def health():
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell16') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell16') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell16') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2127,7 +2127,7 @@ async def health():
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Stage 1: build dependencies ────────────────────────────────────────────
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Stage 1: build dependencies ────────────────────────────────────────────
 FROM python:3.11-slim AS builder
 WORKDIR /build
 COPY requirements.txt .
@@ -2163,7 +2163,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--worker
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell17') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell17') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell17') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2188,7 +2188,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--worker
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Deployment ────────────────────────────────────────────────────────────────
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# ── Deployment ────────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2249,7 +2249,7 @@ spec:
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell18') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell18') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell18') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2274,7 +2274,7 @@ spec:
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <pre style={{ margin: 0, padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy.yml
+            <pre style={{ margin: 0, padding: 'var(--card-pad-secondary)', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', lineHeight: 1.65, overflowX: 'auto', whiteSpace: 'pre' }}>{`# .github/workflows/deploy.yml
 name: Build and Deploy
 
 on:
@@ -2323,7 +2323,7 @@ jobs:
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <div style={{
               width: '26px', height: '26px', borderRadius: '50%',
-              background: state.cellsDone.includes('cell19') ? 'rgba(52,211,153,0.15)' : 'rgba(240,165,0,0.12)',
+              background: state.cellsDone.includes('cell19') ? 'rgba(52,211,153,0.15)' : 'var(--prime-bg-light)',
               border: `1px solid ${state.cellsDone.includes('cell19') ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.35)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -2348,7 +2348,7 @@ jobs:
                 <span style={{ fontSize: '11px', color: 'var(--mint)', fontFamily: 'var(--font-mono)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>Read</span>
               )}
             </div>
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ padding: 'var(--card-pad-secondary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
                 { component: 'API container registry', aws: 'ECR (Elastic Container Registry)', note: 'Push Docker image here. ECR is free within-region; charges on data transfer out.' },
                 { component: 'Container orchestration', aws: 'ECS Fargate vs EKS', note: 'ECS Fargate: simpler, serverless, lower ops overhead. EKS: full K8s, better for multi-service ML platforms. For a single churn API, Fargate wins on simplicity.' },

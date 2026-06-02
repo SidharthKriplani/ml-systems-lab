@@ -116,7 +116,7 @@ export default function PythonCell({
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '13px',
             lineHeight: 1.7,
-            padding: '16px',
+            padding: 'var(--card-pad-secondary)',
             border: 'none',
             outline: 'none',
             borderBottom: '1px solid var(--rim)',

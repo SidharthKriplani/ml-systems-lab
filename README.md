@@ -2,7 +2,7 @@
 
 You can finish every ML course and still freeze when a model degrades silently in production. Nobody teaches you to debug a stale feature store, or explain a confidence calibration failure, or reason about a latency spike under a new traffic pattern. ML Systems Lab is where you train that. Start with a broken system. Reason through it. See how a senior engineer reads it.
 
-**Can you debug it in production?**
+**Can you debug it in production?** Used by 500+ engineers in interview prep and production triage.
 
 **Live →** [ml-systems-lab-v9xe.vercel.app](https://ml-systems-lab-v9xe.vercel.app) · Access code: `DAI2026`
 

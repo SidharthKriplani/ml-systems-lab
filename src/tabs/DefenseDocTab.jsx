@@ -352,7 +352,7 @@ export default function DefenseDocTab({ onNavigate, isUnlocked, onUnlock }) {
 
       {/* Progress bar */}
       {totalItems > 0 && (
-        <div style={{ marginBottom: 24, padding: '10px 14px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ marginBottom: 24, padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>Plan progress</span>
           <div style={{ flex: 1, height: 3, background: 'var(--rim)', borderRadius: 2 }}>
             <div style={{ width: `${Math.round((doneCount / totalItems) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: 2, transition: 'width 0.4s' }} />

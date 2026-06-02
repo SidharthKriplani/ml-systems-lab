@@ -93,7 +93,7 @@ function DriftDashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             PSI alert threshold: <span style={{ color: psiThreshold < 0.1 ? 'var(--rose)' : psiThreshold > 0.3 ? 'var(--gold)' : 'var(--mint)', fontWeight: 600 }}>{psiThreshold}</span>
             {psiThreshold < 0.1 && <span style={{ color: 'var(--rose)', fontSize: '10px', marginLeft: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>alert fatigue</span>}
@@ -105,7 +105,7 @@ function DriftDashboard() {
           </div>
           <p style={{ fontSize: '11px', color: 'var(--ink-ghost)', marginTop: '8px', margin: '8px 0 0' }}>Standard: PSI &gt; 0.2 = significant shift. PSI &gt; 0.1 = monitor closely.</p>
         </div>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Drift onset: {revealed ? <span style={{ color: 'var(--rose)', fontWeight: 600 }}>Day {driftDay}</span> : <span style={{ color: 'var(--ink-low)' }}>hidden</span>}
           </label>
@@ -145,7 +145,7 @@ function DriftDashboard() {
           <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Alert fired (PSI &gt; {psiThreshold})</div>
           <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
             {data.map((d, i) => (
-              <div key={i} title={`Day ${d.day}`} style={{
+              <div key={`day-${d.day}`} title={`Day ${d.day}`} style={{
                 width: '9px', height: '24px', borderRadius: '2px',
                 background: d.alertFired ? 'var(--rose)' : (d.hasDrift && revealed) ? 'rgba(244,63,94,0.2)' : 'var(--rim)',
                 transition: 'background 0.1s',
@@ -218,13 +218,13 @@ function PSILab() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Distribution shift (σ): <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{shiftAmount.toFixed(1)}</span>
           </label>
           <input type="range" min={0} max={3} step={0.1} value={shiftAmount} onChange={e => setShiftAmount(+e.target.value)} />
         </div>
-        <div className="card" style={{ padding: '16px' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
           <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
             Bins: <span style={{ color: 'var(--prime)', fontWeight: 600 }}>{nBins}</span>
           </label>
@@ -244,7 +244,7 @@ function PSILab() {
       </div>
 
       {/* Bin bar chart */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div className="section-eyebrow" style={{ marginBottom: '12px' }}>Bin-by-bin breakdown</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '80px' }}>
           {result.bins.map(b => {
@@ -358,17 +358,17 @@ function KSTestExplorer() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)', textAlign: 'center' }}>
           <div className="section-eyebrow" style={{ marginBottom: '6px' }}>KS Statistic (D)</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: statusColor }}>{result.ksStatistic.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>max |F₁(x) − F₂(x)|</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)', textAlign: 'center' }}>
           <div className="section-eyebrow" style={{ marginBottom: '6px' }}>p-value</div>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: '32px', fontWeight: 700, color: significant ? 'var(--rose)' : 'var(--mint)' }}>{result.pValue.toFixed(4)}</div>
           <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px' }}>threshold: 0.05</div>
         </div>
-        <div className="card" style={{ padding: '16px', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.11)' : 'rgba(52,211,153,0.11)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
+        <div className="card" style={{ padding: 'var(--card-pad-secondary)', textAlign: 'center', background: significant ? 'rgba(244,63,94,0.11)' : 'rgba(52,211,153,0.11)', border: `1px solid ${significant ? 'rgba(244,63,94,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
           <div className="section-eyebrow" style={{ marginBottom: '10px' }}>Verdict</div>
           <div style={{ fontSize: '12px', color: statusColor, fontWeight: 600, lineHeight: 1.4 }}>
             {significant ? 'Significant difference — reject H₀' : 'No significant difference — fail to reject H₀'}
@@ -377,7 +377,7 @@ function KSTestExplorer() {
       </div>
 
       {/* CDF plot */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '12px', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Empirical CDFs — reference vs current distribution</div>
         <svg viewBox={`0 0 ${W} ${H + 4}`} style={{ width: '100%', height: '160px', overflow: 'visible' }}>
           {[0.25, 0.5, 0.75].map(v => (
@@ -421,7 +421,7 @@ function KSTestExplorer() {
       </div>
 
       {/* KS vs PSI guide */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '12px' }}>KS Test vs PSI — choosing the right tool</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
@@ -587,7 +587,7 @@ function AlertTuner() {
       </div>
 
       {/* 30-day timeline */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div style={{ fontSize: '12px', color: 'var(--ink-low)', marginBottom: '10px', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Alert timeline — 30 days</div>
         <div style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${((driftDay - 1) / 30) * 100}%`, right: 0, background: 'rgba(244,63,94,0.11)', borderLeft: '1px dashed rgba(244,63,94,0.3)', pointerEvents: 'none' }} />
@@ -619,7 +619,7 @@ function AlertTuner() {
       </div>
 
       {/* Recommendation */}
-      <div className="card" style={{ padding: '16px', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.10)' : sim.delay === null ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)', background: sim.falsePos > 5 ? 'rgba(244,63,94,0.10)' : sim.delay === null ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', border: `1px solid ${sim.falsePos > 5 ? 'rgba(244,63,94,0.2)' : sim.delay === null ? 'rgba(245,158,11,0.2)' : 'rgba(240,165,0,0.18)'}` }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '14px', color: 'var(--ink-hi)', marginBottom: '8px' }}>Recommendation</div>
         <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
           {sim.delay === null
@@ -817,7 +817,7 @@ function IncidentTriage() {
                 <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Triage Steps</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {incident.triage.map((step, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                    <div key={`ctx-${i}`} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                       <span style={{ color: 'var(--prime)', fontWeight: 700, fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>{i + 1}.</span>
                       <span style={{ fontSize: '13px', color: 'var(--ink-hi)', lineHeight: 1.5 }}>{step}</span>
                     </div>
@@ -912,7 +912,7 @@ function MonitorCoverageAudit() {
             <button onClick={() => { setSelected(s.id); setActiveBlind(0) }}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
+                padding: 'var(--card-pad-primary)', borderRadius: '8px', cursor: 'pointer',
                 border: `1px solid ${selected === s.id ? 'var(--prime)' : 'var(--rim)'}`,
                 background: selected === s.id ? 'rgba(240,165,0,0.15)' : 'var(--depth)',
                 transition: 'all 0.15s', minWidth: '80px',
@@ -934,7 +934,7 @@ function MonitorCoverageAudit() {
             <div style={{ fontSize: '11px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>Typically Monitored</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {stage.monitored.map((m, i) => (
-                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <div key={`opt-${i}`} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <span style={{ color: 'var(--prime)', fontWeight: 700, flexShrink: 0 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>
                   <span style={{ fontSize: '13px', color: 'var(--ink-hi)' }}>{m}</span>
                 </div>
@@ -948,7 +948,7 @@ function MonitorCoverageAudit() {
               <div style={{ fontSize: '11px', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Blind Spots ({stage.blind_spots.length})</div>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {stage.blind_spots.map((_, i) => (
-                  <button key={i} onClick={() => setActiveBlind(i)}
+                  <button key={`blind-${i}`} onClick={() => setActiveBlind(i)}
                     style={{ width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', fontWeight: 700, fontSize: '11px', border: `1px solid ${activeBlind === i ? 'var(--rose)' : 'var(--rim)'}`, background: activeBlind === i ? 'rgba(244,63,94,0.2)' : 'transparent', color: activeBlind === i ? 'var(--rose)' : 'var(--ink-low)' }}>
                     {i + 1}
                   </button>
@@ -1385,7 +1385,7 @@ export default function MonitoringTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

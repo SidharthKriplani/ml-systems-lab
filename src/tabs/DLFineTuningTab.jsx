@@ -227,7 +227,7 @@ function FreezeLoRAModule() {
                 padding: '7px 14px', borderRadius: '20px', fontSize: '12px',
                 fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
                 border: `1px solid ${value === i ? 'var(--prime)' : 'var(--rim)'}`,
-                background: value === i ? 'rgba(240,165,0,0.12)' : 'transparent',
+                background: value === i ? 'var(--prime-bg-light)' : 'transparent',
                 color: value === i ? 'var(--prime)' : 'var(--ink-low)',
                 transition: 'all 0.15s',
               }}>
@@ -616,7 +616,7 @@ function PEFTComparisonModule() {
                 padding: '7px 16px', borderRadius: '20px', fontSize: '13px',
                 fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer',
                 border: `1px solid ${constraint === c.id ? 'var(--prime)' : 'var(--rim)'}`,
-                background: constraint === c.id ? 'rgba(240,165,0,0.12)' : 'transparent',
+                background: constraint === c.id ? 'var(--prime-bg-light)' : 'transparent',
                 color: constraint === c.id ? 'var(--prime)' : 'var(--ink-low)',
                 transition: 'all 0.15s',
               }}>
@@ -711,7 +711,7 @@ export default function DLFineTuningTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Fine-tuning & Adaptation</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '680px', margin: 0 }}>
           Full fine-tune when you shouldn't, LoRA when you don't need to, freeze when you need to update — these are the real mistakes. Make the right call from constraints.

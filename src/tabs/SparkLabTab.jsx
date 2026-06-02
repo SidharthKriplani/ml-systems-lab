@@ -114,7 +114,7 @@ function ShuffleHell() {
           { label: 'Broadcast threshold', value: broadcastMB, set: setBroadcastMB, min: 1, max: 1024, step: 1, unit: 'MB', warn: false },
           { label: 'Skew factor', value: skewFactor, set: setSkewFactor, min: 1, max: 20, step: 0.5, unit: '×', warn: skewFactor > 5 },
         ].map(c => (
-          <div key={c.label} className="card" style={{ padding: '16px' }}>
+          <div key={c.label} className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
             <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px' }}>
               {c.label}: <span style={{ color: c.warn ? 'var(--rose)' : 'var(--ink-hi)', fontWeight: 600 }}>{c.value}{c.unit}</span>
             </label>
@@ -124,7 +124,7 @@ function ShuffleHell() {
       </div>
 
       {/* Join strategy */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <label style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '12px' }}>Join strategy hint</label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {[
@@ -146,7 +146,7 @@ function ShuffleHell() {
 
       {ran && result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', animation: 'slideUp 0.3s ease-out' }}>
-          <div className="card" style={{ padding: '16px' }}>
+          <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>Execution DAG — task duration distribution</div>
             <DagVis result={result} partitions={partitions} />
           </div>
@@ -241,7 +241,7 @@ function SkewDoctor() {
       </div>
 
       {/* Task chart */}
-      <div className="card" style={{ padding: '16px' }}>
+      <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Task duration (Stage: shuffle read → aggregate)</span>
           <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: +skewRatio > 10 ? 'var(--rose)' : +skewRatio > 3 ? 'var(--gold)' : 'var(--mint)' }}>
@@ -274,7 +274,7 @@ function SkewDoctor() {
       </div>
 
       {revealed && fix && fixedDist && (
-        <div className="card animate-slide-up" style={{ padding: '16px', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)' }}>
+        <div className="card animate-slide-up" style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(240,165,0,0.11)', border: '1px solid rgba(240,165,0,0.2)' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--prime)', marginBottom: '12px' }}>After fix: {FIXES[fix].label}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '60px', marginBottom: '8px' }}>
             {fixedDist.tasks.map((t, i) => {
@@ -346,7 +346,7 @@ function PartitionTuner() {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)' }}>Recommendation</div>
 
-          <div style={{ padding: '16px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px', textAlign: 'center' }}>
+          <div style={{ padding: 'var(--card-pad-secondary)', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px', textAlign: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '4px' }}>
               spark.sql.shuffle.partitions
             </div>
@@ -527,7 +527,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                     } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
-                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                        style={{ textAlign: 'left', padding: 'var(--card-pad-primary)', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
@@ -899,7 +899,7 @@ function MemoryPressureSimulator() {
               {[['sort_merge', 'Sort-Merge'], ['broadcast', 'Broadcast'], ['shuffle_hash', 'Shuffle Hash']].map(([val, label]) => (
                 <button key={val} onClick={() => setJoinType(val)} style={{
                   padding: '5px 12px', borderRadius: '6px', border: `1px solid ${joinType === val ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: joinType === val ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: joinType === val ? 'var(--prime-bg-light)' : 'transparent',
                   color: joinType === val ? 'var(--prime)' : 'var(--ink-low)',
                   fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                 }}>{label}</button>
@@ -1021,7 +1021,7 @@ function StreamingStabilityLab() {
                 <button key={i} onClick={() => setInputRateIdx(i)} style={{
                   padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                   border: `1px solid ${inputRateIdx === i ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: inputRateIdx === i ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: inputRateIdx === i ? 'var(--prime-bg-light)' : 'transparent',
                   color: inputRateIdx === i ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{label}</button>
               ))}
@@ -1049,7 +1049,7 @@ function StreamingStabilityLab() {
                 <button key={opt} onClick={() => setTriggerInterval(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                   border: `1px solid ${triggerInterval === opt ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: triggerInterval === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: triggerInterval === opt ? 'var(--prime-bg-light)' : 'transparent',
                   color: triggerInterval === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
@@ -1068,7 +1068,7 @@ function StreamingStabilityLab() {
                 <button key={opt} onClick={() => setWatermark(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', cursor: 'pointer',
                   border: `1px solid ${watermark === opt ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: watermark === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: watermark === opt ? 'var(--prime-bg-light)' : 'transparent',
                   color: watermark === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
@@ -1082,7 +1082,7 @@ function StreamingStabilityLab() {
                 <button key={opt} onClick={() => setStateOp(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
                   border: `1px solid ${stateOp === opt ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: stateOp === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: stateOp === opt ? 'var(--prime-bg-light)' : 'transparent',
                   color: stateOp === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
@@ -1096,7 +1096,7 @@ function StreamingStabilityLab() {
                 <button key={opt} onClick={() => setCheckpointStorage(opt)} style={{
                   padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer',
                   border: `1px solid ${checkpointStorage === opt ? 'var(--prime)' : 'var(--rim)'}`,
-                  background: checkpointStorage === opt ? 'rgba(240,165,0,0.12)' : 'transparent',
+                  background: checkpointStorage === opt ? 'var(--prime-bg-light)' : 'transparent',
                   color: checkpointStorage === opt ? 'var(--prime)' : 'var(--ink-low)',
                 }}>{opt}</button>
               ))}
@@ -1221,7 +1221,7 @@ export default function SparkLabTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

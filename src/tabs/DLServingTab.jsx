@@ -224,7 +224,7 @@ function QuantModule() {
             return (
               <div key={id} style={{
                 display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 14px',
+                padding: 'var(--card-pad-primary)',
                 borderRadius: '8px',
                 background: isTop ? `${ACCENT}18` : 'transparent',
                 border: isTop ? `1.5px solid ${ACCENT}` : '1px solid var(--rim)',
@@ -259,7 +259,7 @@ function QuantModule() {
           { label: 'Accuracy delta', value: topMeta.accuracyDelta, color: 'var(--ink-low)' },
           { label: 'VRAM savings', value: topMeta.vramSave, color: 'var(--ink-low)' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
+          <div key={label} className="card" style={{ padding: 'var(--card-pad-secondary)', textAlign: 'center' }}>
             <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'var(--font-mono)', color }}>{value}</div>
             <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
           </div>
@@ -555,7 +555,7 @@ function MemoryModule() {
       {/* Options when nothing fits */}
       {noGPUFits && int4Estimate && (
         <div style={{
-          padding: '16px',
+          padding: 'var(--card-pad-secondary)',
           background: 'var(--rose)12',
           border: '1.5px solid var(--rose)',
           borderRadius: '10px',
@@ -791,7 +791,7 @@ function ServingModule() {
                   <strong style={{ color: 'var(--ink-hi)' }}>Why: </strong>{scenario.reasoning}
                 </div>
                 <div style={{
-                  padding: '10px 14px',
+                  padding: 'var(--card-pad-primary)',
                   background: 'rgba(240,165,0,0.08)',
                   borderLeft: '3px solid var(--prime)',
                   borderRadius: '0 8px 8px 0',
@@ -830,7 +830,7 @@ const SRV_NODES = [
   },
   {
     id: 'feature_svc', label: 'Feature Service', sub: 'Redis / online store',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Online feature service retrieves pre-computed features from Redis or a similar low-latency store. Accepts entity keys, returns feature vectors in <5ms P99.',
     decisions: 'Staleness tolerance (features computed every minute vs real-time). Fallback strategy when a feature key is missing: return zeros, a default vector, or error.',
     failures: 'Training-serving skew: features computed differently offline vs online. Missing features return zero instead of erroring — model silently receives wrong input.',
@@ -838,7 +838,7 @@ const SRV_NODES = [
   },
   {
     id: 'model_svc', label: 'Model Service', sub: 'TorchServe / Triton',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Model serving framework (TorchServe, Triton Inference Server) that manages model loading, versioning, batching, and request routing to the inference engine.',
     decisions: 'Model versioning strategy: blue/green vs canary rollout. Dynamic batching: batch multiple requests together to improve GPU utilization.',
     failures: 'Model version mismatch between feature pipeline and model artifact. Dynamic batching increases average latency under low load — disable for latency-sensitive paths.',

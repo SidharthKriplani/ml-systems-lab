@@ -1,85 +1,73 @@
-# NEXT.md — Next Session Queue
+# NEXT.md — Session Queue
 
-**Rule:** Max 5 items. Specific enough to start without re-reading IDEAS.md.  
-Updated at the END of every session. Wiped and rewritten — not appended.  
-Read this immediately after CLAUDE.md. Work only what's listed here.
+Next 5 items for v4.49 sprint. Updated: 2026-06-02 (end of v4.48 mega-batch)
 
 ---
 
-## Next session
+## v4.49 — Blocking + Content Quality + Interview Experiences Complete
 
-### 1. Freemium gate v2 — implement per-scenario `isFree` flags (2.5 hours)
-Upgrade freemium from tab-level (free = 4 intro tabs) to scenario-level gating (easy/junior free, mid/senior/staff gated). (a) Add `isFree` field to each scenario in 4 free modules (true for easy/junior, false for mid/senior/staff). (b) Update `AccessGate.jsx` to check `isFree` per scenario instead of per-tab. (c) Hide answer options + checkpoint buttons based on `isFree` + access code. (d) Show gate message: "Unlock with access code for senior-level scenarios." Input: `difficulty` tags from v4.45 (easy/junior → true, mid/senior/staff → false).
+1. **Complete v4.47 Item 3: Interview Experiences Monitoring** (BLOCKED on external setup)
+   - Avinash must sign up for Formspree (for feedback form collection in FeedbackChip) and Tally.so (for interview experience form in InterviewGrid)
+   - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
+   - Requires: Tally.so account + form link → `REPLACE_WITH_YOUR_TALLY_ID` in `src/tabs/App.jsx` InterviewGrid
+   - Once credentials provided: wire both forms, test submission flow, verify data flow to admin panel
+   - Blockers all documented in code; unblocking only requires account signup + 10-min credential swap
 
-### 2. Add YouTube IDs to Gradient posts (1 hour)
-Find and add YouTube video IDs to the 5 new posts from v4.45 (Feature Store, Leakage, Forecast Zoo, A/B Tests, Quantization). Search YouTube for StatQuest/3Blue1Brown/Chip Huyen videos; verify with oEmbed API (200=live, 404=broken); update `youtubeId` in `src/tabs/GradientTab.jsx`. Backfill existing Gradient posts missing YouTube IDs (quick scan). ~10–15 min per video.
+2. **Module bookmarking: "Save for Later" feature** (v4.48 Item 4 infrastructure complete)
+   - Add "Save" button to every scenario/module card (ModelsMath, FeatureEng, ModelEval, ClassicalML, etc.)
+   - Persist to `msl_bookmarks` localStorage (already prepared)
+   - Add "My Bookmarks" view on HomeTab showing all saved modules with navigation
+   - Card state: filled heart (saved) vs outline heart (not saved), toggle on click
+   - Estimated: 2 hours across 30 tab files + HomeTab
 
-### 3. Behavioral question bank — add 5-8 Interview scenarios (1.5 hours)
-Add new module to `InterviewPrepTab.jsx` covering ML-specific behavioral: (1) disagreement over metric with stakeholder, (2) shipped model that degraded silently 2 weeks, (3) resource conflict (10-day training, 5-day deadline), (4) architect disagreement with teammate, (5) critical bug in production during pause — revert or fix?, (6) explain model decision to non-technical exec. Use `.msl-option-btn` / `.msl-reveal-panel` pattern. 4 options per scenario + per-option explanations. Score stored in `msl_score:behavioral`.
+3. **Gradient posts 41–45: 5 new high-impact posts** (content quality pass)
+   - Post 41: "Offline Evaluation ≠ Online Performance" (domain: eval, failure mode where offline metrics don't predict production)
+   - Post 42: "Label Noise in Production: When Your Ground Truth Lies" (domain: features, data quality failure)
+   - Post 43: "Concept Drift: The Invisible Enemy" (domain: monitoring, production failure mode)
+   - Post 44: "Cold-Start Trap in Personalization" (domain: design, architecture failure)
+   - Post 45: "Silent Model Staleness" (domain: monitoring, observability failure)
+   - All must have verified YouTube IDs + practice module CTAs before shipping
+   - Estimated: 4 hours (1 post = 45 min research + write + link)
 
-### 4. Interview Experiences — wire Tally form (1 hour)
-Connect real Tally.so submission form to Interview Experiences. (a) Create/publish Tally form (10 fields: name, company, role, yearsExp, round, date, tags checkboxes, prepSource, result). (b) Add iframe or "Submit" button in InterviewGrid linking to Tally. (c) Admin workflow: download Tally JSON → format into INTERVIEW_EXPERIENCES array → redeploy. Growth trigger: when N≥15 real submissions arrive, visualizations auto-update. Pre-req for social proof.
+4. **Interview zone accessibility audit**
+   - Verify all 9 interview tools (Defense, Combinator, Verbal, Spot the Flaw, Interview Prep Q&A, Take-Home, Case Studies, Staff Layer, Trainer) are discoverable and have clear entry points
+   - Check: all tools show in `INTERVIEW_TOOLS` array, all routed correctly in App.jsx, all have ForwardPointers/CTAs
+   - Check: all descriptions clear on first visit (guidance text added v4.17, verify still accurate)
+   - Check: mobile navigation works smoothly across all tools
+   - Estimated: 1 hour
 
-### 5. Emoji → SVG sweep — replace residual emoji (1.5 hours)
-Systematic pass to replace decorative emoji with inline SVGs. (1) Grep all tabs for emoji codepoints. (2) Categorize: decorative (replace), functional glyphs ✓ ✗ (keep), flags (keep). (3) Replace with simple SVGs using CSS variables. Focus: rendered UI (buttons, labels, headers), not data fields. Output: zero emoji in rendered UI except flags/semantic glyphs.
-
----
-
-## Pending from Avinash's side
-
-- **Formspree ID** — sign up at formspree.io, replace `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx` line 5.
-- **Tally form ID** — create form at tally.so, replace `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid.
-
----
-
-## Blocked
-
-Nothing currently blocked.
-
----
-
-## Done this session (v4.46)
-
-- ~~Freemium gate v2 — per-scenario `isFree` flags (46 scenarios tagged easy/junior=true, mid/senior/staff=false)~~
-- ~~YouTube IDs for Gradient posts — 5 new + 2 backfill, all verified via oEmbed~~
-- ~~Behavioral question bank — 8 scenarios covering production judgment (metrics, degradation, resources, architecture, bugs, leadership)~~
-- ~~Tally form wiring — submit button, form spec, admin workflow documented~~
-- ~~Emoji → SVG sweep — 97 replacements across 8 tabs, new Icons.jsx component~~
-- ~~LINEAGE.md v4.46 entry, IDEAS.md items marked done, METRICS.md keys added, NEXT.md batch complete~~
-
----
-
-## Done this session (v4.45)
-
-- ~~Fraud Detection phases 2–4 (3 cells per phase + checkpoints) — SMOTE vs class_weight, PSI/KS drift, FastAPI + K8s + Ops Runbook~~
-- ~~LandscapeTab LINEAGE entry — documented build history, closed AUDITS #017.3~~
-- ~~ModelEvalTab hex colors — verified CSS var compliance, closed AUDITS #017.2~~
-- ~~5 Gradient posts (Feature Store, Leakage, Forecast Zoo, A/B Tests, Quantization) — added to GradientTab, CTAs linked~~
-- ~~LandscapeTab country/region filter — Global/India/UK/US/EU selector, Salary filtering, localStorage persist~~
-- ~~HomeTab domain completion bars — "Your Progress" section, 5 domains, animated bars, clickable nav~~
-- ~~Interview Experiences v2 — 15 seed records, TagFrequencyChart in InterviewGrid~~
-- ~~Difficulty tagging — all scenarios in ModelsMath/FeatureEng/ModelEval/ClassicalML tagged (easy/junior/mid/senior/staff)~~
-- ~~LINEAGE.md v4.45 entry, IDEAS.md In Progress items updated, NEXT.md batch complete~~
+5. **NEXT.md → IDEAS.md → DECISIONS.md final sync**
+   - Move this session's completed items (v4.47 + audits + v4.48 + 3 resolved findings) to LINEAGE.md "Done" section with dates
+   - Finalize DECISIONS.md token enforcement section (grep checklist, pre-commit steps)
+   - Finalize METRICS.md (4 new keys now documented)
+   - Verify AUDITS.md has all 3 findings marked ✅ Resolved
+   - Queue remaining Tier 1 items from IDEAS.md for v4.50+ planning
+   - Estimated: 1 hour (mostly documentation)
 
 ---
 
-## Next session (v4.47+)
+## Blockers blocking this batch
 
-### 1. Polish freemium gate integration (1.5 hours)
-Wire scenario-level gating into tab renders. Check scenario `isFree` at render time; wrap answer reveals with gate logic: show gate if `!isFree && accessCode !== 'DAI2026'`. Update 4 free modules to use new gating. Test: easy/junior flow free, mid/senior require code.
-
-### 2. Difficulty filter UI — practice zone sidebar (2 hours)
-Add difficulty filter pills (easy/junior/mid/senior/staff) to PracticeDomainCard sidebar. Filter visible modules by difficulty. Persist selection in localStorage (`msl_difficulty_filter`). Chains with freemium gate v2 (users see difficulty before hitting paywall).
-
-### 3. Interview Experiences — real Tally submissions (1.5 hours)
-Monitor Tally form for submissions. When N≥15 real submissions collected: download as JSON, format to INTERVIEW_EXPERIENCES schema, merge into array, commit + deploy. TagFrequencyChart auto-updates. Growth metric: track submission velocity.
-
-### 4. Mobile responsiveness audit + fixes (1.5 hours)
-Test all v4.46 changes on mobile (375px, 768px breakpoints). Check: domain bars layout, emoji icon sizing, Tally button tap target, behavioral scenarios overflow, frequency chart responsiveness. Fix any layout breaks.
-
-### 5. Gradient posts — add 3 more posts (2 hours)
-Priority from IDEAS.md backlog: "Feature Importance Drift" (FeatureEngTab), "Training-Serving Skew" (SystemDesignTab), "Calibration Loss in Production" (ModelEvalTab). Each post: scenario, production consequence, practice tab link, YouTube ID if found.
+**v4.47 Item 3 — Interview Experiences:** Awaiting Avinash account setup (Formspree + Tally).
+- Cannot proceed without credentials.
+- Does not count toward batch completion — marked blocked.
+- Timeline: Avinash availability.
 
 ---
 
-## What comes after (not for this session)
+## Critical path
+
+1. Unblock v4.47 Item 3 (interview experiences) — high-value feature for interview zone
+2. Ship bookmarking + "My Bookmarks" view — improves retention/re-engagement
+3. Add 5 new Gradient posts — content freshness + breadth
+4. Interview zone audit — verify accessibility before any promotion
+
+---
+
+## Notes for next session
+
+- All code changes from v4.48 are staged in git; user must clear locks locally (`rm -f .git/index.lock .git/HEAD.lock`) and push
+- All spine files updated except NEXT.md (this file) and final IDEAS.md/"Done" section move
+- No architectural debt identified; codebase health is clean (all brace-balanced, all CSS variables, no hardcoded colors)
+- 35+ files modified, zero merge conflicts expected
+- LoadingSpinner.jsx and export.js/read.js are new utility files — verify they're committed as part of bundle

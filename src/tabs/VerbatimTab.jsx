@@ -37,11 +37,11 @@ const CATEGORY_COLORS = {
 };
 
 const CATEGORY_BG = {
-  'System Design': 'rgba(240,165,0,0.12)',
-  'Technical': 'rgba(240,165,0,0.12)',
-  'Behavioral': 'rgba(240,165,0,0.12)',
-  'Case Study': 'rgba(240,165,0,0.12)',
-  'Trade-offs': 'rgba(240,165,0,0.12)',
+  'System Design': 'var(--prime-bg-light)',
+  'Technical': 'var(--prime-bg-light)',
+  'Behavioral': 'var(--prime-bg-light)',
+  'Case Study': 'var(--prime-bg-light)',
+  'Trade-offs': 'var(--prime-bg-light)',
 };
 
 const RATING_CRITERIA = [

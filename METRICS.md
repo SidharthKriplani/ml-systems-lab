@@ -90,6 +90,9 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_score:classical_boundary` | `JSON {completed:true, ts:number}` | `ClassicalMLTab` — DecisionBoundaryLab | Written once when user has explored all 5 classifier modes. `ts` is Unix timestamp of completion. |
 | `msl_landscape_region` | `string` | `LandscapeTab` — Region selector | Selected region for career data filtering: 'Global' (default) or 'India'/'UK'/'US'/'EU'. Persists across sessions. |
 | `msl_score:behavioral` | `JSON {completed:true, ts:number}` | `InterviewPrepTab` — Behavioral scenarios | Interview behavioral judgment score. Written when behavioral scenario is completed. Tracks correctness and timestamps. |
+| `msl_difficulty_filter` | `string` | `PracticeDomainCard` | Active difficulty pill filter (easy/junior/mid/senior/staff). User-selected filter persists across sessions. |
+| `msl_readiness_score` | `JSON object` | `HomeTab` (computed) | Domain-by-domain seniority levels {mle: 'senior', features: 'mid', ...}. Computed from `msl_trainer_history` + `msl_combinator_history` aggregation, not persisted. Display-only for readiness badge grid. |
+| `msl_bookmarks` | `JSON array` | (infrastructure) | Bookmarked tab IDs `['defense', 'combinator', ...]`. Infrastructure ready for v4.49 "Save for Later" feature. Not yet populated. |
 
 ---
 

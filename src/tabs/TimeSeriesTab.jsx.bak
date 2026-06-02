@@ -342,7 +342,7 @@ function ForecastFailureZoo() {
       <div className="card" style={{ padding: '22px 26px', borderLeft: '3px solid var(--prime)' }}>
         <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)', marginBottom: '8px' }}>{s.title}</div>
         <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0, marginBottom: '12px' }}>{s.context}</p>
-        <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
+        <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.13)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '8px' }}>
           <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Clue: </span>
           <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.clue}</span>
         </div>
@@ -370,11 +370,11 @@ function ForecastFailureZoo() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div className="card" style={{ padding: '20px', border: `1px solid ${picked === correctIdx ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}` }}>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(52,211,153,0.10)', borderRadius: '8px', border: '1px solid rgba(52,211,153,0.2)', marginBottom: '8px' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(52,211,153,0.10)', borderRadius: '8px', border: '1px solid rgba(52,211,153,0.2)', marginBottom: '8px' }}>
               <span style={{ fontSize: '10px', color: 'var(--mint)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Fix: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.fix}</span>
             </div>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(240,165,0,0.10)', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.15)' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(240,165,0,0.10)', borderRadius: '8px', border: '1px solid rgba(240,165,0,0.15)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Lesson: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.lesson}</span>
             </div>
@@ -421,7 +421,7 @@ function StationaritySelector() {
                 <p style={{ fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{s.check}</p>
               </div>
             </div>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.15)', borderRadius: '8px' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(244,63,94,0.10)', border: '1px solid rgba(244,63,94,0.15)', borderRadius: '8px' }}>
               <span style={{ fontSize: '10px', color: 'var(--rose)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Don\'t: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.dont}</span>
             </div>
@@ -469,7 +469,7 @@ function AnomalyDetectionTiers() {
               <span style={{ fontSize: '11px', padding: '3px 10px', background: s.accent + '18', color: s.accent, border: `1px solid ${s.accent}35`, borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>Use: {tierLabels[s.correct]}</span>
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, margin: 0, marginBottom: '12px' }}>{s.answer}</p>
-            <div style={{ padding: 'var(--card-pad-primary)', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)' }}>
               <span style={{ fontSize: '10px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>When to add complexity: </span>
               <span style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{s.when_to_upgrade}</span>
             </div>
@@ -572,7 +572,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                 <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.30)', marginTop: '4px' }}>
                   {Array.isArray(sc.context) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {sc.context.map((line, li) => <p key={`ctx-${li}-${line.slice(0,10)}`} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
+                      {sc.context.map((line, li) => <p key={li} style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{line}</p>)}
                     </div>
                   ) : (
                     <p style={{ fontSize: '12.5px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{sc.context}</p>
@@ -591,8 +591,8 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                       else if (isPicked)  { bg = 'rgba(239,68,68,0.15)';  border = 'rgba(239,68,68,0.35)'; color = 'var(--ink-mid)' }
                     } else if (isPicked)  { bg = accentColor + '10'; border = accentColor + '50'; color = 'var(--ink-hi)' }
                     return (
-                      <button key={`opt-${sc.id}-${oi}`} disabled={it.revealed} onClick={() => pick(i, oi)}
-                        style={{ textAlign: 'left', padding: 'var(--card-pad-primary)', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
+                      <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
+                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', background: bg, border: `1px solid ${border}`, cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', transition: 'all 0.12s' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', color, lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}

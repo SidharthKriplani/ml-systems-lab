@@ -388,7 +388,7 @@ export default function CaseStudiesTab({ onNavigate }) {
 
 function QuestionBlock({ q, qIdx, state, caseColor, onChange }) {
   return (
-    <div style={{ marginBottom: '16px', background: 'var(--depth)', borderRadius: '8px', padding: '16px' }}>
+    <div style={{ marginBottom: '16px', background: 'var(--depth)', borderRadius: '8px', padding: 'var(--card-pad-secondary)' }}>
       <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ink-ghost)', letterSpacing: '0.08em', marginBottom: '8px' }}>
         Q{qIdx + 1} — {q.type === 'mcq' ? 'MULTIPLE CHOICE' : 'OPEN ENDED'}
       </div>
@@ -427,7 +427,7 @@ function MCQOptions({ q, state, onChange }) {
             key={i}
             disabled={revealed}
             onClick={() => onChange({ answer: String(i), revealed: true })}
-            style={{ background: bg, border, borderRadius: '6px', padding: '10px 14px', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', fontSize: '13px', color, transition: 'all 0.15s' }}
+            style={{ background: bg, border, borderRadius: '6px', padding: 'var(--card-pad-primary)', cursor: revealed ? 'default' : 'pointer', textAlign: 'left', fontSize: '13px', color, transition: 'all 0.15s' }}
           >
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', marginRight: '8px', opacity: 0.6 }}>{['A', 'B', 'C', 'D'][i]}</span>
             {opt}
@@ -461,7 +461,7 @@ function OpenQuestion({ q, state, caseColor, onChange }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
         <button
           onClick={() => onChange({ revealed: !state.revealed })}
-          style={{ fontSize: '12px', padding: '6px 14px', background: state.revealed ? 'rgba(240,165,0,0.12)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+          style={{ fontSize: '12px', padding: '6px 14px', background: state.revealed ? 'var(--prime-bg-light)' : 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--prime)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
         >
           {state.revealed ? 'Hide Answer' : 'Reveal Model Answer'}
         </button>

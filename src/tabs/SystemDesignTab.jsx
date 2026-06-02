@@ -516,7 +516,7 @@ function DSOwnershipChain() {
               {/* Node card */}
               <div style={{ flex: 1, marginBottom: i < DS_CHAIN.length - 1 ? '6px' : '0', marginLeft: '10px' }}>
                 <button onClick={() => setOpenId(isOpen ? null : node.id)}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: isOpen ? 'rgba(240,165,0,0.11)' : 'transparent', border: `1px solid ${isOpen ? 'var(--prime-glow)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
+                  style={{ width: '100%', textAlign: 'left', padding: 'var(--card-pad-primary)', background: isOpen ? 'rgba(240,165,0,0.11)' : 'transparent', border: `1px solid ${isOpen ? 'var(--prime-glow)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.12s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div>
                       <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '13px', color: isOpen ? 'var(--prime)' : isDone ? 'var(--prime)' : 'var(--ink-hi)' }}>{node.title}</span>
@@ -942,7 +942,7 @@ function DesignCanvas() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Scenario</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+          <span style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '999px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.35)', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
             Recommendation System
           </span>
           {['Fraud Detection', 'Search Ranking'].map(s => (
@@ -1537,7 +1537,7 @@ function ServingTradeoffLab() {
                 <div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: isRec ? 'var(--prime)' : 'var(--ink-hi)' }}>
                     {arch.name}
-                    {isRec && <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>}
+                    {isRec && <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 7px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>RECOMMENDED</span>}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--ink-low)' }}>{arch.desc}</div>
                 </div>
@@ -1693,7 +1693,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
                     return (
                       <button key={oi} disabled={it.revealed} onClick={() => pick(i, oi)}
                         className={`msl-option-btn${it.revealed && isAns ? ' correct' : ''}${it.revealed && isPicked && !isAns ? ' wrong' : ''}${!it.revealed && isPicked ? ' selected' : ''}`}
-                        style={{ textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
+                        style={{ textAlign: 'left', padding: 'var(--card-pad-primary)', borderRadius: '8px', cursor: it.revealed ? 'default' : 'pointer', display: 'flex', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '14px', paddingTop: '2px' }}>{['A','B','C','D'][oi]}</span>
                         <span style={{ fontSize: '13px', lineHeight: 1.5 }}>{opt}</span>
                         {it.revealed && isAns && <span style={{ marginLeft: 'auto', color: 'var(--mint)', fontSize: '12px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg></span>}
@@ -1743,7 +1743,7 @@ const TT_NODES = [
   },
   {
     id: 'user_tower', label: 'User Tower', sub: 'DNN encoder',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Independent DNN that maps user context to a fixed-size embedding vector. Runs at query time on the online path — must be fast (typically <10ms).',
     decisions: 'Embedding dimension (64–512), whether to include real-time features vs batch-only, staleness tolerance. Deeper towers capture more signal but add latency.',
     failures: 'Tower learns popularity bias rather than preference signal; user embedding drifts when behavior shifts after major product changes.',
@@ -1751,7 +1751,7 @@ const TT_NODES = [
   },
   {
     id: 'item_tower', label: 'Item Tower', sub: 'DNN encoder',
-    color: 'var(--prime)', bg: 'rgba(240,165,0,0.12)',
+    color: 'var(--prime)', bg: 'var(--prime-bg-light)',
     what: 'Mirror DNN that maps item features to the same embedding space as the user tower. Runs offline to pre-compute embeddings for all items in the catalog.',
     decisions: 'Same architecture as user tower (shared dim) to enable dot-product similarity. Separate towers allow independent feature sets for users vs items.',
     failures: 'Architecture mismatch between user and item tower output dims breaks the ANN index at deployment. Schema changes in item features require full re-embedding.',
@@ -2171,7 +2171,7 @@ export default function SystemDesignTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '12px' }}>What's building</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
           {COMING_SOON.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: 0.65, borderLeft: '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: 'var(--ink-mid)' }}>{m.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(255,255,255,0.07)', color: 'var(--ink-ghost)', borderRadius: '3px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>soon</span>

@@ -194,7 +194,7 @@ function StarOBT() {
                       fontFamily: 'var(--font-sans)', fontWeight: 500,
                       cursor: 'pointer', transition: 'all 0.15s',
                       border: `1px solid ${active ? 'var(--prime)' : 'var(--rim)'}`,
-                      background: active ? 'rgba(240,165,0,0.12)' : 'transparent',
+                      background: active ? 'var(--prime-bg-light)' : 'transparent',
                       color: active ? 'var(--prime)' : 'var(--ink-mid)',
                     }}>
                     {c.label}
@@ -207,7 +207,7 @@ function StarOBT() {
       </div>
 
       {!allSet && (
-        <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', padding: '10px 14px', border: '1px dashed var(--rim)', borderRadius: '8px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', padding: 'var(--card-pad-primary)', border: '1px dashed var(--rim)', borderRadius: '8px' }}>
           Set all 5 parameters to get a recommendation.
         </div>
       )}
@@ -240,7 +240,7 @@ function StarOBT() {
             </div>
           </div>
 
-          <div className="card" style={{ padding: '16px' }}>
+          <div className="card" style={{ padding: 'var(--card-pad-secondary)' }}>
             <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '10px' }}>Schema sketch</div>
             <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink-mid)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '6px', border: '1px solid var(--rim)' }}>
               {result.schema}
@@ -602,7 +602,7 @@ function OLAPShowdown() {
                       fontFamily: 'var(--font-sans)', fontWeight: 500,
                       cursor: 'pointer', transition: 'all 0.15s',
                       border: `1px solid ${active ? 'var(--prime)' : 'var(--rim)'}`,
-                      background: active ? 'rgba(240,165,0,0.12)' : 'transparent',
+                      background: active ? 'var(--prime-bg-light)' : 'transparent',
                       color: active ? 'var(--prime)' : 'var(--ink-mid)',
                     }}>
                     {c.label}
@@ -708,7 +708,7 @@ export default function DataModelingTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Data Modeling & Storage</h1>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DE domain</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px' }}>
           Star schema or OBT? Which SCD type for this business rule? What breaks when you put 10TB through Hive without compaction? Real decisions, not definitions.
@@ -740,11 +740,11 @@ export default function DataModelingTab({ onNavigate }) {
         <div className="eyebrow" style={{ marginBottom: '16px' }}>What's being built</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
           {ROADMAP.map(m => (
-            <div key={m.label} className="card" style={{ padding: '16px', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
+            <div key={m.label} className="card" style={{ padding: 'var(--card-pad-secondary)', opacity: m.status === 'live' ? 1 : 0.6, borderLeft: m.status === 'live' ? '2px solid var(--prime)' : '2px solid var(--rim)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 
                 <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 600, color: m.status === 'live' ? 'var(--ink-hi)' : 'var(--ink-mid)' }}>{m.label}</span>
-                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'rgba(240,165,0,0.12)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
+                {m.status === 'live' && <span style={{ marginLeft: 'auto', fontSize: '9px', padding: '2px 6px', background: 'var(--prime-bg-light)', color: 'var(--prime)', borderRadius: '3px', fontFamily: 'var(--font-mono)' }}>LIVE</span>}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, margin: 0 }}>{m.desc}</p>
             </div>

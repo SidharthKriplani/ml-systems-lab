@@ -1333,7 +1333,7 @@ export default function CombinatorTab({ onNavigate }) {
             padding: '0.85rem 1rem',
             borderRadius: 10,
             border: `2px solid ${challengeMode ? 'var(--prime)' : 'var(--rim)'}`,
-            background: challengeMode ? 'rgba(240,165,0,0.12)' : 'var(--surface)',
+            background: challengeMode ? 'var(--prime-bg-light)' : 'var(--surface)',
             cursor: 'pointer',
             fontFamily: 'var(--font-sans)',
             display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -1524,7 +1524,7 @@ export default function CombinatorTab({ onNavigate }) {
               display: 'inline-block',
               padding: '0.2rem 0.6rem',
               borderRadius: 4,
-              background: 'rgba(240,165,0,0.12)',
+              background: 'var(--prime-bg-light)',
               border: '1px solid rgba(240,165,0,0.2)',
               color: 'var(--prime)',
               fontSize: '0.75rem',
@@ -1728,7 +1728,7 @@ export default function CombinatorTab({ onNavigate }) {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
               padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
-              background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
+              background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)',
             }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)' }}>⚡ Cross-Domain</span>
             </div>
@@ -1737,7 +1737,7 @@ export default function CombinatorTab({ onNavigate }) {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
               padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
-              background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.25)',
+              background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)',
             }}>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)' }}>{selectedTrack.icon} {selectedTrack.label} Track</span>
             </div>
