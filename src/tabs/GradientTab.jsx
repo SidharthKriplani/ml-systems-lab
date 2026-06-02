@@ -2422,11 +2422,11 @@ The model's high-confidence predictions occur less frequently than predicted. Sc
 
 Fix: Platt scaling. Train a logistic regression: targets = true labels, features = model scores. The fitted logistic curve rescales the model's scores to match reality.
 
-```python
+\`\`\`python
 from sklearn.calibration import CalibratedClassifierCV
 calibrated_model = CalibratedClassifierCV(model, cv='precomputed', method='sigmoid')
 calibrated_model.fit(X_val, y_val)
-```
+\`\`\`
 
 Cost: minimal. One additional logistic regression fit on a validation set.
 
@@ -2442,12 +2442,12 @@ An ensemble mixes a neural network (sigmoid outputs) with LightGBM (raw scores).
 
 Fix: calibrate each model separately to [0, 1] before ensembling. Use isotonic regression (more flexible than Platt scaling) if you have enough calibration data (500+ examples).
 
-```python
+\`\`\`python
 from sklearn.calibration import IsotonicRegression
 iso_reg = IsotonicRegression(out_of_bounds='clip')
 iso_reg.fit(lgbm_scores, y_val)
 lgbm_probs = iso_reg.transform(lgbm_scores)
-```
+\`\`\`
 
 **The production checkpoint:**
 
