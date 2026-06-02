@@ -635,6 +635,35 @@ Removed three sections that were adding weight without earning it:
 
 ---
 
+## Tab Documentation
+
+### LandscapeTab — Career Intelligence & Market Data (Today zone)
+
+**What it contains:**
+- **Roles:** 6 ML career tracks (Machine Learning Engineer, MLOps / ML Platform Engineer, Research Scientist, Applied Scientist, Data Scientist, NLP / Vision Specialist). Each includes day-in-life description, core skills with examples, focus area, hiring companies, and compensation ranges (US TC, UK base, DE base).
+- **Salaries:** L3–L7 total compensation (base + equity + bonus) by level and region (US, UK, DE, India). Interactive region toggle with live bar chart updates showing base (amber) vs. equity+bonus breakdown.
+- **Tech Stacks:** ML infrastructure choices grouped by company stage (Seed/Pre-seed, Series A/B, Series C/Growth, FAANG/Hyperscaler). For each stage: tools by category (Experimentation, Training, Serving, Data, Monitoring), team size, philosophy statement, and anti-pattern callout.
+- **Companies:** 6 detailed case studies (Netflix, Spotify, Uber, Airbnb, Google, Meta). Per company: motto, team size, ML budget estimate, key systems with business impact, tech highlights, and production insight.
+- **ML History:** Timeline 2012–2025 (AlexNet → Production AI). 14 milestones marking the research-to-production inflection points and capability breakthroughs.
+- **Global Markets:** 6 regions (US, UK, Germany, Canada, India, Singapore) with geographic context — hubs, senior-level compensation, market strengths, visa/tax/cost-of-living watch signals.
+
+**Zone:** Today (career reference)
+
+**Build date & version:** Pre-v4.14 (confirmed: Satoshi font swap commit touched this file with no prior version-specific comments). Likely v4.x or earlier production-ready release — no changelog entry documenting initial build.
+
+**Features & mechanics:**
+- Interactive role selection: 6 clickable role cards → reveals detailed panel with salary grid (3 geographies), day-in-life text, core skills, hiring companies, "Start this learning path" CTA with `onNavigate` back to HomeTab for path selection
+- Region filter pills on Salary section: 4 options (US, UK, DE, India) → live bar chart updates with TC/base visualization
+- Company selector tabs: 6 pill buttons → content switching showing case study panels (headline, metrics, key ML systems with impact descriptions, tech highlights, production insight)
+- Timeline scroll view: 14 milestone cards with year, title, description, and glowing accent markers
+- All content is static data — no localStorage, no session state, no Pyodide
+
+**Status:** Complete and stable. No active guidance gaps (confirmed in Audit #019 v4.38 guidance completeness sweep). Navigation hint added v4.38: "Use the section tabs to navigate — Roles covers day-in-life and demand signals, Salary shows L3–L7 TC benchmarks, Stack shows how tooling choices change with company stage."
+
+**Contribution to MSL:** Differentiator tab in the Today zone serving two audiences: (1) users exploring career paths and compensation realities, (2) users making technical decisions informed by how different companies organize their ML teams and infrastructure at each growth stage.
+
+---
+
 ### v4.14 — Satoshi font swap + emoji audit (May 2026)
 
 **Font swap:** Replaced Space Grotesk with Satoshi (Fontshare CDN). Single change point: `--font-sans` in `index.css`. `index.html` updated to load from `api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400`. JetBrains Mono preserved from Google Fonts. Inter and Playfair Display dropped (unused). Satoshi reads crisper at smaller weights, tighter at heavy weights — better fit for the amber/dark design system than Space Grotesk's rounded neutrality.

@@ -303,6 +303,19 @@ const CHECKPOINT_F2 = {
   explanation: "At 1:200 imbalance, Precision@K (K=team capacity) is the deployment metric, while AUC guides model selection. Here, both models are already trained and evaluated. The SMOTE model has 7 percentage points higher Precision@100, meaning 71% of the top 100 scored transactions are real fraud vs. 64% for class_weight. The team reviews 100/day. That 7-point gap is 7 extra caught frauds per day. AUC=0.93 vs 0.91 is a statistical difference, but operationally it is not material compared to the precision@100 difference. The correct reasoning: AUC is good for architecture selection (should I use LR vs RF vs GBC?); Precision@K is good for deployment decision (of two architectures already trained, which one should I run in production?). The answer is SMOTE because it delivers superior precision at the operational threshold (K=100). Option (d) is wrong: you already have both models trained; there is no reason to add threshold tuning to the already-higher-precision SMOTE model.",
 }
 
+const CHECKPOINT_F3 = {
+  id: 'cpF3',
+  question: 'Scenario: 48 hours post-deployment, monitoring shows PSI=0.31 on transaction amount (RED zone — above 0.25 retrain threshold). KS tests on user tenure and device fingerprint age are not significant (p > 0.05). Fraud rate in the analyst feedback loop appears unchanged — analysts report reviewing similar fraud patterns. What do you do?',
+  options: [
+    { id: 'a', text: 'Wait 48 more hours. Analysts report no change in fraud patterns, so there is no problem. Monitor PSI again tomorrow. Only act if it stays above 0.25 for 3+ consecutive days.' },
+    { id: 'b', text: 'Alert the team immediately and start a retraining job. PSI=0.31 > 0.25 is your retrain threshold. Statistical signals (PSI) are more reliable than analyst feedback because analysts only observe what the model flagged, not what it missed.' },
+    { id: 'c', text: 'Investigate the specific merchants driving the amount shift. Suppress flagging for merchants with high transaction amounts (since they have low fraud rates anyway). This reduces false positives without retraining.' },
+    { id: 'd', text: 'PSI is a lagging indicator. Since KS tests on other features are not significant, the shift is minor. Continue monitoring but do not act until you see performance degradation (e.g., precision@100 drops below 0.60).' },
+  ],
+  correct: 'b',
+  explanation: "PSI=0.31 > 0.25 is a hard signal that the training distribution has shifted from production. This is a leading indicator (early warning), not lagging. The analyst feedback loop is unreliable for drift detection: analysts only see transactions the model flagged, so they do NOT see fraud cases the model missed. If a shift in amount distribution moved fraudulent transactions to lower model scores, those cases now fall below the flag threshold — analysts will never see them and will report no change in patterns. The correct action: alert immediately and start retraining. PSI on one feature (amount) is sufficient reason to act if it exceeds the threshold, even if other features are stable. KS tests not being significant does not contradict PSI — they measure different aspects (KS detects large shifts; PSI is more sensitive). Option (c) is wrong because suppressing flags for high-amount merchants would reduce fraud detection, making the problem worse. Option (a) is wrong because waiting defeats the purpose of threshold-based alerts. Option (d) is wrong because waiting for performance degradation means you are catching fraud at a lower rate already — the shift is already hurting you.",
+}
+
 const CELL_F4_CODE = `# Cell 4 — Stratified Train/Val/Test Split at 1:200 Imbalance
 import numpy as np
 import pandas as pd

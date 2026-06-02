@@ -542,8 +542,8 @@ The topbar back button (`← Back` with breadcrumb) has `padding: '4px 0'` and `
 |---|---------|---------|----------|--------|
 | 1 | `CLAUDE.md` file structure had 3 wrong filenames (`MathFoundationsTab.jsx` → `ModelsMathTab.jsx`, `DeploymentTab.jsx` → `MLOpsDeployTab.jsx`, `CICDTab.jsx` → `MLOpsPipelinesTab.jsx`) and `LandscapeTab.jsx` completely absent | `CLAUDE.md` | High | ✅ Fixed — corrected in this session |
 | 2 | Hardcoded font literal strings in `App.jsx` — 8+ instances of `"'Space Grotesk',sans-serif"` and `"'JetBrains Mono',monospace"` instead of `var(--font-sans)` / `var(--font-mono)`. Tab files were cleaned in v4.2/v4.3; App.jsx was not updated. Also 3 instances of `'Inter, sans-serif'` in `AskTab.jsx`. | `App.jsx`, `AskTab.jsx` | Medium | ✅ Fixed v4.38 — all `'JetBrains Mono',monospace` → `var(--font-mono)` in App.jsx (5 occurrences); all `Inter, sans-serif` → `var(--font-sans)` in AskTab.jsx (8 occurrences) |
-| 3 | Residual hardcoded hex in 4 files: `color: '#000'`/`'#fff'` in `App.jsx` (lines 441, 781), `#f97316` in `dbtTab.jsx` DANGER_COLORS (should be `var(--ember)`), `color: '#000'` in `InterviewPrepTab.jsx` (line 649), `#6366f1`/`#22d3ee` in `ModelEvalTab.jsx` progress bar gradient. | `App.jsx`, `dbtTab.jsx`, `InterviewPrepTab.jsx`, `ModelEvalTab.jsx` | Low | ✅ Partially fixed v4.38 — App.jsx `#000`→`var(--void)`, `#fff`→`var(--white)`; InterviewPrepTab.jsx `#000`→`var(--void)`. dbtTab.jsx `#f97316` not found (already cleaned in prior session). ModelEvalTab gradient hex (`#6366f1`/`#22d3ee`) still open — deferred. |
-| 4 | `LandscapeTab.jsx` has no entry in `LINEAGE.md` — 684-line career intelligence tab (roles, salaries, market data, ML timeline) in `today` zone with no documented build history | `LINEAGE.md` | Medium | ⚠️ Open |
+| 3 | Residual hardcoded hex in 4 files: `color: '#000'`/`'#fff'` in `App.jsx` (lines 441, 781), `#f97316` in `dbtTab.jsx` DANGER_COLORS (should be `var(--ember)`), `color: '#000'` in `InterviewPrepTab.jsx` (line 649), `#6366f1`/`#22d3ee` in `ModelEvalTab.jsx` progress bar gradient. | `App.jsx`, `dbtTab.jsx`, `InterviewPrepTab.jsx`, `ModelEvalTab.jsx` | Low | ✅ Fully resolved — App.jsx `#000`→`var(--void)`, `#fff`→`var(--white)`; InterviewPrepTab.jsx `#000`→`var(--void)`; dbtTab.jsx `#f97316` already cleaned in prior session; ModelEvalTab gradient hex replaced with `var(--prime)` and `var(--ink-hi)` CSS variables (2026-06-02). |
+| 4 | `LandscapeTab.jsx` has no entry in `LINEAGE.md` — 684-line career intelligence tab (roles, salaries, market data, ML timeline) in `today` zone with no documented build history | `LINEAGE.md` | Medium | ✅ Resolved — LINEAGE.md entry added (2026-06-02), LandscapeTab fully documented with content areas, zone, build history, features, and MSL contribution |
 | 5 | Bundle size risk — 28,757 total lines across all tab files + App.jsx, no lazy loading. At current growth rate, will exceed 1.5MB bundle threshold within ~3 content sprints. Already tracked in IDEAS.md/NEXT.md. | — | Low | ⚠️ Tracked — deferred pending bundle audit |
 
 **Note — AUDITS.md numbering fix (this session):**  
@@ -619,7 +619,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav overflow narrow viewports | 2026-05-27 | Mobile | ✅ Fixed |
 | 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
 | 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ #16.3 fixed v4.28 · 2 open ⚠️ (emoji residue) |
-| 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | 3 open ⚠️ |
+| 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | ✅ All 4 findings resolved (2026-06-02): #17.1 CLAUDE.md fixed, #17.2 fonts fixed, #17.3 LINEAGE.md entry added, #17.4 hex residual fixed |
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 | 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
@@ -644,15 +644,15 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 8 | CausalDAGExplorer and StreamingStabilityLab have no fidelity badges — both are Conceptual/Simplified fidelity, not mathematically faithful | `CausalInferenceTab.jsx`, `SparkLabTab.jsx` | Low | ⚠️ Open — fidelity badge upgrade (3-tier) is a separate Ideas.md item |
 | 9 | ROLLOUT.md Batch 0 checklist referenced removed "Learning Paths" (removed v4.15) in HomeTab test item | `ROLLOUT.md` | Low | ✅ Fixed 2026-05-30 |
 
-**Open findings by severity (updated 2026-05-31):**
+**Open findings by severity (updated 2026-06-02):**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
 | Medium | 1 | #017.3 (LandscapeTab undocumented in LINEAGE) |
-| Low | 2 | #001 index keys, #017.2 partial (ModelEvalTab `#6366f1`/`#22d3ee` gradient hex still open) |
+| Low | 1 | #001 index keys |
 
-**Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32. #017.1 (hardcoded fonts) closed v4.38. #017.2 partially closed v4.38 — App.jsx/InterviewPrepTab fixed; dbtTab was already clean; ModelEvalTab gradient hex deferred. #015.7, #015.10, #020.2, #020.4, #021.5 resolved in earlier sessions.
+**Note:** #016.1-2 (decorative color/emoji residue) resolved by Oracle refactor v4.31–v4.32. #017.1 (hardcoded fonts) closed v4.38. #017.2 fully closed v4.38 + 2026-06-02 — App.jsx/InterviewPrepTab/ModelEvalTab hex all replaced with CSS variables; dbtTab was already clean. #015.7, #015.10, #020.2, #020.4, #021.5 resolved in earlier sessions.
 
 ---
 
@@ -690,8 +690,8 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 1 | #017.3 LandscapeTab undocumented in LINEAGE |
-| Low | 4 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube embed) |
+| Medium | 0 | — |
+| Low | 3 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube embed) |
 
 ---
 
@@ -720,10 +720,12 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 1 | `RAGArchitecture` module: 6 scenarios (`rag1`–`rag6`) covering chunking, hybrid search for LLM context, cross-encoder reranking, embedding model for RAG, RAGAS eval, hallucination from parametric knowledge. All 6 frame retrieval as serving an LLM context window — GAL territory. | `SystemDesignTab.jsx` | Medium | ✅ Fixed v4.43 — `RAG_SCENARIOS` array, `RAGArchitecture()` component, and MODULES entry all removed. ~100 lines removed. |
 | 2 | `RetrievalFailures` module: HNSW index staleness, embedding drift in recommendation, query-document domain mismatch. All frame retrieval as serving a recommendation/search system at scale. | `SystemDesignTab.jsx` | — | ✅ Confirmed MSL — retained. |
 
-**Open findings (updated):**
+**Open findings (updated — 2026-06-02):**
 
 | Severity | Count | Items |
 |----------|-------|-------|
 | High | 0 | — |
-| Medium | 1 | #017.3 LandscapeTab undocumented in LINEAGE |
-| Low | 3 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #023.1 (SHAP YouTube) |
+| Medium | 0 | — |
+| Low | 3 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube) |
+
+**Resolved since last session:** #017.3 LandscapeTab undocumented in LINEAGE — LINEAGE.md entry added with full tab documentation (2026-06-02).
