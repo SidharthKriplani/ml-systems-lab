@@ -703,6 +703,6 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 | # | Finding | File | Severity | Status |
 |---|---------|------|----------|--------|
-| 1 | SHAP values Gradient post has `youtubeId` set but embed renders "video unavailable" — video is likely private, unlisted, or has embeds disabled by uploader after the ID was added | `src/data/gradientPosts.js` — SHAP post | Low | ⚠️ Open — fix: verify `youtube.com/embed/{id}` for every post with a non-empty `youtubeId` in one pass, remove or replace broken IDs |
+| 1 | SHAP values Gradient post had `youtubeId: 'VaIXMiNMEJU'` but embed was unavailable (404 via oEmbed). All 12 other post IDs verified live (200). | `GradientTab.jsx` SHAP post | Low | ⚠️ Partially fixed v4.39 — broken ID cleared to `[]`. Replacement StatQuest SHAP video ID still needed (NEXT.md item #1). |
 
 **Action:** Read `gradientPosts.js`, extract all non-empty `youtubeId` values, verify each at `https://www.youtube.com/embed/{id}` (check for "Video unavailable" or redirect). Remove broken IDs (set to `''`). Scope: all posts in one pass — don't fix only SHAP. (Identified: session 2026-06-02)

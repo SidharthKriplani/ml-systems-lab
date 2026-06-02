@@ -46,6 +46,24 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.40 — ProjectLab complete (Phases 4+5), question framing pass, FeedbackChip, SHAP fix (2026-06-02)
+
+**What shipped (commit `2483679`):**
+
+**ProjectLab Phase 4 — Monitoring (`ProjectLabTab.jsx`):** `CHECKPOINT_5` (PSI=0.18 + KS p=0.03 simultaneous post-deployment — page+investigate is correct, rollback-first and watch-and-wait both wrong). `CELL_11_CODE` (PSI computation across 3 features on synthetic drifted production sample, stable/amber/red banding, PSI limitation prose). `CELL_12_CODE` (scipy KS two-sample test, stat + p-value, KS vs PSI comparison). `CELL_13_CODE` (GradientBoosting scored on both validation and drifted production sample, histogram overlap + CDF matplotlib plot, `withPlot=true`). `CELL_14_CODE` (60-day label delay timeline simulation, blind zone visualization, proxy signal strategy — support tickets + login drop rate, two-panel matplotlib). Phase 4 gated behind `phase3Complete`. Progress bar `phase4TotalSteps=5`.
+
+**ProjectLab Phase 5 — Deployment Scaffold (`ProjectLabTab.jsx`):** 5 display-only reference cells, mark-as-read buttons (no PythonCell, no execution). Cell 15: FastAPI `/predict` + Pydantic request/response models + `/health` endpoint. Cell 16: multi-stage Dockerfile, non-root user, uvicorn workers. Cell 17: K8s Deployment + Service + HPA (CPU 70% target). Cell 18: GitHub Actions CI/CD (test → ECR push → EKS kubectl rollout). Cell 19: AWS service mapping card grid (ECR, ECS vs EKS, S3 artifacts, SageMaker Model Monitor, SageMaker Feature Store, CodePipeline). Phase 5 gated behind `phase4Complete`. Completion card renders when `phase5Complete`. Roadmap section fully removed — both Phase 4 and Phase 5 cards replaced by live implementations. State derivations: `phase4TotalSteps`, `phase4DoneSteps`, `phase3Complete`, `phase5TotalSteps`, `phase5DoneSteps`, `phase4Complete`, `phase5Complete`.
+
+**Question framing quality pass (20 scenarios across 3 tabs):** All question/body text rewritten to be specific, situation-first, and production-decision-grounded. MonitoringTab: 6 scenarios (alert1–3, drift1–3) — each now names concrete metrics, timings, and business events. FeatureEngTab: 6 scenarios (fst1–3, ifl1–3) — each names exact features, numbers, and suspicious signals. SystemDesignTab: 9 scenarios (rag1–6, dwml1–3, ret1–3 via RETRIEVAL_SCENARIOS) — each names exact configs, failure modes, and forces a specific decision. Options and explanations unchanged — only question/body text rewrote.
+
+**FeedbackChip + Interview Experience card (commit `dd83136`, v4.39):** `src/components/FeedbackChip.jsx` — floating "★ Rate" chip (bottom-right, fixed, above bottom nav), opens modal with 3 star-rating questions + optional text field, submits to Formspree via POST, `msl_feedback_last` cooldown (30 days). Wired into App.jsx globally. InterviewGrid in App.jsx: "Submit Interview Experience" card below tool grid, links to Tally form. Both use placeholder IDs pending Avinash's signup. SHAP YouTube embed (`VaIXMiNMEJU`) cleared to `[]` — video was private/removed, verified via oEmbed API. All other 12 YouTube IDs verified as live (200).
+
+**Brace balance:** All 5 modified files (MonitoringTab, FeatureEngTab, SystemDesignTab, ProjectLabTab, App.jsx) verified at delta 0.
+
+**ProjectLab milestone:** With Phase 5 complete, the Telco Churn notebook is a full end-to-end ML pipeline — raw data → EDA → feature engineering → model training → evaluation → calibration → monitoring → deployment scaffold. All 5 phases, 19 cells, 5 judgment checkpoints.
+
+---
+
 ### Ideas triage + cross-lab review (2026-06-02, no code)
 
 Ideation session covering 6 MSL-specific ideas and a full cross-lab scan (PAL, GAL, India Wealth Architecture). No code shipped — all findings logged into IDEAS.md, AUDITS.md, DECISIONS.md.
