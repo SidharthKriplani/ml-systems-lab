@@ -391,7 +391,7 @@ Useful applications: explaining individual predictions to fraud analysts, auditi
 Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.`,
     tags: ['SHAP', 'Feature Importance', 'Explainability', 'Model Interpretability'],
     domain: 'eval',
-    youtube: [{ id: 'VaIXMiNMEJU', title: 'SHAP Values, Clearly Explained — StatQuest' }],
+    youtube: [], // VaIXMiNMEJU was private/removed — replace with correct StatQuest SHAP video ID when found
   },
   {
     id: 11,

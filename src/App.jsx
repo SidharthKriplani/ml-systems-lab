@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { trackTabSwitch } from './analytics.js'
 import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
-import AccessGate from './components/AccessGate.jsx'
+import AccessGate   from './components/AccessGate.jsx'
+import FeedbackChip from './components/FeedbackChip.jsx'
 
 import HomeTab           from './tabs/HomeTab.jsx'
 import SparkLabTab       from './tabs/SparkLabTab.jsx'
@@ -396,6 +397,47 @@ function InterviewGrid({ onSelect, isUnlocked }) {
         {INTERVIEW_TOOLS.map(tool => (
           <InterviewToolCard key={tool.id} tool={tool} onSelect={onSelect} isUnlocked={isUnlocked} />
         ))}
+      </div>
+
+      {/* ── Interview Experience submission card ── */}
+      <div style={{
+        marginTop: '28px',
+        padding: '18px 20px',
+        border: '1px solid var(--rim)',
+        borderLeft: '3px solid var(--prime)',
+        borderRadius: '10px',
+        background: 'rgba(240,165,0,0.03)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px',
+        flexWrap: 'wrap',
+      }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '4px' }}>
+            Share your interview experience
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.6, maxWidth: '480px' }}>
+            Paste what happened — questions asked, rounds, company, role. We review and add it to the ML interview experience base, building a skill frequency map over time.
+          </div>
+        </div>
+        <a
+          href="https://tally.so/r/REPLACE_WITH_YOUR_TALLY_ID"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            flexShrink: 0,
+            background: 'rgba(240,165,0,0.12)',
+            border: '1px solid rgba(240,165,0,0.35)',
+            borderRadius: '8px',
+            padding: '9px 18px',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: 'var(--prime)',
+            fontFamily: 'var(--font-sans)',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Submit experience →
+        </a>
       </div>
     </div>
   )
@@ -903,6 +945,9 @@ export default function App() {
       </footer>
 
       </div>{/* end desktop-main-wrapper */}
+
+      {/* ── Feedback chip (global, fixed bottom-right) ── */}
+      <FeedbackChip />
 
       {/* ── Content map (Cmd+K) ── */}
       {searchOpen && (
