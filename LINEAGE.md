@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.43 — Loan Default Phases 2+3, SystemDesign RAG audit (2026-06-02)
+
+**What shipped (commit `7caee8d`):**
+
+**Loan Default Phase 2 — Model Training & Evaluation (`LoanDefaultTab.jsx`):** `CHECKPOINT_L2` (ECOA threshold check — val AUC=0.77, ECE=0.14, bank threshold >0.35, must verify disparate impact before deployment; correct: run 4/5ths rule analysis on denial rates by demographic group). `CELL_L4_CODE` (stratified 60/20/20 split, class imbalance 14% framing, SMOTE vs class_weight discussion, regulatory note on demographic distribution in training set). `CELL_L5_CODE` (LR + RF + GradientBoosting with `class_weight='balanced'`, val AUC + F1 table, ECOA note that balanced class weights address imbalance but not disparate impact). `CELL_L6_CODE` (ROC + PR curves + business cost threshold chart (FN=$5k vs FP=$200), three-panel matplotlib, min-cost threshold printed alongside max-F1 threshold). Phase 2 progress bar `phase2TotalSteps=4`. Roadmap updated — Phase 2 card removed.
+
+**Loan Default Phase 3 — Monitoring (`LoanDefaultTab.jsx`):** `CHECKPOINT_L3` (PSI=0.22 on annual_income + KS p=0.01 on credit_score simultaneously 72h post-deployment — alert+investigate is correct, not rollback or watch-and-wait). `CELL_L7_CODE` (PSI on 4 features with amber/red banding, regulatory dimension — income drift signals potential demographic shift that affects 4/5ths rule). `CELL_L8_CODE` (KS two-sample test, combined PSI+KS interpretation guide for credit models). `CELL_L9_CODE` (GradientBoosting scored on shifted production sample, histogram + CDF plot, denial rate shift computed at threshold 0.35, demographic impact framing). Phase 3 progress bar `phase3TotalSteps=4`. Roadmap: only Phase 4 (Deployment Scaffold) remains.
+
+**SystemDesignTab RAG content boundary audit:** `RAGArchitecture` module fully removed — 6 scenarios (`rag1`–`rag6`) covering chunking strategy, hybrid search for LLM context, cross-encoder reranking for context window, embedding model selection for RAG, RAGAS evaluation, hallucination from parametric knowledge. All 6 are GAL territory (LLM context window retrieval). `RetrievalFailures` module (HNSW staleness, embedding drift in recommendation, query-document domain mismatch) confirmed as MSL — kept. `RAG_SCENARIOS` array, `RAGArchitecture()` component, and MODULES registry entry all removed. Brace delta 0.
+
+---
+
 ### v4.42 — Loan Default tab, 2 Gradient posts, HomeTab domain bars (2026-06-02)
 
 **What shipped (commit `14e58fe`):**

@@ -706,3 +706,24 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 1 | SHAP values post had `youtubeId: 'VaIXMiNMEJU'` — 404 via oEmbed (private/removed). All other 12 post IDs returned 200. | `GradientTab.jsx` SHAP post | Low | ⚠️ Partially fixed v4.39 — broken ID cleared to `[]`. Replacement StatQuest SHAP video ID still needed (NEXT.md item #1). |
 
 **Action:** Find live StatQuest SHAP video ID, verify via oEmbed, replace the empty `youtube: []` on the SHAP post in `GradientTab.jsx`. (Identified: session 2026-06-02)
+
+---
+
+### #024 — 2026-06-02 · SystemDesign Content Boundary Audit (MSL vs GAL)
+
+**Scope:** `src/tabs/SystemDesignTab.jsx` — RAG/LLM retrieval scenarios  
+**Trigger:** Decision: RAG-specific scenarios belong in GAL (GenAI Systems Lab), not MSL. ANN/recommendation retrieval stays in MSL.  
+**Method:** Full read of SystemDesignTab.jsx — identified `RAGArchitecture` module as entirely GAL-territory. `RetrievalFailures` module reviewed and confirmed MSL.
+
+| # | Finding | File | Severity | Status |
+|---|---------|------|----------|--------|
+| 1 | `RAGArchitecture` module: 6 scenarios (`rag1`–`rag6`) covering chunking, hybrid search for LLM context, cross-encoder reranking, embedding model for RAG, RAGAS eval, hallucination from parametric knowledge. All 6 frame retrieval as serving an LLM context window — GAL territory. | `SystemDesignTab.jsx` | Medium | ✅ Fixed v4.43 — `RAG_SCENARIOS` array, `RAGArchitecture()` component, and MODULES entry all removed. ~100 lines removed. |
+| 2 | `RetrievalFailures` module: HNSW index staleness, embedding drift in recommendation, query-document domain mismatch. All frame retrieval as serving a recommendation/search system at scale. | `SystemDesignTab.jsx` | — | ✅ Confirmed MSL — retained. |
+
+**Open findings (updated):**
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| High | 0 | — |
+| Medium | 1 | #017.3 LandscapeTab undocumented in LINEAGE |
+| Low | 3 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #023.1 (SHAP YouTube) |

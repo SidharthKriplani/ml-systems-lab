@@ -8,20 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. Loan Default Phase 2 — Model Training & Evaluation (2 hours)
-Continue `LoanDefaultTab.jsx`. Phase 2: 3 cells + 1 checkpoint. Cell IDs: `loan_cell4`, `loan_cell5`, `loan_cell6`, checkpoint `cpL2`. Same synthetic 800-row dataset (seed 42). Steps: (loan_cell4) stratified train/val/test split 60/20/20 — same pattern as ProjectLab cell7, note class imbalance 14.2%, discuss SMOTE vs class_weight; (loan_cell5) LR + RF + GradientBoosting training with `class_weight='balanced'`, val AUC + F1; (loan_cell6) ROC / PR curves + confusion matrix + threshold selection — emphasis on cost asymmetry (false negative = bad loan issued vs false positive = credit denied); checkpoint cpL2: "AUC=0.77, ECE=0.14, the bank wants to use a probability threshold of >0.35 to deny loans automatically. Given ECOA requirements, what must you verify before deploying this threshold?" Correct: disparate impact analysis — verify the threshold does not produce adverse impact (>20% difference in denial rate) across demographic groups. AUC and ECE alone are insufficient for deployment sign-off on a credit model. Update phase2 state derivations and progress bar.
+### 1. Loan Default Phase 4 — Deployment Scaffold (1.5 hours)
+Final phase of `LoanDefaultTab.jsx`. Phase 4: 5 display-only reference cells, mark-as-read pattern (no PythonCell execution — same as ProjectLab Phase 5). Cell IDs: `loan_cell10`–`loan_cell14`. (loan_cell10) FastAPI `/predict` endpoint with Pydantic request schema including all 6 loan features + response model with `default_probability`, `decision`, `model_version`; (loan_cell11) Dockerfile — same multi-stage pattern as ProjectLab but with loan model artifact; (loan_cell12) K8s Deployment + HPA; (loan_cell13) CI/CD GitHub Actions; (loan_cell14) Regulatory compliance callout — ECOA model card fields: training data demographics, disparate impact test results, threshold documentation, monitoring cadence, appeal process. This last cell is the key differentiator from the Churn lab — no credit model ships without a model card covering regulatory requirements. After Phase 4: render full completion card ("Loan Default Lab Complete"), phase4 state derivations, remove Phase 4 roadmap card.
 
-### 2. CLAUDE.md file structure — add LoanDefaultTab + data directory (10 min)
-`CLAUDE.md` file structure section is missing `LoanDefaultTab.jsx` and `src/data/testimonials.js`. Add both under the correct locations. Also confirm `src/data/` directory entry exists in the file structure block.
+### 2. Loan Default — CLAUDE.md update (5 min)
+`CLAUDE.md` file structure section shows `LoanDefaultTab.jsx` as "Phase 1 complete (v4.42)". Update to reflect Phases 1–3 complete (v4.43), Phase 4 in queue.
 
-### 3. SystemDesign retrieval content boundary audit (45 min)
-Read `SystemDesignTab.jsx`. Find all retrieval-related scenarios. Classify each as MSL (ANN / recommendation at scale — HNSW, IVF, candidate generation) vs GAL (RAG-specific — chunking, embedding drift, hallucination from retrieval gaps). Remove or clearly comment out GAL scenarios. Do NOT remove the entire retrieval module — the recommendation-scale ANN content is core MSL. After removal, brace balance check, commit.
+### 3. Fraud Detection ProjectLab — Phase 1 (2 hours)
+Third ProjectLab dataset. New file `FraudDetectionTab.jsx`. Synthetic 10,000-row transaction dataset (class imbalance 1:200 — 50 fraud out of 10,000). Features: `amount`, `merchant_category`, `hour_of_day`, `user_tenure_days`, `is_international`, `device_fingerprint_age`, `fraud` (binary). Phase 1: schema inspection (note extreme imbalance — SMOTE alone insufficient at 1:200, must use precision/recall tradeoff framing), EDA (fraud distribution by amount tier and merchant category), imbalance audit checkpoint ("with 50 fraud cases in training, which evaluation metric is most informative — AUC, accuracy, F1, or precision@K?"). Correct: precision@K — at 1:200 imbalance, accuracy is misleading (99.5% by predicting all negative), AUC can look good while recall is unusable, F1 at default threshold is meaningless. Precision@K (top K transactions by score that are actually fraud) is the business metric for a fraud operations team with finite review capacity.
 
-### 4. Loan Default Phase 3 — Monitoring (1.5 hours)
-Phase 3: 3 cells + 1 checkpoint. Cell IDs: `loan_cell7`–`loan_cell9`, checkpoint `cpL3`. PSI on income/credit_score between training and a "shifted" production sample. KS test on the same features. Prediction drift histogram. Checkpoint cpL3: "PSI=0.22 on annual_income (amber-to-red boundary), 72 hours post-deployment of the loan default model. KS p=0.01 on credit_score. No known business events. Alert or wait?" Correct: alert + investigate — two signals simultaneously post-deployment, one near the red threshold.
+### 4. GradientTab changelog entry (10 min)
+Add a June 2026 entry to the `CHANGELOG` constant in `HomeTab.jsx` to reflect the major additions this session: Project Lab complete (5 phases), Loan Default lab (3 phases), 2 new Gradient posts, RAG scenarios removed from SystemDesign. Keep entries concise (one sentence each).
 
-### 5. GradientTab — SHAP post video (open/deferred)
-StatQuest has no public SHAP-specific video. Leave `youtube: []` on the SHAP post. If a high-quality alternative video (not StatQuest) is found, add it. Otherwise skip.
+### 5. AUDITS.md — log SystemDesign RAG removal as resolved finding (10 min)
+Add audit #024 to AUDITS.md documenting the RAG content boundary audit: 6 RAGArchitecture scenarios (`rag1`–`rag6`) removed from SystemDesignTab, transferred to GAL. RetrievalFailures module (HNSW, embedding drift in recommendation) confirmed MSL. Update open findings summary table.
 
 ---
 
@@ -38,22 +38,24 @@ Nothing currently blocked.
 
 ---
 
-## Done this session (v4.41 + v4.42)
+## Done this session (v4.42 + v4.43)
 
-- ~~MD staleness sweep — CLAUDE.md (9-tool count, ProjectLabTab note, components list, SpotTheFlaw count), ROLLOUT.md (Phase 5 check, FeedbackChip, Interview Experience card), AUDITS.md (file path refs).~~
-- ~~Testimonials: `src/data/testimonials.js` + HomeTab "What engineers say" section (auto-hides when empty).~~
-- ~~Loan Default tab Phase 1 — schema inspection, EDA, proxy feature audit (4/5ths rule), cpL1 ECOA judgment. Wired into App.jsx.~~
-- ~~Two new Gradient posts: "Feature Store Time-Travel Bug" + "Validation Set Leakage — Why Your AUC Lied".~~
-- ~~HomeTab domain completion bars — 2px amber fill bar + done/total count on each track card when pct > 0.~~
+- ~~CLAUDE.md + ROLLOUT.md staleness sweep — LoanDefaultTab, data/ dir, FeedbackChip check, Phase 5 check.~~
+- ~~Loan Default Phase 1 — schema + EDA + proxy audit (4/5ths rule) + cpL1 ECOA judgment.~~
+- ~~Loan Default Phase 2 — split + LR/RF/GBC training + eval/threshold + cpL2 ECOA threshold check.~~
+- ~~Loan Default Phase 3 — PSI + KS + prediction drift + denial rate shift + cpL3 alert-or-wait.~~
+- ~~SystemDesign RAG audit — 6 rag1–rag6 scenarios removed (LLM context retrieval = GAL). RetrievalFailures kept.~~
+- ~~Two new Gradient posts — Feature Store Time-Travel Bug + Validation Set Leakage.~~
+- ~~HomeTab domain completion bars — 2px amber fill + done/total count on each track card.~~
+- ~~Testimonials section on HomeTab — src/data/testimonials.js + "What engineers say" card grid.~~
 
 ---
 
 ## What comes after (not for this session)
 
-- **Fraud Detection ProjectLab** — extreme imbalance (1:200), threshold economics, after Loan Default complete.
-- **SystemDesign retrieval content boundary** — RAG scenarios → remove (GAL), ANN/recommendation → keep.
-- **Difficulty + industry filter** — requires tagging 200+ scenarios first.
-- **Freemium gate v2** — per-scenario `isFree` flags.
-- **Interview Experiences v2** — frequency chart (build only after N≥15 approved submissions).
-- **ModelEvalTab gradient hex** — `#6366f1`/`#22d3ee` open #017.2 finding.
+- **Fraud Detection ProjectLab** (extreme imbalance, precision@K, threshold economics) — after Loan Default Phase 4.
+- **Difficulty + industry filter** — requires tagging 200+ scenarios; content work is prerequisite.
+- **Freemium gate v2** — per-scenario `isFree` flags, first 2 per module free.
+- **Interview Experiences v2** — frequency chart (after N≥15 approved Tally submissions).
 - **LandscapeTab country filter** — India/UK/US/EU region field.
+- **ModelEvalTab gradient hex** — `#6366f1`/`#22d3ee` (open AUDITS #017.2 finding).
