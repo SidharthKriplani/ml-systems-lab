@@ -129,7 +129,7 @@ const NAV_ZONES = [
 // ── Practice domain config ────────────────────────────────────────────────────
 const PRACTICE_DOMAINS = [
   {
-    id: 'mle', label: 'ML Engineering', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'mle', label: 'ML Engineering', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'models',    label: 'Math Foundations',    desc: 'PCA, SVD, calibration — Python in browser' },
       { id: 'features',  label: 'Feature Engineering', desc: 'Skew, leakage, feature stores' },
@@ -142,7 +142,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'de', label: 'Data Engineering', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'de', label: 'Data Engineering', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'spark',    label: 'Spark Lab',     desc: 'Shuffle, skew, broadcast join decisions' },
       { id: 'airflow',  label: 'Airflow',       desc: 'DAG failures, backfill, late data' },
@@ -151,7 +151,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'dl', label: 'Deep Learning', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'dl', label: 'Deep Learning', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'dl',          label: 'Training Lab', desc: 'Loss spikes, gradients, debugging' },
       { id: 'dl_finetune', label: 'Fine-tuning',  desc: 'LoRA, freeze, LR strategy' },
@@ -159,7 +159,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'ds', label: 'Data Science', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'ds', label: 'Data Science', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'ds',     label: 'DS Fundamentals',  desc: 'Model selection, calibration, metrics' },
       { id: 'causal', label: 'Causal Inference', desc: 'Identification, uplift, obs vs exp' },
@@ -167,7 +167,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'mlops', label: 'MLOps', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'mlops', label: 'MLOps', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'monitor',      label: 'Monitoring',    desc: 'Drift, PSI, incident triage' },
       { id: 'mlops_deploy', label: 'Deployment',    desc: 'Strategies, champion-challenger, rollback' },
@@ -175,7 +175,7 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'rgba(240,165,0,0.07)',
+    id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
       { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
       { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
@@ -442,7 +442,7 @@ function PracticeGrid({ onSelect, tabProgress, isUnlocked }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', padding: 'var(--card-pad-primary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: "var(--font-mono)" }}>Your progress</span>
           <div style={{ flex: 1, height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px rgba(240,165,0,0.45)' }} />
+            <div style={{ width: `${Math.round((totalAttempted / totalScenarios) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 10px var(--prime-glow)' }} />
           </div>
           <span style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", flexShrink: 0 }}>
             {totalAttempted}/{totalScenarios}
@@ -608,7 +608,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
         border: '1px solid var(--rim)',
         borderLeft: '3px solid var(--prime)',
         borderRadius: '10px',
-        background: 'rgba(240,165,0,0.03)',
+        background: 'var(--prime-faint)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px',
         flexWrap: 'wrap',
       }}>
@@ -627,7 +627,7 @@ function InterviewGrid({ onSelect, isUnlocked }) {
           style={{
             flexShrink: 0,
             background: 'var(--prime-bg-light)',
-            border: '1px solid rgba(240,165,0,0.35)',
+            border: '1px solid var(--prime-glow)',
             borderRadius: '8px',
             padding: '12px 18px',
             fontSize: '13px',
@@ -712,9 +712,9 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
   return (
     <aside className="desktop-sidebar" style={{
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
-      background: 'linear-gradient(180deg, rgba(240,165,0,0.13) 0%, rgba(12,9,6,0.94) 110px, rgba(8,6,4,0.96) 100%)',
+      background: 'var(--depth)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      borderRight: '1px solid rgba(255,255,255,0.10)',
+      borderRight: '1px solid var(--rim)',
       flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'none',
     }}>
@@ -725,8 +725,8 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
         style={{
           padding: '14px 14px 12px', flexShrink: 0,
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'linear-gradient(180deg, rgba(240,165,0,0.14) 0%, rgba(240,165,0,0.07) 100%)',
-          borderBottom: '1px solid rgba(240,165,0,0.15)',
+          background: 'var(--prime-faint)',
+          borderBottom: '1px solid var(--rim)',
           border: 'none', cursor: 'pointer', width: '100%',
           transition: 'opacity var(--t)',
         }}
@@ -738,7 +738,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
           background: 'var(--prime)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--void)',
-          boxShadow: '0 0 18px rgba(240,165,0,0.50), 0 2px 8px rgba(0,0,0,0.6)',
+          boxShadow: '0 0 18px var(--prime-glow), 0 2px 8px rgba(0,0,0,0.6)',
         }}>ML</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>Systems Lab</span>
@@ -896,10 +896,10 @@ function BottomNav({ activeZone, onZoneNav }) {
   return (
     <nav className="bottom-nav-safe" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'rgba(6,4,2,0.80)',
+      background: 'var(--topbar-bg)',
       backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
-      borderTop: 'none',
-      boxShadow: 'inset 0 1px 0 0 rgba(240,165,0,0.22), 0 -12px 48px rgba(0,0,0,0.55)',
+      borderTop: '1px solid var(--rim)',
+      boxShadow: 'inset 0 1px 0 0 var(--prime-glow), 0 -12px 48px rgba(0,0,0,0.55)',
       zIndex: 100,
     }}>
       <div style={{ height: '68px', display: 'flex', alignItems: 'stretch', width: '100%', overflow: 'hidden' }}>
@@ -973,6 +973,9 @@ export default function App() {
   const [searchOpen,  setSearchOpen]  = useState(false)
   const [tabProgress, setTabProgress] = useState(() => readTabProgress())
   const [isUnlocked,  setIsUnlocked]  = useState(() => localStorage.getItem('msl_access') === ACCESS_CODE)
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('msl_theme') || 'dark' } catch { return 'dark' }
+  })
 
   function handleUnlock(code) {
     if (code === ACCESS_CODE) {
@@ -1030,6 +1033,12 @@ export default function App() {
       window.removeEventListener('msl_score_updated', onProgress)
     }
   }, [])
+
+  // Theme persistence — dark: remove attribute, light: set data-theme="light"
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '')
+    try { localStorage.setItem('msl_theme', theme) } catch {}
+  }, [theme])
 
   // Bottom nav tap: same zone → reset to default (e.g. back to practice grid)
   function handleZoneNav(zoneId) {
@@ -1093,7 +1102,7 @@ export default function App() {
         height: '48px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px',
-        background: 'rgba(6,4,2,0.94)', backdropFilter: 'blur(20px)',
+        background: 'var(--topbar-bg)', backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--rim)',
       }}>
@@ -1123,6 +1132,23 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', background: 'none', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', transition: 'border-color 0.15s, color 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-hi)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
+          >
+            {theme === 'light' ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            )}
+          </button>
           {!showBackBtn && (
             <a href="https://github.com/SidharthKriplani/ml-systems-lab" target="_blank" rel="noopener noreferrer"
               className="hide-mobile"

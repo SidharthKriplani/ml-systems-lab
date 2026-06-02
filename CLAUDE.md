@@ -27,6 +27,12 @@ React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser
 4. **Never hardcode colors.** Every color must be a CSS variable from `:root` in `index.css`.
 5. **Every tab gets `onNavigate` prop.** Signature: `export default function XTab({ onNavigate }) {}`. Cross-tab navigation via `onNavigate(tabId)` / `goTo(tabId)` in App.jsx.
 6. **No React hooks inside `.map()` callbacks.** Extract to named components if a card/item needs local state.
+7. **Context budget — Grep-first for large files.** These files must never be read in full; always Grep to find the section, then Read with offset+limit:
+   - `LINEAGE.md` (1,200+ lines) — `grep -n "v4\." LINEAGE.md | tail -5` to find latest entry, then read ±40 lines
+   - `AUDITS.md` (900+ lines) — `grep -n "⚠️" AUDITS.md` for open findings, then `grep -n "^### #" AUDITS.md | tail -3` for latest entry
+   - `GradientTab.jsx` (3,900+ lines) — `grep -n "id: 4[0-9],"` to find a post, read ±30 lines
+   - `IDEAS.md` (550+ lines) — only read the Done section and Tier 1; skip Tier 2/3 unless planning
+   Reading any of these in full wastes 15–60k tokens of context per read.
 
 ---
 
@@ -142,13 +148,13 @@ git push          # auto-deploys to Vercel
 **One session = one NEXT.md batch. Start fresh every time.**
 
 1. Open a new chat
-2. Say: *"Read CLAUDE.md, NEXT.md, DECISIONS.md, and AUDITS.md from the workspace folder, then confirm what's next and proceed."*
-3. Execute the 5 queued items in NEXT.md
+2. Say: *"Read CLAUDE.md and NEXT.md from the workspace folder, then confirm what's next and proceed."*
+3. Execute the 5 queued items in NEXT.md — read other spine files **on demand** (see table below)
 4. Update all MD files (LINEAGE, NEXT, IDEAS, AUDITS, METRICS, CLAUDE as needed)
 5. Commit + push
 6. Close the chat
 
-Never carry a chat across multiple NEXT.md batches. Token consumption grows exponentially with conversation length. The MD files are the complete state — no chat history is needed. A new instance reading the 4 files above will know exactly where to pick up.
+Never carry a chat across multiple NEXT.md batches. Token consumption grows exponentially with conversation length. The MD files are the complete state — no chat history is needed.
 
 ---
 
@@ -177,14 +183,13 @@ The goal is a high-signal IDEAS.md backlog, not a long one.
 
 ## MD spine files
 
-| File | Purpose | Read when |
-|------|---------|-----------|
-| `CLAUDE.md` | This file — session briefing | Start of every session |
-| `NEXT.md` | Next session queue — max 5 items, specific, ordered. Updated at end of every session. | Immediately after CLAUDE.md, every session |
-| `DECISIONS.md` | Architectural rulebook — prescriptive, present-tense | Before making any architectural choice |
-| `LINEAGE.md` | Build history — narrative, past-tense | Understanding why something exists |
-| `IDEAS.md` | Build backlog — Tier 1/2/3 + In Progress + Retired | Planning what to build next |
-| `AUDITS.md` | Health log — findings, resolved/open | Before touching anything; after any audit |
-| `METRICS.md` | Analytics & storage taxonomy — PostHog events, localStorage key registry | Before adding any new event or localStorage key |
-| `README.md` | External-facing project overview | For new visitors / contributors |
-| `ROLLOUT.md` | Beta rollout plan — batches, self-vet checklists, tester briefs, feedback tracking. Operational only; not a backlog. | Before opening any batch to testers |
+| File | Lines | Purpose | How to read |
+|------|-------|---------|-------------|
+| `CLAUDE.md` | ~200 | This file — session briefing | **Read in full** — mandatory session open |
+| `NEXT.md` | ~120 | Next session queue | **Read in full** — mandatory session open |
+| `DECISIONS.md` | ~240 | Architectural rulebook | Read in full only before an architectural choice |
+| `LINEAGE.md` | 1,200+ | Build history | **Grep-first** — `grep -n "v4\." LINEAGE.md \| tail -5` then read ±40 lines |
+| `IDEAS.md` | 550+ | Build backlog | Read Done + Tier 1 sections only; skip Tier 2/3 unless planning |
+| `AUDITS.md` | 900+ | Health log | **Grep-first** — two greps: (1) `grep -n "⚠️" AUDITS.md` for any open findings across all audits; (2) `grep -n "^### #" AUDITS.md \| tail -3` for the latest entry. Never read in full. |
+| `METRICS.md` | ~190 | localStorage key registry | Read in full only when adding a new key or event |
+| `ROLLOUT.md` | ~240 | Beta rollout plan | Read only before opening a batch to testers |

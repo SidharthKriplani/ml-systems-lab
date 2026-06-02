@@ -2,60 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design system — "Ember" palette ────────────────────────────────────── */
+/* ─── Design system — "Charcoal / Parchment" dual-theme ─────────────────── */
 /*
-   Concept: Bloomberg Terminal meets precision instrumentation.
-   Burnished amber on near-black — the colour of cockpit readouts,
-   trading floors, and oscilloscope traces. Not blue. Not purple.
-   Every dev tool looks the same; this one looks like it costs something.
-
-   Single primary accent: #f0a500 (electric amber).
-   One complementary data colour: #22d3ee (cold cyan — warm/cool contrast).
-   Everything else is neutral. Colour earns its place.
+   Two themes: Charcoal (dark default) and Parchment (light).
+   Toggle via [data-theme="light"] on <html>.
+   All colours via CSS variables — never hardcoded.
 */
 :root {
-  /* ── Surfaces — warm near-black ──────────────────── */
-  --void:    #0c0a08;   /* page bg — faintest warm undertone  */
-  --depth:   #201d19;   /* card / panel background            */
-  --surface: #2a2620;   /* elevated cards, code blocks        */
-  --rim:     #4a433a;   /* default border — visible on depth  */
-  --rim-hi:  #615950;   /* hovered / active border            */
+  /* ── Surfaces — neutral charcoal ─────────────────── */
+  --void:    #111111;   /* page bg                           */
+  --depth:   #1c1c1c;   /* card / panel background           */
+  --surface: #252525;   /* elevated cards, code blocks       */
+  --rim:     #333333;   /* default border                    */
+  --rim-hi:  #444444;   /* hovered / active border           */
 
-  /* ── Primary accent: burnished amber ────────────── */
-  --prime:       #f0a500;                  /* the signature colour   */
-  --prime-hi:    #fcc440;                  /* lighter, for text      */
-  --prime-glow:  rgba(240,165,0,0.20);
-  --prime-faint: rgba(240,165,0,0.07);
+  /* ── Primary accent: warm amber ────────────────── */
+  --prime:       #e8a030;
+  --prime-hi:    #f4b84a;
+  --prime-glow:  rgba(232,160,48,0.20);
+  --prime-faint: rgba(232,160,48,0.07);
 
   /* ── Semantic / functional ───────────────────────── */
-  --mint:   #34d399;   /* success — emerald (not teal)         */
-  --sky:    #22d3ee;   /* data / code — cold cyan (complements amber) */
-  --ember:  #f97316;   /* warning — distinct orange, ≠ prime  */
-  --rose:   #f43f5e;   /* error / danger                      */
-  --violet: #a78bfa;   /* secondary accent, used sparingly    */
-  --gold:   var(--prime-hi);  /* monetary / caution — reuse amber family */
-  --green:  #4ade80;   /* strong positive / terminal green    */
+  --mint:   #34d399;
+  --sky:    #22d3ee;
+  --ember:  #f97316;
+  --rose:   #f43f5e;
+  --violet: #a78bfa;
+  --gold:   var(--prime-hi);
+  --green:  #4ade80;
 
-  /* Legacy compat aliases (used by some components) */
+  /* Legacy compat */
   --mint-bright: var(--prime-hi);
   --mint-dim:    #b07800;
   --mint-glow:   var(--prime-glow);
   --mint-faint:  var(--prime-faint);
 
-  /* ── Typography — warm neutrals ─────────────────── */
-  --ink-hi:    #f5f1ea;   /* primary — warm off-white  ~17:1    */
-  --ink-mid:   #d8cfc6;   /* secondary — body text     ~13:1    */
-  --ink-low:   #b8ada2;   /* tertiary — labels/meta    ~9:1     */
-  --ink-ghost: #8c8178;   /* disabled / ghost          ~5.5:1   */
+  /* ── Typography ─────────────────────────────────── */
+  --ink-hi:    #f2f2f2;
+  --ink-mid:   #cccccc;
+  --ink-low:   #999999;
+  --ink-ghost: #666666;
 
   /* ── Utility ─────────────────────────────────────── */
-  --white:     #ffffff;   /* contrast text on colored badge backgrounds */
+  --white:     #ffffff;
+  --topbar-bg: rgba(17,17,17,0.94);
 
   /* ── Typography tokens ───────────────────────────── */
   --font-sans: 'Satoshi', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* ── Transition tokens (use these everywhere) ───── */
+  /* ── Transition tokens ───────────────────────────── */
   --t-fast: 0.10s ease;
   --t:      0.16s ease;
   --t-slow: 0.26s ease;
@@ -72,9 +68,44 @@
   --r-lg: 14px;
 
   /* ── Structural spacing tokens ───────────────────── */
-  --card-pad-primary:   10px 14px;          /* MCQ option buttons, hint blocks (40+ uses) */
-  --card-pad-secondary: 16px;               /* card/panel inner padding (60+ uses)        */
-  --prime-bg-light:     rgba(240,165,0,0.12); /* light amber card/hint background (100+ uses) */
+  --card-pad-primary:   10px 14px;
+  --card-pad-secondary: 16px;
+  --prime-bg-light:     rgba(232,160,48,0.12);
+}
+
+/* ─── Parchment light theme ────────────────────────────────────────────── */
+[data-theme="light"] {
+  --void:    #f4f0e8;
+  --depth:   #fdfbf6;
+  --surface: #ede8dc;
+  --rim:     #d5ccbb;
+  --rim-hi:  #c0b5a5;
+
+  --prime:       #9a6800;
+  --prime-hi:    #c48500;
+  --prime-glow:  rgba(154,104,0,0.15);
+  --prime-faint: rgba(154,104,0,0.05);
+  --prime-bg-light: rgba(154,104,0,0.09);
+
+  --mint:   #0d7a4d;
+  --sky:    #1a6fa8;
+  --ember:  #c45a0a;
+  --rose:   #b8223a;
+  --violet: #6b45d0;
+  --green:  #1a7a3a;
+
+  --ink-hi:    #2a2015;
+  --ink-mid:   #544535;
+  --ink-low:   #8a7560;
+  --ink-ghost: #b0a090;
+
+  --white:     #ffffff;
+  --topbar-bg: rgba(244,240,232,0.95);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow:    0 2px 10px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.10);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -99,12 +130,19 @@
     min-height: 100vh;
     /* Atmosphere: center-top amber light source + corner accents + dot grid */
     background-image:
-      radial-gradient(ellipse 70% 40% at 50% 0%,    rgba(240,165,0,0.22)   0%, transparent 60%),
-      radial-gradient(ellipse 120% 60% at -5% 0%,   rgba(240,165,0,0.14)   0%, transparent 55%),
-      radial-gradient(ellipse 100% 55% at 105% 100%, rgba(240,165,0,0.08)   0%, transparent 55%),
-      radial-gradient(circle, rgba(240,165,0,0.040) 1px, transparent 1px);
+      radial-gradient(ellipse 70% 40% at 50% 0%,    rgba(232,160,48,0.15)  0%, transparent 60%),
+      radial-gradient(ellipse 120% 60% at -5% 0%,   rgba(232,160,48,0.08)  0%, transparent 55%),
+      radial-gradient(ellipse 100% 55% at 105% 100%, rgba(232,160,48,0.05)  0%, transparent 55%),
+      radial-gradient(circle, rgba(232,160,48,0.030) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
     background-attachment: fixed;
+  }
+
+  [data-theme="light"] body {
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(154,104,0,0.07) 0%, transparent 60%),
+      radial-gradient(circle, rgba(154,104,0,0.018) 1px, transparent 1px);
+    background-size: 100% 100%, 28px 28px;
   }
 
   h1,h2,h3,h4,h5,h6 {
@@ -121,7 +159,7 @@
   ::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 99px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--rim-hi); }
 
-  ::selection { background: rgba(240,165,0,0.25); color: var(--ink-hi); }
+  ::selection { background: var(--prime-glow); color: var(--ink-hi); }
 
   :focus-visible { outline: 2px solid var(--prime); outline-offset: 2px; border-radius: 4px; }
 }

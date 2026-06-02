@@ -28,17 +28,20 @@ ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300
 
 ---
 
-## Reading Order (MANDATORY EVERY SESSION)
+## Reading Order (token-efficient)
 
-1. Read **CLAUDE.md** — understand the brief, the stack, the rules, the file structure
-2. Read **NEXT.md** — see what's queued, understand priorities
-3. Read **DECISIONS.md** — know the architectural constraints before writing any code
-4. Read **LINEAGE.md** — understand design history (why did we do this? what's the context?)
-5. Read **IDEAS.md** — see Tier 1/2/3 backlog, understand gaps
-6. Read **AUDITS.md** — know what's broken/open, don't re-discover issues
-7. Read **METRICS.md** — know what localStorage keys exist, what events are tracked
+**Mandatory at session open — read in full:**
+1. **CLAUDE.md** — rules, stack, file structure (~200 lines)
+2. **NEXT.md** — what's queued this session (~120 lines)
 
-**If you skip this, you will waste time re-discovering known problems.**
+**On demand only — never read in full:**
+3. **DECISIONS.md** — only before an architectural choice (240 lines, safe when needed)
+4. **LINEAGE.md** — 1,200+ lines. `grep -n "v4\." LINEAGE.md | tail -5` → find latest entry → Read offset ±40 lines. Never read the whole file.
+5. **IDEAS.md** — 550+ lines. Read Done + Tier 1 only. Skip Tier 2/3 unless planning.
+6. **AUDITS.md** — 900+ lines. `grep -n "^### #" AUDITS.md | tail -3` → find last audit → read from there.
+7. **METRICS.md** — 190 lines, safe to read in full only when adding a new key.
+
+**Estimated token savings:** ~35k tokens per session vs reading all 7 files upfront.
 
 ---
 
