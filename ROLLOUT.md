@@ -72,7 +72,9 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **Lock indicators — Practice grid** | Without code: premium Practice cards show padlock icon, reduced opacity. Free cards (Math Foundations, Feature Eng, Model Eval, Classical ML) show normally | ✓ required | — |
 | **Lock indicators — Interview grid** | Without code: all Interview tool cards show padlock icon (6 tools including Spot the Flaw) | ✓ required | — |
 | **Spot the Flaw** | Open SpotTheFlawTab → read scenario → select a flaw category → confirm reveal shows The Flaw + prevention | ✓ required | — |
-| **Project Lab** | Open ProjectLabTab (ML Engineering) → run Cell 1 (schema inspection) → answer Checkpoint 1 → confirm Pyodide output renders and progress bar updates | ✓ required | — |
+| **Project Lab** | Open ProjectLabTab (ML Engineering) → run Cell 1 (schema inspection) → answer Checkpoint 1 → confirm Pyodide output renders and progress bar updates. Phase 5 display cells: click "Mark as read ✓" → confirm cell marks done and Phase 5 progress bar updates. | ✓ required | — |
+| **Feedback chip** | Confirm floating ★ Rate chip visible bottom-right. Click → modal opens with 3 star-rating rows + text field. Rate all 3 → Submit → confirm "Thanks — feedback received." state. Chip hidden for 30 days after submission. | ✓ required | — |
+| **Interview Experience card** | Interview zone → scroll below tool grid → confirm "Submit interview experience →" card visible. Click → Tally form opens in new tab (or placeholder link — note if not yet wired). | ✓ required | — |
 
 ---
 

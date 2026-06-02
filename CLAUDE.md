@@ -6,7 +6,7 @@ Read this first, every session.
 
 ## What this project is
 
-ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 10-tool Interview simulation zone. No backend. No accounts. Everything in localStorage. Deployed on Vercel.
+ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 9-tool Interview simulation zone. No backend. No accounts. Everything in localStorage. Deployed on Vercel.
 
 **Live:** https://ml-systems-lab-v9xe.vercel.app  
 **Repo:** https://github.com/SidharthKriplani/ml-systems-lab
@@ -70,14 +70,17 @@ src/
     JDPrepTab.jsx
     DefenseDocTab.jsx
     VerbatimTab.jsx
-    SpotTheFlawTab.jsx          ← Interview zone, added v4.28 (10 scenarios, 5 flaw categories)
-    ProjectLabTab.jsx  ← planned (see IDEAS.md Tier 1 — sequential notebook, Pyodide DS + deployment scaffold)
+    SpotTheFlawTab.jsx          ← Interview zone, added v4.28 (12 scenarios, 5 flaw categories)
+    ProjectLabTab.jsx           ← ML Engineering, Pyodide sequential notebook, all 5 phases complete (v4.40)
+                                   Phase 1: EDA · Phase 2: Features · Phase 3: Model · Phase 4: Monitoring · Phase 5: Deployment scaffold
+                                   19 cells, 5 judgment checkpoints, Telco Churn dataset (synthetic 600-row for training phases)
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
-  data/
-    gradientPosts.js       All Gradient post content
   components/
     PythonCell.jsx         Pyodide sandbox wrapper
-    GlobalSearch.jsx       Global search component
+    GlobalSearch.jsx       Global search component (retained, not wired — replaced by ContentMap)
+    ContentMap.jsx         Cmd+K overlay — zone→domain→tab tree + search. Added v4.36.
+    AccessGate.jsx         Premium content gate — renders on locked tabs, unlock animation. Added v4.34.
+    FeedbackChip.jsx       Floating ★ Rate chip — Formspree POST, 3 rating questions, 30-day cooldown. Added v4.39.
 ```
 
 ---
