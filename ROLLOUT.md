@@ -75,6 +75,13 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 | **Project Lab** | Open ProjectLabTab (ML Engineering) → run Cell 1 (schema inspection) → answer Checkpoint 1 → confirm Pyodide output renders and progress bar updates. Phase 5 display cells: click "Mark as read ✓" → confirm cell marks done and Phase 5 progress bar updates. | ✓ required | — |
 | **Feedback chip** | Confirm floating ★ Rate chip visible bottom-right. Click → modal opens with 3 star-rating rows + text field. Rate all 3 → Submit → confirm "Thanks — feedback received." state. Chip hidden for 30 days after submission. | ✓ required | — |
 | **Interview Experience card** | Interview zone → scroll below tool grid → confirm "Submit interview experience →" card visible. Click → Tally form opens in new tab (or placeholder link — note if not yet wired). | ✓ required | — |
+| **Bookmarking** | Open any practice tab → click Save button on a module → confirm it appears in HomeTab "Bookmarked modules" section → click Open → confirm navigates to correct tab | ✓ required | — |
+| **Series filter** | Open GradientTab → confirm Series row appears above domain filter → select "Silent Failures" → confirm only relevant posts show → select "All Series" → all 50 posts visible | ✓ required | — |
+| **Gradient posts count** | Confirm 50 posts are visible in GradientTab under "All Series" | ✓ required | — |
+| **Progress export** | HomeTab → "Export Progress" button → confirm JSON file downloads with msl_* keys | ✓ required | — |
+| **Design tokens** | Open any practice tab → inspect a card — padding and amber backgrounds should look consistent across all tabs | ✓ required | — |
+| **Difficulty filter** | Practice zone → open any domain card → confirm difficulty filter pills appear → select "junior" → confirm only junior scenarios visible | ✓ required | — |
+| **Keyboard nav (MCQ)** | Classical ML tab → open any scenario → press keys 1, 2, 3, 4 to select options → confirm selection → press Enter to reveal | ✓ required | — |
 
 ---
 
@@ -134,6 +141,18 @@ Permanent. Share freely during beta. Unlocks all premium content on device entry
 - Set phone brightness to lowest readable level (~15–20%)
 - Open: HomeTab, a Practice module mid-answer, CombinatorTab timer, TrainerTab heatmap
 - Confirm: all text readable, selected MCQ option visible (not invisible tint), correct/wrong highlights visible
+
+**12. Bookmarking**
+- Open Feature Engineering → select "Skew Simulator" → click Save button → confirm amber saved state
+- Navigate to HomeTab → confirm "Bookmarked modules" section shows "Skew Simulator" with Open → button
+- Click Open → → confirm navigates to Feature Engineering with Skew Simulator active
+- Click ✕ remove → confirm module disappears from HomeTab bookmarks
+
+**13. Series filter (GradientTab)**
+- Open Read zone → GradientTab → confirm Series row shows above domain filter (Silent Failures / Production Diagnostics / Architecture Decisions / Math & Foundations / Interview & Career)
+- Click "Silent Failures" → confirm post count reduces to ~10 posts
+- Click a domain filter while in a series → confirm AND-filtering works
+- Click "All Series" → confirm all 50 posts visible
 
 ---
 

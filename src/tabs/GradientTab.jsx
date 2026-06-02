@@ -3557,6 +3557,7 @@ function PostCard({ post, featured, onClick, isRead }) {
 export default function GradientTab({ onNavigate }) {
   const [activeDomain, setActiveDomain] = useState('all')
   const [activeSeries, setActiveSeries] = useState('all')
+  const [readingMode,  setReadingMode]  = useState('all')
   const [reading,      setReading]      = useState(null)
   const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
   const [read, setRead] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')) } catch { return new Set() } })
@@ -3573,7 +3574,70 @@ export default function GradientTab({ onNavigate }) {
     setActiveDomain('all')
   }
 
-  const filtered = POSTS.filter(p => {
+  // Tab score-prefix → post domain mapping
+  const SCORE_TO_DOMAIN = {
+    spark:    ['spark'],
+    ts:       ['monitor', 'ts'],
+    classical: ['eval'],
+    features: ['features'],
+    eval:     ['eval'],
+    monitor:  ['monitor'],
+    design:   ['design'],
+    dl:       ['dl'],
+    causal:   ['causal'],
+  }
+
+  function getPersonalisedPosts(pm) {
+    // Collect all msl_score:* keys and determine weak / practiced / untouched domains
+    let weakDomains = new Set()
+    let practicedDomains = new Set()
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (!key || !key.startsWith('msl_score:')) continue
+        const prefix = key.replace('msl_score:', '')
+        const raw = localStorage.getItem(key)
+        const mapped = SCORE_TO_DOMAIN[prefix] || []
+        mapped.forEach(d => practicedDomains.add(d))
+        if (!raw) continue
+        try {
+          const val = JSON.parse(raw)
+          // Object form {completed, ts} — counts as practiced, not necessarily weak
+          if (val && typeof val === 'object' && !Array.isArray(val)) {
+            // no numeric ratio available — treat as practiced only
+          } else if (val && typeof val === 'object' && typeof val.correct === 'number' && typeof val.total === 'number') {
+            if (val.total > 0 && val.correct / val.total < 0.6) {
+              mapped.forEach(d => weakDomains.add(d))
+            }
+          }
+        } catch { /* non-JSON value — ignore */ }
+      }
+    } catch { /* localStorage unavailable */ }
+
+    if (pm === 'revise') {
+      if (weakDomains.size === 0) return POSTS // graceful fallback
+      const pool = POSTS.filter(p => weakDomains.has(p.domain))
+      // unread first
+      return [...pool.filter(p => !read.has(p.id)), ...pool.filter(p => read.has(p.id))]
+    }
+
+    if (pm === 'learn') {
+      if (practicedDomains.size === 0) return POSTS.filter(p => !read.has(p.id)) // graceful fallback
+      return POSTS.filter(p => practicedDomains.has(p.domain) && !read.has(p.id))
+    }
+
+    if (pm === 'whats_next') {
+      const allDomains = new Set(POSTS.map(p => p.domain))
+      const untouchedDomains = [...allDomains].filter(d => !practicedDomains.has(d))
+      if (untouchedDomains.length === 0) return POSTS.filter(p => !read.has(p.id)) // graceful fallback
+      return POSTS.filter(p => untouchedDomains.includes(p.domain) && !read.has(p.id))
+    }
+
+    return POSTS
+  }
+
+  const basePool = readingMode === 'all' ? POSTS : getPersonalisedPosts(readingMode)
+  const filtered = basePool.filter(p => {
     const seriesMatch = activeSeries === 'all' || (SERIES.find(s => s.id === activeSeries)?.posts || []).includes(p.id)
     const domainMatch = activeDomain === 'all' || p.domain === activeDomain
     return seriesMatch && domainMatch
@@ -3656,6 +3720,30 @@ export default function GradientTab({ onNavigate }) {
         </div>
       )}
 
+      {/* Reading mode */}
+      <div style={{ marginBottom: '12px' }}>
+        <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Reading mode</div>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all',        label: 'All Posts' },
+            { id: 'revise',     label: '↩ Revise' },
+            { id: 'learn',      label: '→ Learn' },
+            { id: 'whats_next', label: '✶ What\'s Next' },
+          ].map(m => (
+            <button key={m.id} onClick={() => { setReadingMode(m.id); setActiveSeries('all'); setActiveDomain('all') }}
+              style={{
+                padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer',
+                fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
+                background: readingMode === m.id ? 'rgba(240,165,0,0.15)' : 'rgba(0,0,0,0.25)',
+                color: readingMode === m.id ? 'var(--prime)' : 'var(--ink-low)',
+                border: readingMode === m.id ? '1px solid rgba(240,165,0,0.4)' : '1px solid var(--rim)',
+              }}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Series filter */}
       <div>
         <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Series</div>
@@ -3698,8 +3786,11 @@ export default function GradientTab({ onNavigate }) {
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--ink-low)', fontSize: '14px' }}>
-          No posts in this category yet.
+        <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', fontSize: '14px' }}>
+          {readingMode === 'revise' && 'No weak areas detected yet — complete some practice modules first.'}
+          {readingMode === 'learn' && 'You\'ve read all posts in your active domains. Explore a new series!'}
+          {readingMode === 'whats_next' && 'You\'ve touched every domain. Try Revise mode to strengthen weak areas.'}
+          {readingMode === 'all' && 'No posts in this category yet.'}
         </div>
       )}
     </div>
