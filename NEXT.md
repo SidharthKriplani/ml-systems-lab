@@ -28,6 +28,17 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
+## v4.52 — Done this session
+
+- [x] ~~YouTube IDs posts 41/42/45~~ — done (rjGGSHhKDMM, 7iaCLi0Kdd4, cgc3dSEAel0; all oEmbed verified)
+- [x] ~~Series assignment posts 20/26/27~~ — done (Silent Failures now 13 posts)
+- [x] ~~Distractor quality pass round 2~~ — done (21 questions: Spark×5, Airflow×5, dbt×5, DeepLearning×6)
+- [x] ~~ROLLOUT.md Batch 0 update~~ — done (7 new rows + 2 test sections)
+- [x] ~~Revise/Learn/What's Next reading mode~~ — done (3 lenses, msl_score:* driven, graceful fallback)
+- [x] ~~LINEAGE v4.52~~ — done
+
+---
+
 ## v4.51 — Done this session
 
 - [x] ~~Gradient posts 49–50~~ — done (recsys feedback loop, CUPED failures; 50 posts milestone reached)
@@ -38,28 +49,28 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.52 — Next sprint
+## v4.53 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **YouTube IDs backfill — posts 41, 42, 45**
-   - Posts 41 (Offline Eval ≠ Online), 42 (Label Noise), 45 (Silent Model Staleness) still have `youtube: []`
-   - Good search angles: Evidently AI channel for monitoring/staleness; Confident Learning (Curtis Northcutt) for label noise; RecSys conference talks for offline vs online eval
+2. **YouTube IDs backfill — posts 46, 47, 48, 49**
+   - These 4 posts still have `youtube: []` (recsys feedback loop, DiD violations, cold-start framing, recsys loop)
+   - Posts 41/42/45 are now filled (done v4.52)
 
-3. **Series filter — assign unassigned posts 20, 26, 27**
-   - These 3 posts (Validation Set Leakage variants + Feature Store extended) currently only visible under "All Series"
-   - Post 20 → Silent Failures; Post 26 → Silent Failures; Post 27 → Silent Failures
-   - Update SERIES arrays in GradientTab.jsx
+3. **Distractor quality pass — round 3**
+   - Remaining tabs: DataScienceTab, CausalInferenceTab, TimeSeriesTab, MLOpsPipelinesTab, MLOpsDeployTab
+   - Same standard: 2-of-3 wrong options require real judgment to eliminate
 
-4. **Distractor quality pass — round 2**
-   - 23 questions improved in v4.50. Remaining tabs not yet touched: SparkLabTab, AirflowTab, dbtTab, DeepLearningTab
-   - Run same audit: identify obviously-wrong options, replace with plausibly-wrong ones
+4. **ForwardPointers audit — remaining tabs**
+   - AirflowTab, dbtTab, DataModelingTab, CausalInferenceTab, TimeSeriesTab, StaffLayerTab, TrainerTab, CaseStudiesTab still missing Gradient post back-links
+   - Add "Go deeper →" CTA linking to relevant Gradient post at bottom of active module
 
-5. **ROLLOUT.md Batch 0 checklist update**
-   - Several checklist items reference features added since last ROLLOUT.md edit (bookmarking, series filter, 50 posts, design tokens)
-   - Update checklist to reflect current surface area before any external tester access
+5. **"Revise" mode smoke test**
+   - After pushing, verify Revise/Learn/What's Next mode against real localStorage data
+   - Confirm `msl_score:*` key parsing handles both numeric scores and JSON `{completed, ts}` objects
+   - Ensure domain mapping covers all score key prefixes correctly
 
 ---
 
@@ -71,8 +82,9 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ## Notes for next session
 
-- All v4.49–v4.51 changes staged but NOT committed — run from terminal:
-  `rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.51: Posts 49-50, series UI, post 31-34 rewrite, CUPED YouTube ID" && git push`
-- Brace balance: GradientTab at delta 0; all other files clean
-- 50 Gradient posts total
-- Series UI live — posts 20/26/27 still need series assignment (v4.52 Item 3)
+- All changes staged but NOT committed — run from terminal:
+  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.52: YouTube IDs 41-45, series fix, distractors x21, ROLLOUT, Revise/Learn/Next mode" && git push`
+- Brace balance: all files at 0
+- 50 Gradient posts; all series assigned; posts 46/47/48/49 still have youtube: []
+- Revise/Learn/What's Next live — smoke test after push
+- 44 total distractor questions improved across 6 tab files this session

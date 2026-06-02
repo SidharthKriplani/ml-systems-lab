@@ -232,12 +232,12 @@ const DRIFT_SCENARIOS = [
     context: 'Upstream table: `user_id` renamed to `customer_id` by the source team. Your dbt model: `SELECT user_id, email, created_at FROM {{ source(...) }}`.',
     options: [
       'dbt compile error — column not found',
-      'Silent NULL column in output',
-      'Test failure only — model still runs',
-      'Nothing breaks',
+      'Silent NULL column in output — warehouse coerces missing column to NULL',
+      'Test failure only — not_null test fires but the model still runs and loads data',
+      'Nothing breaks — dbt resolves column aliases automatically',
     ],
     answer: 0,
-    explanation: 'When you explicitly reference `user_id` in your SELECT, the warehouse throws a column-not-found error at runtime (or compile time if dbt can resolve it). However, if your model used `SELECT *`, the new column `customer_id` would appear but `user_id` would silently vanish — no error, just wrong data.',
+    explanation: 'When you explicitly reference `user_id` in your SELECT, the warehouse throws a column-not-found error at runtime (or compile time if dbt can resolve it). However, if your model used `SELECT *`, the new column `customer_id` would appear but `user_id` would silently vanish — no error, just wrong data. Option B is wrong because most warehouses do not coerce missing columns to NULL — they throw a hard error. Option C is wrong because dbt tests run after the model executes successfully; if the model fails with a column error, tests never run.',
     fix: `-- Always reference columns explicitly. Add not_null tests:
 -- schema.yml
 columns:
@@ -258,12 +258,12 @@ columns:
     context: '`order_total` changed from INTEGER to DECIMAL(18,2) by the source team. Your downstream model casts it to INTEGER for an aggregation.',
     options: [
       'Silent data truncation — decimals silently lost',
-      'dbt compile error',
-      'Test failure — model still runs',
+      'dbt compile error — type mismatch detected at compile time',
+      'The DECIMAL-to-INTEGER cast raises a warehouse precision loss warning that appears in dbt logs',
       'Nothing if all values happen to be whole numbers',
     ],
     answer: 0,
-    explanation: 'Most warehouses will silently truncate decimal values when cast to INTEGER. You get wrong numbers with no error. This is the most dangerous class of schema drift because everything appears healthy — dbt runs green, dashboards load, the numbers are just wrong.',
+    explanation: 'Most warehouses will silently truncate decimal values when cast to INTEGER. You get wrong numbers with no error. This is the most dangerous class of schema drift because everything appears healthy — dbt runs green, dashboards load, the numbers are just wrong. Option B is wrong: dbt does not inspect runtime types at compile time — it compiles SQL templates, not type-checks column semantics. Option C is plausible but wrong: most production warehouses (BigQuery, Snowflake, Redshift) perform the truncation silently without warning. Option D is a true statement — if all values are whole numbers there is no observable impact — which is why this drift can hide for months until the first fractional order total appears.',
     fix: `-- Cast explicitly and defensively:
 SELECT
     CAST(order_total AS DECIMAL(18,2)) AS order_total,
@@ -356,12 +356,12 @@ sources:
     context: 'Upstream fact table changes from order-level (1 row per order) to order-line-level (N rows per order). Your model: `SELECT order_id, COUNT(*) AS order_count`.',
     options: [
       'Silent metric inflation — counts multiply by avg line items',
-      'dbt compile error',
-      'Test failure if you have unique tests on order_id',
-      'Nothing breaks',
+      'dbt compile error — SELECT order_id is ambiguous when order_id appears on multiple rows',
+      'Test failure if you have unique tests on order_id — the test catches duplicate order_ids before data is written',
+      'Nothing breaks — COUNT(*) and COUNT(order_id) both count rows, result is still valid',
     ],
     answer: 0,
-    explanation: 'This is the most dangerous schema drift. No error, no warning, no test failure — unless you explicitly test for grain. `COUNT(order_id)` now returns (orders x avg_lines_per_order). Every metric downstream is wrong. Dashboards look plausible. The bug can go undetected for weeks.',
+    explanation: 'This is the most dangerous schema drift. No error, no warning, no test failure — unless you explicitly test for grain. `COUNT(order_id)` now returns (orders x avg_lines_per_order). Every metric downstream is wrong. Dashboards look plausible. The bug can go undetected for weeks. Option B is wrong: SQL has no concept of "ambiguous column count" — it will count all rows regardless of duplicates. Option C is the most dangerous distractor: a `unique` test on order_id WOULD catch that order_id now repeats, firing before data is written. This is why unique tests are worth adding — but many models lack them, making option A the common production outcome. Option D sounds logical but is wrong: "valid" depends entirely on what the metric represents. If the business cares about distinct orders, inflated counts are wrong by definition.',
     fix: `-- Add row count assertion tests that alert on large changes:
 -- packages.yml: add dbt_utils
 
@@ -381,12 +381,12 @@ tests:
     context: 'Source team switches event timestamps from UTC to local time (US/Eastern, UTC-5) without announcement. Your date partition key is `DATE(event_timestamp)`.',
     options: [
       'Silent partition misalignment — rows land in wrong date buckets',
-      'Test failure — freshness checks catch it',
+      'Freshness test failure — the max(updated_at) value appears 5 hours stale and triggers the error_after threshold',
       'dbt compile error',
       'Immediate run failure',
     ],
     answer: 0,
-    explanation: 'Timezone changes are completely invisible to dbt. The column type has not changed, the column is not missing, values are still timestamps — they are just 5 hours off. Rows near midnight shift to the wrong date partition. Aggregate metrics by date are wrong, especially for the boundary hours.',
+    explanation: 'Timezone changes are completely invisible to dbt. The column type has not changed, the column is not missing, values are still timestamps — they are just 5 hours off. Rows near midnight shift to the wrong date partition. Aggregate metrics by date are wrong, especially for the boundary hours. Option B is a genuinely tricky distractor: a freshness check on `loaded_at_field` compares the source max(updated_at) against the current wall-clock time. If the timestamps shifted from UTC to local time (US/Eastern, UTC-5), the max timestamp in the source would appear 5 hours older than it actually is — which could trip a 6-hour error threshold. However, the primary and always-present symptom is the silent partition misalignment, not a freshness alert (which depends on exact threshold settings).',
     fix: `-- Store source timestamps as UTC always. Convert at read time:
 SELECT
     CONVERT_TIMEZONE('UTC', 'America/New_York', event_timestamp)
@@ -408,12 +408,12 @@ sources:
     context: 'Source switches from `is_deleted=true` flag to physically deleting records. Your model: `SELECT * FROM {{ source(...) }} WHERE is_deleted = false`.',
     options: [
       'Compile error — is_deleted column no longer exists',
-      'All records returned — filter on missing column ignored',
-      'Silent data inflation — deleted records reappear',
-      'Model runs fine — nothing changes',
+      'Silent data inflation — hard deletes already removed the rows, so the filter on is_deleted = false becomes a no-op and all remaining rows pass',
+      'All records returned — filter on missing column is silently ignored by the warehouse',
+      'Model runs fine — hard deletes are transparent to SELECT statements',
     ],
     answer: 0,
-    explanation: 'When `is_deleted` is dropped and you reference it explicitly, the warehouse throws a column-not-found error at runtime. If you had used a `SELECT *` pattern, the column disappears from your output and the downstream filter on `is_deleted = false` would error. Either way this breaks — but it does break loudly rather than silently inflating data.',
+    explanation: 'When `is_deleted` is dropped and you reference it explicitly, the warehouse throws a column-not-found error at runtime. If you had used a `SELECT *` pattern, the column disappears from your output and the downstream filter on `is_deleted = false` would error. Either way this breaks — but it does break loudly rather than silently inflating data. Option B is the subtle trap: a practitioner might reason "since records are now physically deleted, the soft-delete column is gone and deleted rows are gone too, so the net effect is correct." But the WHERE clause still explicitly references a non-existent column — the query fails before evaluating any rows. Option C is wrong: no major warehouse silently ignores a WHERE reference to a dropped column.',
     fix: `-- Use dbt snapshots for entities that can be deleted.
 -- Snapshots apply SCD Type 2 — you keep history even when source rows disappear:
 

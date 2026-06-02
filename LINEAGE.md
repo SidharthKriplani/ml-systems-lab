@@ -46,6 +46,28 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.52 — YouTube IDs posts 41-45, series assignment, distractor round 2, ROLLOUT update, Revise/Learn/Next mode (2026-06-02)
+
+**What shipped:**
+
+**YouTube IDs backfilled — posts 41, 42, 45 (`GradientTab.jsx`):** All 3 previously empty; now verified via oEmbed:
+- Post 41 (Offline Eval ≠ Online): `rjGGSHhKDMM` — "Identifying Offline Metrics that Predict Online Impact — RecSys 2025"
+- Post 42 (Label Noise): `7iaCLi0Kdd4` — "How Cleanlab Catches Label Errors — Curtis Northcutt"
+- Post 45 (Silent Model Staleness): `cgc3dSEAel0` — "ML Model Monitoring and Observability — Evidently AI"
+Posts 46/47/48/49 remain `youtube: []` — no suitable verified video found.
+
+**Series assignment — posts 20, 26, 27:** Added to `Silent Failures` series posts array. All posts in GradientTab now assigned to a series (only 4 remaining `youtube: []` arrays are for posts without suitable videos). Silent Failures now has 13 posts.
+
+**Distractor quality pass round 2 (`SparkLabTab`, `AirflowTab`, `dbtTab`, `DeepLearningTab`):** 21 more questions improved across 4 files (5 Spark + 5 Airflow + 5 dbt + 6 DeepLearning). All replaced trivially-wrong options with plausibly-wrong alternatives. Total distractor improvements across all sessions: 44 questions. All brace delta 0.
+
+**ROLLOUT.md Batch 0 checklist updated:** 7 new checklist rows added (bookmarking, series filter, 50 posts count, progress export, design tokens, difficulty filter, keyboard nav). 2 new specific test item sections (12. Bookmarking, 13. Series filter).
+
+**Revise / Learn / What's Next reading mode (`GradientTab.jsx`):** 3 state-aware reading lenses using `msl_read` + `msl_score:*` localStorage. `readingMode` state + `getPersonalisedPosts()` plain function. Revise = weak-domain posts (score < 60%); Learn = unread posts in practiced domains; What's Next = unread posts in untouched domains. Reading mode selector row above series filter. Mode-aware empty states. Graceful fallback for fresh users. Brace delta 0.
+
+**Brace balance:** GradientTab delta 0. All other files verified at 0.
+
+---
+
 ### v4.51 — Gradient posts 49–50, Series UI, post audit 31–34, YouTube ID (2026-06-02)
 
 **What shipped:**

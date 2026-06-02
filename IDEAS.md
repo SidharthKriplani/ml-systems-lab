@@ -511,6 +511,11 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **Revise / Learn / What's Next reading mode** (v4.52) — 3 lenses using msl_score:* + msl_read localStorage. Reading mode selector above series filter. Graceful fallback for fresh users.
+- [x] **Distractor quality pass round 2** (v4.52) — 21 questions improved: Spark×5, Airflow×5, dbt×5, DeepLearning×6. Total across all sessions: 44 questions.
+- [x] **YouTube IDs posts 41/42/45** (v4.52) — all 3 verified via oEmbed. Posts 46/47/48/49 still [].
+- [x] **Series assignment posts 20/26/27** (v4.52) — Silent Failures now 13 posts; all 50 posts series-assigned.
+- [x] **ROLLOUT.md Batch 0 update** (v4.52) — 7 new checklist rows + 2 test sections for bookmarking + series filter.
 - [x] **Gradient posts 49–50** (v4.51) — Recsys Feedback Loop, When CUPED Goes Wrong. 50-post milestone reached.
 - [x] **Series + Tags UI** (v4.51) — SERIES constant + activeSeries state + filter row + AND-filtering in GradientTab. 5 series live.
 - [x] **Posts 31–34 differentiation** (v4.51) — 4 genuinely distinct angles (API trap, group contamination, retroactive data, walk-forward validation).

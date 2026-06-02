@@ -2410,7 +2410,7 @@ Treat offline evaluation as a necessary gate, not a sufficient one. Gate on: AUC
 **Practice this in Model Evaluation to develop intuition for when offline metrics predict online performance and when they systematically mislead you.**`,
     tags: ['Model Evaluation', 'A/B Testing', 'Feedback Loops', 'Online vs Offline', 'Position Bias', 'Production ML'],
     domain: 'eval',
-    youtube: [],
+    youtube: [{ id: 'rjGGSHhKDMM', title: 'Identifying Offline Metrics that Predict Online Impact — RecSys 2025' }],
   },
   {
     id: 42,
@@ -2462,7 +2462,7 @@ For proxy labels: invest in measuring the true target on a small sample, then ev
 **Practice this in Feature Engineering to identify how label leakage and noisy ground truth are introduced into training pipelines and how to build defenses against them.**`,
     tags: ['Label Noise', 'Feature Engineering', 'Ground Truth', 'Delayed Labels', 'Proxy Labels', 'Production ML'],
     domain: 'features',
-    youtube: [],
+    youtube: [{ id: '7iaCLi0Kdd4', title: 'How Cleanlab Catches Label Errors in ML Datasets — Curtis Northcutt' }],
   },
   {
     id: 43,
@@ -2618,7 +2618,7 @@ The right answer is almost always a scheduled cadence with monitoring-based earl
 **Practice this in Monitoring to work through how staleness manifests in model score distributions, how to set up outcome divergence tracking with label delay, and how to design a retraining trigger that fires at the right time.**`,
     tags: ['Model Staleness', 'Monitoring', 'Retraining', 'Production ML', 'Prediction Drift', 'Model Health'],
     domain: 'monitor',
-    youtube: [],
+    youtube: [{ id: 'cgc3dSEAel0', title: 'ML Model Monitoring and Observability — Evidently AI' }],
   },
   {
     id: 46,
@@ -2969,7 +2969,7 @@ const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation',
 
 const SERIES = [
   { id: 'all',       label: 'All Series' },
-  { id: 'failures',  label: 'Silent Failures',          posts: [1,3,5,21,38,41,42,43,45,46] },
+  { id: 'failures',  label: 'Silent Failures',          posts: [1,3,5,20,21,26,27,38,41,42,43,45,46] },
   { id: 'diag',      label: 'Production Diagnostics',   posts: [22,23,25,35,39,40] },
   { id: 'arch',      label: 'Architecture Decisions',   posts: [4,7,11,12,15,16,24,44,48,49] },
   { id: 'found',     label: 'Math & Foundations',       posts: [2,6,9,10,17,28,29,36,37,47,50] },
