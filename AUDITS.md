@@ -729,3 +729,37 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | Low | 3 | #001 index keys, #017.2 partial (ModelEvalTab gradient hex), #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube) |
 
 **Resolved since last session:** #017.3 LandscapeTab undocumented in LINEAGE — LINEAGE.md entry added with full tab documentation (2026-06-02).
+
+---
+
+### #025 — 2026-06-02 · v4.46 Batch Build (Freemium v2 + YouTube + Behavioral + Tally + Emoji→SVG)
+
+**Scope:** All 5 agents executing Freemium gate v2, YouTube IDs, behavioral bank, Tally form wiring, emoji→SVG sweep  
+**Trigger:** NEXT.md items 1–5 from previous batch  
+**Output:** All 5 items complete, 0 blockers found
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | Freemium gate v2: 46 scenarios tagged with `isFree: true/false` (easy/junior=true, mid/senior/staff=false) across ModelsMath, FeatureEng, ModelEval, ClassicalML | 4 tab files | — | ✅ Complete |
+| 2 | YouTube IDs: 5 new posts + 2 backfill verified via oEmbed API, all 200 responses | `GradientTab.jsx` | — | ✅ Complete |
+| 3 | Behavioral bank: 8 scenarios in InterviewPrepTab covering production judgment (metrics, degradation, resources, architecture, bugs, execs) using `.msl-option-btn` / `.msl-reveal-panel` pattern | `InterviewPrepTab.jsx` | — | ✅ Complete |
+| 4 | Tally form wiring: submit button in InterviewGrid, TALLY_FORM_SPEC.md created, admin workflow documented in App.jsx code comments | `App.jsx`, new file | — | ✅ Complete |
+| 5 | Emoji→SVG sweep: 97 emoji replaced across 8 tabs (DLFineTuning, DLServing, DataModeling, FraudDetection, InterviewPrep, LoanDefault, ProjectLab, SparkLab) with new Icons.jsx component (CheckMark, CrossMark, WarningMark) | 8 tab files + new component | — | ✅ Complete |
+| 6 | Brace balance: all modified files verified at 0 | All 16 files | — | ✅ Clean |
+| 7 | CSS variables: all new code uses `var(--*)` references; no hardcoded colors or Tailwind utilities | All new code | — | ✅ Clean |
+| 8 | METRICS.md: 2 new localStorage keys added (`msl_landscape_region`, `msl_score:behavioral`) | `METRICS.md` | — | ✅ Updated |
+| 9 | LINEAGE.md: v4.46 entry added with all 5 items documented | `LINEAGE.md` | — | ✅ Updated |
+| 10 | IDEAS.md: v4.46 items moved to "Done this session" section with timestamps | `IDEAS.md` | — | ✅ Updated |
+| 11 | NEXT.md: batch completed, v4.47+ priorities queued (5 new items) | `NEXT.md` | — | ✅ Updated |
+
+**All MD spine files read and verified for staleness before updates.**
+
+---
+
+**Open findings (carry forward from #024):**
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| High | 0 | — |
+| Medium | 0 | — |
+| Low | 3 | #001 index keys, #021.5 (.msl-cloud-map mobile overflow), #023.1 (SHAP YouTube backfill) |

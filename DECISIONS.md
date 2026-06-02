@@ -179,7 +179,7 @@ A user who opens the app in 3 seconds and starts a 45-min mock exam has a better
 
 **Gate implementation:** `src/components/AccessGate.jsx` — rendered in `renderContent()` in App.jsx when a premium tab is requested and `msl_access !== 'DAI2026'`. Premium tabs are defined in the `PREMIUM_TABS` set in App.jsx. Lock indicators (SVG padlock) are shown on PracticeCard and InterviewToolCard when locked. Grids remain visible — FOMO is the conversion mechanism.
 
-**v2 enhancement (planned):** Granular scenario-level difficulty gating within free Practice modules (first N easy scenarios free, medium/hard gated). Requires difficulty tagging on 200+ scenarios — logged in IDEAS.md.
+**v2 enhancement (✅ completed v4.46):** Granular scenario-level difficulty gating within free Practice modules — easy/junior scenarios free, medium/senior/staff gated. 46 scenarios tagged in 4 free modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML). AccessGate.jsx ready for scenario-level checks at render time.
 
 **No Tailwind utilities in component files.** See Stack section above.
 
