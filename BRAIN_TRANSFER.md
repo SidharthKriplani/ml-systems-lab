@@ -36,10 +36,10 @@ ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300
 
 **On demand only — never read in full:**
 3. **DECISIONS.md** — only before an architectural choice (240 lines, safe when needed)
-4. **LINEAGE.md** — 1,200+ lines. `grep -n "v4\." LINEAGE.md | tail -5` → find latest entry → Read offset ±40 lines. Never read the whole file.
-5. **IDEAS.md** — 550+ lines. Read Done + Tier 1 only. Skip Tier 2/3 unless planning.
-6. **AUDITS.md** — 900+ lines. `grep -n "^### #" AUDITS.md | tail -3` → find last audit → read from there.
-7. **METRICS.md** — 190 lines, safe to read in full only when adding a new key.
+4. **LINEAGE.md** — 1,300+ lines. `grep -n "v4\." LINEAGE.md | tail -5` → find latest entry → Read offset ±40 lines. Never read the whole file.
+5. **IDEAS.md** — 570+ lines. Read Done + Tier 1 only. Skip Tier 2/3 unless planning.
+6. **AUDITS.md** — 950+ lines. `grep -n "⚠️ Open" AUDITS.md | head -10` for open findings. `grep -n "^| 02[0-9]" AUDITS.md | tail -5` for latest audit entry. Never read in full.
+7. **METRICS.md** — ~200 lines, safe to read in full only when adding a new key.
 
 **Estimated token savings:** ~35k tokens per session vs reading all 7 files upfront.
 
@@ -50,73 +50,32 @@ ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300
 **End of every session, before closing:**
 
 ```bash
-cd /Users/ASUS/Documents/GitHub/ml-systems-lab && \
-rm -f .git/index.lock .git/HEAD.lock && \
-git commit -m "v4.X: [what shipped — be specific]" && \
-git push
+cd ~/Documents/GitHub/ml-systems-lab
+rm -f .git/index.lock .git/HEAD.lock
+git add -A && git commit -m "v4.X: [what shipped — be specific]" && git push
 ```
 
+**Known sandbox issue:** The AI sandbox cannot remove `.git/HEAD.lock` due to file permissions. If `git commit` fails with "cannot lock ref HEAD", the user must run the commit from their own terminal. Always provide the exact command.
+
 **Why this matters:**
-- Clears sandbox git lock issue (user runs locally if needed)
 - Commit message documents what was built (appears in LINEAGE.md)
 - Push auto-deploys to Vercel
 - If you don't push, changes are staged but not live
-
-**Common git message patterns:**
-- `v4.48: Freemium gating, difficulty filter, lazy loading, role readiness, keyboard nav, export, audits`
-- `v4.47: Mobile fixes, Gradient posts 38–40, scenario-level gating`
-- Never: `v4.X: stuff` (too vague)
 
 ---
 
 ## End-of-Session Checklist (BEFORE YOU CLOSE)
 
-**These must all be done. Check off as you go:**
-
-- [ ] **Code:** All changes compiled (brace-balanced), all CSS variables (no hardcoded colors), no Tailwind utilities in tabs
-- [ ] **Git:** Committed + pushed (or staged with lock note if sandbox-bound)
+- [ ] **Code:** All changes brace-balanced (brace delta 0), all CSS variables (no hardcoded hex in JSX), no Tailwind utilities in tabs
+- [ ] **Git:** Committed + pushed (or staged with exact push command given to user)
 - [ ] **LINEAGE.md:** New version entry added with full build summary + date (v4.X format)
-- [ ] **AUDITS.md:** All open findings documented; resolved findings marked ✅ with what fixed them
+- [ ] **AUDITS.md:** New batch entry in summary table; open findings documented; resolved findings marked ✅
 - [ ] **METRICS.md:** Every new localStorage key + PostHog event documented with schema
-- [ ] **IDEAS.md:** Completed Tier 1 items moved to Done section with timestamps
-- [ ] **NEXT.md:** Next 5 items queued for next session (or updated if priorities shifted)
-- [ ] **DECISIONS.md:** Any new architectural rules documented; enforcement checklists added
-- [ ] **CLAUDE.md:** Date updated to current session
-- [ ] **Cross-check:** Read through all 7 files for contradictions. If LINEAGE says "Item 5 done" but IDEAS still shows it in Tier 1, fix it.
-
-**Do not close until all 8 checks are done.**
-
----
-
-## State Sync Examples
-
-### Adding a new localStorage key
-
-**Code:** `const bookmarks = JSON.parse(localStorage.getItem('msl_bookmarks') || '[]')`
-
-**Update METRICS.md:**
-```
-| `msl_bookmarks` | `JSON array` | HomeTab | Array of bookmarked tab IDs. User can save modules for later. |
-```
-
-**Update IDEAS.md:** If this was a Tier 1 item, move it to Done.
-
-**Update LINEAGE.md:** Add line to current version entry: "New localStorage: `msl_bookmarks` for saved modules."
-
-### Fixing an audit finding
-
-**Audit #021.5:** Mobile overflow on `.msl-cloud-map`
-
-**Fix in code:** Add `max-width: 100%; overflow-x: auto;` to CSS class
-
-**Update AUDITS.md:**
-```
-| #021.5 | .msl-cloud-map mobile overflow | MonitoringTab | Low | ✅ Fixed v4.48 — added max-width + overflow-x |
-```
-
-**Update LINEAGE.md:** Add to current version entry: "Audit #021.5 resolved: mobile overflow fix"
-
-**Update IDEAS.md:** If this was a backlog item, move to Done.
+- [ ] **IDEAS.md:** Completed Tier 1 items moved to Done section with version + timestamps
+- [ ] **NEXT.md:** Next 5 items queued for next session (v4.X+1 format)
+- [ ] **DECISIONS.md:** Any new architectural rules documented
+- [ ] **BRAIN_TRANSFER.md:** "Context for Next Agent" section updated to current state
+- [ ] **Cross-check:** No contradictions across files
 
 ---
 
@@ -124,18 +83,18 @@ git push
 
 **Rule 1: No hardcoded colors in component files**
 - ✅ `color: 'var(--prime)'`
-- ✅ `backgroundColor: 'rgba(240,165,0,0.1)'` (amber tint, acceptable if no exact token exists)
+- ✅ `backgroundColor: 'rgba(240,165,0,0.1)'` (acceptable if no exact token exists)
 - ❌ `color: '#f97316'`
 - ❌ `backgroundColor: '#fff'`
 
 **Rule 2: No Tailwind utilities in `/tabs/*.jsx`**
 - ✅ `className="section-eyebrow"` (utility class from index.css)
 - ✅ `style={{ color: 'var(--prime)' }}` (inline with CSS variables)
-- ❌ `className="bg-amber-100 text-gray-900"` (Tailwind utilities forbidden in tabs)
+- ❌ `className="bg-amber-100 text-gray-900"`
 
 **Rule 3: Spine files must be in sync**
-- If LINEAGE says "v4.48 complete," IDEAS must show all v4.48 items in Done
-- If METRICS says "msl_read localStorage," LINEAGE must mention when it was added
+- If LINEAGE says "v4.58 complete," IDEAS must show all v4.58 items in Done
+- If METRICS says a key exists, LINEAGE must mention when it was added
 - If AUDITS shows open findings, IDEAS must have them as backlog items
 - No contradictions across files
 
@@ -148,76 +107,92 @@ git push
 - Prevention: Update METRICS.md same commit as code change
 
 **Pitfall 2: Moving code but not updating LINEAGE.md**
-- Result: Future sessions don't know when feature was added, history is lost
-- Prevention: LINEAGE is written to same session you write code
+- Result: Future sessions don't know when feature was added
+- Prevention: LINEAGE entry written same session as code
 
 **Pitfall 3: Closing session without pushing**
 - Result: Code exists locally, not on Vercel, user sees old version
-- Prevention: Last thing before closing: git push
+- Prevention: Last thing before closing: git push (or give exact command to user)
 
 **Pitfall 4: Closing session without updating NEXT.md**
-- Result: Next session has no priorities, wastes time re-reading IDEAS to figure out what's next
+- Result: Next session has no priorities, wastes time re-reading IDEAS
 - Prevention: Queue 5 items in NEXT.md at end of every session
 
 **Pitfall 5: Not reading AUDITS.md at session start**
-- Result: You fix something that was already fixed, or ignore a known open issue
-- Prevention: Read AUDITS.md in the mandatory reading order
+- Result: You fix something already fixed, or ignore a known open issue
+- Prevention: `grep -n "⚠️ Open" AUDITS.md` at session open
+
+**Pitfall 6: Reading large files in full (causes context blowup → 1M token gate)**
+- Files that must never be read in full: LINEAGE.md (1,300+ lines), GradientTab.jsx (4,300+ lines), AUDITS.md (950+ lines), IDEAS.md (570+ lines)
+- Always grep-first: find the section, then Read with offset+limit
+- One session = one NEXT.md batch. Close the chat after committing.
+
+**Pitfall 7: Spawning parallel agents**
+- Parallel agents each inherit the full parent context → context triples instantly
+- Always sequential: one agent or one direct operation at a time
+- No `isolation: "worktree"` — repo has a persistent git issue with HEAD worktree detection
 
 ---
 
 ## Context for Next Agent
 
-**Current state (v4.48 complete):**
-- 36 tabs, all lazy-loaded with React.lazy() + Suspense
+**Current state (v4.58 complete — 2026-06-02):**
+
+### Tabs
+- **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
+- 6 practice domains: ML Engineering (7 tabs), Data Engineering (4 tabs), Deep Learning (3 tabs), Data Science (3 tabs), MLOps (2 tabs), + models/eval/design/classical
+- 9 interview zone tools: Defense Plan, Combinator, Verbal, Spot the Flaw, Incident Room (new v4.58), ML Coding (new v4.58), Case Studies, Staff Layer, Code Bugs
+- Interview zone accessible at `incidentroom` and `mlcoding` tab IDs
+
+### Content
+- **50 Gradient posts** — all with verified YouTube IDs (0 empty arrays)
+- **Code examples in posts:** 1, 4, 5, 7, 8, 11, 12, 15, 18, 22, 23, 24, 25, 35, 36, 37, 39 — 17 posts now have embedded Python code blocks
+- **3 Project Lab datasets:** Telco Churn (5 phases complete), Loan Default (4 phases complete), Fraud Detection (4 phases complete)
+- **Series taxonomy:** 5 named series across all 50 posts (Silent Failures, Production Diagnostics, Architecture Decisions, Math & Foundations, Interview & Career)
+
+### Features
 - Freemium gating at scenario level (`isFree` flag + AccessGate component)
-- Difficulty filter pills on domain cards (`msl_difficulty_filter` localStorage)
-- 3 audits resolved (index keys, mobile overflow, YouTube backfill)
-- Role readiness aggregation showing seniority badges per domain
-- Keyboard navigation on MCQ (1–4 keys), global search (arrows + Enter), Gradient posts (mark as read)
-- Progress export utility (download localStorage as JSON)
-- 40 Gradient posts with verified YouTube IDs
-
-**Last completed batch:** v4.48 (mega-batch: v4.47 + v4.48 + 3 audit resolutions)
-- Scenario-level freemium gating (AccessGate wires per-scenario `isFree` checks)
 - Difficulty filter pills on domain cards (`msl_difficulty_filter`)
-- React.lazy() code splitting — all 36 tabs + LoadingSpinner
-- Mobile touch targets + icon fixes (9 icons, 44px targets, 375px viewport)
-- Gradient posts 38–40 (Feature Drift, Training-Serving Skew, Calibration Loss)
-- MCQ keyboard navigation (1–4 keys + Enter in ClassicalMLTab)
-- Gradient post read marking (toggle + msl_read localStorage)
+- React.lazy() + Suspense on all 38 tabs (initial bundle is lightweight)
+- Dual theme system: parchment light + charcoal dark (sun/moon toggle, `msl_theme`)
+- Module bookmarking (BookmarkButton on 18 tabs, `msl_bookmarks`)
+- Progress export utility (HomeTab, downloads all `msl_*` localStorage as JSON)
+- MCQ keyboard nav (1–4 keys + Enter in ClassicalMLTab)
+- Gradient post read marking (`msl_read` localStorage)
 - Global search keyboard nav (arrows + Enter + Escape in ContentMap)
-- HomeTab recommended module ("Start here" role-specific card)
+- FidelityBadge 3-tier system on all 27 practice + interview tabs (faithful/simplified/conceptual)
 - Role readiness aggregation (seniority badges on HomeTab)
-- Progress export utility (HomeTab button + export.js)
-- Audits #001, #021.5, #023.1 all resolved
+- Company logos via Clearbit API in CombinatorTab company tracks + LandscapeTab (6 companies)
+- RSS feed: `public/rss.xml` (50 posts, auto-regenerated on build via `scripts/generate-rss.cjs`)
+- PWA: `public/manifest.json` + `public/sw.js` (installable on iOS/Android)
+- Live Drift Lab in MonitoringTab: real PSI + KS computation via Pyodide (`faithful` tier)
+- Practice zone: overall % + per-domain % on grid headers
+- Interview zone: session history pills (sessions run, avg score) from `msl_combinator_history`
 
-**Files modified:** 35+ tab files + 3 new utility files
-**Brace balance:** All verified at 0
-**All 7 spine files:** Updated and consistent, no stale entries
+### Design system
+- CSS tokens: `--card-pad-primary`, `--card-pad-secondary`, `--prime-bg-light`, `--card-tint`, `--card-scrim` all in `:root` and `[data-theme="light"]`
+- No stray hex in rendered JSX (all remaining hex are in print CSS or Python matplotlib strings)
+- No decorative emoji in rendered UI (country flags + functional glyphs ✓ ✗ ★ ✕ kept)
 
-**Open audit findings:** 0 — all findings resolved as of v4.48
+### Open audit findings (as of v4.58)
+- **#001.6** Low — 56 array index `key` props (not fixed, deferred)
+- **#024.2** Low — AttentionHeadVisualizer uses `rgba(99,102,241,...)` — intentional interpolation
+- **#024.4** Low — TrainerTab SR is domain-level only, not per-scenario
+- **#024.8** Low — CausalDAGExplorer + StreamingStabilityLab have no fidelity badges
+- **#025.5** Low — `.msl-cloud-map` overflow-x needs mobile browser verification
+- All high/medium findings resolved
 
-**Blockers for v4.49:**
-- v4.47 Item 3 (interview experiences monitoring) blocked on Avinash account setup (Formspree + Tally.so)
-- Once unblocked: wire feedback form + experience submission form, test end-to-end
+### Blockers
+- **Interview Experiences** — waiting on Avinash Formspree + Tally.so credentials
+  - Formspree: wire `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
+  - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
 
-**Next batch (v4.49):** 5 items queued in NEXT.md
-1. Interview Experiences (BLOCKED — awaiting Formspree + Tally credentials)
-2. Module bookmarking "Save for Later"
-3. Gradient posts 41–45
-4. Interview zone accessibility audit
-5. MD sync + NEXT.md v4.50 queue
-
----
-
-## How to Use This File
-
-- **First read:** At start of next session, after reading CLAUDE.md, read this entire file
-- **Reference:** When you're unsure about the state model or end-of-session checklist, refer back here
-- **Update:** If you discover a new pitfall or a rule that wasn't documented, add it to this file
-
-**This file is the bridge between sessions. Treat it as truth.**
-
+### Next batch (v4.59) — already queued in NEXT.md
+1. Unblock Interview Experiences (if credentials available)
+2. isFree per-case gating first pass (5 highest-traffic tabs)
+3. Incident Room + ML Coding — expand to 6 scenarios each (currently 3)
+4. Social proof signal in README (when verifiable number available)
+5. IDEAS.md stale cleanup (many Tier 2 `[ ]` items already done)
 
 ---
 
@@ -225,25 +200,30 @@ git push
 
 **Before reading any MD files, verify you're in the correct repo:**
 
-1. **Ask user:** "Which folder/repo are we working on?" 
-   - Expected answer: `/Users/ASUS/Documents/GitHub/ml-systems-lab`
-   - If different: clarify which repo before proceeding
-
-2. **Verify folder has the spine files:**
+1. **Verify folder has spine files:**
    ```bash
-   ls -la /path/to/repo | grep -E "CLAUDE.md|NEXT.md|DECISIONS.md|LINEAGE.md|IDEAS.md|AUDITS.md|METRICS.md|BRAIN_TRANSFER.md"
+   ls /path/to/repo | grep -E "CLAUDE.md|NEXT.md|LINEAGE.md|BRAIN_TRANSFER.md"
    ```
-   - All 8 files must exist
-   - If any missing: STOP. Wrong repo or corrupted state. Ask user.
 
-3. **Verify git state:**
+2. **Verify git state:**
    ```bash
-   cd /path/to/repo && git status
+   cd /path/to/repo && git log --oneline -3
    ```
-   - Should show "On branch main" and "working tree clean" (or staged changes from prior session)
-   - If detached HEAD or merge conflict: STOP. Ask user to resolve.
+   Latest commit should be v4.58 or later.
 
-4. **Only then:** Proceed to read BRAIN_TRANSFER.md → CLAUDE.md → NEXT.md → ...
+3. **Clear git locks before any git operation:**
+   ```bash
+   rm -f .git/index.lock .git/HEAD.lock
+   ```
 
-**Do not assume the folder. Ask. Verify. Proceed.**
+4. **Only then:** Proceed to read CLAUDE.md → NEXT.md → build.
 
+---
+
+## How to Use This File
+
+- **First read:** At start of next session, after confirming repo, read this entire file
+- **Reference:** When unsure about state model or end-of-session checklist, refer back here
+- **Update:** At end of every session, update "Context for Next Agent" section to current state
+
+**This file is the bridge between sessions. Treat it as truth.**

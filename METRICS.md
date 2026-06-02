@@ -93,6 +93,8 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_difficulty_filter` | `string` | `PracticeDomainCard` | Active difficulty pill filter (easy/junior/mid/senior/staff). User-selected filter persists across sessions. |
 | `msl_readiness_score` | `JSON object` | `HomeTab` (computed) | Domain-by-domain seniority levels {mle: 'senior', features: 'mid', ...}. Computed from `msl_trainer_history` + `msl_combinator_history` aggregation, not persisted. Display-only for readiness badge grid. |
 | `msl_bookmarks` | `JSON array` | (infrastructure) | Bookmarked tab IDs `['defense', 'combinator', ...]`. Infrastructure ready for v4.49 "Save for Later" feature. Not yet populated. |
+| `msl_score:incidentroom` | `JSON array of incident IDs` | `IncidentRoomTab` | Array of completed incident IDs e.g. `['inc1','inc2']`. Appended when user completes all diagnostic steps of an incident. 3 incidents total (v4.58). |
+| `msl_score:mlcoding` | `JSON array of problem IDs` | `MLCodingTab` | Array of solved problem IDs e.g. `['mlc1','mlc2']`. Appended when user clicks "Mark solved". 3 problems total (v4.58). |
 
 ---
 

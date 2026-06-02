@@ -640,6 +640,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 026 | v4.47+v4.48 mega-batch — gating, filter, lazy load, mobile, posts 38-40, audits, export, keyboard nav, readiness | 2026-06-02 | BUILD | ✅ 22 items complete, 1 blocked (Interview Experiences) |
 | 027 | Interview zone accessibility — all 9 tools verified, 2 description fixes | 2026-06-02 | Navigation / Discoverability | ✅ All clean — 2 fixes in App.jsx |
 | 028 | v4.49+v4.50 batch — posts 41-48, bookmarking ×18 tabs, design tokens, emoji, 23 distractors | 2026-06-02 | BUILD / Content Integrity | ✅ All complete; 1 low finding (posts 31-34 near-duplicates) |
+| 029 | v4.57+v4.58 mega-batch — FidelityBadge ×7, company logos, code examples ×9, RSS, PWA, Incident Room, ML Coding, Live Drift Lab, design tokens | 2026-06-02 | BUILD / Content Integrity | ✅ All brace deltas 0. Hex audit clean. 2 new METRICS keys registered. Audit #016 closed. |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
