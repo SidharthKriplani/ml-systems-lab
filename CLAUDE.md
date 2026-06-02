@@ -74,7 +74,11 @@ src/
     ProjectLabTab.jsx           ← ML Engineering, Pyodide sequential notebook, all 5 phases complete (v4.40)
                                    Phase 1: EDA · Phase 2: Features · Phase 3: Model · Phase 4: Monitoring · Phase 5: Deployment scaffold
                                    19 cells, 5 judgment checkpoints, Telco Churn dataset (synthetic 600-row for training phases)
+    LoanDefaultTab.jsx          ← ML Engineering, second ProjectLab dataset — Loan Default (credit risk, ECOA). Phase 1 complete (v4.42).
+                                   Phases 2–4 planned: Model Training → Monitoring → Deployment. `msl_projectlab_loan_data`.
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
+  data/
+    testimonials.js             Admin-managed testimonials array. Displayed on HomeTab "What engineers say" section.
   components/
     PythonCell.jsx         Pyodide sandbox wrapper
     GlobalSearch.jsx       Global search component (retained, not wired — replaced by ContentMap)

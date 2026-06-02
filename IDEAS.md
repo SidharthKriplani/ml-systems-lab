@@ -188,7 +188,11 @@ Original spec (archived):
 
 Merged into **Defense Plan** (DefenseDocTab). 3-screen flow: JD parse → self-rate + horizon → gated day plan. Internal gate at 35% of plan sections. JDPrepTab retired (redirect stub). See LINEAGE.md v4.10.
 
-### Second ProjectLab dataset — Loan Default (after Phase 5 ships)
+### Second ProjectLab dataset — Loan Default (Phase 1 done v4.42)
+
+**Phase 1 shipped (v4.42):** `LoanDefaultTab.jsx` — schema inspection, EDA, proxy feature audit (4/5ths rule on home_ownership + employment_length), cpL1 ECOA judgment checkpoint. Synthetic 800-row dataset. Wired into App.jsx as premium tab in ML Engineering domain. Phases 2–4 remain.
+
+### Second ProjectLab dataset — Loan Default (original spec, phases 2–4 remain)
 
 **Ordering rationale (from session discussion, 2026-06-02):** Finish all 5 phases of Telco Churn first. Do not add a new dataset while Phase 4 or 5 are unbuilt — one complete pipeline is more valuable than two incomplete ones. After Phase 5: **Loan Default** is the highest-value next dataset, not Fraud Detection. Reasons: (1) introduces regulatory framing (fairness, disparate impact, model card requirements) that nothing in MSL currently covers, (2) business cost asymmetry (false negative = bad loan issued, false positive = credit denied) teaches threshold selection more viscerally than churn does, (3) calibration-critical context — a 5% ECE gap has compliance consequences here, not just business ones. Fraud Detection is strong for extreme imbalance (1:200) but that judgment is partially addressed in the churn cp4 checkpoint. Loan Default adds a genuinely new judgment dimension.
 

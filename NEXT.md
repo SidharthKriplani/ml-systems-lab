@@ -8,20 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. SHAP YouTube replacement ID (open — StatQuest has no public SHAP video)
-`GradientTab.jsx` line ~394: `youtube: []` — the original `VaIXMiNMEJU` was cleared (video private). Find the correct live StatQuest SHAP video ID. Best candidate: search YouTube for "StatQuest SHAP values" and verify via `youtube.com/oembed?url=https://www.youtube.com/watch?v={id}&format=json` (200 = live). Replace the empty array with `[{ id: 'CORRECT_ID', title: 'SHAP Values, Clearly Explained — StatQuest' }]`. Also AUDITS.md: mark #023.1 resolved.
+### 1. Loan Default Phase 2 — Model Training & Evaluation (2 hours)
+Continue `LoanDefaultTab.jsx`. Phase 2: 3 cells + 1 checkpoint. Cell IDs: `loan_cell4`, `loan_cell5`, `loan_cell6`, checkpoint `cpL2`. Same synthetic 800-row dataset (seed 42). Steps: (loan_cell4) stratified train/val/test split 60/20/20 — same pattern as ProjectLab cell7, note class imbalance 14.2%, discuss SMOTE vs class_weight; (loan_cell5) LR + RF + GradientBoosting training with `class_weight='balanced'`, val AUC + F1; (loan_cell6) ROC / PR curves + confusion matrix + threshold selection — emphasis on cost asymmetry (false negative = bad loan issued vs false positive = credit denied); checkpoint cpL2: "AUC=0.77, ECE=0.14, the bank wants to use a probability threshold of >0.35 to deny loans automatically. Given ECOA requirements, what must you verify before deploying this threshold?" Correct: disparate impact analysis — verify the threshold does not produce adverse impact (>20% difference in denial rate) across demographic groups. AUC and ECE alone are insufficient for deployment sign-off on a credit model. Update phase2 state derivations and progress bar.
 
-### 2. Loan Default ProjectLab dataset — Phase 1 (2.5 hours)
-New ProjectLab notebook: Loan Default (credit risk). New tab file or extend existing `ProjectLabTab.jsx` with a dataset selector (Churn / Loan Default) — decision pending. If extending: add a dataset toggle at the top, separate localStorage key `msl_projectlab_loan_data`, separate cell IDs (loan_cell1–loan_cell3 etc). Phase 1 only: schema inspection (a 25-feature loan dataset with `annual_income`, `loan_amount`, `credit_score`, `employment_length`, `default` target), EDA (class imbalance ~15% default, correlation heatmap), and Checkpoint L1 ("which two columns would you inspect for regulatory fairness risk before training?"). Correct: `annual_income` + any demographic proxy. Synthetic 800-row dataset generated in-cell (numpy, fixed seed). Regulatory framing is the differentiator — mention disparate impact doctrine in explanation.
+### 2. CLAUDE.md file structure — add LoanDefaultTab + data directory (10 min)
+`CLAUDE.md` file structure section is missing `LoanDefaultTab.jsx` and `src/data/testimonials.js`. Add both under the correct locations. Also confirm `src/data/` directory entry exists in the file structure block.
 
-### 3. GradientTab — add 2 new posts (1 hour)
-Add to `GradientTab.jsx` POSTS array: (1) "Feature Store Time-Travel Bug" — covers temporal leakage via point-in-time joins, correct vs. incorrect feature retrieval at prediction time, Feast/Hopsworks `as_of` parameter. Category: Feature Engineering. CTA: FeatureEngTab. (2) "Validation Set Leakage — Why Your AUC Lied" — train-test contamination vs. target leakage distinction, the avg_spend example from ProjectLab cp3, split-first discipline. Category: Model Evaluation. CTA: ProjectLabTab. Both follow the existing post schema: `{ slug, title, category, catColor, readMin, featured: false, excerpt, body, tags, domain, youtube: [] }`. Body: 4–5 `**bold section header:**` paragraphs, same length as existing posts (~600 words each).
+### 3. SystemDesign retrieval content boundary audit (45 min)
+Read `SystemDesignTab.jsx`. Find all retrieval-related scenarios. Classify each as MSL (ANN / recommendation at scale — HNSW, IVF, candidate generation) vs GAL (RAG-specific — chunking, embedding drift, hallucination from retrieval gaps). Remove or clearly comment out GAL scenarios. Do NOT remove the entire retrieval module — the recommendation-scale ANN content is core MSL. After removal, brace balance check, commit.
 
-### 4. Domain completion bars on HomeTab (1 hour)
-In `HomeTab.jsx`, add per-tab progress bars inside the "All tracks" grid section. Each track card shows: tab name, `X / N scenarios` count, 2px progress bar. Data: read `msl_score:{tabPrefix}` keys from localStorage, map against a hardcoded `TAB_SCENARIO_COUNTS` object (approximate counts per tab — use 10 as default, exact where known: CombinatorTab=100, TrainerTab=60, InterviewPrepTab=128, SpotTheFlawTab=12). Bar only renders if `N > 0`. No new localStorage keys. Inline styles, CSS vars only.
+### 4. Loan Default Phase 3 — Monitoring (1.5 hours)
+Phase 3: 3 cells + 1 checkpoint. Cell IDs: `loan_cell7`–`loan_cell9`, checkpoint `cpL3`. PSI on income/credit_score between training and a "shifted" production sample. KS test on the same features. Prediction drift histogram. Checkpoint cpL3: "PSI=0.22 on annual_income (amber-to-red boundary), 72 hours post-deployment of the loan default model. KS p=0.01 on credit_score. No known business events. Alert or wait?" Correct: alert + investigate — two signals simultaneously post-deployment, one near the red threshold.
 
-### 5. Testimonials display section on HomeTab (1 hour)
-Create `src/data/testimonials.js` with 2–3 placeholder entries (name, role, company, rating, text, date, approved:true) so the section renders immediately — replace placeholders with real entries as they arrive via Formspree. In `HomeTab.jsx`, add a testimonials section after the "All tracks" grid: section eyebrow "What engineers say", 2–3 quote cards in a grid (name + role + company + text + star display). Reads from `testimonials.js`. If array is empty, section is hidden. Amber left-border card style, same design language as the rest of HomeTab.
+### 5. GradientTab — SHAP post video (open/deferred)
+StatQuest has no public SHAP-specific video. Leave `youtube: []` on the SHAP post. If a high-quality alternative video (not StatQuest) is found, add it. Otherwise skip.
 
 ---
 
@@ -38,24 +38,22 @@ Nothing currently blocked.
 
 ---
 
-## Done this session (v4.39 + v4.40)
+## Done this session (v4.41 + v4.42)
 
-- ~~SHAP YouTube embed cleared (VaIXMiNMEJU was private — verified via oEmbed API, all other 12 IDs live).~~
-- ~~FeedbackChip.jsx built — floating ★ Rate chip, Formspree POST, 3 star-rating questions, msl_feedback_last cooldown. Wired globally into App.jsx.~~
-- ~~Interview Experience card added to InterviewGrid in App.jsx — links to Tally form placeholder.~~
-- ~~ProjectLab Phase 4 (Monitoring): cell11 PSI, cell12 KS test, cell13 prediction drift, cell14 label drift + blind zone, cp5 alert-or-wait checkpoint.~~
-- ~~ProjectLab Phase 5 (Deployment Scaffold): cell15 FastAPI, cell16 Dockerfile, cell17 K8s manifest, cell18 GitHub Actions CI/CD, cell19 AWS mapping. Mark-as-read pattern. Completion card.~~
-- ~~Question framing quality pass: 20 scenarios rewritten across MonitoringTab (6), FeatureEngTab (6), SystemDesignTab (9) — specific, situation-first, production-decision-grounded.~~
-- ~~Testimonials: `src/data/testimonials.js` created (3 placeholder entries). HomeTab "What engineers say" section — auto-hides when empty, amber left-border cards, star rating display.~~
+- ~~MD staleness sweep — CLAUDE.md (9-tool count, ProjectLabTab note, components list, SpotTheFlaw count), ROLLOUT.md (Phase 5 check, FeedbackChip, Interview Experience card), AUDITS.md (file path refs).~~
+- ~~Testimonials: `src/data/testimonials.js` + HomeTab "What engineers say" section (auto-hides when empty).~~
+- ~~Loan Default tab Phase 1 — schema inspection, EDA, proxy feature audit (4/5ths rule), cpL1 ECOA judgment. Wired into App.jsx.~~
+- ~~Two new Gradient posts: "Feature Store Time-Travel Bug" + "Validation Set Leakage — Why Your AUC Lied".~~
+- ~~HomeTab domain completion bars — 2px amber fill bar + done/total count on each track card when pct > 0.~~
 
 ---
 
 ## What comes after (not for this session)
 
-- **Loan Default Phase 2–5** — feature engineering, model, monitoring, deployment scaffold (same 5-phase structure as Churn).
-- **Fraud Detection ProjectLab** — after Loan Default complete.
-- **SystemDesign retrieval content boundary audit** — classify each retrieval scenario as MSL (ANN) vs GAL (RAG). Remove GAL scenarios.
-- **Difficulty + industry filter** — requires tagging 200+ scenarios first; content work is the prerequisite.
-- **Freemium gate v2** — per-scenario `isFree` flags, first 2 cases per module free.
-- **ModelEvalTab gradient hex** — last open #017.2 finding.
-- **LandscapeTab country filter** — region field on company/salary data; India/UK/US/EU toggle.
+- **Fraud Detection ProjectLab** — extreme imbalance (1:200), threshold economics, after Loan Default complete.
+- **SystemDesign retrieval content boundary** — RAG scenarios → remove (GAL), ANN/recommendation → keep.
+- **Difficulty + industry filter** — requires tagging 200+ scenarios first.
+- **Freemium gate v2** — per-scenario `isFree` flags.
+- **Interview Experiences v2** — frequency chart (build only after N≥15 approved submissions).
+- **ModelEvalTab gradient hex** — `#6366f1`/`#22d3ee` open #017.2 finding.
+- **LandscapeTab country filter** — India/UK/US/EU region field.

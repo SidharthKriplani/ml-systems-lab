@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.42 — Loan Default tab, 2 Gradient posts, HomeTab domain bars (2026-06-02)
+
+**What shipped (commit `14e58fe`):**
+
+**`src/tabs/LoanDefaultTab.jsx`** — new second ProjectLab dataset. Phase 1 (of 4 planned): 3 Pyodide cells + 1 judgment checkpoint. `LS_KEY = 'msl_projectlab_loan_data'`. Synthetic 800-row loan application dataset (annual_income, loan_amount, credit_score, employment_length, home_ownership, loan_purpose, default target — 14.2% positive rate). Cell L1: schema inspection + regulatory framing (ECOA, Fair Housing Act, disparate impact doctrine intro). Cell L2: EDA — class balance pie, credit score / income distributions by default, default rate by home ownership and loan purpose, correlation bar. Cell L3: proxy feature audit — 4/5ths rule (80% adverse impact threshold) applied to home_ownership and employment_length (age proxy), two-panel matplotlib output. Checkpoint L1: "which features need regulatory scrutiny before training, and why?" — correct answer is employment_length (age proxy) + home_ownership (neighbourhood/race proxy), with ECOA business necessity explanation. Wired into App.jsx: ALL_TABS registry, PREMIUM_TABS set, ML Engineering domain tabs array. Progress bar `phase1TotalSteps=4`. Roadmap shows phases 2–4 planned.
+
+**Two new Gradient posts** (`GradientTab.jsx`): (1) "The Feature Store Time-Travel Bug" — point-in-time correctness, Feast `entity_df` with event_timestamp, wrong vs. right join pattern, detection via chronological holdout split, production failure mode. Category: Feature Engineering, domain: features. (2) "Validation Set Leakage — Why Your AUC Lied" — train-test contamination vs target leakage distinction, split-first discipline, scaler fit/transform pattern, time-based split as the gold standard. Category: Model Evaluation, domain: eval. Both use `youtube: []`, no hardcoded hex.
+
+**HomeTab domain completion bars** (`HomeTab.jsx`): inside each track card in the "All tracks" grid, when `pct > 0`, renders `done/total` count (left) + `pct%` (right) in 9px mono + a 2px `var(--prime)` fill bar with `var(--rim)` track at the bottom of the card. Data sourced from existing `progress` state (no new localStorage keys). Transition: `width 0.5s ease`.
+
+**Brace balance:** All 4 files (GradientTab, LoanDefaultTab, HomeTab, App.jsx) verified at delta 0.
+
+---
+
 ### v4.41 — Testimonials section on HomeTab (2026-06-02)
 
 **What shipped (commit pending):**
