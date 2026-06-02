@@ -1723,111 +1723,6 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', storageKey = nu
   )
 }
 
-// ─── RAG Architecture Judgment ────────────────────────────────────────────────
-const RAG_SCENARIOS = [
-  {
-    id: 'rag1',
-    title: 'Chunk size decision',
-    context: 'You are building a RAG system over 10,000 legal contracts. Each contract is 20–50 pages. Users ask highly specific questions ("What is the termination notice period in the Acme contract?"). Your initial system uses 2,000-token chunks and retrieves top-3.',
-    question: 'Your current system uses 2,000-token chunks and retrieves top-3, but users asking "What is the termination notice period in the Acme contract?" are getting poor results. Users want specific clause-level answers from 20–50 page contracts. Does chunking larger or smaller fix this, and why?',
-    options: [
-      'Increase to 5,000-token chunks — bigger context is always better for long documents.',
-      'Use 256-512 token chunks with sentence boundary awareness — small chunks improve retrieval precision for specific queries.',
-      'Keep 2,000-token chunks but retrieve top-10 to ensure the answer is in the context.',
-      'Use document-level chunks — retrieve the full contract and let the LLM extract the answer.',
-    ],
-    answer: 1,
-    diagnosis: 'For specific fact-retrieval questions, smaller chunks improve recall precision: the relevant clause is a few sentences, not 2,000 tokens. Large chunks dilute the signal in the embedding — the embedding for a 2,000-token chunk averages over many topics, making it harder to surface the one relevant clause. Retrieving top-10 with large chunks fills the context window with irrelevant content and confuses the LLM.',
-    fix: 'Use 256–512 token chunks with sentence-boundary splitting (no mid-sentence cuts). Add 10% overlap between adjacent chunks to preserve context at boundaries. For hierarchical documents, consider "parent document retrieval": retrieve small chunks, then fetch the larger parent chunk for the LLM context window. Evaluate chunk quality with context recall metric (RAGAS).',
-  },
-  {
-    id: 'rag2',
-    title: 'Retrieval strategy for keyword-heavy queries',
-    context: 'A RAG system over software documentation receives queries like "HTTPConnectionPool timeout error Python 3.11." Dense embedding retrieval (cosine similarity) misses the exact error message and returns semantically related but irrelevant documents. Recall@5 is 42%.',
-    question: 'Recall@5 is 42% for queries like "HTTPConnectionPool timeout error Python 3.11." Dense embedding search returns semantically related but wrong documents — it can\'t find the exact error string. Do you switch to BM25, or is there a retrieval design that handles both?',
-    options: [
-      'Switch entirely to BM25 sparse retrieval — it handles exact keywords better than embeddings.',
-      'Use hybrid search: combine BM25 sparse retrieval with dense embedding retrieval, fuse results with RRF or a weighted sum.',
-      'Use a larger embedding model — GPT-4 embeddings will handle exact keywords better.',
-      'Increase k from 5 to 50 — the answer is in the index, just not in top-5.',
-    ],
-    answer: 1,
-    diagnosis: 'Dense embeddings excel at semantic similarity but struggle with exact-match queries, product names, error codes, and technical jargon (rare tokens get diffused in the embedding space). BM25 handles exact matches perfectly. Hybrid search combines both strengths: BM25 for exact matches, dense for semantic understanding. Switching entirely to BM25 would hurt semantic queries. Increasing k degrades precision and fills the context window with noise.',
-    fix: 'Implement hybrid search: (1) Run BM25 (Elasticsearch or BM25Okapi) and dense ANN search in parallel. (2) Merge result lists using Reciprocal Rank Fusion (RRF): score = Σ 1/(k + rank_i) across retrieval methods. (3) Pass top-k fused results to LLM. Most vector DBs now support hybrid search natively (Weaviate, Qdrant, Pinecone). Tune BM25 weight vs dense weight on a labeled evaluation set.',
-  },
-  {
-    id: 'rag3',
-    title: 'Reranking decision',
-    context: 'Your RAG pipeline retrieves top-20 chunks via ANN search, then passes all 20 to the LLM. The LLM context window fills up and you hit token limit errors. Reducing k to 3 drops answer quality significantly.',
-    question: 'Retrieving top-20 chunks blows your context window. Cutting to top-3 tanks answer quality. You\'re stuck between token limits and coverage. What architectural component do you add between retrieval and generation to break this tradeoff?',
-    options: [
-      'Switch to a model with a larger context window (128k tokens) to fit all 20 chunks.',
-      'Add a cross-encoder reranker between retrieval and generation: rerank top-20, pass top-3 to the LLM.',
-      'Summarise each of the 20 chunks before passing to the LLM to reduce token count.',
-      'Use map-reduce: have the LLM process each chunk independently and aggregate answers.',
-    ],
-    answer: 1,
-    diagnosis: 'A cross-encoder reranker scores each (query, chunk) pair jointly — far more accurate than bi-encoder ANN retrieval because it has direct query-document interaction. Retrieve a large candidate set with fast ANN (high recall, lower precision), rerank with cross-encoder (high precision on top-k). This separates the recall/latency tradeoff from the precision tradeoff.',
-    fix: 'Add cohere-rerank, BGE-Reranker, or cross-encoder/ms-marco-MiniLM after ANN retrieval. Pattern: ANN retrieves top-20 (fast, recall-optimised), cross-encoder reranks to top-3 (slow, precision-optimised). The reranker adds 50–200ms latency but dramatically improves top-3 relevance. Evaluate with NDCG@3 before and after reranking. For latency-sensitive systems, use a smaller reranker model (MiniLM vs large models).',
-  },
-  {
-    id: 'rag4',
-    title: 'Embedding model choice',
-    context: 'A team building a RAG system for medical literature is choosing between: text-embedding-ada-002 (OpenAI), a general-purpose sentence transformer (all-mpnet-base-v2), and a domain-specific biomedical embedding model (BioLinkBERT). Budget is not a primary constraint.',
-    question: 'ada-002 is available via API with no setup. all-mpnet-base-v2 is open-source and fast. BioLinkBERT is domain-specific but adds operational complexity. For a medical literature RAG system where queries reference drug names, disease codes, and biological pathways — which do you pick, and what is the concrete mechanism that makes the others lose?',
-    options: [
-      'text-embedding-ada-002 — it is the best general-purpose model and the simplest to use via API.',
-      'all-mpnet-base-v2 — open-source, no API dependency, good general performance.',
-      'BioLinkBERT — domain-specific models capture biomedical terminology and relationships that general models cannot represent.',
-      'Train a custom embedding model on this specific corpus — production systems always need custom embeddings.',
-    ],
-    answer: 2,
-    diagnosis: 'Medical literature contains domain-specific vocabulary (drug names, disease codes, biological pathways) that general embedding models represent poorly — rare tokens get averaged into generic embeddings. BioLinkBERT was trained on biomedical text and encodes the semantic relationships in medical literature correctly. ada-002 is a strong general baseline but loses to domain-specific models on specialized corpora.',
-    fix: 'Use BioLinkBERT or PubMedBERT as the base embedding model. Evaluate on a labeled retrieval benchmark from your specific document corpus (build a small eval set: 50–100 question-answer pairs with ground-truth source chunks). If domain-specific model underperforms surprisingly, fine-tune it on your corpus with a contrastive learning objective. Track NDCG@5 and context recall as primary retrieval metrics.',
-  },
-  {
-    id: 'rag5',
-    title: 'RAG evaluation without labels',
-    context: 'You have deployed a RAG system with no labeled evaluation dataset. Users are using it, but you have no ground truth question-answer pairs to measure quality. A stakeholder asks for a system quality metric.',
-    question: 'Your RAG system is live with real users but you have zero labeled Q&A pairs. A stakeholder wants a quality number by end of week. You can\'t answer "not possible" — what do you actually measure, and how do you get a meaningful signal without ground truth?',
-    options: [
-      'You cannot evaluate RAG quality without labeled data — tell the stakeholder evaluation is not possible.',
-      'Use LLM-as-judge metrics (RAGAS): faithfulness (does the answer contradict the retrieved context?), answer relevance (does the answer address the question?), and context precision (are retrieved chunks relevant?).',
-      'Use BLEU/ROUGE scores comparing LLM output to retrieved chunks.',
-      'Track user session length — longer sessions indicate better answers.',
-    ],
-    answer: 1,
-    diagnosis: 'RAGAS (Retrieval-Augmented Generation Assessment) provides reference-free metrics using an LLM judge. Faithfulness measures whether the answer is grounded in the retrieved context (hallucination detection). Answer relevance measures whether the answer addresses the question. Context precision/recall measure retrieval quality. These metrics correlate well with human judgment without requiring manually labeled data.',
-    fix: 'Implement RAGAS: pip install ragas. Run faithfulness + answer_relevance + context_precision on a sample of 100 production queries. Set threshold dashboards: faithfulness < 0.7 triggers a retrieval pipeline review. For a labeled evaluation set, have domain experts annotate 50 golden Q&A pairs — this is a one-time cost that pays for itself in deployment confidence. Monitor RAGAS scores weekly and alert on regressions.',
-  },
-  {
-    id: 'rag6',
-    title: 'Hallucination on out-of-scope queries',
-    context: 'A RAG system built on company internal documentation is asked "What is the capital of France?" The system retrieves irrelevant documents and the LLM answers "Paris" — correctly, but from its parametric knowledge, not from the retrieved context. A week later it answers a similar out-of-scope question incorrectly.',
-    question: 'Your RAG system answered "What is the capital of France?" correctly — but from the LLM\'s parametric memory, not retrieved documents. A week later it answered a similar out-of-scope question incorrectly. A system prompt instruction to "only use the context" didn\'t stop it. What is the correct production gate?',
-    options: [
-      'Add "only answer from the provided context" to the system prompt — the LLM will comply.',
-      'Implement a retrieval confidence gate: if the top retrieved chunk similarity is below threshold (e.g., 0.6 cosine), respond "I don\'t have information about this in the knowledge base."',
-      'Use a more powerful LLM that knows when to say "I don\'t know."',
-      'Increase the number of retrieved chunks — if the answer is anywhere in the corpus, more chunks will find it.',
-    ],
-    answer: 1,
-    diagnosis: 'System prompt instructions to "only use context" are not reliable — LLMs frequently ignore them under distribution shift or adversarial phrasing. The root issue is that when no relevant context is retrieved, the LLM falls back to parametric knowledge. A hard threshold on retrieval similarity is a deterministic gate that does not depend on LLM compliance.',
-    fix: 'Add a retrieval quality gate: compute max(cosine_similarity) over retrieved chunks. If below threshold (tune empirically, typically 0.55–0.65), return a canned response: "I don\'t have information about this topic in the knowledge base." Include a RAGAS faithfulness check as a post-generation guard: if faithfulness < 0.5, flag the response for human review or refuse. Log all low-confidence retrievals for knowledge base gap analysis.',
-  },
-]
-
-function RAGArchitecture() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <p style={{ fontSize: '13.5px', color: 'var(--ink-low)', lineHeight: 1.65, maxWidth: '600px', margin: 0 }}>
-        RAG system design requires judgment at every stage: chunking, retrieval strategy, reranking, evaluation, and hallucination prevention. Each scenario tests a critical production decision.
-      </p>
-      <AccordionMCQ scenarios={RAG_SCENARIOS} accentColor="var(--prime)" storageKey="sysdesign_rag" />
-    </div>
-  )
-}
-
 // ─── Two-Tower Architecture Diagram ──────────────────────────────────────────
 const TT_NODES = [
   {
@@ -2203,7 +2098,6 @@ const MODULES = [
   { id: 'canvas',     label: 'Design Review',        component: DesignCanvas },
   { id: 'two_tower',  label: 'Two-Tower Explorer',   component: TwoTowerExplorer },
   { id: 'serving',    label: 'Serving Tradeoffs',    component: ServingTradeoffLab },
-  { id: 'rag',        label: 'RAG Architecture',     component: RAGArchitecture },
   { id: 'two_tower_arch', label: 'Two-Tower Diagram', component: TwoTowerArchitecture },
   { id: 'do_we_need_ml', label: 'Do We Need ML?', component: DoWeNeedML },
   { id: 'retrieval_failures', label: 'Retrieval Failures', component: RetrievalFailures },
