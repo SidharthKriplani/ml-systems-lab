@@ -79,8 +79,8 @@ Last updated: 2026-06-02
 
 **Format decision needed before build:** Does `antiPattern` live inside the existing `.msl-reveal-panel` or get its own collapsible? Recommendation: inline, `rose`-bordered sub-section at the bottom of the reveal — no new interaction required, no additional click. (Source: Quantiphi JD-Gap + Python Coding Interview Defense Pack, 2026-06-02)
 
-- [ ] **"What's being tested" label on every interview scenario** — `whatsTested` field + `.msl-hint` render before reveal button. InterviewPrepTab first, then Combinator/Trainer/Staff/CodeBugs.
-- [ ] **"Do Not Say This" anti-pattern callout** — `antiPattern` field + rose-bordered reveal sub-section. Same tab rollout order.
+- [x] ~~**"What's being tested" + "Don't say this" pass — InterviewPrepTab**~~ — done (v4.59, 2026-06-03). All 128 questions. `whatsTested` + `antiPattern` fields + render logic in Bank mode + Timed Practice.
+- [ ] **Extend to CombinatorTab + TrainerTab** — same fields, ~160 questions combined. Then StaffLayerTab (23 scenarios) and CodeBugsTab.
 - [ ] **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow/dbt), P6/P9/P10 Python problems (MLCoding).
 
 ### Content — done (v4.46, 2026-06-02). All 46 scenarios in 4 free modules tagged with `isFree: true/false` based on difficulty. AccessGate.jsx ready for scenario-level checks.

@@ -46,6 +46,28 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.59 — InterviewPrepTab whatsTested + antiPattern pass, MD spine consolidation (2026-06-03)
+
+**whatsTested + antiPattern on all 128 InterviewPrepTab questions:**
+- Added `whatsTested` field to every question object in `QUESTIONS[]` array — renders as `.msl-hint` callout before the Reveal button in both Bank mode and Timed Practice mode. Label: "What's being tested:" in amber.
+- Added `antiPattern` field to every question — renders as rose-bordered callout ("Don't say this") at the bottom of the reveal panel in both Bank mode and Timed Practice mode.
+- Render logic added in two places: (a) Bank mode `isOpen` section — `whatsTested` above framework/answer, `antiPattern` below answer; (b) Timed Practice `revealed` section — `antiPattern` at bottom of the reveal div; `whatsTested` shown before the Reveal button in `!revealed` state.
+- Coverage: all 128 questions across System Design, Features, Evaluation, Spark, Coding, Architecture, Statistics, Trees & Ensembles, SQL, Regression, and Behavioral categories.
+- Brace delta: 0.
+
+**MD spine consolidation:**
+- Archived `ROLLOUT.md` + `TALLY_FORM_SPEC.md` → `docs/` folder (still accessible, not session-start material).
+- `NEXT.md`: stripped all 10 "Done this session" sections v4.49–v4.58 (fully covered by LINEAGE.md). Header version corrected from stale v4.51 to v4.59.
+- `IDEAS.md`: Done section (68 lines) replaced with pointer to LINEAGE.md.
+- `DECISIONS.md`: fixed stale "No dark/light mode toggle" → updated to reflect v4.55 dual theme shipped.
+- `BRAIN_TRANSFER.md`: added Update Order section (LINEAGE→METRICS→DECISIONS→AUDITS→IDEAS→NEXT→CLAUDE) and Staleness Red Flags checklist — both migrated from old BRAIN-TRANSFER.md before neutralising that file.
+- `CLAUDE.md`: session start prompt updated to include BRAIN_TRANSFER.md; spine table updated to point to docs/ for archived files.
+- `BRAIN-TRANSFER.md` + `PENDING.md`: content replaced with redirect stubs. Run `git rm` to fully remove.
+
+**Files modified:** `src/tabs/InterviewPrepTab.jsx`, `BRAIN_TRANSFER.md`, `CLAUDE.md`, `DECISIONS.md`, `IDEAS.md`, `NEXT.md`, `LINEAGE.md`, `AUDITS.md`, `METRICS.md` (no new keys), `docs/ROLLOUT.md` (new), `docs/TALLY_FORM_SPEC.md` (new), `BRAIN-TRANSFER.md` (stub), `PENDING.md` (stub).
+
+---
+
 ### v4.58 — RSS feed, PWA, Gradient code ×6, design tokens, Live Drift Lab, Incident Room, ML Coding (2026-06-02)
 
 **RSS feed (`scripts/generate-rss.cjs` + `public/rss.xml`):** Node script parses GradientTab.jsx at build time, extracts all 50 post titles/slugs, writes `/public/rss.xml`. Handles both single and double-quoted title strings. `package.json` build script wired: `node scripts/generate-rss.cjs && vite build`. RSS autodiscovery `<link>` added to `index.html`. 50 posts.

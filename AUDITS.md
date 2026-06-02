@@ -874,6 +874,25 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 ---
 
+### #029 — 2026-06-03 · v4.59 Batch Build (InterviewPrepTab whatsTested+antiPattern, MD spine consolidation)
+
+**Scope:** InterviewPrepTab data pass + render logic + MD spine files  
+**Trigger:** v4.59 NEXT.md item 1  
+**Output:** All items complete; 0 blockers
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `whatsTested` + `antiPattern` fields added to all 128 QUESTIONS[] objects | `InterviewPrepTab.jsx` | — | ✅ Complete |
+| 2 | Render logic: `.msl-hint` for `whatsTested` in Bank (isOpen) + Timed Practice (!revealed); rose callout for `antiPattern` in both Bank (isOpen) + Timed Practice (revealed) | `InterviewPrepTab.jsx` | — | ✅ Complete |
+| 3 | Brace balance: delta 0 (751/751) | `InterviewPrepTab.jsx` | — | ✅ Clean |
+| 4 | No hardcoded hex in new render logic; all colours via CSS vars (var(--prime), var(--rose)) | `InterviewPrepTab.jsx` | — | ✅ Clean |
+| 5 | MD spine consolidation: NEXT.md trimmed, IDEAS.md Done section archived, DECISIONS.md theme lie fixed, BRAIN_TRANSFER.md enriched, CLAUDE.md session prompt updated, docs/ folder created | 6 MD files | — | ✅ Complete |
+| 6 | BRAIN-TRANSFER.md (stale v4.46) and PENDING.md neutralised with redirect stubs — pending `git rm` from user terminal | 2 MD files | Low ⚠️ | Needs `git rm` |
+
+**All 7 spine files consistent with v4.59 state.**
+
+---
+
 ### #028 — 2026-06-02 · v4.49 + v4.50 Batch Build (Gradient Posts, Bookmarking, Design Tokens, Emoji Sweep, Distractor Quality, BookmarkButton Expansion)
 
 **Scope:** All v4.49 items + v4.50 partial batch  

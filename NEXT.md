@@ -6,14 +6,11 @@ Next 5 items for v4.59 sprint. Updated: 2026-06-02 (end of v4.58 batch)
 
 ## v4.59 — Next sprint
 
-1. **"What's being tested" + anti-pattern pass — InterviewPrepTab first**
-   - Add `whatsTested` field to each question object → render as `.msl-hint` before reveal button
-   - Add `antiPattern` field → render as rose-bordered callout inside reveal panel
-   - InterviewPrepTab (128 questions) is the only tab this sprint — do one tab right, not 4 tabs rushed
-   - Format decision: inline at bottom of `.msl-reveal-panel`, no new click required
-   - Source: Quantiphi defense pack analysis, 2026-06-02
+1. ~~**"What's being tested" + anti-pattern pass — InterviewPrepTab**~~ — done (2026-06-03). All 128 questions. `whatsTested` as `.msl-hint` before reveal button; `antiPattern` as rose callout inside reveal. Both Bank mode + Timed Practice. Brace delta 0.
 
-2. **New scenarios from defense pack** — add to respective tabs:
+2. **Next: extend to CombinatorTab + TrainerTab** — same `whatsTested` + `antiPattern` fields on ~160 questions combined. Same render pattern.
+
+3. **New scenarios from defense pack** — add to respective tabs:
    - Bagging vs Boosting + hyperparameter judgment → ClassicalMLTab
    - SageMaker train→register→endpoint flow → MLOpsDeployTab (currently has no SageMaker content)
    - Glue vs Lambda ETL decision → AirflowTab
