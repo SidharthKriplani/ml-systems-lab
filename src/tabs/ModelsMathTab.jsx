@@ -686,13 +686,13 @@ function CalibrationCurves() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'pca',     label: 'PCA Explorer', component: PCAExplorer },
-  { id: 'svd',     label: 'SVD Decomposer', component: SVDDecomposer },
-  { id: 'preproc', label: 'Preprocessing Lab', component: PreprocessingLab },
-  { id: 'reg',     label: 'Regularization Lab', component: RegularizationLab },
-  { id: 'numpy',   label: 'NumPy Internals', component: NumPyInternals },
-  { id: 'calib',   label: 'Calibration Curves', component: CalibrationCurves },
-  { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL },
+  { id: 'pca',     label: 'PCA Explorer', component: PCAExplorer, difficulty: 'junior' },
+  { id: 'svd',     label: 'SVD Decomposer', component: SVDDecomposer, difficulty: 'junior' },
+  { id: 'preproc', label: 'Preprocessing Lab', component: PreprocessingLab, difficulty: 'mid' },
+  { id: 'reg',     label: 'Regularization Lab', component: RegularizationLab, difficulty: 'junior' },
+  { id: 'numpy',   label: 'NumPy Internals', component: NumPyInternals, difficulty: 'junior' },
+  { id: 'calib',   label: 'Calibration Curves', component: CalibrationCurves, difficulty: 'mid' },
+  { id: 'repl',    label: 'Python Sandbox', component: FreePythonREPL, difficulty: 'easy' },
 ]
 
 export default function ModelsMathTab({ onNavigate }) {

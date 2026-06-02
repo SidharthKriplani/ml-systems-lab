@@ -332,6 +332,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'Model outputs 0.95 but only 60% of those examples are positive',
     hint: 'Before picking, ask whether the mismatch between the predicted probability and the actual rate is a training problem or a post-hoc correction problem.',
     tier: 'Senior',
+    difficulty: 'mid',
     context: [
       'Reliability diagram: predicted 0.95 bucket → actual positive rate 0.61',
       'Model: gradient boosted tree, trained on 500k samples',
@@ -350,6 +351,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'All model outputs cluster between 0.42 and 0.58 — nothing extreme',
     hint: 'Consider whether a low ECE here is genuinely good news or whether ECE can look healthy even when the model is practically useless for ranking.',
     tier: 'Analyst',
+    difficulty: 'mid',
     context: [
       'Model: neural network classifier, output after sigmoid',
       'Probability histogram: 95% of outputs in [0.4, 0.6]',
@@ -367,6 +369,7 @@ const CALIBRATION_SCENARIOS = [
     id: 'platt_vs_isotonic',
     title: 'Choosing calibration method: 300-sample calibration set available',
     tier: 'Staff',
+    difficulty: 'senior',
     context: [
       'Model: random forest (known to be poorly calibrated)',
       'Calibration set: 300 samples (20% holdout from 1500-sample dataset)',
@@ -385,6 +388,7 @@ const CALIBRATION_SCENARIOS = [
     title: 'Model calibrated on val set, but miscalibrated 3 months after deploy',
     hint: 'Ask what the calibration mapping was fitted to — and whether that assumption can silently become false over time without touching model weights.',
     tier: 'Staff',
+    difficulty: 'senior',
     context: [
       'Initial ECE (validation, October): 0.03',
       'Current ECE (production, January): 0.21',
@@ -402,6 +406,7 @@ const CALIBRATION_SCENARIOS = [
     id: 'ensemble_calibration',
     title: 'Averaging 5 models — are the averaged probabilities calibrated?',
     tier: 'Senior',
+    difficulty: 'mid',
     context: [
       'Model: ensemble of 5 independently trained neural networks',
       'Each model individually calibrated (ECE ~0.03 per model)',
@@ -419,6 +424,7 @@ const CALIBRATION_SCENARIOS = [
     id: 'brier_vs_ece',
     title: 'ECE is 0.01 but Brier score is 0.28 — conflicting signals',
     tier: 'Senior',
+    difficulty: 'senior',
     context: [
       'Classification task: customer churn prediction',
       'ECE: 0.01 (excellent)',
@@ -454,6 +460,7 @@ const THRESHOLD_SCENARIOS = [
     id: 'fraud_cost',
     title: 'Fraud detection: FN costs $500, FP costs $5 (manual review)',
     tier: 'Analyst',
+    difficulty: 'junior',
     context: [
       'Model: fraud classifier, binary output',
       'False Negative (missed fraud): $500 average loss',
@@ -472,6 +479,7 @@ const THRESHOLD_SCENARIOS = [
     id: 'medical_test',
     title: 'Cancer screening model — missing a positive is catastrophic',
     tier: 'Senior',
+    difficulty: 'senior',
     context: [
       'Task: binary cancer screening from imaging',
       'Positive: likely malignant → biopsy ordered',
@@ -491,6 +499,7 @@ const THRESHOLD_SCENARIOS = [
     title: 'Churn model: offer 10% discount to predicted churners',
     hint: 'Consider whether minimising classification error is the same objective as maximising the revenue impact of the intervention.',
     tier: 'Senior',
+    difficulty: 'senior',
     context: [
       'Intervention: 10% discount coupon sent to predicted churners',
       'Revenue per customer: $50/month',
@@ -509,6 +518,7 @@ const THRESHOLD_SCENARIOS = [
     id: 'multiclass_threshold',
     title: 'Multi-class model: single threshold vs per-class thresholds',
     tier: 'Senior',
+    difficulty: 'mid',
     context: [
       'Task: 5-class document routing (billing, tech, refund, complaint, other)',
       'Current: argmax over softmax output (implicit threshold 0.2)',
@@ -527,6 +537,7 @@ const THRESHOLD_SCENARIOS = [
     title: 'Fraud rate doubles on weekends — static threshold underperforms',
     hint: 'Think about what a fixed threshold implicitly assumes about the base rate — and whether that assumption holds when the prior changes.',
     tier: 'Staff',
+    difficulty: 'senior',
     context: [
       'Weekday fraud rate: 2%, Weekend fraud rate: 4–5%',
       'Model: trained on mixed data, good AUC',
@@ -544,6 +555,7 @@ const THRESHOLD_SCENARIOS = [
     id: 'threshold_stability',
     title: 'Threshold optimal on validation is suboptimal on held-out test',
     tier: 'Staff',
+    difficulty: 'mid',
     context: [
       'Threshold tuned on validation set: 0.43 (maximizes F1)',
       'Test set F1 at 0.43: 0.61',
@@ -579,6 +591,7 @@ const RANKING_SCENARIOS = [
     id: 'ndcg_vs_map',
     title: 'E-commerce search: products vary in relevance (highly relevant, relevant, irrelevant)',
     tier: 'Analyst',
+    difficulty: 'junior',
     context: [
       'Task: product search ranking',
       'Relevance labels: 3 levels (0 = irrelevant, 1 = relevant, 2 = highly relevant)',
@@ -596,6 +609,7 @@ const RANKING_SCENARIOS = [
     id: 'mrr',
     title: 'Autocomplete: user only cares about the first correct suggestion',
     tier: 'Analyst',
+    difficulty: 'junior',
     context: [
       'Task: search query autocomplete',
       'User behavior: clicks first acceptable suggestion or types more',
@@ -613,6 +627,7 @@ const RANKING_SCENARIOS = [
     id: 'precision_at_k',
     title: 'News feed: 10-slot carousel, all positions equally visible',
     tier: 'Analyst',
+    difficulty: 'junior',
     context: [
       'Task: news article recommendation',
       'UI: horizontal carousel, 10 slots, all equally prominent',
@@ -630,6 +645,7 @@ const RANKING_SCENARIOS = [
     id: 'ndcg_cutoff',
     title: 'Video recommendation: engagement drops sharply after position 3',
     tier: 'Senior',
+    difficulty: 'senior',
     context: [
       'Platform: short-form video app',
       'Analytics: 70% of video plays come from positions 1–3',
@@ -647,6 +663,7 @@ const RANKING_SCENARIOS = [
     id: 'map_binary',
     title: 'Document retrieval: legal case search with binary relevance',
     tier: 'Senior',
+    difficulty: 'mid',
     context: [
       'Task: legal precedent retrieval — retrieve all relevant cases for a query',
       'Relevance labels: binary (relevant / not relevant)',
@@ -664,6 +681,7 @@ const RANKING_SCENARIOS = [
     id: 'diversity',
     title: 'Top-10 NDCG is high, but all 10 results are about the same topic',
     tier: 'Staff',
+    difficulty: 'senior',
     context: [
       'News recommendation, NDCG@10: 0.87 (excellent)',
       'User survey: "I keep seeing the same story from different sources"',
@@ -703,11 +721,11 @@ function RankingMetrics() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector },
-  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic },
-  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner },
-  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics },
-  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim },
+  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector, difficulty: 'junior' },
+  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic, difficulty: 'mid' },
+  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner, difficulty: 'mid' },
+  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics, difficulty: 'mid' },
+  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim, difficulty: 'junior' },
 ]
 
 

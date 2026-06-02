@@ -664,6 +664,25 @@ Removed three sections that were adding weight without earning it:
 
 ---
 
+### v4.45 — Gradient posts, LandscapeTab region filter, HomeTab domain bars, Interview Experiences v2, difficulty tagging (2026-06-02)
+
+**Content expansion:**
+- 5 new Gradient posts added in priority order: Feature Store Time-Travel Bug (leakage at scale), Validation Set Leakage (temporal contamination), Forecast Failure Zoo (6 failure modes), Two Failure Modes of A/B Tests (SRM + novelty effect), Quantization from First Principles (FP16 vs FP32 tradeoffs). Each post links to target practice tab (FeatureEngTab, TimeSeriesTab, StaffLayerTab, DLServingTab). `youtubeId: ''` placeholder for future video embeds.
+
+**LandscapeTab enhancement:**
+- Region filter added: Global | India | UK | US | EU pills above section tabs. Persists selection in localStorage (`msl_landscape_region`). Salary section responds to selection with filtered regional data. First pass — Companies section deferred.
+
+**HomeTab polish:**
+- "Your Progress" section added above "All tracks" grid. Shows domain completion bars for 5 major tracks (ML Engineering, Data Engineering, Deep Learning, MLOps, Data Science). Responsive 3-4 column grid on desktop, 1 column mobile. Each card: domain name | X/Y count | animated progress bar. Clicking a domain navigates to its tab.
+
+**Interview Experiences v2:**
+- New file `src/data/interviewExperiences.js` with 15 hardcoded seed interview records (15 companies, realistic tag distribution). Schema: id, name, company, role, yearsExp, round, date, tags (10-tag fixed taxonomy), prepSource, result. TagFrequencyChart component added to InterviewGrid showing tag coverage (e.g., "system_design: 15/15 (100%)", "coding_ml: 9/15 (60%)"). Pre-req for Tally form v1 integration.
+
+**Difficulty tagging — free modules:**
+- All scenarios in 4 free practice modules tagged with `difficulty` field (easy/junior/mid/senior/staff). Modules: ModelsMathTab (7 modules), FeatureEngTab (8 modules + 3 scenario sets), ModelEvalTab (5 modules + 4 scenario sets), ClassicalMLTab (8 models + 3 scenario sets). Distribution: early scenarios mostly easy/junior, middle mostly junior/mid, complex mostly mid/senior. Unblocks freemium gate v2 (scenario-level difficulty gating).
+
+---
+
 ### v4.14 — Satoshi font swap + emoji audit (May 2026)
 
 **Font swap:** Replaced Space Grotesk with Satoshi (Fontshare CDN). Single change point: `--font-sans` in `index.css`. `index.html` updated to load from `api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400`. JetBrains Mono preserved from Google Fonts. Inter and Playfair Display dropped (unused). Satoshi reads crisper at smaller weights, tighter at heavy weights — better fit for the amber/dark design system than Space Grotesk's rounded neutrality.

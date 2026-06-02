@@ -11,6 +11,12 @@ Last updated: 2026-06-02
 
 *Move items here from Tier 1 at the start of a session. Strike through and move to LINEAGE.md when done.*
 
+- [x] ~~**Fraud Detection phases 2–4**~~ — done (v4.44, 2026-06-02). Phase 2: SMOTE vs class_weight comparison, P@100 judgment. Phase 3: PSI/KS drift detection, analyst feedback unreliability. Phase 4: FastAPI + Docker + K8s + Ops Runbook (fraud-specific, no ECOA). 14 cells, 2 checkpoints. `msl_projectlab_fraud_data`.
+- [x] ~~**Gradient posts — 5 high-impact posts**~~ — done (v4.45, 2026-06-02). Feature Store Time-Travel Bug, Validation Set Leakage, Forecast Failure Zoo, Two A/B Test Failures, Quantization from First Principles. Each links to practice tab. `youtubeId: ''` placeholders for future video embeds.
+- [x] ~~**LandscapeTab country/region filter**~~ — done (v4.45, 2026-06-02). Global | India | UK | US | EU selector above section tabs. Persists to localStorage (`msl_landscape_region`). Salary section responds with region-specific data.
+- [x] ~~**HomeTab domain completion bars**~~ — done (v4.45, 2026-06-02). "Your Progress" section showing 5 major domains with X/Y scenario counts and animated progress bars. Responsive grid, clickable navigation.
+- [x] ~~**Interview Experiences v2 — seed data + frequency chart**~~ — done (v4.45, 2026-06-02). 15 hardcoded seed records in `src/data/interviewExperiences.js`. TagFrequencyChart component in InterviewGrid showing tag coverage % (e.g., "system_design: 15/15, 100%").
+- [x] ~~**Difficulty tagging — free modules subset**~~ — done (v4.45, 2026-06-02). All scenarios in ModelsMathTab, FeatureEngTab, ModelEvalTab, ClassicalMLTab tagged with `difficulty` field (easy/junior/mid/senior/staff).
 - [x] ~~**Improve distractor quality**~~ — done (2026-05-29, 14 questions across CombinatorTab + TrainerTab, replaced trivially-eliminable wrong options with plausibly-wrong options requiring real reasoning)
 - [x] ~~**Share Score clipboard button**~~ — done (2026-05-29, CombinatorTab debrief + TrainerTab ResultsScreen, navigator.clipboard, copied/setCopied 2s toggle)
 - [x] ~~**Fidelity/simulation badges**~~ — done (2026-05-29, 6 tabs: ✓ Real execution on SparkLab + ModelsMath, ~ Simulated on Combinator/Trainer/Verbatim/StaffLayer)

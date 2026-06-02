@@ -6,6 +6,7 @@ const MODELS = [
   {
     id: 'decision-tree',
     name: 'Decision Tree',
+    difficulty: 'junior',
     silentFailure: 'Unpruned tree memorizes training set. Accuracy looks fine on IID test set but collapses on any distribution shift. The feature splits become nonsensical — 0.00001 thresholds on continuous variables.',
     story: '"Our churn model had 98% train accuracy, 91% val accuracy. Deployed, got 54% in production. The val set was from the same week as train. Real distribution shift = new user cohort = every leaf was wrong."',
     diagnosticSignal: 'Tree depth > 15, any leaf with < 5 samples, feature importances showing single feature at 0.95+.',
@@ -16,6 +17,7 @@ const MODELS = [
   {
     id: 'random-forest',
     name: 'Random Forest',
+    difficulty: 'junior',
     silentFailure: 'Correlated features split importance across duplicates. You have 50 features, 30 are correlated. Importances look "spread out" and healthy. Remove any one feature and model degrades dramatically — you can\'t tell which features actually matter.',
     story: '"Feature importance told us customer_age was 3rd most important. We tried to collect it at signup. Didn\'t matter — turns out account_age_days (correlation 0.94) was doing the same work."',
     diagnosticSignal: 'Permutation importance ≠ impurity-based importance on val set. Run both. Also: inference time grows linearly with n_estimators — 500 trees × 5ms each = 2.5s per request.',
@@ -26,6 +28,7 @@ const MODELS = [
   {
     id: 'xgboost',
     name: 'XGBoost / LightGBM',
+    difficulty: 'mid',
     silentFailure: 'Over-tuning on val set. 50 rounds of Bayesian hyperparameter search → model learns the specific quirks of your val set. Kaggle-style optimization does not transfer to production distribution.',
     story: '"Spent 2 days tuning. Val AUC 0.94. Production AUC 0.81. The val set was 3 months old, production data was from last week with new feature distributions."',
     diagnosticSignal: 'Val AUC improved by >3% during tuning but test-on-time-holdout AUC didn\'t move. Learning curves show training AUC >> val AUC even after regularization.',
@@ -36,6 +39,7 @@ const MODELS = [
   {
     id: 'logistic-regression',
     name: 'Logistic Regression',
+    difficulty: 'junior',
     silentFailure: 'Predicted probabilities are not calibrated. Model says 80% probability but actual rate in production is 45%. Business team sets threshold at 0.5, gets totally wrong decision boundaries.',
     story: '"Our fraud model had 0.87 AUC. Fraud ops set a threshold at 0.6. In production, 60% model confidence corresponded to 20% actual fraud rate. We were flagging way too much."',
     diagnosticSignal: 'Calibration plot (reliability diagram) shows predicted probs systematically above/below the diagonal. Brier score on val set.',
@@ -46,6 +50,7 @@ const MODELS = [
   {
     id: 'svm',
     name: 'SVM',
+    difficulty: 'mid',
     silentFailure: 'Training time scales as O(n²) to O(n³). Works fine in dev on 10k samples. At 500k samples, training takes 18 hours. Nobody notices until the retraining job times out in production.',
     story: '"We built the model on a 10k sample for speed during prototyping. Went to retrain on full data in production. Job ran for 6 hours and was killed by the cluster timeout."',
     diagnosticSignal: 'Training time on 10k vs 50k vs 200k samples — plot the curve. If it\'s not linear, you have a problem.',
@@ -56,6 +61,7 @@ const MODELS = [
   {
     id: 'knn',
     name: 'k-NN',
+    difficulty: 'junior',
     silentFailure: 'Prediction latency scales with training set size. O(n) per query. Add 1M rows of training data and your previously-fast API becomes unusably slow.',
     story: '"k-NN worked great for our recommendation cold-start at 50k users. 6 months later, 500k users, API went from 12ms to 120ms. Had to emergency migrate to FAISS."',
     diagnosticSignal: 'Benchmark prediction time at 1k, 10k, 100k, 1M training samples. It should grow linearly.',
@@ -66,6 +72,7 @@ const MODELS = [
   {
     id: 'naive-bayes',
     name: 'Naive Bayes',
+    difficulty: 'junior',
     silentFailure: 'Feature independence assumption violated → probabilities collapse toward 0 or 1 on correlated features. Downstream calibration is impossible. "Zero probability" problem kills any sample with an unseen feature value.',
     story: '"Our spam classifier used Multinomial NB on TF-IDF. Any email containing a word not in the training vocabulary got probability 0.00 for both classes. np.argmax on [0, 0] returns 0 = \'not spam\' by default. Every novel spam got through."',
     diagnosticSignal: 'Check predicted probability histogram — if you see spikes at 0.0 and 1.0, independence assumption is being violated. Use add-1 (Laplace) smoothing: alpha=1.0.',
@@ -76,6 +83,7 @@ const MODELS = [
   {
     id: 'linear-regression',
     name: 'Linear Regression',
+    difficulty: 'junior',
     silentFailure: 'Extrapolation outside training range gives nonsensical predictions with false confidence. Prediction intervals are not surfaced. Downstream systems treat extrapolated predictions as equally reliable.',
     story: '"House price model trained on $100k–$800k homes. A $2M listing came through. Model predicted $950k with no uncertainty signal. System auto-approved a mortgage based on a prediction that was outside the model\'s valid range by 150%."',
     diagnosticSignal: 'Monitor input feature distributions vs training distributions in production. Alert when inputs are >2 std devs from training mean. Check Cook\'s distance for influential training points.',
@@ -396,6 +404,7 @@ const NAIVE_BAYES_SCENARIOS = [
   {
     id: 'nb1',
     title: 'Text classification with correlated features',
+    difficulty: 'mid',
     context: 'You are building a spam classifier using Multinomial Naive Bayes on bag-of-words features. Training accuracy is 97%. In production, performance drops to 71%. Investigation shows that spam emails consistently contain both "free" and "money" together, while your model treats them as independent features.',
     question: 'Why does Naive Bayes fail here, and what is the correct fix?',
     options: [
@@ -411,6 +420,7 @@ const NAIVE_BAYES_SCENARIOS = [
   {
     id: 'nb2',
     title: 'Gaussian Naive Bayes on skewed numeric features',
+    difficulty: 'mid',
     context: 'A fraud detection model uses Gaussian Naive Bayes on transaction amount, time since last transaction, and account age. Training AUC is 0.82. In production, high-value transactions (>$10,000) are almost never flagged as fraud, even when other signals are strong. Investigation reveals transaction amounts follow a heavy-tailed Pareto distribution.',
     question: 'What is the core failure mode?',
     options: [
@@ -426,6 +436,7 @@ const NAIVE_BAYES_SCENARIOS = [
   {
     id: 'nb3',
     title: 'Zero-frequency problem in production',
+    difficulty: 'junior',
     context: 'A product category classifier uses Multinomial Naive Bayes trained on 50,000 product descriptions. In production, it fails with a probability of 0.0 for any product containing a word not seen during training — even if every other word strongly indicates the category.',
     question: 'What causes this and what is the standard fix?',
     options: [

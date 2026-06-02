@@ -1107,6 +1107,7 @@ const FEATURE_STORE_SCENARIOS = [
       'Check that the feature store has no missing values for the training period.',
     ],
     answer: 1,
+    difficulty: 'mid',
     diagnosis: 'Point-in-time correctness is only as good as the timestamp used. If the feature store is accidentally joining on `label_available_date` instead of `application_date`, post-outcome features (e.g., account behaviour after default) are included in training. The 8-point AUC jump is a red flag — legitimate feature improvements rarely produce gains this large without leakage.',
     fix: 'Audit every feature\'s computation timestamp against the event timestamp used in the join. For each feature, verify: (1) the feature was computed using only data available before the application date, and (2) the feature store join key is the application event timestamp, not any derived timestamp. A temporal holdout test — train on months 1–18, evaluate on months 19–24 — should produce similar AUC to the full-period evaluation if no leakage exists.',
   },
@@ -1122,6 +1123,7 @@ const FEATURE_STORE_SCENARIOS = [
       'The feature store needs to be replaced with a real-time database.',
     ],
     answer: 1,
+    difficulty: 'mid',
     diagnosis: 'Training-serving skew from feature staleness: the model learned that `user_transaction_count_24h = 15` is highly predictive of card testing. In production, by the time the fraud detection fires, the stale feature store still shows count = 3 from 5 minutes ago. The fraud signal is invisible to the model in real-time serving.',
     fix: 'For latency-sensitive fraud features: (1) measure actual feature staleness at serving time — log the delta between feature computation time and serving time, (2) if staleness exceeds the fraud attack window, add a direct database lookup at inference time bypassing the feature store cache for high-velocity features, (3) in training, inject realistic staleness by artificially lagging feature values by the observed serving lag — this trains the model on the actual distribution it will see in production.',
   },
@@ -1137,6 +1139,7 @@ const FEATURE_STORE_SCENARIOS = [
       'The model\'s AUC will improve because LTV computation is now more accurate.',
     ],
     answer: 1,
+    difficulty: 'senior',
     diagnosis: 'Immutability violation: the feature store should be append-only for historical data. Backfilling with updated values using original timestamps breaks the audit trail and invalidates all model evaluations that used those historical features. You can no longer reproduce the exact training or evaluation dataset the model was promoted on.',
     fix: 'Implement feature store immutability for historical records: backfills should write new records with a `backfill_timestamp` alongside the original `event_timestamp`, not overwrite. Models that need the improved LTV computation should be retrained and re-evaluated on the new backfilled data explicitly. The currently deployed model\'s offline evaluation should remain reproducible using the original feature values.',
   },
@@ -1171,6 +1174,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
       'SHAP importance does not indicate leakage.',
     ],
     answer: 1,
+    difficulty: 'junior',
     diagnosis: 'Near-future leakage: churning customers often stop spending in the 30 days before cancelling. `revenue_30d` decreases, making `support_calls_per_dollar_spent` spike — but this spike occurs because the customer is already leaving, not because they are at risk. The model is partly learning post-churn behaviour rather than pre-churn risk signals.',
     fix: 'Shift revenue features to earlier windows: use `revenue_60d` or `revenue_90d` to reduce sensitivity to end-of-tenure spend reduction. Alternatively, use `support_call_count` and `revenue_30d` as separate features and let the model learn the interaction — if the interaction is genuine, the model will find it without needing a manually constructed ratio that amplifies the leakage.',
   },
@@ -1186,6 +1190,7 @@ const INTERACTION_LEAKAGE_SCENARIOS = [
       'Only when the dataset has fewer than 10,000 rows.',
     ],
     answer: 2,
+    difficulty: 'mid',
     diagnosis: 'Tree-based models learn piecewise interactions via splits — they can approximate `age × income` through a sequence of splits but may need many splits to do so accurately, especially with continuous features. Ratio and difference features are harder for splits to approximate. Manual engineering is justified when the transformation is non-linear and the tree would need exponential depth to learn it.',
     fix: 'Guideline: for gradient boosting, manually engineer ratio and difference features where the ratio has known business meaning and is hard to approximate via splits. Avoid engineering polynomial products — trees handle these naturally. Always compare: train with and without the engineered feature, evaluate on a held-out set, and keep it only if it provides consistent lift across folds. SHAP analysis should confirm the feature is learning signal, not noise.',
   },
@@ -1222,14 +1227,14 @@ function InteractionLeakage() {
 }
 
 const MODULES = [
-  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator },
-  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner },
-  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder },
-  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo },
-  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider },
-  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture },
-  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug },
-  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage },
+  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator, difficulty: 'senior' },
+  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner, difficulty: 'junior' },
+  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder, difficulty: 'mid' },
+  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo, difficulty: 'mid' },
+  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider, difficulty: 'senior' },
+  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture, difficulty: 'senior' },
+  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug, difficulty: 'mid' },
+  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage, difficulty: 'junior' },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────

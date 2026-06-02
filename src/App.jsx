@@ -4,6 +4,7 @@ import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
+import { INTERVIEW_EXPERIENCES } from './data/interviewExperiences.js'
 
 import HomeTab           from './tabs/HomeTab.jsx'
 import SparkLabTab       from './tabs/SparkLabTab.jsx'
@@ -386,6 +387,47 @@ function InterviewToolCard({ tool, onSelect, isUnlocked }) {
   )
 }
 
+// ── TagFrequencyChart ─────────────────────────────────────────────────────────
+function TagFrequencyChart({ experiences }) {
+  const tagFrequency = {}
+  experiences.forEach(exp => {
+    exp.tags.forEach(tag => {
+      tagFrequency[tag] = (tagFrequency[tag] || 0) + 1
+    })
+  })
+
+  const sorted = Object.entries(tagFrequency).sort((a, b) => b[1] - a[1])
+
+  return (
+    <div style={{ marginTop: '32px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--prime)', fontFamily: "var(--font-mono)", textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '12px' }}>
+        Interview skill coverage
+      </div>
+      <p style={{ fontSize: '13px', color: 'var(--ink-mid)', marginBottom: '16px' }}>
+        Based on {experiences.length} submitted experiences
+      </p>
+      {sorted.map(([tag, count]) => {
+        const pct = Math.round((count / experiences.length) * 100)
+        return (
+          <div key={tag} style={{ marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}>
+              <span style={{ color: 'var(--ink-hi)', textTransform: 'capitalize', fontWeight: 500 }}>
+                {tag.replace(/_/g, ' ')}
+              </span>
+              <span style={{ color: 'var(--ink-mid)', fontFamily: "var(--font-mono)" }}>
+                {count}/{experiences.length} ({pct}%)
+              </span>
+            </div>
+            <div style={{ height: '6px', background: 'var(--rim)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: 'var(--prime)', transition: 'width 0.3s ease' }} />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── InterviewGrid ─────────────────────────────────────────────────────────────
 function InterviewGrid({ onSelect, isUnlocked }) {
   return (
@@ -445,6 +487,11 @@ function InterviewGrid({ onSelect, isUnlocked }) {
           Submit experience →
         </a>
       </div>
+
+      {/* ── Tag Frequency Chart ── */}
+      {INTERVIEW_EXPERIENCES && INTERVIEW_EXPERIENCES.length > 0 && (
+        <TagFrequencyChart experiences={INTERVIEW_EXPERIENCES} />
+      )}
     </div>
   )
 }

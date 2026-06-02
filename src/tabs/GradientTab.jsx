@@ -1711,6 +1711,346 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantizati
     domain: 'eval',
     youtube: [],
   },
+  {
+    id: 33,
+    slug: 'feature-store-time-travel-leakage',
+    title: 'The Feature Store Time-Travel Bug: Off-by-One Leakage at Scale',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Your feature store runs a daily batch at 02:00 UTC to compute yesterday\'s features. Features are timestamped "2024-01-15" even though they contain data from 00:00–23:59 on that day. Your point-in-time join looks correct. It isn\'t. Events from 01:00 UTC use features computed hours after they occurred. This is leakage at scale — and it corrupts your offline metrics by 5–15% while remaining invisible until production.',
+    body: `The feature store time-travel bug is the most insidious failure mode in ML data infrastructure. It exists in almost every feature store that hasn\'t explicitly tested for it, and it hides in plain sight because the code looks correct.
+
+**The concrete scenario:**
+
+You have a daily batch feature computation job that runs at 02:00 UTC. It reads all events from the previous calendar day (2024-01-15 00:00 UTC → 2024-01-15 23:59 UTC) and computes features for each user. These features are materialised to your feature store with a timestamp of "2024-01-15 00:00:00".
+
+Your training pipeline does a point-in-time join: "For each event at timestamp T, fetch the most recent feature row where feature_timestamp <= T."
+
+For a user with an event at 2024-01-15 08:00:00 UTC, your join correctly retrieves the feature row timestamped 2024-01-15 00:00:00. But those features were computed using data from the full day 2024-01-15 — including data from 09:00 UTC and onwards. If the user made a purchase at 20:00 UTC on 2024-01-15, their "purchases_this_week" feature includes that purchase. The event at 08:00 UTC is predicting from information that wouldn't be available until 20:00 UTC.
+
+**Why the model trains beautifully but fails in production:**
+
+Your model is trained on this future-contaminated data. Its AUC is 0.91. You deploy.
+
+In production, features are computed in near-real-time. At 08:00 UTC, the "purchases_this_week" feature reflects purchases only through 07:59 UTC — not 23:59 UTC. The training features included future data; production features don't. The model has learned from signals that don't exist in production.
+
+AUC degrades from 0.91 to 0.76. You attribute it to covariate shift. You retrain. The new model is also contaminated. The problem perpetuates.
+
+**The four variants of this bug:**
+
+1. Calendar-day vs event-time mismatch: features stamped at midnight but containing full-day data. Early-day events see future data.
+
+2. Processing lag hiding behind event timestamp: the feature row isn't available until hours after the calendar date it's stamped with.
+
+3. Late-arriving data correction: yesterday's features are reprocessed today to account for late-arriving events. Historical training data is retrospectively altered, and your model becomes inconsistent with its training distribution.
+
+4. Aggregation window definition mismatch: "past 7 days" computed at 2024-01-15 23:55 UTC includes data that won't be available at 08:00 UTC on 2024-01-15.
+
+**How to detect it:**
+
+Take 100 rows from your training dataset. For each row at timestamp T, manually compute its features using only data with event_timestamp <= T - epsilon. Compare to what your feature store served. If the numbers don't match systematically, you have the bug.
+
+Also: if a model degrades faster in production than you'd expect from feature drift (PSI is moderate, but AUC drops 5+ points), temporal leakage is a prime suspect.
+
+**The correct fix:**
+
+Store features with two timestamps: the event_timestamp and the availability_timestamp. The availability_timestamp is when the row was actually written to the feature store. Your point-in-time join must use availability_timestamp <= event_timestamp, not feature_date <= event_date.
+
+This requires changing how your pipeline logs metadata and how your training join works. Feast 0.28+ supports this with materialisation logs. Without explicit availability tracking, you're doing "point-in-time" joins that aren't actually point-in-time.
+
+**Practice this in Feature Engineering to understand point-in-time correctness and how to test for it.**`,
+    tags: ['Feature Store', 'Point-in-Time', 'Data Leakage', 'Time-Travel', 'Feature Engineering'],
+    domain: 'features',
+    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines' }],
+  },
+  {
+    id: 34,
+    slug: 'validation-set-temporal-leakage',
+    title: 'Validation Set Leakage: Why Your Backtest AUC Doesn\'t Predict Production AUC',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Your model has 0.91 AUC in backtest. Production AUC is 0.68. Nobody changed the model. Nobody changed the data pipeline. The gap is the cost of a subtle contamination: your validation set contains data from after the prediction point, and the features include information from that future data. This is temporal leakage, and it\'s invisible unless you know where to look.',
+    body: `Temporal leakage in the validation set is different from target leakage. With target leakage, you\'re using a feature directly computed from the label. With temporal leakage, you\'re using features computed correctly, but with the wrong time window.
+
+**The scenario:**
+
+You\'re building a churn prediction model. Your training set is a table of (user_id, prediction_date, churned_30_days_later). One feature is "support tickets opened in the 30 days before prediction_date."
+
+Your feature computation logic is correct: for each row, retrieve tickets with ticket_opened_date between [prediction_date - 30 days, prediction_date].
+
+But your feature store query doesn\'t enforce the timestamp constraint. It fetches the user\'s ticket count as it exists today. A user who had 0 tickets at the time of prediction but opened a ticket 7 days later will have a count of 1 in your training data. Your model learns that support activity predicts churn — but only because it\'s seeing future support tickets.
+
+**Why this looks exactly right:**
+
+The validation set is computed the same way as the training set. Both are contaminated identically. Your train/val split is random (not temporal), so the contamination affects both sets equally. Cross-validation shows consistent performance. Your offline metrics are beautiful.
+
+The contamination is invisible in the metrics because both train and validation are infected from the same source.
+
+**How it manifests in production:**
+
+In production, you make a prediction at prediction_date. You fetch support tickets. The feature reflects only tickets opened before prediction_date. The model receives a feature value that it has never seen before (because training data always included future tickets). It mispredicts.
+
+The degradation isn't noise — it's systematic. The model's decision boundary was learned on a distribution that doesn't exist in production.
+
+**The three forms:**
+
+1. Aggregation window boundary error: computing "past 30 days" using data available today, not data available at prediction_date.
+
+2. Late-arriving data confusion: your training data includes corrections applied after the fact. A transaction flagged as fraudulent after the prediction updates the label. The feature pipeline retroactively updates that user\'s risk score. Training data now reflects the updated state, not the state at prediction time.
+
+3. Preprocessing fitted on full data: you compute zscore normalisation on the validation set before it\'s held out. The validation set\'s mean and std leak into the training features.
+
+**How to audit:**
+
+1. For each feature in your training set, document the time window explicitly: "support tickets from [T-30 to T]".
+
+2. Manually compute 100 training rows using only the data that would have been available at T. Compare to what your pipeline produced.
+
+3. Run a time-split validation: train on data before date D, validate on data between D and D+90 days. Hold out a further 30 days chronologically for final testing. If holdout AUC is significantly lower than validation AUC, you have temporal leakage.
+
+4. Compute features for your validation set as if you\'re making a fresh prediction at each validation row\'s timestamp. If the computed features differ from what your training pipeline produced, you\'re leaking.
+
+**Practice this in Feature Engineering to understand temporal data integrity and point-in-time feature computation.**`,
+    tags: ['Feature Engineering', 'Temporal Leakage', 'Data Contamination', 'Validation', 'Backtest vs Production'],
+    domain: 'features',
+    youtube: [{ id: 'qH6ERcuJgn0', title: 'Temporal Data and ML: Concepts and Common Pitfalls' }],
+  },
+  {
+    id: 35,
+    slug: 'forecast-failure-modes',
+    title: 'The Forecast Failure Zoo: Six Silent Killers of Time Series Models',
+    category: 'Time Series',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn\'t fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn\'t fail; it underfits multiplicative patterns. LSTM assumes sufficient data — it doesn\'t fail; it memorises noise. Here are the six failure modes, the production signals that indicate each, and how to catch them before deployment.',
+    body: `Forecasting models don't fail loudly. They fail quietly, producing plausible numbers that are systematically wrong. The six failure modes below are the ones that kill forecasting projects in production.
+
+**1. Seasonality assumption violations — ARIMA assumes stable seasonality**
+
+ARIMA learns the seasonal pattern from historical data and assumes it will persist. When seasonality shifts — amplitude changes, frequency changes, or seasonality disappears entirely — ARIMA extrapolates the learned pattern blindly.
+
+Production signal: your model forecasts with consistent MAPE during training, but its error spikes at the onset of a new season. January is typically high-volume, but a pandemic year shows flat demand. The model forecast January as high; actual is flat.
+
+Detection: run autocorrelation analysis (ACF) on the residuals. If residuals show the same seasonal pattern the model was supposed to capture, seasonality is changing.
+
+Fix: don't assume seasonality is stable. Use Prophet with \`yearly_seasonality=False\` for series where annual seasonality is expected to shift. Better: use a rolling forecasting window and retrain monthly.
+
+**2. Non-stationarity ignored — the model fits the trend instead of the pattern**
+
+ARIMA assumes the series is stationary (after differencing). If you fit ARIMA to a non-stationary series without proper differencing, the model fits the overall trend rather than the deviations around the trend.
+
+Production signal: your forecast follows the historical trend perfectly through the holdout period, then diverges. If historical data was rising, the model forecasts continued rise — even when the series mean-reverts.
+
+Detection: ADF test (Augmented Dickey-Fuller) on the residuals. If p > 0.05, residuals are non-stationary — your model didn't capture the non-stationarity correctly.
+
+Fix: difference the series until it passes the ADF test (p < 0.05). The number of differences required becomes the d parameter in ARIMA(p,d,q).
+
+**3. Structural breaks treated as noise — when the regime changes permanently**
+
+A structural break is a permanent shift in the level, trend, or pattern of a series. New market entrant. Product launch. Regulation change. Macro event. Models trained before the break will forecast as if the old regime continues.
+
+Production signal: your model's forecast diverges from actuals immediately after a structural break. Mean Absolute Percentage Error jumps 30%+. The break is unambiguous in hindsight but invisible during backtest because your training set didn't include it.
+
+Detection: use the Chow test or visual inspection. Plot your series with a sliding window of recent data. If the recent distribution looks different from the long-term distribution, a break may have occurred.
+
+Fix: retrain on post-break data only. Alternatively, use Prophet, which has built-in changepoint detection and can weight pre-break data lower. Or use a structural time series model that explicitly models breaks.
+
+**4. Evaluation metric mismatch — optimising RMSE when operations cares about MAPE**
+
+RMSE penalises large errors heavily. MAPE penalises percentage errors. MAE treats all errors equally. If you optimise one metric but operations monitors another, you've solved the wrong problem.
+
+Production signal: your model reports excellent RMSE in backtest, but operations says it's missing large absolute errors by 20% or more.
+
+Detection: compute multiple metrics on the same holdout set. If RMSE and MAPE rankings of candidate models are different, the metric choice matters for your use case.
+
+Fix: choose the metric that aligns with business costs. If missing a 100-unit spike is 10× worse than missing a 10-unit spike, use RMSE. If missing by 20% is uniformly costly, use MAPE. Define the metric before backtesting, not after.
+
+**5. Look-ahead bias in walk-forward validation — the model already saw the future**
+
+A common backtest mistake: fit the model once on all historical data, then generate "forecasts" on historical windows. The model has already seen those windows during training. Your backtest is not honest.
+
+Production signal: your backtest MAPE is 3%, production MAPE is 12%. No model change, no data change. The backtest was measuring how well the model remembers the past, not how well it predicts the future.
+
+Detection: plot your forecasts against actuals using expanding window cross-validation. If the forecast lags the actual by exactly the seasonal period, you're not forecasting — you're copying last season's values.
+
+Fix: use expanding or rolling window cross-validation. At each step, fit on all data up to time T, forecast forward to T+H, then move T forward by one period and repeat. This is the only honest backtest.
+
+**6. Insufficient data for seasonality capture — LSTM memorises noise instead**
+
+Neural forecasting models need thousands of observations to learn seasonal patterns. A 2-year time series with daily data (730 observations) has only 2 full annual cycles. An LSTM trained on this will overfit to noise rather than learn the seasonal pattern.
+
+Production signal: your LSTM trains to near-zero loss on the training set, but its forecast on a fresh holdout year is 10× worse than a simple Prophet model. The LSTM has memorised the training years, not learned a generalizable pattern.
+
+Detection: check your data volume. Count complete seasonal cycles. < 2 cycles: seasonal models are risky. < 3: validate heavily. 5+ cycles: seasonal models are appropriate.
+
+Fix: start with simpler models (ARIMA, Prophet) that have explicit seasonal components and lower data requirements. Reserve neural models for scenarios with thousands of observations and complex nonlinear dependencies.
+
+**The production checkpoint:**
+
+Before deploying a forecast model: (1) Plot the series and identify obvious structural breaks or seasonality changes. (2) Run stationarity tests. (3) Backtest with a proper walk-forward validation where the model never sees future data. (4) Verify your evaluation metric aligns with what operations actually cares about. (5) Validate that your holdout MAPE is within 20% of your cross-validation MAPE. If not, you have a problem — likely one of the six above.
+
+**Practice this in Time Series to diagnose failures and apply the right preventive checks for your data.**`,
+    tags: ['Time Series', 'Forecasting', 'ARIMA', 'Prophet', 'Stationarity', 'Seasonality', 'Production Failures'],
+    domain: 'eval',
+    youtube: [{ id: 'DeORzP0go5I', title: 'Time Series Fundamentals: Stationarity and Differencing' }],
+  },
+  {
+    id: 36,
+    slug: 'ab-test-failure-modes',
+    title: 'The Two Silent Killers of A/B Tests: Peeking and SRM',
+    category: 'Data Science',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Most A/B testing failures aren\'t statistical errors — they\'re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of 50/50, making all your metrics untrustworthy. Both are invisible in dashboards. Both corrupt your decision-making. Both are preventable.',
+    body: `A/B tests are the gold standard for validating product decisions. They\'re also fragile. Two failure modes account for the majority of false positives and invalid experiments: peeking and Sample Ratio Mismatch (SRM). Both produce convincing-looking results that are actually noise.
+
+**Failure mode 1: Peeking**
+
+Peeking is checking your experiment results before the planned end date, and potentially stopping early if the p-value crosses 0.05.
+
+The statistical problem: p-values are not stable over time. If you run 1,000 A/A tests (identical treatment and control) and check them daily for 14 days, roughly 30% will cross p < 0.05 at some point — even with no real effect. The standard p < 0.05 threshold assumes you test once, at the planned end date.
+
+Each additional peek is an independent hypothesis test. Your false positive rate inflates from 5% to 20–30% depending on how often you check and how long you run the experiment.
+
+Production signal: you ship a "winner" that seemed significant at day 8. By day 21 (if you hadn't stopped early), the effect would have regressed toward zero and been non-significant. The "winner" was noise.
+
+Why everyone peeks anyway: experiment dashboards update in real-time. PMs refresh them daily. Someone sees a metric moving in the right direction and the pressure to ship becomes intense.
+
+**Fixes for peeking:**
+
+Sequential testing (always-valid inference): methods like mSPRT (Uber), CUPED (Microsoft), or mixture sequential probability ratio tests allow continuous monitoring while maintaining the correct false positive rate. Statsig and Optimizely both offer always-valid p-values by default.
+
+Pre-registration: write down your sample size, primary metric, and end date before the experiment starts. Lock the dashboard for interim results. P-value visible only after the pre-registered duration. This is less sophisticated than sequential testing but surprisingly effective.
+
+Bonferroni correction as a blunt tool: if you peek N times, set your p-value threshold to 0.05/N. This overcorrects but prevents false positives. For 14 daily peeks, set your threshold to 0.05/14 ≈ 0.004.
+
+**Failure mode 2: Sample Ratio Mismatch (SRM)**
+
+SRM is when the ratio of users assigned to treatment and control doesn't match the intended ratio. You randomise 50/50, but the treatment group ends up with 47% of traffic. The 3% difference seems small. It isn't.
+
+An SRM means something is wrong with your randomisation or traffic routing. And that something has differential effects on treatment and control groups. The users missing from one group have systematic properties — they're from a specific device type, browser version, geographic region, or time window where an error occurred. Your control and treatment groups are no longer comparable populations.
+
+When an SRM exists, all your metric comparisons are invalid. Not noisy — invalid. You cannot trust any metric showing a difference.
+
+Production signal: you find a 3% SRM in post-analysis. You ship the experiment anyway, thinking "3% is small." Six months later, in a meta-analysis of similar experiments, you notice that every experiment with SRM showed inflated lift — false positives at roughly 50% rate.
+
+**How to detect SRM:**
+
+Chi-squared test on assignment counts:
+\`\`\`
+from scipy.stats import chisquare
+chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2])
+\`\`\`
+
+If p-value < 0.01, you have an SRM. Run this check automatically the moment your experiment starts, not after it ends.
+
+Common SRM causes: bot traffic filtered differently in treatment vs control, JavaScript errors preventing logging in one variant, different caching behaviour, geographic load balancing sending disproportionate traffic, or randomisation happening after the first meaningful user action (so some users are bucketed differently than intended).
+
+**Bonus failure mode: the novelty effect**
+
+A variant that's new generates engagement purely because it's novel, not because it's better. This shows up as a spike in week 1 that regresses toward control in weeks 2–3.
+
+Fix: run experiments for at least 2 full novelty cycles. For products with weekly engagement patterns, that's 2 weeks minimum. For features used infrequently (monthly), 6–8 weeks.
+
+**The mandatory check sequence:**
+
+1. Before you look at anything: run the SRM check. If p < 0.01, stop analysis. Fix the randomisation and rerun.
+
+2. Next: verify your experiment ran for the full pre-registered duration. If it didn't, and someone wants to stop early, use sequential testing results — not naive p-values.
+
+3. Then: look at your primary metric. It's only trustworthy if the SRM check passed and you ran for the full duration.
+
+**Practice this in Experimentation frameworks to understand how to design bulletproof A/B tests and catch these failure modes before they corrupt your decisions.**`,
+    tags: ['A/B Testing', 'Experimentation', 'SRM', 'Peeking', 'Statistical Validity', 'Data Science'],
+    domain: 'eval',
+    youtube: [{ id: 'DUNk4GPZ9bw', title: 'A/B Testing Mistakes: Peeking and SRM' }],
+  },
+  {
+    id: 37,
+    slug: 'quantization-fp16-first-principles',
+    title: 'Quantization from First Principles: What FP16 Throws Away and When It Matters',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Quantization promises 2× throughput and half the memory with "no accuracy loss." It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-bit mantissa vs FP32\'s 23 bits. For most models, this is fine. For LLMs with activation outliers, it\'s catastrophic. Here\'s the bit-level reasoning that tells you when quantization is safe and when it destroys your model.',
+    body: `Quantization trades precision for speed. The marketing says "no accuracy loss." The reality is more nuanced. Whether quantization works depends entirely on how your model\'s activations and weights distribute — something you need to understand at the bit level to predict failure.
+
+**The floating point bit layout:**
+
+FP32: 1 sign bit, 8 exponent bits, 23 mantissa bits.
+FP16: 1 sign bit, 5 exponent bits, 10 mantissa bits.
+BF16: 1 sign bit, 8 exponent bits, 7 mantissa bits.
+
+The exponent bits determine range: what\'s the maximum and minimum representable value? The mantissa bits determine precision: how finely values within that range are represented.
+
+**What FP16 throws away: precision**
+
+By reducing mantissa bits from 23 to 10, FP16 has roughly 2× the relative error of FP32 for any given value. For neural network inference, this is usually acceptable. Weights after training are typically in [-1, 1] with similar-magnitude activations. The precision loss doesn\'t materially change predictions for most architectures.
+
+**When FP16 breaks: activation outliers**
+
+Some models have neurons with activation magnitudes 100–1000× larger than typical. When you quantise to FP16, the representable range doesn\'t shrink (5 exponent bits still covers a wide range), but if activations exceed ~65,504 (FP16 max), they overflow to infinity or NaN.
+
+Large language models are uniquely vulnerable. Attention heads in LLaMA, GPT, and similar architectures routinely produce outlier activations of 100–500×. Naive FP16 inference on these models produces incoherent outputs — not subtle degradation, but complete failure.
+
+**The solution: mixed precision and selective dequantisation**
+
+LLM.int8() (Dettmers et al., 2022) handles this by identifying outlier dimensions and computing them in higher precision while keeping non-outliers in INT8. The result: 2–4× speedup with minimal quality loss.
+
+The more general pattern: don\'t quantise every layer uniformly. Attention layers and layer normalisation are quantisation-sensitive. Keep them in FP32 or FP16. Linear layers in transformer blocks are robust to INT8.
+
+**BF16 vs FP16: why exponent bits matter**
+
+BF16 trades mantissa precision (7 bits) for exponent range (8 bits, same as FP32). It can represent values up to ~3.4 × 10^38. FP16\'s 5 exponent bits limit it to ~65,504.
+
+For LLMs: BF16 is almost always preferable to FP16. Activation outliers fit in the range without overflow. The reduced mantissa precision (7 vs 23 bits) is acceptable for inference.
+
+Modern GPUs (A100, H100) support BF16 at the same throughput as FP16. If your hardware supports it, use BF16 for LLM inference.
+
+**INT8 and INT4: dynamic range compression**
+
+INT8 represents values as 8-bit integers in [-128, 127]. There\'s no exponent — the numeric range is fixed. Quantisation maps floats to this fixed range via a scale factor.
+
+Per-tensor quantisation: one scale factor for the entire weight matrix. If the matrix has a few very large values, those dominate the scale and small values lose precision.
+
+Per-channel quantisation: separate scale factor per output channel. More expensive but much better quality. This is the standard for production INT8 quantisation.
+
+INT4 halves the memory of INT8. A 7B parameter LLM fits in ~3.5GB. The quality cost is significant but manageable with mixed precision and groupwise quantisation (separate scales per group of weights).
+
+**The practical decision matrix:**
+
+Transformer inference on Ampere+ GPU (A100, H100)? Use BF16. No loss, 2× throughput.
+
+Transformer on older GPU? FP16 with overflow checks.
+
+LLM inference, memory-constrained? INT8 with outlier decomposition (LLM.int8()).
+
+LLM, extreme memory constraint (edge device)? INT4 with GPTQ or AWQ.
+
+CNN inference, production serving? INT8 per-channel, calibrated on representative data.
+
+Training? BF16 mixed precision with FP32 master weights.
+
+**Calibration: choosing the right scale factors**
+
+Static INT8 quantisation requires a calibration dataset: representative inputs run through the model before quantisation. Calibration collects activation distributions at each layer, used to choose optimal scale factors.
+
+A calibration dataset that doesn\'t match your production distribution produces poor scale factors and quality degradation. 100–1000 representative inputs is typically sufficient.
+
+TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantisation. Using these correctly requires knowing which layers are quantisation-sensitive (attention, layer norm) and keeping them in higher precision.
+
+**Practice this in Deep Learning serving to understand when quantization is safe, how to detect failures, and how to optimise inference for your specific model and hardware.**`,
+    tags: ['Deep Learning', 'Quantization', 'FP16', 'BF16', 'INT8', 'LLM Inference', 'Serving'],
+    domain: 'dl',
+    youtube: [{ id: 'IxrlHAJtqKE', title: '8-bit Optimizers via Block-wise Quantization' }],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']

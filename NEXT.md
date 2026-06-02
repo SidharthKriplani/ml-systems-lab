@@ -8,27 +8,20 @@ Read this immediately after CLAUDE.md. Work only what's listed here.
 
 ## Next session
 
-### 1. Gradient posts — add 5 high-impact posts (2 hours)
-Add posts to `src/tabs/GradientTab.jsx` in priority order from IDEAS.md:
-- **"Feature Store Time-Travel Bug"** → link to FeatureEngTab. Scenario: you rebuild a feature store, suddenly model AUC is 3 points lower, and features for tomorrow are already computed. Root cause: computed features are using tomorrow's data (off-by-one). Checkpoint: why does this break silently in production? (Data leakage at scale, difficult to detect because metrics look plausible during batch window.)
-- **"Validation Set Leakage"** → link to FeatureEngTab. Scenario: train/val split looks clean, but validation set distribution leaks tomorrow's data (temporal leakage). Why your backtest AUC (0.91) ≠ production AUC (0.68).
-- **"Forecast Failure Zoo"** → link to TimeSeriesTab. Scenario: 6 failure modes of time-series models (seasonality shift, nonstationarity, trend change, forecast stale beyond T+7, auto-correlation ignored, exogenous variable dependency). Each with a production signal.
-- **"Two Failure Modes of A/B Tests"** → cross-link to StaffLayerTab/CombinatorTab. SRM (Sample Ratio Mismatch) and novelty effect as the two most common reasons valid A/B tests give misleading results.
-- **"Quantization from First Principles"** → link to DLServingTab. What FP16 throws away vs FP32, when it matters (inference on edge), and when it doesn't (large batch serving).
+### 1. Freemium gate v2 — implement per-scenario `isFree` flags (2.5 hours)
+Upgrade freemium from tab-level (free = 4 intro tabs) to scenario-level gating (easy/junior free, mid/senior/staff gated). (a) Add `isFree` field to each scenario in 4 free modules (true for easy/junior, false for mid/senior/staff). (b) Update `AccessGate.jsx` to check `isFree` per scenario instead of per-tab. (c) Hide answer options + checkpoint buttons based on `isFree` + access code. (d) Show gate message: "Unlock with access code for senior-level scenarios." Input: `difficulty` tags from v4.45 (easy/junior → true, mid/senior/staff → false).
 
-Each post should: describe the scenario, explain the production consequence, link to the practice tab at the end. ~15-20 min per post. No YouTube IDs required yet.
+### 2. Add YouTube IDs to Gradient posts (1 hour)
+Find and add YouTube video IDs to the 5 new posts from v4.45 (Feature Store, Leakage, Forecast Zoo, A/B Tests, Quantization). Search YouTube for StatQuest/3Blue1Brown/Chip Huyen videos; verify with oEmbed API (200=live, 404=broken); update `youtubeId` in `src/tabs/GradientTab.jsx`. Backfill existing Gradient posts missing YouTube IDs (quick scan). ~10–15 min per video.
 
-### 2. LandscapeTab — add country/region filter (1.5 hours)
-Extend `LandscapeTab.jsx` to add a region filter (India/UK/US/EU/Global). Store selection in localStorage as `msl_landscape_region` (default: 'Global'). Tabs already exist (Roles, Salaries, Stack, Companies, Timeline, Market) — add a compact filter row above them showing buttons: India | UK | US | EU | Global. When a region is selected, show region-specific data (e.g., salary ranges for India are 2–4x lower than US; role distribution differs; companies differ). Modify the Salaries tab first (easiest to implement filtering), then add region-aware context to Company Explorer. ~1.5 hours implementation + 30 min data cleanup (add `region` field to company/salary data objects if they don't have it).
+### 3. Behavioral question bank — add 5-8 Interview scenarios (1.5 hours)
+Add new module to `InterviewPrepTab.jsx` covering ML-specific behavioral: (1) disagreement over metric with stakeholder, (2) shipped model that degraded silently 2 weeks, (3) resource conflict (10-day training, 5-day deadline), (4) architect disagreement with teammate, (5) critical bug in production during pause — revert or fix?, (6) explain model decision to non-technical exec. Use `.msl-option-btn` / `.msl-reveal-panel` pattern. 4 options per scenario + per-option explanations. Score stored in `msl_score:behavioral`.
 
-### 3. HomeTab — domain completion bars (1 hour)
-Add a new section above the "All tracks" grid showing compact completion bars for each domain. For each domain (Feature Engineering, Model Evaluation, Classical ML, Deep Learning, etc.), display: domain name | X/Y scenarios completed | thin progress bar. Data already exists in localStorage (read `msl_score:*` keys, compute as `completed / totalScenarios`). Renders a 3–4 row grid of domain cards. Cards show domain name (left), "X/Y" count (center-right), and a slim progress bar (right). Clicking a card navigates to that domain. ~1 hour for rendering + localStorage logic.
+### 4. Interview Experiences — wire Tally form (1 hour)
+Connect real Tally.so submission form to Interview Experiences. (a) Create/publish Tally form (10 fields: name, company, role, yearsExp, round, date, tags checkboxes, prepSource, result). (b) Add iframe or "Submit" button in InterviewGrid linking to Tally. (c) Admin workflow: download Tally JSON → format into INTERVIEW_EXPERIENCES array → redeploy. Growth trigger: when N≥15 real submissions arrive, visualizations auto-update. Pre-req for social proof.
 
-### 4. Interview Experiences v2 — seed data + frequency chart (1 hour)
-Prepare for the Interview Experiences feature. Create `src/data/interviewExperiences.js` with a hardcoded array of 15+ sample interview experience records. Schema: `{ name, company, role, yearsExp, round, date, tags: ['ml_fundamentals', 'system_design', 'deep_learning', ...], prep_source, result }`. Add a placeholder component in HomeTab or InterviewGrid that shows a frequency bar chart of tags (e.g., "system_design was covered 12/15 times, ml_fundamentals 14/15"). Chart uses Chart.js. This is a pre-req for the real Tally form integration (when N≥15 real submissions arrive, admin will add them to the data file and this chart auto-updates).
-
-### 5. Difficulty tagging — free modules subset (1.5 hours)
-Start tagging scenarios by difficulty (easy/junior/mid/senior/staff). Focus on the 4 free modules that will gate freemium v2: ModelsMathTab, FeatureEngTab, ModelEvalTab, ClassicalMLTab. Add a `difficulty` field to each scenario object (easy/junior/mid/senior/staff). For v1, tag just these 4 modules (roughly 100 scenarios total). Don't implement the gate yet — just the metadata. Plan: 25–30 min per module (reading scenarios + assigning difficulty). Output: all scenarios in 4 modules have a `difficulty` field. Store in each tab's MODULES or individual scenario definitions. This unblocks freemium gate v2 in a later session.
+### 5. Emoji → SVG sweep — replace residual emoji (1.5 hours)
+Systematic pass to replace decorative emoji with inline SVGs. (1) Grep all tabs for emoji codepoints. (2) Categorize: decorative (replace), functional glyphs ✓ ✗ (keep), flags (keep). (3) Replace with simple SVGs using CSS variables. Focus: rendered UI (buttons, labels, headers), not data fields. Output: zero emoji in rendered UI except flags/semantic glyphs.
 
 ---
 
@@ -45,17 +38,17 @@ Nothing currently blocked.
 
 ---
 
-## Done this session (v4.42 → v4.44)
+## Done this session (v4.45)
 
-- ~~Loan Default Phase 1 — schema + EDA + proxy audit (4/5ths) + cpL1 ECOA judgment.~~
-- ~~Loan Default Phase 2 — split + model training + eval/threshold + cpL2 ECOA threshold check.~~
-- ~~Loan Default Phase 3 — PSI + KS + prediction drift + denial rate shift + cpL3 alert-or-wait.~~
-- ~~Loan Default Phase 4 — deployment scaffold + regulatory model card (7 ECOA fields) — lab complete.~~
-- ~~Fraud Detection Phase 1 — schema + EDA + precision@K comparison + cpF1 metric selection judgment.~~
-- ~~SystemDesign RAG audit — rag1–rag6 removed (GAL), RetrievalFailures kept (MSL).~~
-- ~~Two new Gradient posts — Feature Store Time-Travel Bug + Validation Set Leakage.~~
-- ~~HomeTab domain bars + changelog June 2026 entry + testimonials section.~~
-- ~~AUDITS #024, CLAUDE.md file structure + session model, METRICS.md keys updated, IDEAS/LINEAGE/DECISIONS staleness fixed.~~
+- ~~Fraud Detection phases 2–4 (3 cells per phase + checkpoints) — SMOTE vs class_weight, PSI/KS drift, FastAPI + K8s + Ops Runbook~~
+- ~~LandscapeTab LINEAGE entry — documented build history, closed AUDITS #017.3~~
+- ~~ModelEvalTab hex colors — verified CSS var compliance, closed AUDITS #017.2~~
+- ~~5 Gradient posts (Feature Store, Leakage, Forecast Zoo, A/B Tests, Quantization) — added to GradientTab, CTAs linked~~
+- ~~LandscapeTab country/region filter — Global/India/UK/US/EU selector, Salary filtering, localStorage persist~~
+- ~~HomeTab domain completion bars — "Your Progress" section, 5 domains, animated bars, clickable nav~~
+- ~~Interview Experiences v2 — 15 seed records, TagFrequencyChart in InterviewGrid~~
+- ~~Difficulty tagging — all scenarios in ModelsMath/FeatureEng/ModelEval/ClassicalML tagged (easy/junior/mid/senior/staff)~~
+- ~~LINEAGE.md v4.45 entry, IDEAS.md In Progress items updated, NEXT.md batch complete~~
 
 ---
 

@@ -315,6 +315,14 @@ const MARKETS = [
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+const GLOBAL_REGIONS = [
+  { id: 'Global', label: 'Global' },
+  { id: 'India', label: 'India' },
+  { id: 'UK', label: 'UK' },
+  { id: 'US', label: 'US' },
+  { id: 'EU', label: 'EU' },
+]
+
 function RolesSection({ onNavigate }) {
   const [selected, setSelected] = useState(null)
   const role = selected !== null ? ROLES[selected] : null
@@ -397,7 +405,7 @@ function RolesSection({ onNavigate }) {
   )
 }
 
-function SalarySection() {
+function SalarySection({ globalRegion }) {
   const [region, setRegion] = useState('us')
   const maxTC = Math.max(...SALARY_LEVELS.map(l => l[region]?.tc ?? 0))
 
@@ -408,6 +416,18 @@ function SalarySection() {
     { id: 'india', label: '🇮🇳 India (USD)', currency: 'k' },
   ]
 
+  const filteredRegions = REGIONS.filter(r => {
+    if (globalRegion === 'Global') return true
+    if (globalRegion === 'US' && r.id === 'us') return true
+    if (globalRegion === 'UK' && r.id === 'uk') return true
+    if (globalRegion === 'EU' && r.id === 'de') return true
+    if (globalRegion === 'India' && r.id === 'india') return true
+    return false
+  })
+
+  const defaultRegion = filteredRegions.length > 0 ? filteredRegions[0].id : 'us'
+  const displayRegion = REGIONS.find(r => r.id === region) && filteredRegions.some(r => r.id === region) ? region : defaultRegion
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
@@ -417,8 +437,8 @@ function SalarySection() {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {REGIONS.map(r => (
-          <button key={r.id} onClick={() => setRegion(r.id)} className={`sub-tab ${region === r.id ? 'active' : 'inactive'}`} style={{ fontSize: '13px' }}>
+        {filteredRegions.map(r => (
+          <button key={r.id} onClick={() => setRegion(r.id)} className={`sub-tab ${displayRegion === r.id ? 'active' : 'inactive'}`} style={{ fontSize: '13px' }}>
             {r.label}
           </button>
         ))}
@@ -426,7 +446,7 @@ function SalarySection() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {SALARY_LEVELS.map(l => {
-          const d = l[region]
+          const d = l[displayRegion]
           if (!d) return null
           const tcPct = (d.tc / maxTC) * 100
           const basePct = (d.base / maxTC) * 100
@@ -655,7 +675,13 @@ const SECTIONS = [
 
 export default function LandscapeTab({ onNavigate }) {
   const [active, setActive] = useState('roles')
+  const [globalRegion, setGlobalRegion] = useState(() => localStorage.getItem('msl_landscape_region') || 'Global')
   const ActiveSection = SECTIONS.find(s => s.id === active)?.component ?? RolesSection
+
+  const handleRegionChange = (r) => {
+    setGlobalRegion(r)
+    localStorage.setItem('msl_landscape_region', r)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -672,6 +698,17 @@ export default function LandscapeTab({ onNavigate }) {
         </p>
       </div>
 
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {GLOBAL_REGIONS.map(r => (
+            <button key={r.id} onClick={() => handleRegionChange(r.id)}
+              style={{ padding: '6px 12px', borderRadius: '6px', border: globalRegion === r.id ? '1px solid var(--prime)' : '1px solid var(--rim)', background: globalRegion === r.id ? 'rgba(240,165,0,0.1)' : 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: globalRegion === r.id ? 600 : 400, color: globalRegion === r.id ? 'var(--prime)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {SECTIONS.map(s => (
           <button key={s.id} onClick={() => setActive(s.id)}
@@ -681,7 +718,11 @@ export default function LandscapeTab({ onNavigate }) {
         ))}
       </div>
 
-      <ActiveSection onNavigate={active === 'roles' ? onNavigate : undefined} />
+      {active === 'salary' ? (
+        <SalarySection globalRegion={globalRegion} />
+      ) : (
+        <ActiveSection onNavigate={active === 'roles' ? onNavigate : undefined} />
+      )}
     </div>
   )
 }

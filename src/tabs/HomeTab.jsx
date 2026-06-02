@@ -258,6 +258,28 @@ export default function HomeTab({ onNavigate }) {
 
   const jumpBackLabel = jumpBackTab ? (TRACKS.find(t => t.id === jumpBackTab)?.label ?? jumpBackTab) : null
 
+  // ── Domain completion data ──────────────────────────────────────────────
+  const DOMAIN_COMPLETION_MAP = [
+    { name: 'ML Engineering', accent: 'var(--prime)', trackIds: ['models','features','eval','design','classical'] },
+    { name: 'Data Engineering', accent: 'var(--prime)', trackIds: ['spark','airflow','dbt','modeling'] },
+    { name: 'Deep Learning', accent: 'var(--prime)', trackIds: ['dl','dl_finetune','dl_serving'] },
+    { name: 'MLOps', accent: 'var(--prime)', trackIds: ['monitor','mlops_deploy','mlops_pipes'] },
+    { name: 'Data Science', accent: 'var(--prime)', trackIds: ['ds','causal','ts'] },
+  ]
+
+  function getDomainProgress(domainData) {
+    const trackProgress = domainData.trackIds.map(id => getTrackPct(id))
+    const totalProgress = trackProgress.length > 0 ? Math.round(trackProgress.reduce((a,b) => a+b, 0) / trackProgress.length) : 0
+    const completedTracks = trackProgress.filter(p => p > 0).length
+    return { completed: completedTracks, total: domainData.trackIds.length, percent: totalProgress }
+  }
+
+  function navigateToDomain(trackIds) {
+    const firstUnstarted = trackIds.find(id => getTrackPct(id) === 0)
+    if (firstUnstarted) onNavigate(firstUnstarted)
+    else onNavigate(trackIds[0])
+  }
+
   function computeReadiness() {
     const DOMAIN_MAP = {
       mle:   ['Feature Engineering', 'Model Evaluation', 'ML Systems'],
@@ -501,6 +523,46 @@ export default function HomeTab({ onNavigate }) {
       )}
 
 
+
+      {/* ── Domain Progress Bars ── */}
+      <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '40px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)', fontWeight: 600, marginBottom: '12px' }}>Your Progress</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '32px' }}>
+          {DOMAIN_COMPLETION_MAP.map(domain => {
+            const { completed, total, percent } = getDomainProgress(domain)
+            return (
+              <div
+                key={domain.name}
+                onClick={() => navigateToDomain(domain.trackIds)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'var(--depth)',
+                  border: '1px solid var(--rim)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'border-color var(--t-fast), transform var(--t-fast)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'var(--rim-hi)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'var(--rim)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{domain.name}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>{completed}/{total}</div>
+                </div>
+                <div style={{ height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${percent}%`, background: domain.accent, borderRadius: '2px', transition: 'width 0.3s ease', boxShadow: percent > 0 ? `0 0 6px ${domain.accent}50` : 'none' }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
 
       {/* ── All tracks ── */}
       <section style={{ borderTop: '1px solid var(--rim)', paddingTop: '40px' }}>
