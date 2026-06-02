@@ -24,10 +24,10 @@ const ALL_QUESTIONS = [
       'One-hot encoding',
       'Target encoding with cross-validation',
       'Target encoding applied to the full dataset before any train/test split',
-      'Dropping the feature',
+      'Feature hashing to a fixed-size vector — same memory benefit as target encoding without any leakage risk',
     ],
     correct: 1,
-    explanation: "Target encoding maps categories to their mean target value. Cross-validation folding prevents leakage. OHE creates 10k sparse dimensions; GBTs handle target encoding well. In production this breaks as: model ships with full-dataset target-encoded means; rare categories (cold-start items) get mean imputed to the global average and rank randomly, spiking p0 latency errors in the ranker.",
+    explanation: "Target encoding maps categories to their mean target value. Cross-validation folding prevents leakage. OHE creates 10k sparse dimensions; GBTs handle target encoding well. Feature hashing eliminates vocabulary overhead and leakage risk but introduces hash collisions that conflate unrelated categories — at 10k categories with a 2^13 hash space, collision rate is ~55%, substantially degrading the signal. In production this breaks as: model ships with full-dataset target-encoded means; rare categories (cold-start items) get mean imputed to the global average and rank randomly, spiking p0 latency errors in the ranker.",
   },
   {
     id: 3, domain: 'Feature Engineering',
@@ -36,10 +36,10 @@ const ALL_QUESTIONS = [
       'Ignore — PSI below 0.5 is acceptable',
       'Retrain the model immediately',
       'Investigate root cause, consider feature removal or recalibration',
-      'Add the feature to the monitoring dashboard only',
+      'Apply Platt scaling to recalibrate the model\'s output probabilities to the new distribution',
     ],
     correct: 2,
-    explanation: "PSI >0.25 indicates significant shift. Investigate: data pipeline changes, upstream schema drift. Options: remove feature, apply transformation, retrain. Monitoring alone is insufficient. In production this breaks as: PSI alert fires at 3am, on-call finds null rate spiked from 0.2% to 34% on a key feature — upstream team changed a column name and null-imputation masked it for two weeks.",
+    explanation: "PSI >0.25 indicates significant shift. Investigate: data pipeline changes, upstream schema drift. Options: remove feature, apply transformation, retrain. Platt scaling recalibrates predicted probabilities, but if the input feature itself has shifted, you are fitting a calibration layer on top of structurally wrong predictions — treating the symptom not the cause. Monitoring alone and immediate retraining without root cause investigation are both incomplete responses. Production tell: PSI alert fires at 3am, on-call finds null rate spiked from 0.2% to 34% on a key feature — upstream team changed a column name and null-imputation masked it for two weeks.",
   },
   // Model Evaluation
   {
@@ -48,11 +48,11 @@ const ALL_QUESTIONS = [
     options: [
       'The model is excellent across all thresholds',
       'Class imbalance makes AUC misleading; precision-recall metrics are more informative',
-      'The test set is too small',
+      'AUC-PR would likely agree with AUC-ROC here since both are threshold-independent metrics',
       'The model has high recall but low specificity',
     ],
     correct: 1,
-    explanation: "With severe class imbalance, AUC can be inflated by easy negatives. Precision-recall AUC and precision@K are more relevant for top-K prediction tasks. Production tell: AUROC looks great at 0.97 but Precision@100 is 2% — model is ranking fraudulent transactions below thousands of easy negatives it correctly ignores.",
+    explanation: "With severe class imbalance, AUC-ROC can be inflated by easy negatives. AUC-PR would NOT agree — it is explicitly sensitive to imbalance because it focuses on the positive class, and low precision@top 1% directly predicts a low AUC-PR. Precision-recall metrics and precision@K are more relevant for top-K prediction tasks. Production tell: AUROC looks great at 0.97 but Precision@100 is 2% — model is ranking fraudulent transactions below thousands of easy negatives it correctly ignores.",
   },
   {
     id: 5, domain: 'Model Evaluation',
@@ -61,10 +61,10 @@ const ALL_QUESTIONS = [
       'Maximize F1 score',
       'Use the default 0.5 threshold',
       'Lower the threshold to increase recall, weighted by cost ratio',
-      'Maximize AUC-ROC',
+      'Maximize precision@K where K is fixed to the capacity of your fraud review team',
     ],
     correct: 2,
-    explanation: "Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN. In production this breaks as: default 0.5 threshold ships; oncall receives escalation that high-severity fraud cases are being missed at 60% rate because nobody set the threshold for the actual cost ratio.",
+    explanation: "Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN. Precision@K is a valid capacity-constrained approach but it optimizes for a fixed review volume — it doesn't account for the actual cost asymmetry, which can change the optimal operating point. Maximizing F1 treats FP and FN costs equally (both cost 1), which is wrong when costs are 100:1. Production tell: default 0.5 threshold ships; oncall receives escalation that high-severity fraud cases are being missed at 60% rate because nobody set the threshold for the actual cost ratio.",
   },
   {
     id: 6, domain: 'Model Evaluation',
@@ -73,10 +73,10 @@ const ALL_QUESTIONS = [
       'It over-penalizes false positives',
       'A model predicting all negatives achieves 99% accuracy with zero predictive value',
       'It penalizes all misclassifications equally, regardless of asymmetric class costs',
-      'It makes cross-validation unreliable',
+      'Accuracy degrades as a metric when classes are imbalanced because the denominator includes too many easy negatives, making even AUC-ROC unreliable in this regime',
     ],
     correct: 1,
-    explanation: "With 99% negative class, a trivial classifier gets 99% accuracy. Use precision, recall, F1, or AUC-PR which are insensitive to class imbalance. Production tell: model accuracy dashboard shows 99.1% and stakeholders celebrate; fraud team reports zero detections in two weeks — model is predicting all-negative.",
+    explanation: "With 99% negative class, a trivial classifier gets 99% accuracy. Use precision, recall, F1, or AUC-PR which are explicitly sensitive to the positive class. AUC-ROC is actually more robust to class imbalance than accuracy — it measures ranking quality across all thresholds and is not fooled by an all-negative classifier (which would score AUC-ROC = 0.5). Option C is also true but secondary — accuracy's deeper flaw is that it conflates easy-to-predict negatives with actual model quality. Production tell: model accuracy dashboard shows 99.1% and stakeholders celebrate; fraud team reports zero detections in two weeks — model is predicting all-negative.",
   },
   // ML Systems
   {
@@ -86,10 +86,10 @@ const ALL_QUESTIONS = [
       'SHAP value distribution shift between the training window and current serving period',
       'Input feature distribution shift (PSI)',
       'Prediction score distribution shift',
-      'Business metric (CTR) drop',
+      'Label drift — tracking the fraction of ground-truth positives arriving in the feedback loop',
     ],
     correct: 2,
-    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. SHAP drift detection is expensive (requires running the explainer on live traffic), delayed (needs batch post-processing), and measures attribution rather than model output quality directly. Feature PSI catches input drift but not model behavior. Production tell: score histogram compresses toward 0.5 for 3 days before CTR drops — a feature pipeline bug was flattening variance upstream, invisible to business dashboards.",
+    explanation: "Prediction score distribution shifts before business metrics degrade, with no label delay. SHAP drift detection is expensive (requires running the explainer on live traffic), delayed (needs batch post-processing), and measures attribution rather than model output quality directly. Feature PSI catches input drift but not model behavior change. Label drift monitoring is a valid technique but requires waiting for labels — in week 3 of a monthly training cycle, labels lag by days. Production tell: score histogram compresses toward 0.5 for 3 days before CTR drops — a feature pipeline bug was flattening variance upstream, invisible to business dashboards.",
   },
   {
     id: 8, domain: 'ML Systems',
@@ -108,12 +108,12 @@ const ALL_QUESTIONS = [
     q: 'Your batch prediction pipeline must complete within 2 hours for 100M users. Spark job takes 6 hours. What is your first optimization?',
     options: [
       'Switch to a larger instance type',
-      'Increase the number of output partitions',
+      'Increase the number of output partitions to reduce task size and improve parallelism',
       'Investigate data skew — hot keys cause stragglers',
       'Cache the model weights in broadcast variable',
     ],
     correct: 2,
-    explanation: "In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort. In production this breaks as: Spark job hangs at 99% for 4 hours; one executor is processing the top-10 users who each have 50M events while 199 executors sit idle.",
+    explanation: "In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort. Increasing output partitions helps only if all tasks take similar time — with skew, one partition still processes the hot key and takes the same time. Broadcasting model weights is useful but secondary — if the model is already in memory, re-broadcasting it won't help the straggler. Production tell: Spark job hangs at 99% for 4 hours; one executor is processing the top-10 users who each have 50M events while 199 executors sit idle.",
   },
   // Statistics & Probability
   {
@@ -126,9 +126,9 @@ const ALL_QUESTIONS = [
   {
     id: 11, domain: 'Statistics & Probability',
     q: 'Which distribution best models the time between user events in a recommendation system?',
-    options: ['Normal', 'Binomial', 'Exponential', 'Uniform'],
+    options: ['Normal', 'Weibull — it generalizes exponential and models hazard rate changes over time', 'Exponential', 'Uniform'],
     correct: 2,
-    explanation: "Inter-arrival times for Poisson processes follow an exponential distribution. User events (clicks, purchases) are often modeled as Poisson processes, making exponential the natural choice. Production tell: time-to-purchase model fitted with Gaussian residuals shows systematic underestimation for high-value users whose inter-event times have heavy right tails.",
+    explanation: "Inter-arrival times for Poisson processes follow an exponential distribution — it assumes a constant hazard rate (memoryless property). The Weibull distribution is a common wrong answer here: it is more flexible (models increasing or decreasing hazard rates) and used in survival analysis, but for a simple Poisson process model the exponential is both correct and sufficient. Production tell: time-to-purchase model fitted with Gaussian residuals shows systematic underestimation for high-value users whose inter-event times have heavy right tails.",
   },
   {
     id: 12, domain: 'Statistics & Probability',
@@ -150,10 +150,10 @@ const ALL_QUESTIONS = [
       'Increasing learning rate',
       'Using sigmoid activations throughout',
       'Residual connections (skip connections)',
-      'Reducing batch size',
+      'Applying gradient clipping — capping gradient norms prevents them from vanishing to near-zero in early layers',
     ],
     correct: 2,
-    explanation: "Residual connections (ResNet-style) allow gradients to flow directly through skip paths, bypassing saturating nonlinearities. Batch normalization also helps. Sigmoid worsens vanishing. Production tell: training loss plateaus after epoch 2 on a 20-layer network; gradient norms logged per layer show near-zero norms in the first 5 layers — no skip connections, sigmoid activations throughout.",
+    explanation: "Residual connections (ResNet-style) allow gradients to flow directly through skip paths, bypassing saturating nonlinearities. Batch normalization also helps by normalizing pre-activations, reducing saturation. Sigmoid worsens vanishing due to saturation in its tails. Gradient clipping addresses the opposite problem — exploding gradients — and actively makes vanishing worse by limiting the magnitude of already-small signals. Production tell: training loss plateaus after epoch 2 on a 20-layer network; gradient norms logged per layer show near-zero norms in the first 5 layers — no skip connections, sigmoid activations throughout.",
   },
   {
     id: 14, domain: 'Deep Learning',
@@ -187,10 +187,10 @@ const ALL_QUESTIONS = [
       'Blue-green deployment',
       'Shadow deployment',
       'Canary deployment',
-      'Rolling restart',
+      'Feature flag rollout — enable the new model only for users where the feature flag is true, expanding the flag gradually',
     ],
     correct: 2,
-    explanation: "Canary: route X% of traffic to new model, monitor metrics, gradually increase %. Blue-green: instant switch (less gradual). Shadow: new model runs but responses aren't served (no user impact). In production this breaks as: team does blue-green switch on a model with a latency regression; p99 latency triples for all users simultaneously with no gradual signal — canary would have caught it at 1% traffic.",
+    explanation: "Canary: route X% of traffic to new model, monitor metrics, gradually increase %. Blue-green: instant switch (less gradual). Shadow: new model runs but responses aren't served (no user impact). Feature flag rollout is a valid user-targeting mechanism but it is not traffic splitting at the infrastructure level — it is user-segment filtering, which can introduce selection bias when the segment expands. In production this breaks as: team does blue-green switch on a model with a latency regression; p99 latency triples for all users simultaneously with no gradual signal — canary would have caught it at 1% traffic.",
   },
   {
     id: 17, domain: 'MLOps',
@@ -210,11 +210,11 @@ const ALL_QUESTIONS = [
     options: [
       "Input feature distributions shift — P(X) changes while P(Y|X) stays stable",
       'The relationship between input features and target variable changes over time',
-      'Training data becomes unavailable',
+      'Prior probability shift — P(Y) changes over time while the conditional P(Y|X) stays stable',
       'API endpoints change breaking client calls',
     ],
     correct: 1,
-    explanation: "Concept drift: P(Y|X) changes. E.g., user behavior patterns shift post-COVID. Distinct from covariate drift (P(X) changes). Requires model retraining, not just recalibration. Production tell: feature distributions look stable (PSI < 0.1) but model precision drops 12 points over 6 weeks — user intent has shifted while the input signals remain the same.",
+    explanation: "Concept drift: P(Y|X) changes — the mapping from features to labels shifts. E.g., user behavior patterns shift post-COVID. Covariate drift (P(X) changes) is option A. Prior probability shift (P(Y) changes) — option C — is a real, distinct phenomenon (e.g., base fraud rate increases) but the conditional relationship P(Y|X) stays intact; recalibration can address it without full retraining. Production tell: feature distributions look stable (PSI < 0.1) but model precision drops 12 points over 6 weeks — user intent has shifted while the input signals remain the same.",
   },
   // Ranking & Retrieval
   {
@@ -333,12 +333,12 @@ const ALL_QUESTIONS = [
     q: 'Adam optimizer vs. SGD with momentum: when is SGD preferred?',
     options: [
       'When batch sizes are very small, since Adam\'s variance estimates become unreliable at low sample counts',
-      'When training very large transformers',
+      'When training very large transformers where Adam\'s per-parameter state doubles memory cost',
       'When generalization is critical — SGD often finds flatter minima that generalize better',
       'When training speed is the priority',
     ],
     correct: 2,
-    explanation: "Adam converges faster but often to sharper minima (higher test loss). SGD+momentum with learning rate warmup and cosine decay finds flatter minima. Many production models use SGD for final training after Adam warmup. Production tell: Adam-trained model has 0.5% lower val loss than SGD but 1.8% higher test loss on held-out distribution — the sharp minimum does not generalize.",
+    explanation: "Adam converges faster but often to sharper minima (higher test loss). SGD+momentum with learning rate warmup and cosine decay finds flatter minima. Many production vision models use SGD for final training. Memory cost is a real reason to avoid Adam on very large models, but it doesn't predict the shape of the minimum found — it motivates Adafactor or Lion rather than SGD. Production tell: Adam-trained model has 0.5% lower val loss than SGD but 1.8% higher test loss on held-out distribution — the sharp minimum does not generalize.",
   },
   {
     id: 29, domain: 'Optimization',
@@ -347,10 +347,10 @@ const ALL_QUESTIONS = [
       'Removing gradients below a threshold to speed up training',
       'Capping gradient norms to prevent exploding gradients from destabilizing training',
       'Zeroing gradients for specific layers during fine-tuning',
-      'A regularization technique to prevent overfitting',
+      'Scaling gradients by the inverse of their variance to normalize step sizes across parameter groups — equivalent to per-layer learning rate adaptation',
     ],
     correct: 1,
-    explanation: "Exploding gradients (common in RNNs, transformers on long sequences) cause parameter updates to diverge. Clip by global norm: scale all gradients uniformly when ||g|| > threshold. Production tell: training loss spikes to NaN at step 1200 of a 10k-step run; gradient norm logs show ||g|| hitting 1e6 two steps before the NaN — clip threshold was missing from the optimizer config.",
+    explanation: "Exploding gradients (common in RNNs, transformers on long sequences) cause parameter updates to diverge. Clip by global norm: scale all gradients uniformly when ||g|| > threshold. Per-layer learning rate adaptation is what adaptive optimizers like Adam and RMSProp do — it is unrelated to clipping, which is a one-shot magnitude bound not a per-parameter normalization. Production tell: training loss spikes to NaN at step 1200 of a 10k-step run; gradient norm logs show ||g|| hitting 1e6 two steps before the NaN — clip threshold was missing from the optimizer config.",
   },
   {
     id: 30, domain: 'Optimization',
@@ -359,10 +359,10 @@ const ALL_QUESTIONS = [
       'Prevents the model from memorizing early training examples',
       'Stabilizes training in early steps when weight initialization produces high-variance gradients',
       'Reduces the total number of training steps needed',
-      'Prevents catastrophic forgetting',
+      'Acts as implicit curriculum learning — low LR in early steps biases the model toward easy examples that appear first in the shuffled dataset',
     ],
     correct: 1,
-    explanation: "At initialization, weights are random and gradients are noisy. High LR early → large unstable updates. Warmup starts with tiny LR, increases linearly. Prevents early divergence, especially with Adam. In production this breaks as: fine-tuning a pretrained model with full LR from step 0 causes catastrophic forgetting in the first 100 steps; loss recovers but pretrained features are destroyed, final accuracy 6% below baseline.",
+    explanation: "At initialization, weights are random and gradients are noisy. High LR early → large unstable updates. Warmup starts with tiny LR, increases linearly. Prevents early divergence, especially with Adam which has cold momentum estimates in early steps. Warmup has nothing to do with example ordering or curriculum effects — it is purely about taming the optimizer's behavior during the cold-start phase. Production tell: fine-tuning a pretrained model with full LR from step 0 causes catastrophic forgetting in the first 100 steps; loss recovers but pretrained features are destroyed, final accuracy 6% below baseline.",
   },
   // Feature Engineering — questions 31-33
   {
@@ -667,11 +667,11 @@ const ALL_QUESTIONS = [
     options: [
       'Boolean columns cannot be indexed in SQL',
       'When a column has very few distinct values, a full table scan with parallel execution is cheaper than random I/O via the index',
-      'Add explicit USE INDEX hints to force the query planner to use low-selectivity indexes',
+      'The planner ignores any index whose cardinality ratio falls below the auto_analyze threshold — updating table statistics via ANALYZE would make the planner use it',
       'Non-selective indexes only work with composite keys',
     ],
     correct: 1,
-    explanation: "Index selectivity = distinct values / total rows. For a boolean column (2 distinct values on 100M rows), each lookup still fetches ~50% of the table via scattered I/O — worse than a sequential scan. Planners correctly skip these indexes. Production tell: adding an index on is_active does not speed up the query; EXPLAIN shows sequential scan chosen by planner — a composite index on (is_active, created_at) with a date filter would have the selectivity needed.",
+    explanation: "Index selectivity = distinct values / total rows. For a boolean column (2 distinct values on 100M rows), each lookup fetches ~50% of the table via scattered I/O — worse than a sequential scan even with current statistics. Running ANALYZE updates the planner's cardinality estimates, but if the index is genuinely non-selective, accurate statistics will confirm the sequential scan is correct — ANALYZE fixes stale estimates, not the selectivity problem. Production tell: adding an index on is_active does not speed up the query; EXPLAIN shows sequential scan chosen by planner — a composite index on (is_active, created_at) with a date filter would have the selectivity needed.",
   },
   {
     id: 56, domain: 'SQL & Data',

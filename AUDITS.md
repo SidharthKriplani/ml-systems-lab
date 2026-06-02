@@ -618,13 +618,19 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 013 | Full contrast audit — 200+ inline rgba tint backgrounds invisible at low brightness | 2026-05-27 | Mobile / Visual Consistency | ✅ Fixed |
 | 014 | Mobile horizontal overflow — no overflow-x:hidden on html/body; bottom nav overflow narrow viewports | 2026-05-27 | Mobile | ✅ Fixed |
 | 015 | Mobile UI/UX comprehensive audit — 10 findings across layout, touch targets, platform support | 2026-05-27 | Mobile | 8/10 fixed ✅ · 2 deferred |
-| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ #16.3 fixed v4.28 · 2 open ⚠️ (emoji residue) |
+| 016 | Visual Consistency — emoji residue across tabs + HomeTab TODAY row mobile test | 2026-05-29 | Visual Consistency / Mobile | ✅ All resolved v4.49 — ⚡→SVG CombinatorTab, 🎉→SVG ProjectLabTab |
 | 017 | Codebase health sweep — CLAUDE.md stale filenames, hardcoded fonts in App.jsx, residual hex, LandscapeTab undocumented | 2026-05-29 | BUILD / Visual Consistency | ✅ All 4 findings resolved (2026-06-02): #17.1 CLAUDE.md fixed, #17.2 fonts fixed, #17.3 LINEAGE.md entry added, #17.4 hex residual fixed |
 | 018 | Mobile hover sticky bug sweep — PAL fix pattern applied to 4 tabs; GradientTab JSON.parse crash guard | 2026-05-29 | Mobile / BUILD | ✅ All 6 fixed |
 | 019 | Guidance completeness final sweep — 4 gaps fixed (TakeHome, Landscape, Combinator, Ask); 27 tabs confirmed clean | 2026-05-29 | Guidance Completeness | ✅ All 4 fixed |
 | 020 | Post-sprint state check — v4.28 + v4.29 additions (SpotTheFlawTab, 10 new interactive modules, all COMING_SOON cleared) | 2026-05-30 | BUILD / Content Integrity | See below |
 | 021 | Post-v4.33 state check — ProjectLabTab routing + brace balance, msl_projectlab_churn_data in METRICS.md, SpotTheFlaw scenario count vs GlobalSearch, .msl-cloud-map mobile render | 2026-05-31 | BUILD / Content Integrity | 1 open ⚠️ |
 | 022 | Mobile sidebar always-visible bug — `display:'flex'` inline style on DesktopSidebar overrode CSS `display:none` on all viewports | 2026-05-30 | Mobile / BUILD | ✅ Fixed v4.34 |
+| 023 | Content Integrity — SHAP YouTube ID broken (private/removed video) | 2026-06-02 | Content Integrity | ✅ Fixed v4.48 — replaced with StatQuest ID 3032t--_wsg |
+| 024 | Content boundary — SystemDesign RAG scenarios belong in GAL not MSL | 2026-06-02 | Content Integrity | ✅ Fixed v4.43 — RAGArchitecture module removed |
+| 025 | v4.46 batch build — Freemium v2, YouTube, behavioral bank, Tally, emoji→SVG | 2026-06-02 | BUILD | ✅ All 5 items complete |
+| 026 | v4.47+v4.48 mega-batch — gating, filter, lazy load, mobile, posts 38-40, audits, export, keyboard nav, readiness | 2026-06-02 | BUILD | ✅ 22 items complete, 1 blocked (Interview Experiences) |
+| 027 | Interview zone accessibility — all 9 tools verified, 2 description fixes | 2026-06-02 | Navigation / Discoverability | ✅ All clean — 2 fixes in App.jsx |
+| 028 | v4.49+v4.50 batch — posts 41-48, bookmarking ×18 tabs, design tokens, emoji, 23 distractors | 2026-06-02 | BUILD / Content Integrity | ✅ All complete; 1 low finding (posts 31-34 near-duplicates) |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
@@ -828,4 +834,61 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | High | 0 | — |
 | Medium | 0 | — |
 | Low | 0 | All findings resolved |
+
+---
+
+### #027 — 2026-06-02 · v4.49 Interview Zone Accessibility Audit
+
+**Scope:** All 9 interview tools in App.jsx — INTERVIEW_TOOLS array, TAB_TO_ZONE, ALL_TABS imports, descriptions  
+**Trigger:** NEXT.md v4.49 Item 4  
+**Output:** All 9 tools verified; 2 minor description fixes applied
+
+| # | Tool | Tab ID | Import | Zone | Description | Status |
+|---|------|--------|--------|------|-------------|--------|
+| 1 | Interview Q&A | `interview` | ✅ | `interview` | Accurate (128 questions) | ✅ Clean |
+| 2 | Take-Home Bank | `takehome` | ✅ | `interview` | Accurate | ✅ Clean |
+| 3 | Defense Plan | `defense` | ✅ | `interview` | Accurate | ✅ Clean |
+| 4 | Combinator | `combinator` | ✅ | `interview` | Accurate | ✅ Clean |
+| 5 | Verbal Practice | `verbal` | ✅ | `interview` | Accurate | ✅ Clean |
+| 6 | Spot the Flaw | `spottheflaw` | ✅ | `interview` | **Fixed** — "10 analyses" → "12 analyses" | ✅ Fixed |
+| 7 | Trainer | `trainer` | ✅ | `practice` (default) | Accurate | ✅ Clean |
+| 8 | Code Bugs | `codebugs` | ✅ | `practice` (default) | Accurate | ✅ Clean |
+| 9 | Case Studies | `casestudies` | ✅ | `practice` (default) | Accurate | ✅ Clean |
+| — | Staff Layer | `stafflayer` | ✅ | `practice` (default) | Accurate (10th tool, correctly in Drills) | ✅ Clean |
+
+**Fixes applied to `src/App.jsx`:**
+1. `spottheflaw` description: `"10 real ML analyses"` → `"12 real ML analyses"` (tab has 12 scenarios stf01–stf12)
+2. InterviewGrid heading: `"Nine tools. One loop."` → `"Six tools. One loop."` (grid renders 6 INTERVIEW_TOOLS; Drills tools are in Practice zone)
+
+**No routing, import, or zone assignment issues found. Brace delta 0.**
+
+---
+
+### #028 — 2026-06-02 · v4.49 + v4.50 Batch Build (Gradient Posts, Bookmarking, Design Tokens, Emoji Sweep, Distractor Quality, BookmarkButton Expansion)
+
+**Scope:** All v4.49 items + v4.50 partial batch  
+**Trigger:** Full session build batch  
+**Output:** All items complete; 0 blockers
+
+| # | Item | Files | Status |
+|---|------|-------|--------|
+| 1 | Gradient posts 41–45 | `GradientTab.jsx` | ✅ 5 posts, POST_PRACTICE wired, brace 0 |
+| 2 | YouTube IDs — posts 43+44 | `GradientTab.jsx` | ✅ post 43: jRM5_Z31y5U, post 44: UFpF108gyaw (both oEmbed 200) |
+| 3 | BookmarkButton — 8 tabs | 8 tab files | ✅ All brace 0 |
+| 4 | Design token extraction | `index.css` + 40+ files | ✅ 3 tokens in :root, 237 replacements |
+| 5 | Emoji sweep | `CombinatorTab.jsx`, `ProjectLabTab.jsx` | ✅ ⚡→SVG (4 sites), 🎉→SVG star |
+| 6 | Distractor quality pass | `CombinatorTab.jsx`, `TrainerTab.jsx` | ✅ 23 questions improved (12+11) |
+| 7 | BookmarkButton — 10 more tabs | 10 tab files | ✅ All brace 0, var(--prime-bg-light) used |
+| 8 | Gradient posts 46–48 | `GradientTab.jsx` | ✅ 3 posts (recsys, DiD, cold-start framing), brace 0 |
+| 9 | MD spine sync | METRICS, IDEAS, BRAIN_TRANSFER | ✅ Table fixed, dupe removed, state updated |
+
+**Content integrity note (low severity, no action needed this session):** GradientTab posts 31–34 appear to be near-duplicate earlier drafts of posts 20–21 (Validation Set Leakage and Feature Store Time-Travel). They ship with full content and don't break anything. A future content audit pass should consolidate or differentiate them.
+
+**Open findings (post-#028):**
+
+| Severity | Count | Items |
+|----------|-------|-------|
+| High | 0 | — |
+| Medium | 0 | — |
+| Low | 1 | GradientTab posts 31–34 — near-duplicate earlier drafts (see content integrity note above) |
 

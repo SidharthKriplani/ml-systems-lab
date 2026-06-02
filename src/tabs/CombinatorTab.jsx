@@ -17,9 +17,9 @@ const MCQ_QUESTIONS = [
     explanation: "SVMs use distance metrics (kernel), making them sensitive to feature scale. Tree-based methods are invariant to monotonic transformations. In production this breaks as: SVM trained on unscaled features has near-random predictions in serving; the tell is train AUC 0.85, serving AUC 0.52 with no obvious data issue." },
   { id: 'C3', domain: 'Feature Engineering', type: 'mcq',
     q: 'What is the correct way to impute missing values to avoid data leakage?',
-    options: ['Impute with column mean computed on full dataset', 'Impute with median computed on training set only, then apply same to test', 'Drop rows with missing values', 'Fit imputer on train + validation combined to reduce imputation variance'],
+    options: ['Impute with column mean computed on full dataset', 'Impute with median computed on training set only, then apply same to test', 'Impute with the global median recomputed fresh on each evaluation fold to keep statistics current', 'Fit imputer on train + validation combined to reduce imputation variance'],
     correct: 1,
-    explanation: "Fit imputer on train only, then transform test with the same statistics. Leakage occurs whenever the imputer sees any data outside the training fold — including validation folds or the combined train+val set. Production tell: validation AUC is suspiciously close to train AUC; model degrades sharply on truly held-out data collected after the training cutoff." },
+    explanation: "Fit imputer on train only, then transform test with the same statistics. Leakage occurs whenever the imputer sees any data outside the training fold — including validation folds or the combined train+val set. Recomputing on each fold (option C) sounds principled but still leaks: the fold's validation labels inform which rows are in that fold's 'fresh' statistics. Production tell: validation AUC is suspiciously close to train AUC; model degrades sharply on truly held-out data collected after the training cutoff." },
   { id: 'C4', domain: 'Feature Engineering', type: 'mcq',
     q: 'Log transformation of a right-skewed feature primarily helps:',
     options: ['Reduce feature correlation', 'Make tree models converge faster', 'Satisfy normality assumptions in linear models', 'Remove outliers'],
@@ -28,14 +28,14 @@ const MCQ_QUESTIONS = [
   // Model Evaluation
   { id: 'C5', domain: 'Model Evaluation', type: 'mcq',
     q: 'Stratified K-fold cross-validation is essential when:',
-    options: ['Dataset has more than 10,000 samples', 'Target class distribution is imbalanced', 'Features have different scales', 'Model has many hyperparameters'],
+    options: ['Dataset has more than 10,000 samples', 'Target class distribution is imbalanced', 'Features have different scales', 'Cross-validation is nested inside hyperparameter search'],
     correct: 1,
-    explanation: "Stratified k-fold preserves class proportions in each fold, preventing folds from having no positive examples in rare-class scenarios. In production this breaks as: standard k-fold on 1% positive-rate data produces folds with 0 positives; log loss returns NaN and the training job silently produces a useless model." },
+    explanation: "Stratified k-fold preserves class proportions in each fold, preventing folds from having no positive examples in rare-class scenarios. Nested CV for hyperparameter search is unrelated to stratification — it addresses a different problem (selection bias). Feature scaling affects distance-based models but is not a reason for stratification. In production this breaks as: standard k-fold on 1% positive-rate data produces folds with 0 positives; log loss returns NaN and the training job silently produces a useless model." },
   { id: 'C6', domain: 'Model Evaluation', type: 'mcq',
-    q: 'Which metric is most appropriate for ranking model evaluation?',
-    options: ['MAP@K (Mean Average Precision at K)', 'F1 Score', 'NDCG@K', 'AUC-ROC'],
+    q: 'Which metric is most appropriate for ranking model evaluation when top-position relevance matters most?',
+    options: ['MAP@K (Mean Average Precision at K)', 'Macro-averaged AUC across item categories', 'NDCG@K', 'AUC-ROC'],
     correct: 2,
-    explanation: "NDCG@K captures position-weighted relevance via log-discounting: relevant item at rank 1 is worth far more than at rank 10. MAP@K also averages precision at each relevant rank but weights all positions within K equally — it misses the concentration of value at the very top of the list. Production tell: AUC looks flat but user engagement drops; NDCG@5 reveals the model is burying relevant items below rank 5 where users rarely scroll." },
+    explanation: "NDCG@K captures position-weighted relevance via log-discounting: relevant item at rank 1 is worth far more than at rank 10. MAP@K also averages precision at each relevant rank but weights all positions within K equally — it misses the concentration of value at the very top of the list. Macro-AUC measures discriminative ability per class, not list ordering quality, and AUC-ROC collapses the ranking problem to a binary classification view. Production tell: AUC looks flat but user engagement drops; NDCG@5 reveals the model is burying relevant items below rank 5 where users rarely scroll." },
   { id: 'C7', domain: 'Model Evaluation', type: 'mcq',
     q: 'Log loss penalizes:',
     options: ['Only incorrect predictions', 'Confident wrong predictions most severely', 'Low-confidence correct predictions more harshly than high-confidence wrong ones', 'Predictions far from 0.5 only'],
@@ -59,9 +59,9 @@ const MCQ_QUESTIONS = [
     explanation: "Network latency to Redis/Cassandra is typically 1-5ms per call. Multiple lookups add up. Solutions: batch feature requests, co-locate feature store and model server, cache hot user features. Production tell: p99 serving latency is 200ms but model compute is only 20ms; a flame graph shows 80% of time spent in sequential Redis calls." },
   { id: 'C11', domain: 'ML Systems', type: 'mcq',
     q: 'Shadow deployment differs from canary deployment in that:',
-    options: ['Shadow is more gradual', 'Shadow serves real users', 'Shadow runs new model but discards responses — zero user impact', 'Shadow uses a different dataset'],
+    options: ['Shadow deployment is equivalent to a canary at 0% traffic — both serve the new model to a small subset', 'Shadow serves real users', 'Shadow runs new model but discards responses — zero user impact', 'Shadow uses a separate holdout dataset rather than live traffic'],
     correct: 2,
-    explanation: "Shadow: mirror production traffic to new model, compare outputs, no user impact. Canary: new model serves real users (small %). Shadow is pure offline validation on live traffic. Choose shadow when serving degraded results to even 1% of users is unacceptable — high-stakes, low-reversibility decisions. Choose canary when you need real user behavior signal." },
+    explanation: "Shadow: mirror production traffic to new model, compare outputs, no user impact. Canary: new model serves real users (small %). Shadow is pure offline validation on live traffic — not a canary at 0%, which would serve nobody and provide no signal. Choose shadow when serving degraded results to even 1% of users is unacceptable — high-stakes, low-reversibility decisions. Choose canary when you need real user behavior signal." },
   { id: 'C12', domain: 'ML Systems', type: 'mcq',
     q: 'What is the most important property of a training-serving skew check?',
     options: ['Comparing model weights between training and serving', 'Verifying feature transformations are identical between training and serving', 'Checking that serving latency is <100ms', 'Ensuring model version is current'],
@@ -91,14 +91,14 @@ const MCQ_QUESTIONS = [
   // Deep Learning
   { id: 'C17', domain: 'Deep Learning', type: 'mcq',
     q: 'Dropout during training acts as:',
-    options: ['A learning rate scheduler', 'An ensemble of exponentially many sub-networks', 'Gradient clipping', 'Feature selection'],
+    options: ['A learning rate scheduler', 'An ensemble of exponentially many sub-networks', 'An implicit L2 regularizer — equivalent to weight decay on the dropped units', 'Feature selection'],
     correct: 1,
-    explanation: "Dropout randomly zeros units. Equivalent to training 2^N networks sharing weights, then averaging at test time (approximate). Prevents co-adaptation, acts as ensemble. In production this breaks as: dropout left enabled at serving time (model.train() instead of model.eval()); predictions are stochastic and non-reproducible, causing inconsistent user-facing results." },
+    explanation: "Dropout randomly zeros units. Equivalent to training 2^N networks sharing weights, then averaging at test time (approximate). Prevents co-adaptation, acts as ensemble. Dropout and L2/weight decay are related but distinct: weight decay penalizes magnitude of all weights continuously, while dropout creates sparsity stochastically. In production this breaks as: dropout left enabled at serving time (model.train() instead of model.eval()); predictions are stochastic and non-reproducible, causing inconsistent user-facing results." },
   { id: 'C18', domain: 'Deep Learning', type: 'mcq',
     q: 'When fine-tuning a pretrained language model, which layers should be unfrozen first?',
-    options: ['Embedding layers', 'First (earliest) transformer layers', 'Last (top) layers closest to the output', 'All layers with layer-specific learning rates (largest LR for top layers)'],
+    options: ['Embedding layers — they are closest to the raw input and need the most domain adaptation', 'First (earliest) transformer layers', 'Last (top) layers closest to the output', 'All layers with layer-specific learning rates (largest LR for top layers)'],
     correct: 2,
-    explanation: "Lower layers encode general features (syntax, basic semantics). Upper layers encode task-specific features. Fine-tune top layers first, optionally unfreeze lower layers with smaller LR. Layer-specific learning rates (LLRD) are a valid technique for full fine-tuning but don't substitute for starting with only the top layers unfrozen. In production this breaks as: fine-tuning all layers with a single high LR catastrophically forgets general representations; validation loss explodes after epoch 1 on a small domain dataset." },
+    explanation: "Lower layers encode general features (syntax, basic semantics) that transfer well. Upper layers encode task-specific features that need the most adaptation. Fine-tune top layers first, optionally unfreeze lower layers with smaller LR. Embedding layers encode vocabulary and should almost never be fine-tuned first — they encode distributional priors that are expensive to relearn. Layer-specific learning rates (LLRD) are a valid technique for full fine-tuning but don't substitute for starting with only the top layers unfrozen. In production this breaks as: fine-tuning all layers with a single high LR catastrophically forgets general representations; validation loss explodes after epoch 1 on a small domain dataset." },
   { id: 'C19', domain: 'Deep Learning', type: 'mcq',
     q: 'Batch size in deep learning training: doubling batch size with fixed epochs typically:',
     options: ['Requires proportionally decreasing the learning rate to maintain convergence', 'Improves generalization', 'Degrades generalization — larger batches find sharper minima', 'Always requires halving learning rate'],
@@ -112,9 +112,9 @@ const MCQ_QUESTIONS = [
   // MLOps
   { id: 'C21', domain: 'MLOps', type: 'mcq',
     q: 'Data versioning in ML pipelines is most critical for:',
-    options: ['Reducing storage costs', 'Enabling reproducible model training and debugging production issues', 'Speeding up data ingestion', 'Preventing data leakage'],
+    options: ['Reducing storage costs', 'Enabling reproducible model training and debugging production issues', 'Enforcing schema validation at the point of data ingestion', 'Preventing data leakage'],
     correct: 1,
-    explanation: "If a model misbehaves in production, you need to identify the exact training data. DVC, Delta Lake time-travel, or dataset snapshots enable: rollback, reproduce training, audit lineage. Production tell: model starts misbehaving after a data pipeline update; without lineage you cannot determine whether the bug is in code or training data." },
+    explanation: "If a model misbehaves in production, you need to identify the exact training data. DVC, Delta Lake time-travel, or dataset snapshots enable: rollback, reproduce training, audit lineage. Schema validation is a separate concern — it catches malformed records at write time but does not preserve a snapshot of what data a specific model was trained on. Production tell: model starts misbehaving after a data pipeline update; without lineage you cannot determine whether the bug is in code or training data." },
   { id: 'C22', domain: 'MLOps', type: 'mcq',
     q: 'Feature stores provide value primarily by:',
     options: ['Replacing model serving infrastructure', 'Eliminating training-serving skew and enabling feature reuse across teams', 'Automatically engineering features', 'Reducing model training time'],
@@ -122,9 +122,9 @@ const MCQ_QUESTIONS = [
     explanation: "Feature stores: (1) single source of truth for features, (2) same computation in training (batch) and serving (online), (3) cross-team feature sharing and discovery. In production this breaks as: two teams compute 'user_30d_spend' differently; model trained on Team A's definition silently receives Team B's version at serving, causing a 15% revenue prediction bias." },
   { id: 'C23', domain: 'MLOps', type: 'mcq',
     q: 'Model monitoring differs from application monitoring in that:',
-    options: ['Application monitoring is more important', 'Model monitoring requires tracking statistical properties of data and predictions, not just system health', 'Model monitoring catches issues earlier by tracking business metrics (CTR, revenue) directly', 'They are identical in practice'],
+    options: ['Application monitoring is more important', 'Model monitoring requires tracking statistical properties of data and predictions, not just system health', 'Model monitoring catches issues earlier by tracking business metrics (CTR, revenue) directly', 'Model monitoring can be fully replaced by logging all predictions to a data warehouse and running weekly accuracy queries'],
     correct: 1,
-    explanation: "App monitoring: latency, error rate, uptime. Model monitoring additionally requires: feature drift (PSI), prediction drift, label feedback quality, and calibration. Business metrics (CTR, revenue) are lagging indicators — model monitoring catches statistical drift days before business metrics move, not by tracking business metrics directly. Production tell: infra dashboards all green but CTR drops 20%; model monitoring on prediction score distribution would have caught the drift three days earlier." },
+    explanation: "App monitoring: latency, error rate, uptime. Model monitoring additionally requires: feature drift (PSI), prediction drift, label feedback quality, and calibration. Business metrics (CTR, revenue) are lagging indicators — model monitoring catches statistical drift days before business metrics move, not by tracking business metrics directly. Weekly accuracy queries are too coarse and too slow — PSI and prediction distribution monitoring detect problems in near-real-time. Production tell: infra dashboards all green but CTR drops 20%; model monitoring on prediction score distribution would have caught the drift three days earlier." },
   { id: 'C24', domain: 'MLOps', type: 'mcq',
     q: 'A/B testing in MLOps — the holdback group (never-treat) serves what purpose?',
     options: ['Increases statistical power', 'Measures long-term impact beyond initial experiment window', 'Reduces infrastructure cost', 'Prevents network effects'],
@@ -269,12 +269,12 @@ const MCQ_QUESTIONS = [
     q: 'Platt scaling and isotonic regression are both post-hoc calibration methods. When should you prefer isotonic regression?',
     options: [
       'Always — isotonic regression is strictly better',
-      'When training data is small (< 1000 samples)',
+      'When the model is already well-calibrated and you want a lightweight fine-tuning step',
       'When the calibration curve is strongly non-monotonic and you have sufficient held-out data',
       'When the model is a logistic regression',
     ],
     correct: 2,
-    explanation: "Platt scaling fits a parametric sigmoid — fast but assumes a monotone miscalibration pattern. Isotonic regression is non-parametric and flexible, but prone to overfitting on small calibration sets. Production tell: isotonic regression ECE is 0.01 on the calibration set but 0.08 on new data — the calibration set was too small and isotonic overfit to its noise.",
+    explanation: "Platt scaling fits a parametric sigmoid — fast but assumes a monotone miscalibration pattern. Isotonic regression is non-parametric and flexible, but prone to overfitting on small calibration sets. If the model is already well-calibrated, neither method adds value and isotonic regression would actively overfit calibration-set noise. Production tell: isotonic regression ECE is 0.01 on the calibration set but 0.08 on new data — the calibration set was too small and isotonic overfit to its noise.",
   },
   {
     id: 36, domain: 'Model Evaluation',
@@ -282,11 +282,11 @@ const MCQ_QUESTIONS = [
     options: [
       'AUC-ROC is a poor metric for ranking models',
       'Offline evaluation uses logged data that doesn\'t reflect counterfactual user responses to new rankings',
-      'The model was trained on too little data',
+      'The AUC threshold was not tuned to the operating point matching the production decision boundary',
       'CTR is a lagging indicator that takes months to stabilize',
     ],
     correct: 1,
-    explanation: "Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data can't capture. Production tell: new ranker shows +8% offline NDCG but 0% online CTR lift — the offline gain was measuring re-ranking of items users had already been shown under the old policy.",
+    explanation: "Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data can't capture. Threshold tuning matters for precision/recall but not for the AUC-vs-CTR gap — threshold selection would shift the operating point on the ROC curve but would not explain a discrepancy between offline ranking quality and online user response. Production tell: new ranker shows +8% offline NDCG but 0% online CTR lift — the offline gain was measuring re-ranking of items users had already been shown under the old policy.",
   },
   // ML Systems — questions 37-39
   {
@@ -586,9 +586,9 @@ const MCQ_QUESTIONS = [
   },
   { id: 'C41', domain: 'Feature Engineering', type: 'mcq',
     q: 'You detect that embedding vectors for a categorical feature are drifting over time in production. What is the most principled first diagnostic step?',
-    options: ['Retrain the model immediately', 'Compute cosine similarity between rolling weekly centroids of each category\'s embedding and flag categories whose centroid drift exceeds a threshold', 'Increase embedding dimension', 'Switch to one-hot encoding'],
+    options: ['Retrain the model immediately', 'Compute cosine similarity between rolling weekly centroids of each category\'s embedding and flag categories whose centroid drift exceeds a threshold', 'Increase embedding dimension to capture more distributional complexity', 'Apply Platt scaling to recalibrate the downstream model\'s outputs to recent data'],
     correct: 1,
-    explanation: "Embedding drift can be caught by tracking per-category centroid movement via cosine similarity over time windows. Sudden drops signal distributional shift or data pipeline issues before model performance degrades. Production tell: cosine similarity of item embedding centroids drops from 0.95 to 0.60 overnight; investigation reveals a data pipeline bug that zeroed out a batch of item features." },
+    explanation: "Embedding drift can be caught by tracking per-category centroid movement via cosine similarity over time windows. Sudden drops signal distributional shift or data pipeline issues before model performance degrades. Increasing embedding dimension does not address drift — it increases capacity but does not diagnose or fix the root cause. Platt scaling recalibrates prediction probabilities, not embedding representations, and does not address the underlying input drift. Production tell: cosine similarity of item embedding centroids drops from 0.95 to 0.60 overnight; investigation reveals a data pipeline bug that zeroed out a batch of item features." },
   { id: 'C42', domain: 'Feature Engineering', type: 'mcq',
     q: 'Feature hashing maps high-cardinality categoricals to a fixed-size vector. The primary tradeoff vs. learned embeddings is:',
     options: ['Hashing is slower at inference', 'Hashing eliminates the need for a vocabulary but introduces collision-based noise that conflates unrelated categories', 'Hashing always outperforms embeddings on cold-start', 'Hashing requires more memory'],
@@ -621,14 +621,14 @@ const MCQ_QUESTIONS = [
     explanation: "ECE partitions predictions into M bins by confidence, computes |accuracy - confidence| per bin weighted by bin size, and averages. A perfectly calibrated model has ECE = 0. Production tell: model reports ECE = 0.02 on validation but ECE = 0.18 on production traffic; the validation set lacked the tail distributions that appear in production queries." },
   { id: 'C48', domain: 'Model Evaluation', type: 'mcq',
     q: 'You tune a classification threshold to maximize F1 on a held-out validation set. What is the correct methodology to report final performance?',
-    options: ['Report F1 on the same validation set used for tuning', 'Report F1 on a separate test set never seen during threshold selection', 'Report F1 averaged across all thresholds', 'Report AUC instead of F1'],
+    options: ['Report F1 on the same validation set used for tuning', 'Report F1 on a separate test set never seen during threshold selection', 'Report F1 averaged across all thresholds', 'Re-tune the threshold on the test set and report that F1 — since test data is larger than validation, the estimate is more stable'],
     correct: 1,
-    explanation: "Threshold tuning on validation data is a form of optimization that can overfit to that split. The true generalization estimate requires a held-out test set where no decision was made. Production tell: precision/recall at chosen threshold degrades by 15 points on the first week of live traffic — the threshold was tuned to validation noise rather than signal." },
+    explanation: "Threshold tuning on validation data is a form of optimization that can overfit to that split. The true generalization estimate requires a held-out test set where no decision was made. Re-tuning on the test set is the same error compounded — you have now used test data for optimization and the reported F1 is as optimistic as if you had never split the data at all. Production tell: precision/recall at chosen threshold degrades by 15 points on the first week of live traffic — the threshold was tuned to validation noise rather than signal." },
   { id: 'C49', domain: 'Model Evaluation', type: 'mcq',
     q: 'The disagreement between macro-F1 and micro-F1 on a multi-class problem most likely indicates:',
-    options: ['The model is overfitting', 'Significant class imbalance — micro-F1 is dominated by frequent classes, macro-F1 weights all classes equally', 'A bug in the evaluation code', 'The learning rate is too high'],
+    options: ['The model is overfitting to the training distribution', 'Significant class imbalance — micro-F1 is dominated by frequent classes, macro-F1 weights all classes equally', 'Weighted-F1 should be used instead to give a definitive single number', 'The threshold was not tuned per-class'],
     correct: 1,
-    explanation: "Micro-F1 aggregates TP/FP/FN globally before computing F1, so large classes dominate. Macro-F1 computes per-class F1 and averages. A large gap reveals the model performs differently across class sizes. Production tell: micro-F1 = 0.92 looks great; macro-F1 = 0.61 reveals the model ignores 3 minority classes entirely, which are exactly the edge cases the business cares most about." },
+    explanation: "Micro-F1 aggregates TP/FP/FN globally before computing F1, so large classes dominate. Macro-F1 computes per-class F1 and averages. A large gap reveals the model performs differently across class sizes — it is not resolved by switching to weighted-F1 (which just weights by support, similar to micro-F1) or per-class thresholding (which changes precision/recall tradeoffs but not the structural imbalance). Production tell: micro-F1 = 0.92 looks great; macro-F1 = 0.61 reveals the model ignores 3 minority classes entirely, which are exactly the edge cases the business cares most about." },
   { id: 'C50', domain: 'Model Evaluation', type: 'mcq',
     q: 'Offline NDCG is high but online CTR drops after deployment. The most likely explanation is:',
     options: ['The model overfit to training data', 'Offline labels (clicks from historical logs) reflect selection bias from the prior ranker, not true user relevance', 'NDCG is the wrong metric for ranking', 'The serving infrastructure is slow'],
@@ -636,9 +636,9 @@ const MCQ_QUESTIONS = [
     explanation: "Logs collected under a prior ranker are not IID samples — items that were never ranked high were never clicked. The offline metric is optimistic because it only evaluates relevance on items the old ranker selected. In production this breaks as: new ranker with +6% offline NDCG shows 0% online lift; the offline gain came from re-scoring items that were already being shown, not from surfacing better items." },
   { id: 'C51', domain: 'Model Evaluation', type: 'mcq',
     q: 'Platt scaling calibrates a classifier\'s scores by:',
-    options: ['Retraining the last layer', 'Fitting a logistic regression on the model\'s raw scores using a held-out calibration set', 'Applying temperature scaling to logits', 'Normalizing scores to sum to 1'],
+    options: ['Retraining the last layer with a smaller learning rate on the calibration set', 'Fitting a logistic regression on the model\'s raw scores using a held-out calibration set', 'Applying temperature scaling to logits', 'Normalizing scores to sum to 1'],
     correct: 1,
-    explanation: "Platt scaling learns two parameters (A, B) by fitting sigmoid(A·score + B) to calibration labels. It is cheap, post-hoc, and effective for SVMs and GBTs whose raw outputs are not well-calibrated probabilities. Production tell: GBT model outputs raw leaf scores used directly as fraud probabilities; downstream threshold at 0.5 catches only 20% of fraud — Platt scaling would have mapped scores to true probabilities." },
+    explanation: "Platt scaling learns two parameters (A, B) by fitting sigmoid(A·score + B) to calibration labels. It is cheap, post-hoc, and effective for SVMs and GBTs whose raw outputs are not well-calibrated probabilities. Retraining the last layer is a valid fine-tuning technique but is not calibration — it changes the model's predictions, not just their probability mapping. Temperature scaling (dividing logits by T) is a different one-parameter calibration method used primarily for neural network softmax outputs. Production tell: GBT model outputs raw leaf scores used directly as fraud probabilities; downstream threshold at 0.5 catches only 20% of fraud — Platt scaling would have mapped scores to true probabilities." },
   { id: 'C52', domain: 'ML Systems', type: 'mcq',
     q: 'Schema-on-read vs. schema-on-write in a feature serving context: which is safer for production ML?',
     options: ['Schema-on-read, because it is more flexible', 'Schema-on-write, because feature types and shapes are validated at write time, catching pipeline errors before they corrupt serving', 'They are equivalent in production', 'Schema-on-read is safer because it defers validation'],
@@ -970,7 +970,7 @@ const COMPANY_TRACKS = [
     label: 'Startup/Growth',
     desc: 'Full-stack ML: features → model → deploy → monitor. Breadth over depth.',
     domains: ['Feature Engineering', 'MLOps', 'Model Evaluation', 'ML Systems'],
-    icon: '⚡',
+    icon: 'L',
   },
 ]
 
@@ -1344,7 +1344,7 @@ export default function CombinatorTab({ onNavigate }) {
           <span style={{
             fontSize: '1.1rem',
             filter: challengeMode ? 'none' : 'grayscale(1) opacity(0.5)',
-          }}>⚡</span>
+          }}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline-block', verticalAlign: 'middle' }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: challengeMode ? 'var(--prime)' : 'var(--ink-hi)' }}>
               Challenge Mode — All Domains
@@ -1431,7 +1431,7 @@ export default function CombinatorTab({ onNavigate }) {
             padding: '0.3rem 0.75rem', borderRadius: 99, marginBottom: '0.75rem',
             background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)',
           }}>
-            <span style={{ fontSize: '0.85rem' }}>⚡</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'inline-block', verticalAlign: 'middle', color: 'var(--prime)' }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--prime)', letterSpacing: '0.04em' }}>
               Cross-Domain Challenge
             </span>
@@ -1730,7 +1730,7 @@ export default function CombinatorTab({ onNavigate }) {
               padding: '0.25rem 0.65rem', borderRadius: 99, marginTop: '0.5rem',
               background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)',
             }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)' }}>⚡ Cross-Domain</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--prime)', display: 'flex', alignItems: 'center', gap: '3px' }}><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Cross-Domain</span>
             </div>
           )}
           {selectedTrack && !challengeMode && (

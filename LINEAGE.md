@@ -46,6 +46,86 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.51 — Gradient posts 49–50, Series UI, post audit 31–34, YouTube ID (2026-06-02)
+
+**What shipped:**
+
+**Gradient posts 49–50 (`GradientTab.jsx`):** 2 posts completing the 50-post milestone:
+- Post 49: "The Recsys Feedback Loop You Can't Escape" (domain: design) — popularity spiral, exploration starvation, demographic homogenisation; 4 interventions (ε-greedy, IPS, popularity debiasing, diversity constraints); 3-metric production checkpoint
+- Post 50: "When CUPED Goes Wrong" (domain: causal) — 3 failure modes (treatment anticipation contamination, covariate non-stationarity, wrong population); 3 diagnostic checks (θ stability, covariate balance, dual p-value); when not to use CUPED
+YouTube ID for post 50: `W0kDiJiDcEE` (CUPED geometric interpretation, verified oEmbed 200). Total: 50 Gradient posts.
+
+**Series + Tags UI (`GradientTab.jsx`):** Series filter row added above domain filter pills. `SERIES` constant defines 5 named series + All. `activeSeries` state drives filtering. `filtered` computation ANDs series + domain. `handleSeriesChange` resets domain to 'all' on series switch. Series: Silent Failures (10 posts), Production Diagnostics (6), Architecture Decisions (10), Math & Foundations (11), Interview & Career (5). Unassigned posts (20, 26, 27, 31–34) visible under All Series. Brace delta 0.
+
+**Post 31–34 content differentiation (`GradientTab.jsx`):** All 4 near-duplicate posts rewritten with genuinely distinct angles:
+- Post 31: "The Feature Store API Trap" — `get_online_features` vs `get_historical_features` misuse; fintech/credit risk context
+- Post 32: "Group-Level Contamination" — entity-level split failure; `GroupShuffleSplit`; recommender evaluation
+- Post 33: "Late-Arriving Data and the Retroactive Feature Trap" — nightly reprocessing jobs corrupting historical rows; immutable-row append fix
+- Post 34: "The Walk-Forward Validation Rule" — backtest methodology; expanding vs rolling window; walk-forward vs standard backtest diagnostic
+Titles, excerpts, bodies, and slugs all updated. IDs unchanged. Brace delta 0.
+
+**YouTube ID backfill:** Post 50 (CUPED): `W0kDiJiDcEE` verified. Posts 41/42/45 remain `youtube: []` — no suitable verified video found in search.
+
+**Brace balance:** GradientTab at delta 0. All other files unchanged.
+
+---
+
+### v4.50 — Gradient posts 46–48, YouTube IDs, distractor quality, BookmarkButton ×18 tabs, AUDITS #027+#028, series map (2026-06-02)
+
+**What shipped:**
+
+**Gradient posts 46–48 (`GradientTab.jsx`):** 3 posts from IDEAS.md backlog:
+- Post 46: "The Six Ways a Recommendation System Silently Stops Recommending" (domain: design) — all 6 failure modes with detection signals + health dashboard spec
+- Post 47: "When Difference-in-Differences Breaks: Parallel Trends Violations in Practice" (domain: causal) — 4 failure modes + 3 plausibility checks
+- Post 48: "Cold-Start Is Not a Model Problem, It's a Product Problem" (domain: design) — product framing, hybrid routing architecture, time-to-personalization metric
+POST_PRACTICE entries 46–48 added. Total: 48 Gradient posts.
+
+**YouTube IDs backfilled — posts 43+44:** Post 43 (Concept Drift): `jRM5_Z31y5U` verified live (oEmbed 200). Post 44 (Cold-Start): `UFpF108gyaw` verified live. Posts 41, 42, 45 remain `youtube: []` — no suitable verified video found.
+
+**Distractor quality pass:** 23 questions improved across CombinatorTab (12) + TrainerTab (11). All replaced trivially-eliminable wrong options with plausibly-wrong alternatives requiring real judgment to eliminate. Audit #008.2 closed.
+
+**BookmarkButton — 10 additional tabs:** AirflowTab, dbtTab, DataModelingTab, DeepLearningTab, DLFineTuningTab, DLServingTab, DataScienceTab, CausalInferenceTab, TimeSeriesTab, MLOpsPipelinesTab. BookmarkButton now present across all 18 practice tabs (8 from v4.49 + 10 this session). Uses `var(--prime-bg-light)` token. All brace delta 0.
+
+**AUDITS.md #027+#028:** #027 documents interview zone accessibility audit (9 tools verified, 2 fixes). #028 documents full v4.49+v4.50 build batch. Summary table updated through #028. Audit #016 (emoji residue) and #008.2 (distractor quality) both closed.
+
+**Series taxonomy documented in IDEAS.md:** 5 named series mapped across all 48 posts (Silent Failures, Production Diagnostics, Architecture Decisions, Math & Foundations, Interview & Career). UI build deferred until post count ≥ 50.
+
+**Brace balance:** All modified files at delta 0.
+
+---
+
+### v4.49 — Gradient posts 41–45, module bookmarking, design tokens, emoji sweep, interview audit (2026-06-02)
+
+**What shipped:**
+
+**Gradient posts 41–45 (`GradientTab.jsx`):** 5 new production ML posts added to the POSTS array:
+- Post 41: "Offline Evaluation ≠ Online Performance" (domain: eval) — 4 failure modes, shadow mode, A/B as ground truth
+- Post 42: "Label Noise in Production: When Your Ground Truth Lies" (domain: features) — 3 noise types, 30-day fraud label delay example, detection + fixes
+- Post 43: "Concept Drift: The Invisible Enemy" (domain: monitor) — 3 drift types, why PSI misses concept drift, pre-pandemic credit model example
+- Post 44: "The Cold-Start Trap" (domain: design) — 3 cold-start variants, Matthew effect, 4 strategies, production routing architecture
+- Post 45: "Silent Model Staleness" (domain: monitor) — 3 detection signals, Dec-to-Jun recommendation example, scheduled vs triggered retraining
+POST_PRACTICE entries 41–45 added. `youtube: []` on all 5 (no verified IDs yet). Total: 45 Gradient posts.
+
+**Module bookmarking — Save for Later:** `BookmarkButton` component added to 8 practice tab files (FeatureEngTab, ModelEvalTab, ModelsMathTab, ClassicalMLTab, SystemDesignTab, SparkLabTab, MonitoringTab, MLOpsDeployTab). Button appears below module nav pills, right-aligned. Bookmark icon SVG (filled = saved, outline = unsaved). State persists to `msl_bookmarks` via existing `src/utils/bookmarks.js`. HomeTab "Bookmarked modules" section already renders saved bookmarks with Open → and remove buttons. `isBookmarked` imported for initial state. All 8 files brace delta 0.
+
+**Design token extraction (`src/index.css` + all tab/component files):** 3 structural tokens added to `:root`:
+- `--card-pad-primary: 10px 14px` (40 occurrences replaced across tabs)
+- `--card-pad-secondary: 16px` (63 occurrences replaced across tabs)
+- `--prime-bg-light: rgba(240,165,0,0.12)` (130 occurrences replaced across tabs + App.jsx + components)
+Final reference counts: `var(--card-pad-primary)` 41 uses, `var(--card-pad-secondary)` 64 uses, `var(--prime-bg-light)` 134 uses. `rgba(240,165,0,0.1)` catColor values in GradientTab untouched (different opacity, intentionally kept). Brace balance unaffected (string replacements only).
+
+**Emoji sweep — CombinatorTab + ProjectLabTab:** All decorative emoji replaced with inline SVGs. CombinatorTab: `⚡` data icon changed to `'L'`; 3 direct render sites replaced with inline SVG lightning bolt (path `M13 2L3 14h9l-1 8 10-12h-9l1-8z`). ProjectLabTab: `🎉` completion card emoji replaced with inline SVG star using `stroke="var(--mint)"`. Country flags in LandscapeTab kept (functional). Pyodide code string symbols (✓ ✗ ⚠) kept (inside Python literal strings, not rendered HTML).
+
+**Interview zone audit (#027):** All 9 tools verified — import, ALL_TABS, zone assignment, descriptions. 2 fixes: `spottheflaw` description updated from "10" → "12 real ML analyses"; InterviewGrid heading corrected from "Nine tools" to "Six tools" (grid renders 6 INTERVIEW_TOOLS; Drills tools live in Practice zone). Brace delta 0 on App.jsx.
+
+**MD spine fixes:** METRICS.md — 3 new v4.48 keys (`msl_difficulty_filter`, `msl_readiness_score`, `msl_bookmarks`) moved into main table; orphaned block removed. IDEAS.md — duplicate open `[ ]` "Domain completion bars" entry removed from HomeTab polish section. BRAIN_TRANSFER.md — updated to v4.48 state with full batch summary and "0 open audit findings" line.
+
+**Audit #021.5 resolved: mobile overflow fix**
+
+**Brace balance:** All modified files at delta 0.
+
+---
+
 ### v4.44 — Loan Default Phase 4, Fraud Detection Phase 1, HomeTab changelog (2026-06-02)
 
 **What shipped (commit `08c1d91`):**

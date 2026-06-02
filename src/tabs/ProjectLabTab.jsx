@@ -2379,7 +2379,7 @@ jobs:
         {/* Phase 5 complete card */}
         {phase5Complete && (
           <div style={{ border: '1px solid rgba(52,211,153,0.35)', borderRadius: '10px', padding: '20px', background: 'rgba(52,211,153,0.06)', textAlign: 'center', marginTop: '8px' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎉</div>
+            <div style={{ marginBottom: '8px' }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
             <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--mint)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.03em', marginBottom: '6px' }}>
               Project Lab Complete
             </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
 // ── Model Selection Oracle ────────────────────────────────────────────────────
 const MODELS = [
@@ -974,9 +975,35 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
+// ── BookmarkButton ─────────────────────────────────────────────────────────────
+function BookmarkButton({ tabId, moduleId, label }) {
+  const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
+  function handle() {
+    toggleBookmark(tabId, moduleId, label)
+    setSaved(isBookmarked(tabId, moduleId))
+  }
+  return (
+    <button onClick={handle} style={{
+      display: 'flex', alignItems: 'center', gap: '5px',
+      padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+      background: saved ? 'var(--prime-bg-light)' : 'transparent',
+      border: saved ? '1px solid rgba(240,165,0,0.35)' : '1px solid var(--rim)',
+      color: saved ? 'var(--prime)' : 'var(--ink-ghost)',
+      fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600,
+      transition: 'all 0.15s'
+    }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      {saved ? 'Saved' : 'Save'}
+    </button>
+  )
+}
+
 export default function DataScienceTab({ onNavigate }) {
   const [active, setActive] = useState('oracle')
   const ActiveModule = DS_MODULES.find(m => m.id === active)?.component ?? ModelSelectionOracle
+  const activeModuleData = DS_MODULES.find(m => m.id === active)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
@@ -1001,6 +1028,12 @@ export default function DataScienceTab({ onNavigate }) {
           </button>
         ))}
       </div>
+
+      {activeModuleData && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <BookmarkButton tabId="ds" moduleId={active} label={activeModuleData.label} />
+        </div>
+      )}
 
       {/* Active module */}
       <div key={active} className="tab-enter"><ActiveModule /></div>

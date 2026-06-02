@@ -1663,161 +1663,221 @@ TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantizati
   {
     id: 31,
     slug: 'feature-store-time-travel',
-    title: 'The Feature Store Time-Travel Bug',
+    title: 'The Feature Store API Trap: Why Calling the Wrong Function Silently Corrupts Fintech Models',
     category: 'Feature Engineering',
     catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 8,
     featured: false,
-    excerpt: 'Your feature store has a timestamp on every row. That does not mean your pipeline is using it correctly. The time-travel bug — computing features on data that would not have been available at prediction time — is the most common silent killer in production ML.',
-    body: `**The setup:** You have a feature store with a \`user_avg_spend_7d\` feature — average daily spend over the 7 days before the observation date. The table has an \`event_timestamp\` column. You join it to your training dataset and your AUC jumps from 0.74 to 0.89. You ship.
+    excerpt: 'Your feature store supports point-in-time retrieval. Your training pipeline does not use it. The culprit is a single function call: get_online_features instead of get_historical_features. In fintech, this mistake does not just inflate AUC — it trains credit and fraud models on future account activity, creating regulatory exposure and models that collapse at deployment.',
+    body: `The feature store time-travel bug has two layers. The first layer — understanding that point-in-time correctness is necessary — is well documented. The second layer is what catches engineers who already know the concept: the feature store API has two different functions, and calling the wrong one is silent.
 
-**What went wrong:** The join was on user_id, not on user_id AND event_timestamp. Every training row got the user\'s most recent \`avg_spend_7d\` value — not the value as of the prediction date. A customer who spent heavily in December got that December value appended to their June observation. The model learned from the future.
+**The two functions that look the same**
 
-**Point-in-time correctness:** A feature store query must return the feature value as it existed at or before the observation timestamp. This is called a point-in-time join (also: as-of join, temporal join). Feast calls it \`get_historical_features\` with an \`entity_df\` that includes an \`event_timestamp\` column. Hopsworks calls it \`feature_view.get_batch_data(start_time, end_time)\`. Without this, you get the current value — not the historical one.
+Feast exposes two retrieval paths. \`feature_store.get_online_features\` returns the current value of a feature for a given entity. It is fast, low-latency, designed for serving. \`feature_store.get_historical_features\` takes an entity_df with an \`event_timestamp\` column and returns the feature value as it existed at each row's timestamp. It is batch, slower, designed for training.
 
-**The canonical Feast pattern:** The wrong approach: \`feature_store.get_online_features\` gets current feature values. The right approach for training: \`feature_store.get_historical_features\` with an entity_df that must include an \`event_timestamp\` column. Feast uses it to look up each user\'s feature values as of that timestamp — not the latest available. Features: \`user_stats:avg_spend_7d\`, \`user_stats:login_count_30d\`.
+Engineers building training pipelines often reach for the online API because it is familiar from serving code. The function signature is similar. There is no type error. The data comes back. AUC goes up.
 
-**How to detect it:** Run your training pipeline with a deliberate 7-day lag between event_timestamp and label timestamp. If AUC drops significantly (more than 3–4 points), you had future leakage. Also: sort your training data by time, hold out the last 20% chronologically, and check if holdout AUC matches cross-validation AUC. A large gap is the tell.
+**Why fintech is particularly exposed**
 
-**The production failure mode:** The model trains on features it cannot access at inference time. In production, \`avg_spend_7d\` is computed on data available right now — not on future data. The model\'s predictions immediately degrade because the feature distribution at inference looks nothing like what it saw at training. You will not notice this in offline metrics. You will notice it when the model\'s lift curve flatlines in production.
+In fraud detection, the most predictive features are recent account activity — transaction velocity, balance changes, login frequency over the past 7 days. These features change rapidly. Calling \`get_online_features\` at training time gives you the current value: a user's balance today, not their balance at the time of the historical transaction you are labeling.
 
-**What interviewers test:** Can you distinguish between "the feature store has point-in-time support" and "the pipeline is using it correctly"? Knowing Feast exists is not the answer. Knowing why \`entity_df\` must have \`event_timestamp\`, what happens if it doesn\'t, and how to verify correctness with a holdout split — that is the answer.`,
-    tags: ['Feature Stores', 'Data Leakage', 'Point-in-Time', 'Feast'],
+A user whose account was flagged for fraud 8 months ago and has since recovered shows high account activity today. The model sees "active account, high transaction volume" for a fraud case. It learns that active accounts are risky — but only because it is seeing account state after fraud recovery, not at fraud time.
+
+In credit risk, this is worse. ECOA prohibits using certain attributes that correlate with protected characteristics. If your feature computation inadvertently uses future income information (because the feature was recomputed after a pay period), you may be using a feature whose value at training time is statistically different from its value at prediction time in ways that correlate with protected class membership. You have both an accuracy problem and a regulatory exposure.
+
+**The correct Feast pattern**
+
+The entity_df passed to \`get_historical_features\` must include an \`event_timestamp\` column. This is not optional metadata — it is the mechanism by which Feast selects the correct historical snapshot. Without it, Feast falls back to the latest available value.
+
+entity_df must have: \`user_id\` (entity key), \`event_timestamp\` (the as-of time for each training row), and any label columns. Features retrieved: \`user_stats:avg_spend_7d\`, \`user_stats:login_count_30d\`, \`account:balance_change_7d\`.
+
+**The detection test**
+
+Run your training pipeline twice: once with event_timestamp set to actual training event time, once with event_timestamp set to 7 days earlier for every row. If AUC drops 5+ points with the lagged timestamps, your current pipeline is using future feature values. The lag test forces the feature store to retrieve values from before the event — if those look meaningfully different from what you normally retrieve, you have been using post-event data.
+
+**What the production degradation looks like**
+
+Model deploys. Fraud capture rate is 18% lower than backtest suggested. Ops retrain. Same result. The model was trained on features that reflect post-event account state; at inference time, features reflect current account state for a real-time event. The distributions never matched.
+
+The fix is not retraining. The fix is switching from \`get_online_features\` to \`get_historical_features\` with correct timestamps, then retraining. One function call, permanent fix.`,
+    tags: ['Feature Stores', 'Data Leakage', 'Point-in-Time', 'Feast', 'Fintech', 'Credit Risk'],
     domain: 'features',
     youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines — OpML 2020' }],
   },
   {
     id: 32,
-    slug: 'validation-set-leakage',
-    title: 'Validation Set Leakage — Why Your AUC Lied',
+    slug: 'group-level-leakage',
+    title: 'Group-Level Contamination: The Leakage Nobody Catches Until Production',
     category: 'Model Evaluation',
     catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 7,
     featured: false,
-    excerpt: 'There are two kinds of leakage. Target leakage is using features that contain the label. Train-test contamination is subtler — and more common. It is what happens when test data influences training in any way, even indirectly.',
-    body: `**Two leakages, one name:** Data leakage gets discussed as a single concept, but the failure modes are different. Target leakage: you include a feature that is derived from or highly correlated with the label — \`claim_approved\` in a fraud model, \`refund_requested\` in a churn model. Train-test contamination: the test set influences the training process in some way, even without target information directly.
+    excerpt: 'Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per product. When the same entity appears in both train and test, the model memorises entity-level patterns and your validation AUC reflects that memory, not generalisation.',
+    body: `Group-level contamination is the leakage form that survives all the standard preprocessing hygiene checks. You split before engineering. You fit scalers on train only. You avoid target encoding on the full dataset. You still have leakage — because the split itself is wrong.
 
-**The contamination mechanism:** The most common form: you compute a feature on the full dataset before splitting. Suppose you engineer \`avg_spend_last_7d\` as a user-level rolling mean. If you compute it on all 10,000 rows before calling \`train_test_split\`, the rolling mean for a training-set user absorbs spend patterns from test-set time windows. The test rows contributed to the computation that produced a training feature. They are no longer truly held out.
+**The mechanism**
 
-**Why AUC lies:** The reported val AUC reflects how well the model performs on data whose signal already leaked into the features. When you deploy, that signal is absent — the production feature is computed on data available at inference time only, which looks different. The offline-online gap is not random noise. It is the systematic gap between "what the model learned" and "what production data looks like."
+Your dataset has 50,000 rows from 8,000 users. Each user appears an average of 6 times. A random 80/20 split puts roughly 5 rows from user_id=12345 in training and 1 row in validation.
 
-**The red flags:** A feature that produces a sudden 10+ point AUC gain is suspicious by definition. Legitimate features rarely move AUC that much. A training AUC much higher than val AUC is overfitting. But training AUC and val AUC both high while holdout AUC (time-based, computed after the fact) is significantly lower — that is contamination.
+The model learns user-level patterns — average spend, historical churn signals, engagement velocity. On the validation row for user_id=12345, it essentially recognises the user. It does not generalise to new users; it memorises existing ones.
 
-**The fix — split first, engineer second:** Always call \`train_test_split\` before computing any aggregate features. Compute training features on training data only. For test features, use only training-set statistics — never refit on test rows. For imputers, scalers, and encoders: \`scaler.fit_transform(X_train)\`, then \`scaler.transform(X_test)\`. Never \`fit_transform\` on the full dataset.
+Your validation AUC is 0.89. In production, the model sees user_id=99999, a user it has never encountered. The AUC drops to 0.74. The gap is not model complexity or hyperparameters. It is the split.
 
-**The time-split discipline:** For any dataset with a temporal component, replace random splits with time-based splits. Everything before date D is training. Everything after is test. Features for test rows are computed using only data from before D. This is the only split that fully eliminates both contamination and target leakage simultaneously.
+**Where this appears in recommender systems**
 
-**What interviewers probe:** "Your AUC is 0.91 in cross-validation but 0.76 in the A/B test. Walk me through how you\'d diagnose this." The correct answer starts with the split order, not the model.`,
-    tags: ['Data Leakage', 'Train-Test Split', 'AUC', 'Evaluation'],
+In recommender systems, this is the standard failure mode of item-based collaborative filtering evaluation. A random split across user-item interactions means both train and test contain interactions from the same users and the same items. The model learns user embeddings and item embeddings that perfectly predict held-out interactions — because it has seen every user and every item before.
+
+The correct evaluation: a leave-one-user-out or leave-one-item-out split. Users in validation are a disjoint set from users in training. Or: time-split, where validation contains interactions after a cutoff date for all users.
+
+**The correct fix: GroupShuffleSplit**
+
+sklearn provides \`GroupShuffleSplit\`, which accepts a \`groups\` parameter (your entity ID array) and guarantees that all rows from a given entity are in the same split. Usage:
+
+\`\`\`python
+from sklearn.model_selection import GroupShuffleSplit
+gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+train_idx, val_idx = next(gss.split(X, y, groups=df['user_id']))
+\`\`\`
+
+After this split, every user in validation is a user the model has never seen during training. This is the honest evaluation.
+
+**When group leakage is acceptable**
+
+Sometimes you want the model to leverage known-entity signals. A fraud model that flags known bad actors is legitimate if your production use case also covers those same actors. In this case, group leakage in validation is intentional and your metric is: "how well does the model perform on entities it has seen before?"
+
+But you still need a second evaluation: "how well does the model perform on new entities?" Both evaluations should be reported separately. Conflating them gives a metric that means neither thing precisely.
+
+**Cross-validation with groups**
+
+For cross-validation, use \`GroupKFold\`. Each fold assigns complete groups to train or test — no entity spans two folds.
+
+\`\`\`python
+from sklearn.model_selection import GroupKFold
+gkf = GroupKFold(n_splits=5)
+for train_idx, val_idx in gkf.split(X, y, groups=df['user_id']):
+    # train and val share no user_ids
+\`\`\`
+
+The model's cross-validated AUC now reflects generalisation to unseen entities — which is what production performance actually is.
+
+**The diagnostic question to ask of any dataset before splitting:** Does this dataset have repeated observations from the same entity? If yes, which evaluation matters more — performance on known entities or performance on new entities? That answer determines your split strategy.`,
+    tags: ['Data Leakage', 'Group Splits', 'Cross-Validation', 'Evaluation', 'Recommender Systems'],
     domain: 'eval',
     youtube: [{ id: 'fE_25esn-5U', title: 'Data Leakage — StatQuest with Josh Starmer' }],
   },
   {
     id: 33,
-    slug: 'feature-store-time-travel-leakage',
-    title: 'The Feature Store Time-Travel Bug: Off-by-One Leakage at Scale',
+    slug: 'late-arriving-data-retroactive-corruption',
+    title: 'Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets',
     category: 'Feature Engineering',
     catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 10,
     featured: false,
-    excerpt: 'Your feature store runs a daily batch at 02:00 UTC to compute yesterday\'s features. Features are timestamped "2024-01-15" even though they contain data from 00:00–23:59 on that day. Your point-in-time join looks correct. It isn\'t. Events from 01:00 UTC use features computed hours after they occurred. This is leakage at scale — and it corrupts your offline metrics by 5–15% while remaining invisible until production.',
-    body: `The feature store time-travel bug is the most insidious failure mode in ML data infrastructure. It exists in almost every feature store that hasn\'t explicitly tested for it, and it hides in plain sight because the code looks correct.
+    excerpt: 'Your feature pipeline runs nightly and reprocesses yesterday\'s data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model training. Every reprocessing run retroactively alters the features your historical training rows will see — and the model you train on Monday\'s data is systematically different from the model you train on Friday\'s reprocessed data.',
+    body: `Late-arriving data is a normal operational reality in data engineering. Transactions settle over 24–72 hours. User activity logs arrive with delay. External data sources batch-deliver with variable latency. The standard response: run a late-data correction job that reprocesses recent windows and backfills updated values.
 
-**The concrete scenario:**
+This response is correct for data completeness. It is a training data integrity problem that most teams do not notice until a model retrain produces unexpectedly different results.
 
-You have a daily batch feature computation job that runs at 02:00 UTC. It reads all events from the previous calendar day (2024-01-15 00:00 UTC → 2024-01-15 23:59 UTC) and computes features for each user. These features are materialised to your feature store with a timestamp of "2024-01-15 00:00:00".
+**The retroactive corruption mechanism**
 
-Your training pipeline does a point-in-time join: "For each event at timestamp T, fetch the most recent feature row where feature_timestamp <= T."
+You have a feature \`transactions_last_7d\` for each user, computed by a nightly batch job. On 2024-01-15 at 02:00 UTC, the job runs and computes features for 2024-01-14. It writes feature rows with timestamp 2024-01-14.
 
-For a user with an event at 2024-01-15 08:00:00 UTC, your join correctly retrieves the feature row timestamped 2024-01-15 00:00:00. But those features were computed using data from the full day 2024-01-15 — including data from 09:00 UTC and onwards. If the user made a purchase at 20:00 UTC on 2024-01-15, their "purchases_this_week" feature includes that purchase. The event at 08:00 UTC is predicting from information that wouldn't be available until 20:00 UTC.
+Some transactions from 2024-01-13 and 2024-01-14 arrive late — they were delayed in transit from a payment processor. On 2024-01-16, your late-data correction job reprocesses the 2024-01-14 window and rewrites the feature rows, now including the late transactions.
 
-**Why the model trains beautifully but fails in production:**
+The feature row in your store for timestamp 2024-01-14 now reflects reality as of 2024-01-16 — not reality as of 2024-01-14 at 02:00 UTC when it was first computed.
 
-Your model is trained on this future-contaminated data. Its AUC is 0.91. You deploy.
+**Why training is inconsistent**
 
-In production, features are computed in near-real-time. At 08:00 UTC, the "purchases_this_week" feature reflects purchases only through 07:59 UTC — not 23:59 UTC. The training features included future data; production features don't. The model has learned from signals that don't exist in production.
+When you train a model on Monday, you generate your training dataset by reading the feature store. You get features reflecting the state as of Monday — including all retroactive corrections up to Monday.
 
-AUC degrades from 0.91 to 0.76. You attribute it to covariate shift. You retrain. The new model is also contaminated. The problem perpetuates.
+When you retrain the same model on Friday with "the same training window," you generate a new training dataset. The feature store now reflects corrections up to Friday. Some rows have different feature values than they did on Monday. The model trains on different data. Its weights are different. Its decision boundary is different.
 
-**The four variants of this bug:**
+You cannot reproduce Monday's model on Friday. The training data has been altered underneath you. This is not drift — the production distribution has not changed. The training data is literally different.
 
-1. Calendar-day vs event-time mismatch: features stamped at midnight but containing full-day data. Early-day events see future data.
+**The compounding effect**
 
-2. Processing lag hiding behind event timestamp: the feature row isn't available until hours after the calendar date it's stamped with.
+Over a 12-month training window, late-data corrections may affect 15–30% of training rows. The corrections are not random — they disproportionately affect high-activity users (more transactions to late-arrive) and recent time windows (more recent corrections have had less time to finalise). Your model learns a systematically biased picture of those user segments.
 
-3. Late-arriving data correction: yesterday's features are reprocessed today to account for late-arriving events. Historical training data is retrospectively altered, and your model becomes inconsistent with its training distribution.
+In a credit scoring context: users with many transactions are high-activity customers. If their features are consistently overestimated (because late transactions always add to their totals), your model learns that high transaction volume is predictive of creditworthiness by a larger margin than it actually is. The bias is invisible in offline metrics because your validation set has the same correction bias as your training set.
 
-4. Aggregation window definition mismatch: "past 7 days" computed at 2024-01-15 23:55 UTC includes data that won't be available at 08:00 UTC on 2024-01-15.
+**The two patterns that prevent this**
 
-**How to detect it:**
+**Pattern 1: Immutable feature rows with a write timestamp.**
+Never overwrite a feature row. Instead, append a new row with the corrected value and a new \`availability_timestamp\`. Your point-in-time join retrieves the row that was available at training time — the original, uncorrected value. Training is reproducible because it always reads the as-of-training-time snapshot, not the current snapshot.
 
-Take 100 rows from your training dataset. For each row at timestamp T, manually compute its features using only data with event_timestamp <= T - epsilon. Compare to what your feature store served. If the numbers don't match systematically, you have the bug.
+**Pattern 2: Correction awareness in feature computation.**
+Accept that features will be incomplete at first computation. Compute features with an explicit \`completeness_timestamp\`: the earliest time at which this feature value is considered final. Your training pipeline only uses rows where \`event_timestamp + correction_window <= training_run_timestamp\`. You exclude the most recent data from training until it is final.
 
-Also: if a model degrades faster in production than you'd expect from feature drift (PSI is moderate, but AUC drops 5+ points), temporal leakage is a prime suspect.
+**How to detect retroactive corruption**
 
-**The correct fix:**
+Run your training pipeline twice with a 7-day gap between runs, using identical training window bounds. Compute the feature-level correlation between the two datasets for matching entity-timestamp pairs. If feature values differ for more than 2% of rows, your pipeline has retroactive corrections altering the training data.
 
-Store features with two timestamps: the event_timestamp and the availability_timestamp. The availability_timestamp is when the row was actually written to the feature store. Your point-in-time join must use availability_timestamp <= event_timestamp, not feature_date <= event_date.
-
-This requires changing how your pipeline logs metadata and how your training join works. Feast 0.28+ supports this with materialisation logs. Without explicit availability tracking, you're doing "point-in-time" joins that aren't actually point-in-time.
-
-**Practice this in Feature Engineering to understand point-in-time correctness and how to test for it.**`,
-    tags: ['Feature Store', 'Point-in-Time', 'Data Leakage', 'Time-Travel', 'Feature Engineering'],
+Also: if retrained models show unexpected performance divergence from their predecessors with no apparent distribution shift in production, retroactive feature corruption is a primary suspect.`,
+    tags: ['Feature Engineering', 'Late-Arriving Data', 'Data Pipeline', 'Training Data Integrity', 'Feature Store'],
     domain: 'features',
-    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines' }],
+    youtube: [{ id: 'PAzEyeWItH4', title: 'Time Travel and Provenance for ML Pipelines — OpML 2020' }],
   },
   {
     id: 34,
-    slug: 'validation-set-temporal-leakage',
-    title: 'Validation Set Leakage: Why Your Backtest AUC Doesn\'t Predict Production AUC',
-    category: 'Feature Engineering',
+    slug: 'walk-forward-validation-honest-backtest',
+    title: 'The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest',
+    category: 'Model Evaluation',
     catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
     readMin: 9,
     featured: false,
-    excerpt: 'Your model has 0.91 AUC in backtest. Production AUC is 0.68. Nobody changed the model. Nobody changed the data pipeline. The gap is the cost of a subtle contamination: your validation set contains data from after the prediction point, and the features include information from that future data. This is temporal leakage, and it\'s invisible unless you know where to look.',
-    body: `Temporal leakage in the validation set is different from target leakage. With target leakage, you\'re using a feature directly computed from the label. With temporal leakage, you\'re using features computed correctly, but with the wrong time window.
+    excerpt: 'Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on all historical data and then scores it on historical windows is not forecasting. It is memorisation. Walk-forward validation is the only backtest that measures what you actually need to measure: whether a model trained up to time T can predict events after time T.',
+    body: `Most backtests are dishonest. Not because the engineer intended deception, but because the evaluation procedure answers a question different from the one that matters.
 
-**The scenario:**
+The question you care about: "If I train my model on data up to today and deploy it, how well will it perform next month?"
 
-You\'re building a churn prediction model. Your training set is a table of (user_id, prediction_date, churned_30_days_later). One feature is "support tickets opened in the 30 days before prediction_date."
+The question most backtests actually answer: "How well does a model trained on all available history describe patterns that are already in the history?"
 
-Your feature computation logic is correct: for each row, retrieve tickets with ticket_opened_date between [prediction_date - 30 days, prediction_date].
+These are different questions. The first is about prediction. The second is about description. A model that scores 0.91 AUC describing historical patterns may score 0.72 AUC predicting future events — and you will not know until you deploy.
 
-But your feature store query doesn\'t enforce the timestamp constraint. It fetches the user\'s ticket count as it exists today. A user who had 0 tickets at the time of prediction but opened a ticket 7 days later will have a count of 1 in your training data. Your model learns that support activity predicts churn — but only because it\'s seeing future support tickets.
+**What the standard backtest gets wrong**
 
-**Why this looks exactly right:**
+A typical backtest procedure: (1) gather all historical data, (2) fit the model, (3) generate predictions on held-out rows sampled from across the history, (4) measure AUC.
 
-The validation set is computed the same way as the training set. Both are contaminated identically. Your train/val split is random (not temporal), so the contamination affects both sets equally. Cross-validation shows consistent performance. Your offline metrics are beautiful.
+The problem: step 2 fits on the same time range that step 3 evaluates. Even with a held-out split, if the model is fit on data from 2022–2024 and evaluated on randomly sampled rows from 2022–2024, the model has already "seen" the periods it is evaluated on in the sense that it trained on surrounding events, the same distribution, and potentially the same users or items.
 
-The contamination is invisible in the metrics because both train and validation are infected from the same source.
+For time series and any temporal prediction task, this is a dishonest evaluation. It conflates in-distribution performance (which tells you about model fit) with out-of-distribution prediction (which tells you about deployment risk).
 
-**How it manifests in production:**
+**Walk-forward validation: the honest backtest**
 
-In production, you make a prediction at prediction_date. You fetch support tickets. The feature reflects only tickets opened before prediction_date. The model receives a feature value that it has never seen before (because training data always included future tickets). It mispredicts.
+Walk-forward validation (also called expanding window or rolling origin cross-validation) works as follows:
 
-The degradation isn't noise — it's systematic. The model's decision boundary was learned on a distribution that doesn't exist in production.
+1. Set an initial training end date: T0.
+2. Train the model on all data with timestamp <= T0.
+3. Generate predictions on events in [T0, T0 + H] where H is your forecast horizon.
+4. Record performance.
+5. Advance T0 by one period (one week, one month). Repeat from step 2.
 
-**The three forms:**
+At each step, the model has never seen the evaluation window. The predictions are genuinely out-of-sample. The backtest directly simulates what will happen in production: a model trained up to date T is asked to predict events after T.
 
-1. Aggregation window boundary error: computing "past 30 days" using data available today, not data available at prediction_date.
+**Why this is harder to implement and why it matters**
 
-2. Late-arriving data confusion: your training data includes corrections applied after the fact. A transaction flagged as fraudulent after the prediction updates the label. The feature pipeline retroactively updates that user\'s risk score. Training data now reflects the updated state, not the state at prediction time.
+Walk-forward validation is computationally expensive. You retrain the model at each step. For complex models with large datasets, this means 10–20 full training runs instead of one. Most teams skip it.
 
-3. Preprocessing fitted on full data: you compute zscore normalisation on the validation set before it\'s held out. The validation set\'s mean and std leak into the training features.
+The cost of skipping: you deploy with false confidence. You attribute production underperformance to drift when the true cause is that your backtest was measuring the wrong thing. You retrain on more data and get a similar result, because the new backtest is still dishonest.
 
-**How to audit:**
+**The expanding vs rolling window choice**
 
-1. For each feature in your training set, document the time window explicitly: "support tickets from [T-30 to T]".
+Expanding window: each training fold includes all data up to T0. The training set grows. This is appropriate when you believe the model benefits from more historical data and when older data is still representative.
 
-2. Manually compute 100 training rows using only the data that would have been available at T. Compare to what your pipeline produced.
+Rolling window: each training fold uses only the most recent N periods. Older data is dropped. This is appropriate when you believe recent data is more predictive than old data, or when the data generating process changes over time (structural breaks, seasonal regime changes).
 
-3. Run a time-split validation: train on data before date D, validate on data between D and D+90 days. Hold out a further 30 days chronologically for final testing. If holdout AUC is significantly lower than validation AUC, you have temporal leakage.
+For most production ML use cases with stable data distributions: expanding window. For forecasting tasks with trend or seasonality changes: rolling window.
 
-4. Compute features for your validation set as if you\'re making a fresh prediction at each validation row\'s timestamp. If the computed features differ from what your training pipeline produced, you\'re leaking.
+**The performance gap diagnostic**
 
-**Practice this in Feature Engineering to understand temporal data integrity and point-in-time feature computation.**`,
-    tags: ['Feature Engineering', 'Temporal Leakage', 'Data Contamination', 'Validation', 'Backtest vs Production'],
-    domain: 'features',
+Run both the standard backtest and a walk-forward validation on your current model. The gap between them tells you something specific:
+
+- Standard backtest AUC 0.91, walk-forward AUC 0.88: small gap, the model generalises well to new time periods. Deploy with reasonable confidence.
+- Standard backtest AUC 0.91, walk-forward AUC 0.74: large gap, the model is fitting to historical patterns that do not generalise. Your features may have temporal leakage, or the model is overfitting to historical signal that does not persist.
+
+**The rule: if you cannot describe your validation procedure as walk-forward, your backtest metrics are not production estimates. They are training diagnostics.**`,
+    tags: ['Model Evaluation', 'Backtesting', 'Walk-Forward Validation', 'Time Series', 'Cross-Validation'],
+    domain: 'eval',
     youtube: [{ id: 'qH6ERcuJgn0', title: 'Temporal Data and ML: Concepts and Common Pitfalls' }],
   },
   {
@@ -2456,7 +2516,7 @@ Rollback is the right call when: (1) a recent deployment is the suspected cause,
 **Practice this in Monitoring to build intuition for which drift signals fire for which types of model degradation, and how to triage drift alerts correctly.**`,
     tags: ['Concept Drift', 'Monitoring', 'PSI', 'Covariate Shift', 'Model Degradation', 'Production ML'],
     domain: 'monitor',
-    youtube: [],
+    youtube: [{ id: 'jRM5_Z31y5U', title: 'What is Concept and Data Drift? | Data Science Fundamentals' }],
   },
   {
     id: 44,
@@ -2506,7 +2566,7 @@ At the serving layer, maintain a user interaction count in a low-latency store (
 **Practice this in System Design to work through how a two-tower architecture handles new user and new item cold-start, and where the routing and fallback logic lives in the serving stack.**`,
     tags: ['Cold Start', 'Personalization', 'System Design', 'Recommendations', 'Exploration vs Exploitation', 'Matthew Effect'],
     domain: 'design',
-    youtube: [],
+    youtube: [{ id: 'UFpF108gyaw', title: 'Mitigating the challenges of cold start in TensorFlow Recommenders' }],
   },
   {
     id: 45,
@@ -2560,9 +2620,361 @@ The right answer is almost always a scheduled cadence with monitoring-based earl
     domain: 'monitor',
     youtube: [],
   },
+  {
+    id: 46,
+    slug: 'recommendation-system-silent-failures',
+    title: 'The Six Ways a Recommendation System Silently Stops Recommending',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard infrastructure monitoring and require ML-specific observability to detect.',
+    body: `**Why Recommendation Systems Fail Without Anyone Noticing**
+
+Infrastructure monitoring — uptime, latency, error rate — tells you the serving system is healthy. It tells you nothing about whether the recommendations are any good. A recommendation system can be perfectly operational as a software system while being completely broken as a product. These two failure modes live in different monitoring planes, and most teams only instrument the first one.
+
+The six failure modes below are all silent: they degrade recommendation quality without triggering infrastructure alerts. Each has a specific signal that catches it — but only if you are looking.
+
+**Failure Mode 1: Index Staleness**
+
+Item embeddings are not refreshed when new inventory is added. The recommendation index contains embeddings for the catalog as it existed at last refresh. New items have no embedding and are never surfaced. The system is not broken — it is simply recommending from a stale slice of the catalog.
+
+Signal: compare CTR on items that are 0–1 days old versus items that are 7+ days old. On a healthy system, new items should surface in recommendations and accumulate CTR. If new-item CTR is more than 90% lower than week-old-item CTR, the embedding pipeline is not keeping pace with catalog additions. Set a freshness SLA: no item embedding older than 26 hours in the serving index.
+
+**Failure Mode 2: Popularity Collapse**
+
+The recommendation model is trained on clicks. Clicks are biased toward already-popular items because those items are recommended more. More recommendations mean more clicks, which means the model learns that those items are good, which means more recommendations. After enough retraining cycles, the long tail of the catalog disappears entirely. The system degrades from personalized recommendations to a popularity ranking with a personalization veneer.
+
+Signal: track inter-list similarity (ILS) — the average pairwise distance between items recommended to the same user across a session. A high ILS means diverse recommendations. If ILS drops more than 40% over 30 days without a product change, popularity collapse is occurring. Also track catalog coverage: what percentage of items are recommended at least once per week. Healthy systems cover 15–30% of catalog. Below 5% is collapse.
+
+**Failure Mode 3: Embedding Drift**
+
+User embeddings are produced by a model trained on historical behavior. As user behavior evolves — new content categories launch, seasonal patterns shift, platform usage patterns change — the embedding model falls out of step. Cold-start users get profiles that reflect the population from 6 months ago, not today. Warm users get embeddings that no longer accurately represent their current interests.
+
+Signal: for a cohort of users, compute the cosine similarity between their embedding at week 1 and their embedding at week 8. On a healthy system, this should be moderate — users change, but gradually. If the similarity drops below 0.4 for a large fraction of users, the embedding model is not capturing behavioral evolution. Retrain the embedding model, not just the ranking model.
+
+**Failure Mode 4: Position Bias Entrenchment**
+
+The model is trained on clicks. Position 1 gets the most clicks regardless of relevance because users click what they see first. If the training pipeline does not correct for position bias, the model learns a spurious correlation: position 1 items are good. Over time, the ranking degrades toward a system that always puts the same popular items first, not because they are most relevant but because they are trained to look most relevant by their position.
+
+Signal: compute CTR stratified by position. A healthy system has CTR@1 higher than CTR@3, but CTR@3–5 should still be meaningfully non-zero. If CTR@1 is high but CTR@3–5 is near zero, users are not engaging with anything below the first slot. This is the footprint of position bias entrenchment. Fix: inverse propensity weighting in training, or a separate position bias model.
+
+**Failure Mode 5: Coverage Collapse**
+
+The catalog has one million items. The recommendation system has only ever recommended ten thousand of them. The remaining 990,000 items are stranded — they have no interaction history, accumulate no training signal, and are never recommended. The system has silently reduced itself to a 10K-item system while the product team believes they have a 1M-item system.
+
+Signal: catalog coverage — the percentage of catalog items recommended at least once per week. Track this as an explicit health metric. Below 5% is a coverage crisis. Below 1% means the system has effectively abandoned discovery. Remediation: forced exploration budget (reserve 10–15% of recommendation slots for items outside the top-recommended set), constrained diversity in the retrieval layer, or explicit long-tail boosting.
+
+**Failure Mode 6: Seasonality Blindness**
+
+The model was trained on data from the last 90 days. If those 90 days were summer, the model has never seen winter behavior: different content preferences, different device usage patterns, different session lengths. As the season changes, the model serves recommendations calibrated for a world that no longer exists.
+
+Signal: compare the category distribution of recommendations to the category distribution of current browse behavior. If users are browsing 40% holiday content but recommendations are still serving 20% holiday content (the summer training distribution), the model is seasonally misaligned. Fix: weight recent training data more heavily, use rolling windows that overlap season transitions, or maintain separate seasonal model variants with explicit routing.
+
+**Building a Recommendation Health Dashboard**
+
+A production recommendation system needs six health signals, one per failure mode above, monitored continuously:
+
+1. Embedding freshness SLA — max age of any item embedding in the serving index
+2. New-item CTR ratio — CTR on items <24h old vs items >7d old
+3. ILS (inter-list similarity) — weekly trend, alert on >40% drop
+4. Catalog coverage — % of catalog recommended at least once per week
+5. CTR by position — stratified by slot, alert if CTR@3–5 collapses
+6. Recommendation vs browse category alignment — divergence by category
+
+None of these metrics come from your infrastructure monitoring stack. They all require logging what the recommendation system served, joining against item metadata, and computing these statistics in an offline batch job or a streaming pipeline. The effort to build this dashboard is one sprint. The cost of not having it is months of silent degradation.
+
+**Practice this in System Design to work through how to architect a two-tower recommendation system with freshness constraints, diversity mechanisms, and position bias correction built in from the start.**`,
+    tags: ['Recommendations', 'ML System Design', 'Observability', 'Embedding Drift', 'Position Bias', 'Catalog Coverage', 'Silent Failures'],
+    domain: 'design',
+    youtube: [],
+  },
+  {
+    id: 47,
+    slug: 'did-parallel-trends-violations',
+    title: 'When Difference-in-Differences Breaks: Parallel Trends Violations in Practice',
+    category: 'Causal Inference',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajectory absent the treatment — is untestable by definition. Here are the four ways it breaks in practice and what to do about it.',
+    body: `**What the Parallel Trends Assumption Actually Means**
+
+Difference-in-differences estimates the causal effect of a treatment by comparing the change in outcomes for a treated group against the change in outcomes for a control group over the same time period. The identifying assumption — parallel trends — states that absent the treatment, the treated group would have followed the same trajectory as the control group.
+
+This is not the same as "the two groups had similar trends before the treatment." That is a testable claim about pre-treatment data. Parallel trends is a claim about the counterfactual: what would have happened to the treated group if it had not been treated. That is, by definition, unobservable.
+
+The pre-treatment trend test is evidence consistent with parallel trends, not proof of it. The parallel trends assumption can hold even when pre-trends differ (if the difference is predictable and adjustable) and can fail even when pre-trends look identical (if a confounding event was about to affect only the treatment group).
+
+With that framing, here are the four ways the assumption breaks in practice.
+
+**Failure Mode 1: Compositional Shift**
+
+The treatment changes who is in the treatment group. A pricing change, a feature launch, or a policy change can attract a different type of user or customer to the treatment condition in the weeks around the treatment date. These new entrants have different baseline trends than the original treatment group members. The measured post-treatment trajectory is a mix of the original group's response and the new group's baseline behavior.
+
+Sign to look for: track the demographic or behavioral composition of your treatment group in the 2–4 weeks before and after treatment. If age distribution, geographic distribution, acquisition channel mix, or engagement tier shifts meaningfully, compositional confounding is present. The DiD estimate conflates the treatment effect with the composition change.
+
+Fix: restrict the analysis to users who were present in both pre- and post-treatment periods. This is a cohort-locked DiD — it eliminates compositional confounding at the cost of generalizability to newly acquired users.
+
+**Failure Mode 2: Anticipation Effects**
+
+Users or customers change behavior before the treatment takes effect because they know it is coming. A subscription price increase announced two weeks before it takes effect will cause early cancellations in the pre-treatment period. A new feature announced in a blog post will cause increased sign-ups before launch. These behavioral changes corrupt the pre-treatment baseline, making the pre-treatment trend for the treatment group look different from what it would have been without the announcement.
+
+Sign to look for: pre-period trends diverge between treatment and control in the days or weeks immediately preceding the treatment date. This is distinct from a structural trend difference — it is a sudden divergence that begins at the announcement date.
+
+Fix: extend the pre-period window far enough back to predate the announcement. Use a placebo test on an earlier period with no treatment and no announcement to verify that the groups were on parallel trajectories. If anticipation is unavoidable (e.g., regulatory changes require advance notice), adjust by modeling the announcement effect as a separate treatment.
+
+**Failure Mode 3: Concurrent Events**
+
+Something else happened to the treatment group around the treatment date that did not happen to the control group. A marketing campaign targeted the same user segment as the treatment. A competitor's outage drove traffic to a product used predominantly by the treatment group. A supplier disruption affected a geographic region that overlaps with the treatment condition.
+
+This is the most common reason DiD estimates are wrong in industry settings. Experiments are never conducted in a vacuum. The treatment group is a real segment of a real business, and real businesses experience confounding events continuously.
+
+Sign to look for: audit the event log for the treatment group in the ±4 week window around treatment. Marketing spend changes, sales campaigns, support incidents, product changes affecting the same segment — any of these can invalidate the parallel trends assumption.
+
+Fix: there is no statistical fix for an unobserved concurrent event. The fix is operational: run a pre-analysis plan that requires an event audit before interpreting DiD results, and flag any correlated intervention as a confound. In post-hoc analyses, attempt to estimate the magnitude of the concurrent event separately.
+
+**Failure Mode 4: Different Cyclicality**
+
+Treatment and control groups have different weekly or monthly cycles. A B2B product used Monday through Friday by enterprise customers will have a very different day-of-week pattern than a B2C product used heavily on weekends. If treatment assignment correlates with product type or usage pattern, a DiD measured from Monday to Friday will have different seasonality baked in for the two groups. Averaging over these cycles without alignment introduces bias.
+
+Sign to look for: plot the day-of-week profile for outcomes separately for treatment and control groups in the pre-period. If the shapes are different — one peaks on weekdays, one peaks on weekends — standard DiD will confound cyclicality differences with treatment effects.
+
+Fix: align cohorts by day-of-week. Compute the DiD separately for each day of the week and aggregate. Or, aggregate both groups to weekly totals before taking differences, which averages out within-week cycles. Do not compare Tuesday-heavy treatment windows to Friday-heavy control windows.
+
+**How to Assess Parallel Trends Plausibility**
+
+Three practices make the parallel trends assumption more assessable:
+
+Pre-trend test: regress the outcome on a time-trend variable, a group indicator, and their interaction, using only pre-treatment data. The coefficient on the interaction term should be statistically indistinguishable from zero. If it is not, there is a measurable pre-trend difference that the DiD assumption requires to extrapolate.
+
+Placebo outcome test: apply the same DiD to an outcome that the treatment should not affect. If you are estimating the effect of a pricing change on revenue, also run the DiD on customer support ticket volume (which pricing should not change). A significant placebo effect suggests a confound is driving the result.
+
+Event study plot: rather than a single pre/post comparison, estimate the treatment effect at each time period separately. Plot the coefficients. The pre-treatment coefficients should cluster around zero. A clean event study shows a flat pre-period and a step change at the treatment date. Divergence in the pre-period is a red flag.
+
+**Practice this in Causal Inference to work through experiment design under violation conditions, placebo test construction, and the event study diagnostic.**`,
+    tags: ['Causal Inference', 'DiD', 'Parallel Trends', 'Experiment Design', 'Confounding', 'Econometrics'],
+    domain: 'causal',
+    youtube: [],
+  },
+  {
+    id: 48,
+    slug: 'cold-start-product-not-model',
+    title: "Cold-Start Is Not a Model Problem, It's a Product Problem",
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that happens to require a model solution — and fixing the model without fixing the product produces a technically correct system that still fails users.',
+    body: `**Why the Framing Matters**
+
+How you frame a problem determines what solution space you search. If cold-start is a model problem, you improve the model: add content-based features, experiment with transfer learning, tune similarity metrics, improve the embedding architecture. These are all valid modeling moves.
+
+If cold-start is a product problem, you redesign the product to collect signal: you build an onboarding flow that asks users what they want, surface seed content for explicit reactions, let users state goals. These are product moves that generate training signal the model can immediately use.
+
+The second framing almost always wins. A model with rich explicit signal from onboarding will outperform a model with no signal plus clever feature engineering. You cannot engineer your way out of a genuine signal absence — but you can collect the signal you are missing.
+
+Most teams spend months on model improvements and weeks on onboarding. The ratio should be inverted.
+
+**The Signal Gap**
+
+New users have no interaction history. The recommendation model has nothing to personalize on. The traditional solution is content-based features: demographic data, device type, geographic location, referral source, stated preferences at sign-up. This is correct and necessary.
+
+But it is incomplete. These are weak signals. Age and location tell you something about preference population distributions, but they do not tell you what this specific user wants. A 28-year-old in London who signed up via a cooking blog and a 28-year-old in London who signed up via a fitness app have very different preference profiles that demographics will not separate.
+
+The gap is not a modeling gap — it is a signal gap. The model cannot close it by being smarter. The product needs to generate the signal.
+
+**The Product Fix: Active Signal Elicitation**
+
+Onboarding is the only moment where users expect to be asked about their preferences. They have just made a commitment to the product — they are at peak willingness to engage. Every interaction during onboarding is worth 10 passive scrolls in terms of preference signal.
+
+The patterns that work: show 5–8 seed items and ask for explicit reactions (like, not interested, love it). Present category tiles and ask for selection. Ask a single goal-statement question ("What brings you here today?"). Let users follow or subscribe to topics.
+
+Instagram's launch onboarding — "follow 5 accounts to get started" — is this pattern. Spotify's taste profile setup is this pattern. Duolingo's language goal and daily commitment question is this pattern. These are not UX niceties. They are signal collection mechanisms that make the first-session model dramatically more accurate.
+
+The threshold to exit cold-start can be as low as 3–5 explicit signals. Three explicit reactions to seed content plus one category selection gives the model enough to begin collaborative filtering.
+
+**The Hybrid Routing Architecture**
+
+Cold-start is not a binary state — it is a spectrum. A user with 0 interactions is different from a user with 5 explicit reactions, which is different from a user with 50 passive interactions. Using one model to serve all three is wasteful and inaccurate.
+
+The right architecture is explicit routing:
+
+Cold users (fewer than 10 interactions): route to an onboarding model. This model uses content-based features plus any explicit signals from onboarding. It is optimized for rapid signal collection, not for maximizing CTR on session 1.
+
+Warm users (10–50 interactions): route to a transitional model. This model blends collaborative filtering signals with content-based features. The collaborative signal is thin but real. The model is optimized for accelerating the transition to the hot state.
+
+Hot users (50+ interactions): route to the full collaborative filtering model. This model has enough interaction history to produce accurate personalized recommendations.
+
+These are three separate models with separate training pipelines, not one model trying to handle all three cases. The routing logic is a function of interaction count, not a model parameter. Explicit routing is more maintainable, more debuggable, and more accurate than a single model with a cold-start regularization term.
+
+**The Exploration-Exploitation Frame**
+
+Cold users are not a problem to solve. They are exploration budget. The system has genuine uncertainty about what they want. The correct response to uncertainty is exploration: show diverse content, observe reactions, update beliefs, converge.
+
+UCB (upper confidence bound) or Thompson sampling on item categories is the right mechanism during cold-start. Treat each content category as an arm. Start with equal uncertainty. Update based on reactions. After 5–10 interactions, the distribution of uncertainty has converged enough to start exploitation.
+
+The common mistake is treating cold-start as "give them the popular stuff." Popular items reduce the risk of a bad first impression, but they also teach the model nothing about this specific user. They delay personalization by using safe interactions rather than informative ones. The first session should be optimized for information gain, not for CTR.
+
+**Measuring Whether Your Cold-Start Solution Works**
+
+Standard metrics (CTR, session length) on session 1 are not the right measure of cold-start solution quality. A high-CTR session 1 that serves only popular content and never personalizes is a cold-start failure that looks like a success.
+
+The right metric is time-to-personalization: how many sessions until the model's recommendations match the user's observed preferences? Define a threshold — for example, the first session where the recommendation distribution for this user is statistically distinguishable from the global popularity distribution. Measure the median number of sessions to reach that threshold.
+
+A cold-start solution that reduces median time-to-personalization from session 8 to session 3 is a good solution, even if CTR on session 1 is unchanged. That is the metric that reflects the actual goal: getting users into the personalized serving layer as fast as possible.
+
+**Practice this in System Design to work through the routing architecture, onboarding signal collection design, and time-to-personalization measurement for a real product cold-start scenario.**`,
+    tags: ['Cold-Start', 'ML System Design', 'Recommendations', 'Personalization', 'Onboarding', 'Exploration-Exploitation'],
+    domain: 'design',
+    youtube: [],
+  },
+  {
+    id: 49,
+    slug: 'recsys-feedback-loop',
+    title: 'The Recsys Feedback Loop You Can\'t Escape',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. Within months, your model has learned to recommend what it already recommended — not what users actually want.',
+    body: `**What the Feedback Loop Is**
+
+A recommendation system decides what users see. Users click on what they see. Those clicks become the next training batch. The model learns from its own outputs.
+
+This is not a design flaw — it is the fundamental architecture of every production recommendation system. But it creates a compounding dynamic that, without explicit intervention, systematically degrades catalog coverage, user experience, and long-run relevance. Items the model never shows get zero clicks and never improve their position. Items it shows frequently accumulate clicks and rank higher in every subsequent training cycle.
+
+The loop is self-reinforcing by construction.
+
+**Failure Mode 1: Popularity Spiral**
+
+Top-10 items capture 60%+ of traffic within 90 days of deployment. Catalog coverage collapses. Long-tail items — which may have high latent interest among specific user segments — never surface because they never accumulate the click signal that would make the model show them.
+
+The distribution of item impressions follows a power law that steepens over time. At launch, the top 10% of items may capture 40% of impressions. After six months of feedback-loop training, the same 10% capture 70%. The rest of the catalog effectively does not exist for the model.
+
+The business cost: catalog that was expensive to acquire, produce, or license generates zero engagement not because users don't want it, but because it was never shown.
+
+**Failure Mode 2: Exploration Starvation**
+
+Without explicit exploration, the model converges on a local optimum. New items released after training cutoff never break through because they have no historical signal. A model trained on six months of data assigns near-zero probability to items launched in month seven.
+
+This creates a structural disadvantage for new content. It also means that shifts in user preference — new trends, seasonal changes, emerging interests — are absorbed slowly or not at all. The model's prior on item quality is dominated by historical click rates, which are themselves a product of historical exposure, not historical preference.
+
+**Failure Mode 3: Demographic Homogenisation**
+
+If one demographic clicks more than others, the model skews toward their preferences. Other segments see progressively less relevant content. They churn. The surviving audience becomes more homogeneous. The model optimises harder for the dominant demographic's signal.
+
+This is a feedback loop operating on user population composition, not just item distribution. The outcome is a system that serves a narrowing segment extremely well and a growing segment not at all — and whose offline metrics look fine throughout the process because they are measured on the surviving, homogeneous user population.
+
+**Why Offline Evaluation Hides This**
+
+Your offline AUC or NDCG looks fine because you evaluate on historical clicks — which were themselves generated by the feedback loop. The held-out test set reflects the distribution of items the model already showed, not the distribution of items users would have clicked if they'd been shown different content.
+
+Offline metrics don't capture what users would have clicked if they'd been shown items outside the model's historical top-K. This is the exposure bias problem in recommendation system evaluation. A model that perfectly predicts historically shown items is not necessarily a good recommender — it may be an excellent memorizer of its own previous decisions.
+
+**Four Interventions**
+
+*Forced exploration budget:* Reserve 5–10% of recommendation slots for items outside the model's top-K. Log results. Feed them back into training. Implementation: ε-greedy assigns a fixed fraction of slots to random-in-catalog items. Thompson sampling estimates per-item uncertainty and allocates exploration budget proportional to uncertainty. The exploration budget is not a concession to users — it is an investment in training signal diversity.
+
+*Inverse propensity scoring (IPS):* Reweight training examples by the inverse probability of them being shown. Items shown more frequently are downweighted. Items shown rarely are upweighted. If item A was shown with probability 0.8 and was clicked, its contribution to the training gradient is scaled by 1/0.8 = 1.25. If item B was shown with probability 0.05 and was clicked, its contribution is scaled by 1/0.05 = 20. IPS corrects for the exposure bias in the training signal and gives the model a less distorted view of item quality.
+
+*Popularity debiasing:* Subtract a popularity prior from item scores at inference time. Score_debiased = Score_model - α × log(impression_count). The α hyperparameter controls the strength of debiasing. A high α strongly suppresses popular items; a low α leaves the model's ranking largely intact. The correct α is empirical — tune it on a held-out diversity metric, not on offline AUC.
+
+*Diversity constraints:* At serving time, enforce minimum category or genre diversity in the top-K results. Maximal marginal relevance reranks items by a combination of relevance and novelty relative to already-selected items. Determinantal point processes provide a probabilistic framework for diverse subset selection. Both prevent the top-K from collapsing to a single content type while maintaining relevance.
+
+**The Production Checkpoint**
+
+Before any recsys model ships, audit three things:
+
+Catalog coverage over the last 30 days: if fewer than 10% of catalog items appeared in recommendations, the feedback loop is already dominating the system before you've even added this model.
+
+Top-10 item share: if more than 50% of clicks go to 10 items, diversity is broken. The model is serving a popularity leaderboard with extra steps.
+
+New-item CTR vs average CTR: if items launched in the last 30 days have less than 30% of average CTR, exploration is broken. New content cannot break through the historical signal barrier.
+
+These three checks take 20 minutes to run. They will tell you more about the health of your recommendation system than any offline evaluation metric.
+
+**Practice this in System Design → Two-Tower Explorer**`,
+    tags: ['Recommendations', 'ML System Design', 'Feedback Loop', 'Exploration', 'Bias', 'Diversity'],
+    domain: 'design',
+    youtube: [],
+  },
+  {
+    id: 50,
+    slug: 'cuped-variance-reduction-failures',
+    title: 'When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test',
+    category: 'Causal Inference',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces required sample size by 50–80%. It also silently breaks your test in three specific ways that look like valid results.',
+    body: `**What CUPED Actually Does**
+
+CUPED removes variance in your outcome metric that is explained by pre-experiment user behavior. If you know a user was highly active before the experiment started, that baseline activity predicts a lot of their experiment-period activity — regardless of treatment. By controlling for that predictable variance, you reduce the noise in your treatment effect estimate, which reduces the sample size required to reach a given power level.
+
+The adjustment is: Y_adj = Y - θ(X - E[X]), where Y is the experiment-period metric, X is the pre-experiment covariate (e.g. user activity in the two weeks before the experiment), and θ = Cov(Y, X) / Var(X). This is OLS partial-out. CUPED is not a novel estimator — it is a specific application of covariate adjustment that has well-understood statistical properties and equally well-understood failure modes.
+
+The variance reduction equals 1 - Corr(Y, X)². If X explains 70% of variance in Y, CUPED reduces your required sample size by 70%. That is a real and significant benefit. It is also why failures are so costly — the technique is used precisely on high-stakes tests where sample size constraints are binding.
+
+**Failure Mode 1: Covariate Contaminated by Treatment Anticipation**
+
+If users know a treatment is coming before the experiment starts, their pre-experiment behavior shifts. A price increase announced two weeks before the experiment begins causes users to stockpile or defer purchases during the announcement window. That window is now in your pre-experiment covariate period. X is contaminated — it is correlated with treatment not because of baseline differences, but because of the announcement.
+
+CUPED amplifies this contamination rather than removing it. The θ parameter absorbs the announcement effect. The adjusted metric overcorrects for users who changed behavior in anticipation of the treatment, biasing the treatment effect estimate in the direction opposite to the announcement effect.
+
+Diagnostic: the covariate regression coefficient θ is unusually high (above 0.7), and its value changes substantially depending on which pre-experiment window you use. A stable CUPED adjustment should produce stable θ across window lengths of 1 week, 2 weeks, and 4 weeks. Volatile θ means X is capturing something that changed over the pre-experiment period — a red flag that contamination may be present.
+
+**Failure Mode 2: Non-Stationarity in the Covariate Relationship**
+
+CUPED assumes θ — the relationship between the pre-experiment covariate and the experiment-period outcome — is stable across time. If user behavior changed structurally between the pre-experiment window and the experiment period, this assumption is violated.
+
+A product redesign, a major marketing campaign, a seasonality shift, or a platform algorithm change can all break the stationarity assumption. If users who were active in the pre-experiment period are no longer active during the experiment period (because the redesign changed what the product rewards), then X is a poor predictor of Y. CUPED overcorrects — it subtracts too much from active pre-experiment users and too little from inactive ones, introducing systematic bias in the direction of the covariate shift.
+
+Diagnostic: compare the correlation between X and Y in the pre-experiment period with the correlation in the experiment period. For a clean CUPED application, these should be similar. A large divergence (e.g. Corr = 0.65 pre-experiment, Corr = 0.30 during experiment) is a sign that the covariate relationship has broken down and the adjustment is invalid.
+
+**Failure Mode 3: Covariate Computed on the Wrong Population**
+
+The covariate must be computed on the same users as the experiment, measured strictly before randomisation. Both conditions matter, and both are violated surprisingly often in data pipelines.
+
+Wrong population: if you compute X on all users rather than experiment-eligible users, you may include users with systematically different behavior patterns. The CUPED adjustment calibrated on the broader population is miscalibrated for the experiment population.
+
+Post-randomisation data: if your pipeline accidentally includes any data from after randomisation in the pre-experiment window — due to a timezone error, an off-by-one in the date boundary, or a data backfill — the covariate is contaminated with treatment effects. The adjustment will absorb part of the treatment effect into the "baseline" correction and underestimate the true effect.
+
+This failure mode is a data pipeline error, not a statistical error. It happens silently. The numbers look reasonable. The only reliable detection is: verify that the covariate mean is equal between treatment and control groups before adjustment. By randomisation, they should be equal. If they are not, the covariate was computed on data that was not cleanly pre-experiment for both groups.
+
+**How to Diagnose CUPED Failures in Practice**
+
+Three checks that take under an hour and should be standard before reporting any CUPED-adjusted result:
+
+Plot θ as a function of pre-experiment window length (1 week, 2 weeks, 4 weeks). Stable θ across window lengths is necessary (though not sufficient) for a valid CUPED adjustment. Volatile θ is a red flag.
+
+Verify covariate balance: compute the mean of X separately for treatment and control. They should be equal within sampling error. A systematic difference means the covariate was not cleanly pre-experiment.
+
+Always report both the unadjusted and CUPED-adjusted p-value. If they disagree substantially — for example, p_raw = 0.08 and p_cuped = 0.03 — investigate before concluding significance. A CUPED adjustment that moves a result from non-significant to significant should be scrutinised, not celebrated.
+
+**When Not to Use CUPED**
+
+CUPED requires a stable, clean pre-experiment period. It should not be used when the pre-experiment window is shorter than seven days (insufficient signal to estimate a reliable θ), when the product has had major structural changes between the pre-period and the experiment period, or when users are in their first week on the platform. New users have no stable baseline — their pre-experiment activity is zero or near-zero, and θ estimated on this population is unreliable.
+
+The technique is powerful precisely because it exploits user-level baseline differences. When those baselines are absent, contaminated, or non-stationary, the power gain disappears and you are left with a biased estimator that looks like a valid one.
+
+**Practice this in Causal Inference → Experiment Design Failures**`,
+    tags: ['Causal Inference', 'A/B Testing', 'CUPED', 'Variance Reduction', 'Experimentation', 'Statistics'],
+    domain: 'causal',
+    youtube: [{ id: 'W0kDiJiDcEE', title: 'Geometric interpretation of variance reduction methods — CUPED' }],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
+
+const SERIES = [
+  { id: 'all',       label: 'All Series' },
+  { id: 'failures',  label: 'Silent Failures',          posts: [1,3,5,21,38,41,42,43,45,46] },
+  { id: 'diag',      label: 'Production Diagnostics',   posts: [22,23,25,35,39,40] },
+  { id: 'arch',      label: 'Architecture Decisions',   posts: [4,7,11,12,15,16,24,44,48,49] },
+  { id: 'found',     label: 'Math & Foundations',       posts: [2,6,9,10,17,28,29,36,37,47,50] },
+  { id: 'career',    label: 'Interview & Career',       posts: [8,13,14,18,19] },
+]
 
 const GRADIENT_DOMAINS = [
   { id: 'all',       label: 'All Posts' },
@@ -2870,6 +3282,11 @@ const POST_PRACTICE = {
   43: { tab: 'monitor',      label: 'Monitoring — Drift Dashboard' },
   44: { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
   45: { tab: 'monitor',      label: 'Monitoring — Incident Triage' },
+  46: { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
+  47: { tab: 'causal',       label: 'Causal Inference — Identification Strategies' },
+  48: { tab: 'design',       label: 'System Design — Incident Room' },
+  49: { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
+  50: { tab: 'causal',       label: 'Causal Inference — Experiment Design Failures' },
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────
@@ -3139,6 +3556,7 @@ function PostCard({ post, featured, onClick, isRead }) {
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function GradientTab({ onNavigate }) {
   const [activeDomain, setActiveDomain] = useState('all')
+  const [activeSeries, setActiveSeries] = useState('all')
   const [reading,      setReading]      = useState(null)
   const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
   const [read, setRead] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')) } catch { return new Set() } })
@@ -3150,7 +3568,16 @@ export default function GradientTab({ onNavigate }) {
     localStorage.setItem('msl_read', JSON.stringify([...next]))
   }
 
-  const filtered = POSTS.filter(p => activeDomain === 'all' || p.domain === activeDomain)
+  function handleSeriesChange(id) {
+    setActiveSeries(id)
+    setActiveDomain('all')
+  }
+
+  const filtered = POSTS.filter(p => {
+    const seriesMatch = activeSeries === 'all' || (SERIES.find(s => s.id === activeSeries)?.posts || []).includes(p.id)
+    const domainMatch = activeDomain === 'all' || p.domain === activeDomain
+    return seriesMatch && domainMatch
+  })
   const featured = filtered.filter(p => p.featured)
   const rest      = filtered.filter(p => !p.featured)
 
@@ -3228,6 +3655,25 @@ export default function GradientTab({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Series filter */}
+      <div>
+        <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Series</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {SERIES.map(s => (
+            <button key={s.id} onClick={() => handleSeriesChange(s.id)}
+              style={{
+                padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
+                fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
+                background: activeSeries === s.id ? 'rgba(240,165,0,0.15)' : 'rgba(0,0,0,0.25)',
+                color: activeSeries === s.id ? 'var(--prime)' : 'var(--ink-low)',
+                border: activeSeries === s.id ? '1px solid rgba(240,165,0,0.4)' : '1px solid var(--rim)',
+              }}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Domain filter */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>

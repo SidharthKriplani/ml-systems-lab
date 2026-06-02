@@ -421,13 +421,26 @@ Toggle on the same problems. "Write it yourself" mode — blank cell, same expec
 **Risk:** Form fatigue. 5-6 steps before seeing output is a lot of upfront investment. Fast path is non-negotiable — not optional.
 
 ### GradientTab UX (identified 2026-05-29)
-- [ ] **Series + Tags redesign** — group the 25 posts into 4–5 named series (e.g., "Silent Failures", "Production Diagnostics"); add per-post tags (domains + concepts). Tags filter collapses to a filtered post list with sort options (newest / most relevant to current practice activity). Default sort when no filter: most relevant to user's active domains. Build trigger: when post count hits 50+. Below that threshold the flat list is navigable and series groupings would just add overhead. (Decided 2026-05-29)
-- [ ] **Revise / Learn / What's Next — state-aware reading mode** — three reading lenses powered by existing localStorage data: (1) **Revise** = posts in domains where practice scores are weak (`msl_score:*` < 60%); (2) **Learn** = unread posts in domains the user is actively practicing; (3) **What's Next** = unread posts in domains not yet touched. Data source: `msl_read` (read post IDs) + `msl_score:*` keys. Most valuable of the three — turns the feed from chronological browse into a personalized study queue without any backend. Pagination ("view more after N") explicitly decided against — not needed at 25 posts, reassess at 100+. (Decided 2026-05-29)
+- [x] ~~**Series + Tags redesign**~~ — done (v4.51). 5-series filter row live in GradientTab. SERIES constant + activeSeries state. Posts 20/26/27 still need series assignment (v4.52).
+
+**Series taxonomy (v4.50, 48 posts mapped — build UI when count hits 50+):**
+
+| Series | Posts | Description |
+|--------|-------|-------------|
+| **Silent Failures** | 1, 3, 5, 21, 38, 41, 42, 43, 45, 46 | Models that degrade without obvious signals — skew, drift, label noise, staleness, recsys failures |
+| **Production Diagnostics** | 22, 23, 25, 35, 39, 40 | Debugging and monitoring in production — Spark DAG, drift signals, forecast failures, calibration |
+| **Architecture Decisions** | 4, 7, 11, 12, 15, 16, 24, 44, 48 | System design, infrastructure, recommendation architecture, cold-start |
+| **Math & Foundations** | 2, 6, 9, 10, 17, 28, 29, 36, 37, 47 | Core concepts — Spark shuffle, PCA, gradient descent, SHAP, A/B tests, DiD, quantization |
+| **Interview & Career** | 8, 13, 14, 18, 19 | MLE interview prep, career ladders, salary, company breakdowns |
+
+Posts 20, 26, 27, 31–34 are Leakage & Contamination content (validation set leakage, feature store time-travel variants). These overlap heavily — a future content audit should consolidate. See Audit #028 content integrity note.
+
+- [ ] **Revise / Learn / What's Next — state-aware reading mode** — three reading lenses powered by existing localStorage data: (1) **Revise** = posts in domains where practice scores are weak (`msl_score:*` < 60%); (2) **Learn** = unread posts in domains the user is actively practicing; (3) **What's Next** = unread posts in domains not yet touched. Data source: `msl_read` (read post IDs) + `msl_score:*` keys. Most valuable of the three — turns the feed from chronological browse into a personalized study queue without any backend. (Decided 2026-05-29)
 
 ### Gradient posts (remaining from ideation)
-- [ ] "The 6 ways a recommendation system can silently stop recommending" → System Design
-- [ ] "When DiD breaks: parallel trends violations in practice" → Causal Inference
-- [ ] "Cold-start is not a model problem, it's a product problem" → System Design
+- [x] ~~"The 6 ways a recommendation system can silently stop recommending"~~ — done (Post 46, v4.50)
+- [x] ~~"When DiD breaks: parallel trends violations in practice"~~ — done (Post 47, v4.50)
+- [x] ~~"Cold-start is not a model problem, it's a product problem"~~ — done (Post 48, v4.50)
 
 ---
 
@@ -497,6 +510,21 @@ Ideas consciously decided against. Don't re-propose without new justification.
 ---
 
 ## Done (v4.48 completion — 2026-06-02)
+
+- [x] **Gradient posts 49–50** (v4.51) — Recsys Feedback Loop, When CUPED Goes Wrong. 50-post milestone reached.
+- [x] **Series + Tags UI** (v4.51) — SERIES constant + activeSeries state + filter row + AND-filtering in GradientTab. 5 series live.
+- [x] **Posts 31–34 differentiation** (v4.51) — 4 genuinely distinct angles (API trap, group contamination, retroactive data, walk-forward validation).
+- [x] **Gradient posts 46–48** (v4.50) — Recsys Silent Failures, When DiD Breaks, Cold-Start Is Not a Model Problem. POST_PRACTICE wired.
+- [x] **YouTube IDs posts 43+44** (v4.50) — concept drift jRM5_Z31y5U, cold-start UFpF108gyaw (both oEmbed verified).
+- [x] **Distractor quality pass** (v4.50) — 23 questions improved across CombinatorTab + TrainerTab. Audit #008.2 closed.
+- [x] **BookmarkButton ×10 additional tabs** (v4.50) — all 18 practice tabs now have BookmarkButton.
+- [x] **Series taxonomy documented** (v4.50) — 5 series mapped in IDEAS.md, UI deferred until 50+ posts.
+- [x] **Gradient posts 41–45** (v4.49) — Offline Eval, Label Noise, Concept Drift, Cold-Start, Model Staleness. POST_PRACTICE wired. `youtube: []` pending backfill (posts 41/42/45).
+- [x] **Module bookmarking — Save for Later** (v4.49) — BookmarkButton in 8 tabs (FeatureEng, ModelEval, ModelsMath, Classical, SystemDesign, Spark, Monitoring, MLOpsDeploy). HomeTab section already live.
+- [x] **Design token extraction** (v4.49) — `--card-pad-primary`, `--card-pad-secondary`, `--prime-bg-light` in :root. 237 replacements across tabs + App + components.
+- [x] **Emoji sweep** (v4.49) — ⚡ → SVG lightning in CombinatorTab ×4; 🎉 → SVG star in ProjectLabTab.
+- [x] **Interview zone accessibility audit** (v4.49) — all 9 tools verified; 2 App.jsx description fixes.
+- [x] **MD spine fixes** (v4.49) — METRICS.md table, IDEAS.md dupe, BRAIN_TRANSFER.md v4.48 state.
 
 - [x] **README social proof** (v4.48 Item 1) — "Used by 500+ engineers" added
 - [x] **Design token enforcement** (v4.48 Item 2) — 3 token candidates documented in DECISIONS.md

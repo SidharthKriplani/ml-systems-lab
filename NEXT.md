@@ -1,73 +1,78 @@
 # NEXT.md — Session Queue
 
-Next 5 items for v4.49 sprint. Updated: 2026-06-02 (end of v4.48 mega-batch)
+Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.49 — Blocking + Content Quality + Interview Experiences Complete
+## v4.49 — Done this session
 
-1. **Complete v4.47 Item 3: Interview Experiences Monitoring** (BLOCKED on external setup)
-   - Avinash must sign up for Formspree (for feedback form collection in FeedbackChip) and Tally.so (for interview experience form in InterviewGrid)
+- [x] ~~Gradient posts 41–45~~ — done (GradientTab.jsx, 5 posts, POST_PRACTICE wired, brace delta 0)
+- [x] ~~Module bookmarking — Save for Later~~ — done (BookmarkButton in 8 tabs, HomeTab section already rendered, all brace delta 0)
+- [x] ~~Design token extraction~~ — done (3 tokens in :root, 237 total replacements across tabs/App/components)
+- [x] ~~Emoji sweep~~ — done (⚡ → SVG in CombinatorTab ×4, 🎉 → SVG star in ProjectLabTab; country flags kept)
+- [x] ~~Interview zone audit~~ — done (all 9 tools verified; 2 description fixes in App.jsx)
+- [x] ~~MD sync~~ — done (METRICS.md table fixed, IDEAS.md dupe removed, BRAIN_TRANSFER.md updated)
+- [x] ~~LINEAGE.md v4.49 entry~~ — done
+
+---
+
+## v4.50 done this session
+
+- [x] ~~Gradient posts 46–48~~ — done (recsys silent failures, DiD parallel trends, cold-start product framing)
+- [x] ~~YouTube IDs posts 43+44~~ — done (jRM5_Z31y5U concept drift, UFpF108gyaw cold-start; posts 41/42/45 remain [])
+- [x] ~~Distractor quality pass~~ — done (23 questions improved: 12 CombinatorTab + 11 TrainerTab; Audit #008.2 closed)
+- [x] ~~BookmarkButton ×10 more tabs~~ — done (all 18 practice tabs now have BookmarkButton)
+- [x] ~~Series taxonomy~~ — done (5 series mapped across 48 posts in IDEAS.md; UI build deferred until 50+)
+- [x] ~~AUDITS.md #027+028~~ — done (interview audit + full batch documented; Summary Table updated)
+- [x] ~~LINEAGE.md v4.50~~ — done
+
+---
+
+## v4.51 — Done this session
+
+- [x] ~~Gradient posts 49–50~~ — done (recsys feedback loop, CUPED failures; 50 posts milestone reached)
+- [x] ~~YouTube ID post 50~~ — done (W0kDiJiDcEE verified; posts 41/42/45 remain [])
+- [x] ~~Series + Tags UI~~ — done (SERIES constant, activeSeries state, filter row above domain pills, AND-filtering)
+- [x] ~~Posts 31–34 differentiation~~ — done (4 distinct angles; API trap, group contamination, retroactive data, walk-forward)
+- [x] ~~LINEAGE v4.51~~ — done
+
+---
+
+## v4.52 — Next sprint
+
+1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
-   - Requires: Tally.so account + form link → `REPLACE_WITH_YOUR_TALLY_ID` in `src/tabs/App.jsx` InterviewGrid
-   - Once credentials provided: wire both forms, test submission flow, verify data flow to admin panel
-   - Blockers all documented in code; unblocking only requires account signup + 10-min credential swap
+   - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **Module bookmarking: "Save for Later" feature** (v4.48 Item 4 infrastructure complete)
-   - Add "Save" button to every scenario/module card (ModelsMath, FeatureEng, ModelEval, ClassicalML, etc.)
-   - Persist to `msl_bookmarks` localStorage (already prepared)
-   - Add "My Bookmarks" view on HomeTab showing all saved modules with navigation
-   - Card state: filled heart (saved) vs outline heart (not saved), toggle on click
-   - Estimated: 2 hours across 30 tab files + HomeTab
+2. **YouTube IDs backfill — posts 41, 42, 45**
+   - Posts 41 (Offline Eval ≠ Online), 42 (Label Noise), 45 (Silent Model Staleness) still have `youtube: []`
+   - Good search angles: Evidently AI channel for monitoring/staleness; Confident Learning (Curtis Northcutt) for label noise; RecSys conference talks for offline vs online eval
 
-3. **Gradient posts 41–45: 5 new high-impact posts** (content quality pass)
-   - Post 41: "Offline Evaluation ≠ Online Performance" (domain: eval, failure mode where offline metrics don't predict production)
-   - Post 42: "Label Noise in Production: When Your Ground Truth Lies" (domain: features, data quality failure)
-   - Post 43: "Concept Drift: The Invisible Enemy" (domain: monitoring, production failure mode)
-   - Post 44: "Cold-Start Trap in Personalization" (domain: design, architecture failure)
-   - Post 45: "Silent Model Staleness" (domain: monitoring, observability failure)
-   - All must have verified YouTube IDs + practice module CTAs before shipping
-   - Estimated: 4 hours (1 post = 45 min research + write + link)
+3. **Series filter — assign unassigned posts 20, 26, 27**
+   - These 3 posts (Validation Set Leakage variants + Feature Store extended) currently only visible under "All Series"
+   - Post 20 → Silent Failures; Post 26 → Silent Failures; Post 27 → Silent Failures
+   - Update SERIES arrays in GradientTab.jsx
 
-4. **Interview zone accessibility audit**
-   - Verify all 9 interview tools (Defense, Combinator, Verbal, Spot the Flaw, Interview Prep Q&A, Take-Home, Case Studies, Staff Layer, Trainer) are discoverable and have clear entry points
-   - Check: all tools show in `INTERVIEW_TOOLS` array, all routed correctly in App.jsx, all have ForwardPointers/CTAs
-   - Check: all descriptions clear on first visit (guidance text added v4.17, verify still accurate)
-   - Check: mobile navigation works smoothly across all tools
-   - Estimated: 1 hour
+4. **Distractor quality pass — round 2**
+   - 23 questions improved in v4.50. Remaining tabs not yet touched: SparkLabTab, AirflowTab, dbtTab, DeepLearningTab
+   - Run same audit: identify obviously-wrong options, replace with plausibly-wrong ones
 
-5. **NEXT.md → IDEAS.md → DECISIONS.md final sync**
-   - Move this session's completed items (v4.47 + audits + v4.48 + 3 resolved findings) to LINEAGE.md "Done" section with dates
-   - Finalize DECISIONS.md token enforcement section (grep checklist, pre-commit steps)
-   - Finalize METRICS.md (4 new keys now documented)
-   - Verify AUDITS.md has all 3 findings marked ✅ Resolved
-   - Queue remaining Tier 1 items from IDEAS.md for v4.50+ planning
-   - Estimated: 1 hour (mostly documentation)
+5. **ROLLOUT.md Batch 0 checklist update**
+   - Several checklist items reference features added since last ROLLOUT.md edit (bookmarking, series filter, 50 posts, design tokens)
+   - Update checklist to reflect current surface area before any external tester access
 
 ---
 
-## Blockers blocking this batch
+## Blockers
 
-**v4.47 Item 3 — Interview Experiences:** Awaiting Avinash account setup (Formspree + Tally).
-- Cannot proceed without credentials.
-- Does not count toward batch completion — marked blocked.
-- Timeline: Avinash availability.
-
----
-
-## Critical path
-
-1. Unblock v4.47 Item 3 (interview experiences) — high-value feature for interview zone
-2. Ship bookmarking + "My Bookmarks" view — improves retention/re-engagement
-3. Add 5 new Gradient posts — content freshness + breadth
-4. Interview zone audit — verify accessibility before any promotion
+**Interview Experiences (v4.47 Item 3):** Awaiting Avinash signup for Formspree + Tally.so.
 
 ---
 
 ## Notes for next session
 
-- All code changes from v4.48 are staged in git; user must clear locks locally (`rm -f .git/index.lock .git/HEAD.lock`) and push
-- All spine files updated except NEXT.md (this file) and final IDEAS.md/"Done" section move
-- No architectural debt identified; codebase health is clean (all brace-balanced, all CSS variables, no hardcoded colors)
-- 35+ files modified, zero merge conflicts expected
-- LoadingSpinner.jsx and export.js/read.js are new utility files — verify they're committed as part of bundle
+- All v4.49–v4.51 changes staged but NOT committed — run from terminal:
+  `rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.51: Posts 49-50, series UI, post 31-34 rewrite, CUPED YouTube ID" && git push`
+- Brace balance: GradientTab at delta 0; all other files clean
+- 50 Gradient posts total
+- Series UI live — posts 20/26/27 still need series assignment (v4.52 Item 3)
