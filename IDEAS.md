@@ -511,6 +511,10 @@ Ideas consciously decided against. Don't re-propose without new justification.
 
 ## Done (v4.48 completion — 2026-06-02)
 
+- [x] **Light mode visual pass** (v4.56) — ink contrast fixed, sidebar accordion removed, all white/amber rgba → CSS tokens in App.jsx, TimeSeriesTab, DefenseDocTab.
+- [x] **Build safety documented** (v4.56) — 4 recurring risks in AUDITS.md: f-string `${}`, `\&\&` entities, bare `<digit`, triple backticks in template literals.
+- [x] **Code examples posts 4, 7, 11** (v4.56) — TwoTowerScorer, Feast FeatureStore API, cold/warm/hot router.
+- [x] **Dual theme system** (v4.55) — parchment light + charcoal dark. sun/moon toggle. msl_theme localStorage. All tokens respond via CSS variables.
 - [x] **Revise mode v2** (v4.54) — trainer/combinator history wired; HISTORY_DOMAIN_MAP; aggregate accuracy < 60% = weak domain.
 - [x] **Fidelity badge ×10 remaining tabs** (v4.54) — all 20 practice tabs now have badges.
 - [x] **Code examples in posts 22/23/25/39** (v4.54) — Spark metrics, PSI+KS, temporal features, skew detection.

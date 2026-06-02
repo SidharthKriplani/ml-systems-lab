@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.56 — light mode visual pass, build fixes ×4, code examples posts 4/7/11, sidebar cleanup (2026-06-02)
+
+**Light mode visual audit:**
+- `--ink-low` `#8a7560` → `#5c4838`, `--ink-ghost` `#b0a090` → `#8a7560`, `--ink-mid` → `#3d3225`. Nav text ~5:1 contrast on parchment.
+- Sidebar accordion removed — all domains permanently expanded, no chevrons, headers converted from `<button>` to `<div>`.
+- All `rgba(255,255,255,...)` in App.jsx → CSS tokens (`var(--rim)`, `var(--surface)`, `var(--ink-low)`, `var(--prime-faint)`). Affects: bottom nav inactive, InterviewGrid cards, sidebar dividers/labels/kbd, topbar GitHub/kbd.
+- TimeSeriesTab: 10+ `rgba(240,165,0,0.08–0.20)` → `var(--prime-bg-light)` / `var(--prime-glow)`.
+- DefenseDocTab: all `rgba(240,165,0,0.28)` → `var(--prime-glow)`.
+
+**Build fixes (3 new recurring risks documented in AUDITS.md):**
+- ClassicalMLTab: `\&\&` → `&&` in onKeyDown
+- GradientTab post 40: 4 unescaped triple backticks → `\`\`\``
+- FraudDetectionTab: `${...:.0f}` f-strings → `\${...}`, bare `<100ms` → `&lt;100ms`
+
+**Code examples in posts 4, 7, 11:** TwoTowerScorer class, Feast FeatureStore API, cold/warm/hot router function.
+
+**HomeTab changelog updated.** AUDITS.md: 4 build safety risks documented with grep commands.
+
+**Brace balance:** All files at delta 0.
+
+---
+
+### v4.55 — dual theme: parchment light + charcoal dark, sun/moon toggle (2026-06-02)
+
+**What shipped:**
+- `src/index.css`: `:root` updated to charcoal dark (`#111111` void, `#e8a030` prime). `[data-theme="light"]` parchment block added (`#f4f0e8` void, `#9a6800` prime, all ink/shadow/surface tokens overridden). `--topbar-bg` token added. `body` gradient updated for both themes.
+- `src/App.jsx`: `theme` useState (reads `msl_theme` localStorage). `useEffect` applies `data-theme` to `document.documentElement`. Topbar, bottom nav, sidebar backgrounds all use `var(--topbar-bg)` / `var(--depth)` / `var(--rim)`. Sun/moon toggle button in topbar. All `rgba(240,165,0,...)` in App.jsx → `var(--prime-faint)` / `var(--prime-glow)`.
+
+**Brace balance:** App.jsx delta 0.
+
+---
+
 ### v4.54 — Revise mode v2, fidelity badges ×10, code examples in posts, distractor r4, ForwardPointers complete (2026-06-02)
 
 **What shipped:**

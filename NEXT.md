@@ -72,27 +72,45 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ---
 
-## v4.55 — Next sprint
+## v4.55 — Done this session
+
+- [x] ~~Dual theme system~~ — done (parchment light + charcoal dark, sun/moon toggle, msl_theme localStorage)
+
+---
+
+## v4.56 — Done this session
+
+- [x] ~~Light mode visual pass~~ — done (ink contrast, sidebar accordion removed, all rgba(255,255,255) → CSS vars)
+- [x] ~~TimeSeriesTab + DefenseDocTab rgba~~ — done (→ var(--prime-bg-light)/var(--prime-glow))
+- [x] ~~Build fixes ×4~~ — done (\&\&, backticks, f-string $, <100ms JSX)
+- [x] ~~Code examples posts 4/7/11~~ — done (TwoTower, Feast API, cold-start router)
+- [x] ~~HomeTab changelog~~ — done (updated Jun 2026 entry)
+- [x] ~~AUDITS.md build safety~~ — done (4 recurring risks documented with grep commands)
+- [x] ~~LINEAGE v4.55 + v4.56~~ — done
+
+---
+
+## v4.57 — Next sprint
 
 1. **Unblock Interview Experiences** (blocked on Avinash credentials)
    - Requires: Formspree account ID → `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
    - Requires: Tally.so form URL → `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid
 
-2. **Gradient post code pass — remaining posts without code**
-   - Posts 4, 5, 7, 11, 15, 24 are high-value but have no code blocks
-   - Add 1 snippet per post: two-tower architecture (4), PSI drift (5), feature store API (7), cold-start routing (11), Netflix ML stack (15), system design checklist (24)
+2. **Fidelity badges — interview zone tabs**
+   - CombinatorTab, TrainerTab, CodeBugsTab, VerbatimTab, SpotTheFlawTab, StaffLayerTab, CaseStudiesTab not yet badged
+   - All AccordionMCQ/judgment → `conceptual`; VerbatimTab speech → `faithful`
 
-3. **Gradient post body pass — add code examples to 5 posts**
-   - Posts 4, 7, 11 are highest value (rec system, feature store, cold start)
-   - 1 Python snippet each
+3. **Gradient post code pass — posts 5, 15, 24**
+   - Posts 4/7/11 done; posts 5 (PSI drift detection), 15 (Netflix ML stack), 24 (system design checklist) still have no code
+   - 1 verified Python snippet each
 
-4. **HomeTab changelog — update entry**
-   - Jun 2026 entry is stale (references v4.44 features)
-   - Update to reflect 50 posts, bookmarking ×18 tabs, series UI, Revise mode, fidelity badges, ForwardPointers on all tabs
+4. **ROLLOUT.md — Batch 1 readiness check**
+   - Batch 0 checklist updated; read Batch 1 tester brief and confirm it reflects current product before inviting anyone
+   - Light/dark theme now present — add to Batch 1 check: "toggle switches theme, preference persists"
 
-5. **ROLLOUT.md — Batch 1 readiness check**
-   - Batch 0 checklist is updated; run through it manually before inviting Batch 1 testers
-   - Batch 1 tester brief is written; confirm it still reflects current product
+5. **RSS feed for Gradient posts**
+   - 30-min Vite plugin: generate `/rss.xml` at build time from the POSTS array
+   - 50 posts × title/excerpt/date/slug — adds a distribution channel for free
 
 ---
 
@@ -104,10 +122,8 @@ Next 5 items for v4.51 sprint. Updated: 2026-06-02 (end of v4.50 batch)
 
 ## Notes for next session
 
-- All changes staged but NOT committed — run from terminal:
-  `cd ~/Documents/GitHub/ml-systems-lab && rm -f .git/index.lock .git/HEAD.lock && git add -A && git commit -m "v4.54: Revise v2, fidelity x10, post code examples, distractor r4 x12, ForwardPointers all tabs" && git push`
+- All v4.55 + v4.56 changes committed — run `git push` if not already done
 - Brace balance: all files at 0
-- All 20 practice tabs now have ForwardPointers + fidelity badges
-- 77 total distractor questions improved across 13 tab files (4 rounds)
-- Revise mode v2 now draws from trainer/combinator history — much more useful for active users
-- HomeTab changelog is stale — update as v4.55 Item 4
+- No open build safety issues — all 4 recurring risks now documented in AUDITS.md
+- Pre-commit sweep before any future commit: see AUDITS.md "Recurring Build Safety risk" section
+- Light mode fully functional — theme toggle in topbar, persists via msl_theme
