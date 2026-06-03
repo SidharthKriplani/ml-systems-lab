@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.64 complete — 2026-06-03):**
+**Current state (v4.65 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
@@ -217,17 +217,17 @@ Later files reference earlier ones. Always update in this sequence:
 4. ~~**Incident Room → 6 scenarios**~~ — inc4 (resolution lag), inc5 (feature store silent schema mismatch), inc6 (zero-variance predictions from stale snapshot).
 5. ~~**ML Coding → 6 problems**~~ — mlc4–mlc6 added above.
 
-### v4.64 sprint — DONE
-1. ~~Three-tier on IncidentRoom steps~~ — 12 steps across inc1–inc6, render wired + all data added.
-2. ~~HyperparamScenarios three-tier~~ — 8 HYPERPARAM_SCENARIOS, render wired + all data added.
-3. ~~MLOpsDeploy scenario 8~~ — batch inference at scale: EMR Spark vs Batch Transform vs Lambda fan-out.
+### v4.65 sprint — DONE
+1. ~~ENSEMBLE_SCENARIOS three-tier~~ — 7 scenarios, AccordionMCQ render wired + all data added.
+2. ~~MLCodingTab mlc7~~ — PySpark skew diagnosis + salted join. MLCoding now 7 problems.
+3. ~~SHAP video fix~~ — title corrected (A Data Odyssey, not StatQuest). Video valid.
 
-### v4.65 sprint — queued (see NEXT.md)
+### v4.66 sprint — queued (see NEXT.md)
 1. isFree per-case gating first pass (5 highest-traffic tabs).
 2. Unblock Interview Experiences (awaiting credentials).
-3. ENSEMBLE_SCENARIOS three-tier decision (AccordionMCQ render update or leave).
-4. MLCodingTab mlc7 — PySpark skew/salting problem.
-5. SHAP video replacement in GradientTab.
+3. MLCodingTab mlc8 — feature pipeline health check.
+4. SpotTheFlawTab three-tier pass.
+5. DLFineTuningTab + DLServingTab content audit.
 
 ---
 

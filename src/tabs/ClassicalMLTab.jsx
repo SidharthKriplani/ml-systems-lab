@@ -137,6 +137,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Bagging',
     reasoning: "Bagging's parallel trees each see different bootstrap samples — reduces variance directly. Boosting would make overfitting worse by doubling down on hard examples. The problem is high variance, not high bias.",
     whyNot: 'Boosting increases model complexity and would amplify the variance issue. Stacking/blending needs more data to be reliable than 5k.',
+    whatsTested: 'Whether you correctly map high variance to bagging — parallel trees on bootstrap samples reduce variance without increasing bias.',
+    antiPattern: 'Choosing Boosting for a high-variance model makes it worse — boosting doubles down on hard examples and increases model complexity.',
+    staffFraming: 'High variance = model is too complex for the data. Bagging averages across diverse samples. Boosting adds more complexity. Never use boosting to fix overfitting.',
   },
   {
     id: 2,
@@ -146,6 +149,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Boosting',
     reasoning: 'Boosting sequentially fits residuals — it directly attacks bias. Each new model corrects where the previous one was wrong. Bagging averages parallel models and won\'t help when the underlying model is underfitting.',
     whyNot: 'Bagging reduces variance, not bias. If every tree underfits, averaging them still underfits.',
+    whatsTested: 'Whether you correctly map high bias (train ≈ val, both poor) to boosting — sequential residual correction directly reduces bias.',
+    antiPattern: 'Bagging when a model underfits — you average 100 underfitting trees and still get an underfitting ensemble.',
+    staffFraming: 'Bias-variance diagnosis is gate zero. Train ≈ val both poor = bias. Train much better than val = variance. Boosting for bias. Bagging for variance. Never mix them up.',
   },
   {
     id: 3,
@@ -155,6 +161,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Stacking',
     reasoning: 'Uncorrelated errors from diverse model families = high stacking value. A meta-learner learns when to trust each base model. Simple blending leaves signal on the table — the meta-learner can learn the conditional relationship.',
     whyNot: 'Blending is simpler but treats all models equally. The meta-learner in stacking can discover context-dependent model trust.',
+    whatsTested: 'Whether you know stacking extracts value from uncorrelated errors across diverse model families — a meta-learner learns when to trust each base model.',
+    antiPattern: 'Simple averaging (blending) when errors are uncorrelated — you leave the conditional trust signal on the table that the meta-learner would have captured.',
+    staffFraming: 'Stacking payoff = diversity of base models × uncorrelatedness of errors. Same family = correlated errors = low stacking value. XGBoost + LightGBM + linear = high value.',
   },
   {
     id: 4,
@@ -164,6 +173,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Blending',
     reasoning: 'Rank-average or mean of probabilities. Fast, surprisingly effective, no overfitting risk from a meta-learner. Rule of thumb: weight models by (val_AUC - 0.5)². Stacking would need a held-out set and time you don\'t have.',
     whyNot: 'Stacking requires training a meta-learner on out-of-fold predictions — no time for that. Single model throws away 11 models worth of work.',
+    whatsTested: 'Whether you know blending (rank-average or probability average) is the correct choice under time pressure — no meta-learner training required.',
+    antiPattern: 'Attempting stacking with 1 hour remaining — the meta-learner requires out-of-fold predictions which need the full CV to generate.',
+    staffFraming: 'Kaggle end-game: blend first, always. Stacking is for when you have days, not hours. Rank-average weighted by (val_AUC - 0.5)² is the standard fast ensemble.',
   },
   {
     id: 5,
@@ -173,6 +185,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Single model',
     reasoning: 'Ensembles add complexity and require more data to be reliable. A well-regularized single model + stratified k-fold will outperform a hastily assembled ensemble on 2k samples. With small N, ensemble overfitting risk outweighs the variance reduction benefit.',
     whyNot: 'Any ensemble on 2k samples risks overfitting the ensemble structure itself. Use your data budget for cross-validation, not stacking layers.',
+    whatsTested: 'Whether you know ensembles require sufficient data to be reliable — on 2k samples, ensemble overhead outweighs variance reduction.',
+    antiPattern: 'Building an ensemble on 2k samples — the ensemble itself can overfit, and you have no data budget left for a reliable stacking holdout set.',
+    staffFraming: 'Rule of thumb: need at least 10k samples for stacking to be reliable. Below that: well-regularized single model + stratified k-fold extracts more signal.',
   },
   {
     id: 6,
@@ -182,6 +197,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Voting Classifier',
     reasoning: 'Each model votes — majority wins. Perfect when you have specialists with complementary objectives and you want a democratic decision policy. Hard voting is ideal here: 2-of-3 models must agree to flag.',
     whyNot: 'Blending averages probabilities and can be dominated by the most confident model. Stacking would lose the intentional specialization of each model.',
+    whatsTested: 'Whether you recognise that a democratic majority-vote policy maps to Voting Classifier, not probability averaging.',
+    antiPattern: 'Blending (probability average) when you have specialist models — the most confident model dominates and the specialization is effectively lost.',
+    staffFraming: 'Hard voting = 2-of-3 agree = decision. Soft voting = averaged probabilities = confidence-weighted. When the policy is democratic by design, hard voting is the implementation.',
   },
   {
     id: 7,
@@ -191,6 +209,9 @@ const ENSEMBLE_SCENARIOS = [
     answer: 'Stacking',
     reasoning: 'A 2-point plateau with moderate bias is not a signal to switch families — it is a signal that a single algorithm family has been exhausted. Stacking across families (XGBoost + LightGBM + a linear model) will extract incremental signal that no single-family ensemble can. Switching XGBoost for Random Forest replaces one boosted ensemble with a bagged ensemble — both are tree-based, errors are correlated, and the gain is marginal. Blending is a weaker version of stacking. The 4-hour training time rules out running boosting with dramatically more trees.',
     whyNot: 'Switching from Boosting to Bagging within the same tree family gains little — errors are still correlated across decision trees. The plateau is a sign that you need diverse model families, not a different aggregation technique.',
+    whatsTested: 'Whether you recognise that a single-family plateau requires cross-family stacking, not a switch from boosting to bagging.',
+    antiPattern: 'Switching XGBoost for Random Forest at a plateau — both are tree-based, errors are highly correlated, the gain is marginal and not worth 4 more hours of training.',
+    staffFraming: 'Single-family plateau = exhausted the algorithm. Stacking across families (trees + linear + neural) extracts residual signal that no tree family can capture. Training budget is the only constraint.',
   },
 ]
 
@@ -824,6 +845,24 @@ function EnsembleDecisionLab() {
                   <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Why not the others: </span>
                   <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{scenario.whyNot}</span>
                 </div>
+                {scenario.whatsTested && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What this tests · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.whatsTested}</span>
+                  </div>
+                )}
+                {scenario.antiPattern && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--rose)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Anti-pattern · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.antiPattern}</span>
+                  </div>
+                )}
+                {scenario.staffFraming && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--violet)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>How a senior frames this · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.staffFraming}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

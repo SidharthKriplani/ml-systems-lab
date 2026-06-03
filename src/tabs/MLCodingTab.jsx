@@ -427,6 +427,114 @@ print(result)
     checkpoint: 'Your deduplication sorts descending then drop_duplicates to get the latest row. What is the subtle failure mode if the CDC feed has two UPDATE events for the same record_id with identical updated_at timestamps?',
     checkpointAnswer: 'sort_values is not guaranteed stable across equal keys — the row kept by drop_duplicates(keep="first") after sorting could be either of the two tied events, depending on the original DataFrame order. In practice, CDC systems assign monotonically increasing sequence numbers precisely for this reason. The correct fix: add a sequence_number column as a tiebreaker in the sort. If sequence numbers are unavailable, document the non-determinism explicitly — hiding it causes hard-to-debug production inconsistencies.',
   },
+  {
+    id: 'mlc7',
+    title: 'Diagnosing and Fixing Spark Data Skew',
+    domain: 'Data Engineering',
+    difficulty: 'senior',
+    prompt: `A PySpark job joining user events to a user_profile table takes 3.5 hours. Profiling shows 1 executor processes 80% of the data while 199 sit idle.
+
+Your tasks:
+1. Write diagnose_skew(df, key_col) — returns the top 10 keys by count and the skew ratio (max_count / mean_count)
+2. Write salt_join(events_df, profiles_df, join_key, n_buckets=10) — implement salted join to distribute hot keys
+   - Add a random salt (0 to n_buckets-1) to events_df join key
+   - Replicate each profiles_df row n_buckets times with each salt value
+   - Join on the salted key, then drop salt columns
+
+Use only PySpark (pyspark.sql.functions). No pandas.`,
+    starter: `from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import *
+
+spark = SparkSession.builder.master("local[*]").appName("skew").getOrCreate()
+spark.sparkContext.setLogLevel("ERROR")
+
+def diagnose_skew(df, key_col):
+    """Return top 10 keys by count + skew ratio (max/mean)."""
+    # Your implementation here
+    pass
+
+def salt_join(events_df, profiles_df, join_key, n_buckets=10):
+    """Salted join to distribute hot keys across partitions."""
+    # Your implementation here
+    pass
+
+# Test data
+events = spark.createDataFrame([
+    ("user_A",), ("user_A",), ("user_A",), ("user_A",), ("user_A",),
+    ("user_B",), ("user_B",), ("user_C",), ("user_D",), ("user_E",),
+], ["user_id"])
+
+profiles = spark.createDataFrame([
+    ("user_A", "premium"), ("user_B", "free"),
+    ("user_C", "free"), ("user_D", "premium"), ("user_E", "free"),
+], ["user_id", "tier"])
+
+print("=== Skew diagnosis ===")
+top_keys, skew_ratio = diagnose_skew(events, "user_id")
+top_keys.show()
+print(f"Skew ratio: {skew_ratio:.1f}x")
+
+print("\\n=== Salted join result ===")
+result = salt_join(events, profiles, "user_id", n_buckets=4)
+result.show()
+`,
+    solution: `from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+spark = SparkSession.builder.master("local[*]").appName("skew").getOrCreate()
+spark.sparkContext.setLogLevel("ERROR")
+
+def diagnose_skew(df, key_col):
+    counts = df.groupBy(key_col).count()
+    top10 = counts.orderBy(F.desc("count")).limit(10)
+    stats = counts.agg(
+        F.max("count").alias("max_count"),
+        F.mean("count").alias("mean_count")
+    ).collect()[0]
+    skew_ratio = stats["max_count"] / stats["mean_count"]
+    return top10, skew_ratio
+
+def salt_join(events_df, profiles_df, join_key, n_buckets=10):
+    # Add random salt to events
+    salted_events = events_df.withColumn(
+        "salt", (F.rand() * n_buckets).cast("int")
+    ).withColumn(
+        "salted_key", F.concat(F.col(join_key), F.lit("_"), F.col("salt"))
+    )
+
+    # Replicate profiles for each salt bucket
+    buckets_df = spark.range(n_buckets).withColumnRenamed("id", "salt")
+    salted_profiles = profiles_df.crossJoin(buckets_df).withColumn(
+        "salted_key", F.concat(F.col(join_key), F.lit("_"), F.col("salt"))
+    )
+
+    # Join on salted key, drop helper columns
+    result = salted_events.join(salted_profiles, on="salted_key", how="left") \
+        .drop("salt", "salted_key", salted_profiles[join_key])
+
+    return result
+
+events = spark.createDataFrame([
+    ("user_A",), ("user_A",), ("user_A",), ("user_A",), ("user_A",),
+    ("user_B",), ("user_B",), ("user_C",), ("user_D",), ("user_E",),
+], ["user_id"])
+
+profiles = spark.createDataFrame([
+    ("user_A", "premium"), ("user_B", "free"),
+    ("user_C", "free"), ("user_D", "premium"), ("user_E", "free"),
+], ["user_id", "tier"])
+
+top_keys, skew_ratio = diagnose_skew(events, "user_id")
+top_keys.show()
+print(f"Skew ratio: {skew_ratio:.1f}x")
+
+result = salt_join(events, profiles, "user_id", n_buckets=4)
+result.show()
+`,
+    checkpoint: 'Your salt_join replicates the profiles table n_buckets times. What is the failure mode when profiles_df is very large (e.g., 500M rows) and n_buckets=20?',
+    checkpointAnswer: 'Replicating a 500M-row table 20× produces a 10B-row intermediate dataset. This will OOM the executors and is worse than the original skew problem. Salting only makes sense when profiles_df (the small/dimension table) can be broadcast OR when the skew is in a small subset of keys. The correct production approach for large dimension tables: identify which keys are hot (top 1%), salt only those specific hot keys (partial salting), and handle the remaining keys with a standard join. This bounds the replication factor to hot-key count × n_buckets, not total_rows × n_buckets.',
+  },
 ]
 
 // ── Problem card component ────────────────────────────────────────────────────

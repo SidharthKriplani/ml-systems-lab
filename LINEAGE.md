@@ -46,6 +46,25 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.65 — ENSEMBLE_SCENARIOS three-tier, mlc7 PySpark skew, SHAP video fix (2026-06-03)
+
+**ClassicalMLTab — ENSEMBLE_SCENARIOS three-tier:**
+- Wired `whatsTested`, `antiPattern`, `staffFraming` callouts into the ensemble scenario reveal panel (after whyNot div, matching HyperparamPriority format).
+- Added all 3 fields to all 7 ENSEMBLE_SCENARIOS (high variance→bagging, high bias→boosting, diverse families→stacking, deadline→blending, small data→single model, specialists→voting, plateau→stacking).
+- ClassicalMLTab now has full three-tier coverage across both ENSEMBLE_SCENARIOS (7) and HYPERPARAM_SCENARIOS (8).
+
+**MLCodingTab — mlc7 (PySpark skew/salting):**
+- Added `mlc7`: senior-difficulty PySpark problem — diagnose_skew() returning top-10 keys + skew ratio, and salt_join() implementing salted join for hot key distribution.
+- Checkpoint: failure mode of salting a 500M-row dimension table (partial salting is the correct production fix).
+- MLCoding now at 7 problems (mlc1–mlc7).
+
+**GradientTab — SHAP video fix:**
+- Corrected video title for `3032t--_wsg` from "SHAP in Linear Regression Plots — StatQuest" to "SHAP Values in Linear Regression — A Data Odyssey" (video is valid and on-topic; was mislabeled as StatQuest). Audit finding #026.1 resolved.
+
+**Files modified:** `src/tabs/ClassicalMLTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/GradientTab.jsx`.
+
+---
+
 ### v4.64 — Three-tier on IncidentRoom + HyperparamScenarios, MLOpsDeploy scenario 8 (2026-06-03)
 
 **IncidentRoomTab — three-tier render + data:**
