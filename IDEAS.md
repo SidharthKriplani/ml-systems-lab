@@ -1,7 +1,7 @@
 # IDEAS.md — Build Backlog
 
 Future-facing. Prioritized. Feeds from AUDITS.md findings and creative sessions.  
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 
 **Rule:** AUDITS.md feeds this file, not the reverse. Audit findings that are buildable features go into Tier 1 here. Features you want to build don't go into AUDITS.md.
 
@@ -10,14 +10,14 @@ Last updated: 2026-06-02
 ## PAL Revamp — Sprint Roadmap (logged 2026-06-03, from PAL screenshot audit)
 
 ### Sprint A — Fix what's broken (no new content)
-- [ ] **Typography/contrast overhaul** — `index.css` single pass. Push `--ink-mid` ~60% → ~85% brightness, `--ink-low` → ~70%, remove `--ink-ghost` as primary text color. PAL uses near-white on dark; MSL is grayish at standard brightness. Highest visible-impact, lowest-risk change.
-- [ ] **Consistent scenario card format** — Define one card standard across all tabs: title, difficulty pill, estimated time, domain tag, completion indicator. Currently FeatureEng/ModelEval/ClassicalML/IncidentRoom/MLCoding all render differently.
-- [ ] **"What to do next" after scenario completion** — Explicit forward-routing at end of each tab's reveal/complete state. Minimum: "Next scenario →" + cross-link to one related tab via `onNavigate`. PAL shows Next case / Build interview plan / Company Tracks after every case.
+- [x] ~~**Typography/contrast overhaul**~~ — done v4.66. `--ink-low` #999 → #b8b8b8, `--ink-ghost` #666 → #8a8a8a. Light mode `--ink-ghost` → #6b5038. All 35+ tabs inherit automatically.
+- [x] ~~**Consistent scenario card format**~~ — done v4.66. `readMin` + difficulty pill + FREE badge on FeatureEngTab (8), ModelEvalTab (5), MLCodingTab (7), IncidentRoomTab (6), ClassicalMLTab (8).
+- [x] ~~**"What to do next" after scenario completion**~~ — done v4.66. IncidentRoom → Combinator + MLCoding. MLCoding → IncidentRoom + Combinator after checkpoint reveal.
 
 ### Sprint B — Progress and paths
-- [ ] **HomeTab → proper Progress/Profile page** — Total completed count, per-section breakdown with bars, "Strongest section" / "Not started yet" callouts, bookmarks panel, streak counter, export/import. PAL Profile has all of this without auth.
-- [ ] **Guided Paths** — 3 named paths hardcoded in HomeTab, localStorage-tracked: "Senior MLE in 4 weeks" (Defense → InterviewPrep → Combinator → IncidentRoom → MLCoding), "Data Eng Focus" (Spark → Airflow → dbt → DataModeling → MLCoding), "Quick Calibration" (ClassicalML → Trainer → Combinator). Shows X/N completion.
-- [ ] **isFree per-case gating** — Tag first 2 scenarios per module as free, show FREE badge inline on locked scenarios, update AccessGate to filter (show but lock scenarios 3+) not block the whole tab.
+- [x] ~~**HomeTab → proper Progress/Profile page**~~ — done v4.67. Streak counter, strongest/not-started callouts, bookmarks panel, section progress bars, footer with scenario count.
+- [x] ~~**Guided Paths**~~ — done v4.67. 3 paths (Senior MLE 7 steps, Data Eng 5 steps, Quick Cal 5 steps). PathCard with segmented bar + step chips. localStorage-tracked.
+- [ ] **isFree per-case gating** — Tag first 2 scenarios per module as free, show FREE badge inline on locked scenarios, update AccessGate to filter not block. Queued v4.68.
 
 ### Sprint C — Content consistency
 - [ ] **Three-tier audit + completion** — SpotTheFlawTab (12 scenarios), DLFineTuningTab, DLServingTab, FeatureEngTab, ModelEvalTab. Each needs whatsTested/antiPattern/staffFraming checked.

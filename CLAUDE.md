@@ -87,7 +87,7 @@ src/
                                    Phases 2–4 planned: Model + SMOTE → Monitoring → Deployment + Ops Runbook. `msl_projectlab_fraud_data`.
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
   data/
-    testimonials.js             Admin-managed testimonials array. Displayed on HomeTab "What engineers say" section.
+    testimonials.js             Admin-managed testimonials array. (legacy — HomeTab v4.67 no longer renders testimonials)
   components/
     PythonCell.jsx         Pyodide sandbox wrapper
     GlobalSearch.jsx       Global search component (retained, not wired — replaced by ContentMap)

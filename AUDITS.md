@@ -645,6 +645,11 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 031 | v4.60 — staffFraming on all 128 InterviewPrepTab questions (completing partial build from v4.59 session) | 2026-06-03 | Content Integrity / BUILD | ✅ Brace delta 0. All 128 questions have staffFraming. Spine files synced. |
 | 032 | v4.61 — Structural redesign: collapsible sidebar, new nav architecture, HomeTab rewrite | 2026-06-03 | Architecture / BUILD | ✅ Both files brace delta 0. Dead tabs removed. NAV_SECTIONS wired. |
 | 033 | v4.62 — Routing simplification + three-tier MCQ format on CombinatorTab + TrainerTab | 2026-06-03 | BUILD / Content | ✅ All 4 changed files brace delta 0. 98/100 Combinator + 54/60 Trainer covered. |
+| 034 | v4.63 — Three-tier complete (100+60), dead code removal, defense pack scenarios, Incident Room+MLCoding to 6 | 2026-06-03 | BUILD / Content | ✅ All 8 files delta 0. Dead components removed. 100/100 Combinator + 60/60 Trainer. |
+| 035 | v4.64 — Three-tier on IncidentRoom (12 steps) + HyperparamScenarios (8), MLOpsDeploy scenario 8 | 2026-06-03 | Content / BUILD | ✅ All 3 files delta 0. 12/12 incident steps have three-tier. 8/8 hyperparam scenarios. |
+| 036 | v4.65 — ENSEMBLE_SCENARIOS three-tier (7), mlc7 PySpark skew, SHAP video title fix | 2026-06-03 | Content / BUILD | ✅ All 3 files delta 0. SHAP video title corrected. 7/7 ensemble scenarios three-tier. |
+| 037 | v4.66 — Sprint A: contrast overhaul, card metadata standard, what-to-do-next routing | 2026-06-03 | UX / BUILD | ✅ All 5 tab files delta 0. CSS tokens bumped (WCAG AA). readMin + difficulty pills on 5 tabs. |
+| 038 | v4.67 — Sprint B: HomeTab progress dashboard, streak, callouts, 3 guided paths | 2026-06-03 | UX / Architecture | ✅ HomeTab delta 0. PAL architecture reference logged. Nav skill-first decision locked in DECISIONS.md. |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
