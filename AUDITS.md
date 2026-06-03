@@ -644,6 +644,7 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 030 | v4.59 — InterviewPrepTab whatsTested+antiPattern (128 questions), MD spine consolidation | 2026-06-03 | Content Integrity / BUILD | ✅ Brace delta 0. 1 low open: BRAIN-TRANSFER.md + PENDING.md need `git rm`. |
 | 031 | v4.60 — staffFraming on all 128 InterviewPrepTab questions (completing partial build from v4.59 session) | 2026-06-03 | Content Integrity / BUILD | ✅ Brace delta 0. All 128 questions have staffFraming. Spine files synced. |
 | 032 | v4.61 — Structural redesign: collapsible sidebar, new nav architecture, HomeTab rewrite | 2026-06-03 | Architecture / BUILD | ✅ Both files brace delta 0. Dead tabs removed. NAV_SECTIONS wired. |
+| 033 | v4.62 — Routing simplification + three-tier MCQ format on CombinatorTab + TrainerTab | 2026-06-03 | BUILD / Content | ✅ All 4 changed files brace delta 0. 98/100 Combinator + 54/60 Trainer covered. |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 

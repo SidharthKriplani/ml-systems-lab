@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.61 complete — 2026-06-03):**
+**Current state (v4.62 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
@@ -210,12 +210,12 @@ Later files reference earlier ones. Always update in this sequence:
   - Formspree: wire `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
   - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
 
-### v4.62 sprint — queued (see NEXT.md)
+### v4.63 sprint — queued (see NEXT.md)
 1. ~~**Structural redesign: collapsible sidebar, NAV_SECTIONS, HomeTab rewrite**~~ — **DONE v4.61.**
-2. **Simplify routing** — replace activeZone + zoneTab with single activeTab, remove PracticeGrid/InterviewGrid.
-3. **Extend `staffFraming` to CombinatorTab + TrainerTab** — same field, ~90 questions combined.
-4. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
-5. **Unblock Interview Experiences** (awaiting Formspree + Tally credentials)
+2. ~~**Routing simplification + three-tier MCQ on Combinator + Trainer**~~ — **DONE v4.62.** 98/100 + 54/60 covered.
+3. **Complete three-tier on 8 remaining MCQ questions** (C9, C20, T5, T9, T31, T32, T33, T36).
+4. **Remove PracticeGrid + InterviewGrid dead code** from App.jsx.
+5. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
 
 ---
 

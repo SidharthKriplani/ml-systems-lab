@@ -1029,15 +1029,9 @@ function BottomNav({ activeTabId, goTo }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [activeZone, setActiveZone] = useState(() => {
-    const tab = getTabFromHash() || localStorage.getItem('msl_tab') || 'home'
-    return getZoneForTab(tab)
-  })
-  const [zoneTab, setZoneTab] = useState(() => {
-    const tab  = getTabFromHash() || localStorage.getItem('msl_tab') || 'home'
-    const zone = getZoneForTab(tab)
-    return { ...ZONE_DEFAULTS, [zone]: zone === 'practice' ? tab : ZONE_DEFAULTS[zone] }
-  })
+  const [activeTab, setActiveTab] = useState(() =>
+    getTabFromHash() || localStorage.getItem('msl_tab') || 'home'
+  )
   const [searchOpen,  setSearchOpen]  = useState(false)
   const [tabProgress, setTabProgress] = useState(() => readTabProgress())
   const [isUnlocked,  setIsUnlocked]  = useState(() => localStorage.getItem('msl_access') === ACCESS_CODE)
@@ -1054,9 +1048,7 @@ export default function App() {
 
   // Navigate to any tabId from anywhere
   const goTo = useCallback((tabId) => {
-    const zone = getZoneForTab(tabId)
-    setActiveZone(zone)
-    setZoneTab(prev => ({ ...prev, [zone]: tabId }))
+    setActiveTab(tabId)
     setSearchOpen(false)
     trackTabSwitch(tabId)
     window.scrollTo(0, 0)
@@ -1064,12 +1056,11 @@ export default function App() {
 
   // Hash + localStorage sync
   useEffect(() => {
-    const tab = zoneTab[activeZone] ?? (activeZone === 'today' ? 'home' : activeZone === 'read' ? 'gradient' : activeZone)
-    if (tab) {
-      localStorage.setItem('msl_tab', tab)
-      setHash(tab)
+    if (activeTab) {
+      localStorage.setItem('msl_tab', activeTab)
+      setHash(activeTab)
     }
-  }, [activeZone, zoneTab])
+  }, [activeTab])
 
   // Hash change from browser
   useEffect(() => {
@@ -1108,38 +1099,23 @@ export default function App() {
     try { localStorage.setItem('msl_theme', theme) } catch {}
   }, [theme])
 
-  // Bottom nav tap: same zone → reset to default (e.g. back to practice grid)
-  function handleZoneNav(zoneId) {
-    if (zoneId === activeZone) {
-      setZoneTab(prev => ({ ...prev, [zoneId]: ZONE_DEFAULTS[zoneId] }))
-    } else {
-      setActiveZone(zoneId)
-    }
-    window.scrollTo(0, 0)
-  }
-
   // Topbar context
-  const currentTabId    = zoneTab[activeZone]
-  const isPracticeGrid  = activeZone === 'practice'  && !currentTabId
-  const isInterviewGrid = activeZone === 'interview' && !currentTabId
-  const showBackBtn     = !!currentTabId && currentTabId !== 'home'
-  const activeTabLabel  = showBackBtn ? getNavLabel(currentTabId) : null
+  const currentTabId   = activeTab
+  const showBackBtn    = activeTab !== 'home'
+  const activeTabLabel = showBackBtn ? getNavLabel(activeTab) : null
 
   function renderContent() {
-    if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} isUnlocked={isUnlocked} />
-    if (isInterviewGrid) return <InterviewGrid onSelect={goTo} isUnlocked={isUnlocked} />
-    // Defense Plan handles its own internal gate; jdprep redirects here
-    if (currentTabId === 'defense' || currentTabId === 'jdprep') {
+    if (activeTab === 'defense') {
       return (
         <Suspense fallback={<LoadingSpinner />}>
           <DefenseDocTab onNavigate={goTo} isUnlocked={isUnlocked} onUnlock={handleUnlock} />
         </Suspense>
       )
     }
-    if (currentTabId && PREMIUM_TABS.has(currentTabId) && !isUnlocked) {
+    if (PREMIUM_TABS.has(activeTab) && !isUnlocked) {
       return <AccessGate onUnlock={handleUnlock} />
     }
-    const Component = ALL_TABS.find(t => t.id === currentTabId)?.component
+    const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (
       <Suspense fallback={<LoadingSpinner />}>
         <Component onNavigate={goTo} />
@@ -1155,7 +1131,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'var(--void)' }}>
 
       {/* ── Desktop sidebar (hidden on mobile via CSS) ── */}
-      <DesktopSidebar activeTabId={currentTabId || 'home'} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} />
+      <DesktopSidebar activeTabId={activeTab} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} />
 
       {/* ── Desktop main wrapper (offset for sidebar on desktop) ── */}
       <div className="desktop-main-wrapper">
@@ -1174,9 +1150,9 @@ export default function App() {
           {showBackBtn ? (
             <>
               <button
-                onClick={() => setZoneTab(prev => ({ ...prev, [activeZone]: null }))}
+                onClick={() => goTo('home')}
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "var(--font-sans)", padding: '10px 8px', margin: '-10px -8px' }}>
-                ← <span>{activeZone === 'interview' ? 'Tools' : 'Domains'}</span>
+                ← <span>Back</span>
               </button>
               {activeTabLabel && (
                 <>
@@ -1188,7 +1164,7 @@ export default function App() {
               )}
             </>
           ) : (
-            <button onClick={() => handleZoneNav('today')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <button onClick={() => goTo('home')} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'var(--prime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: '8px', color: 'var(--white)', flexShrink: 0 }}>ML</div>
               <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.02em' }}>Systems Lab</span>
             </button>
@@ -1244,7 +1220,7 @@ export default function App() {
       </main>
 
       {/* ── Bottom nav (hidden on desktop via CSS) ── */}
-      <BottomNav activeTabId={currentTabId || 'home'} goTo={goTo} />
+      <BottomNav activeTabId={activeTab} goTo={goTo} />
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>

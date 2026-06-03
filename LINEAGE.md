@@ -46,6 +46,27 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.62 — Three-tier MCQ format + routing simplification (2026-06-03)
+
+**Routing simplification (App.jsx):**
+- Replaced `activeZone + zoneTab[zone]` dual-state with single `activeTab` state.
+- `goTo(tabId)` now simply calls `setActiveTab(tabId)`. Hash + localStorage sync simplified accordingly.
+- `handleZoneNav()` removed. `PracticeGrid` and `InterviewGrid` are no longer rendered (they still exist in the file but `renderContent()` no longer routes to them — clean removal deferred).
+- Back button now always shows "← Back" and navigates to home. `showBackBtn` simplified to `activeTab !== 'home'`.
+- `DesktopSidebar` and `BottomNav` call sites updated to use `activeTab` directly.
+- Brace delta: 0.
+
+**Three-tier format on CombinatorTab + TrainerTab:**
+- Added `whatsTested`, `antiPattern`, `staffFraming` fields to 98/100 CombinatorTab questions and 54/60 TrainerTab questions. (8 questions had non-standard IDs not matched by extraction — they render without callouts, no breakage.)
+- **CombinatorTab render:** `whatsTested` amber hint rendered above the question in the live exam screen; `antiPattern` (rose) + `staffFraming` (violet) rendered in the debrief review after explanation.
+- **TrainerTab render:** `whatsTested` amber hint rendered above the question; `antiPattern` + `staffFraming` rendered inside the explanation block after `{q.explanation}`.
+- All render calls use conditional `{q.whatsTested && ...}` pattern — backward-safe for questions missing fields.
+- Brace delta: 0 on both files.
+
+**Files modified:** `src/App.jsx`, `src/tabs/CombinatorTab.jsx`, `src/tabs/TrainerTab.jsx`.
+
+---
+
 ### v4.61 — Structural redesign: collapsible sidebar, new nav architecture, HomeTab rewrite (2026-06-03)
 
 **Navigation restructure (App.jsx):**

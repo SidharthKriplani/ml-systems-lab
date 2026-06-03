@@ -4,11 +4,13 @@ Next 5 items for v4.62 sprint. Updated: 2026-06-03 (v4.61 complete)
 
 ---
 
-## v4.62 — Next sprint
+## v4.63 — Next sprint
 
-1. **Simplify routing: replace activeZone + zoneTab with single activeTab** — removes PracticeGrid/InterviewGrid, cleans up App() state. v4.61 kept zone routing intact for safety; this finishes the job.
+1. **Complete three-tier coverage on CombinatorTab + TrainerTab** — 2 Combinator questions (C9, C20) and 6 Trainer questions (T5, T9, T31, T32, T33, T36) still missing fields. Small targeted pass.
 
-2. **Extend `staffFraming` to CombinatorTab + TrainerTab** — same field, same render pattern. ~90 questions combined. InterviewPrepTab is the proven template (128 q done).
+2. **Remove PracticeGrid + InterviewGrid dead code** — both components still exist in App.jsx but are no longer reachable. Safe to delete.
+
+3. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
 
 2. **New scenarios from defense pack** — add to respective tabs:
    - Bagging vs Boosting + hyperparameter judgment → ClassicalMLTab
@@ -34,9 +36,9 @@ Next 5 items for v4.62 sprint. Updated: 2026-06-03 (v4.61 complete)
 
 ## Notes for next session
 
-- v4.61 committed and live on Vercel after user runs commit command
-- Brace balance: App.jsx delta 0, HomeTab.jsx delta 0
-- Structural redesign shipped: collapsible sidebar, new 5-section nav, HomeTab rewritten
-- Zone routing (activeZone + zoneTab) still in place — simplification deferred to v4.62
-- PracticeGrid + InterviewGrid still present — will be removed when routing is simplified
+- v4.62 committed and live on Vercel after user runs commit command
+- Brace balance: all 4 changed files delta 0
+- Routing simplified: single activeTab state, zone concept removed
+- Three-tier MCQ: 98/100 Combinator + 54/60 Trainer covered
+- 8 questions missing three-tier fields — render is conditional, no breakage
 - BRAIN-TRANSFER.md + PENDING.md stubs still need `git rm` (open finding #030.6)
