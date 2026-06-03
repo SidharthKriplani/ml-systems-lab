@@ -34,6 +34,9 @@ Your on-call shift starts in 10 minutes. What do you check first?`,
 • session_features: PSI = 0.04 (stable)
 
 The embedding features drifted during migration. Old embeddings were L2-normalised; the migration script omitted the normalisation step — raw dot products now score differently.`,
+        whatsTested: 'Whether you run PSI on migrated features before rolling back — diagnosing before acting.',
+        antiPattern: 'Rolling back immediately without diagnosis means you will hit the same issue on the next migration attempt.',
+        staffFraming: 'Two metrics degrading simultaneously after one change = shared root cause. Diagnose first, then decide whether to rollback.',
       },
       {
         question: 'Latency is also up 40ms. What explains it given the PSI finding?',
@@ -47,6 +50,9 @@ The embedding features drifted during migration. Old embeddings were L2-normalis
         finding: `Confirmed: new feature store schema bumped embedding dimensions 128→512. ANN index (HNSW) query time scales roughly with dimension. Serving latency increased 41ms. The AUC drop and latency spike share the same root cause: the migration changed both normalisation and dimensionality.
 
 Resolution: rollback the migration, fix the normalisation script and dimensionality, re-validate offline before re-deploying.`,
+        whatsTested: 'Whether you understand that ANN query time scales with embedding dimension, linking the latency spike to the migration.',
+        antiPattern: 'Treating the latency spike as an unrelated infra issue delays diagnosis by hours — concurrent degradations after a single change almost never coincide by accident.',
+        staffFraming: 'Schema migration checklist: normalisation, dimensionality, data type, null handling. Miss one and you get a production incident.',
       },
     ],
     lesson: 'Two simultaneous degradations after a single change almost always share a root cause. Diagnose before rolling back — a rollback without root cause identification means you\'ll hit the same issue on the next migration.',
@@ -77,6 +83,9 @@ The drop is gradual, not sudden. PM is escalating. What's your first diagnostic 
 • The 0.000-scoring items are entirely new catalog items added in the last 3 weeks
 
 New items have no interaction history → feature lookup returns null → null coerced to 0.0 → ranked last or not surfaced. 23% of catalog is effectively invisible to users.`,
+        whatsTested: 'Whether you check prediction score distributions for coverage collapse — PSI on feature values will stay stable because affected items have no features to drift.',
+        antiPattern: 'Adding more PSI monitors when existing ones show green is the wrong move — the monitoring gap is a coverage metric, not a feature metric.',
+        staffFraming: 'PSI monitors features. Coverage monitors items. A 23% catalog blind spot shows up in neither until you explicitly track % items scoring above threshold.',
       },
       {
         question: 'The cause is identified. What is the correct immediate fix?',
@@ -92,6 +101,9 @@ New items have no interaction history → feature lookup returns null → null c
 CTR recovered to –1.2% within 48 hours (residual gap = genuine quality difference between new and established items).
 
 Monitoring added: "items scoring exactly 0.0" as a daily alert with threshold > 5%.`,
+        whatsTested: 'Whether you know cold-start fallback is the right fix — removing items or setting floor scores are both wrong.',
+        antiPattern: 'Setting a score floor of 0.5 for new items is dangerous — it artificially elevates unscored items above known-good items without any signal.',
+        staffFraming: 'Cold-start is a product design decision, not a monitoring fix. Content embeddings + global popularity baseline is the standard solution. The monitoring alert on 0.0 scores is the prevention layer.',
       },
     ],
     lesson: 'Coverage collapse is a monitoring blind spot — PSI on feature values stays stable because the affected items have no features to drift. Add explicit catalog coverage metrics: % items with scores above threshold, % items returned zero score.',
@@ -123,6 +135,9 @@ p-value: 0.0002
 SRM confirmed. The traffic split deviation is not random noise — it is statistically significant. This means the randomisation is broken. The measured 12.4% lift cannot be trusted: self-selection bias may explain part or all of the difference.
 
 Stop analysis. Do not ship based on this result.`,
+        whatsTested: 'Whether you run the SRM check before reading the primary metric — a significant SRM invalidates all downstream analysis.',
+        antiPattern: 'Correcting for the traffic imbalance by reweighting does not fix an SRM — if randomisation is broken, the groups differ in unknown ways that cannot be reweighted away.',
+        staffFraming: 'SRM check is gate zero. If it fails, stop reading your primary metric. Investigate randomisation first, then rerun.',
       },
       {
         question: 'SRM is confirmed. What caused it?',
@@ -138,6 +153,9 @@ Stop analysis. Do not ship based on this result.`,
 The "lift" partially reflects the survivorship bias of mobile users who wait longer. After fixing the performance regression, re-running the experiment showed 3.1% CTR lift (genuine, ships).
 
 Fix: assignment events must fire at page request, not at page-load completion.`,
+        whatsTested: 'Whether you can trace SRM to an assignment event timing bug — mobile page-load latency causing 7% of treatment users to be unrecorded.',
+        antiPattern: 'Running the experiment longer to let the split stabilise will not fix a structural assignment bug — more data compounds the systematic bias.',
+        staffFraming: 'Assignment event fires at page request, not page load. This is a standard implementation pattern that prevents mobile drop-off from contaminating the exposure log.',
       },
     ],
     lesson: 'Always run the SRM check before looking at your primary metric. A significant SRM means your randomisation is broken and any observed effect is untrustworthy — even if it looks like a win. Fixing performance regressions in experiments is part of the experiment discipline.',
@@ -170,6 +188,9 @@ What is your first diagnostic action?`,
 • Model learned that recent transactions = not fraud (because confirmed fraud hasn't been labeled yet)
 
 This is label leakage via resolution lag — a classic supervised learning failure mode in fraud.`,
+        whatsTested: 'Whether you recognise precision drop + recall rise as a label contamination pattern — true positives being mislabeled as negatives.',
+        antiPattern: 'Suspecting class imbalance or serialization error before checking the training label distribution — the retrain log showing SUCCESS does not validate label quality.',
+        staffFraming: 'Precision drop with recall rise = model shifted toward predicting negative. In fraud with investigation lag, that means recent true fraud was relabeled as legitimate during training.',
       },
       {
         question: 'Resolution lag is confirmed. What is the correct training data fix?',
@@ -183,6 +204,9 @@ This is label leakage via resolution lag — a classic supervised learning failu
         finding: `Training data corrected: exclude all transactions with created_at within 45 days of training cutoff (conservative buffer above the 30-day resolution lag). Retrained model achieved precision 0.89, recall 0.83 — back to baseline.
 
 Monitoring added: label resolution rate by cohort (week). If resolution rate for the most recent 30-day cohort < 60%, trigger an alert and skip the weekly retrain until labels stabilise.`,
+        whatsTested: 'Whether you know to exclude the most recent unresolved window from training, not just add a feature for recency.',
+        antiPattern: 'Adding days_since_transaction as a feature cannot fix the problem — the model still trains on mislabeled examples and learns a fundamentally wrong relationship.',
+        staffFraming: 'Label cutoff = training cutoff minus resolution lag buffer. This is non-negotiable in any domain where ground truth is confirmed retrospectively.',
       },
     ],
     lesson: 'In fraud and any domain with investigation lag, the most recent data is the most dangerous for training. Labels take time to be confirmed. Always check resolution rate by cohort before including recent data in a training set.',
@@ -215,6 +239,9 @@ What is your first diagnostic step?`,
 • Job status: SUCCESS (warnings do not fail the job)
 
 The upstream event pipeline migration renamed the columns (txn_count_1h → transaction_count_1h). The feature store write job silently defaulted the missing columns and reported SUCCESS. No error was raised.`,
+        whatsTested: 'Whether you inspect full job logs for WARNING lines — a SUCCESS status with schema warnings is the most dangerous pipeline failure mode.',
+        antiPattern: 'Rolling back the upstream migration before checking logs destroys evidence and skips diagnosis — you will not know the root cause until you read the warnings.',
+        staffFraming: 'Job status SUCCESS ≠ data correctness. After any schema migration, scan pipeline logs for WARNING, not just ERROR. Silent defaults write garbage and report green.',
       },
       {
         question: 'Silent schema mismatch is confirmed. What is the systemic fix beyond patching the column names?',
@@ -231,6 +258,9 @@ The upstream event pipeline migration renamed the columns (txn_count_1h → tran
 3. Post-write distribution check (option A): automated check comparing feature mean ± 3σ vs rolling 7-day baseline — fires a P1 alert if deviation > 20%
 
 All three are needed: schema contract catches renaming, fail-on-unknown catches deletion, distribution check catches silent value corruption (e.g., a column present but computed incorrectly).`,
+        whatsTested: 'Whether you recognise that no single check is sufficient — schema contract, fail-on-unknown, and distribution validation each catch a different failure class.',
+        antiPattern: 'Adding only schema version pinning misses column deletion and silent value corruption — a column can be present with the right name but computed incorrectly.',
+        staffFraming: 'Defense in depth for feature pipelines: schema contract (catch renames), fail-on-unknown (catch deletions), post-write distribution check (catch value corruption). All three required.',
       },
     ],
     lesson: 'Feature store write jobs that warn but succeed are the most dangerous failure mode — all health checks show green while the model silently receives garbage. Add post-write distribution assertions as a mandatory step in any feature pipeline that feeds a production model.',
@@ -265,6 +295,9 @@ The campaign launches in 3 hours. What do you check first?`,
 • The constant features produced a near-constant output from the model
 
 Root cause: a config file was not updated when the batch scoring job was templated from an old run.`,
+        whatsTested: 'Whether your first reflex on zero-variance predictions is to check input features, not the model.',
+        antiPattern: 'Suspecting sigmoid saturation or a corrupt model file before checking inputs wastes hours — the model is correct, it is receiving constant inputs.',
+        staffFraming: 'Zero-variance predictions = identical inputs. Check feature snapshot date before anything else. The model cannot discriminate on features it never sees vary.',
       },
       {
         question: 'Stale snapshot confirmed. The campaign launches in 2.5 hours. What do you do?',
@@ -281,6 +314,9 @@ Root cause: a config file was not updated when the batch scoring job was templat
 • P10: 0.31, P50: 0.49, P90: 0.71 — healthy distribution
 
 Campaign launched on time. Post-mortem: feature_snapshot_date must be a runtime parameter, not hardcoded in config. Added CI check: fail the job if snapshot_date is > 7 days stale.`,
+        whatsTested: 'Whether you re-run immediately with the correct snapshot rather than falling back to last week\'s scores, given you have time.',
+        antiPattern: 'Using last week\'s valid scores avoids the immediate problem but sends the campaign on 7-day-old propensity scores — cohorts shift weekly in most products.',
+        staffFraming: 'Re-run is always the right call if you have runway. Document the config bug and add the stale-date CI check to prevent recurrence — that is the post-mortem, not just the fix.',
       },
     ],
     lesson: 'Zero-variance predictions are always a data problem, not a model problem. The model is working correctly on constant inputs and producing constant outputs. The diagnostic reflex: check the input feature distribution first, before touching the model.',
@@ -392,6 +428,24 @@ function IncidentCard({ incident, completed, onComplete }) {
                   <pre style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {step.finding}
                   </pre>
+                  {step.whatsTested && (
+                    <div style={{ marginTop: '10px', padding: '8px 12px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px' }}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What this tests · </span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{step.whatsTested}</span>
+                    </div>
+                  )}
+                  {step.antiPattern && (
+                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px' }}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--rose)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Anti-pattern · </span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{step.antiPattern}</span>
+                    </div>
+                  )}
+                  {step.staffFraming && (
+                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '6px' }}>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--violet)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>How a senior frames this · </span>
+                      <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{step.staffFraming}</span>
+                    </div>
+                  )}
                 </div>
                 {!done && (
                   <button className="btn-primary" onClick={nextStep} style={{ fontSize: '12px' }}>

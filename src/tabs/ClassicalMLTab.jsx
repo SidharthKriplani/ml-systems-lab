@@ -205,6 +205,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Plateau means insufficient model capacity or too-early stopping. Lower LR + more trees (with early stopping) almost always helps. Reducing learning_rate from 0.1 to 0.01 and setting n_estimators=1000 with early_stopping_rounds=20 is the highest-leverage move.',
     impact: 'HIGH',
     whyNotOthers: 'max_depth is secondary — tree structure isn\'t the bottleneck when you plateau at 100 trees. subsample and colsample_bytree are regularization knobs for overfitting, not underfitting.',
+    whatsTested: 'Whether you know learning_rate + n_estimators is the highest-leverage pair for a plateau — not architectural knobs.',
+    antiPattern: 'Tuning max_depth when the model stops improving at 100 trees is looking in the wrong place — depth is not the constraint.',
+    staffFraming: 'Plateau at N trees = too few iterations or LR too high. Lower LR, raise n_estimators, use early stopping. That is the default first move on any boosted model plateau.',
   },
   {
     id: 2,
@@ -216,6 +219,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Halving n_estimators halves inference time linearly — it\'s a direct 1:1 relationship. If 500 trees → 800ms, try 100 trees → ~160ms. Check if accuracy degrades acceptably. max_depth has a smaller effect on inference.',
     impact: 'HIGH',
     whyNotOthers: 'max_depth affects tree complexity but not the count of trees being traversed. min_samples_leaf changes tree structure but doesn\'t reduce the number of trees. max_features affects training, not inference.',
+    whatsTested: 'Whether you know Random Forest inference time scales linearly with n_estimators, not with depth.',
+    antiPattern: 'Reducing max_depth to improve inference speed — depth affects the number of nodes visited per tree, but traversing 500 shallow trees is still 500 traversals.',
+    staffFraming: 'Profile inference before tuning. n_estimators is the only knob with a near-1:1 relationship to latency. Halve it, benchmark, then decide if the accuracy tradeoff is acceptable.',
   },
   {
     id: 3,
@@ -227,6 +233,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'C is the only knob that directly controls overfitting in LR. Decrease C (increase regularization). Default C=1 — try C=0.01 or C=0.1 first. solver and max_iter don\'t affect model capacity at all.',
     impact: 'HIGH',
     whyNotOthers: 'solver is about convergence algorithm — doesn\'t change what the model learns. max_iter controls whether optimization converges, not model complexity. class_weight is for imbalance, not overfitting.',
+    whatsTested: 'Whether you know C is the only model-complexity knob in Logistic Regression — everything else is a convergence or class-distribution parameter.',
+    antiPattern: 'Changing solver or increasing max_iter when a model is overfitting — those control how you optimize, not what you optimize for.',
+    staffFraming: 'Logistic Regression with a 22-point train/val gap on 1k samples needs one thing: lower C. Start at C=0.01, double until val accuracy stops improving.',
   },
   {
     id: 4,
@@ -238,6 +247,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Gamma controls how far each training example\'s influence reaches. Too-small gamma = model too smooth = underfitting. Increase gamma first (try gamma=\'scale\' → \'auto\' → explicit values), then increase C. gamma is the primary complexity lever for RBF.',
     impact: 'HIGH',
     whyNotOthers: 'C controls the margin penalty — relevant after gamma is set correctly. kernel change is drastic — exhaust RBF tuning first. degree only applies to polynomial kernel.',
+    whatsTested: 'Whether you know gamma controls RBF kernel complexity and is the primary lever for underfitting in SVMs.',
+    antiPattern: 'Tuning C before gamma on an underfitting SVM — C controls the soft-margin penalty, which is irrelevant when the model cannot fit the training data at all.',
+    staffFraming: 'RBF SVM tuning order: gamma first (complexity), then C (regularization). Too-small gamma makes every training point look far from every other — the model sees a flat landscape.',
   },
   {
     id: 5,
@@ -249,6 +261,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Most direct lever for overfitting in trees. Set max_depth=5 and re-evaluate. This immediately constrains the tree\'s ability to create arbitrarily fine splits. min_samples_leaf is secondary — useful after you have a reasonable max_depth.',
     impact: 'HIGH',
     whyNotOthers: 'min_samples_split helps but is weaker than max_depth at controlling overfit. min_samples_leaf is secondary. criterion (gini vs entropy) almost never matters — 0.1% accuracy difference at most.',
+    whatsTested: 'Whether you know max_depth is the most direct regularization lever for decision trees — it caps the entire tree structure in one parameter.',
+    antiPattern: 'Tuning criterion (gini vs entropy) when a tree has memorized the training set — this changes the split metric by 0.1%, not the overfitting.',
+    staffFraming: 'Decision tree with 99/61 split: set max_depth=5 immediately. Everything else is secondary. If accuracy is still poor after depth is constrained, then consider min_samples_leaf.',
   },
   {
     id: 6,
@@ -260,6 +275,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Non-convergence is almost always an LR problem first. Jagged loss = LR too high. Try 10x lower LR before changing architecture. This is the single highest-impact knob for convergence. Layer sizes are secondary.',
     impact: 'HIGH',
     whyNotOthers: 'hidden_layer_sizes affects capacity but won\'t fix oscillation. activation function rarely causes non-convergence — ReLU is nearly always fine. batch_size affects noise in gradients but LR should be adjusted proportionally anyway.',
+    whatsTested: 'Whether you know jagged oscillating loss is a learning rate diagnostic, not an architecture diagnostic.',
+    antiPattern: 'Changing hidden layer sizes or activation when loss is oscillating — the model is not suffering from insufficient capacity, it is taking steps that are too large.',
+    staffFraming: 'Jagged loss = LR too high. Reduce by 10x, observe one epoch. If loss smooths, you found the problem. If loss vanishes, you went too low. Binary search from there.',
   },
   {
     id: 7,
@@ -271,6 +289,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Small k = high variance = noise. Increase k (try k = sqrt(n_samples) as a starting rule). More neighbors = smoother decision boundary. weights=\'distance\' is the secondary improvement — closer neighbors get more say.',
     impact: 'HIGH',
     whyNotOthers: 'weights affects how neighbors are combined but doesn\'t reduce the noise from having too few neighbors. algorithm (ball_tree, kd_tree, brute) and leaf_size only affect speed — zero impact on predictions.',
+    whatsTested: 'Whether you know k (n_neighbors) controls the bias-variance tradeoff in k-NN — small k = high variance = noise.',
+    antiPattern: 'Tuning algorithm or leaf_size when predictions are noisy — those are speed parameters with zero effect on prediction quality.',
+    staffFraming: 'k-NN with noisy predictions: increase k. Rule of thumb starting point: k = sqrt(n_samples). Then add weights=\'distance\' for a secondary improvement. Speed parameters are irrelevant to quality.',
   },
   {
     id: 8,
@@ -282,6 +303,9 @@ const HYPERPARAM_SCENARIOS = [
     reasoning: 'Setting subsample=0.8 activates stochastic GBM — reduces training time by ~20% while often improving generalisation. But the real fix: switch to LightGBM entirely. It\'s 10-20x faster than sklearn GBM on the same data via histogram-based splitting.',
     impact: 'MEDIUM (switch to LightGBM for HIGH)',
     whyNotOthers: 'n_estimators reduces trees but hurts accuracy proportionally. learning_rate alone doesn\'t affect speed. max_features helps but less than subsample for GBM.',
+    whatsTested: 'Whether you know stochastic GBM (subsample < 1.0) reduces training time and often improves generalisation — and that the real fix is switching to LightGBM.',
+    antiPattern: 'Reducing n_estimators to speed up training — it works but hurts accuracy proportionally. subsample reduces training work per tree without proportional accuracy loss.',
+    staffFraming: 'sklearn GBM at 4 hours = wrong tool. Switch to LightGBM first (10-20x faster, histogram-based). If stuck with sklearn GBM: subsample=0.8, then reduce n_estimators only if subsample isn\'t enough.',
   },
 ]
 
@@ -966,6 +990,24 @@ function HyperparamPriority() {
                   <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Why not others: </span>
                   <span style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6 }}>{scenario.whyNotOthers}</span>
                 </div>
+                {scenario.whatsTested && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What this tests · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.whatsTested}</span>
+                  </div>
+                )}
+                {scenario.antiPattern && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--rose)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Anti-pattern · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.antiPattern}</span>
+                  </div>
+                )}
+                {scenario.staffFraming && (
+                  <div style={{ padding: '8px 12px', background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--violet)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>How a senior frames this · </span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{scenario.staffFraming}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

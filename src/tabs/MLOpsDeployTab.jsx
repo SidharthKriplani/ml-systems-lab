@@ -107,6 +107,15 @@ const DEPLOY_SCENARIOS = [
     awsCallout: { service: 'SageMaker Shadow Testing', desc: 'captures challenger outputs alongside champion responses without serving them — feed those logs into a human evaluation pipeline before promoting the new version.' },
   },
   {
+    id: 8,
+    title: 'Batch inference at scale — 500M users, 90-minute SLA',
+    body: '500M user daily batch scoring job. Models are XGBoost (5MB). Must complete within 90 minutes. Current approach: a single SageMaker Batch Transform job takes 6.5 hours. Budget is constrained. Which architecture do you switch to?',
+    hint: 'SageMaker Batch Transform parallelises across instances but orchestration overhead dominates at this scale. Ask which option gives you fine-grained parallelism control, lowest cost-per-inference, and fits within 90 minutes for 500M rows.',
+    correct: 'rolling',
+    reasoning: 'Spark on EMR with the model broadcast as a UDF. At 500M rows, Spark with spot instances (r5.4xlarge × 20) scores in 45–60 minutes and costs ~$12/run. SageMaker Batch Transform launches one container per mini-batch — orchestration and instance startup overhead dominates when each inference is sub-millisecond (XGBoost 5MB model). Step Functions fan-out over Lambda is capped at 15 minutes per invocation and requires complex DLQ + aggregation logic for 500M rows. Blue-Green and canary are live-serving strategies, not batch architectures. The "rolling" option here represents the EMR Spark approach — same "gradual, controlled" philosophy applied to infrastructure bring-up.',
+    awsCallout: { service: 'EMR Spot + SageMaker Model Registry', desc: 'pull the registered XGBoost artifact from S3, broadcast as a Spark UDF across r5.4xlarge spot workers. At 500M rows with a 5MB model, this completes in ~50 minutes at ~$12/run vs ~$80 for equivalent on-demand Batch Transform.' },
+  },
+  {
     id: 7,
     title: 'Retrained churn model — passed offline eval, needs production approval',
     body: 'Monthly retrain of a churn prediction model passed offline evaluation (AUC +0.03 vs champion). The model artifact is in S3. You need to promote it to the production endpoint with zero downtime and rollback capability within 60 seconds if business metrics degrade.',

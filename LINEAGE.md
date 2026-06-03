@@ -46,6 +46,24 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.64 — Three-tier on IncidentRoom + HyperparamScenarios, MLOpsDeploy scenario 8 (2026-06-03)
+
+**IncidentRoomTab — three-tier render + data:**
+- Wired `whatsTested`, `antiPattern`, `staffFraming` callouts into the step reveal panel (amber/rose/violet, conditional render).
+- Added all 3 fields to all 12 steps across inc1–inc6.
+
+**ClassicalMLTab — HyperparamScenarios three-tier:**
+- Wired `whatsTested`, `antiPattern`, `staffFraming` callouts into the `HyperparamPriority` reveal panel (after whyNotOthers div).
+- Added all 3 fields to all 8 HYPERPARAM_SCENARIOS (XGBoost plateau, RF inference latency, LR overfitting, SVM underfitting, Decision Tree overfit, MLP convergence, k-NN noise, GBM training speed).
+
+**MLOpsDeployTab — scenario 8:**
+- Added scenario 8: 500M-user batch inference at scale — Spark on EMR (broadcast UDF) vs SageMaker Batch Transform vs Lambda fan-out. Correct: EMR Spark spot at ~$12/run vs ~$80 Batch Transform.
+- DEPLOY_SCENARIOS now has 8 scenarios.
+
+**Files modified:** `src/tabs/IncidentRoomTab.jsx`, `src/tabs/ClassicalMLTab.jsx`, `src/tabs/MLOpsDeployTab.jsx`.
+
+---
+
 ### v4.63 — Three-tier completion, dead code removal, defense pack scenarios, Incident Room + ML Coding expanded (2026-06-03)
 
 **Three-tier MCQ completion:**
