@@ -1,6 +1,6 @@
 # NEXT.md — Session Queue
 
-Next 5 items for v4.67 sprint. Updated: 2026-06-03 (v4.66 complete — Sprint A done)
+Next 5 items for v4.68 sprint. Updated: 2026-06-03 (v4.67 complete — Sprint B done)
 
 ---
 
@@ -26,8 +26,9 @@ Next 5 items for v4.67 sprint. Updated: 2026-06-03 (v4.66 complete — Sprint A 
 
 ## Notes for next session
 
-- v4.67 committed. Push: `cd ~/Documents/GitHub/ml-systems-lab && git push`
+- v4.67 + PAL architecture reference committed. Push: `cd ~/Documents/GitHub/ml-systems-lab && git push`
 - Brace balance: HomeTab delta 0 (342 lines)
 - Sprint B complete: streak counter, strongest/not-started callouts, 3 Guided Paths, bookmarks panel
-- Guided Paths step completion uses msl_score:{tabId} (attempted > 0) + custom checkFn for Defense + Verbal
+- PAL architecture reference logged at docs/PAL_ARCHITECTURE_REFERENCE.md — read before auth sprint
+- Nav restructure decided: skill-first (Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn) — NOT done yet, queued
 - BRAIN-TRANSFER.md + PENDING.md stubs still need `git rm` (open finding #030.6)

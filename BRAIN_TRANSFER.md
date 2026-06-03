@@ -220,6 +220,13 @@ Later files reference earlier ones. Always update in this sequence:
 ### v4.67 sprint — DONE (Sprint B complete)
 1. ~~HomeTab Progress/Profile overhaul~~ — streak counter, strongest/not-started callouts, bookmarks panel, footer with scenario count.
 2. ~~Guided Paths~~ — 3 paths (Senior MLE 7 steps, Data Eng 5 steps, Quick Cal 5 steps). PathCard component with segmented bar + step chips. Step completion via msl_score + custom checkFn.
+3. ~~PAL Architecture Reference~~ — logged at `docs/PAL_ARCHITECTURE_REFERENCE.md`. Full auth sprint blueprint.
+
+### Architectural decisions locked (not yet built)
+- **Nav restructure: skill-first** — Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn. NOT role-based or domain-based. Roles get renamed; skills don't. Queued for after Sprint C.
+- **Auth sprint uses PAL pattern exactly** — Supabase, email + Google + GitHub OAuth, same 5-card profile, same access tier system. Read `docs/PAL_ARCHITECTURE_REFERENCE.md` first.
+- **Signed-out state hides sidebar** — when auth lands, sidebar only renders for `user !== null`.
+- **localStorage migration on auth** — `msl_` underscore → `msl-` hyphen prefix when auth sprint starts.
 
 ### v4.68 sprint — queued (see NEXT.md)
 1. isFree per-case gating.

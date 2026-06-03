@@ -46,6 +46,12 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### docs: PAL Architecture Reference (2026-06-03)
+
+- Added `docs/PAL_ARCHITECTURE_REFERENCE.md` — full blueprint for MSL auth sprint.
+- Covers: auth state management (SIGNED_IN / INITIAL_SESSION / TOKEN_REFRESHED), 5-card profile layout, access tier system (anonymous/free/premium), auth modal rendering rules, signed-out sidebar hiding, Supabase setup, localStorage key migration plan (`msl_` → `msl-`), skill-first sidebar structure, and critical mistakes to avoid.
+- Source: PAL codebase architecture doc. Read before starting auth sprint.
+
 ### v4.67 — Sprint B: HomeTab Progress/Profile + Guided Paths (2026-06-03)
 
 **HomeTab rewrite (170 → 342 lines):**
