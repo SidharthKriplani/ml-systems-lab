@@ -1261,14 +1261,14 @@ function InteractionLeakage() {
 }
 
 const MODULES = [
-  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator, difficulty: 'senior', isFree: false },
-  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner, difficulty: 'junior', isFree: true },
-  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder, difficulty: 'mid', isFree: false },
-  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo, difficulty: 'mid', isFree: false },
-  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider, difficulty: 'senior', isFree: false },
-  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture, difficulty: 'senior', isFree: false },
-  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug, difficulty: 'mid', isFree: false },
-  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage, difficulty: 'junior', isFree: true },
+  { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator,             difficulty: 'senior', isFree: false, readMin: 8  },
+  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner,      difficulty: 'junior', isFree: true,  readMin: 6  },
+  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder,  difficulty: 'mid',    isFree: false, readMin: 7  },
+  { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo,         difficulty: 'mid',    isFree: false, readMin: 10 },
+  { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider,      difficulty: 'senior', isFree: false, readMin: 6  },
+  { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture,  difficulty: 'senior', isFree: false, readMin: 5  },
+  { id: 'feature_store_timetavel', label: 'Feature Store Time-Travel', icon: '',    component: FeatureStoreTimeTravelBug, difficulty: 'mid',    isFree: false, readMin: 8  },
+  { id: 'interaction_leakage',   label: 'Interaction & Leakage',       icon: '',    component: InteractionLeakage,        difficulty: 'junior', isFree: true,  readMin: 6  },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────
@@ -1315,7 +1315,20 @@ export default function FeatureEngTab({ onNavigate, accessCode = null }) {
         ))}
       </div>
       {activeModuleData && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px',
+              color: activeModuleData.difficulty === 'junior' ? 'var(--mint)' : activeModuleData.difficulty === 'mid' ? 'var(--prime)' : activeModuleData.difficulty === 'senior' ? 'var(--rose)' : 'var(--violet)',
+              background: activeModuleData.difficulty === 'junior' ? 'rgba(52,211,153,0.1)' : activeModuleData.difficulty === 'mid' ? 'rgba(240,165,0,0.1)' : activeModuleData.difficulty === 'senior' ? 'rgba(244,63,94,0.1)' : 'rgba(167,139,250,0.1)',
+              border: `1px solid ${activeModuleData.difficulty === 'junior' ? 'rgba(52,211,153,0.25)' : activeModuleData.difficulty === 'mid' ? 'rgba(240,165,0,0.25)' : activeModuleData.difficulty === 'senior' ? 'rgba(244,63,94,0.25)' : 'rgba(167,139,250,0.25)'}`,
+            }}>{activeModuleData.difficulty}</span>
+            {activeModuleData.readMin && (
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>~{activeModuleData.readMin} min</span>
+            )}
+            {activeModuleData.isFree && (
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '4px', padding: '2px 6px' }}>FREE</span>
+            )}
+          </div>
           <BookmarkButton tabId="features" moduleId={active} label={activeModuleData.label} />
         </div>
       )}

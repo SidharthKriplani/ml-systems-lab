@@ -38,10 +38,10 @@
   --mint-faint:  var(--prime-faint);
 
   /* ── Typography ─────────────────────────────────── */
-  --ink-hi:    #f2f2f2;
-  --ink-mid:   #cccccc;
-  --ink-low:   #999999;
-  --ink-ghost: #666666;
+  --ink-hi:    #f4f4f4;   /* headings, primary labels         */
+  --ink-mid:   #dedede;   /* body text, explanations          */
+  --ink-low:   #b8b8b8;   /* secondary text, descriptions     */
+  --ink-ghost: #8a8a8a;   /* metadata, timestamps, counts     */
 
   /* ── Utility ─────────────────────────────────────── */
   --white:     #ffffff;
@@ -98,10 +98,10 @@
   --violet: #6b45d0;
   --green:  #1a7a3a;
 
-  --ink-hi:    #2a2015;
-  --ink-mid:   #3d3225;
-  --ink-low:   #5c4838;
-  --ink-ghost: #8a7560;
+  --ink-hi:    #1a1008;   /* headings, primary labels          */
+  --ink-mid:   #2e200f;   /* body text, explanations           */
+  --ink-low:   #4a3520;   /* secondary text, descriptions      */
+  --ink-ghost: #6b5038;   /* metadata, timestamps, counts      */
 
   --white:     #ffffff;
   --topbar-bg: rgba(244,240,232,0.95);

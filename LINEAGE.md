@@ -46,6 +46,29 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.66 — Sprint A: typography contrast, card metadata standard, "what to do next" (2026-06-03)
+
+**Typography/contrast overhaul (index.css):**
+- Dark mode: `--ink-mid` #cccccc → #dedede, `--ink-low` #999999 → #b8b8b8 (WCAG AA+), `--ink-ghost` #666666 → #8a8a8a (WCAG AA, was failing).
+- Light mode: `--ink-hi` → #1a1008, `--ink-mid` → #2e200f, `--ink-low` → #4a3520, `--ink-ghost` #8a7560 → #6b5038 (was failing on parchment). All inline-style and CSS class references inherit automatically — no tab files changed.
+
+**Scenario card metadata standard (5 tabs):**
+- Added `readMin` field to all modules in FeatureEngTab (8 modules) and ModelEvalTab (5 modules).
+- Added metadata bar between tab pills and content in both tabs: difficulty pill (color-coded junior/mid/senior/staff) + `~N min` read-time + FREE badge if applicable.
+- Added `readMin` to all 7 MLCodingTab PROBLEMS, displayed in card header alongside domain and difficulty.
+- Added `readMin` to all 6 IncidentRoomTab INCIDENTS, displayed in card header alongside domain. Added inline `senior` difficulty badge.
+- Added `readMin` (2 min each) to all 8 ClassicalMLTab HYPERPARAM_SCENARIOS, displayed in card alongside model badge.
+
+**"What to do next" forward-routing:**
+- IncidentRoomTab: after incident completion, shows "Test in Combinator →" and "ML Coding Lab →" buttons below the Key Lesson panel. Passes `onNavigate` down to `IncidentCard`.
+- MLCodingTab: after checkpoint is revealed, shows "Incident Room →" and "Combinator →" buttons. Passes `onNavigate` down to `ProblemCard`.
+
+**PAL revamp sprint A complete. Sprint B next: HomeTab Progress/Profile page + Guided Paths.**
+
+**Files modified:** `src/index.css`, `src/tabs/FeatureEngTab.jsx`, `src/tabs/ModelEvalTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/IncidentRoomTab.jsx`, `src/tabs/ClassicalMLTab.jsx`.
+
+---
+
 ### v4.65 — ENSEMBLE_SCENARIOS three-tier, mlc7 PySpark skew, SHAP video fix (2026-06-03)
 
 **ClassicalMLTab — ENSEMBLE_SCENARIOS three-tier:**

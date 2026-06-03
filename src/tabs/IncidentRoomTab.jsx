@@ -12,6 +12,7 @@ const INCIDENTS = [
     id: 'inc1',
     title: 'AUC Drop + Latency Spike After Feature Migration',
     domain: 'Cross-domain: Feature Eng → Serving → MLOps',
+    readMin: 10,
     situation: `72 hours after a feature store migration, the production recommendation model shows:
 • AUC dropped from 0.847 → 0.803 (–5.2%)
 • Serving P95 latency increased from 48ms → 89ms
@@ -61,6 +62,7 @@ Resolution: rollback the migration, fix the normalisation script and dimensional
     id: 'inc2',
     title: 'Silent CTR Drop — No Alerts Fired',
     domain: 'Cross-domain: Monitoring → Feature Eng → Cold Start',
+    readMin: 10,
     situation: `Recommendation CTR has dropped 8.3% over 21 days. No alerts fired during this period:
 • Feature pipeline: all green
 • Model serving: all green
@@ -112,6 +114,7 @@ Monitoring added: "items scoring exactly 0.0" as a daily alert with threshold > 
     id: 'inc3',
     title: 'A/B Test Shows 12% Lift — But Traffic Split Is Off',
     domain: 'Cross-domain: Experimentation → Frontend → Statistics',
+    readMin: 10,
     situation: `An experiment ran for 5 days shows:
 • Control CTR: 4.21% | Treatment CTR: 4.73% — 12.4% relative lift, p = 0.003
 • Control traffic: 48.2% | Treatment traffic: 51.8%
@@ -164,6 +167,7 @@ Fix: assignment events must fire at page request, not at page-load completion.`,
     id: 'inc4',
     title: 'Model Retrain Made Predictions Worse Overnight',
     domain: 'Cross-domain: Training Pipeline → Data Quality → Monitoring',
+    readMin: 12,
     situation: `Weekly retrain ran successfully at 2am. By 6am, the fraud detection model's precision dropped from 0.91 → 0.67, recall from 0.84 → 0.89. No pipeline alerts fired. The retrain log shows no errors.
 
 • Model artifact: successfully uploaded to S3
@@ -215,6 +219,7 @@ Monitoring added: label resolution rate by cohort (week). If resolution rate for
     id: 'inc5',
     title: 'Feature Store Returns Stale Values in Production',
     domain: 'Cross-domain: Feature Engineering → Serving → Data Engineering',
+    readMin: 12,
     situation: `Your real-time fraud model uses a feature store for online serving. Two days after a schema migration in the upstream event pipeline, alerts show:
 
 • user_txn_count_1h: values are uniformly 0 for all users
@@ -269,6 +274,7 @@ All three are needed: schema contract catches renaming, fail-on-unknown catches 
     id: 'inc6',
     title: 'Batch Scoring Job Produces Identical Predictions for All Users',
     domain: 'Cross-domain: Training Pipeline → Serving → Feature Engineering',
+    readMin: 10,
     situation: `Your daily batch scoring job completed in 40 minutes (normal). But when the downstream email campaign team queries predicted scores:
 
 • All 2.1M users have score = 0.493
@@ -324,7 +330,7 @@ Campaign launched on time. Post-mortem: feature_snapshot_date must be a runtime 
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
-function IncidentCard({ incident, completed, onComplete }) {
+function IncidentCard({ incident, completed, onComplete, onNavigate }) {
   const [expanded, setExpanded]   = useState(false)
   const [stepIdx, setStepIdx]     = useState(0)
   const [picks, setPicks]         = useState([])
@@ -364,8 +370,14 @@ function IncidentCard({ incident, completed, onComplete }) {
         style={{ width: '100%', textAlign: 'left', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
-            {incident.domain}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              {incident.domain}
+            </span>
+            {incident.readMin && (
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>~{incident.readMin} min</span>
+            )}
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--rose)', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '4px', padding: '1px 6px' }}>senior</span>
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
             {incident.title}
@@ -456,12 +468,29 @@ function IncidentCard({ incident, completed, onComplete }) {
             )}
           </div>
 
-          {/* Lesson (shown when complete) */}
+          {/* Lesson + What to do next (shown when complete) */}
           {done && (
-            <div style={{ padding: '12px 16px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px', marginTop: '8px' }}>
-              <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Key lesson</div>
-              <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{incident.lesson}</p>
-            </div>
+            <>
+              <div style={{ padding: '12px 16px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '8px', marginTop: '8px' }}>
+                <div className="section-eyebrow" style={{ marginBottom: '6px' }}>Key lesson</div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{incident.lesson}</p>
+              </div>
+              <div style={{ marginTop: '12px', padding: '12px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>What to do next</span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {onNavigate && (
+                    <button onClick={() => onNavigate('combinator')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                      Test in Combinator →
+                    </button>
+                  )}
+                  {onNavigate && (
+                    <button onClick={() => onNavigate('mlcoding')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                      ML Coding Lab →
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -522,6 +551,7 @@ export default function IncidentRoomTab({ onNavigate }) {
             incident={inc}
             completed={completedIds.includes(inc.id)}
             onComplete={handleComplete}
+            onNavigate={onNavigate}
           />
         ))}
       </div>

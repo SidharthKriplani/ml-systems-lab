@@ -219,6 +219,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 1,
     model: 'XGBoost',
+    readMin: 2,
     problem: 'Validation AUC plateau at 0.82 after 100 trees.',
     detail: 'Learning curves flatten early. You haven\'t hit a wall on max_depth.',
     options: ['max_depth', 'learning_rate + more trees', 'subsample', 'colsample_bytree'],
@@ -233,6 +234,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 2,
     model: 'Random Forest',
+    readMin: 2,
     problem: 'Inference too slow — 800ms per request in production.',
     detail: 'Accuracy is fine. Pure latency problem.',
     options: ['n_estimators', 'max_depth', 'min_samples_leaf', 'max_features'],
@@ -247,6 +249,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 3,
     model: 'Logistic Regression',
+    readMin: 2,
     problem: 'Large train/val gap (overfitting) on 1k samples.',
     detail: 'Train accuracy 94%, val accuracy 72%. Only 1,000 training samples.',
     options: ['C (regularization)', 'solver', 'max_iter', 'class_weight'],
@@ -261,6 +264,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 4,
     model: 'SVM (RBF kernel)',
+    readMin: 2,
     problem: 'Model is underfitting — decision boundary too smooth.',
     detail: 'Both train and val accuracy are mediocre. The model isn\'t fitting the training data.',
     options: ['C', 'gamma', 'kernel', 'degree'],
@@ -275,6 +279,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 5,
     model: 'Decision Tree',
+    readMin: 2,
     problem: 'Massive overfitting — train acc 99%, val acc 61%.',
     detail: 'Classic overfit profile. The tree has memorized the training set.',
     options: ['max_depth', 'min_samples_split', 'min_samples_leaf', 'criterion'],
@@ -289,6 +294,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 6,
     model: 'Neural Net (MLP)',
+    readMin: 2,
     problem: 'Loss not converging after 50 epochs.',
     detail: 'Loss curve is jagged and oscillating. No clear downward trend.',
     options: ['learning_rate', 'hidden_layer_sizes', 'activation', 'batch_size'],
@@ -303,6 +309,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 7,
     model: 'k-NN',
+    readMin: 2,
     problem: 'Predictions feel noisy and inconsistent across similar inputs.',
     detail: 'Small input changes cause big prediction swings.',
     options: ['n_neighbors (k)', 'weights', 'algorithm', 'leaf_size'],
@@ -317,6 +324,7 @@ const HYPERPARAM_SCENARIOS = [
   {
     id: 8,
     model: 'GradientBoostingClassifier',
+    readMin: 2,
     problem: 'Training takes 4 hours on 100k samples.',
     detail: 'sklearn GradientBoostingClassifier. Pure speed problem.',
     options: ['n_estimators', 'learning_rate', 'subsample', 'max_features'],
@@ -938,6 +946,9 @@ function HyperparamPriority() {
                   }}>
                     {scenario.model}
                   </span>
+                  {scenario.readMin && (
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>~{scenario.readMin} min</span>
+                  )}
                 </div>
                 <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '14px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
                   {scenario.problem}

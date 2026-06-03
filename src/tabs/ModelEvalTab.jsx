@@ -756,11 +756,11 @@ function RankingMetrics() {
 
 // ─── Tab shell ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { id: 'metric',       label: 'Metric Selector',    icon: '', component: MetricSelector, difficulty: 'junior', isFree: true },
-  { id: 'calibration', label: 'Calibration Clinic',  icon: '', component: CalibrationClinic, difficulty: 'mid', isFree: false },
-  { id: 'threshold',   label: 'Threshold Tuner',     icon: '', component: ThresholdTuner, difficulty: 'mid', isFree: false },
-  { id: 'ranking',     label: 'Ranking Metrics',     icon: '', component: RankingMetrics, difficulty: 'mid', isFree: false },
-  { id: 'shadow',      label: 'Shadow Mode',         icon: '', component: ShadowModeSim, difficulty: 'junior', isFree: true },
+  { id: 'metric',      label: 'Metric Selector',   icon: '', component: MetricSelector,   difficulty: 'junior', isFree: true,  readMin: 5  },
+  { id: 'calibration', label: 'Calibration Clinic', icon: '', component: CalibrationClinic, difficulty: 'mid',    isFree: false, readMin: 8  },
+  { id: 'threshold',   label: 'Threshold Tuner',    icon: '', component: ThresholdTuner,    difficulty: 'mid',    isFree: false, readMin: 7  },
+  { id: 'ranking',     label: 'Ranking Metrics',    icon: '', component: RankingMetrics,    difficulty: 'mid',    isFree: false, readMin: 8  },
+  { id: 'shadow',      label: 'Shadow Mode',        icon: '', component: ShadowModeSim,     difficulty: 'junior', isFree: true,  readMin: 6  },
 ]
 
 
@@ -822,7 +822,20 @@ export default function ModelEvalTab({ onNavigate, accessCode = null }) {
         ))}
       </div>
       {activeModuleData && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px',
+              color: activeModuleData.difficulty === 'junior' ? 'var(--mint)' : activeModuleData.difficulty === 'mid' ? 'var(--prime)' : activeModuleData.difficulty === 'senior' ? 'var(--rose)' : 'var(--violet)',
+              background: activeModuleData.difficulty === 'junior' ? 'rgba(52,211,153,0.1)' : activeModuleData.difficulty === 'mid' ? 'rgba(240,165,0,0.1)' : activeModuleData.difficulty === 'senior' ? 'rgba(244,63,94,0.1)' : 'rgba(167,139,250,0.1)',
+              border: `1px solid ${activeModuleData.difficulty === 'junior' ? 'rgba(52,211,153,0.25)' : activeModuleData.difficulty === 'mid' ? 'rgba(240,165,0,0.25)' : activeModuleData.difficulty === 'senior' ? 'rgba(244,63,94,0.25)' : 'rgba(167,139,250,0.25)'}`,
+            }}>{activeModuleData.difficulty}</span>
+            {activeModuleData.readMin && (
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>~{activeModuleData.readMin} min</span>
+            )}
+            {activeModuleData.isFree && (
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '4px', padding: '2px 6px' }}>FREE</span>
+            )}
+          </div>
           <BookmarkButton tabId="eval" moduleId={active} label={activeModuleData.label} />
         </div>
       )}

@@ -15,6 +15,7 @@ const PROBLEMS = [
     title: 'Custom Cross-Entropy Loss',
     domain: 'Model Training',
     difficulty: 'mid',
+    readMin: 15,
     prompt: `Implement a numerically stable binary cross-entropy loss function from scratch.
 Do NOT use sklearn or torch — implement the formula directly with numpy.
 
@@ -60,6 +61,7 @@ print(f"sklearn matches: {abs(loss - sklearn_loss) < 1e-6}")
     title: 'Vectorised Feature Engineering — No Loops',
     domain: 'Feature Engineering',
     difficulty: 'mid',
+    readMin: 20,
     prompt: `Given a DataFrame of user sessions, compute the following features WITHOUT using any Python for-loops or .apply():
 1. days_since_last_purchase: days between each row's date and that user's most recent purchase date
 2. purchase_velocity_7d: number of purchases by that user in the 7 days before the row's date (exclusive)
@@ -115,6 +117,7 @@ print(df[['user_id','date','item_id','days_since_last_purchase','purchase_veloci
     title: 'K-Fold Cross-Validation From Scratch',
     domain: 'Model Evaluation',
     difficulty: 'junior',
+    readMin: 15,
     prompt: `Implement k-fold cross-validation from scratch using only numpy (no sklearn KFold).
 
 Your function cross_val_score(X, y, model_fn, k=5) should:
@@ -178,6 +181,7 @@ print(f"Mean: {np.mean(scores):.3f}")
     title: 'Retry Decorator with Exponential Backoff',
     domain: 'ML Systems',
     difficulty: 'senior',
+    readMin: 12,
     prompt: `Implement a @retry decorator that wraps any function with exponential backoff on failure.
 
 Requirements:
@@ -261,6 +265,7 @@ print(f"Result: {result}, total calls: {call_count}")
     title: 'ModelConfig Validation with Pydantic',
     domain: 'ML Systems',
     difficulty: 'mid',
+    readMin: 10,
     prompt: `Implement a Pydantic ModelConfig class that validates ML training configuration.
 
 Requirements:
@@ -358,6 +363,7 @@ except Exception as e:
     title: 'Pandas CDC Deduplication',
     domain: 'Data Engineering',
     difficulty: 'senior',
+    readMin: 15,
     prompt: `You receive a CDC (Change Data Capture) feed as a DataFrame. Each row is an event with:
 - record_id: the ID of the business entity
 - updated_at: timestamp of the change
@@ -432,6 +438,7 @@ print(result)
     title: 'Diagnosing and Fixing Spark Data Skew',
     domain: 'Data Engineering',
     difficulty: 'senior',
+    readMin: 20,
     prompt: `A PySpark job joining user events to a user_profile table takes 3.5 hours. Profiling shows 1 executor processes 80% of the data while 199 sit idle.
 
 Your tasks:
@@ -538,7 +545,7 @@ result.show()
 ]
 
 // ── Problem card component ────────────────────────────────────────────────────
-function ProblemCard({ problem, done, onComplete }) {
+function ProblemCard({ problem, done, onComplete, onNavigate }) {
   const [expanded, setExpanded]     = useState(false)
   const [showSolution, setShowSol]  = useState(false)
   const [cpRevealed, setCpRevealed] = useState(false)
@@ -553,9 +560,10 @@ function ProblemCard({ problem, done, onComplete }) {
         style={{ width: '100%', textAlign: 'left', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase' }}>{problem.domain}</span>
             <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: DIFF_COLOR[problem.difficulty], border: `1px solid ${DIFF_COLOR[problem.difficulty]}`, borderRadius: '3px', padding: '0 4px', textTransform: 'uppercase' }}>{problem.difficulty}</span>
+            {problem.readMin && <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>~{problem.readMin} min</span>}
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{problem.title}</div>
         </div>
@@ -628,6 +636,21 @@ function ProblemCard({ problem, done, onComplete }) {
               </div>
             )}
           </div>
+
+          {/* What to do next — shown after checkpoint revealed */}
+          {cpRevealed && onNavigate && (
+            <div style={{ padding: '12px 16px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>What to do next</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button onClick={() => onNavigate('incidentroom')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                  Incident Room →
+                </button>
+                <button onClick={() => onNavigate('combinator')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
+                  Combinator →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -685,6 +708,7 @@ export default function MLCodingTab({ onNavigate }) {
             problem={p}
             done={completedIds.includes(p.id)}
             onComplete={handleComplete}
+            onNavigate={onNavigate}
           />
         ))}
       </div>

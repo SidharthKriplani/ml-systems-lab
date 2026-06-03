@@ -7,6 +7,30 @@ Last updated: 2026-06-02
 
 ---
 
+## PAL Revamp — Sprint Roadmap (logged 2026-06-03, from PAL screenshot audit)
+
+### Sprint A — Fix what's broken (no new content)
+- [ ] **Typography/contrast overhaul** — `index.css` single pass. Push `--ink-mid` ~60% → ~85% brightness, `--ink-low` → ~70%, remove `--ink-ghost` as primary text color. PAL uses near-white on dark; MSL is grayish at standard brightness. Highest visible-impact, lowest-risk change.
+- [ ] **Consistent scenario card format** — Define one card standard across all tabs: title, difficulty pill, estimated time, domain tag, completion indicator. Currently FeatureEng/ModelEval/ClassicalML/IncidentRoom/MLCoding all render differently.
+- [ ] **"What to do next" after scenario completion** — Explicit forward-routing at end of each tab's reveal/complete state. Minimum: "Next scenario →" + cross-link to one related tab via `onNavigate`. PAL shows Next case / Build interview plan / Company Tracks after every case.
+
+### Sprint B — Progress and paths
+- [ ] **HomeTab → proper Progress/Profile page** — Total completed count, per-section breakdown with bars, "Strongest section" / "Not started yet" callouts, bookmarks panel, streak counter, export/import. PAL Profile has all of this without auth.
+- [ ] **Guided Paths** — 3 named paths hardcoded in HomeTab, localStorage-tracked: "Senior MLE in 4 weeks" (Defense → InterviewPrep → Combinator → IncidentRoom → MLCoding), "Data Eng Focus" (Spark → Airflow → dbt → DataModeling → MLCoding), "Quick Calibration" (ClassicalML → Trainer → Combinator). Shows X/N completion.
+- [ ] **isFree per-case gating** — Tag first 2 scenarios per module as free, show FREE badge inline on locked scenarios, update AccessGate to filter (show but lock scenarios 3+) not block the whole tab.
+
+### Sprint C — Content consistency
+- [ ] **Three-tier audit + completion** — SpotTheFlawTab (12 scenarios), DLFineTuningTab, DLServingTab, FeatureEngTab, ModelEvalTab. Each needs whatsTested/antiPattern/staffFraming checked.
+- [ ] **Read time on scenario cards** — Every scenario gets estimated time (2 min MCQ, 5 min incident, 10 min Project Lab phase). Show inline on cards.
+- [ ] **Cross-references between tabs** — ForwardPointer at bottom of each tab to most relevant related tab. Component exists, just not consistently used.
+
+### Sprint D — Remaining v4.66 queue
+- [ ] mlc8 — Feature pipeline health check (Python problem)
+- [ ] SpotTheFlawTab three-tier pass
+- [ ] DLFineTuningTab + DLServingTab content audit
+
+---
+
 ## In Progress
 
 *Move items here from Tier 1 at the start of a session. Strike through and move to LINEAGE.md when done.*

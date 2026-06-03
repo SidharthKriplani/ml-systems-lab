@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.65 complete — 2026-06-03):**
+**Current state (v4.66 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
@@ -217,17 +217,17 @@ Later files reference earlier ones. Always update in this sequence:
 4. ~~**Incident Room → 6 scenarios**~~ — inc4 (resolution lag), inc5 (feature store silent schema mismatch), inc6 (zero-variance predictions from stale snapshot).
 5. ~~**ML Coding → 6 problems**~~ — mlc4–mlc6 added above.
 
-### v4.65 sprint — DONE
-1. ~~ENSEMBLE_SCENARIOS three-tier~~ — 7 scenarios, AccordionMCQ render wired + all data added.
-2. ~~MLCodingTab mlc7~~ — PySpark skew diagnosis + salted join. MLCoding now 7 problems.
-3. ~~SHAP video fix~~ — title corrected (A Data Odyssey, not StatQuest). Video valid.
+### v4.66 sprint — DONE (Sprint A complete)
+1. ~~Typography/contrast overhaul~~ — dark mode `--ink-low` #999 → #b8b8b8, `--ink-ghost` #666 → #8a8a8a (WCAG AA). Light mode `--ink-ghost` → #6b5038. All 35+ tabs inherit automatically.
+2. ~~Scenario card metadata standard~~ — `readMin` + difficulty pill + FREE badge added to FeatureEngTab (8 modules), ModelEvalTab (5 modules), MLCodingTab (7 problems), IncidentRoomTab (6 incidents), ClassicalMLTab HyperparamScenarios (8).
+3. ~~"What to do next" routing~~ — IncidentRoom shows "Combinator →" + "ML Coding →" after completion. MLCoding shows "Incident Room →" + "Combinator →" after checkpoint reveal.
 
-### v4.66 sprint — queued (see NEXT.md)
-1. isFree per-case gating first pass (5 highest-traffic tabs).
-2. Unblock Interview Experiences (awaiting credentials).
-3. MLCodingTab mlc8 — feature pipeline health check.
-4. SpotTheFlawTab three-tier pass.
-5. DLFineTuningTab + DLServingTab content audit.
+### v4.67 sprint — queued (see NEXT.md)
+1. HomeTab Progress/Profile page overhaul.
+2. Guided Paths (3 named paths, localStorage-tracked).
+3. Unblock Interview Experiences (awaiting credentials).
+4. isFree per-case gating.
+5. Sprint C kickoff (SpotTheFlaw, DL tabs three-tier).
 
 ---
 
