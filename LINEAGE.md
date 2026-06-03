@@ -46,6 +46,43 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.61 — Structural redesign: collapsible sidebar, new nav architecture, HomeTab rewrite (2026-06-03)
+
+**Navigation restructure (App.jsx):**
+- Replaced role-based domain taxonomy (ML Engineering / Data Engineering / Deep Learning / Data Science / MLOps) with 5-section responsibility-layer structure: FOUNDATIONS · SCENARIOS · PRACTICE · INTERVIEW · LEARN.
+- `NAV_SECTIONS` config replaces `PRACTICE_DOMAINS` + `INTERVIEW_TOOLS` as the sidebar source of truth.
+- `DesktopSidebar` fully rewritten: collapsible sections (closed by default, auto-expands to active tab's section), sub-groups within SCENARIOS (Data & Features · Model & Evaluation · Systems & Serving · Monitoring & Reliability), progress % on items, search button at bottom.
+- `BottomNav` rewritten: 5 section icons (Home / Scenarios / Practice / Interview / Learn) replacing the 5-zone nav.
+- `getTabSection()` + `getNavLabel()` helpers added for section-aware routing.
+- Dead tabs removed: `AskTab`, `DataScienceTab`, `JDPrepTab` — imports, ALL_TABS entries, and usages all removed.
+- `NAV_ZONES` constant removed (superseded by `NAV_SECTIONS`).
+- Topbar breadcrumb updated: uses `getNavLabel()` instead of `ALL_NAV_TABS` array lookup. `showBackBtn` now triggers for any non-home tab.
+- Brace delta: 0.
+
+**HomeTab rewrite (879 → 170 lines):**
+- Old: 7 role cards + TRACKS grid + CHANGELOG + testimonials + role readiness aggregation.
+- New: mission statement hero ("Production ML judgment. Built through real failure modes."), 3 entry path cards (Interview / Scenarios / Foundations), 5 section progress rows (per-section % from localStorage), continue button, export link.
+- Section progress reads `msl_score:*` keys and aggregates by section.
+- No role-based content. No changelog. Clean entry point.
+- Brace delta: 0.
+
+**Files modified:** `src/App.jsx`, `src/tabs/HomeTab.jsx`.
+
+---
+
+### v4.60 — staffFraming on all 128 InterviewPrepTab questions (2026-06-03)
+
+**staffFraming field — third reveal tier on all 128 InterviewPrepTab questions:**
+- Added `staffFraming` field to questions 44–128, completing the field across all 128 questions (ids 1–43 were written in the prior session but the session hit the API 1M context gate before finishing).
+- `staffFraming` renders as a violet-tinted "How a senior frames this" callout at the bottom of the reveal panel in both Bank mode and Timed Practice mode (render logic was already wired in v4.59 with `q?.staffFraming &&` conditional).
+- Coverage by category: Architecture (21 q), Features (10 q), Evaluation (12 q), Spark (7 q), Coding (5 q), Statistics (19 q), Trees & Ensembles (8 q), SQL (7 q), Regression (6 q), Behavioral (15 q), System Design (8 q), LLM/GenAI (10 q).
+- Pattern per question: tradeoff language, what signals seniority vs "technically right but doesn't sound like someone who's done it," production constraints, failure modes only practitioners have seen.
+- Brace delta: 0.
+
+**Files modified:** `src/tabs/InterviewPrepTab.jsx`.
+
+---
+
 ### v4.59 — InterviewPrepTab whatsTested + antiPattern pass, MD spine consolidation (2026-06-03)
 
 **whatsTested + antiPattern on all 128 InterviewPrepTab questions:**

@@ -23,20 +23,17 @@ const MLOpsPipelinesTab = lazy(() => import('./tabs/MLOpsPipelinesTab.jsx'))
 const DeepLearningTab   = lazy(() => import('./tabs/DeepLearningTab.jsx'))
 const DLFineTuningTab   = lazy(() => import('./tabs/DLFineTuningTab.jsx'))
 const DLServingTab      = lazy(() => import('./tabs/DLServingTab.jsx'))
-const DataScienceTab    = lazy(() => import('./tabs/DataScienceTab.jsx'))
 const CausalInferenceTab = lazy(() => import('./tabs/CausalInferenceTab.jsx'))
 const TimeSeriesTab     = lazy(() => import('./tabs/TimeSeriesTab.jsx'))
 const AirflowTab        = lazy(() => import('./tabs/AirflowTab.jsx'))
 const DbtTab            = lazy(() => import('./tabs/dbtTab.jsx'))
 const DataModelingTab   = lazy(() => import('./tabs/DataModelingTab.jsx'))
-const AskTab            = lazy(() => import('./tabs/AskTab.jsx'))
 const TakeHomeTab    = lazy(() => import('./tabs/TakeHomeTab.jsx'))
 const TrainerTab     = lazy(() => import('./tabs/TrainerTab.jsx'))
 const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
 const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
 const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
 const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
-const JDPrepTab      = lazy(() => import('./tabs/JDPrepTab.jsx'))
 const DefenseDocTab  = lazy(() => import('./tabs/DefenseDocTab.jsx'))
 const VerbatimTab    = lazy(() => import('./tabs/VerbatimTab.jsx'))
 const SpotTheFlawTab    = lazy(() => import('./tabs/SpotTheFlawTab.jsx'))
@@ -61,7 +58,6 @@ const ALL_TABS = [
   { id: 'dl',           component: DeepLearningTab },
   { id: 'dl_finetune',  component: DLFineTuningTab },
   { id: 'dl_serving',   component: DLServingTab },
-  { id: 'ds',           component: DataScienceTab },
   { id: 'causal',       component: CausalInferenceTab },
   { id: 'ts',           component: TimeSeriesTab },
   { id: 'monitor',      component: MonitoringTab },
@@ -70,7 +66,6 @@ const ALL_TABS = [
   { id: 'interview',    component: InterviewPrepTab },
   { id: 'gradient',     component: GradientTab },
   { id: 'landscape',    component: LandscapeTab },
-  { id: 'ask',          component: AskTab },
   // New feature tabs
   { id: 'takehome',    component: TakeHomeTab },
   { id: 'trainer',     component: TrainerTab },
@@ -78,7 +73,6 @@ const ALL_TABS = [
   { id: 'codebugs',    component: CodeBugsTab },
   { id: 'casestudies', component: CaseStudiesTab },
   { id: 'stafflayer',  component: StaffLayerTab },
-  { id: 'jdprep',      component: JDPrepTab },
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
   { id: 'spottheflaw',   component: SpotTheFlawTab },
@@ -124,13 +118,7 @@ const ZONE_DEFAULTS = {
 function getZoneForTab(id) { return TAB_TO_ZONE[id] ?? 'practice' }
 
 // ── Bottom nav zones ──────────────────────────────────────────────────────────
-const NAV_ZONES = [
-  { id: 'today',     label: 'Today',     icon: '◎', accent: 'var(--prime)' },
-  { id: 'practice',  label: 'Practice',  icon: '⊞', accent: 'var(--prime)' },
-  { id: 'read',      label: 'Read',      icon: '∇', accent: 'var(--prime)' },
-  { id: 'interview', label: 'Interview', icon: '◈', accent: 'var(--prime)' },
-  { id: 'ask',       label: 'Search',    icon: '✦', accent: 'var(--prime)' },
-]
+
 
 // ── Practice domain config ────────────────────────────────────────────────────
 const PRACTICE_DOMAINS = [
@@ -213,6 +201,99 @@ const INTERVIEW_TOOLS = [
 
 // all practice tabs flat, for label lookup
 const ALL_PRACTICE_TABS = PRACTICE_DOMAINS.flatMap(d => d.tabs.map(t => ({ ...t, domainAccent: d.accent })))
+
+// ── New 5-section nav structure ──────────────────────────────────────────────
+const NAV_SECTIONS = [
+  {
+    id: 'foundations',
+    label: 'FOUNDATIONS',
+    items: [
+      { id: 'models',    label: 'Math & Statistics' },
+      { id: 'classical', label: 'Classical ML' },
+    ],
+  },
+  {
+    id: 'scenarios',
+    label: 'SCENARIOS',
+    groups: [
+      { label: 'Data & Features', items: [
+        { id: 'features', label: 'Feature Engineering' },
+        { id: 'spark',    label: 'Spark Lab' },
+        { id: 'airflow',  label: 'Airflow' },
+        { id: 'dbt',      label: 'dbt' },
+        { id: 'modeling', label: 'Data Modeling' },
+      ]},
+      { label: 'Model & Evaluation', items: [
+        { id: 'eval',        label: 'Model Evaluation' },
+        { id: 'dl',          label: 'Deep Learning' },
+        { id: 'dl_finetune', label: 'Fine-tuning' },
+      ]},
+      { label: 'Systems & Serving', items: [
+        { id: 'design',       label: 'System Design' },
+        { id: 'dl_serving',   label: 'DL Serving' },
+        { id: 'mlops_deploy', label: 'Deployment' },
+        { id: 'mlops_pipes',  label: 'CI/CD & Infra' },
+      ]},
+      { label: 'Monitoring & Reliability', items: [
+        { id: 'monitor', label: 'Monitoring' },
+        { id: 'ts',      label: 'Time Series' },
+        { id: 'causal',  label: 'Causal Inference' },
+      ]},
+    ],
+  },
+  {
+    id: 'practice',
+    label: 'PRACTICE',
+    items: [
+      { id: 'incidentroom',    label: 'Incident Room' },
+      { id: 'mlcoding',        label: 'Code Problems' },
+      { id: 'codebugs',        label: 'Code Bugs' },
+      { id: 'projectlab',      label: 'Project Lab · Telco' },
+      { id: 'loan_default',    label: 'Project Lab · Loans' },
+      { id: 'fraud_detection', label: 'Project Lab · Fraud' },
+      { id: 'casestudies',     label: 'Case Studies' },
+    ],
+  },
+  {
+    id: 'interview',
+    label: 'INTERVIEW',
+    items: [
+      { id: 'interview',   label: 'Q&A Bank' },
+      { id: 'combinator',  label: 'Timed Exam' },
+      { id: 'verbal',      label: 'Verbal Practice' },
+      { id: 'stafflayer',  label: 'Staff Layer' },
+      { id: 'defense',     label: 'Defense Plan' },
+      { id: 'spottheflaw', label: 'Spot the Flaw' },
+      { id: 'takehome',    label: 'Take-Home' },
+      { id: 'trainer',     label: 'Trainer' },
+    ],
+  },
+  {
+    id: 'learn',
+    label: 'LEARN',
+    items: [
+      { id: 'gradient',  label: 'Deep Dives' },
+      { id: 'landscape', label: 'Landscape' },
+    ],
+  },
+]
+
+function getTabSection(tabId) {
+  for (const s of NAV_SECTIONS) {
+    const items = s.groups ? s.groups.flatMap(g => g.items) : (s.items || [])
+    if (items.some(i => i.id === tabId)) return s.id
+  }
+  return null
+}
+
+function getNavLabel(tabId) {
+  for (const s of NAV_SECTIONS) {
+    const items = s.groups ? s.groups.flatMap(g => g.items) : (s.items || [])
+    const found = items.find(i => i.id === tabId)
+    if (found) return found.label
+  }
+  return null
+}
 
 // ── Progress helpers ──────────────────────────────────────────────────────────
 const SCORE_TAB_MAP = {
@@ -698,8 +779,22 @@ function InterviewGrid({ onSelect, isUnlocked }) {
 // ── DesktopSidebar ────────────────────────────────────────────────────────────
 // Guiding principle: user always knows where they are and what to do next.
 // Flat domain sections — one click to any tab. No lock icons. Progress inline.
-function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) {
-  const activeTabId = zoneTab[activeZone]
+function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }) {
+  const activeSection = getTabSection(activeTabId)
+
+  const [openSections, setOpenSections] = useState(() => {
+    const s = getTabSection(activeTabId)
+    return s ? { [s]: true } : {}
+  })
+
+  useEffect(() => {
+    const s = getTabSection(activeTabId)
+    if (s) setOpenSections(prev => ({ ...prev, [s]: true }))
+  }, [activeTabId])
+
+  function toggleSection(id) {
+    setOpenSections(prev => ({ ...prev, [id]: !prev[id] }))
+  }
 
   function getTabPct(tabId) {
     const p = tabProgress?.[tabId]
@@ -707,36 +802,38 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
     return Math.round((p.attempted / p.total) * 100)
   }
 
-  const isHomeActive   = activeZone === 'today'
-  const isSearchActive = activeZone === 'ask'
-
-  // Shared nav item base — hover handled via onMouseEnter/Leave
-  function NavBtn({ id, label, accent, isActive, indent = false, extra = null, onClick }) {
+  function NavItem({ id, label, depth = 0 }) {
     const [hov, setHov] = useState(false)
+    const isActive = activeTabId === id
+    const pct = getTabPct(id)
+    const isDimmed = PREMIUM_TABS.has(id) && !isUnlocked
     return (
       <button
-        onClick={onClick || (() => goTo(id))}
+        onClick={() => goTo(id)}
         className={isActive ? 'sidebar-item-active' : ''}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
           width: '100%', textAlign: 'left',
-          padding: indent ? '4px 12px 4px 26px' : '6px 14px',
+          padding: depth === 1 ? '4px 12px 4px 28px' : '4px 12px 4px 16px',
           background: isActive ? undefined : hov ? 'var(--prime-faint)' : 'none',
           border: 'none', cursor: 'pointer',
-          transition: 'background var(--t-fast), color var(--t-fast)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          transition: 'background var(--t-fast)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: indent ? '12px' : '13px',
-            fontWeight: isActive ? 600 : 400,
-            color: isActive ? undefined : hov ? 'var(--ink-mid)' : 'var(--ink-low)',
-            transition: 'color var(--t-fast)',
-          }}>{label}</span>
-          {extra}
-        </div>
+        <span style={{
+          fontFamily: 'var(--font-sans)', fontSize: '12px',
+          fontWeight: isActive ? 600 : 400,
+          color: isActive ? undefined : hov ? 'var(--ink-mid)' : 'var(--ink-low)',
+          transition: 'color var(--t-fast)', lineHeight: 1.4,
+        }}>{label}</span>
+        {pct > 0
+          ? <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isActive ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0, marginLeft: '4px' }}>{pct}%</span>
+          : isDimmed
+            ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
+            : null
+        }
       </button>
     )
   }
@@ -751,7 +848,7 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
       zIndex: 60, scrollbarWidth: 'none',
     }}>
 
-      {/* ── Logo ── */}
+      {/* Logo */}
       <button
         onClick={() => goTo('home')}
         style={{
@@ -774,133 +871,89 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
         }}>ML</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>Systems Lab</span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>ml · data · mlops</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>production ml judgment</span>
         </div>
       </button>
 
-      {/* ── Nav ── */}
-      <nav style={{ flex: 1, padding: '6px 0 16px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '6px 0 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
-        {/* Home */}
-        <NavBtn id="home" label="Home" accent="var(--prime)" isActive={isHomeActive} onClick={() => goTo('home')} />
+        <NavItem id="home" label="Home" />
+        <div style={{ height: '1px', background: 'var(--rim)', margin: '6px 0' }} />
 
-        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Practice</div>
-
-        {/* Practice domains */}
-        {PRACTICE_DOMAINS.map(domain => {
-          const domainHasActive = domain.tabs.some(t => t.id === activeTabId) && activeZone === 'practice'
+        {NAV_SECTIONS.map(section => {
+          const isOpen = !!openSections[section.id]
+          const hasActive = activeSection === section.id
           return (
-            <div key={domain.id}>
-              {/* Domain header — always expanded, no toggle */}
-              <div style={{
-                padding: '8px 14px 2px',
-              }}>
+            <div key={section.id}>
+              <button
+                onClick={() => toggleSection(section.id)}
+                style={{
+                  width: '100%', textAlign: 'left', padding: '7px 12px 5px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}
+              >
                 <span style={{
-                  fontFamily: 'var(--font-sans)', fontSize: '11px',
-                  fontWeight: domainHasActive ? 700 : 500,
-                  color: domainHasActive ? domain.accent : 'var(--ink-mid)',
-                  letterSpacing: '0.01em',
-                }}>{domain.label}</span>
-              </div>
+                  fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.13em',
+                  color: hasActive ? 'var(--prime)' : 'var(--ink-ghost)',
+                  transition: 'color var(--t-fast)',
+                }}>{section.label}</span>
+                <span style={{
+                  fontSize: '8px', color: hasActive ? 'var(--prime)' : 'var(--ink-ghost)',
+                  display: 'inline-block',
+                  transform: isOpen ? 'rotate(90deg)' : 'none',
+                  transition: 'transform 0.18s ease, color var(--t-fast)',
+                }}>▶</span>
+              </button>
 
-              {/* Tab items — always visible */}
-              {domain.tabs.map(tab => {
-                const isTabActive = activeTabId === tab.id && activeZone === 'practice'
-                const pct = getTabPct(tab.id)
-                const isDimmed = PREMIUM_TABS.has(tab.id) && !isUnlocked
-                return (
-                  <NavBtn
-                    key={tab.id}
-                    id={tab.id}
-                    label={tab.label}
-                    accent={domain.accent}
-                    isActive={isTabActive}
-                    indent
-                    extra={
-                      pct > 0
-                        ? <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isTabActive ? domain.accent : 'var(--ink-ghost)', flexShrink: 0 }}>{pct}%</span>
-                        : isDimmed
-                          ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
-                          : null
-                    }
-                  />
-                )
-              })}
+              {isOpen && (
+                <div>
+                  {section.groups ? (
+                    section.groups.map(group => (
+                      <div key={group.label}>
+                        <div style={{
+                          padding: '5px 12px 2px 16px',
+                          fontSize: '9px', fontFamily: 'var(--font-mono)',
+                          color: 'var(--ink-ghost)', opacity: 0.65,
+                          letterSpacing: '0.07em', textTransform: 'uppercase',
+                        }}>{group.label}</div>
+                        {group.items.map(item => (
+                          <NavItem key={item.id} id={item.id} label={item.label} depth={1} />
+                        ))}
+                      </div>
+                    ))
+                  ) : (
+                    section.items.map(item => (
+                      <NavItem key={item.id} id={item.id} label={item.label} />
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
-
-        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Interview</div>
-
-        {/* Interview tools */}
-        {INTERVIEW_TOOLS.map(tool => {
-          const isToolActive = activeTabId === tool.id && activeZone === 'interview'
-          const isDimmed = PREMIUM_TABS.has(tool.id) && !isUnlocked
-          return (
-            <NavBtn
-              key={tool.id}
-              id={tool.id}
-              label={tool.label}
-              accent={tool.accent}
-              isActive={isToolActive}
-              indent
-              extra={
-                isDimmed && !isToolActive
-                  ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
-                  : null
-              }
-            />
-          )
-        })}
-
-        <div style={{ height: '1px', background: 'var(--rim)', margin: '5px 14px' }} />
-        <div style={{ padding: '8px 14px 2px', fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', userSelect: 'none' }}>Read</div>
-
-        {[
-          { id: 'gradient',  label: 'Gradient ∇', accent: 'var(--prime)', zone: 'read' },
-          { id: 'landscape', label: 'Landscape',   accent: 'var(--prime)', zone: 'today' },
-        ].map(item => {
-          const isActive = activeTabId === item.id && activeZone === item.zone
-          return <NavBtn key={item.id} id={item.id} label={item.label} accent={item.accent} isActive={isActive} indent />
-        })}
-
       </nav>
 
-      {/* ── Search — PAL-style bottom bar ── */}
-      <div style={{ padding: '8px 10px 12px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
+      {/* Search */}
+      <div style={{ padding: '8px 10px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
         <button
-          onClick={() => goTo('ask')}
-          className={isSearchActive ? 'sidebar-item-active' : ''}
+          onClick={onSearch}
           style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            width: '100%', textAlign: 'left',
-            background: isSearchActive ? undefined : 'var(--prime-faint)',
-            border: `1px solid ${isSearchActive ? 'var(--prime)' : 'var(--rim)'}`,
-            borderRadius: 'var(--r-sm)',
-            padding: '7px 10px',
-            cursor: 'pointer',
-            transition: 'border-color var(--t), background var(--t), box-shadow var(--t)',
+            width: '100%', padding: '7px 10px',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)',
+            borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)',
+            fontSize: '12px', fontFamily: 'var(--font-sans)',
+            transition: 'border-color var(--t-fast), color var(--t-fast)',
           }}
-          onMouseEnter={e => {
-            if (!isSearchActive) {
-              e.currentTarget.style.borderColor = 'var(--rim-hi)'
-              e.currentTarget.style.boxShadow = '0 0 0 2px var(--prime-bg-light)'
-            }
-          }}
-          onMouseLeave={e => {
-            if (!isSearchActive) {
-              e.currentTarget.style.borderColor = 'var(--rim)'
-              e.currentTarget.style.boxShadow = 'none'
-            }
-          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: isSearchActive ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0 }}>
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: '12px', color: isSearchActive ? undefined : 'var(--ink-low)' }}>Search</span>
-          <kbd style={{ fontSize: '9px', padding: '2px 5px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '3px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>⌘K</kbd>
+          <span style={{ fontSize: '13px' }}>⌕</span>
+          <span>Search</span>
+          <kbd style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }}>⌘K</kbd>
         </button>
       </div>
 
@@ -909,7 +962,17 @@ function DesktopSidebar({ activeZone, zoneTab, goTo, tabProgress, isUnlocked }) 
 }
 
 // ── BottomNav ─────────────────────────────────────────────────────────────────
-function BottomNav({ activeZone, onZoneNav }) {
+
+const BOTTOM_NAV_ITEMS = [
+  { id: 'home',      icon: '◎', label: 'Home',      defaultTab: 'home' },
+  { id: 'scenarios', icon: '⊟', label: 'Scenarios', defaultTab: 'features' },
+  { id: 'practice',  icon: '⚡', label: 'Practice',  defaultTab: 'incidentroom' },
+  { id: 'interview', icon: '◈', label: 'Interview',  defaultTab: 'interview' },
+  { id: 'learn',     icon: '∇', label: 'Learn',      defaultTab: 'gradient' },
+]
+
+function BottomNav({ activeTabId, goTo }) {
+  const activeSection = getTabSection(activeTabId)
   return (
     <nav className="bottom-nav-safe" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
@@ -920,57 +983,45 @@ function BottomNav({ activeZone, onZoneNav }) {
       zIndex: 100,
     }}>
       <div style={{ height: '68px', display: 'flex', alignItems: 'stretch', width: '100%', overflow: 'hidden' }}>
-      {NAV_ZONES.map(zone => {
-        const isActive = activeZone === zone.id
-        return (
-          <button key={zone.id} onClick={() => onZoneNav(zone.id)}
-            style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: '4px',
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: isActive ? zone.accent : 'var(--ink-low)',
-              transition: 'color 0.15s',
-              padding: '8px 2px 10px',
-              position: 'relative',
-              minWidth: 0, overflow: 'hidden',
-              WebkitTapHighlightColor: 'transparent',
-            }}>
-            {/* Active top bar */}
-            {isActive && (
+        {BOTTOM_NAV_ITEMS.map(item => {
+          const isActive = item.id === 'home' ? activeTabId === 'home' : activeSection === item.id
+          return (
+            <button key={item.id} onClick={() => goTo(item.defaultTab)}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '4px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: isActive ? 'var(--prime)' : 'var(--ink-low)',
+                transition: 'color 0.15s', padding: '8px 2px 10px',
+                position: 'relative', minWidth: 0, overflow: 'hidden',
+                WebkitTapHighlightColor: 'transparent',
+              }}>
+              {isActive && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '18%', right: '18%',
+                  height: '3px', background: 'var(--prime)',
+                  borderRadius: '0 0 4px 4px',
+                  boxShadow: '0 0 16px var(--prime), 0 0 4px var(--prime)',
+                }} />
+              )}
               <div style={{
-                position: 'absolute', top: 0, left: '18%', right: '18%',
-                height: '3px', background: zone.accent,
-                borderRadius: '0 0 4px 4px',
-                boxShadow: `0 0 16px ${zone.accent}, 0 0 4px ${zone.accent}`,
-              }} />
-            )}
-            {/* Icon with active glow pill */}
-            <div style={{
-              width: '36px', height: '26px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: '8px',
-              background: isActive
-                ? `radial-gradient(ellipse at center, ${zone.accent}38 0%, ${zone.accent}12 60%, transparent 100%)`
-                : 'transparent',
-              boxShadow: isActive ? `0 0 18px ${zone.accent}50` : 'none',
-              transition: 'all 0.20s ease',
-              flexShrink: 0,
-            }}>
-              <span style={{ fontSize: '18px', lineHeight: 1, filter: isActive ? `drop-shadow(0 0 6px ${zone.accent})` : 'none', transition: 'filter 0.20s' }}>{zone.icon}</span>
-            </div>
-            <span style={{
-              fontSize: '10px', fontFamily: 'var(--font-sans)',
-              fontWeight: isActive ? 700 : 500,
-              letterSpacing: '0',
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '100%',
-            }}>{zone.label}</span>
-          </button>
-        )
-      })}
+                width: '36px', height: '26px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '8px',
+                background: isActive ? 'radial-gradient(ellipse at center, rgba(240,165,0,0.22) 0%, rgba(240,165,0,0.07) 60%, transparent 100%)' : 'transparent',
+                boxShadow: isActive ? '0 0 18px rgba(240,165,0,0.3)' : 'none',
+                transition: 'all 0.20s ease', flexShrink: 0,
+              }}>
+                <span style={{ fontSize: '18px', lineHeight: 1, filter: isActive ? 'drop-shadow(0 0 6px var(--prime))' : 'none', transition: 'filter 0.20s' }}>{item.icon}</span>
+              </div>
+              <span style={{
+                fontSize: '10px', fontFamily: 'var(--font-sans)',
+                fontWeight: isActive ? 700 : 500, lineHeight: 1,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
+              }}>{item.label}</span>
+            </button>
+          )
+        })}
       </div>
     </nav>
   )
@@ -1071,12 +1122,8 @@ export default function App() {
   const currentTabId    = zoneTab[activeZone]
   const isPracticeGrid  = activeZone === 'practice'  && !currentTabId
   const isInterviewGrid = activeZone === 'interview' && !currentTabId
-  const showBackBtn     = (activeZone === 'practice' || activeZone === 'interview') && !!currentTabId
-  const ALL_NAV_TABS    = [
-    ...ALL_PRACTICE_TABS,
-    ...INTERVIEW_TOOLS.map(t => ({ ...t, domainAccent: t.accent })),
-  ]
-  const activeTabInfo = showBackBtn ? ALL_NAV_TABS.find(t => t.id === currentTabId) : null
+  const showBackBtn     = !!currentTabId && currentTabId !== 'home'
+  const activeTabLabel  = showBackBtn ? getNavLabel(currentTabId) : null
 
   function renderContent() {
     if (isPracticeGrid)  return <PracticeGrid  onSelect={goTo} tabProgress={tabProgress} isUnlocked={isUnlocked} />
@@ -1108,7 +1155,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'var(--void)' }}>
 
       {/* ── Desktop sidebar (hidden on mobile via CSS) ── */}
-      <DesktopSidebar activeZone={activeZone} zoneTab={zoneTab} goTo={goTo} onZoneNav={handleZoneNav} tabProgress={tabProgress} isUnlocked={isUnlocked} />
+      <DesktopSidebar activeTabId={currentTabId || 'home'} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} />
 
       {/* ── Desktop main wrapper (offset for sidebar on desktop) ── */}
       <div className="desktop-main-wrapper">
@@ -1131,11 +1178,11 @@ export default function App() {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '13px', fontFamily: "var(--font-sans)", padding: '10px 8px', margin: '-10px -8px' }}>
                 ← <span>{activeZone === 'interview' ? 'Tools' : 'Domains'}</span>
               </button>
-              {activeTabInfo && (
+              {activeTabLabel && (
                 <>
                   <span style={{ color: 'var(--rim)', fontSize: '13px' }}>/</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: activeTabInfo.domainAccent || activeTabInfo.accent, fontFamily: "var(--font-sans)", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {activeTabInfo.label}
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--prime)', fontFamily: "var(--font-sans)", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {activeTabLabel}
                   </span>
                 </>
               )}
@@ -1197,7 +1244,7 @@ export default function App() {
       </main>
 
       {/* ── Bottom nav (hidden on desktop via CSS) ── */}
-      <BottomNav activeZone={activeZone} onZoneNav={handleZoneNav} />
+      <BottomNav activeTabId={currentTabId || 'home'} goTo={goTo} />
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>

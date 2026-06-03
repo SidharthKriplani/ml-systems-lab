@@ -1,16 +1,16 @@
 # NEXT.md — Session Queue
 
-Next 5 items for v4.59 sprint. Updated: 2026-06-02 (end of v4.58 batch)
+Next 5 items for v4.62 sprint. Updated: 2026-06-03 (v4.61 complete)
 
 ---
 
-## v4.59 — Next sprint
+## v4.62 — Next sprint
 
-1. ~~**"What's being tested" + anti-pattern pass — InterviewPrepTab**~~ — done (2026-06-03). All 128 questions. `whatsTested` as `.msl-hint` before reveal button; `antiPattern` as rose callout inside reveal. Both Bank mode + Timed Practice. Brace delta 0.
+1. **Simplify routing: replace activeZone + zoneTab with single activeTab** — removes PracticeGrid/InterviewGrid, cleans up App() state. v4.61 kept zone routing intact for safety; this finishes the job.
 
-2. **Next: extend to CombinatorTab + TrainerTab** — same `whatsTested` + `antiPattern` fields on ~160 questions combined. Same render pattern.
+2. **Extend `staffFraming` to CombinatorTab + TrainerTab** — same field, same render pattern. ~90 questions combined. InterviewPrepTab is the proven template (128 q done).
 
-3. **New scenarios from defense pack** — add to respective tabs:
+2. **New scenarios from defense pack** — add to respective tabs:
    - Bagging vs Boosting + hyperparameter judgment → ClassicalMLTab
    - SageMaker train→register→endpoint flow → MLOpsDeployTab (currently has no SageMaker content)
    - Glue vs Lambda ETL decision → AirflowTab
@@ -34,9 +34,9 @@ Next 5 items for v4.59 sprint. Updated: 2026-06-02 (end of v4.58 batch)
 
 ## Notes for next session
 
-- All v4.58 changes committed and live on Vercel
-- Brace balance: all files at 0
-- No open build safety issues — all 4 recurring risks documented in AUDITS.md
-- Pre-commit sweep before any future commit: see AUDITS.md "Recurring Build Safety risk" section
-- Light mode fully functional — theme toggle in topbar, persists via msl_theme
-- MD spine consolidated: docs/ folder added (ROLLOUT.md + TALLY_FORM_SPEC.md archived there)
+- v4.61 committed and live on Vercel after user runs commit command
+- Brace balance: App.jsx delta 0, HomeTab.jsx delta 0
+- Structural redesign shipped: collapsible sidebar, new 5-section nav, HomeTab rewritten
+- Zone routing (activeZone + zoneTab) still in place — simplification deferred to v4.62
+- PracticeGrid + InterviewGrid still present — will be removed when routing is simplified
+- BRAIN-TRANSFER.md + PENDING.md stubs still need `git rm` (open finding #030.6)

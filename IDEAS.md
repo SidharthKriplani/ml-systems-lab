@@ -28,6 +28,40 @@ Last updated: 2026-06-02
 
 ## Tier 1 — High impact, buildable now
 
+### Cross-lab validated ideas (sourced from PAL + GAL deep read, 2026-06-03)
+
+These items are not experiments — they are proven patterns running on identical user types in sibling codebases. Each has been gap-mapped against MSL's current state.
+
+#### `staffFraming` — third tier in interview reveals (Source: GAL IDEAS.md, top-ranked item)
+- [x] **`staffFraming` field — InterviewPrepTab (128 q)** — ✅ Done v4.59–v4.60. All 128 questions have `whatsTested`, `antiPattern`, and `staffFraming`. Render wired in Bank + Timed Practice.
+- [ ] **`staffFraming` field — CombinatorTab + TrainerTab (~160 q)** — Same field, same render pattern. Next logical rollout. No new schema.
+
+#### Content quality bar document (Source: PAL `docs/CONTENT_QUALITY_BAR.md`)
+- [ ] **Write `docs/CONTENT_QUALITY_BAR.md`** — Formal quality standard for MSL scenarios. Core test: "Would a senior engineer reading this scenario learn something that changes how they approach real work?" Defines: (1) decision must be genuinely hard, (2) 4 calibrated answer levels (junior miss → mid-level → senior-ready → staff-level), (3) reveal must be scenario-specific not generic (400–700 words), (4) each scenario teaches exactly one failure mode, (5) business context creates real pressure. At 300+ scenarios, a formal bar prevents quality drift. Pure documentation, S effort, lasting value.
+
+#### Scenario bank taxonomy (Source: PAL `docs/SCENARIO_BANK_TAXONOMY.md`)
+- [ ] **Write `docs/SCENARIO_BANK_TAXONOMY.md`** — Map all MSL scenarios to failure-mode families. PAL has 15 families covering experimentation; MSL needs equivalent across ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps domains. Each family: core trap, what it teaches, common wrong answer, interview relevance, existing scenarios in MSL, roadmap scenarios. Exposes coverage gaps invisible from category view. Prevents near-duplicates. Ensures each scenario teaches exactly one thing.
+
+#### "Quiz me" auto-MCQs on Gradient posts (Source: GAL)
+- [ ] **3 post-specific MCQs per Gradient post on expand** — GAL auto-generates 3 MCQs from each GT post when the user opens it, turning passive reading into active recall. MSL has 50 posts × 3 questions = 150 targeted questions with zero new posts written. Infrastructure exists (AccordionMCQ pattern). Content work: write 3 targeted MCQs per post keyed to the post's core concept. Can be built progressively (10 posts first).
+
+#### Module-opening HowTo orientation frame (Source: GAL)
+- [ ] **Consistent 3-line orientation frame on all practice tabs** — GAL requires every module to open with: what skill you're building, what the format is, max 3 steps. MSL's 38 tabs have inconsistent opening text. A standardised `ModuleIntro` component (eyebrow + 1-line skill description + format note) reduces new-user "where do I start?" friction. S effort for component, M for content across 38 tabs.
+
+#### Per-question spaced repetition with timestamps (Source: both PAL + GAL)
+- [ ] **`msl_trainer_sr_log` — per-question wrong-answer timestamps** — On each wrong answer in TrainerTab/CombinatorTab, write `{questionId, wrongAt: timestamp}` to `msl_trainer_sr_log`. Surface a "Due for review" mode in TrainerTab: questions resurface at 24h → 3d → 7d → 14d intervals. PAL has `pal-spaced-rep`, GAL's IDEAS.md calls it Tier 1 with "dramatically improves retention — daily habit without a backend." MSL has domain-level SR but not per-question intervals. S effort.
+
+#### Tiered solutions on coding questions (Source: PAL SQL Lab standard)
+- [ ] **Junior / Senior / Pro-tip / Common-mistake on coding questions** — PAL ships every problem with 4 layers: junior solution (works, suboptimal), senior solution (production-grade, why it's better), pro tip (one technique), common mistake (what candidates get wrong on this specific problem). MSL's 10 coding questions (ids 23–25, 50, 90–92) have good answers but no explicit tiering. Adds materially more signal without adding questions.
+
+#### `--discovery` reserved token for insight reveals (Source: PAL DECISIONS.md)
+- [ ] **Dedicated CSS token for reveal moments** — PAL reserves `--discovery` (#E8A033) for insight-reveal moments only — never in nav, CTA, chrome. "The moment it gets reused 'just this once,' the meaning is gone permanently." MSL uses amber everywhere including reveals. A distinct token (slightly different hue — a warmer amber or teal-shifted variant) for `msl-reveal-panel`, `antiPattern`, and `staffFraming` callouts creates a genuine "aha" visual signal. XS effort (add token to index.css, swap in reveal classes).
+
+#### Static data corpus in Incident Room (Source: GAL RAG corpus pattern)
+- [ ] **Actual data tables per Incident Room scenario** — GAL added `ragCorpus.js` with real retrieved document text per failure scenario. "Seeing the garbage doc that got pulled in is materially different from reading 'noise injection.'" MSL's 3 Incident Room scenarios are narrative — no actual data the user can inspect. Adding a small static data table per incident (feature distributions, PSI values, confusion matrix) makes the reasoning more concrete and diagnostic. M effort per incident, 3 incidents total.
+
+---
+
 ### Emoji → SVG replacement (identified 2026-05-29, post v4.14 partial audit)
 - [ ] **Full emoji sweep + SVG replacement** — v4.14 cleaned `icon:` data fields and prefix emoji across 18 tabs. Residual emoji remain in rendered UI copy, button labels, section headers, and inline content. Next pass: grep all tab files for emoji codepoints, categorise (decorative → replace with inline SVG using CSS variable colors; functional glyphs like ✓ ✗ → keep; country flags → keep), then replace. SVGs should reference `currentColor` or CSS vars so they theme correctly. Run audit #009 first to get the full per-tab list before starting.
 

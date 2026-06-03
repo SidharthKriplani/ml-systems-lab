@@ -158,12 +158,12 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.58 complete — 2026-06-02):**
+**Current state (v4.61 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
 - 6 practice domains: ML Engineering (7 tabs), Data Engineering (4 tabs), Deep Learning (3 tabs), Data Science (3 tabs), MLOps (2 tabs), + models/eval/design/classical
-- 9 interview zone tools: Defense Plan, Combinator, Verbal, Spot the Flaw, Incident Room (new v4.58), ML Coding (new v4.58), Case Studies, Staff Layer, Code Bugs
+- 9 interview zone tools: Defense Plan, Combinator, Verbal, Spot the Flaw, Incident Room (v4.58), ML Coding (v4.58), Case Studies, Staff Layer, Code Bugs
 - Interview zone accessible at `incidentroom` and `mlcoding` tab IDs
 
 ### Content
@@ -196,12 +196,13 @@ Later files reference earlier ones. Always update in this sequence:
 - No stray hex in rendered JSX (all remaining hex are in print CSS or Python matplotlib strings)
 - No decorative emoji in rendered UI (country flags + functional glyphs ✓ ✗ ★ ✕ kept)
 
-### Open audit findings (as of v4.58)
+### Open audit findings (as of v4.59)
 - **#001.6** Low — 56 array index `key` props (not fixed, deferred)
 - **#024.2** Low — AttentionHeadVisualizer uses `rgba(99,102,241,...)` — intentional interpolation
 - **#024.4** Low — TrainerTab SR is domain-level only, not per-scenario
 - **#024.8** Low — CausalDAGExplorer + StreamingStabilityLab have no fidelity badges
 - **#025.5** Low — `.msl-cloud-map` overflow-x needs mobile browser verification
+- **#030.6** Low — `BRAIN-TRANSFER.md` + `PENDING.md` still present as stubs; need `git rm` from user terminal
 - All high/medium findings resolved
 
 ### Blockers
@@ -209,12 +210,12 @@ Later files reference earlier ones. Always update in this sequence:
   - Formspree: wire `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
   - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
 
-### Next batch (v4.59) — already queued in NEXT.md
-1. **"What's being tested" + anti-pattern pass — InterviewPrepTab first** — `whatsTested` field (renders as `.msl-hint` before reveal) + `antiPattern` field (rose-bordered callout inside reveal). One tab done right this sprint. Then Combinator/Trainer/Staff in subsequent sprints. Source: Quantiphi defense pack analysis.
-2. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
-3. Incident Room + ML Coding — expand to 6 scenarios each (currently 3)
-4. Unblock Interview Experiences (awaiting Formspree + Tally credentials)
-5. isFree per-case gating first pass (5 highest-traffic tabs)
+### v4.62 sprint — queued (see NEXT.md)
+1. ~~**Structural redesign: collapsible sidebar, NAV_SECTIONS, HomeTab rewrite**~~ — **DONE v4.61.**
+2. **Simplify routing** — replace activeZone + zoneTab with single activeTab, remove PracticeGrid/InterviewGrid.
+3. **Extend `staffFraming` to CombinatorTab + TrainerTab** — same field, ~90 questions combined.
+4. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
+5. **Unblock Interview Experiences** (awaiting Formspree + Tally credentials)
 
 ---
 

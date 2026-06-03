@@ -641,6 +641,9 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 027 | Interview zone accessibility — all 9 tools verified, 2 description fixes | 2026-06-02 | Navigation / Discoverability | ✅ All clean — 2 fixes in App.jsx |
 | 028 | v4.49+v4.50 batch — posts 41-48, bookmarking ×18 tabs, design tokens, emoji, 23 distractors | 2026-06-02 | BUILD / Content Integrity | ✅ All complete; 1 low finding (posts 31-34 near-duplicates) |
 | 029 | v4.57+v4.58 mega-batch — FidelityBadge ×7, company logos, code examples ×9, RSS, PWA, Incident Room, ML Coding, Live Drift Lab, design tokens | 2026-06-02 | BUILD / Content Integrity | ✅ All brace deltas 0. Hex audit clean. 2 new METRICS keys registered. Audit #016 closed. |
+| 030 | v4.59 — InterviewPrepTab whatsTested+antiPattern (128 questions), MD spine consolidation | 2026-06-03 | Content Integrity / BUILD | ✅ Brace delta 0. 1 low open: BRAIN-TRANSFER.md + PENDING.md need `git rm`. |
+| 031 | v4.60 — staffFraming on all 128 InterviewPrepTab questions (completing partial build from v4.59 session) | 2026-06-03 | Content Integrity / BUILD | ✅ Brace delta 0. All 128 questions have staffFraming. Spine files synced. |
+| 032 | v4.61 — Structural redesign: collapsible sidebar, new nav architecture, HomeTab rewrite | 2026-06-03 | Architecture / BUILD | ✅ Both files brace delta 0. Dead tabs removed. NAV_SECTIONS wired. |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
@@ -874,7 +877,24 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 ---
 
-### #029 — 2026-06-03 · v4.59 Batch Build (InterviewPrepTab whatsTested+antiPattern, MD spine consolidation)
+### #031 — 2026-06-03 · v4.60 Build (staffFraming — all 128 InterviewPrepTab questions)
+
+**Scope:** staffFraming data for questions 44–128, completing partial build from prior session  
+**Trigger:** Session resumed after v4.59 API context gate  
+**Output:** All items complete; 0 blockers
+
+| # | Finding | File(s) | Severity | Status |
+|---|---------|---------|----------|--------|
+| 1 | `staffFraming` field added to questions 44–128 (1–43 were done in v4.59). All 128 now complete. | `InterviewPrepTab.jsx` | — | ✅ Complete |
+| 2 | Render logic was already wired (`q?.staffFraming &&` conditional in both Bank + Timed Practice). No render changes needed. | `InterviewPrepTab.jsx` | — | ✅ No changes needed |
+| 3 | Brace balance: delta 0 (767/767) | `InterviewPrepTab.jsx` | — | ✅ Clean |
+| 4 | All 7 spine files synced to v4.60 state | 7 MD files | — | ✅ Complete |
+
+**All 7 spine files consistent with v4.60 state.**
+
+---
+
+### #030 — 2026-06-03 · v4.59 Batch Build (InterviewPrepTab whatsTested+antiPattern, MD spine consolidation)
 
 **Scope:** InterviewPrepTab data pass + render logic + MD spine files  
 **Trigger:** v4.59 NEXT.md item 1  
