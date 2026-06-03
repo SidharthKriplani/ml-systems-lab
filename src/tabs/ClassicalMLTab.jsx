@@ -183,6 +183,15 @@ const ENSEMBLE_SCENARIOS = [
     reasoning: 'Each model votes — majority wins. Perfect when you have specialists with complementary objectives and you want a democratic decision policy. Hard voting is ideal here: 2-of-3 models must agree to flag.',
     whyNot: 'Blending averages probabilities and can be dominated by the most confident model. Stacking would lose the intentional specialization of each model.',
   },
+  {
+    id: 7,
+    situation: 'Your XGBoost model has plateaued at 0.79 AUC after 3 weeks of feature work. New data arrives daily. Training time is already 4 hours.',
+    detail: 'Bias is moderate (train AUC 0.81, val 0.79). You need +2 points AUC or the model goes to production as-is. Another team suggests switching from XGBoost (boosting) to a Random Forest (bagging) ensemble.',
+    options: ['Bagging', 'Boosting', 'Stacking', 'Blending', 'Single model', 'Voting Classifier'],
+    answer: 'Stacking',
+    reasoning: 'A 2-point plateau with moderate bias is not a signal to switch families — it is a signal that a single algorithm family has been exhausted. Stacking across families (XGBoost + LightGBM + a linear model) will extract incremental signal that no single-family ensemble can. Switching XGBoost for Random Forest replaces one boosted ensemble with a bagged ensemble — both are tree-based, errors are correlated, and the gain is marginal. Blending is a weaker version of stacking. The 4-hour training time rules out running boosting with dramatically more trees.',
+    whyNot: 'Switching from Boosting to Bagging within the same tree family gains little — errors are still correlated across decision trees. The plateau is a sign that you need diverse model families, not a different aggregation technique.',
+  },
 ]
 
 const HYPERPARAM_SCENARIOS = [

@@ -300,6 +300,21 @@ const BACKFILL_SCENARIOS = [
     explanation: 'Backfilling a non-idempotent pipeline creates duplicates. Even if COUNT DISTINCT handles some queries, any SUM or AVG over duplicated rows will be wrong. Truncate + INSERT is acceptable if you can guarantee atomic partition replacement and no concurrent reads. But the right fix is making the pipeline idempotent permanently — use MERGE/UPSERT with order_id as the key, then backfill. Never patch idempotency only at backfill time and leave the production pipeline broken.',
   },
   {
+    id: 'glue_vs_lambda',
+    title: 'ETL tool choice: AWS Glue vs Lambda for a new pipeline',
+    what_happened: 'You are designing a new ETL pipeline: read 50M rows/day from S3 (JSON, variable schema), apply 12 transformation rules, write Parquet to a data warehouse. The pipeline must complete within 90 minutes. Budget is a constraint.',
+    downstream: 'Downstream: a dbt model that reads the Parquet output, plus an ML feature pipeline that ingests 3 columns from the result.',
+    options: [
+      'AWS Glue (PySpark) — managed Spark, handles 50M rows, schema-on-read, native Parquet write',
+      'AWS Lambda — serverless functions, partition the 50M rows into batches per Lambda invocation',
+      'EMR on EC2 — full Spark cluster, maximum control, lowest cost at scale',
+      'Lambda + SQS fan-out — event-driven, auto-scales to zero between runs',
+    ],
+    answer: 0,
+    diagnosis: 'AWS Glue (PySpark) — the right fit for volume + schema flexibility + Parquet output',
+    explanation: '50M rows/day with variable schema and a 90-minute SLA is exactly Glue\'s target. Glue DynamicFrames handle schema drift without explicit struct definitions; Spark Parquet writer is native and optimised. Lambda has a 15-minute execution limit and 10GB memory cap — batching 50M rows across invocations adds fan-out coordination complexity and risks partial-failure scenarios that are hard to recover from. Lambda + SQS fan-out (Option D) shares the same 15-min limit problem and adds queue management overhead. EMR is more cost-effective at very high scale (500M+ rows/day) but requires cluster management, node sizing, and spot interruption handling — over-engineered for this volume. The downstream dbt + ML feature pipeline integration is also native via Glue catalog + Parquet, requiring no translation layer.',
+  },
+  {
     id: 'sla_conflict',
     title: 'Full backfill takes 8 hours — ML training runs in 4 hours',
     what_happened: '5 days of data need backfilling. Estimated time: 8 hours. The ML feature pipeline reads the same tables and kicks off in 4 hours to meet a training SLA.',

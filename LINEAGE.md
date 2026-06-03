@@ -46,6 +46,33 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.63 — Three-tier completion, dead code removal, defense pack scenarios, Incident Room + ML Coding expanded (2026-06-03)
+
+**Three-tier MCQ completion:**
+- Added `whatsTested`, `antiPattern`, `staffFraming` to 8 previously missing questions: C9 (watermark lateness), C20 (attention O(n²)), T5 (cost-sensitive threshold), T9 (Spark data skew), T31 (RFE selection leakage), T32 (log-transform for linear models), T33 (sentinel+indicator for MNAR), T36 (offline metric bias).
+- All 100 CombinatorTab + all 60 TrainerTab questions now have full three-tier coverage.
+
+**Dead code removal (App.jsx):**
+- Removed `PracticeGrid`, `InterviewGrid`, `InterviewToolCard`, `TagFrequencyChart` function bodies — all were unreachable after v4.62 routing simplification.
+- Removed `ALL_PRACTICE_TABS` const (unused after PracticeGrid removal).
+- Removed `INTERVIEW_EXPERIENCES` import (only used by deleted components).
+- App.jsx reduced from ~1,000 to ~990 lines. `PRACTICE_DOMAINS` and `INTERVIEW_TOOLS` retained (still used by ContentMap).
+
+**Defense pack scenarios (4 tabs):**
+- **ClassicalMLTab** (`ENSEMBLE_SCENARIOS`): Added scenario 7 — XGBoost plateau at 0.79 AUC after 3 weeks, boosting vs bagging vs stacking judgment (correct: Stacking across families; wrong answer is switching tree families).
+- **MLOpsDeployTab** (`DEPLOY_SCENARIOS`): Added scenario 7 — monthly churn model retrain, SageMaker train→register→canary→endpoint flow with Deployment Guardrails.
+- **AirflowTab** (`BACKFILL_SCENARIOS`): Added `glue_vs_lambda` scenario — 50M rows/day ETL, Glue vs Lambda vs EMR decision (correct: Glue PySpark for variable schema + Parquet output at this volume).
+- **MLCodingTab** (`PROBLEMS`): Added mlc4 (retry decorator with exponential backoff), mlc5 (Pydantic ModelConfig validation), mlc6 (Pandas CDC deduplication). MLCoding now at 6 problems.
+
+**Incident Room expanded to 6 scenarios:**
+- Added inc4: Model retrain precision drop from resolution lag in fraud labels — correct training window selection.
+- Added inc5: Feature store returns stale/default values due to silent schema mismatch — post-write distribution validation.
+- Added inc6: Batch scoring produces zero-variance predictions — stale feature snapshot from hardcoded config date.
+
+**Files modified:** `src/tabs/CombinatorTab.jsx`, `src/tabs/TrainerTab.jsx`, `src/App.jsx`, `src/tabs/ClassicalMLTab.jsx`, `src/tabs/MLOpsDeployTab.jsx`, `src/tabs/AirflowTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/IncidentRoomTab.jsx`.
+
+---
+
 ### v4.62 — Three-tier MCQ format + routing simplification (2026-06-03)
 
 **Routing simplification (App.jsx):**

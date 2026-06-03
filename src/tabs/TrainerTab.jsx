@@ -61,7 +61,7 @@ const ALL_QUESTIONS = [
       'Maximize precision@K where K is fixed to the capacity of your fraud review team',
     ],
     correct: 2,
-    explanation: "Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN. Precision@K is a valid capacity-constrained approach but it optimizes for a fixed review volume — it doesn't account for the actual cost asymmetry, which can change the optimal operating point. Maximizing F1 treats FP and FN costs equally (both cost 1), which is wrong when costs are 100:1. Production tell: default 0.5 threshold ships; oncall receives escalation that high-severity fraud cases are being missed at 60% rate because nobody set the threshold for the actual cost ratio.",
+    explanation: "Cost-sensitive threshold: set threshold where expected cost is minimized. FN cost 100x FP means we should recall aggressively. Lower threshold = higher recall = fewer costly FN. Precision@K is a valid capacity-constrained approach but it optimizes for a fixed review volume — it doesn't account for the actual cost asymmetry, which can change the optimal operating point. Maximizing F1 treats FP and FN costs equally (both cost 1), which is wrong when costs are 100:1. Production tell: default 0.5 threshold ships; oncall receives escalation that high-severity fraud cases are being missed at 60% rate because nobody set the threshold for the actual cost ratio.", whatsTested: 'Whether you know to optimize threshold by expected cost, not F1, when false negative and false positive costs are asymmetric.', antiPattern: 'Maximizing F1 treats FP and FN as equally costly — wrong when FN costs 100× more than FP.', staffFraming: 'Threshold = point where expected cost is minimized. FN 100× more expensive means recall aggressively. F1 is only right when costs are symmetric.',
   },
   {
     id: 6, domain: 'Model Evaluation',
@@ -107,7 +107,7 @@ const ALL_QUESTIONS = [
       'Cache the model weights in broadcast variable',
     ],
     correct: 2,
-    explanation: "In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort. Increasing output partitions helps only if all tasks take similar time — with skew, one partition still processes the hot key and takes the same time. Broadcasting model weights is useful but secondary — if the model is already in memory, re-broadcasting it won't help the straggler. Production tell: Spark job hangs at 99% for 4 hours; one executor is processing the top-10 users who each have 50M events while 199 executors sit idle.",
+    explanation: "In distributed systems, 80% of slowdowns come from skew. A few hot keys (e.g., superusers) overwhelm specific partitions. Salt the join key or repartition by user cohort. Increasing output partitions helps only if all tasks take similar time — with skew, one partition still processes the hot key and takes the same time. Broadcasting model weights is useful but secondary — if the model is already in memory, re-broadcasting it won't help the straggler. Production tell: Spark job hangs at 99% for 4 hours; one executor is processing the top-10 users who each have 50M events while 199 executors sit idle.", whatsTested: 'Whether you know data skew (hot keys) is the most common cause of Spark job stragglers, not raw parallelism.', antiPattern: 'Adding more partitions or a larger instance helps symmetric slowness — with skew, the hot partition still processes the same hot key regardless.', staffFraming: 'Spark hangs at 99% for hours = data skew. Profile partition sizes first, then salt the join key or repartition by cohort.',
   },
   // Statistics & Probability
   {
@@ -348,7 +348,7 @@ const ALL_QUESTIONS = [
       'RFE requires a linear model as estimator',
     ],
     correct: 1,
-    explanation: "Performing RFE on the full dataset before CV means the feature selector has seen the validation folds labels, a form of selection leakage. Always nest RFE inside the CV loop. Production tell: nested CV AUC is 0.76; outer-only RFE CV reports 0.84 — the 8-point gap is pure selection leakage that vanishes when the model hits unseen production data.",
+    explanation: "Performing RFE on the full dataset before CV means the feature selector has seen the validation folds labels, a form of selection leakage. Always nest RFE inside the CV loop. Production tell: nested CV AUC is 0.76; outer-only RFE CV reports 0.84 — the 8-point gap is pure selection leakage that vanishes when the model hits unseen production data.", whatsTested: 'Whether you know that feature selection on the full dataset before CV leaks validation fold labels into the selection step.', antiPattern: 'RFE before CV is taught as standard practice — the selection bias silently inflates apparent performance by up to 8 AUC points.', staffFraming: 'Nest feature selection inside the CV loop. The gap between nested and non-nested CV is exactly the magnitude of the selection leak.',
   },
   {
     id: 32, domain: 'Feature Engineering',
@@ -360,7 +360,7 @@ const ALL_QUESTIONS = [
       'Linear models require all features to be log-normal',
     ],
     correct: 1,
-    explanation: "Linear models assume roughly Gaussian residuals and are sensitive to outliers; heavy right-skew creates extreme values that disproportionately influence gradient updates and coefficient estimation. In production this breaks as: insurance claim model trained on raw claim amounts; a single $10M outlier claim dominates the loss, pulling coefficients so far that median predictions are off by 40%.",
+    explanation: "Linear models assume roughly Gaussian residuals and are sensitive to outliers; heavy right-skew creates extreme values that disproportionately influence gradient updates and coefficient estimation. In production this breaks as: insurance claim model trained on raw claim amounts; a single $10M outlier claim dominates the loss, pulling coefficients so far that median predictions are off by 40%.", whatsTested: 'Whether you know linear models are distorted by heavy-tailed distributions because outliers dominate gradient updates and coefficient estimation.', antiPattern: 'Thinking tree-based models need the same log-transform treatment — trees split at thresholds and are inherently invariant to monotone feature transforms.', staffFraming: 'A single $10M outlier dominates gradients without transform. Log-transform compresses the scale while preserving ordinality — linear models need this, trees do not.',
   },
   {
     id: 33, domain: 'Feature Engineering',
@@ -372,7 +372,7 @@ const ALL_QUESTIONS = [
       'Fill with zero — new users have zero days since last purchase',
     ],
     correct: 1,
-    explanation: "NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps. Applying the is_new_user flag only during training but not serving is training-serving skew — the model sees that feature at train time but receives no signal at inference, causing silent mispredictions for exactly the new users that matter most. In production this breaks as: NULLs imputed with mean days_since_purchase (e.g., 45 days); new users look identical to average-lapsed users, suppressing a strong new-user conversion signal the model could have learned.",
+    explanation: "NULL here is structurally meaningful (user has no purchase history), not missing at random. A sentinel + indicator lets the model learn a separate effect for new users vs. lapsed users with large gaps. Applying the is_new_user flag only during training but not serving is training-serving skew — the model sees that feature at train time but receives no signal at inference, causing silent mispredictions for exactly the new users that matter most. In production this breaks as: NULLs imputed with mean days_since_purchase (e.g., 45 days); new users look identical to average-lapsed users, suppressing a strong new-user conversion signal the model could have learned.", whatsTested: 'Whether you know structurally missing values (MNAR) require sentinel + indicator, not mean imputation which destroys the signal.', antiPattern: 'Mean imputation makes new users look like average-lapsed users — the model loses the ability to distinguish the highest-value cohort.', staffFraming: 'NULL here means no history exists — that is structurally different from a 45-day lapsed user. Sentinel + indicator lets the model learn both effects separately.',
   },
   // Model Evaluation — questions 34-36
   {
@@ -407,7 +407,7 @@ const ALL_QUESTIONS = [
       'CTR is a lagging indicator that takes months to stabilize',
     ],
     correct: 1,
-    explanation: "Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data cannot capture. In production this breaks as: new ranker improves offline NDCG 3% but online A/B shows -1% CTR; model learned to exploit position bias in logged data, surfacing items that were clicked because they were rank-1, not because they were relevant.",
+    explanation: "Offline metrics on logged data suffer from position bias and selection bias — users only interact with what was shown. Online gains depend on actual user response to new orderings, which offline data cannot capture. In production this breaks as: new ranker improves offline NDCG 3% but online A/B shows -1% CTR; model learned to exploit position bias in logged data, surfacing items that were clicked because they were rank-1, not because they were relevant.", whatsTested: 'Whether you know offline metrics on logged data cannot capture counterfactual user responses to new rankings — selection and position bias make them poor predictors of online gains.', antiPattern: 'Blaming AUC-ROC as a poor metric misses the root cause — the issue is evaluation data contaminated by position bias, not the metric choice.', staffFraming: 'Offline NDCG on logged data measures how well you reproduce the current policy, not how users would respond to a new ordering. Online A/B is the only truth.',
   },
   // ML Systems — questions 37-39
   {

@@ -173,6 +173,260 @@ print(f"Mean: {np.mean(scores):.3f}")
     checkpoint: 'Your implementation is correct for i.i.d. data. What breaks when applied to a time series?',
     checkpointAnswer: 'Standard KFold shuffles or assigns folds sequentially, which means validation data can precede training data in time. The model trains on future data and is tested on the past — the classic temporal leakage pattern. Fix: use time-based split where all training data strictly precedes all validation data. sklearn\'s TimeSeriesSplit implements this correctly.',
   },
+  {
+    id: 'mlc4',
+    title: 'Retry Decorator with Exponential Backoff',
+    domain: 'ML Systems',
+    difficulty: 'senior',
+    prompt: `Implement a @retry decorator that wraps any function with exponential backoff on failure.
+
+Requirements:
+• max_retries: number of times to retry before raising the final exception
+• base_delay: initial wait time in seconds (doubles on each retry)
+• exceptions: tuple of exception types to catch (default: Exception)
+• If all retries exhausted, raise the ORIGINAL exception (not a wrapper)
+• Log each attempt and delay to stdout
+
+Usage:
+  @retry(max_retries=3, base_delay=1.0)
+  def call_model_api(payload): ...`,
+    starter: `import time
+import functools
+
+def retry(max_retries=3, base_delay=1.0, exceptions=(Exception,)):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Your implementation here
+            pass
+        return wrapper
+    return decorator
+
+# Test
+call_count = 0
+
+@retry(max_retries=3, base_delay=0.1)
+def flaky_api():
+    global call_count
+    call_count += 1
+    if call_count < 3:
+        raise ConnectionError(f"Attempt {call_count} failed")
+    return "success"
+
+result = flaky_api()
+print(f"Result: {result}, total calls: {call_count}")
+# Expected: Result: success, total calls: 3
+`,
+    solution: `import time
+import functools
+
+def retry(max_retries=3, base_delay=1.0, exceptions=(Exception,)):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exc = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exc = e
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** attempt)
+                        print(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s...")
+                        time.sleep(delay)
+                    else:
+                        print(f"All {max_retries + 1} attempts failed.")
+            raise last_exc
+        return wrapper
+    return decorator
+
+call_count = 0
+
+@retry(max_retries=3, base_delay=0.1)
+def flaky_api():
+    global call_count
+    call_count += 1
+    if call_count < 3:
+        raise ConnectionError(f"Attempt {call_count} failed")
+    return "success"
+
+result = flaky_api()
+print(f"Result: {result}, total calls: {call_count}")
+`,
+    checkpoint: 'Your decorator raises the original exception after retries are exhausted. What is the subtle failure mode if you raise Exception(str(last_exc)) instead of raise last_exc?',
+    checkpointAnswer: 'You lose the original exception type and the full stack trace. Downstream code that catches specific exceptions (e.g., except ConnectionError) will fail to match a generic Exception wrapper. The original traceback is also discarded — debugging a production incident becomes much harder. Always re-raise the original exception object (raise last_exc) or use raise with no argument inside the except block to preserve the chain.',
+  },
+  {
+    id: 'mlc5',
+    title: 'ModelConfig Validation with Pydantic',
+    domain: 'ML Systems',
+    difficulty: 'mid',
+    prompt: `Implement a Pydantic ModelConfig class that validates ML training configuration.
+
+Requirements:
+• learning_rate: float, must be between 1e-6 and 1.0 (inclusive)
+• batch_size: int, must be a power of 2, between 8 and 512
+• epochs: int, between 1 and 1000
+• model_type: Literal["xgboost", "lightgbm", "neural_net"]
+• early_stopping_rounds: optional int, defaults to None; if set, must be > 0
+• A computed property: steps_per_epoch(dataset_size: int) → int that returns ceil(dataset_size / batch_size)
+
+All validation errors should be descriptive.`,
+    starter: `from pydantic import BaseModel, field_validator, model_validator
+from typing import Optional, Literal
+import math
+
+class ModelConfig(BaseModel):
+    learning_rate: float
+    batch_size: int
+    epochs: int
+    model_type: Literal["xgboost", "lightgbm", "neural_net"]
+    early_stopping_rounds: Optional[int] = None
+
+    # Add validators and computed method here
+
+# Test
+try:
+    cfg = ModelConfig(learning_rate=0.01, batch_size=64, epochs=100, model_type="xgboost")
+    print(cfg)
+    print("steps_per_epoch(10000):", cfg.steps_per_epoch(10000))
+except Exception as e:
+    print(f"Error: {e}")
+
+# This should fail:
+try:
+    bad = ModelConfig(learning_rate=2.0, batch_size=60, epochs=0, model_type="svm")
+except Exception as e:
+    print(f"Caught expected error: {e}")
+`,
+    solution: `from pydantic import BaseModel, field_validator
+from typing import Optional, Literal
+import math
+
+class ModelConfig(BaseModel):
+    learning_rate: float
+    batch_size: int
+    epochs: int
+    model_type: Literal["xgboost", "lightgbm", "neural_net"]
+    early_stopping_rounds: Optional[int] = None
+
+    @field_validator('learning_rate')
+    @classmethod
+    def validate_lr(cls, v):
+        if not (1e-6 <= v <= 1.0):
+            raise ValueError(f"learning_rate must be between 1e-6 and 1.0, got {v}")
+        return v
+
+    @field_validator('batch_size')
+    @classmethod
+    def validate_batch_size(cls, v):
+        if not (8 <= v <= 512) or (v & (v - 1)) != 0:
+            raise ValueError(f"batch_size must be a power of 2 between 8 and 512, got {v}")
+        return v
+
+    @field_validator('epochs')
+    @classmethod
+    def validate_epochs(cls, v):
+        if not (1 <= v <= 1000):
+            raise ValueError(f"epochs must be between 1 and 1000, got {v}")
+        return v
+
+    @field_validator('early_stopping_rounds')
+    @classmethod
+    def validate_early_stopping(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError(f"early_stopping_rounds must be > 0 if set, got {v}")
+        return v
+
+    def steps_per_epoch(self, dataset_size: int) -> int:
+        return math.ceil(dataset_size / self.batch_size)
+
+cfg = ModelConfig(learning_rate=0.01, batch_size=64, epochs=100, model_type="xgboost")
+print(cfg)
+print("steps_per_epoch(10000):", cfg.steps_per_epoch(10000))
+
+try:
+    bad = ModelConfig(learning_rate=2.0, batch_size=60, epochs=0, model_type="svm")
+except Exception as e:
+    print(f"Caught expected error: {e}")
+`,
+    checkpoint: 'Your validator correctly rejects batch_size=60 (not a power of 2). The check is (v & (v - 1)) != 0. Why does this bitwise trick work for detecting non-powers of 2?',
+    checkpointAnswer: 'Any power of 2 has exactly one bit set in its binary representation (e.g., 64 = 01000000). Subtracting 1 flips all bits below that bit (63 = 00111111). The AND of the two is always 0 for powers of 2. For non-powers (e.g., 60 = 00111100), subtracting 1 gives 59 = 00111011, and 60 & 59 = 00111000 ≠ 0. This is an O(1) check versus iterating through powers.',
+  },
+  {
+    id: 'mlc6',
+    title: 'Pandas CDC Deduplication',
+    domain: 'Data Engineering',
+    difficulty: 'senior',
+    prompt: `You receive a CDC (Change Data Capture) feed as a DataFrame. Each row is an event with:
+- record_id: the ID of the business entity
+- updated_at: timestamp of the change
+- operation: "INSERT", "UPDATE", or "DELETE"
+- payload: dict of current values (None for DELETE)
+
+Implement deduplicate_cdc(df) that returns the latest state of each record:
+• For each record_id, keep only the latest event by updated_at
+• If the latest operation is "DELETE", exclude the record from output entirely
+• Return a DataFrame with columns: record_id, payload (unwrap the dict into columns)
+• Handle the case where updated_at timestamps may be equal (any stable tiebreak is fine)`,
+    starter: `import pandas as pd
+from datetime import datetime
+
+def deduplicate_cdc(df: pd.DataFrame) -> pd.DataFrame:
+    # Your implementation here
+    pass
+
+# Test
+events = pd.DataFrame([
+    {'record_id': 1, 'updated_at': datetime(2024,1,1,9,0), 'operation': 'INSERT', 'payload': {'name': 'Alice', 'score': 80}},
+    {'record_id': 1, 'updated_at': datetime(2024,1,1,10,0), 'operation': 'UPDATE', 'payload': {'name': 'Alice', 'score': 95}},
+    {'record_id': 2, 'updated_at': datetime(2024,1,1,9,0), 'operation': 'INSERT', 'payload': {'name': 'Bob', 'score': 70}},
+    {'record_id': 2, 'updated_at': datetime(2024,1,1,11,0), 'operation': 'DELETE', 'payload': None},
+    {'record_id': 3, 'updated_at': datetime(2024,1,1,8,0), 'operation': 'INSERT', 'payload': {'name': 'Carol', 'score': 88}},
+])
+
+result = deduplicate_cdc(events)
+print(result)
+# Expected: record_id=1 (score 95), record_id=3 (score 88). record_id=2 deleted — excluded.
+`,
+    solution: `import pandas as pd
+from datetime import datetime
+
+def deduplicate_cdc(df: pd.DataFrame) -> pd.DataFrame:
+    # Sort by updated_at descending, keep last (latest) event per record_id
+    latest = (
+        df.sort_values('updated_at', ascending=False)
+          .drop_duplicates(subset='record_id', keep='first')
+    )
+
+    # Drop deleted records
+    active = latest[latest['operation'] != 'DELETE'].copy()
+
+    if active.empty:
+        return pd.DataFrame()
+
+    # Unwrap payload dict into columns
+    payload_df = pd.json_normalize(active['payload'].tolist())
+    payload_df.index = active.index
+
+    result = pd.concat([active[['record_id']].reset_index(drop=True),
+                        payload_df.reset_index(drop=True)], axis=1)
+    return result
+
+events = pd.DataFrame([
+    {'record_id': 1, 'updated_at': datetime(2024,1,1,9,0), 'operation': 'INSERT', 'payload': {'name': 'Alice', 'score': 80}},
+    {'record_id': 1, 'updated_at': datetime(2024,1,1,10,0), 'operation': 'UPDATE', 'payload': {'name': 'Alice', 'score': 95}},
+    {'record_id': 2, 'updated_at': datetime(2024,1,1,9,0), 'operation': 'INSERT', 'payload': {'name': 'Bob', 'score': 70}},
+    {'record_id': 2, 'updated_at': datetime(2024,1,1,11,0), 'operation': 'DELETE', 'payload': None},
+    {'record_id': 3, 'updated_at': datetime(2024,1,1,8,0), 'operation': 'INSERT', 'payload': {'name': 'Carol', 'score': 88}},
+])
+
+result = deduplicate_cdc(events)
+print(result)
+`,
+    checkpoint: 'Your deduplication sorts descending then drop_duplicates to get the latest row. What is the subtle failure mode if the CDC feed has two UPDATE events for the same record_id with identical updated_at timestamps?',
+    checkpointAnswer: 'sort_values is not guaranteed stable across equal keys — the row kept by drop_duplicates(keep="first") after sorting could be either of the two tied events, depending on the original DataFrame order. In practice, CDC systems assign monotonically increasing sequence numbers precisely for this reason. The correct fix: add a sequence_number column as a tiebreaker in the sort. If sequence numbers are unavailable, document the non-determinism explicitly — hiding it causes hard-to-debug production inconsistencies.',
+  },
 ]
 
 // ── Problem card component ────────────────────────────────────────────────────

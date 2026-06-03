@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.62 complete — 2026-06-03):**
+**Current state (v4.63 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
@@ -210,12 +210,19 @@ Later files reference earlier ones. Always update in this sequence:
   - Formspree: wire `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
   - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
 
-### v4.63 sprint — queued (see NEXT.md)
-1. ~~**Structural redesign: collapsible sidebar, NAV_SECTIONS, HomeTab rewrite**~~ — **DONE v4.61.**
-2. ~~**Routing simplification + three-tier MCQ on Combinator + Trainer**~~ — **DONE v4.62.** 98/100 + 54/60 covered.
-3. **Complete three-tier on 8 remaining MCQ questions** (C9, C20, T5, T9, T31, T32, T33, T36).
-4. **Remove PracticeGrid + InterviewGrid dead code** from App.jsx.
-5. **New scenarios from defense pack** — Bagging/Boosting (ClassicalML), SageMaker flow (MLOpsDeploy), Glue vs Lambda (Airflow), P6/P9/P10 Python problems (MLCoding).
+### v4.63 sprint — DONE
+1. ~~**Three-tier completion**~~ — 100/100 Combinator + 60/60 Trainer, all 8 missing questions filled.
+2. ~~**Dead code removal**~~ — PracticeGrid, InterviewGrid, InterviewToolCard, TagFrequencyChart, ALL_PRACTICE_TABS, INTERVIEW_EXPERIENCES import all removed from App.jsx.
+3. ~~**Defense pack scenarios**~~ — ClassicalML +1 (stacking judgment), MLOpsDeploy +1 (SageMaker register→canary), AirflowTab +1 (Glue vs Lambda), MLCoding +3 (retry decorator, Pydantic ModelConfig, CDC dedup).
+4. ~~**Incident Room → 6 scenarios**~~ — inc4 (resolution lag), inc5 (feature store silent schema mismatch), inc6 (zero-variance predictions from stale snapshot).
+5. ~~**ML Coding → 6 problems**~~ — mlc4–mlc6 added above.
+
+### v4.64 sprint — queued (see NEXT.md)
+1. Three-tier format pass on IncidentRoomTab steps (whatsTested/antiPattern/staffFraming).
+2. isFree per-case gating first pass (5 highest-traffic tabs).
+3. Unblock Interview Experiences (awaiting credentials).
+4. HyperparamScenarios three-tier pass (ClassicalMLTab).
+5. MLOpsDeploy scenario 8 — batch inference at scale.
 
 ---
 

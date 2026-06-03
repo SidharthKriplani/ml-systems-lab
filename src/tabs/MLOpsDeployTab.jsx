@@ -106,6 +106,15 @@ const DEPLOY_SCENARIOS = [
     reasoning: 'Shadow Mode with human eval. LLM quality requires human judgment, not just automated metrics. Run both versions, collect shadow outputs, run human preference evaluation before any live traffic.',
     awsCallout: { service: 'SageMaker Shadow Testing', desc: 'captures challenger outputs alongside champion responses without serving them — feed those logs into a human evaluation pipeline before promoting the new version.' },
   },
+  {
+    id: 7,
+    title: 'Retrained churn model — passed offline eval, needs production approval',
+    body: 'Monthly retrain of a churn prediction model passed offline evaluation (AUC +0.03 vs champion). The model artifact is in S3. You need to promote it to the production endpoint with zero downtime and rollback capability within 60 seconds if business metrics degrade.',
+    hint: 'The SageMaker workflow has 3 steps: register the artifact, test on a shadow/canary endpoint, then swap production traffic. Which deployment strategy gives you metric-gated rollback at the endpoint level?',
+    correct: 'canary',
+    reasoning: 'SageMaker train → Model Registry (register with approval gate) → canary endpoint with Deployment Guardrails. The register step creates an immutable artifact with a version; the canary ramp lets you gate on business metrics (churn call rate, revenue impact) before full promotion. Blue-Green would flip all traffic instantly — no metric gate during ramp. Shadow cannot roll back on business metrics because it serves no users. Immediate deploy skips the registry and audit trail.',
+    awsCallout: { service: 'SageMaker Model Registry + Deployment Guardrails', desc: 'register the artifact with approval status, then deploy with automatic traffic shifting and metric-gated rollback — the canonical SageMaker path for governed model promotion.' },
+  },
 ]
 
 function DeployStrategy() {

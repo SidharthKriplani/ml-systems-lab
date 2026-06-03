@@ -142,6 +142,149 @@ Fix: assignment events must fire at page request, not at page-load completion.`,
     ],
     lesson: 'Always run the SRM check before looking at your primary metric. A significant SRM means your randomisation is broken and any observed effect is untrustworthy — even if it looks like a win. Fixing performance regressions in experiments is part of the experiment discipline.',
   },
+  {
+    id: 'inc4',
+    title: 'Model Retrain Made Predictions Worse Overnight',
+    domain: 'Cross-domain: Training Pipeline → Data Quality → Monitoring',
+    situation: `Weekly retrain ran successfully at 2am. By 6am, the fraud detection model's precision dropped from 0.91 → 0.67, recall from 0.84 → 0.89. No pipeline alerts fired. The retrain log shows no errors.
+
+• Model artifact: successfully uploaded to S3
+• Serving endpoint: updated to new version
+• Training data window: last 90 days
+
+What is your first diagnostic action?`,
+    steps: [
+      {
+        question: 'Precision dropped 24 points, recall improved slightly. What failure mode does this suggest?',
+        options: [
+          { id: 'a', text: 'Data leakage — a feature correlated with the label was accidentally included in training' },
+          { id: 'b', text: 'Class imbalance shifted — the training set now has proportionally more negatives, biasing the model toward precision' },
+          { id: 'c', text: 'Label contamination — recent fraudulent transactions were incorrectly resolved as legitimate in the training data' },
+          { id: 'd', text: 'Model serialization error — the wrong model weights were loaded onto the endpoint' },
+        ],
+        correct: 'c',
+        finding: `Investigation of the last 90-day training window:
+• Fraud labels come from a case management system that resolves investigations
+• Resolution lag: genuine fraud cases take 30–90 days to confirm
+• The most recent 30 days of training data contains many true fraud cases still labeled "unresolved" → treated as negative
+• Model learned that recent transactions = not fraud (because confirmed fraud hasn't been labeled yet)
+
+This is label leakage via resolution lag — a classic supervised learning failure mode in fraud.`,
+      },
+      {
+        question: 'Resolution lag is confirmed. What is the correct training data fix?',
+        options: [
+          { id: 'a', text: 'Exclude the last 30 days from training — use only fully resolved cases' },
+          { id: 'b', text: 'Add a "days_since_transaction" feature to let the model learn to discount recent transactions' },
+          { id: 'c', text: 'Use only the most recent 30 days — more recent data = better signal' },
+          { id: 'd', text: 'Upsample confirmed fraud cases from the recent 30-day window' },
+        ],
+        correct: 'a',
+        finding: `Training data corrected: exclude all transactions with created_at within 45 days of training cutoff (conservative buffer above the 30-day resolution lag). Retrained model achieved precision 0.89, recall 0.83 — back to baseline.
+
+Monitoring added: label resolution rate by cohort (week). If resolution rate for the most recent 30-day cohort < 60%, trigger an alert and skip the weekly retrain until labels stabilise.`,
+      },
+    ],
+    lesson: 'In fraud and any domain with investigation lag, the most recent data is the most dangerous for training. Labels take time to be confirmed. Always check resolution rate by cohort before including recent data in a training set.',
+  },
+  {
+    id: 'inc5',
+    title: 'Feature Store Returns Stale Values in Production',
+    domain: 'Cross-domain: Feature Engineering → Serving → Data Engineering',
+    situation: `Your real-time fraud model uses a feature store for online serving. Two days after a schema migration in the upstream event pipeline, alerts show:
+
+• user_txn_count_1h: values are uniformly 0 for all users
+• user_avg_amount_7d: values are at their defaults (–1.0)
+• Fraud catch rate: dropped 31% overnight
+• Feature store write jobs: all show "SUCCESS" in logs
+
+What is your first diagnostic step?`,
+    steps: [
+      {
+        question: 'Feature store writes succeed but values are wrong. What do you check first?',
+        options: [
+          { id: 'a', text: 'Check if the serving endpoint is using cached features from before the migration' },
+          { id: 'b', text: 'Inspect the feature store write job logs for schema mismatch warnings (not errors)' },
+          { id: 'c', text: 'Verify the feature store TTL — values may have expired and fallen back to defaults' },
+          { id: 'd', text: 'Roll back the upstream schema migration immediately' },
+        ],
+        correct: 'b',
+        finding: `Feature store write job logs (full, not just status):
+• WARNING: column "user_txn_count_1h" not found in source schema — defaulting to 0
+• WARNING: column "user_avg_amount_7d" not found in source schema — defaulting to -1.0
+• Job status: SUCCESS (warnings do not fail the job)
+
+The upstream event pipeline migration renamed the columns (txn_count_1h → transaction_count_1h). The feature store write job silently defaulted the missing columns and reported SUCCESS. No error was raised.`,
+      },
+      {
+        question: 'Silent schema mismatch is confirmed. What is the systemic fix beyond patching the column names?',
+        options: [
+          { id: 'a', text: 'Add a post-write validation step: assert that feature distributions match the last 24h baseline before marking the job successful' },
+          { id: 'b', text: 'Fail the write job on any unrecognised column — never default silently' },
+          { id: 'c', text: 'Add schema version pinning on the feature store write contract — the job should fail if the source schema version changes' },
+          { id: 'd', text: 'All of the above — each catches a different failure mode' },
+        ],
+        correct: 'd',
+        finding: `Three-layer fix implemented:
+1. Schema contract: write job fails if source schema version != expected version (catch upstream renames before they write)
+2. Fail on unknown column (option B): write job fails, not warns, if expected feature columns are absent
+3. Post-write distribution check (option A): automated check comparing feature mean ± 3σ vs rolling 7-day baseline — fires a P1 alert if deviation > 20%
+
+All three are needed: schema contract catches renaming, fail-on-unknown catches deletion, distribution check catches silent value corruption (e.g., a column present but computed incorrectly).`,
+      },
+    ],
+    lesson: 'Feature store write jobs that warn but succeed are the most dangerous failure mode — all health checks show green while the model silently receives garbage. Add post-write distribution assertions as a mandatory step in any feature pipeline that feeds a production model.',
+  },
+  {
+    id: 'inc6',
+    title: 'Batch Scoring Job Produces Identical Predictions for All Users',
+    domain: 'Cross-domain: Training Pipeline → Serving → Feature Engineering',
+    situation: `Your daily batch scoring job completed in 40 minutes (normal). But when the downstream email campaign team queries predicted scores:
+
+• All 2.1M users have score = 0.493
+• Score variance: 0.000 (literally zero)
+• Model accuracy on holdout: 0.84 (still looks correct in MLflow)
+• No serving errors, no pipeline failures
+
+The campaign launches in 3 hours. What do you check first?`,
+    steps: [
+      {
+        question: 'Model accuracy is fine but all predictions are the same. What is the likely cause?',
+        options: [
+          { id: 'a', text: 'The model is outputting the mean of its calibration distribution — calibration step has a bug' },
+          { id: 'b', text: 'All input features are the same value — the batch scoring job read the wrong feature snapshot' },
+          { id: 'c', text: 'The sigmoid output layer saturated — all logits are near 0, producing 0.5 output' },
+          { id: 'd', text: 'The model file is corrupt — the scores are random noise that happens to cluster near 0.493' },
+        ],
+        correct: 'b',
+        finding: `Inspect the feature snapshot used by the batch job:
+• job_config.feature_snapshot_date = 2024-01-01 (hardcoded in the config file)
+• Today's date: 2024-04-15
+• All 2.1M users have features from Jan 1 — a 3.5 month old snapshot
+• user_recency_days = 1 for all users (Jan 1 data treated as "yesterday")
+• The constant features produced a near-constant output from the model
+
+Root cause: a config file was not updated when the batch scoring job was templated from an old run.`,
+      },
+      {
+        question: 'Stale snapshot confirmed. The campaign launches in 2.5 hours. What do you do?',
+        options: [
+          { id: 'a', text: 'Delay the campaign — never send based on known-bad scores' },
+          { id: 'b', text: 'Re-run the batch job against the correct snapshot; monitor closely; launch only if job completes with non-trivial score variance' },
+          { id: 'c', text: 'Use last week\'s valid scores — better than stale features from January' },
+          { id: 'd', text: 'Randomly sample 50% of users as a control; use last week\'s scores for treatment — run it as an experiment' },
+        ],
+        correct: 'b',
+        finding: `Batch job re-run against correct feature snapshot (today's date):
+• Runtime: 38 minutes (completed with 52 minutes to spare)
+• Score variance: 0.041 (normal range: 0.035–0.055)
+• P10: 0.31, P50: 0.49, P90: 0.71 — healthy distribution
+
+Campaign launched on time. Post-mortem: feature_snapshot_date must be a runtime parameter, not hardcoded in config. Added CI check: fail the job if snapshot_date is > 7 days stale.`,
+      },
+    ],
+    lesson: 'Zero-variance predictions are always a data problem, not a model problem. The model is working correctly on constant inputs and producing constant outputs. The diagnostic reflex: check the input feature distribution first, before touching the model.',
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
