@@ -46,6 +46,26 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.67 — Sprint B: HomeTab Progress/Profile + Guided Paths (2026-06-03)
+
+**HomeTab rewrite (170 → 342 lines):**
+- **Streak counter:** `readAndUpdateStreak()` on mount — reads `msl_last_visit`, increments `msl_streak` if yesterday, resets to 1 if gap > 1 day. Shown as amber pill next to the ML Systems Lab eyebrow.
+- **Progress callouts:** "Strongest area" (mint, highest pct section) + "Not started" (rose, first zero-pct section) — both clickable, navigate to that section's default tab.
+- **Guided Paths section:** 3 named paths with step-by-step progress bars. Each step is a clickable chip. Next step is highlighted in amber with `→` prefix. Done steps shown in mint.
+  - "Senior MLE in 4 weeks": Defense → InterviewPrep → Combinator → IncidentRoom → MLCoding → Verbal → SpotTheFlaw (7 steps)
+  - "Data Engineering Focus": Spark → Airflow → dbt → DataModeling → MLCoding (5 steps)
+  - "Quick Calibration": ClassicalML → FeatureEng → ModelEval → Trainer → Combinator (5 steps)
+  - Step completion detected via `msl_score:{tabId}` (attempted > 0) or custom `checkFn` for non-scored tabs (Defense uses `msl_defense_progress`, Verbal uses `msl_verbal_history`).
+- **Bookmarks panel:** Renders if `msl_bookmarks` has entries — shows clickable pills.
+- **Footer:** Shows "N scenarios attempted" or "No progress yet — pick a path above." alongside export button.
+- **PathCard component:** New sub-component with hover state, segmented progress bar (one segment per step), step chips.
+- All existing components preserved: `EntryCard`, `SectionRow`, `ResumeBtn`. Overall progress bar and sections list unchanged.
+- Brace delta: 0.
+
+**Files modified:** `src/tabs/HomeTab.jsx`.
+
+---
+
 ### v4.66 — Sprint A: typography contrast, card metadata standard, "what to do next" (2026-06-03)
 
 **Typography/contrast overhaul (index.css):**

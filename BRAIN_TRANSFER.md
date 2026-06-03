@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.66 complete — 2026-06-03):**
+**Current state (v4.67 complete — 2026-06-03):**
 
 ### Tabs
 - **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
@@ -217,17 +217,16 @@ Later files reference earlier ones. Always update in this sequence:
 4. ~~**Incident Room → 6 scenarios**~~ — inc4 (resolution lag), inc5 (feature store silent schema mismatch), inc6 (zero-variance predictions from stale snapshot).
 5. ~~**ML Coding → 6 problems**~~ — mlc4–mlc6 added above.
 
-### v4.66 sprint — DONE (Sprint A complete)
-1. ~~Typography/contrast overhaul~~ — dark mode `--ink-low` #999 → #b8b8b8, `--ink-ghost` #666 → #8a8a8a (WCAG AA). Light mode `--ink-ghost` → #6b5038. All 35+ tabs inherit automatically.
-2. ~~Scenario card metadata standard~~ — `readMin` + difficulty pill + FREE badge added to FeatureEngTab (8 modules), ModelEvalTab (5 modules), MLCodingTab (7 problems), IncidentRoomTab (6 incidents), ClassicalMLTab HyperparamScenarios (8).
-3. ~~"What to do next" routing~~ — IncidentRoom shows "Combinator →" + "ML Coding →" after completion. MLCoding shows "Incident Room →" + "Combinator →" after checkpoint reveal.
+### v4.67 sprint — DONE (Sprint B complete)
+1. ~~HomeTab Progress/Profile overhaul~~ — streak counter, strongest/not-started callouts, bookmarks panel, footer with scenario count.
+2. ~~Guided Paths~~ — 3 paths (Senior MLE 7 steps, Data Eng 5 steps, Quick Cal 5 steps). PathCard component with segmented bar + step chips. Step completion via msl_score + custom checkFn.
 
-### v4.67 sprint — queued (see NEXT.md)
-1. HomeTab Progress/Profile page overhaul.
-2. Guided Paths (3 named paths, localStorage-tracked).
-3. Unblock Interview Experiences (awaiting credentials).
-4. isFree per-case gating.
-5. Sprint C kickoff (SpotTheFlaw, DL tabs three-tier).
+### v4.68 sprint — queued (see NEXT.md)
+1. isFree per-case gating.
+2. SpotTheFlawTab three-tier pass.
+3. DLFineTuningTab + DLServingTab audit.
+4. mlc8 feature pipeline health check.
+5. Unblock Interview Experiences (awaiting credentials).
 
 ---
 
