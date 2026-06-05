@@ -5,6 +5,29 @@ Keep this in sync whenever new events are added or new keys introduced.
 
 ---
 
+## Product metrics (from PM audit, 2026-06-03)
+
+These are the 12 product-level metrics MSL should track. They are distinct from the PostHog event taxonomy below — those are implementation signals. These are the outcomes that determine whether the product is working.
+
+| Metric | Type | Definition | Why it matters |
+|--------|------|------------|----------------|
+| First-scenario completion rate | Activation | % of new users who complete at least one full scenario reveal (sees all three-tier callouts) within first session | Primary activation signal — did the user get the core product experience? |
+| Combinator attempt rate | Activation | % of users who start a Combinator timed exam within first 3 sessions | Measures whether users reach the flagship interview simulation |
+| 7-day return rate | Retention | % of users who return within 7 days of first visit | Core retention signal for a habit-forming study tool |
+| Session depth | Depth | Mean number of scenario reveals per session | Are users consuming content or just browsing? |
+| Streak length distribution | Habit | % of users with 3+ day streaks; % with 7+ day streaks | Habit loop signal — daily use is the goal |
+| Wrong-answer rate by scenario | Content quality | % of users who select the wrong answer on first attempt per scenario | High = good discrimination (scenario is doing its job); low = too easy, question needs stronger distractors |
+| Access gate conversion | Gating | % of users who hit an AccessGate and successfully enter a code within the same session | Measures friction and intent at the paywall — also flags if the code has leaked publicly |
+| Guided path completion | Engagement | % of users who complete all steps in any Guided Path | Measures whether the structured learning paths create follow-through |
+| Weak-area return rate | Depth | % of users who return to their lowest-scoring section within 7 days of completing it | Measures whether the product creates targeted self-improvement behavior |
+| Section coverage breadth | Depth | Mean number of distinct sections accessed per user within first 14 days | Do users explore beyond the entry point or get stuck in one area? |
+| Project Lab phase completion | Quality | % of Project Lab users (any dataset) who complete all phases | Project Labs are the most differentiated feature — do users finish them? |
+| antiPattern selection rate | Content quality | % of users who select the canonical wrong answer per MCQ question | High = distractor is well-calibrated; low = too obvious, reduces judgment signal |
+
+**Implementation note:** Most of these require PostHog event coverage beyond what is currently tracked. See "Known gaps" section below. Priority order for instrumentation: first-scenario completion → Combinator attempt → 7-day return (PostHog cohort) → access gate conversion.
+
+---
+
 ## PostHog event taxonomy
 
 All events are fired via `track()` in `src/analytics.js`. Events only fire when `VITE_POSTHOG_KEY` is set — the app runs identically without it.

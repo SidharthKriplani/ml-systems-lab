@@ -650,6 +650,22 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 | 036 | v4.65 — ENSEMBLE_SCENARIOS three-tier (7), mlc7 PySpark skew, SHAP video title fix | 2026-06-03 | Content / BUILD | ✅ All 3 files delta 0. SHAP video title corrected. 7/7 ensemble scenarios three-tier. |
 | 037 | v4.66 — Sprint A: contrast overhaul, card metadata standard, what-to-do-next routing | 2026-06-03 | UX / BUILD | ✅ All 5 tab files delta 0. CSS tokens bumped (WCAG AA). readMin + difficulty pills on 5 tabs. |
 | 038 | v4.67 — Sprint B: HomeTab progress dashboard, streak, callouts, 3 guided paths | 2026-06-03 | UX / Architecture | ✅ HomeTab delta 0. PAL architecture reference logged. Nav skill-first decision locked in DECISIONS.md. |
+| 039 | PM audit — product coherence assessment, all open findings logged | 2026-06-03 | Product / IA | See findings #039.1–039.8 below. 3 High, 3 Medium, 2 Low. |
+
+### #039 — 2026-06-03 · PM Coherence Audit
+
+**Scope:** Full PM-level product audit. Covers product identity, nav IA, gating model, first-session UX, content depth, README accuracy. Surfaced 8 open findings.
+
+| # | Finding | Location | Severity | Status |
+|---|---------|----------|----------|--------|
+| 039.1 | Access code `DAI2026` published in public README (lines 7 and 67) — gate is meaningless | README.md | High | ⚠️ Open — fix in private-test readiness sprint |
+| 039.2 | Dead `ds` domain block in PRACTICE_DOMAINS — references tab deleted in v4.61, never cleaned up | App.jsx ~lines 156–162 | High | ⚠️ Open — fix in private-test readiness sprint |
+| 039.3 | "Senior MLE in 4 weeks" guided path step 1 is Defense Plan — hits AccessGate immediately for users without code | HomeTab.jsx GUIDED_PATHS | High | ⚠️ Open — fix in private-test readiness sprint |
+| 039.4 | Mixed nav taxonomy — FOUNDATIONS (content type), SCENARIOS (format), PRACTICE (activity), INTERVIEW (use case), LEARN (activity) — no consistent dimension | App.jsx NAV_SECTIONS | Medium | ⚠️ Open — fix in MVP coherence sprint (skill-first restructure already decided) |
+| 039.5 | isFree scenario-level flags (FeatureEngTab, ModelEvalTab, ClassicalMLTab) not enforced — tab-level AccessGate overrides, creating two conflicting gating systems | App.jsx, FeatureEngTab.jsx, ModelEvalTab.jsx | Medium | ⚠️ Open — decide one model in MVP coherence sprint |
+| 039.6 | Practice section thinness: Incident Room 6 scenarios, ML Coding 7 problems — below 12-minimum threshold set in DECISIONS.md | IncidentRoomTab.jsx, MLCodingTab.jsx | Medium | ⚠️ Open — address in depth sprint after structure |
+| 039.7 | README stale references: JD Prep listed (deleted v4.61), Incident Room count shows 3 (now 6), ML Coding count shows 3 (now 7) | README.md | Low | ⚠️ Open — fix in MVP coherence sprint |
+| 039.8 | Code Bugs vs ML Coding naming ambiguity — similar names, different formats, same PRACTICE section, creates user confusion | App.jsx nav labels, README | Low | ⚠️ Open — rename Code Bugs → "Bug Hunt" in MVP coherence sprint |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 

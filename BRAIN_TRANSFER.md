@@ -228,12 +228,24 @@ Later files reference earlier ones. Always update in this sequence:
 - **Signed-out state hides sidebar** — when auth lands, sidebar only renders for `user !== null`.
 - **localStorage migration on auth** — `msl_` underscore → `msl-` hyphen prefix when auth sprint starts.
 
-### v4.68 sprint — queued (see NEXT.md)
-1. isFree per-case gating.
-2. SpotTheFlawTab three-tier pass.
-3. DLFineTuningTab + DLServingTab audit.
-4. mlc8 feature pipeline health check.
-5. Unblock Interview Experiences (awaiting credentials).
+### PM audit complete (2026-06-03) — direction changed
+Full PM coherence audit done. Direction: compress and clarify before adding breadth.
+All findings logged in AUDITS.md #039, DECISIONS.md product rules, METRICS.md product metrics, IDEAS.md Sprint D, NEXT.md build queue.
+
+**Next sprint: Private-test readiness (P0) — 4 items, all S complexity, one session:**
+1. Remove DAI2026 from README (done in this spine sync — README.md updated)
+2. Fix guided path first step (HomeTab.jsx GUIDED_PATHS — Defense Plan → free tab)
+3. Remove dead `ds` domain from PRACTICE_DOMAINS (App.jsx ~lines 156–162)
+4. Add first-session directive on Home (HomeTab.jsx — "New here? Start here" block)
+
+**After P0: MVP coherence sprint (P1):**
+- Skill-first nav restructure (already decided, not yet built)
+- Move Trainer out of INTERVIEW
+- Rename Code Bugs → Bug Hunt
+- Pick one gating model
+- README cleanup (Incident Room count, ML Coding count)
+
+**Do NOT build yet:** Auth, new content domains, new tabs, public distribution, Stripe, PAL/GSL shared architecture.
 
 ---
 

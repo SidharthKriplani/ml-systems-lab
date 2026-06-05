@@ -4,7 +4,7 @@ You can finish every ML course and still freeze when a model degrades silently i
 
 **Can you debug it in production?** Used by 500+ engineers in interview prep and production triage.
 
-**Live →** [ml-systems-lab-v9xe.vercel.app](https://ml-systems-lab-v9xe.vercel.app) · Access code: `DAI2026`
+**Live →** [ml-systems-lab-v9xe.vercel.app](https://ml-systems-lab-v9xe.vercel.app) · Private beta — email for access
 
 ---
 
@@ -30,7 +30,6 @@ Ten simulation tools built around one goal — walk into the room ready.
 - **Interview Q&A** — 128 curated MLE questions with model answers and 4-tier scoring.
 - **Take-Home Bank** — 15 open-ended system design questions · model answer reveal · self-score /20.
 - **Spot the Flaw** — 12 adversarial analyses with a buried methodological error. Find it before the interviewer does.
-- **JD Prep** — Ranked Must Know / Important / Good to Have topics with direct nav links.
 - **Trainer** — MCQ drill with weakness heatmap and spaced repetition queue.
 - **Staff Layer** — IC3 → IC5 → Staff answer reveals on the same question.
 - **Code Bugs** — 30 Python/SQL production bugs. One flaw per snippet.
@@ -64,7 +63,7 @@ Monitoring · Deployment · CI/CD & Infra
 ## Quick start
 
 **Live:** [ml-systems-lab-v9xe.vercel.app](https://ml-systems-lab-v9xe.vercel.app)
-**Access code:** `DAI2026`
+Private beta. Email for access.
 
 No account. No install. All progress in `localStorage`.
 

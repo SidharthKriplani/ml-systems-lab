@@ -220,7 +220,30 @@ Completion rate on in-app feedback drops sharply after 3 questions. Rating quest
 **Interview Experiences use a fixed skill taxonomy, not free-form tags.**  
 The 10-tag taxonomy (`ml_fundamentals`, `statistics`, `system_design`, `coding_ml`, `coding_general`, `experimentation`, `product_sense`, `deep_learning`, `sql`, `behavioral`) is agreed and fixed. Tags are assigned by admin during review — not by submitters. This prevents taxonomy drift and keeps the frequency chart meaningful. Do not expand the taxonomy without auditing the existing distribution first.
 
-**Nav structure is skill-first, not role-first or domain-first. Decided 2026-06-03.**
+## Product identity rules (from PM audit, 2026-06-03)
+
+**MSL's primary use case is interview prep for senior MLE roles.**
+Every content and feature decision is evaluated against this first. If something doesn't serve a user preparing for a senior MLE interview, it needs a strong independent reason to exist. This does not mean the product is only an interview tool — production judgment training is the method, interview readiness is the outcome.
+
+**MSL optimizes for production ML judgment, not generic ML learning.**
+Content belongs if it requires production judgment to answer correctly. Definitions, tutorials, and recall-based questions do not belong unless they are steps in a judgment scenario. If a user can answer correctly without having shipped a model, the question is probably wrong for this product.
+
+**The first session must always prescribe one action.**
+Home must always have a visible "do this first" directive without scrolling. A user who arrives cold must know exactly what to do in the next 10 minutes. Do not add features to the home page that make the entry path less obvious.
+
+**Every scenario must contain a production tell.**
+The "In production, this breaks as…" pattern is mandatory for all MCQ explanations. This is what distinguishes MSL from a flashcard deck. No scenario ships without a production tell in its explanation.
+
+**The three-tier format is the product's methodology. Non-negotiable.**
+Every content piece in a judgment-testing context must have: `whatsTested` (amber), `antiPattern` (rose), `staffFraming` (violet). All three fields, every scenario. Treat a missing field as a bug, not a deferred task.
+
+**The access code is a private beta mechanism. It must not be published publicly.**
+`DAI2026` (or any successor code) must not appear in README.md, marketing copy, social posts, or any public-facing document. The code is distributed only through direct contact with testers. A gate that is publicly documented is not a gate.
+
+**Practice areas require depth before they are treated as full features.**
+Minimum: 12 scenarios per practice area before a section is considered complete. Below 12 is a preview. Do not add a new practice area until the existing ones reach 12. Current status: Incident Room (6), ML Coding (7) — both below threshold.
+
+**Navigation is skill-first, not role-first or domain-first. Decided 2026-06-03.**
 Roles get renamed constantly across companies and assume the user already knows where they fit. "ML Engineer" at Google is not "ML Engineer" at a startup. Skill labels don't have this problem — "Feature Engineering" means the same thing everywhere. The nav top-level is: Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn. Do not add a role-based section (e.g. "ML Engineering", "MLOps") without reverting this decision first. This applies to sidebar labels, section headers, and guided path descriptions.
 
 **MSL vs GAL content boundary — retrieval and generative AI scenarios.**  

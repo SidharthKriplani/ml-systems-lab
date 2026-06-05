@@ -19,6 +19,15 @@ Last updated: 2026-06-03
 - [x] ~~**Guided Paths**~~ — done v4.67. 3 paths (Senior MLE 7 steps, Data Eng 5 steps, Quick Cal 5 steps). PathCard with segmented bar + step chips. localStorage-tracked.
 - [ ] **isFree per-case gating** — Tag first 2 scenarios per module as free, show FREE badge inline on locked scenarios, update AccessGate to filter not block. Queued v4.68.
 
+### Sprint D — Deferred (from PM audit, do not start before structure is clean)
+- [ ] **Readiness tier per section** — compute "Developing / Proficient / Senior" badge per section from localStorage score%. Analogous to PAL's Analyst-Ready / Senior-Ready / Staff-Level. Renders on HomeTab section rows and potentially on sidebar items. Needs: score threshold decisions, badge component.
+- [ ] **Weak-area identification** — surface the user's lowest-scoring section explicitly on Home ("You're weakest in Evaluation — 12% complete"). Requires aggregating `msl_score:*` keys and ranking sections. Display as a callout or badge on section row.
+- [ ] **"Today's session" CTA** — compute a recommended 20-min session based on: (1) active guided path next step, (2) weakest section, (3) last visited. Single amber CTA on Home pinned below streak. No backend needed — all localStorage.
+- [ ] **Private beta access model improvement** — replace static code with a time-limited or user-specific code. Even a monthly rotating code is better than a permanent one that leaks. Implement after auth sprint is done.
+- [ ] **Per-scenario isFree gating (scenario-level)** — show first 2 scenarios per module free, gate the rest. Show inline FREE badge on unlocked cards, lock icon + "Enter code" on locked. Only implement AFTER the one-gating-model decision is locked in DECISIONS.md.
+- [ ] **Signed-out landing page** — full-screen pitch, no sidebar, ghost data snippets (PSI = 0.34, AUC drop –5.2%, training-serving skew), 2 CTAs: "Sign in to practice" and "Explore without signing in." See docs/PAL_ARCHITECTURE_REFERENCE.md for implementation pattern.
+- [ ] **Continue-your-path CTA** — sticky amber CTA on HomeTab for users with an active guided path and an incomplete next step. Shows: "Continue: [step name] in [tab] →". Only shows when a guided path is in progress and the next step is not done.
+
 ### Sprint C — Content consistency
 - [ ] **Three-tier audit + completion** — SpotTheFlawTab (12 scenarios), DLFineTuningTab, DLServingTab, FeatureEngTab, ModelEvalTab. Each needs whatsTested/antiPattern/staffFraming checked.
 - [ ] **Read time on scenario cards** — Every scenario gets estimated time (2 min MCQ, 5 min incident, 10 min Project Lab phase). Show inline on cards.
