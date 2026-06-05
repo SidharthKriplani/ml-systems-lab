@@ -158,94 +158,85 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.67 complete — 2026-06-03):**
+**Current state (v4.73 complete — 2026-06-05):**
+
+### Version history this session
+- v4.68: P0 fixes (guided path, dead ds, first-session directive, README)
+- v4.69: P1 MVP coherence (skill-first nav, Bug Hunt, gating decision, README cleanup)
+- v4.70: PAL/GSL parity (unlock.js, outcome-framed AccessGate, Plans page, Recently Added, CONTENT_QUALITY_BAR.md)
+- v4.71: 3-tier gating (scenario-level isFree enforced in 4 free tabs, guestMode bypass)
+- v4.72: Auth sprint (Supabase, AuthModal, SignedOutHome, ProfilePage, App.jsx wiring)
+- v4.73: Depth sprint (Incident Room 12/12, ML Coding 12/12)
 
 ### Tabs
-- **38 tabs total**, all lazy-loaded with React.lazy() + Suspense
-- 6 practice domains: ML Engineering (7 tabs), Data Engineering (4 tabs), Deep Learning (3 tabs), Data Science (3 tabs), MLOps (2 tabs), + models/eval/design/classical
-- 9 interview zone tools: Defense Plan, Combinator, Verbal, Spot the Flaw, Incident Room (v4.58), ML Coding (v4.58), Case Studies, Staff Layer, Code Bugs
-- Interview zone accessible at `incidentroom` and `mlcoding` tab IDs
+- **42 tabs total**, all lazy-loaded with React.lazy() + Suspense
+- New tabs added this session: PlansTab (`plans`), ProfilePage (`profile`), SignedOutHome (rendered conditionally, not a tab)
+- Nav is now **skill-first**: Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn
+- Trainer moved to Labs section. Code Bugs renamed to Bug Hunt (`codebugs` tab id unchanged)
+- `plans` and `profile` appear as top-level sidebar links (above the nav sections)
 
 ### Content
-- **50 Gradient posts** — all with verified YouTube IDs (0 empty arrays)
-- **Code examples in posts:** 1, 4, 5, 7, 8, 11, 12, 15, 18, 22, 23, 24, 25, 35, 36, 37, 39 — 17 posts now have embedded Python code blocks
-- **3 Project Lab datasets:** Telco Churn (5 phases complete), Loan Default (4 phases complete), Fraud Detection (4 phases complete)
-- **Series taxonomy:** 5 named series across all 50 posts (Silent Failures, Production Diagnostics, Architecture Decisions, Math & Foundations, Interview & Career)
+- **Incident Room: 12/12** — inc1–inc12. inc7–inc12 added v4.73.
+- **ML Coding: 12/12** — mlc1–mlc12. mlc8–mlc12 added v4.73.
+- **50 Gradient posts** — all with verified YouTube IDs
+- **3 Project Labs:** Telco Churn (5 phases), Loan Default (4 phases), Fraud Detection (4 phases)
 
-### Features
-- Freemium gating at scenario level (`isFree` flag + AccessGate component)
-- Difficulty filter pills on domain cards (`msl_difficulty_filter`)
-- React.lazy() + Suspense on all 38 tabs (initial bundle is lightweight)
-- Dual theme system: parchment light + charcoal dark (sun/moon toggle, `msl_theme`)
-- Module bookmarking (BookmarkButton on 18 tabs, `msl_bookmarks`)
-- Progress export utility (HomeTab, downloads all `msl_*` localStorage as JSON)
-- MCQ keyboard nav (1–4 keys + Enter in ClassicalMLTab)
-- Gradient post read marking (`msl_read` localStorage)
-- Global search keyboard nav (arrows + Enter + Escape in ContentMap)
-- FidelityBadge 3-tier system on all 27 practice + interview tabs (faithful/simplified/conceptual)
-- Role readiness aggregation (seniority badges on HomeTab)
-- Company logos via Clearbit API in CombinatorTab company tracks + LandscapeTab (6 companies)
-- RSS feed: `public/rss.xml` (50 posts, auto-regenerated on build via `scripts/generate-rss.cjs`)
-- PWA: `public/manifest.json` + `public/sw.js` (installable on iOS/Android)
-- Live Drift Lab in MonitoringTab: real PSI + KS computation via Pyodide (`faithful` tier)
-- Practice zone: overall % + per-domain % on grid headers
-- Interview zone: session history pills (sessions run, avg score) from `msl_combinator_history`
+### Auth (v4.72)
+- Supabase project: `bgwhbpjjlbgtiukaywnv.supabase.co` (ML Systems Lab project, sidharthkriplani@gmail.com's Org)
+- Google OAuth: live (Client ID `98058433335-o80fg72s721fv851t98b3d3k22q20so5`)
+- GitHub OAuth: configured in Supabase but not yet live-tested
+- `authEnabled = !!(VITE_SUPABASE_URL && VITE_SUPABASE_ANON_KEY)` — feature-flagged via env vars
+- When `authEnabled=true && !user && !guestMode`: renders SignedOutHome full-screen (no sidebar)
+- `guestMode` state in App.jsx: set to `true` when user clicks "Explore without signing in"
+- `user` state synced via `onAuthStateChange` — handles SIGNED_IN, INITIAL_SESSION, TOKEN_REFRESHED, SIGNED_OUT
+- On SIGNED_IN: pulls progress from Supabase (`pullProgressFromSupabase`)
+- `src/utils/supabase.js`, `auth.js`, `syncProgress.js` are the auth utility files
+- Supabase table: `user_progress (user_id, key, value, updated_at)` — see `docs/SETUP_AUTH.md`
 
-### Design system
-- CSS tokens: `--card-pad-primary`, `--card-pad-secondary`, `--prime-bg-light`, `--card-tint`, `--card-scrim` all in `:root` and `[data-theme="light"]`
-- No stray hex in rendered JSX (all remaining hex are in print CSS or Python matplotlib strings)
-- No decorative emoji in rendered UI (country flags + functional glyphs ✓ ✗ ★ ✕ kept)
+### Gating model (two-layer, locked v4.71)
+- **Layer 1 — tab-level** (`PREMIUM_TABS` set in App.jsx): Full gate for Interview zone, Labs, advanced practice modules
+- **Layer 2 — scenario-level** (4 free tabs): FeatureEngTab, ClassicalMLTab, ModelEvalTab, ModelsMathTab have `isFree` flags enforced. `const [unlocked, setUnlocked] = useState(() => isUnlocked())` in each. `onUnlock={() => setUnlocked(true)}` triggers immediate re-render.
+- `src/utils/unlock.js` is the single source of truth: `isUnlocked()`, `unlock()`, `getAccessTier()`, `ACCESS_CODE`, `STORAGE_KEY`
+- `GATE_COPY` map in App.jsx: 27 entries, outcome-framed copy per premium tab
 
-### Open audit findings (as of v4.59)
-- **#001.6** Low — 56 array index `key` props (not fixed, deferred)
-- **#024.2** Low — AttentionHeadVisualizer uses `rgba(99,102,241,...)` — intentional interpolation
-- **#024.4** Low — TrainerTab SR is domain-level only, not per-scenario
-- **#024.8** Low — CausalDAGExplorer + StreamingStabilityLab have no fidelity badges
-- **#025.5** Low — `.msl-cloud-map` overflow-x needs mobile browser verification
-- **#030.6** Low — `BRAIN-TRANSFER.md` + `PENDING.md` still present as stubs; need `git rm` from user terminal
-- All high/medium findings resolved
+### Monetization / Plans
+- `PlansTab.jsx` (`plans` tab): 3-tier display (Guest / Free account coming soon / Full Lab). Feature table 22 rows. WhatsApp beta group + founder DM linked.
+- WhatsApp: `https://chat.whatsapp.com/KqFoGxAW0XMF9hNllGyAo9`
+- Founder WA: `https://wa.me/917838438784`
+
+### Key files added this session
+- `src/utils/unlock.js` — access tier single source of truth
+- `src/utils/supabase.js` — Supabase client (env-var gated)
+- `src/utils/auth.js` — OAuth + email sign-in helpers
+- `src/utils/syncProgress.js` — push/pull msl_* to Supabase
+- `src/components/auth/AuthModal.jsx` — 3-method sign-in modal
+- `src/tabs/SignedOutHome.jsx` — full-screen landing with ghost snippets
+- `src/tabs/PlansTab.jsx` — conversion surface, 3-tier
+- `src/tabs/ProfilePage.jsx` — 5-card profile (identity, stats, sync, study plans, settings)
+- `docs/SETUP_AUTH.md` — Supabase + OAuth setup guide
+- `docs/CONTENT_QUALITY_BAR.md` — 4-check scenario quality standard
+
+### Open audit findings (as of v4.73)
+All high/medium findings resolved. Low findings remaining:
+- **#001.6** — 56 array index `key` props (deferred)
+- **#024.2** — AttentionHeadVisualizer rgba hex (intentional interpolation)
+- **#024.4** — TrainerTab SR domain-level only
+- **#024.8** — CausalDAGExplorer + StreamingStabilityLab missing fidelity badges
+- **#025.5** — `.msl-cloud-map` mobile overflow unverified
+- **#030.6** — `BRAIN-TRANSFER.md` + `PENDING.md` stubs need `git rm` from user terminal
 
 ### Blockers
-- **Interview Experiences** — waiting on Avinash Formspree + Tally.so credentials
-  - Formspree: wire `REPLACE_WITH_YOUR_FORMSPREE_ID` in `src/components/FeedbackChip.jsx`
-  - Tally.so: wire `REPLACE_WITH_YOUR_TALLY_ID` in `src/App.jsx` InterviewGrid card
+- **Interview Experiences** — waiting on Avinash: `REPLACE_WITH_YOUR_FORMSPREE_ID` in FeedbackChip.jsx, `REPLACE_WITH_YOUR_TALLY_ID` in App.jsx InterviewGrid
+- **Git lock** — sandbox cannot remove `.git/index.lock`. User must run `rm -f .git/index.lock .git/HEAD.lock` before every commit.
+- **GitHub OAuth** — not yet live-tested (Supabase provider enabled, redirect URI not confirmed)
 
-### v4.63 sprint — DONE
-1. ~~**Three-tier completion**~~ — 100/100 Combinator + 60/60 Trainer, all 8 missing questions filled.
-2. ~~**Dead code removal**~~ — PracticeGrid, InterviewGrid, InterviewToolCard, TagFrequencyChart, ALL_PRACTICE_TABS, INTERVIEW_EXPERIENCES import all removed from App.jsx.
-3. ~~**Defense pack scenarios**~~ — ClassicalML +1 (stacking judgment), MLOpsDeploy +1 (SageMaker register→canary), AirflowTab +1 (Glue vs Lambda), MLCoding +3 (retry decorator, Pydantic ModelConfig, CDC dedup).
-4. ~~**Incident Room → 6 scenarios**~~ — inc4 (resolution lag), inc5 (feature store silent schema mismatch), inc6 (zero-variance predictions from stale snapshot).
-5. ~~**ML Coding → 6 problems**~~ — mlc4–mlc6 added above.
+### Next sprint: Intuition sprint
+See NEXT.md for full queue. Top 3 items:
+1. HowTo framing strip on every tab (GSL pattern — always-visible entry context)
+2. Forward pointers on scenario reveals (`relatedPost` field → Gradient link at reveal)
+3. Unlock state propagation fix (dispatch `msl-unlock` CustomEvent from AccessGate; App.jsx listens and calls `setIsUnlocked(true)`)
 
-### v4.67 sprint — DONE (Sprint B complete)
-1. ~~HomeTab Progress/Profile overhaul~~ — streak counter, strongest/not-started callouts, bookmarks panel, footer with scenario count.
-2. ~~Guided Paths~~ — 3 paths (Senior MLE 7 steps, Data Eng 5 steps, Quick Cal 5 steps). PathCard component with segmented bar + step chips. Step completion via msl_score + custom checkFn.
-3. ~~PAL Architecture Reference~~ — logged at `docs/PAL_ARCHITECTURE_REFERENCE.md`. Full auth sprint blueprint.
-
-### Architectural decisions locked (not yet built)
-- **Nav restructure: skill-first** — Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn. NOT role-based or domain-based. Roles get renamed; skills don't. Queued for after Sprint C.
-- **Auth sprint uses PAL pattern exactly** — Supabase, email + Google + GitHub OAuth, same 5-card profile, same access tier system. Read `docs/PAL_ARCHITECTURE_REFERENCE.md` first.
-- **Signed-out state hides sidebar** — when auth lands, sidebar only renders for `user !== null`.
-- **localStorage migration on auth** — `msl_` underscore → `msl-` hyphen prefix when auth sprint starts.
-
-### PM audit complete (2026-06-03) — direction changed
-Full PM coherence audit done. Direction: compress and clarify before adding breadth.
-All findings logged in AUDITS.md #039, DECISIONS.md product rules, METRICS.md product metrics, IDEAS.md Sprint D, NEXT.md build queue.
-
-**Next sprint: Private-test readiness (P0) — 4 items, all S complexity, one session:**
-1. Remove DAI2026 from README (done in this spine sync — README.md updated)
-2. Fix guided path first step (HomeTab.jsx GUIDED_PATHS — Defense Plan → free tab)
-3. Remove dead `ds` domain from PRACTICE_DOMAINS (App.jsx ~lines 156–162)
-4. Add first-session directive on Home (HomeTab.jsx — "New here? Start here" block)
-
-**After P0: MVP coherence sprint (P1):**
-- Skill-first nav restructure (already decided, not yet built)
-- Move Trainer out of INTERVIEW
-- Rename Code Bugs → Bug Hunt
-- Pick one gating model
-- README cleanup (Incident Room count, ML Coding count)
-
-**Do NOT build yet:** Auth, new content domains, new tabs, public distribution, Stripe, PAL/GSL shared architecture.
+**Do NOT start:** new content domains, new tabs beyond what's in NEXT.md, public distribution, Stripe, SpotTheFlaw three-tier pass (secondary), auth expansion beyond Google OAuth.
 
 ---
 

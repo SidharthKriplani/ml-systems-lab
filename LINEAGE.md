@@ -46,6 +46,31 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.73 — Depth sprint: Incident Room 12/12, ML Coding 12/12 (2026-06-05)
+
+**Incident Room — inc7–inc12 (6 new scenarios):**
+- inc7: Retrain degraded from stale training data (date filter bug; training loss improved but production collapsed)
+- inc8: Training-serving skew from missing log1p transform (shadow mode missed it; PSI on features is the fix)
+- inc9: Cold start failure after marketing campaign (popularity fallback miscalibrated for new cohort)
+- inc10: GPU OOM triggering silent CPU fallback (0% error rate, P95 tripled; fallback rate is a first-class metric)
+- inc11: Label leakage via `days_to_dispute` post-event feature (AUC 0.96 offline → 0.23 production)
+- inc12: Canary passed CTR checks but long-term retention collapsed (CTR ≠ retention; canary duration and metric selection failure)
+
+**ML Coding — mlc8–mlc12 (5 new problems):**
+- mlc8: Time-safe train/val split with point-in-time rolling features (temporal leakage prevention)
+- mlc9: Weighted Precision@K for imbalanced fraud ranking (non-monotone P@K edge case)
+- mlc10: Online mean/variance via Welford's algorithm + sliding window z-score (catastrophic cancellation discussion)
+- mlc11: Early stopping for GBM from scratch with best-round restoration (predictions vs model weights distinction)
+- mlc12: Permutation feature importance from scratch with ASCII bar chart (SHAP interaction limitation)
+
+**Both sections now at 12/12 — minimum threshold met.**
+
+**HomeTab RECENTLY_ADDED updated** to reflect new content.
+
+**Files modified:** `src/tabs/IncidentRoomTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/HomeTab.jsx`.
+
+---
+
 ### v4.72 — Auth sprint: Supabase, AuthModal, SignedOutHome, ProfilePage, 3-tier Plans (2026-06-05)
 
 **New files:**
@@ -68,6 +93,21 @@ Key routing architecture:
 **Behaviour when auth is not configured (no env vars):** App runs exactly as before — no sign-in UI, no signed-out redirect, localStorage-only. `authEnabled = false` is the default state.
 
 **Package:** `@supabase/supabase-js` added to package.json.
+
+---
+
+### v4.71 — 3-tier gating: scenario-level gates enforced in 4 free tabs (2026-06-05)
+
+**PAL MONETIZATION.md 3-tier model implemented:**
+- FeatureEngTab, ClassicalMLTab, ModelEvalTab, ModelsMathTab: replaced raw `localStorage.getItem('msl_access') !== 'DAI2026'` checks with `isUnlocked()` from `utils/unlock.js`
+- Each tab now has `const [unlocked, setUnlocked] = useState(() => isUnlocked())`
+- `onUnlock` changed from `() => localStorage.setItem(...)` (broken — no re-render) to `() => setUnlocked(true)` (correct — immediate re-render, localStorage already written by AccessGate)
+- AccessGate now receives outcome-framed `title`/`body` props specific to each tab's locked content
+- PlansTab rebuilt to true 3-tier display: Guest / Free account (coming soon) / Full Lab. Feature comparison table (22 rows). WhatsApp + founder DM linked.
+- DECISIONS.md: two-layer gating model documented (tab-level for premium tabs, scenario-level for 4 free tabs)
+- `guestMode` bypass added: "Explore without signing in" now sets `guestMode=true`, allowing full app render without auth
+
+**Files modified:** `src/tabs/FeatureEngTab.jsx`, `src/tabs/ClassicalMLTab.jsx`, `src/tabs/ModelEvalTab.jsx`, `src/tabs/ModelsMathTab.jsx`, `src/tabs/PlansTab.jsx`, `src/App.jsx`, `DECISIONS.md`.
 
 ---
 

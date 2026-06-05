@@ -1,97 +1,103 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-05. Objective: Depth sprint (P1.5) — Incident Room and ML Coding to 12. Forward pointers on scenarios. Quiz Me on Gradient posts.
+Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint (HowTo framing, forward pointers, UX clarity).
 
 ---
 
 ## ✅ DONE: Private-test readiness (P0) — v4.68
-
-1. ~~Remove DAI2026 from public README~~ — done, committed
-2. ~~Fix "Senior MLE in 4 weeks" guided path step 1~~ — changed to `classical` (free tab)
-3. ~~Remove dead `ds` domain from PRACTICE_DOMAINS~~ — domain renamed `causal_ts`, DS tab removed
-4. ~~Add first-session directive to Home~~ — amber callout, renders only when `totalAttempted === 0`
+1. ~~Remove DAI2026 from public README~~
+2. ~~Fix "Senior MLE in 4 weeks" guided path step 1~~ — changed to `classical`
+3. ~~Remove dead `ds` domain from PRACTICE_DOMAINS~~
+4. ~~Add first-session directive to Home~~
 
 ## ✅ DONE: MVP coherence (P1) — v4.69
+1. ~~Skill-first nav~~ — Features/Evaluation/Systems/Training/Data/Interview/Labs/Learn
+2. ~~Code Bugs → Bug Hunt~~
+3. ~~Gating model decision~~ — tab-level is single enforcement; isFree flags enforced in 4 free tabs only
+4. ~~README cleanup~~
 
-1. ~~Skill-first nav restructure~~ — Features/Evaluation/Systems/Training/Data/Interview/Labs/Learn. Trainer moved to Labs.
-2. ~~Code Bugs → Bug Hunt~~ — renamed in nav + README.
-3. ~~Gating model decision~~ — tab-level AccessGate is the single model; isFree flags informational only. Logged in DECISIONS.md.
-4. ~~README cleanup~~ — DS Fundamentals removed, Bug Hunt count corrected (20), Gradient posts updated (50).
+## ✅ DONE: PAL/GSL parity sprint — v4.70
+1. ~~`src/utils/unlock.js`~~ — single source of truth
+2. ~~AccessGate outcome-framed copy~~ — GATE_COPY map, 27 entries
+3. ~~Plans & Access tab~~
+4. ~~Recently Added strip on Home~~
+5. ~~`docs/CONTENT_QUALITY_BAR.md`~~
+6. ~~DECISIONS.md monetization + content quality rules~~
 
----
+## ✅ DONE: 3-tier gating — v4.71
+1. ~~Scenario-level gate re-render fixed~~ — `isUnlocked()` + useState in all 4 free tabs
+2. ~~PlansTab true 3-tier~~ — Guest / Free (coming soon) / Full Lab + feature table
+3. ~~guestMode bypass~~ — "Explore without signing in" works
+4. ~~DECISIONS.md two-layer gating model documented~~
 
-## ✅ DONE: Auth sprint (v4.72)
+## ✅ DONE: Auth sprint — v4.72
+1. ~~`src/utils/supabase.js`~~ — env-var gated client
+2. ~~`src/utils/auth.js`~~ — Google, GitHub, email magic link
+3. ~~`src/utils/syncProgress.js`~~ — push/pull all msl_* keys
+4. ~~`src/components/auth/AuthModal.jsx`~~ — 3-method sign-in modal
+5. ~~`src/tabs/SignedOutHome.jsx`~~ — full-screen landing, ghost snippets
+6. ~~`src/tabs/ProfilePage.jsx`~~ — 5 cards
+7. ~~App.jsx wiring~~ — user state, topbar sign-in/avatar, AuthModal at root
+8. ~~`docs/SETUP_AUTH.md`~~ — full setup guide
+9. ~~Google OAuth live~~ — Supabase project bgwhbpjjlbgtiukaywnv
 
-1. ~~`src/utils/supabase.js`~~ — env-var gated client, authEnabled export
-2. ~~`src/utils/auth.js`~~ — signInWithGoogle/GitHub/Email, signOut
-3. ~~`src/utils/syncProgress.js`~~ — push/pull all msl_* keys to Supabase user_progress table
-4. ~~`src/components/auth/AuthModal.jsx`~~ — 3-method sign-in modal (Google, GitHub, email magic link)
-5. ~~`src/tabs/SignedOutHome.jsx`~~ — full-screen landing with ghost data snippets
-6. ~~`src/tabs/ProfilePage.jsx`~~ — 5 cards: identity, stats, sync, study plans, settings
-7. ~~App.jsx wiring~~ — user state, onAuthStateChange, topbar sign-in/avatar, AuthModal at root end
-8. ~~`docs/SETUP_AUTH.md`~~ — setup guide (Supabase project, OAuth, SQL table, Vercel env vars)
-9. ~~`@supabase/supabase-js`~~ — installed
-
-**To activate:** Run `npm install @supabase/supabase-js` (done), create Supabase project, run SQL from SETUP_AUTH.md, enable Google + GitHub OAuth, add VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY to Vercel → redeploy.
-
-## ✅ DONE: PAL/GSL parity sprint (v4.70)
-
-1. ~~`src/utils/unlock.js`~~ — single source of truth for access logic (`isUnlocked`, `unlock`, `getAccessTier`, `ACCESS_CODE`, `STORAGE_KEY`)
-2. ~~AccessGate outcome-framed copy~~ — accepts `title`/`body`/`ctaLabel` props. `GATE_COPY` map in App.jsx covers every premium tab with surface-specific copy.
-3. ~~Plans & Access tab~~ — `PlansTab.jsx` wired as `plans` tab. Free vs Premium tier breakdown + access code entry. NAV link "Plans & Access" added to sidebar.
-4. ~~Recently Added strip on Home~~ — `RECENTLY_ADDED` array in HomeTab. Shows top 3 to returning users (`totalAttempted > 0`).
-5. ~~`docs/CONTENT_QUALITY_BAR.md`~~ — four-check quality standard + interactive module standard (Configure→Logic→Outcome→Diagnosis).
-6. ~~DECISIONS.md~~ — monetization plumbing rules + content quality rules logged.
-
----
-
-## CURRENT SPRINT: Depth sprint (P1.5)
-
-1. **Incident Room → 12 scenarios** — currently 6. Add inc7–inc12 across cross-domain failure modes. Each must meet CONTENT_QUALITY_BAR.md standard.
-
-2. **ML Coding → 12 problems** — currently 7. Add mlc8–mlc12 targeting senior/staff difficulty. Live Pyodide execution required.
-
-3. **Forward pointers on scenarios** — add `relatedPost` field to FeatureEngTab, ModelEvalTab, ClassicalMLTab scenario data. Render "Read next → [post title]" at reveal. Closes the learn loop.
-
-4. **SpotTheFlawTab three-tier pass** — 12 scenarios, none have `whatsTested`/`antiPattern`/`staffFraming`. Required by CONTENT_QUALITY_BAR.md.
-
-5. **DLFineTuningTab + DLServingTab audit** — check scenario count, three-tier coverage, format consistency against CONTENT_QUALITY_BAR.md.
+## ✅ DONE: Depth sprint — v4.73
+1. ~~Incident Room → 12/12~~ — inc7–inc12 shipped (stale data, train/serve skew, cold start, GPU OOM, label leakage, canary miss)
+2. ~~ML Coding → 12/12~~ — mlc8–mlc12 shipped (time-safe split, weighted P@K, Welford, early stopping, permutation importance)
+3. ~~RECENTLY_ADDED updated~~
 
 ---
 
-## NEXT: UX loop sprint (P2-early)
+## CURRENT SPRINT: Intuition sprint (P2)
 
-After depth sprint, in order:
+MSL is now at private-test threshold. The highest-leverage work is UX clarity — making every tab self-explanatory without a tutorial.
 
-1. **Quiz Me on Gradient posts** — precomputed 3 MCQs per post embedded in GradientTab data. Static, no LLM call. Closes the read→practice loop.
-2. **ELI5 mode on Gradient posts** — simplified-language toggle. Static simplified version per post.
-3. **Challenge Log panel on Home** — global completion summary: X/Y scenarios across all tabs, wrong-answer count, tabs with 0% coverage. localStorage data already exists.
-4. **91-day practice heatmap** — GitHub-style activity grid. `msl_streak` data already partially tracked.
-5. **Auth sprint** — Supabase, email + Google OAuth. See `docs/PAL_ARCHITECTURE_REFERENCE.md`. Only after Quiz Me + heatmap ship.
+1. **HowTo framing strip on every tab** — borrow GSL pattern: "What you're building / Steps: 3 / 1. Configure 2. Observe 3. Diagnose." Always visible at tab entry. Applies to: IncidentRoomTab, MLCodingTab, SpotTheFlawTab, FeatureEngTab, ModelEvalTab, ClassicalMLTab, SystemDesignTab, MonitoringTab. Pure copy + layout work in each tab file.
+
+2. **Forward pointers on scenario reveals** — at the end of every scenario reveal, link to the most relevant Gradient post. "Go deeper → [post title] in ∇ Gradient." Add `relatedPost: { id, title }` field to scenario data in FeatureEngTab, ClassicalMLTab, ModelEvalTab. Render after staffFraming. Closes the read→practice loop that GSL identified as mandatory.
+
+3. **Unlock state propagation fix** — when a user unlocks via scenario-level gate in a free tab (e.g. FeatureEngTab), App.jsx `isUnlocked` state doesn't update. Premium tabs still show gates. Fix: dispatch `CustomEvent('msl-unlock')` from AccessGate on success; App.jsx listens and calls `setIsUnlocked(true)`. One event, no prop threading.
+
+4. **SpotTheFlawTab audit** — 12 scenarios exist with `reveal` + `fix`. Check whether the reveal quality meets CONTENT_QUALITY_BAR.md standard (scenario-specific, production tell present). Strengthen any reveals that are too generic.
+
+5. **DLFineTuningTab + DLServingTab content audit** — neither was touched in the three-tier pass. Check scenario count and staffFraming coverage.
 
 ---
 
-## DEFERRED (P3 — post-auth)
+## NEXT: UX loop sprint (P2-later)
 
-- Signed-out landing page (no sidebar, full-screen pitch)
+After intuition sprint:
+
+1. **Quiz Me on Gradient posts** — precomputed 3 MCQs per post. Static, no LLM. Read→practice loop.
+2. **Challenge Log on Home** — global completion summary (X/Y scenarios, wrong-answer count, uncovered tabs).
+3. **91-day practice heatmap** — GitHub-style activity grid. Data in `msl_activity_YYYY-MM-DD` already written.
+4. **ELI5 mode on Gradient posts** — simplified-language toggle. Static simplified version per post.
+
+---
+
+## DEFERRED (P3 — post private-test signal)
+
+- GitHub OAuth (Supabase config exists, not yet tested)
 - Per-section readiness badges (Developing/Proficient/Senior)
-- Continue-your-path CTA on Home (needs auth for cross-device)
+- Continue-your-path CTA on Home
 - Stripe integration
 - Company-specific tracks in Combinator
+- Interview Experiences tab (blocked on Formspree + Tally credentials from Avinash)
 
 ---
 
 ## Blockers
 
-**Interview Experiences:** Awaiting Avinash signup for Formspree + Tally.so.
-**Git lock:** User must run `rm -f .git/index.lock .git/HEAD.lock` before each commit from their terminal.
+- **Interview Experiences:** Awaiting Avinash signup for Formspree + Tally.so (`REPLACE_WITH_YOUR_FORMSPREE_ID` in FeedbackChip.jsx, `REPLACE_WITH_YOUR_TALLY_ID` in App.jsx InterviewGrid)
+- **Git lock:** User must run `rm -f .git/index.lock .git/HEAD.lock` before each commit (sandbox cannot remove lock files)
+- **GitHub OAuth:** Supabase provider enabled but Google Cloud Console redirect URI may need a second entry for GitHub — not yet verified live
 
 ---
 
 ## Notes for next session
 
-- v4.68+v4.69+v4.70 all uncommitted — one combined push needed (git lock on sandbox)
-- `RECENTLY_ADDED` in HomeTab.jsx must be updated each time content ships
+- Read CLAUDE.md + this file first. Then grep AUDITS.md for open findings before touching code.
+- v4.68–v4.73 all in one large uncommitted batch — user must push from terminal
+- `RECENTLY_ADDED` in HomeTab.jsx must be updated every time content ships (5-item static array)
 - `GATE_COPY` in App.jsx must have an entry for any new premium tab
-- BRAIN-TRANSFER.md + PENDING.md stubs still need `git rm` (open finding #030.6)
-- Depth sprint items (Incident Room, ML Coding) are pure content additions — read CONTENT_QUALITY_BAR.md before writing any new scenario
+- `BRAIN-TRANSFER.md` + `PENDING.md` stubs still need `git rm` — open finding #030.6
