@@ -15,8 +15,8 @@ function TabLeaf({ label, desc, isPro, onNav }) {
         style={{
           flex: 1, textAlign: 'left', padding: '8px 8px',
           minHeight: '40px',
-          background: isSelected ? 'var(--prime-bg-light)' : hov ? 'rgba(240,165,0,0.07)' : 'none',
-          border: `1px solid ${isSelected ? 'rgba(240,165,0,0.35)' : hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
+          background: hov ? 'rgba(240,165,0,0.07)' : 'none',
+          border: `1px solid ${hov ? 'rgba(240,165,0,0.22)' : 'transparent'}`,
           borderRadius: 'var(--r-sm)', cursor: 'pointer',
           transition: 'background var(--t-fast), border-color var(--t-fast)',
           display: 'flex', alignItems: 'center', gap: '6px',
@@ -228,7 +228,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
-        $1value={query}
+        value={query}
         onChange={e => { setQuery(e.target.value); setSelectedIdx(-1) }}
         onKeyDown={e => {
           if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx(idx => idx < (filtered?.length ?? 0) - 1 ? idx + 1 : idx) }
