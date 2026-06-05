@@ -327,6 +327,280 @@ Campaign launched on time. Post-mortem: feature_snapshot_date must be a runtime 
     ],
     lesson: 'Zero-variance predictions are always a data problem, not a model problem. The model is working correctly on constant inputs and producing constant outputs. The diagnostic reflex: check the input feature distribution first, before touching the model.',
   },
+  {
+    id: 'inc7',
+    title: 'Retraining Made the Model Worse — Pipeline Ran on Stale Data',
+    domain: 'Cross-domain: Data Eng → MLOps → Monitoring',
+    readMin: 10,
+    situation: `Monday morning retrain completed successfully. All pipeline checks passed. Model was auto-promoted to production. By noon:
+• Precision@100 dropped from 0.71 → 0.54 (–24%)
+• No data quality alerts
+• Training loss was lower than the previous run (0.43 → 0.38)
+• Feature coverage: 100% on all columns
+
+The ML platform engineer says "the pipeline is healthy." What went wrong?`,
+    steps: [
+      {
+        question: 'Training loss went down but production precision collapsed. First hypothesis:',
+        options: [
+          { id: 'a', text: 'The model overfit to the training data — lower loss means overfitting at this dataset size' },
+          { id: 'b', text: 'Check the training data date range — lower loss on stale data means the model learned outdated patterns' },
+          { id: 'c', text: 'The evaluation metric changed — precision@100 is not aligned with the training objective' },
+          { id: 'd', text: 'The model architecture was changed — check git diff on the model config' },
+        ],
+        correct: 'b',
+        finding: `Training data audit shows the Monday retrain pulled data from the S3 partition using a date filter bug: it trained on data from 3 weeks ago instead of the last 7 days. The pipeline reported "100% coverage" because the stale partition was complete — no nulls, no schema errors. Training loss improved because the model fit the old distribution more tightly. But production traffic reflects current user behaviour — which diverged 3 weeks ago.`,
+        whatsTested: 'Whether you check the training data date range when loss improves but production metrics collapse.',
+        antiPattern: 'Trusting pipeline health checks that report row count and coverage — these tell you the data arrived, not that it is the right data.',
+        staffFraming: 'In production, "pipeline passed" means schema and completeness checks passed. It does not mean temporal correctness. Always audit the actual date range of training data as the first step in a post-retrain regression. A lower training loss after a retrain is not always good news — it can mean the model fit stale patterns more precisely.',
+      },
+      {
+        question: 'How do you prevent this class of failure going forward?',
+        options: [
+          { id: 'a', text: 'Add a row count check — if training data is below expected volume, fail the pipeline' },
+          { id: 'b', text: 'Add a data freshness check: assert max(event_date) >= today - 1d before training starts' },
+          { id: 'c', text: 'Switch to online learning so the model always trains on the most recent data' },
+          { id: 'd', text: 'Add a holdout set that mirrors production traffic and evaluate on it before promotion' },
+        ],
+        correct: 'b',
+        finding: `A data freshness assertion — checking that the maximum event date in the training set is within an expected recency window — would have caught this at pipeline start, before training consumed any compute. Row count checks miss temporal bugs entirely: a stale but complete partition passes row count with flying colours. A production-mirroring holdout is useful but it catches the failure after training, not before.`,
+        whatsTested: 'Whether you know that data freshness checks and row count checks are different things and catch different failure modes.',
+        antiPattern: 'Adding more volume checks when the bug is a date filter — a larger stale partition still passes a row count check.',
+        staffFraming: 'Every training pipeline should assert temporal correctness before model fit: max(label_date) >= now - max_allowed_lag. This is a one-line check that prevents an entire class of silent production regressions. It belongs in the data validation step, not the model evaluation step.',
+      },
+    ],
+    lesson: 'Pipeline health checks validate schema and completeness, not temporal correctness. A training data freshness assertion is a distinct, mandatory check. Lower training loss after a retrain is not inherently good — always audit the date range.',
+  },
+  {
+    id: 'inc8',
+    title: 'Serving Precision Collapsed — Training Metrics Were Fine',
+    domain: 'Cross-domain: Feature Eng → Serving → MLOps',
+    readMin: 10,
+    situation: `A ranking model ships after passing all offline evaluations:
+• Offline NDCG@10: 0.68 (above the 0.65 threshold)
+• Offline Precision@20: 0.74
+• Shadow mode A/B: no significant difference
+
+48 hours after full traffic promotion:
+• Live Precision@20: 0.41 (–44% vs offline)
+• Click-through rate: down 18%
+• Serving logs show predictions in range [0.0, 1.0] — no clipping errors
+
+What explains the gap between offline and online performance?`,
+    steps: [
+      {
+        question: 'Offline metrics were strong, shadow mode showed no gap, but live metrics collapsed. Most likely cause:',
+        options: [
+          { id: 'a', text: 'The model underfit — offline NDCG of 0.68 was too low to generalise' },
+          { id: 'b', text: 'Training and serving compute features differently — a preprocessing step applied offline was not applied in the serving path' },
+          { id: 'c', text: 'Shadow mode did not run long enough — 48 hours is needed for statistical power' },
+          { id: 'd', text: 'The live traffic distribution is genuinely different — retrain on live data' },
+        ],
+        correct: 'b',
+        finding: `Comparing the training pipeline and the serving feature store: training applied a log1p transform to the item_popularity feature. The serving path reads item_popularity raw (no transform). At training time, item_popularity was in the range [0, 12.5]. At serving time, it arrives in the range [1, 150,000]. The model sees feature values 4–5 orders of magnitude outside its training distribution. Shadow mode missed this because it replayed historical requests that were also logged without the transform — the shadow evaluation had the same bug.`,
+        whatsTested: 'Whether you immediately compare training and serving preprocessing when offline metrics look good but online metrics collapse.',
+        antiPattern: 'Trusting shadow mode as a complete proxy for online performance — shadow mode replays logged features, which may themselves be mis-transformed.',
+        staffFraming: 'Training-serving skew is one of the highest-impact and hardest-to-detect failure modes in production ML. The canonical defence: a feature registry that logs both the training transform and the serving transform, and a CI check that diffs them on every model version. Shadow mode validates model outputs, not feature preprocessing.',
+      },
+      {
+        question: 'How should you have caught this before promotion?',
+        options: [
+          { id: 'a', text: 'Run a longer shadow mode period — 7 days to cover weekly traffic patterns' },
+          { id: 'b', text: 'Log training feature values at training time and serving feature values at inference time, then compare distributions before promotion' },
+          { id: 'c', text: 'Add a schema check to the serving path to reject out-of-range features' },
+          { id: 'd', text: 'Use the same codebase for training and serving features (e.g. a shared feature library)' },
+        ],
+        correct: 'b',
+        finding: `Logging and comparing training vs serving feature distributions is the direct detection mechanism for training-serving skew. A shared feature library (option D) is the prevention mechanism — both are correct, but the question asks about detection before promotion. A schema range check would block extreme values but wouldn't identify that the transform is missing. PSI computed between training features and live serving features, run as a pre-promotion gate, would have caught the item_popularity divergence immediately.`,
+        whatsTested: 'Whether you know that training-serving skew detection requires comparing feature distributions, not just model output distributions.',
+        antiPattern: 'Running PSI only on model outputs — output PSI catches symptom, not cause. Feature-level PSI is needed to diagnose which input caused the drift.',
+        staffFraming: 'Pre-promotion checklist for every model: (1) diff training transforms vs serving transforms in code, (2) run PSI on all feature distributions comparing training vs recent serving logs. Both checks must pass before promotion. This adds 30 minutes to the release process and prevents hours of live incident response.',
+      },
+    ],
+    lesson: 'Training-serving skew is silent — offline metrics look good because evaluation uses the same mis-transformed features as training. The only reliable detection is explicitly comparing training and serving feature distributions before every promotion.',
+  },
+  {
+    id: 'inc9',
+    title: 'New User Cohort Tanks Engagement — Cold Start Failure',
+    domain: 'Cross-domain: Recsys → Feature Eng → Monitoring',
+    readMin: 8,
+    situation: `A recommendation system serves personalised feeds. After a marketing campaign drove 140,000 new signups in 48 hours:
+• New user 7-day retention: 18% (vs 34% for organic cohorts)
+• Average session CTR for new users: 0.9% (vs 3.1% for existing users)
+• Model serving: all green
+• No pipeline alerts
+• Existing user metrics: unchanged
+
+The engineering lead says "the model is working — existing users are fine." What's happening?`,
+    steps: [
+      {
+        question: 'New users have dramatically lower engagement despite the model reporting healthy. Root cause:',
+        options: [
+          { id: 'a', text: 'New users are lower quality — marketing campaigns attract less engaged audiences' },
+          { id: 'b', text: 'The model has no signal for new users — cold start means recommendations default to popularity-based fallback, which is poorly calibrated' },
+          { id: 'c', text: 'The model needs retraining — the new user cohort represents a distribution shift' },
+          { id: 'd', text: 'The feature store is returning null values for new users, causing the model to produce random scores' },
+        ],
+        correct: 'b',
+        finding: `New users have zero interaction history. The model\'s user-side features (embedding, historical CTR, session depth, long-term affinity scores) are all zero or missing. The system falls back to a popularity-based ranker. But the popularity fallback was calibrated on organic users — it surfaces tech/productivity content that performs well for engaged users. The marketing campaign drove a demographically different cohort. Popularity fallback + wrong demographic = near-random recommendations for a cohort that needed genre diversity exploration.`,
+        whatsTested: 'Whether you understand that cold start is a feature coverage failure, not a model failure, and that popularity fallback quality depends on cohort alignment.',
+        antiPattern: 'Treating "model is healthy for existing users" as evidence the system is working — cold start affects a separate code path (fallback ranker), not the main model.',
+        staffFraming: 'Cold start is a separate product problem from recommendation quality. The fallback ranker needs its own evaluation: is it calibrated for the incoming cohort? A/B test the fallback independently of the main model. When a campaign drives new cohorts, pre-validate the fallback against that cohort\'s demographic profile before the campaign launches.',
+      },
+      {
+        question: 'What\'s the highest-leverage cold start mitigation you can ship in 48 hours?',
+        options: [
+          { id: 'a', text: 'Collect more onboarding signals — add interest selection at signup to seed the user embedding' },
+          { id: 'b', text: 'Retrain the main model with new user interaction data from this cohort' },
+          { id: 'c', text: 'Replace the popularity fallback with a diversity-promoting ranker that explores content categories' },
+          { id: 'd', text: 'Add a cold start threshold: serve only when the model has ≥10 interactions for a user' },
+        ],
+        correct: 'a',
+        finding: `Onboarding interest selection gives the model immediate signal without requiring interaction history. Three interest tags from a signup screen are enough to pick a non-generic user embedding from a cluster of similar users. This is shippable in 48 hours (UI + a lookup table mapping interest tags to user cluster embeddings). Retraining takes days and won\'t help users arriving now. Diversity-promoting rankers help but don\'t address the signal poverty problem. A cold start threshold withholds recommendations entirely — that kills retention faster.`,
+        whatsTested: 'Whether you know that onboarding signals (explicit preference collection) are the fastest cold start mitigation and don\'t require model retraining.',
+        antiPattern: 'Waiting for enough interaction data before improving cold start performance — by the time you have 10 interactions, the user has already churned.',
+        staffFraming: 'Cold start mitigation priority: (1) explicit signals (onboarding), (2) context signals (device, location, referral source), (3) collaborative filtering on similar users, (4) diversity-promoting fallback. Each tier takes progressively longer to ship. When you have an incident, start at tier 1.',
+      },
+    ],
+    lesson: 'Cold start is a feature coverage failure in a separate code path from the main model. The fallback ranker needs independent calibration for incoming cohorts. Onboarding signals are the highest-ROI cold start mitigation and are shippable in hours.',
+  },
+  {
+    id: 'inc10',
+    title: 'Inference Latency Tripled — GPU OOM Triggers Silent Fallback',
+    domain: 'Cross-domain: DL Serving → MLOps → Monitoring',
+    readMin: 9,
+    situation: `A text embedding service used for semantic search reports:
+• P95 latency: 340ms (up from 110ms baseline)
+• P50 latency: 95ms (unchanged)
+• Error rate: 0.0% — no serving errors
+• GPU memory usage: 98% (up from 71%)
+• Business metric: search relevance score down 12%
+
+The infrastructure team says "no errors, model is serving." Why is relevance down if there are no errors?`,
+    steps: [
+      {
+        question: 'P95 tripled but P50 is unchanged and error rate is 0%. What\'s the most likely explanation?',
+        options: [
+          { id: 'a', text: 'P95 is being pulled up by a small number of very long queries — a text length issue, not an infrastructure issue' },
+          { id: 'b', text: 'GPU OOM is triggering a silent CPU fallback for overflow requests — CPU inference runs correctly but 3× slower, and the fallback is logged as "success"' },
+          { id: 'c', text: 'The embedding model is batching requests differently — larger batches increase GPU utilisation and latency' },
+          { id: 'd', text: 'Network routing is sending some requests to an under-provisioned replica' },
+        ],
+        correct: 'b',
+        finding: `Serving logs show two request classes: GPU path (mean 95ms, all healthy) and a CPU fallback path (mean 340ms, triggered when GPU memory is exhausted). The fallback produces valid embeddings from the same model weights on CPU — hence 0.0% error rate. But the CPU path activates for ~5% of requests (the highest-traffic queries that arrive during peak GPU utilisation). These are the searches most likely to be high-value — high-traffic queries are typically navigational, where relevance matters most. GPU memory grew because a recent update loaded a larger batch buffer without resizing the instance.`,
+        whatsTested: 'Whether you understand that a CPU fallback can be functionally correct but latency-degraded, and that 0% error rate does not mean 0% degradation.',
+        antiPattern: 'Concluding "no errors = no problem" — silent fallbacks are designed to not error. The signal is in latency percentile divergence, not error rate.',
+        staffFraming: 'When P95 and P50 diverge dramatically with zero error rate, the correct hypothesis is always: a subset of requests is hitting a slower code path that is still returning 200s. In GPU serving, that path is almost always CPU fallback. Monitor the fallback activation rate as a first-class metric — not a debug log.',
+      },
+      {
+        question: 'What monitoring would have caught this before it affected relevance?',
+        options: [
+          { id: 'a', text: 'Alert on GPU memory % — trigger when utilisation exceeds 85% sustained for 5 minutes' },
+          { id: 'b', text: 'Alert on the CPU fallback activation rate — any non-zero fallback rate in production should trigger a page' },
+          { id: 'c', text: 'Alert on P95/P50 ratio — when this ratio exceeds 2.5, it indicates bimodal latency distribution from a fallback path' },
+          { id: 'd', text: 'All three — GPU memory, fallback rate, and latency ratio are complementary signals for this failure mode' },
+        ],
+        correct: 'd',
+        finding: `All three metrics are needed: GPU memory gives early warning before fallback activates. Fallback rate is the direct signal. P95/P50 ratio detects bimodal latency even if the fallback path isn\'t explicitly logged. No single metric is sufficient — GPU memory can spike without triggering fallback (if requests are short), fallback can activate without appearing in P50 (if it\'s rare), and P95/P50 ratio can diverge for other reasons (long queries). Together they triangulate to a confident diagnosis in minutes rather than hours.`,
+        whatsTested: 'Whether you know that GPU serving failure modes require multiple complementary monitoring signals, not a single metric.',
+        antiPattern: 'Monitoring only error rate for a serving system — error rate is the last signal to trigger for a well-engineered fallback.',
+        staffFraming: 'Production GPU serving monitoring checklist: (1) device memory utilisation with headroom alert, (2) fallback path activation rate as a first-class metric, (3) latency percentile spread (P99/P50 or P95/P50), (4) per-path latency breakdown if multiple serving paths exist. Wire all four before the first traffic hits a GPU-served model.',
+      },
+    ],
+    lesson: 'Silent fallbacks produce valid outputs at degraded performance — error rate stays zero while quality degrades. The signal is latency percentile divergence and explicit fallback activation rate monitoring, not error rate.',
+  },
+  {
+    id: 'inc11',
+    title: 'Model AUC Looks Great — But It\'s Leaking the Label',
+    domain: 'Cross-domain: Feature Eng → Training → Data Quality',
+    readMin: 8,
+    situation: `A fraud detection model ships after 4 weeks of development:
+• Training AUC: 0.97
+• Holdout AUC: 0.96
+• Production precision@1%: 0.23 (expected ≥0.55 based on holdout)
+
+The model that looked production-ready in evaluation is catching less than half the fraud you predicted. What happened?`,
+    steps: [
+      {
+        question: 'High holdout AUC that collapses in production is a classic symptom of:',
+        options: [
+          { id: 'a', text: 'Overfitting — the model memorised training data and fails to generalise' },
+          { id: 'b', text: 'A feature that encodes the label — the model learned the outcome, not its predictors' },
+          { id: 'c', text: 'Class imbalance — 0.96 AUC is misleadingly high when fraud is rare' },
+          { id: 'd', text: 'Distribution shift — fraud patterns changed between training data collection and deployment' },
+        ],
+        correct: 'b',
+        finding: `Feature audit surfaces the culprit: the training pipeline included \`days_to_dispute\` — the number of days between a transaction and its dispute filing. For fraudulent transactions, this field is populated (median 12 days). For legitimate transactions, it is NULL or zero. The feature directly encodes whether a fraud event occurred. The model learned one feature and achieved near-perfect separation. In production, \`days_to_dispute\` is always NULL at inference time (disputes haven\'t been filed yet — they happen after the fact). The model scores every production transaction as low-risk.`,
+        whatsTested: 'Whether you immediately audit features for post-event information when holdout AUC is suspiciously high.',
+        antiPattern: 'Accepting 0.96 holdout AUC as validation — in fraud detection, AUC this high almost always indicates a leaking feature, not a good model.',
+        staffFraming: 'An AUC of 0.96+ on a fraud detection problem is a red flag, not a green light. Fraud is hard. Legitimate 0.9+ AUC requires years of feature engineering. The right response to very high holdout performance is not celebration — it\'s a feature audit. Every feature should be audited for temporal validity: "would this feature be available at inference time?" If the answer is "not always" or "only after the event," the feature is leaking.',
+      },
+      {
+        question: 'How do you systematically prevent label leakage in future training pipelines?',
+        options: [
+          { id: 'a', text: 'Use only features that were available at the time of the transaction, not features computed after its outcome was known' },
+          { id: 'b', text: 'Run a correlation check between each feature and the label — features with correlation > 0.5 are suspicious' },
+          { id: 'c', text: 'Implement a point-in-time feature construction: features are computed using only data available up to the transaction timestamp' },
+          { id: 'd', text: 'Both A and C — temporal validity is the principle, point-in-time construction is the implementation' },
+        ],
+        correct: 'd',
+        finding: `Point-in-time correctness is the implementation of temporal validity. For every training example at timestamp T, features must be computed using only data with event_time ≤ T. This prevents any post-event information from entering the training pipeline. Correlation checks (option B) help but are insufficient — a leaking feature can have moderate correlation if fraud labels are noisy. The gold standard is a feature construction audit: for every feature, answer "at training time (timestamp T), could this value have been known?" If not, exclude it.`,
+        whatsTested: 'Whether you know that point-in-time feature construction is the correct implementation of temporal validity, not just a correlation check.',
+        antiPattern: 'Relying on correlation thresholds to detect leakage — a leaking feature with noisy labels can have moderate correlation and still cause significant inflation of offline metrics.',
+        staffFraming: 'Label leakage audit is mandatory before any model ships to production. Two checks: (1) for every feature, verify it is temporally valid (available at inference time), (2) run ablation — remove the top 5 features by importance and check if AUC drops dramatically. A legitimate model\'s AUC should degrade gracefully across feature ablations. A leaking model\'s AUC collapses when the leaking feature is removed.',
+      },
+    ],
+    lesson: 'Suspiciously high AUC is a red flag, not a green light. Temporal validity audit and point-in-time feature construction are non-negotiable before any predictive model ships to production.',
+  },
+  {
+    id: 'inc12',
+    title: 'Canary Rollout: Latency Looks Fine, But Users Are Churning',
+    domain: 'Cross-domain: MLOps → Monitoring → Recsys',
+    readMin: 9,
+    situation: `A new recommendation model is deployed via 5% canary:
+• Canary P95 latency: 82ms (vs 78ms baseline — within SLA)
+• Canary error rate: 0.0%
+• Canary vs control: no statistically significant difference in CTR after 24 hours
+• Decision: promote to 100% traffic
+
+36 hours after full promotion:
+• 7-day retention for the post-promotion cohort: down 11%
+• Session depth (pages/session): down 14%
+• CTR: unchanged
+
+The model passed every canary check. What happened?`,
+    steps: [
+      {
+        question: 'Canary passed all standard checks but long-term retention collapsed. The gap is explained by:',
+        options: [
+          { id: 'a', text: 'The canary ran for too short a period — 24 hours is insufficient for a weekly-pattern product' },
+          { id: 'b', text: 'CTR is the wrong metric for canary evaluation — it measures clicks, not satisfaction or return probability' },
+          { id: 'c', text: 'Retention and session depth are affected by the cumulative effect of multiple sessions — a canary measuring single-session CTR cannot detect multi-session degradation' },
+          { id: 'd', text: 'All three — duration, metric choice, and accumulation effect all contributed' },
+        ],
+        correct: 'd',
+        finding: `Three compounding factors: (1) 24 hours is one news cycle, not a habit cycle — retention signals require 5–7 days minimum. (2) CTR measures click intent, not satisfaction — a recommendation system can inflate CTR with clickbait thumbnails while degrading long-term engagement. (3) The new model optimised for short-term CTR at the expense of recommendation diversity. Users clicked more in session 1 but found their feed homogeneous by session 3. Diversity collapse doesn\'t show up in single-session canary metrics — it shows up in return rates after 48–72 hours.`,
+        whatsTested: 'Whether you understand that canary metrics must match the product\'s success horizon — short-term metrics can be orthogonal to long-term retention.',
+        antiPattern: 'Using CTR as the sole canary metric for a recommendation system — CTR measures immediate engagement, not the product quality signal that drives retention.',
+        staffFraming: 'Canary metric selection is a product decision, not an engineering decision. For recommendation systems, the minimum canary metric set is: (1) session CTR (short-term), (2) session depth or scroll depth (mid-term satisfaction proxy), (3) 3-day return rate if canary duration allows, (4) diversity metric (intra-list diversity or novelty score). CTR alone is insufficient and actively misleading for systems where engagement quality determines long-term retention.',
+      },
+      {
+        question: 'How long should the canary have run before promotion was considered safe?',
+        options: [
+          { id: 'a', text: '48 hours — enough to capture a full weekday/weekend cycle' },
+          { id: 'b', text: '5–7 days — long enough to observe whether users return for a second and third session' },
+          { id: 'c', text: '2 weeks — to cover two full weekly traffic cycles and seasonal variation' },
+          { id: 'd', text: 'Duration is secondary — the right metrics at 24 hours are more important than running longer with the wrong metrics' },
+        ],
+        correct: 'b',
+        finding: `5–7 days is the practical minimum for a recommendation system canary that must detect retention effects. This captures: first return visit (typically 24–48h for engaged users), second return visit (confirms habit formation vs one-time return), and weekend/weekday traffic composition differences. 2 weeks provides stronger statistical power but delays launches significantly — it\'s appropriate for high-risk changes. 48 hours is insufficient to measure return rate. Option D is directionally correct but incomplete — better metrics at 24h would help, but diversity collapse requires observing multiple sessions which requires time.`,
+        whatsTested: 'Whether you know the appropriate canary duration for a system where the key metric (retention) is inherently delayed.',
+        antiPattern: 'Minimising canary duration to ship faster — for recommendation systems, the business cost of a post-promotion rollback typically exceeds the cost of 5 additional canary days.',
+        staffFraming: 'Canary duration is set by the latency of the signal you are trying to detect. If your success metric is 7-day retention, your canary must run long enough to observe retention behaviour. A useful heuristic: canary duration ≥ 2× the expected time between user sessions for your median user. For a daily-use product, 2 days minimum. For a weekly-use product, 10–14 days minimum.',
+      },
+    ],
+    lesson: 'Canary metrics must match the product\'s success horizon. CTR is a click signal, not a retention signal. For recommendation systems: canary duration ≥ 2× median inter-session time, and the metric set must include session depth and short-term return rate alongside CTR.',
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────

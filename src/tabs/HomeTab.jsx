@@ -3,11 +3,11 @@ import { downloadProgressJSON } from '../utils/export.js'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
-  { date: '2026-06-05', label: 'Skill-first nav',          desc: 'Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn',  tab: 'home' },
-  { date: '2026-06-05', label: 'Plans & Access page',      desc: 'Free vs Premium tier breakdown + access code entry in one place',               tab: 'plans' },
-  { date: '2026-06-03', label: 'Guided paths',             desc: 'Senior MLE 4-week path, Data Eng path, Quick Calibration path on Home',         tab: 'home' },
-  { date: '2026-06-03', label: 'Incident Room — 6 cases',  desc: 'inc4 resolution lag · inc5 feature store schema mismatch · inc6 zero-variance',  tab: 'incidentroom' },
-  { date: '2026-06-03', label: 'ML Coding — 7 problems',   desc: 'mlc4–mlc6 added: retry decorator, Pydantic ModelConfig, CDC dedup',             tab: 'mlcoding' },
+  { date: '2026-06-05', label: 'Incident Room — 12 cases', desc: 'inc7–inc12: stale data, train/serve skew, cold start, GPU OOM, label leakage, canary miss', tab: 'incidentroom' },
+  { date: '2026-06-05', label: 'ML Coding — 12 problems',  desc: 'mlc8–mlc12: time-safe split, weighted P@K, Welford online stats, early stopping, permutation importance', tab: 'mlcoding' },
+  { date: '2026-06-05', label: 'Sign in with Google',      desc: 'Free account — progress sync coming soon. Google OAuth live.',                   tab: 'plans' },
+  { date: '2026-06-05', label: 'Skill-first nav',          desc: 'Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn',   tab: 'home' },
+  { date: '2026-06-05', label: 'Plans & Access page',      desc: 'Free vs Full Lab tier breakdown + access code entry in one place',               tab: 'plans' },
 ]
 
 // ── Section tab registry ───────────────────────────────────────────────────────

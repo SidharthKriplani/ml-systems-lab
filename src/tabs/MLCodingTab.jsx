@@ -542,6 +542,634 @@ result.show()
     checkpoint: 'Your salt_join replicates the profiles table n_buckets times. What is the failure mode when profiles_df is very large (e.g., 500M rows) and n_buckets=20?',
     checkpointAnswer: 'Replicating a 500M-row table 20× produces a 10B-row intermediate dataset. This will OOM the executors and is worse than the original skew problem. Salting only makes sense when profiles_df (the small/dimension table) can be broadcast OR when the skew is in a small subset of keys. The correct production approach for large dimension tables: identify which keys are hot (top 1%), salt only those specific hot keys (partial salting), and handle the remaining keys with a standard join. This bounds the replication factor to hot-key count × n_buckets, not total_rows × n_buckets.',
   },
+  {
+    id: 'mlc8',
+    title: 'Time-Safe Train/Validation Split',
+    domain: 'Feature Engineering',
+    difficulty: 'mid',
+    readMin: 12,
+    prompt: `You have a DataFrame of user transactions with columns:
+  user_id (str), transaction_date (datetime), amount (float), is_fraud (int 0/1)
+
+Implement a function that:
+1. Creates time-based features: rolling 7-day transaction count and rolling 7-day spend per user
+2. Splits into train (before cutoff) and validation (on/after cutoff) WITHOUT any future leakage
+3. Returns X_train, X_val, y_train, y_val
+
+The cutoff date is '2024-06-01'.
+
+Constraints:
+- Rolling features for a transaction on date D must use only transactions STRICTLY before D (not including D)
+- Validation features must NOT be computed using any validation period data
+- No sklearn train_test_split — implement the temporal split manually`,
+    starter: `import pandas as pd
+import numpy as np
+
+def time_safe_split(df: pd.DataFrame, cutoff: str):
+    cutoff_dt = pd.to_datetime(cutoff)
+    df = df.copy()
+    df['transaction_date'] = pd.to_datetime(df['transaction_date'])
+    df = df.sort_values(['user_id', 'transaction_date'])
+
+    # TODO: compute rolling_7d_count and rolling_7d_spend per user
+    # using only strictly prior transactions
+
+    # TODO: split into train/val on cutoff
+
+    feature_cols = ['rolling_7d_count', 'rolling_7d_spend']
+    # return X_train, X_val, y_train, y_val
+    pass
+
+# Test data
+import random
+random.seed(42)
+dates = pd.date_range('2024-01-01', '2024-08-31', freq='D')
+rows = []
+for uid in ['u1', 'u2', 'u3']:
+    for _ in range(40):
+        rows.append({'user_id': uid, 'transaction_date': random.choice(dates),
+                     'amount': round(random.uniform(10, 500), 2),
+                     'is_fraud': random.randint(0, 1)})
+df = pd.DataFrame(rows)
+result = time_safe_split(df, '2024-06-01')
+if result:
+    X_train, X_val, y_train, y_val = result
+    print(f"Train: {len(X_train)} rows, Val: {len(X_val)} rows")
+    print(f"Train date range: {df.loc[X_train.index, 'transaction_date'].min().date()} to {df.loc[X_train.index, 'transaction_date'].max().date()}")
+    print(f"Val date range: {df.loc[X_val.index, 'transaction_date'].min().date()} to {df.loc[X_val.index, 'transaction_date'].max().date()}")
+`,
+    solution: `import pandas as pd
+import numpy as np
+
+def time_safe_split(df: pd.DataFrame, cutoff: str):
+    cutoff_dt = pd.to_datetime(cutoff)
+    df = df.copy()
+    df['transaction_date'] = pd.to_datetime(df['transaction_date'])
+    df = df.sort_values(['user_id', 'transaction_date']).reset_index(drop=True)
+
+    # Point-in-time rolling features: for each row, use only prior rows for the same user
+    counts, spends = [], []
+    for _, group in df.groupby('user_id', sort=False):
+        group = group.sort_values('transaction_date')
+        window_counts, window_spends = [], []
+        for i, (_, row) in enumerate(group.iterrows()):
+            cutoff_7d = row['transaction_date'] - pd.Timedelta(days=7)
+            prior = group[
+                (group['transaction_date'] >= cutoff_7d) &
+                (group['transaction_date'] < row['transaction_date'])
+            ]
+            window_counts.append(len(prior))
+            window_spends.append(prior['amount'].sum())
+        counts.extend(window_counts)
+        spends.extend(window_spends)
+
+    # Re-align (groupby changes order)
+    df_sorted = df.copy()
+    df_sorted['rolling_7d_count'] = 0
+    df_sorted['rolling_7d_spend'] = 0.0
+    idx = 0
+    for _, group in df.groupby('user_id', sort=False):
+        group_sorted = group.sort_values('transaction_date')
+        for loc in group_sorted.index:
+            df_sorted.at[loc, 'rolling_7d_count'] = counts[idx]
+            df_sorted.at[loc, 'rolling_7d_spend'] = spends[idx]
+            idx += 1
+
+    feature_cols = ['rolling_7d_count', 'rolling_7d_spend']
+    train = df_sorted[df_sorted['transaction_date'] < cutoff_dt]
+    val   = df_sorted[df_sorted['transaction_date'] >= cutoff_dt]
+
+    return (train[feature_cols], val[feature_cols],
+            train['is_fraud'], val['is_fraud'])
+
+import random
+random.seed(42)
+dates = pd.date_range('2024-01-01', '2024-08-31', freq='D')
+rows = []
+for uid in ['u1', 'u2', 'u3']:
+    for _ in range(40):
+        rows.append({'user_id': uid, 'transaction_date': random.choice(dates),
+                     'amount': round(random.uniform(10, 500), 2),
+                     'is_fraud': random.randint(0, 1)})
+df = pd.DataFrame(rows)
+X_train, X_val, y_train, y_val = time_safe_split(df, '2024-06-01')
+print(f"Train: {len(X_train)} rows, Val: {len(X_val)} rows")
+print(f"Train rolling_7d_count mean: {X_train['rolling_7d_count'].mean():.2f}")
+print(f"Val rolling_7d_count mean: {X_val['rolling_7d_count'].mean():.2f}")
+print("No leakage: val features computed from pre-cutoff data only")
+`,
+    checkpoint: 'What goes wrong if you compute rolling features on the full DataFrame before splitting, instead of point-in-time?',
+    checkpointAnswer: 'Rolling features computed on the full DataFrame include future transactions in the window. A transaction on 2024-05-30 would have its rolling_7d_count include transactions from 2024-06-01–06-06 (which are in the window but in the future). The training set learns features that include information about what happens after the train/val cutoff. This inflates training performance and produces a model that cannot be reproduced in production, where future transactions are unavailable at inference time. The production model would receive feature values that are systematically lower than what it trained on.',
+  },
+  {
+    id: 'mlc9',
+    title: 'Weighted Precision@K for Imbalanced Ranking',
+    domain: 'Model Evaluation',
+    difficulty: 'senior',
+    readMin: 14,
+    prompt: `In a fraud detection ranking system, not all fraud cases are equal:
+- High-value fraud (amount > $10,000): weight = 3.0
+- Mid-value fraud (amount $1,000–$10,000): weight = 1.5
+- Low-value fraud (amount < $1,000): weight = 1.0
+
+Implement weighted_precision_at_k(y_true, y_scores, amounts, k) that:
+1. Ranks transactions by y_scores descending
+2. Takes the top-K predictions
+3. Returns weighted precision: sum(weights of true positives in top-K) / sum(weights of all items in top-K)
+   (weight = fraud weight if true positive, 1.0 if false positive)
+
+Also implement: find_optimal_k(y_true, y_scores, amounts, min_precision=0.6)
+Returns the largest K where weighted_precision_at_k >= min_precision.`,
+    starter: `import numpy as np
+
+def get_weight(amount):
+    if amount > 10000: return 3.0
+    if amount >= 1000: return 1.5
+    return 1.0
+
+def weighted_precision_at_k(y_true, y_scores, amounts, k):
+    # Your implementation
+    pass
+
+def find_optimal_k(y_true, y_scores, amounts, min_precision=0.6):
+    # Your implementation
+    pass
+
+# Test
+np.random.seed(42)
+n = 1000
+y_true  = np.random.binomial(1, 0.05, n)   # 5% fraud rate
+y_scores = np.where(y_true, np.random.uniform(0.6, 1.0, n), np.random.uniform(0.0, 0.7, n))
+amounts  = np.random.choice([500, 5000, 50000], n, p=[0.7, 0.2, 0.1])
+
+print(f"P@10:  {weighted_precision_at_k(y_true, y_scores, amounts, 10):.3f}")
+print(f"P@50:  {weighted_precision_at_k(y_true, y_scores, amounts, 50):.3f}")
+print(f"P@100: {weighted_precision_at_k(y_true, y_scores, amounts, 100):.3f}")
+print(f"Optimal K (min_prec=0.6): {find_optimal_k(y_true, y_scores, amounts, 0.6)}")
+`,
+    solution: `import numpy as np
+
+def get_weight(amount):
+    if amount > 10000: return 3.0
+    if amount >= 1000: return 1.5
+    return 1.0
+
+def weighted_precision_at_k(y_true, y_scores, amounts, k):
+    y_true   = np.asarray(y_true)
+    y_scores = np.asarray(y_scores)
+    amounts  = np.asarray(amounts)
+
+    # Rank by score descending, take top K
+    sorted_idx = np.argsort(y_scores)[::-1][:k]
+    top_k_true   = y_true[sorted_idx]
+    top_k_amounts = amounts[sorted_idx]
+
+    numerator   = 0.0
+    denominator = 0.0
+    for is_fraud, amount in zip(top_k_true, top_k_amounts):
+        w = get_weight(amount) if is_fraud else 1.0
+        denominator += w
+        if is_fraud:
+            numerator += w
+
+    return numerator / denominator if denominator > 0 else 0.0
+
+def find_optimal_k(y_true, y_scores, amounts, min_precision=0.6):
+    n = len(y_true)
+    optimal_k = 0
+    for k in range(1, n + 1):
+        if weighted_precision_at_k(y_true, y_scores, amounts, k) >= min_precision:
+            optimal_k = k
+        else:
+            break  # precision is monotonically non-increasing as K grows
+    return optimal_k
+
+np.random.seed(42)
+n = 1000
+y_true   = np.random.binomial(1, 0.05, n)
+y_scores = np.where(y_true, np.random.uniform(0.6, 1.0, n), np.random.uniform(0.0, 0.7, n))
+amounts  = np.random.choice([500, 5000, 50000], n, p=[0.7, 0.2, 0.1])
+
+print(f"P@10:  {weighted_precision_at_k(y_true, y_scores, amounts, 10):.3f}")
+print(f"P@50:  {weighted_precision_at_k(y_true, y_scores, amounts, 50):.3f}")
+print(f"P@100: {weighted_precision_at_k(y_true, y_scores, amounts, 100):.3f}")
+print(f"Optimal K (min_prec=0.6): {find_optimal_k(y_true, y_scores, amounts, 0.6)}")
+`,
+    checkpoint: 'find_optimal_k uses a break when precision drops below the threshold. When does this break fail to find the true optimal K?',
+    checkpointAnswer: 'Precision@K is not strictly monotonically decreasing — it can increase at certain K values if a high-weight true positive appears just outside the current top-K. For example, if the 51st-ranked item is a $50,000 fraud case (weight 3.0), P@51 can be higher than P@50. The break-on-first-failure approach misses this and returns K=50 instead of 51. Correct implementation: iterate all K values and track the maximum K that meets the threshold. The tradeoff is O(n²) time vs O(n) for the break approach — at production scale (n=10M transactions), precompute the sorted order once and iterate the cumulative precision.',
+  },
+  {
+    id: 'mlc10',
+    title: 'Online Mean and Variance (Welford\'s Algorithm)',
+    domain: 'Model Training',
+    difficulty: 'mid',
+    readMin: 12,
+    prompt: `A streaming feature pipeline must maintain a running mean and variance for a numeric feature as new data arrives — without storing all past values.
+
+Implement an OnlineStats class using Welford's algorithm:
+- update(x): incorporate a new observation
+- mean: current mean
+- variance: current sample variance (Bessel's correction, n-1)
+- std: current standard deviation
+- reset(): clear all state
+
+Then implement: z_score_normalize(stream, window_size=None)
+- If window_size is None: use all data seen so far
+- If window_size=N: use only the last N observations (sliding window)
+- Returns each value's z-score at the time it arrives
+
+The sliding window version should NOT store a rolling array — use a deque and update stats incrementally.`,
+    starter: `import numpy as np
+from collections import deque
+
+class OnlineStats:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        # Your implementation
+        pass
+
+    def update(self, x):
+        # Welford's online algorithm
+        pass
+
+    @property
+    def mean(self):
+        pass
+
+    @property
+    def variance(self):
+        pass
+
+    @property
+    def std(self):
+        pass
+
+def z_score_normalize(stream, window_size=None):
+    # Yield z-scores as data arrives
+    pass
+
+# Test
+stream = [2.1, 3.4, 2.8, 5.1, 2.3, 8.7, 2.9, 3.1, 2.6, 4.2]
+print("Full stream z-scores:")
+for val, z in zip(stream, z_score_normalize(stream)):
+    print(f"  x={val:.1f}  z={z:.3f}")
+
+print("Sliding window (size=4) z-scores:")
+for val, z in zip(stream, z_score_normalize(stream, window_size=4)):
+    print(f"  x={val:.1f}  z={z:.3f}")
+`,
+    solution: `import numpy as np
+from collections import deque
+
+class OnlineStats:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.n   = 0
+        self._mean = 0.0
+        self._M2   = 0.0   # sum of squared deviations
+
+    def update(self, x):
+        self.n += 1
+        delta  = x - self._mean
+        self._mean += delta / self.n
+        delta2 = x - self._mean
+        self._M2 += delta * delta2
+
+    @property
+    def mean(self):
+        return self._mean
+
+    @property
+    def variance(self):
+        # Sample variance (Bessel's correction)
+        return self._M2 / (self.n - 1) if self.n > 1 else 0.0
+
+    @property
+    def std(self):
+        return self.variance ** 0.5
+
+def z_score_normalize(stream, window_size=None):
+    stream = list(stream)
+
+    if window_size is None:
+        stats = OnlineStats()
+        for x in stream:
+            stats.update(x)
+            if stats.n < 2 or stats.std == 0:
+                yield 0.0
+            else:
+                yield (x - stats.mean) / stats.std
+
+    else:
+        # Sliding window: maintain a deque and incremental sum/sum_sq
+        window = deque()
+        s, s2  = 0.0, 0.0
+
+        for x in stream:
+            # Evict oldest if full
+            if len(window) == window_size:
+                old = window.popleft()
+                s  -= old
+                s2 -= old * old
+
+            window.append(x)
+            s  += x
+            s2 += x * x
+
+            n = len(window)
+            if n < 2:
+                yield 0.0
+            else:
+                mean = s / n
+                var  = (s2 - n * mean ** 2) / (n - 1)
+                std  = max(var, 0.0) ** 0.5
+                yield (x - mean) / std if std > 0 else 0.0
+
+stream = [2.1, 3.4, 2.8, 5.1, 2.3, 8.7, 2.9, 3.1, 2.6, 4.2]
+print("Full stream z-scores:")
+for val, z in zip(stream, z_score_normalize(stream)):
+    print(f"  x={val:.1f}  z={z:.3f}")
+
+print("Sliding window (size=4) z-scores:")
+for val, z in zip(stream, z_score_normalize(stream, window_size=4)):
+    print(f"  x={val:.1f}  z={z:.3f}")
+`,
+    checkpoint: 'The sliding window version uses s2 - n * mean² to compute variance. Why not use the naive formula sum((x-mean)²)?',
+    checkpointAnswer: 'The naive formula requires storing all window values to recompute (x-mean)² after each eviction. The computational trick (s2 - n*mean²) — called the "computational formula for variance" — lets us maintain variance incrementally using only the sum and sum of squares. However, this formula suffers from catastrophic cancellation when values are large and variance is small: subtracting two large similar numbers loses precision. Welford\'s algorithm avoids this by tracking M2 (sum of squared deviations from the running mean) directly. In production, use Welford\'s for numerical stability; use the sum/sum-of-squares trick only when you control the scale of input values.',
+  },
+  {
+    id: 'mlc11',
+    title: 'Early Stopping for Gradient Boosting From Scratch',
+    domain: 'Model Training',
+    difficulty: 'senior',
+    readMin: 15,
+    prompt: `Implement early stopping for a gradient boosting loop WITHOUT using sklearn's early stopping.
+
+You are given a simple GBM-like training loop:
+- Each round adds a weak learner (provided as fit_round(X_train, residuals) → predictions)
+- You evaluate on a validation set after each round
+- Stop when validation loss has not improved for \`patience\` rounds
+- Restore to the best round (not the last round)
+
+Implement:
+1. EarlyStopper class with: should_stop(val_loss) → bool, best_round → int, rounds_without_improvement → int
+2. train_with_early_stopping(X_train, y_train, X_val, y_val, n_rounds, patience, learning_rate)
+
+Use MSE as the loss. The weak learner is a shallow decision tree (use sklearn DecisionTreeRegressor depth=3).`,
+    starter: `import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+class EarlyStopper:
+    def __init__(self, patience=5, min_delta=1e-4):
+        self.patience  = patience
+        self.min_delta = min_delta
+        # Your init here
+
+    def should_stop(self, val_loss: float) -> bool:
+        # Return True if training should stop
+        # Update internal state
+        pass
+
+    @property
+    def best_round(self) -> int:
+        pass
+
+    @property
+    def rounds_without_improvement(self) -> int:
+        pass
+
+def train_with_early_stopping(X_train, y_train, X_val, y_val,
+                               n_rounds=200, patience=10, learning_rate=0.1):
+    # Returns: predictions on val, best_round, loss_history
+    pass
+
+# Test
+np.random.seed(42)
+n = 500
+X = np.random.randn(n, 5)
+y = 3*X[:,0] - 2*X[:,1] + np.random.randn(n)*0.5
+
+split = int(0.8*n)
+X_train, X_val = X[:split], X[split:]
+y_train, y_val = y[:split], y[split:]
+
+preds, best_round, history = train_with_early_stopping(
+    X_train, y_train, X_val, y_val, n_rounds=200, patience=10)
+
+if preds is not None:
+    final_mse = np.mean((preds - y_val)**2)
+    print(f"Best round: {best_round}")
+    print(f"Val MSE at best round: {final_mse:.4f}")
+    print(f"Total rounds run: {len(history)}")
+    print(f"Rounds saved by early stopping: {200 - len(history)}")
+`,
+    solution: `import numpy as np
+from sklearn.tree import DecisionTreeRegressor
+
+class EarlyStopper:
+    def __init__(self, patience=5, min_delta=1e-4):
+        self.patience   = patience
+        self.min_delta  = min_delta
+        self._best_loss = float('inf')
+        self._best_rnd  = 0
+        self._counter   = 0
+        self._round     = 0
+
+    def should_stop(self, val_loss: float) -> bool:
+        self._round += 1
+        if val_loss < self._best_loss - self.min_delta:
+            self._best_loss = val_loss
+            self._best_rnd  = self._round
+            self._counter   = 0
+        else:
+            self._counter += 1
+        return self._counter >= self.patience
+
+    @property
+    def best_round(self):
+        return self._best_rnd
+
+    @property
+    def rounds_without_improvement(self):
+        return self._counter
+
+def train_with_early_stopping(X_train, y_train, X_val, y_val,
+                               n_rounds=200, patience=10, learning_rate=0.1):
+    stopper     = EarlyStopper(patience=patience)
+    train_preds = np.zeros(len(X_train))
+    val_preds   = np.zeros(len(X_val))
+    all_trees   = []
+    loss_history = []
+    best_val_preds = val_preds.copy()
+
+    for rnd in range(n_rounds):
+        residuals = y_train - train_preds
+        tree = DecisionTreeRegressor(max_depth=3, random_state=rnd)
+        tree.fit(X_train, residuals)
+        all_trees.append(tree)
+
+        train_preds += learning_rate * tree.predict(X_train)
+        val_preds   += learning_rate * tree.predict(X_val)
+
+        val_mse = np.mean((val_preds - y_val) ** 2)
+        loss_history.append(val_mse)
+
+        if val_mse < np.mean((best_val_preds - y_val)**2) - 1e-4:
+            best_val_preds = val_preds.copy()
+
+        if stopper.should_stop(val_mse):
+            print(f"Early stopping at round {rnd+1}, best round: {stopper.best_round}")
+            break
+
+    return best_val_preds, stopper.best_round, loss_history
+
+np.random.seed(42)
+n = 500
+X = np.random.randn(n, 5)
+y = 3*X[:,0] - 2*X[:,1] + np.random.randn(n)*0.5
+
+split = int(0.8*n)
+X_train, X_val = X[:split], X[split:]
+y_train, y_val = y[:split], y[split:]
+
+preds, best_round, history = train_with_early_stopping(
+    X_train, y_train, X_val, y_val, n_rounds=200, patience=10)
+
+final_mse = np.mean((preds - y_val)**2)
+print(f"Best round: {best_round}")
+print(f"Val MSE at best round: {final_mse:.4f}")
+print(f"Total rounds run: {len(history)}")
+print(f"Rounds saved by early stopping: {200 - len(history)}")
+`,
+    checkpoint: 'This implementation restores to the best validation predictions, not the best model weights. What\'s the difference and when does it matter?',
+    checkpointAnswer: 'Restoring best predictions works for evaluating the final model but does not give you the trained model object (the list of trees) at the best round. If you need to serve predictions on new data after training, you need to track which round was best and reconstruct the prediction by summing only the trees up to that round. The production pattern: keep a list of all trees, track best_round, then at inference time sum the first best_round trees. Restoring predictions-only is fine for evaluation and hyperparameter search; it is incorrect for model serialisation and deployment.',
+  },
+  {
+    id: 'mlc12',
+    title: 'Permutation Feature Importance From Scratch',
+    domain: 'Model Evaluation',
+    difficulty: 'staff',
+    readMin: 16,
+    prompt: `Implement model-agnostic permutation feature importance WITHOUT using sklearn's permutation_importance.
+
+permutation_importance(model, X_val, y_val, metric_fn, n_repeats=5, random_state=42)
+
+Algorithm:
+1. Compute baseline metric on (X_val, y_val)
+2. For each feature j:
+   a. Repeat n_repeats times:
+      - Shuffle column j in X_val
+      - Compute metric on shuffled data
+      - Importance contribution = baseline_metric - shuffled_metric
+   b. Importance[j] = mean of n_repeats contributions
+   c. Importance_std[j] = std of n_repeats contributions
+3. Return: importances array, stds array, feature names
+
+Also implement: plot_importance_text(importances, stds, feature_names)
+— prints a sorted ASCII bar chart of feature importances with ±std shown.
+
+Use negative MSE as the metric (higher = better), so importance > 0 means feature matters.`,
+    starter: `import numpy as np
+
+def permutation_importance(model, X_val, y_val, metric_fn,
+                            n_repeats=5, random_state=42):
+    # Your implementation
+    pass
+
+def plot_importance_text(importances, stds, feature_names, width=40):
+    # ASCII bar chart, sorted by importance descending
+    pass
+
+# Test with a simple model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_regression
+
+np.random.seed(42)
+X, y = make_regression(n_samples=300, n_features=8, n_informative=4,
+                        noise=0.1, random_state=42)
+feature_names = [f'feature_{i}' for i in range(X.shape[1])]
+
+split = 240
+X_train, X_val = X[:split], X[split:]
+y_train, y_val = y[:split], y[split:]
+
+model = RandomForestRegressor(n_estimators=50, random_state=42)
+model.fit(X_train, y_train)
+
+def neg_mse(model, X, y):
+    return -np.mean((model.predict(X) - y)**2)
+
+importances, stds, names = permutation_importance(
+    model, X_val, y_val, neg_mse, n_repeats=5)
+
+if importances is not None:
+    plot_importance_text(importances, stds, names)
+`,
+    solution: `import numpy as np
+
+def permutation_importance(model, X_val, y_val, metric_fn,
+                            n_repeats=5, random_state=42):
+    rng = np.random.RandomState(random_state)
+    X_val = np.asarray(X_val)
+    y_val = np.asarray(y_val)
+    n_features = X_val.shape[1]
+
+    baseline = metric_fn(model, X_val, y_val)
+    importances = np.zeros((n_features, n_repeats))
+
+    for j in range(n_features):
+        for r in range(n_repeats):
+            X_permuted = X_val.copy()
+            X_permuted[:, j] = rng.permutation(X_permuted[:, j])
+            permuted_score = metric_fn(model, X_permuted, y_val)
+            importances[j, r] = baseline - permuted_score
+
+    means = importances.mean(axis=1)
+    stds  = importances.std(axis=1)
+    return means, stds, list(range(n_features))
+
+def plot_importance_text(importances, stds, feature_names, width=40):
+    order = np.argsort(importances)[::-1]
+    max_imp = max(abs(importances)) if max(abs(importances)) > 0 else 1
+    print(f"\\nPermutation Feature Importance (n_repeats=5):")
+    print("-" * 60)
+    for i in order:
+        name = feature_names[i] if isinstance(feature_names[i], str) else f'feature_{feature_names[i]}'
+        bar_len = int(abs(importances[i]) / max_imp * width)
+        bar = '█' * bar_len
+        sign = '+' if importances[i] >= 0 else '-'
+        print(f"  {name:<15} {sign}{abs(importances[i]):.4f} ±{stds[i]:.4f}  |{bar}")
+    print("-" * 60)
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_regression
+
+np.random.seed(42)
+X, y = make_regression(n_samples=300, n_features=8, n_informative=4,
+                        noise=0.1, random_state=42)
+feature_names = [f'feature_{i}' for i in range(X.shape[1])]
+
+split = 240
+X_train, X_val = X[:split], X[split:]
+y_train, y_val = y[:split], y[split:]
+
+model = RandomForestRegressor(n_estimators=50, random_state=42)
+model.fit(X_train, y_train)
+
+def neg_mse(model, X, y):
+    return -np.mean((model.predict(X) - y)**2)
+
+importances, stds, names = permutation_importance(
+    model, X_val, y_val, neg_mse, n_repeats=5)
+plot_importance_text(importances, stds, feature_names)
+`,
+    checkpoint: 'Permutation importance shuffles one feature at a time. What does it miss that SHAP handles correctly?',
+    checkpointAnswer: 'Permutation importance cannot detect feature interactions. If features A and B are correlated and the model uses them jointly (e.g., A×B interaction), shuffling A alone may not reduce performance much because B still carries similar information. SHAP values are additive and account for interactions by computing marginal contributions across all possible feature orderings (Shapley values from cooperative game theory). Permutation importance also does not handle correlated features correctly — shuffling feature A when B is correlated with A creates unrealistic data points that the model was never trained on. SHAP\'s TreeExplainer avoids this by using the actual training data distribution. For production model debugging, permutation importance is a fast first pass; SHAP is the correct tool when features are correlated or interactions matter.',
+  },
 ]
 
 // ── Problem card component ────────────────────────────────────────────────────
