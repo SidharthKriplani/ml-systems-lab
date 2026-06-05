@@ -192,6 +192,8 @@ A user who opens the app in 3 seconds and starts a 45-min mock exam has a better
 
 **v2 enhancement (✅ completed v4.46):** Granular scenario-level difficulty gating within free Practice modules — easy/junior scenarios free, medium/senior/staff gated. 46 scenarios tagged in 4 free modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML). AccessGate.jsx ready for scenario-level checks at render time.
 
+**Single gating model decision (✅ locked v4.69):** Tab-level AccessGate (`PREMIUM_TABS` set in App.jsx) is the one and only enforcement point. The `isFree` scenario-level flags that exist in FeatureEngTab, ModelEvalTab, and ClassicalMLTab are informational/documentary only — they are NOT enforced at render time and must not be wired to a second gate. If scenario-level enforcement is ever needed, remove the tab-level gate for that tab first. Two gating systems must never coexist.
+
 **No Tailwind utilities in component files.** See Stack section above.
 
 **All modal/overlay inputs must use `fontSize: '16px'` minimum.**  

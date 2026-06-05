@@ -153,9 +153,8 @@ const PRACTICE_DOMAINS = [
     ],
   },
   {
-    id: 'ds', label: 'Data Science', accent: 'var(--prime)', bg: 'var(--prime-faint)',
+    id: 'causal_ts', label: 'Causal & Time Series', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
-      { id: 'ds',     label: 'DS Fundamentals',  desc: 'Model selection, calibration, metrics' },
       { id: 'causal', label: 'Causal Inference', desc: 'Identification, uplift, obs vs exp' },
       { id: 'ts',     label: 'Time Series',      desc: 'Failures, stationarity, anomaly detection' },
     ],
@@ -204,53 +203,50 @@ const INTERVIEW_TOOLS = [
 // ── New 5-section nav structure ──────────────────────────────────────────────
 const NAV_SECTIONS = [
   {
-    id: 'foundations',
-    label: 'FOUNDATIONS',
+    id: 'features',
+    label: 'FEATURES',
     items: [
-      { id: 'models',    label: 'Math & Statistics' },
+      { id: 'features', label: 'Feature Engineering' },
+    ],
+  },
+  {
+    id: 'evaluation',
+    label: 'EVALUATION',
+    items: [
+      { id: 'eval',      label: 'Model Evaluation' },
       { id: 'classical', label: 'Classical ML' },
+      { id: 'causal',    label: 'Causal Inference' },
+      { id: 'ts',        label: 'Time Series' },
     ],
   },
   {
-    id: 'scenarios',
-    label: 'SCENARIOS',
-    groups: [
-      { label: 'Data & Features', items: [
-        { id: 'features', label: 'Feature Engineering' },
-        { id: 'spark',    label: 'Spark Lab' },
-        { id: 'airflow',  label: 'Airflow' },
-        { id: 'dbt',      label: 'dbt' },
-        { id: 'modeling', label: 'Data Modeling' },
-      ]},
-      { label: 'Model & Evaluation', items: [
-        { id: 'eval',        label: 'Model Evaluation' },
-        { id: 'dl',          label: 'Deep Learning' },
-        { id: 'dl_finetune', label: 'Fine-tuning' },
-      ]},
-      { label: 'Systems & Serving', items: [
-        { id: 'design',       label: 'System Design' },
-        { id: 'dl_serving',   label: 'DL Serving' },
-        { id: 'mlops_deploy', label: 'Deployment' },
-        { id: 'mlops_pipes',  label: 'CI/CD & Infra' },
-      ]},
-      { label: 'Monitoring & Reliability', items: [
-        { id: 'monitor', label: 'Monitoring' },
-        { id: 'ts',      label: 'Time Series' },
-        { id: 'causal',  label: 'Causal Inference' },
-      ]},
-    ],
-  },
-  {
-    id: 'practice',
-    label: 'PRACTICE',
+    id: 'systems',
+    label: 'SYSTEMS',
     items: [
-      { id: 'incidentroom',    label: 'Incident Room' },
-      { id: 'mlcoding',        label: 'Code Problems' },
-      { id: 'codebugs',        label: 'Code Bugs' },
-      { id: 'projectlab',      label: 'Project Lab · Telco' },
-      { id: 'loan_default',    label: 'Project Lab · Loans' },
-      { id: 'fraud_detection', label: 'Project Lab · Fraud' },
-      { id: 'casestudies',     label: 'Case Studies' },
+      { id: 'design',       label: 'System Design' },
+      { id: 'dl_serving',   label: 'DL Serving' },
+      { id: 'mlops_deploy', label: 'Deployment' },
+      { id: 'mlops_pipes',  label: 'CI/CD & Infra' },
+      { id: 'monitor',      label: 'Monitoring' },
+    ],
+  },
+  {
+    id: 'training',
+    label: 'TRAINING',
+    items: [
+      { id: 'models',      label: 'Math Foundations' },
+      { id: 'dl',          label: 'Deep Learning' },
+      { id: 'dl_finetune', label: 'Fine-tuning' },
+    ],
+  },
+  {
+    id: 'data',
+    label: 'DATA',
+    items: [
+      { id: 'spark',    label: 'Spark Lab' },
+      { id: 'airflow',  label: 'Airflow' },
+      { id: 'dbt',      label: 'dbt' },
+      { id: 'modeling', label: 'Data Modeling' },
     ],
   },
   {
@@ -260,11 +256,24 @@ const NAV_SECTIONS = [
       { id: 'interview',   label: 'Q&A Bank' },
       { id: 'combinator',  label: 'Timed Exam' },
       { id: 'verbal',      label: 'Verbal Practice' },
-      { id: 'stafflayer',  label: 'Staff Layer' },
       { id: 'defense',     label: 'Defense Plan' },
-      { id: 'spottheflaw', label: 'Spot the Flaw' },
       { id: 'takehome',    label: 'Take-Home' },
-      { id: 'trainer',     label: 'Trainer' },
+      { id: 'spottheflaw', label: 'Spot the Flaw' },
+      { id: 'stafflayer',  label: 'Staff Layer' },
+    ],
+  },
+  {
+    id: 'labs',
+    label: 'LABS',
+    items: [
+      { id: 'incidentroom',    label: 'Incident Room' },
+      { id: 'mlcoding',        label: 'Code Problems' },
+      { id: 'codebugs',        label: 'Bug Hunt' },
+      { id: 'trainer',         label: 'Trainer' },
+      { id: 'projectlab',      label: 'Project Lab · Telco' },
+      { id: 'loan_default',    label: 'Project Lab · Loans' },
+      { id: 'fraud_detection', label: 'Project Lab · Fraud' },
+      { id: 'casestudies',     label: 'Case Studies' },
     ],
   },
   {
@@ -700,11 +709,11 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 
 const BOTTOM_NAV_ITEMS = [
-  { id: 'home',      icon: '◎', label: 'Home',      defaultTab: 'home' },
-  { id: 'scenarios', icon: '⊟', label: 'Scenarios', defaultTab: 'features' },
-  { id: 'practice',  icon: '⚡', label: 'Practice',  defaultTab: 'incidentroom' },
-  { id: 'interview', icon: '◈', label: 'Interview',  defaultTab: 'interview' },
-  { id: 'learn',     icon: '∇', label: 'Learn',      defaultTab: 'gradient' },
+  { id: 'home',      icon: '◎', label: 'Home',      defaultTab: 'home',         sections: [] },
+  { id: 'practice',  icon: '⊟', label: 'Practice',  defaultTab: 'features',     sections: ['features','evaluation','systems','training','data'] },
+  { id: 'labs',      icon: '⚡', label: 'Labs',      defaultTab: 'incidentroom', sections: ['labs'] },
+  { id: 'interview', icon: '◈', label: 'Interview',  defaultTab: 'interview',    sections: ['interview'] },
+  { id: 'learn',     icon: '∇', label: 'Learn',      defaultTab: 'gradient',     sections: ['learn'] },
 ]
 
 function BottomNav({ activeTabId, goTo }) {
@@ -720,7 +729,7 @@ function BottomNav({ activeTabId, goTo }) {
     }}>
       <div style={{ height: '68px', display: 'flex', alignItems: 'stretch', width: '100%', overflow: 'hidden' }}>
         {BOTTOM_NAV_ITEMS.map(item => {
-          const isActive = item.id === 'home' ? activeTabId === 'home' : activeSection === item.id
+          const isActive = item.id === 'home' ? activeTabId === 'home' : item.sections.includes(activeSection)
           return (
             <button key={item.id} onClick={() => goTo(item.defaultTab)}
               style={{

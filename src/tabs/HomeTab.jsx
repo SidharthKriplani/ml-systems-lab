@@ -31,13 +31,13 @@ const GUIDED_PATHS = [
     label: 'Senior MLE in 4 weeks',
     desc: 'The complete interview loop — framing, Q&A, timed exam, incident diagnosis, live coding.',
     steps: [
+      { tabId: 'classical',   label: 'Classical ML',   scoreKey: 'msl_score:classical' },
       { tabId: 'defense',     label: 'Defense Plan',   scoreKey: null,               checkFn: () => !!localStorage.getItem('msl_defense_progress') },
       { tabId: 'interview',   label: 'Q&A Bank (128)', scoreKey: 'msl_score:interview' },
       { tabId: 'combinator',  label: 'Combinator Exam',scoreKey: 'msl_score:combinator' },
       { tabId: 'incidentroom',label: 'Incident Room',  scoreKey: 'msl_score:incidentroom' },
       { tabId: 'mlcoding',    label: 'ML Coding',      scoreKey: 'msl_score:mlcoding' },
       { tabId: 'verbal',      label: 'Verbal Practice',scoreKey: null, checkFn: () => !!localStorage.getItem('msl_verbal_history') },
-      { tabId: 'spottheflaw', label: 'Spot the Flaw',  scoreKey: 'msl_score:spottheflaw' },
     ],
   },
   {
@@ -166,6 +166,20 @@ export default function HomeTab({ onNavigate }) {
           </div>
         )}
       </div>
+
+      {/* ── First-session directive (new users only) ─────────────────────── */}
+      {totalAttempted === 0 && (
+        <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderLeft: '3px solid var(--prime)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px' }}>New here?</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Start with a 10-minute calibration — production judgment scenarios, no setup.</div>
+          </div>
+          <button onClick={() => onNavigate('classical')}
+            style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Start first session →
+          </button>
+        </div>
+      )}
 
       {/* ── Progress callouts ─────────────────────────────────────────────── */}
       {(strongest || notStarted) && (

@@ -16,7 +16,7 @@ You can finish every ML course and still freeze when a model degrades silently i
 
 **StaffLayer** — IC3 → IC5 → Staff reveals on the same scenario. The only place that shows you what "Staff-level thinking" actually means in ML.
 
-**CodeBugs** — Real production ML code with exactly one buried flaw. Find it before the interviewer does.
+**Bug Hunt** — Real production ML code with exactly one buried flaw. Find it before the interviewer does.
 
 ---
 
@@ -32,7 +32,7 @@ Ten simulation tools built around one goal — walk into the room ready.
 - **Spot the Flaw** — 12 adversarial analyses with a buried methodological error. Find it before the interviewer does.
 - **Trainer** — MCQ drill with weakness heatmap and spaced repetition queue.
 - **Staff Layer** — IC3 → IC5 → Staff answer reveals on the same question.
-- **Code Bugs** — 30 Python/SQL production bugs. One flaw per snippet.
+- **Bug Hunt** — 20 Python/SQL production bugs. One flaw per snippet.
 
 ---
 
@@ -50,13 +50,13 @@ Spark Lab · Airflow · dbt · Data Modeling
 Training Lab · Fine-tuning (LoRA/freeze) · DL Serving (quantization/GPU)
 
 ### Data Science
-DS Fundamentals · Causal Inference · Time Series
+Causal Inference · Time Series
 
 ### MLOps
 Monitoring · Deployment · CI/CD & Infra
 
 ### Read
-∇ Gradient — 25 long-form production ML posts linked directly to practice modules
+∇ Gradient — 50 long-form production ML posts linked directly to practice modules
 
 ---
 

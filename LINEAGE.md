@@ -46,6 +46,57 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.69 — MVP coherence sprint: skill-first nav, Bug Hunt, gating model, README (2026-06-05)
+
+**Nav restructure (App.jsx):**
+- Replaced FOUNDATIONS/SCENARIOS/PRACTICE/INTERVIEW/LEARN with skill-first taxonomy.
+- New NAV_SECTIONS: Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn.
+- Trainer moved from INTERVIEW → LABS (it's a drill, not an interview simulation).
+- BOTTOM_NAV_ITEMS updated: Scenarios → Practice (covers features/eval/systems/training/data sections), Practice → Labs. `sections` array added to each item; `isActive` logic uses `item.sections.includes(activeSection)` instead of single-ID match.
+
+**Code Bugs → Bug Hunt (App.jsx + README.md):**
+- Nav label changed from "Code Bugs" to "Bug Hunt". README updated accordingly.
+
+**Gating model locked (DECISIONS.md + AUDITS.md):**
+- Decision: tab-level AccessGate is the single gating model. `isFree` scenario-level flags in FeatureEngTab/ModelEvalTab/ClassicalMLTab are informational only — not enforced. No second gating system.
+
+**README cleanup:**
+- "DS Fundamentals" removed from Data Science section (tab deleted v4.61).
+- Bug Hunt count corrected: 30 → 20.
+- Gradient post count corrected: 25 → 50.
+- "CodeBugs" → "Bug Hunt" in product differentiators section.
+
+**Files modified:** `src/App.jsx`, `README.md`.
+
+---
+
+### v4.68 — Private-test readiness sprint: P0 fixes (2026-06-03)
+
+**P0.1 — Guided path first step (HomeTab.jsx):**
+- "Senior MLE in 4 weeks" step 1 changed from `defense` (gated) to `classical` (free).
+- Path now starts with Classical ML — accessible to all users, builds MCQ judgment before entering gated tools.
+- Spot the Flaw removed as step 7 (path now 7 steps: Classical → Defense → Q&A Bank → Combinator → Incident Room → ML Coding → Verbal).
+
+**P0.2 — Dead `ds` domain removed (App.jsx):**
+- `id: 'ds'` domain block in PRACTICE_DOMAINS referenced a tab deleted in v4.61.
+- Dead `DS Fundamentals` tab entry removed. `causal` and `ts` tabs retained under renamed domain `Causal & Time Series`.
+- Domain id changed to `causal_ts`. No tab routing broken — tabs themselves are unchanged.
+
+**P0.3 — First-session directive added (HomeTab.jsx):**
+- New amber callout block added between hero and progress callouts.
+- Only renders when `totalAttempted === 0` (true new user). Disappears after first scenario attempted.
+- Copy: "New here? Start with a 10-minute calibration" → CTA "Start first session →" → navigates to `classical`.
+- Does not render for returning users.
+
+**P0.4 (README — done previous commit):**
+- `DAI2026` removed from README.md lines 7 and 67. JD Prep removed from feature list.
+
+**All four P0 items resolved. MSL is now ready for a 3–5 person private test.**
+
+**Files modified:** `src/App.jsx`, `src/tabs/HomeTab.jsx`.
+
+---
+
 ### docs: PAL Architecture Reference (2026-06-03)
 
 - Added `docs/PAL_ARCHITECTURE_REFERENCE.md` — full blueprint for MSL auth sprint.

@@ -1,40 +1,26 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-03. Objective: MVP coherence before distribution. PM audit complete.
+Updated: 2026-06-05. Objective: Depth sprint — get Incident Room and ML Coding to 12 before first tester.
 
 ---
 
-## CURRENT SPRINT: Private-test readiness (P0)
+## ✅ DONE: Private-test readiness (P0) — v4.68
 
-All four items are S complexity. Do in one session before showing MSL to anyone.
+1. ~~Remove DAI2026 from public README~~ — done, committed
+2. ~~Fix "Senior MLE in 4 weeks" guided path step 1~~ — changed to `classical` (free tab)
+3. ~~Remove dead `ds` domain from PRACTICE_DOMAINS~~ — domain renamed `causal_ts`, DS tab removed
+4. ~~Add first-session directive to Home~~ — amber callout, renders only when `totalAttempted === 0`
 
-1. **Remove DAI2026 from public README** — access code appears twice in README.md (lines 7 and 67). Replace with "Email for access." The gate is meaningless if the code is published.
+## ✅ DONE: MVP coherence (P1) — v4.69
 
-2. **Fix "Senior MLE in 4 weeks" guided path** — step 1 is Defense Plan which immediately hits AccessGate for users without a code. Change step 1 to a free tab (e.g. ClassicalML or InterviewPrep Q&A). HomeTab.jsx GUIDED_PATHS.
-
-3. **Remove dead `ds` domain from PRACTICE_DOMAINS** — App.jsx still references `id: 'ds'` (Data Science tab deleted in v4.61). Dead data in the domain config. Remove the entire `ds` domain block from PRACTICE_DOMAINS array.
-
-4. **Add first-session directive to Home** — one visible block above entry paths on HomeTab: "New here? Start with the 10-min calibration" → link to ClassicalML or free Combinator questions. Without this, new users have no prescribed starting point.
-
----
-
-## NEXT SPRINT: MVP coherence (P1)
-
-Do after P0 is done and at least 2 testers have confirmed the product works.
-
-1. **Skill-first nav restructure** — replace current FOUNDATIONS/SCENARIOS/PRACTICE/INTERVIEW/LEARN with skill-first taxonomy: Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn. Already decided in DECISIONS.md. App.jsx NAV_SECTIONS + BottomNav + DesktopSidebar.
-
-2. **Move Trainer out of INTERVIEW** — Trainer is a drill tool (MCQ flashcard), not an interview simulation. Move to a Drills sub-section within the new skill nav or under Labs. Current placement creates wrong expectations.
-
-3. **Differentiate Code Bugs from ML Coding** — both in PRACTICE, similar names, different formats (Code Bugs = 20 static snippets, ML Coding = 7 live Pyodide problems). Rename Code Bugs → "Bug Hunt" and add a format subtitle on the card. 
-
-4. **Pick one gating model** — currently tab-level AccessGate conflicts with scenario-level isFree flags. Decision: keep tab-level gating (simpler, already working), strip isFree scenario-level enforcement that isn't wired. Log the decision in DECISIONS.md. App.jsx + FeatureEngTab + ModelEvalTab.
-
-5. **README cleanup** — remove JD Prep reference (deleted v4.61), update Incident Room count (6 not 3), update ML Coding count (7 not 3), verify "500+ engineers" claim or soften to "engineers."
+1. ~~Skill-first nav restructure~~ — Features/Evaluation/Systems/Training/Data/Interview/Labs/Learn. Trainer moved to Labs.
+2. ~~Code Bugs → Bug Hunt~~ — renamed in nav + README.
+3. ~~Gating model decision~~ — tab-level AccessGate is the single model; isFree flags informational only. Logged in DECISIONS.md.
+4. ~~README cleanup~~ — DS Fundamentals removed, Bug Hunt count corrected (20), Gradient posts updated (50).
 
 ---
 
-## AFTER MVP COHERENCE: Depth sprint (P1.5)
+## CURRENT SPRINT: Depth sprint (P1.5)
 
 Do only after structure is cleaner. Content before breadth expansion.
 

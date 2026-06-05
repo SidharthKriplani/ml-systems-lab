@@ -658,14 +658,14 @@ The emoji/mobile audit had been mislabelled `#009` (duplicate of the Visual Poli
 
 | # | Finding | Location | Severity | Status |
 |---|---------|----------|----------|--------|
-| 039.1 | Access code `DAI2026` published in public README (lines 7 and 67) — gate is meaningless | README.md | High | ⚠️ Open — fix in private-test readiness sprint |
-| 039.2 | Dead `ds` domain block in PRACTICE_DOMAINS — references tab deleted in v4.61, never cleaned up | App.jsx ~lines 156–162 | High | ⚠️ Open — fix in private-test readiness sprint |
-| 039.3 | "Senior MLE in 4 weeks" guided path step 1 is Defense Plan — hits AccessGate immediately for users without code | HomeTab.jsx GUIDED_PATHS | High | ⚠️ Open — fix in private-test readiness sprint |
-| 039.4 | Mixed nav taxonomy — FOUNDATIONS (content type), SCENARIOS (format), PRACTICE (activity), INTERVIEW (use case), LEARN (activity) — no consistent dimension | App.jsx NAV_SECTIONS | Medium | ⚠️ Open — fix in MVP coherence sprint (skill-first restructure already decided) |
-| 039.5 | isFree scenario-level flags (FeatureEngTab, ModelEvalTab, ClassicalMLTab) not enforced — tab-level AccessGate overrides, creating two conflicting gating systems | App.jsx, FeatureEngTab.jsx, ModelEvalTab.jsx | Medium | ⚠️ Open — decide one model in MVP coherence sprint |
-| 039.6 | Practice section thinness: Incident Room 6 scenarios, ML Coding 7 problems — below 12-minimum threshold set in DECISIONS.md | IncidentRoomTab.jsx, MLCodingTab.jsx | Medium | ⚠️ Open — address in depth sprint after structure |
-| 039.7 | README stale references: JD Prep listed (deleted v4.61), Incident Room count shows 3 (now 6), ML Coding count shows 3 (now 7) | README.md | Low | ⚠️ Open — fix in MVP coherence sprint |
-| 039.8 | Code Bugs vs ML Coding naming ambiguity — similar names, different formats, same PRACTICE section, creates user confusion | App.jsx nav labels, README | Low | ⚠️ Open — rename Code Bugs → "Bug Hunt" in MVP coherence sprint |
+| 039.1 | Access code `DAI2026` published in public README (lines 7 and 67) — gate is meaningless | README.md | High | ✅ Fixed v4.68 — README updated, code removed |
+| 039.2 | Dead `ds` domain block in PRACTICE_DOMAINS — references tab deleted in v4.61, never cleaned up | App.jsx ~lines 156–162 | High | ✅ Fixed v4.68 — domain renamed to `causal_ts`, ds tab removed |
+| 039.3 | "Senior MLE in 4 weeks" guided path step 1 is Defense Plan — hits AccessGate immediately for users without code | HomeTab.jsx GUIDED_PATHS | High | ✅ Fixed v4.68 — step 1 changed to `classical` (free tab) |
+| 039.4 | Mixed nav taxonomy — FOUNDATIONS (content type), SCENARIOS (format), PRACTICE (activity), INTERVIEW (use case), LEARN (activity) — no consistent dimension | App.jsx NAV_SECTIONS | Medium | ✅ Fixed v4.69 — skill-first nav: Features/Evaluation/Systems/Training/Data/Interview/Labs/Learn |
+| 039.5 | isFree scenario-level flags (FeatureEngTab, ModelEvalTab, ClassicalMLTab) not enforced — tab-level AccessGate overrides, creating two conflicting gating systems | App.jsx, FeatureEngTab.jsx, ModelEvalTab.jsx | Medium | ✅ Fixed v4.69 — decision locked: tab-level AccessGate is the single gating model; isFree flags are informational only |
+| 039.6 | Practice section thinness: Incident Room 6 scenarios, ML Coding 7 problems — below 12-minimum threshold set in DECISIONS.md | IncidentRoomTab.jsx, MLCodingTab.jsx | Medium | ⚠️ Open — address in depth sprint (P1.5) |
+| 039.7 | README stale references: JD Prep listed (deleted v4.61), Incident Room count shows 3 (now 6), ML Coding count shows 3 (now 7) | README.md | Low | ✅ Fixed v4.69 — DS Fundamentals removed, Bug Hunt count corrected to 20, Gradient posts updated to 50 |
+| 039.8 | Code Bugs vs ML Coding naming ambiguity — similar names, different formats, same PRACTICE section, creates user confusion | App.jsx nav labels, README | Low | ✅ Fixed v4.69 — Code Bugs renamed to Bug Hunt in nav + README |
 
 ### #020 — 2026-05-30 · Post-Sprint State Check (v4.28 + v4.29)
 
