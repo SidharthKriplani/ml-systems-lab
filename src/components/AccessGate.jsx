@@ -1,17 +1,35 @@
 import { useState } from 'react'
+import { ACCESS_CODE, STORAGE_KEY } from '../utils/unlock.js'
 
-const ACCESS_CODE = 'DAI2026'
+// ── AccessGate ─────────────────────────────────────────────────────────────────
+//
+// Single gate component. Accepts surface-specific copy via props so every
+// locked tab tells the user exactly what they're missing — outcome-framed,
+// not feature-listed.
+//
+// Props:
+//   onUnlock   fn(code) → called on successful unlock
+//   title      string   → surface-specific headline (e.g. "Full Mock Exam")
+//   body       string   → outcome-framed description (what they gain, not what they get)
+//   ctaLabel   string   → button label (default "Get access →")
 
-export default function AccessGate({ onUnlock }) {
+export default function AccessGate({
+  onUnlock,
+  title    = 'Premium content',
+  body     = 'Advanced modules, interview simulation tools, mock exams, and verbal practice are behind an access code. Enter yours to unlock everything on this device.',
+  ctaLabel = 'Get access →',
+}) {
   const [code,       setCode]       = useState('')
   const [error,      setError]      = useState(false)
   const [showMoment, setShowMoment] = useState(false)
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (code.trim().toUpperCase() === ACCESS_CODE) {
+    const entered = code.trim().toUpperCase()
+    if (entered === ACCESS_CODE) {
+      try { localStorage.setItem(STORAGE_KEY, ACCESS_CODE) } catch {}
       setShowMoment(true)
-      setTimeout(() => onUnlock(code.trim().toUpperCase()), 1300)
+      setTimeout(() => onUnlock(entered), 1300)
     } else {
       setError(true)
       setTimeout(() => setError(false), 1800)
@@ -85,11 +103,11 @@ export default function AccessGate({ onUnlock }) {
         </div>
 
         <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.04em', marginBottom: '10px', lineHeight: 1.2 }}>
-          This content requires access.
+          {title}
         </h2>
 
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.65, marginBottom: '28px' }}>
-          Advanced modules, interview simulation tools, mock exams, and verbal practice are behind an access code. Enter yours below to unlock everything.
+          {body}
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -115,19 +133,17 @@ export default function AccessGate({ onUnlock }) {
               transition: 'border-color 0.15s',
             }}
           />
-
           {error && (
             <p style={{ fontSize: '12px', color: 'var(--rose)', marginBottom: '10px', fontFamily: 'var(--font-mono)' }}>
               Incorrect code. Try again.
             </p>
           )}
-
           <button
             type="submit"
             className="btn-primary"
             style={{ width: '100%', padding: '12px', fontSize: '14px' }}
           >
-            Unlock →
+            {ctaLabel}
           </button>
         </form>
 

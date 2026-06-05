@@ -251,6 +251,43 @@ Roles get renamed constantly across companies and assume the user already knows 
 **MSL vs GAL content boundary — retrieval and generative AI scenarios.**  
 MSL covers production ML for traditional/statistical ML systems. GAL (GenAI Systems Lab) covers LLM-based and generative AI systems. The boundary applies to retrieval scenarios specifically: ANN / vector search for recommendation at scale (HNSW, IVF, index staleness, candidate generation quality) belongs in MSL — these are infrastructure decisions every platform MLE faces. RAG-specific scenarios (chunking strategy, embedding drift, hallucination from retrieval gaps, context window allocation) belong in GAL — these are LLM-systems concerns. When a scenario involves both (e.g., a recommendation system migrating to embedding-based retrieval), classify by the primary judgment being tested. Any new scenario that touches LLM inference, prompt engineering, or generation quality defaults to GAL unless the judgment is clearly about the ML pipeline (training, serving latency, drift) rather than the LLM behavior.
 
+## Monetization plumbing (adopted from PAL, 2026-06-05)
+
+**Three tiers: Free → Premium (access code) → Stripe (future).**
+Free tier: home, landscape, gradient, ask, models, features, eval, classical. Enough to understand the product and build genuine value. Premium tier (access code): everything — all Interview zone tools, all Labs, all advanced practice modules. Stripe tier (future): same as Premium, validated server-side. The access code community tier coexists with Stripe — it does not go away when Stripe ships.
+
+**`src/utils/unlock.js` is the single source of truth for access logic.**
+`isUnlocked()`, `unlock()`, `getAccessTier()`, `ACCESS_CODE`, and `STORAGE_KEY` all live there. Do not read `localStorage` directly for access state anywhere else in the codebase. Any future Stripe validation is added here only.
+
+**`AccessGate` is the single gate component.**
+No inline gate logic in tab components. Every locked surface uses `<AccessGate title="" body="" ctaLabel="" onUnlock={} />`. Copy is surface-specific and outcome-framed — not feature-listed. The `GATE_COPY` map in App.jsx is the authoritative source of gate copy per tab. Consistent visual language, contextual copy via props.
+
+**Gate copy must be outcome-framed, not feature-listed.**
+Wrong: "Unlock 7 ML coding problems." Right: "7 Python problems from real senior/staff loops. Live Pyodide execution. The format most engineers skip and then fail on." The copy must describe what the user achieves, not what the feature does. Apply this rule to all new gate copy and any revision of existing copy.
+
+**`Plans & Access` tab is the canonical conversion surface.**
+All "unlock" CTAs in the app navigate to the `plans` tab. The Plans page shows the Free vs Premium tier breakdown and the access code input field. Do not add a second access-code entry point anywhere else in the app.
+
+**`GATE_COPY` in App.jsx must have an entry for every tab in `PREMIUM_TABS`.**
+When adding a new premium tab, add the entry to `GATE_COPY` in the same commit. A tab without a `GATE_COPY` entry falls back to the generic default — acceptable temporarily, not acceptable at launch.
+
+**No 10-question session gates. Ever.**
+Session-based content limits add friction without conversion benefit. A guest who hits a limit thinks the product is broken, not that they should get access. The access code model already scopes access cleanly.
+
+## Content quality rules (from PAL/GSL audit, 2026-06-05)
+
+**Decision-first, never definition-first.**
+Every scenario, module, and Gradient post opens with a situation — not a definition. The scenario on feature store drift starts with "Your model accuracy dropped 4% on Tuesday with no deployment" — not "Feature drift occurs when...". This applies to every new scenario and every revision.
+
+**Every interactive module must meet the Configure → Logic → Outcome → Diagnosis standard.**
+A module that presents information without requiring user input is a reference table, not an interactive. Reference tables belong in Gradient posts, not in tabs. Every module in IncidentRoom, MLCoding, and the Project Labs already meets this bar. New modules must too.
+
+**Every module must end with a forward pointer.**
+At minimum, one of: a related Gradient post link, the next logical tab to visit, or a specific scenario in another tab that builds on this one. Silent module endings break the learn loop at the most important moment. See `docs/CONTENT_QUALITY_BAR.md`.
+
+**`RECENTLY_ADDED` in HomeTab.jsx must be updated when content ships.**
+When new scenarios, posts, or features ship, add an entry to `RECENTLY_ADDED` in the same commit. Returning users must be able to see what changed since their last visit. Maximum 5 items shown at a time; array can grow indefinitely.
+
 **Build the visualization only after 15+ approved submissions.**  
 A frequency chart built from fewer than 15 data points is misleading — one outlier submission can skew a category by 10+ percentage points. The submission form and admin curation process (v1) ships independently of the visualization (v2). The chart is not built until the corpus is large enough to tell a real story.
 

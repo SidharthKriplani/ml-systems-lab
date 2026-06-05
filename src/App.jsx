@@ -5,6 +5,7 @@ import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
+import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 
 
 const HomeTab           = lazy(() => import('./tabs/HomeTab.jsx'))
@@ -42,6 +43,7 @@ const MLCodingTab       = lazy(() => import('./tabs/MLCodingTab.jsx'))
 const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
+const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -81,28 +83,66 @@ const ALL_TABS = [
   { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
   { id: 'fraud_detection', component: FraudDetectionTab },
+  { id: 'plans',           component: PlansTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
-// Free: home, landscape, gradient, ask, models, features, eval, classical
-// Premium: all Interview zone, all interview tools, all advanced practice modules
+// Free:    home, landscape, gradient, ask, models, features, eval, classical
+// Premium: all Interview zone tools, all Labs, all advanced practice modules
+// Tiers:   Anonymous (free tabs) → Code holder (all tabs) → Stripe (future)
+// See src/utils/unlock.js for the single source of truth on access logic.
 const PREMIUM_TABS = new Set([
-  // Interview zone (Defense Plan is free — has internal gate)
+  // Interview zone
   'interview', 'takehome', 'combinator', 'verbal', 'spottheflaw', 'incidentroom', 'mlcoding',
-  // Interview tools (Practice > Drills domain)
+  // Labs (drill tools + project labs)
   'trainer', 'codebugs', 'casestudies', 'stafflayer',
+  'projectlab', 'loan_default', 'fraud_detection',
   // Advanced practice modules
   'design', 'spark', 'airflow', 'dbt', 'modeling',
   'dl', 'dl_finetune', 'dl_serving',
-  'ds', 'causal', 'ts',
+  'causal', 'ts',
   'monitor', 'mlops_deploy', 'mlops_pipes',
-  'projectlab', 'loan_default', 'fraud_detection',
 ])
-const ACCESS_CODE = 'DAI2026'
+
+// ── Gate copy — outcome-framed per surface (PAL pattern) ──────────────────────
+// Every locked tab shows copy specific to what the user is missing.
+// copy: { title, body, ctaLabel }. ctaLabel defaults to "Get access →".
+const GATE_COPY = {
+  // ── Interview tools ──
+  interview:    { title: '128 curated MLE questions',         body: 'Every question has a model answer and a 4-tier scoring guide. The fastest way to close gaps before the loop starts.' },
+  combinator:   { title: 'Full mock exam — 45 minutes',       body: '100 questions locked until the clock stops. A full per-domain debrief when you finish. The closest simulation to the real screen.' },
+  verbal:       { title: 'Verbal practice with live recording', body: 'Record yourself answering out loud. Hear the gap between knowing and saying. 25 prompts used in real interview loops.' },
+  spottheflaw:  { title: 'Spot the Flaw — 12 adversarial analyses', body: 'Each analysis contains exactly one buried methodological error. Find it before the interviewer does. The hardest format in the loop.' },
+  incidentroom: { title: 'Production incident diagnosis',     body: '6 cross-domain incidents requiring reasoning across Feature Eng, Monitoring, Serving, and Experimentation. Multi-step, no MCQ.' },
+  mlcoding:     { title: 'ML coding — live in browser',       body: '7 Python problems from real senior/staff loops. Custom loss, vectorized features, k-fold from scratch. Live Pyodide execution.' },
+  takehome:     { title: '15 open-ended system design questions', body: 'No time limit. Write your answer, then compare against a senior model response. The format most engineers underestimate.' },
+  stafflayer:   { title: 'Staff-level answer reveals',        body: 'The same scenario answered at IC3, IC5, and Staff. See what "Staff-level thinking" actually means — not just a better answer, a different frame.' },
+  trainer:      { title: 'MCQ drill + weakness heatmap',      body: '60 questions with immediate feedback. A spaced repetition queue surfaces what to revisit. The fastest feedback loop in the product.' },
+  codebugs:     { title: 'Bug Hunt — 20 production snippets', body: 'Each snippet has exactly one buried flaw that ships silently in production. Find it before the interviewer does.' },
+  casestudies:  { title: 'Netflix, Uber, Airbnb, DoorDash, Spotify', body: 'Real ML system decisions at scale — not case studies invented for a textbook. What did they actually build and why?' },
+  // ── Project Labs ──
+  projectlab:     { title: 'End-to-end ML project — Telco Churn',   body: 'A full DS notebook in your browser. Real Pyodide execution across 5 phases: EDA → Features → Model → Monitoring → Deployment.' },
+  loan_default:   { title: 'End-to-end ML project — Loan Default',  body: 'Credit risk notebook with ECOA fairness audit, proxy detection, and PSI drift monitoring. 4 phases, live execution.' },
+  fraud_detection:{ title: 'End-to-end ML project — Fraud Detection', body: '1:200 class imbalance, SMOTE, precision@K, and an ops runbook. The production ML problem most candidates have never simulated.' },
+  // ── Advanced practice modules ──
+  design:      { title: 'ML system design scenarios',    body: 'Two-tower systems, ML platform decisions, real incident diagnosis. The format that trips up most senior loop candidates.' },
+  spark:       { title: 'Spark production failures',     body: 'Shuffle, skew, broadcast join decisions. The failures you only see when debugging a 6-hour job in production.' },
+  airflow:     { title: 'Airflow DAG failures',          body: 'Backfill decisions, late data handling, silent DAG failures. What actually breaks in production orchestration.' },
+  dbt:         { title: 'dbt production failures',       body: 'Materialization tradeoffs, schema drift, incremental model failures. The decisions a senior data engineer owns.' },
+  modeling:    { title: 'Data modeling scenarios',       body: 'Star schema vs OBT, SCDs, OLAP format decisions. The upstream choices that make or break downstream ML.' },
+  dl:          { title: 'Deep learning training failures', body: 'Loss spikes, gradient issues, training instability. The production DL failures that don\'t appear in courses.' },
+  dl_finetune: { title: 'Fine-tuning judgment scenarios', body: 'LoRA vs full fine-tune, freeze decisions, LR strategy. What actually moves the needle when adapting a model.' },
+  dl_serving:  { title: 'DL serving failures',           body: 'Quantization tradeoffs, GPU memory management, serving latency. The production failures that happen after the model is trained.' },
+  causal:      { title: 'Causal inference scenarios',    body: 'Identification, uplift modeling, observational vs experimental. The hardest judgment calls in production data science.' },
+  ts:          { title: 'Time series failures',          body: 'Stationarity violations, anomaly detection, seasonality handling. The production failures in forecasting systems.' },
+  monitor:     { title: 'Model monitoring — live computation', body: 'PSI, KS statistic, prediction drift — with a live Pyodide computation lab. The production triage skills most ML engineers lack.' },
+  mlops_deploy:{ title: 'Deployment strategy scenarios', body: 'Champion-challenger, canary, rollback decisions. What a senior MLE owns when a model goes to production.' },
+  mlops_pipes: { title: 'CI/CD & infra decisions',       body: 'Model registry gates, infrastructure decisions, pipeline failure modes. The MLOps judgment layer most engineers skip.' },
+}
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
-  home: 'today', landscape: 'today',
+  home: 'today', landscape: 'today', plans: 'today',
   gradient: 'read',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
@@ -624,6 +664,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
       <nav style={{ flex: 1, padding: '6px 0 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
         <NavItem id="home" label="Home" />
+        <NavItem id="plans" label="Plans & Access" />
         <div style={{ height: '1px', background: 'var(--rim)', margin: '6px 0' }} />
 
         {NAV_SECTIONS.map(section => {
@@ -779,14 +820,14 @@ export default function App() {
   )
   const [searchOpen,  setSearchOpen]  = useState(false)
   const [tabProgress, setTabProgress] = useState(() => readTabProgress())
-  const [isUnlocked,  setIsUnlocked]  = useState(() => localStorage.getItem('msl_access') === ACCESS_CODE)
+  const [isUnlocked,  setIsUnlocked]  = useState(() => checkUnlocked())
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('msl_theme') || 'dark' } catch { return 'dark' }
   })
 
   function handleUnlock(code) {
-    if (code === ACCESS_CODE) {
-      localStorage.setItem('msl_access', code)
+    if (code?.trim().toUpperCase() === ACCESS_CODE) {
+      try { localStorage.setItem(STORAGE_KEY, ACCESS_CODE) } catch {}
       setIsUnlocked(true)
     }
   }
@@ -858,7 +899,15 @@ export default function App() {
       )
     }
     if (PREMIUM_TABS.has(activeTab) && !isUnlocked) {
-      return <AccessGate onUnlock={handleUnlock} />
+      const copy = GATE_COPY[activeTab] || {}
+      return (
+        <AccessGate
+          onUnlock={handleUnlock}
+          title={copy.title}
+          body={copy.body}
+          ctaLabel={copy.ctaLabel}
+        />
+      )
     }
     const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (

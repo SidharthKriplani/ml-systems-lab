@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
 import { downloadProgressJSON } from '../utils/export.js'
 
+// ── Recently added — update when new content ships ────────────────────────────
+const RECENTLY_ADDED = [
+  { date: '2026-06-05', label: 'Skill-first nav',          desc: 'Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn',  tab: 'home' },
+  { date: '2026-06-05', label: 'Plans & Access page',      desc: 'Free vs Premium tier breakdown + access code entry in one place',               tab: 'plans' },
+  { date: '2026-06-03', label: 'Guided paths',             desc: 'Senior MLE 4-week path, Data Eng path, Quick Calibration path on Home',         tab: 'home' },
+  { date: '2026-06-03', label: 'Incident Room — 6 cases',  desc: 'inc4 resolution lag · inc5 feature store schema mismatch · inc6 zero-variance',  tab: 'incidentroom' },
+  { date: '2026-06-03', label: 'ML Coding — 7 problems',   desc: 'mlc4–mlc6 added: retry decorator, Pydantic ModelConfig, CDC dedup',             tab: 'mlcoding' },
+]
+
 // ── Section tab registry ───────────────────────────────────────────────────────
 const SECTION_TABS = {
   foundations: ['models', 'classical'],
@@ -178,6 +187,26 @@ export default function HomeTab({ onNavigate }) {
             style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Start first session →
           </button>
+        </div>
+      )}
+
+      {/* ── Recently added ────────────────────────────────────────────────── */}
+      {totalAttempted > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Recently added</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {RECENTLY_ADDED.slice(0, 3).map(item => (
+              <button key={item.label} onClick={() => onNavigate(item.tab)}
+                style={{ textAlign: 'left', padding: '10px 14px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', flexShrink: 0, minWidth: '68px' }}>{item.date.slice(5)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '1px' }}>{item.label}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div>
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', flexShrink: 0 }}>→</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

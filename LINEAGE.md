@@ -46,6 +46,41 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.70 — PAL/GSL parity sprint: monetization plumbing, outcome-framed gates, Plans page, Recently Added (2026-06-05)
+
+**`src/utils/unlock.js` (new file):**
+- Single source of truth for access logic. Exports: `ACCESS_CODE`, `STORAGE_KEY`, `isUnlocked()`, `unlock()`, `getAccessTier()`.
+- App.jsx and AccessGate.jsx now import from here. No more direct localStorage reads for access state anywhere.
+
+**AccessGate.jsx — outcome-framed copy (PAL pattern):**
+- Now accepts `title`, `body`, `ctaLabel` props. Generic fallback copy kept as defaults.
+- Import changed: pulls `ACCESS_CODE` and `STORAGE_KEY` from `utils/unlock.js`.
+
+**`GATE_COPY` map in App.jsx:**
+- 27-entry map covering every premium tab with surface-specific, outcome-framed copy.
+- `renderContent()` passes the correct entry to `<AccessGate>` for the active tab.
+- Pattern: "what you gain" not "what you get". e.g. Combinator: "100 questions locked until the clock stops. The closest simulation to the real screen."
+
+**`src/tabs/PlansTab.jsx` (new file):**
+- Free vs Premium tier breakdown. Access code input with unlock animation. "Full Lab" badge on premium card.
+- Wired as tab `plans`, zone `today`. Sidebar NavItem "Plans & Access" added below Home.
+- Canonical conversion surface — all "unlock" CTAs should route here.
+
+**Recently Added strip (HomeTab.jsx):**
+- `RECENTLY_ADDED` static array at top of file. Developers update it when content ships.
+- Renders top 3 items as clickable cards, visible only to returning users (`totalAttempted > 0`).
+- Gives returning users a signal when content changes since their last visit.
+
+**`docs/CONTENT_QUALITY_BAR.md` (new file):**
+- Four-check quality standard: one failure mode, tempting antiPattern, scenario-specific staffFraming, production tell required.
+- Interactive module standard (Configure→Logic→Outcome→Diagnosis) from GSL.
+- Content depth thresholds (12-item minimum per practice area).
+
+**Files modified:** `src/App.jsx`, `src/tabs/HomeTab.jsx`, `src/components/AccessGate.jsx`.
+**Files created:** `src/utils/unlock.js`, `src/tabs/PlansTab.jsx`, `docs/CONTENT_QUALITY_BAR.md`.
+
+---
+
 ### v4.69 — MVP coherence sprint: skill-first nav, Bug Hunt, gating model, README (2026-06-05)
 
 **Nav restructure (App.jsx):**
