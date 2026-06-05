@@ -867,6 +867,13 @@ export default function App() {
     }
   }
 
+  // Listen for msl-unlock fired by AccessGate (including scenario-level gates in free tabs)
+  useEffect(() => {
+    function onUnlockEvent() { setIsUnlocked(true) }
+    window.addEventListener('msl-unlock', onUnlockEvent)
+    return () => window.removeEventListener('msl-unlock', onUnlockEvent)
+  }, [])
+
   // Navigate to any tabId from anywhere
   const goTo = useCallback((tabId) => {
     setActiveTab(tabId)

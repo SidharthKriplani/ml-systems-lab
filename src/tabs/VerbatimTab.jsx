@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 const QUESTIONS = [
   { id: 1, category: 'System Design', text: 'Walk me through how you would design a real-time recommendation system for a platform with 100 million users.' },
@@ -261,6 +262,10 @@ export default function VerbatimTab({ onNavigate }) {
             </p>
           )}
         </div>
+        <HowToStrip
+          skill="Closing the gap between knowing and saying"
+          steps={['Pick a question', 'Record yourself answering out loud', 'Self-rate on clarity, completeness, conciseness, confidence']}
+        />
 
         {/* Category filter */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>

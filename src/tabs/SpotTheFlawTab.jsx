@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 const SCENARIOS = [
   {
@@ -438,6 +439,10 @@ export default function SpotTheFlawTab({ onNavigate }) {
         <p style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>Not code bugs — methodology errors. Data leakage, evaluation mistakes, distribution shift, metric mismatch, labeling artifacts.</p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
+      <HowToStrip
+        skill="Identifying buried methodological flaws"
+        steps={['Read the analysis — it looks reasonable by design', 'Select the flaw category you think applies', 'See the exact error and how to fix it']}
+      />
 
       {/* Score strip */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 16px', background: 'linear-gradient(160deg, var(--card-tint) 0%, var(--depth) 40%)', borderRadius: '10px', border: '1px solid var(--rim)' }}>

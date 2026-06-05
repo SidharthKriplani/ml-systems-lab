@@ -48,7 +48,15 @@ Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint
 
 ---
 
-## CURRENT SPRINT: Intuition sprint (P2)
+## ✅ DONE: Intuition sprint (v4.74)
+
+1. ~~Unlock statefulness~~ — `CustomEvent('msl-unlock')` from AccessGate; App.jsx listener calls `setIsUnlocked(true)`
+2. ~~HowToStrip component~~ — applied to 9 tabs: IncidentRoom, MLCoding, SpotTheFlaw, FeatureEng, ClassicalML, ModelEval, ModelsMath, Combinator, Verbal
+3. ~~Session memory~~ — `msl_featureeng_active`, `msl_classical_active`, `msl_modeleval_active`, `msl_mathfound_active` keys; module persisted on every switch
+
+---
+
+## CURRENT SPRINT: Intuition sprint continued (P2)
 
 MSL is now at private-test threshold. The highest-leverage work is UX clarity — making every tab self-explanatory without a tutorial.
 

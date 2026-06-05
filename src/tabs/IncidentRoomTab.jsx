@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 const LS_KEY = 'msl_score:incidentroom'
 
@@ -805,6 +806,10 @@ export default function IncidentRoomTab({ onNavigate }) {
         </p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
+      <HowToStrip
+        skill="Cross-domain production incident diagnosis"
+        steps={['Read the situation — no scrolling ahead', 'Choose your first diagnostic action', 'Follow the finding to the root cause']}
+      />
 
       {/* Progress */}
       {done > 0 && (

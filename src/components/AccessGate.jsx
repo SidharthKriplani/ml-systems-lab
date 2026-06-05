@@ -28,6 +28,7 @@ export default function AccessGate({
     const entered = code.trim().toUpperCase()
     if (entered === ACCESS_CODE) {
       try { localStorage.setItem(STORAGE_KEY, ACCESS_CODE) } catch {}
+      window.dispatchEvent(new CustomEvent('msl-unlock'))
       setShowMoment(true)
       setTimeout(() => onUnlock(entered), 1300)
     } else {

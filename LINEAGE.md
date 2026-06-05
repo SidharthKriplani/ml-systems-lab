@@ -46,6 +46,28 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.74 — Intuition sprint: HowToStrip, unlock statefulness, session memory (2026-06-05)
+
+**Unlock statefulness fix (AccessGate.jsx + App.jsx):**
+- `AccessGate` dispatches `CustomEvent('msl-unlock')` on successful code entry
+- App.jsx listens via `useEffect` and calls `setIsUnlocked(true)`
+- Unlocking via a scenario-level gate inside a free tab now immediately unlocks the full app — no reload required
+
+**`src/components/HowToStrip.jsx` (new component):**
+- Always-visible entry context strip: skill name + 2–3 numbered steps
+- Applied to 9 tabs: IncidentRoom, MLCoding, SpotTheFlaw, FeatureEng, ClassicalML, ModelEval, ModelsMath, Combinator, VerbatimTab
+- Pattern from GSL — frames the session before the user's first choice, works on mobile (no hover required)
+
+**Tab-level session memory (4 free tabs):**
+- `msl_featureeng_active`, `msl_classical_active`, `msl_modeleval_active`, `msl_mathfound_active` keys
+- Each tab reads active module from localStorage on mount, writes on every module switch
+- Returning users resume exactly where they left off
+
+**Files modified:** `src/components/AccessGate.jsx`, `src/App.jsx`, `src/tabs/FeatureEngTab.jsx`, `src/tabs/ClassicalMLTab.jsx`, `src/tabs/ModelEvalTab.jsx`, `src/tabs/ModelsMathTab.jsx`, `src/tabs/CombinatorTab.jsx`, `src/tabs/VerbatimTab.jsx`, `src/tabs/IncidentRoomTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/SpotTheFlawTab.jsx`.
+**Files created:** `src/components/HowToStrip.jsx`.
+
+---
+
 ### v4.73 — Depth sprint: Incident Room 12/12, ML Coding 12/12 (2026-06-05)
 
 **Incident Room — inc7–inc12 (6 new scenarios):**

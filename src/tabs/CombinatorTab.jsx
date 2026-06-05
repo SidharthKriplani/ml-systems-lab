@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { trackModuleComplete } from '../analytics'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 // ─── Question Bank ──────────────────────────────────────────────────────────
 
@@ -1237,6 +1238,10 @@ export default function CombinatorTab({ onNavigate }) {
           </p>
           <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
         </div>
+        <HowToStrip
+          skill="Full mock interview exam under time pressure"
+          steps={['Set your duration — answers lock when time ends', 'Answer every question without peeking at results', 'Review your per-domain debrief after the session']}
+        />
 
         {_saved?.screen === 'session' && (
           <div style={{

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
+import HowToStrip from '../components/HowToStrip.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
@@ -780,7 +781,10 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
 }
 
 export default function ModelEvalTab({ onNavigate }) {
-  const [active, setActive] = useState('metric')
+  const [active, setActive] = useState(() => {
+    try { return localStorage.getItem('msl_modeleval_active') || 'metric' } catch { return 'metric' }
+  })
+  function setActiveAndPersist(id) { setActive(id); try { localStorage.setItem('msl_modeleval_active', id) } catch {} }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
   const activeModuleData = MODULES.find(m => m.id === active)
@@ -808,11 +812,15 @@ export default function ModelEvalTab({ onNavigate }) {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a production scenario. Pick your answer — then see what breaks in production and why every wrong option fails.</p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
+      <HowToStrip
+        skill="Model evaluation decision-making"
+        steps={['Select a module', 'Pick your answer to the production scenario', 'See what the wrong options miss and what a senior engineer catches']}
+      />
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-            <button onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`} style={{ paddingRight: '8px' }}>{m.label}</button>
+            <button onClick={() => setActiveAndPersist(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`} style={{ paddingRight: '8px' }}>{m.label}</button>
             <button onClick={(e) => { e.stopPropagation(); toggleBookmark('modeleval', m.id, m.label); forceUpdate(n => n+1) }}
               title={isBookmarked('modeleval', m.id) ? 'Remove bookmark' : 'Bookmark module'}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontSize: '12px', color: isBookmarked('modeleval', m.id) ? 'var(--prime)' : 'var(--ink-ghost)', lineHeight: 1 }}>

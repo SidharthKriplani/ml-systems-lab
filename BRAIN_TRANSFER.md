@@ -158,7 +158,7 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.73 complete — 2026-06-05):**
+**Current state (v4.74 complete — 2026-06-05):**
 
 ### Version history this session
 - v4.68: P0 fixes (guided path, dead ds, first-session directive, README)
@@ -230,11 +230,13 @@ All high/medium findings resolved. Low findings remaining:
 - **Git lock** — sandbox cannot remove `.git/index.lock`. User must run `rm -f .git/index.lock .git/HEAD.lock` before every commit.
 - **GitHub OAuth** — not yet live-tested (Supabase provider enabled, redirect URI not confirmed)
 
-### Next sprint: Intuition sprint
-See NEXT.md for full queue. Top 3 items:
-1. HowTo framing strip on every tab (GSL pattern — always-visible entry context)
-2. Forward pointers on scenario reveals (`relatedPost` field → Gradient link at reveal)
-3. Unlock state propagation fix (dispatch `msl-unlock` CustomEvent from AccessGate; App.jsx listens and calls `setIsUnlocked(true)`)
+### v4.74 additions
+- `src/components/HowToStrip.jsx` — reusable entry context strip, applied to 9 tabs
+- Session memory keys: `msl_featureeng_active`, `msl_classical_active`, `msl_modeleval_active`, `msl_mathfound_active`
+- AccessGate dispatches `CustomEvent('msl-unlock')` on success; App.jsx listener syncs `isUnlocked` state
+
+### Next sprint
+See NEXT.md. Remaining intuition items: forward pointers on scenario reveals, empty state improvements.
 
 **Do NOT start:** new content domains, new tabs beyond what's in NEXT.md, public distribution, Stripe, SpotTheFlaw three-tier pass (secondary), auth expansion beyond Google OAuth.
 

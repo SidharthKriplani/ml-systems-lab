@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
+import HowToStrip from '../components/HowToStrip.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
@@ -1550,7 +1551,10 @@ const MODULES = [
 const COMING_SOON = []
 
 export default function ClassicalMLTab({ onNavigate }) {
-  const [activeModule, setActiveModule] = useState('zoo')
+  const [activeModule, setActiveModule] = useState(() => {
+    try { return localStorage.getItem('msl_classical_active') || 'zoo' } catch { return 'zoo' }
+  })
+  function setActiveModuleAndPersist(id) { setActiveModule(id); try { localStorage.setItem('msl_classical_active', id) } catch {} }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
 
   const ActiveComponent = MODULES.find(m => m.id === activeModule)?.component
@@ -1587,13 +1591,17 @@ export default function ClassicalMLTab({ onNavigate }) {
           You know how these models work. This covers when they break in production — silently, confidently, and in ways the training metrics never warned you about.
         </p>
       </div>
+      <HowToStrip
+        skill="Classical ML failure mode recognition"
+        steps={['Select a module or scenario', 'Pick your answer — commit before peeking', 'See the production tell: what this failure looks like in a live system']}
+      />
 
       {/* Module nav */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '28px' }}>
         {MODULES.map(mod => (
           <button
             key={mod.id}
-            onClick={() => setActiveModule(mod.id)}
+            onClick={() => setActiveModuleAndPersist(mod.id)}
             style={{
               display: 'flex',
               alignItems: 'center',

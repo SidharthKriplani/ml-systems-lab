@@ -4,6 +4,7 @@ import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -724,7 +725,10 @@ const MODULES = [
 ]
 
 export default function ModelsMathTab({ onNavigate }) {
-  const [active, setActive] = useState('pca')
+  const [active, setActive] = useState(() => {
+    try { return localStorage.getItem('msl_mathfound_active') || 'pca' } catch { return 'pca' }
+  })
+  function setActiveAndPersist(id) { setActive(id); try { localStorage.setItem('msl_mathfound_active', id) } catch {} }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? PCAExplorer
   const activeModuleData = MODULES.find(m => m.id === active)
@@ -741,11 +745,15 @@ export default function ModelsMathTab({ onNavigate }) {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a real scenario. Pick your answer — then run the Python cell to verify your intuition against the actual numbers.</p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="faithful" /></div>
       </div>
+      <HowToStrip
+        skill="Mathematical intuition for ML systems"
+        steps={['Select a module', 'Work through the scenario and pick your answer', 'Run the Python cell to verify against real numbers']}
+      />
 
       {/* Module picker */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)}
+          <button key={m.id} onClick={() => setActiveAndPersist(m.id)}
             className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
           </button>
         ))}

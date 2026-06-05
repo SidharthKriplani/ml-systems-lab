@@ -3,6 +3,7 @@ import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -1292,7 +1293,10 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
 }
 
 export default function FeatureEngTab({ onNavigate }) {
-  const [active, setActive] = useState('skew')
+  const [active, setActive] = useState(() => {
+    try { return localStorage.getItem('msl_featureeng_active') || 'skew' } catch { return 'skew' }
+  })
+  function setActiveAndPersist(id) { setActive(id); try { localStorage.setItem('msl_featureeng_active', id) } catch {} }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? SkewSimulator
   const activeModuleData = MODULES.find(m => m.id === active)
@@ -1309,9 +1313,13 @@ export default function FeatureEngTab({ onNavigate }) {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a production scenario. Pick your answer — then see what breaks in production and why every wrong option fails.</p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="conceptual" /></div>
       </div>
+      <HowToStrip
+        skill="Feature engineering production judgment"
+        steps={['Select a module from the list below', 'Work through the production scenario', 'See the staffFraming — what a senior engineer checks first']}
+      />
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActive(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
+          <button key={m.id} onClick={() => setActiveAndPersist(m.id)} className={`sub-tab ${active === m.id ? 'active' : 'inactive'}`}>{m.label}
           </button>
         ))}
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import PythonCell from '../components/PythonCell.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import HowToStrip from '../components/HowToStrip.jsx'
 
 const LS_KEY = 'msl_score:mlcoding'
 
@@ -1318,6 +1319,10 @@ export default function MLCodingTab({ onNavigate }) {
         </p>
         <div style={{ marginTop: '8px' }}><FidelityBadge tier="faithful" /></div>
       </div>
+      <HowToStrip
+        skill="Production ML coding judgment"
+        steps={['Read the problem and constraints', 'Write your solution in the live editor', 'Answer the judgment checkpoint — what breaks in production?']}
+      />
 
       {done > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
