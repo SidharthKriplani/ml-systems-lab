@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
+import { isUnlocked } from '../utils/unlock.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
@@ -1548,9 +1549,9 @@ const MODULES = [
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 const COMING_SOON = []
 
-export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
+export default function ClassicalMLTab({ onNavigate }) {
   const [activeModule, setActiveModule] = useState('zoo')
-  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
+  const [unlocked, setUnlocked] = useState(() => isUnlocked())
 
   const ActiveComponent = MODULES.find(m => m.id === activeModule)?.component
   const activeModuleData = MODULES.find(m => m.id === activeModule)
@@ -1622,8 +1623,12 @@ export default function ClassicalMLTab({ onNavigate, accessCode = null }) {
 
       {/* Module content */}
       <div className="animate-slide-up">
-        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
-          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        {activeModuleData && !activeModuleData.isFree && !unlocked ? (
+          <AccessGate
+            onUnlock={() => setUnlocked(true)}
+            title="Mid & senior Classical ML scenarios"
+            body="Ensemble failure modes, hyperparameter traps, and the judgment calls that separate a passing answer from a hired one. The scenarios that trip up engineers who've only studied, not shipped."
+          />
         ) : (
           ActiveComponent && <ActiveComponent />
         )}

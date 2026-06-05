@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
+import { isUnlocked } from '../utils/unlock.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
@@ -1290,9 +1291,9 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
-export default function FeatureEngTab({ onNavigate, accessCode = null }) {
+export default function FeatureEngTab({ onNavigate }) {
   const [active, setActive] = useState('skew')
-  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
+  const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? SkewSimulator
   const activeModuleData = MODULES.find(m => m.id === active)
 
@@ -1333,8 +1334,12 @@ export default function FeatureEngTab({ onNavigate, accessCode = null }) {
         </div>
       )}
       <div key={active} className="tab-enter">
-        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
-          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        {activeModuleData && !activeModuleData.isFree && !unlocked ? (
+          <AccessGate
+            onUnlock={() => setUnlocked(true)}
+            title="Senior & mid-level Feature Engineering modules"
+            body="Skew, leakage, feature stores, window aggregation, online vs offline serving — the production decisions that determine whether your features degrade silently or stay clean."
+          />
         ) : (
           <ActiveModule />
         )}

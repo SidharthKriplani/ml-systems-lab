@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import AccessGate from '../components/AccessGate.jsx'
+import { isUnlocked } from '../utils/unlock.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
@@ -778,10 +779,9 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
-export default function ModelEvalTab({ onNavigate, accessCode = null }) {
+export default function ModelEvalTab({ onNavigate }) {
   const [active, setActive] = useState('metric')
-  const [, forceUpdate] = useState(0)
-  const accessCodeFromStorage = accessCode ?? localStorage.getItem('msl_access')
+  const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
   const activeModuleData = MODULES.find(m => m.id === active)
 
@@ -841,8 +841,12 @@ export default function ModelEvalTab({ onNavigate, accessCode = null }) {
       )}
 
       <div key={active} className="tab-enter">
-        {activeModuleData && activeModuleData.isFree === false && accessCodeFromStorage !== 'DAI2026' ? (
-          <AccessGate onUnlock={() => localStorage.setItem('msl_access', 'DAI2026')} />
+        {activeModuleData && !activeModuleData.isFree && !unlocked ? (
+          <AccessGate
+            onUnlock={() => setUnlocked(true)}
+            title="Senior model evaluation scenarios"
+            body="Shadow mode comparison, calibration failure diagnosis, and metric selection traps — the evaluation decisions that determine whether a model should actually ship."
+          />
         ) : (
           <ActiveModule />
         )}

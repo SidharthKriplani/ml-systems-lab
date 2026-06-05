@@ -192,7 +192,12 @@ A user who opens the app in 3 seconds and starts a 45-min mock exam has a better
 
 **v2 enhancement (✅ completed v4.46):** Granular scenario-level difficulty gating within free Practice modules — easy/junior scenarios free, medium/senior/staff gated. 46 scenarios tagged in 4 free modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML). AccessGate.jsx ready for scenario-level checks at render time.
 
-**Single gating model decision (✅ locked v4.69):** Tab-level AccessGate (`PREMIUM_TABS` set in App.jsx) is the one and only enforcement point. The `isFree` scenario-level flags that exist in FeatureEngTab, ModelEvalTab, and ClassicalMLTab are informational/documentary only — they are NOT enforced at render time and must not be wired to a second gate. If scenario-level enforcement is ever needed, remove the tab-level gate for that tab first. Two gating systems must never coexist.
+**Two-layer gating model (✅ locked v4.71 — 3-tier from PAL MONETIZATION.md):**
+- **Layer 1 — tab-level gate** (`PREMIUM_TABS` in App.jsx): All Interview zone tools, all Labs, all advanced practice modules are fully gated. A user without a code cannot enter these tabs at all.
+- **Layer 2 — scenario-level gate** (the 4 free tabs: FeatureEngTab, ClassicalMLTab, ModelEvalTab, ModelsMathTab): These tabs are NOT in PREMIUM_TABS. They're always accessible. But within each tab, scenarios with `isFree: false` render an inline `<AccessGate>` at the module level. Junior/free scenarios play without a code; mid/senior/staff scenarios gate.
+- This maps to PAL's Guest → Free → Premium tier structure. Guest = no code (junior scenarios only). Full Lab = code stored (everything).
+- The `isFree` flags in these 4 tabs ARE enforced — they are not informational. The flags in other data files (SparkLabTab etc.) are informational since those tabs are tab-level gated.
+- Two gating systems DO coexist by design — one at the tab shell level, one at the scenario level within free tabs. They target different tiers and must not be collapsed.
 
 **No Tailwind utilities in component files.** See Stack section above.
 
