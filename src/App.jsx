@@ -857,7 +857,8 @@ export default function App() {
   }, [])
 
   // Reactive: if auth is enabled and user is null, show signed-out home
-  const showSignedOut = authEnabled && !user
+  const [guestMode, setGuestMode] = useState(false)
+  const showSignedOut = authEnabled && !user && !guestMode
 
   function handleUnlock(code) {
     if (code?.trim().toUpperCase() === ACCESS_CODE) {
@@ -976,7 +977,7 @@ export default function App() {
     return (
       <>
         <Suspense fallback={<LoadingSpinner />}>
-          <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} />
+          <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} onExplore={() => { setGuestMode(true); goTo('classical') }} />
         </Suspense>
         <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
       </>

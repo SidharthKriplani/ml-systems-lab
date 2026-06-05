@@ -33,7 +33,7 @@ const GHOST_POSITIONS = [
   { x: 90, y: 82, d: 2.6 }, { x: 30, y: 55, d: 3.4 }, { x: 68, y: 22, d: 0.2 },
 ]
 
-export default function SignedOutHome({ onShowAuth, onNavigate }) {
+export default function SignedOutHome({ onShowAuth, onNavigate, onExplore }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t) }, [])
 
@@ -103,7 +103,7 @@ export default function SignedOutHome({ onShowAuth, onNavigate }) {
             Sign in to practice →
           </button>
           <button
-            onClick={() => onNavigate('classical')}
+            onClick={() => onExplore ? onExplore() : onNavigate('classical')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-low)', padding: '8px', textDecoration: 'underline', textDecorationColor: 'var(--rim-hi)' }}
           >
             Explore without signing in
