@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked } from '../utils/unlock.js'
+import { authEnabled } from '../utils/supabase.js'
 
 // ── PlansTab — conversion surface (PAL 3-tier model) ─────────────────────────
 //
@@ -58,7 +59,7 @@ function CellVal({ value, col }) {
   return <span style={{ fontSize: '11px', fontWeight: 600, color, fontFamily: 'var(--font-sans)' }}>{value}</span>
 }
 
-export default function PlansTab({ onNavigate }) {
+export default function PlansTab({ onNavigate, onShowAuth, user }) {
   const already = isUnlocked()
   const [code,  setCode]  = useState('')
   const [error, setError] = useState(false)
@@ -133,9 +134,19 @@ export default function PlansTab({ onNavigate }) {
           <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.6, margin: '0 0 24px' }}>
             Every scenario you complete gets saved. Return any day and pick up where you left off — the streak tells you if you're actually being consistent. Cross-device sync via sign-in.
           </p>
-          <div style={{ width: '100%', padding: '10px', fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', color: 'var(--mint)', textAlign: 'center', opacity: 0.7 }}>
-            Sign in — coming soon
-          </div>
+          {user ? (
+            <div style={{ width: '100%', padding: '10px', fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', color: 'var(--mint)', textAlign: 'center' }}>
+              ✓ Signed in as {user.email}
+            </div>
+          ) : authEnabled ? (
+            <button onClick={onShowAuth} style={{ width: '100%', padding: '10px', fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', color: 'var(--mint)', cursor: 'pointer' }}>
+              Sign in — it's free →
+            </button>
+          ) : (
+            <div style={{ width: '100%', padding: '10px', fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: '8px', color: 'var(--mint)', textAlign: 'center', opacity: 0.6 }}>
+              Sign in — coming soon
+            </div>
+          )}
         </div>
 
         {/* Full Lab */}

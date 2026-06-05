@@ -5,7 +5,10 @@ import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
+import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
+import { authEnabled, onAuthStateChange } from './utils/supabase.js'
+import { pullProgressFromSupabase } from './utils/syncProgress.js'
 
 
 const HomeTab           = lazy(() => import('./tabs/HomeTab.jsx'))
@@ -44,6 +47,8 @@ const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
+const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
+const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -83,7 +88,8 @@ const ALL_TABS = [
   { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
   { id: 'fraud_detection', component: FraudDetectionTab },
-  { id: 'plans',           component: PlansTab },
+  { id: 'plans',   component: PlansTab },
+  { id: 'profile', component: ProfilePage },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -142,7 +148,7 @@ const GATE_COPY = {
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
-  home: 'today', landscape: 'today', plans: 'today',
+  home: 'today', landscape: 'today', plans: 'today', profile: 'today',
   gradient: 'read',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
@@ -665,6 +671,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 
         <NavItem id="home" label="Home" />
         <NavItem id="plans" label="Plans & Access" />
+        <NavItem id="profile" label="Profile" />
         <div style={{ height: '1px', background: 'var(--rim)', margin: '6px 0' }} />
 
         {NAV_SECTIONS.map(section => {
@@ -824,6 +831,33 @@ export default function App() {
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('msl_theme') || 'dark' } catch { return 'dark' }
   })
+  // ── Auth state ───────────────────────────────────────────────────────────────
+  const [user,     setUser]     = useState(null)
+  const [showAuth, setShowAuth] = useState(false)
+
+  useEffect(() => {
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
+        && session?.user
+      ) {
+        setUser(session.user)
+        setShowAuth(false)
+        if (event === 'SIGNED_IN') {
+          // Pull remote progress on fresh sign-in (may overwrite local — intentional)
+          await pullProgressFromSupabase(session.user)
+          setIsUnlocked(checkUnlocked()) // re-check after pull
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setActiveTab('home')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Reactive: if auth is enabled and user is null, show signed-out home
+  const showSignedOut = authEnabled && !user
 
   function handleUnlock(code) {
     if (code?.trim().toUpperCase() === ACCESS_CODE) {
@@ -909,6 +943,22 @@ export default function App() {
         />
       )
     }
+    // Profile page needs user + onShowAuth props
+    if (activeTab === 'profile') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <ProfilePage user={user} onNavigate={goTo} onShowAuth={() => setShowAuth(true)} />
+        </Suspense>
+      )
+    }
+    // Plans page needs onShowAuth
+    if (activeTab === 'plans') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <PlansTab onNavigate={goTo} onShowAuth={() => setShowAuth(true)} user={user} />
+        </Suspense>
+      )
+    }
     const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (
       <Suspense fallback={<LoadingSpinner />}>
@@ -918,6 +968,18 @@ export default function App() {
       <Suspense fallback={<LoadingSpinner />}>
         <HomeTab onNavigate={goTo} />
       </Suspense>
+    )
+  }
+
+  // ── Signed-out full-screen landing (only when auth is configured + no session)
+  if (showSignedOut) {
+    return (
+      <>
+        <Suspense fallback={<LoadingSpinner />}>
+          <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} />
+        </Suspense>
+        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      </>
     )
   }
 
@@ -998,6 +1060,22 @@ export default function App() {
             <span style={{ display: 'inline' }}>Search</span>
             <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
           </button>
+          {authEnabled && (
+            user ? (
+              <button onClick={() => goTo('profile')} title="Profile"
+                style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid var(--rim-hi)', background: user.user_metadata?.avatar_url ? 'none' : 'var(--prime)', overflow: 'hidden', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+                {user.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--depth)' }}>{(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}</span>
+                }
+              </button>
+            ) : (
+              <button onClick={() => setShowAuth(true)}
+                style={{ padding: '5px 12px', background: 'var(--prime)', border: 'none', borderRadius: '7px', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '11px', color: 'var(--depth)', letterSpacing: '0.03em' }}>
+                Sign in
+              </button>
+            )
+          )}
         </div>
       </header>
 
@@ -1042,6 +1120,10 @@ export default function App() {
           premiumTabs={PREMIUM_TABS}
         />
       )}
+
+      {/* ── Auth modal — MUST be last in return, never inside a transformed panel ── */}
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+
     </div>
   )
 }

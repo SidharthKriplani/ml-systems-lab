@@ -20,6 +20,20 @@ Updated: 2026-06-05. Objective: Depth sprint (P1.5) — Incident Room and ML Cod
 
 ---
 
+## ✅ DONE: Auth sprint (v4.72)
+
+1. ~~`src/utils/supabase.js`~~ — env-var gated client, authEnabled export
+2. ~~`src/utils/auth.js`~~ — signInWithGoogle/GitHub/Email, signOut
+3. ~~`src/utils/syncProgress.js`~~ — push/pull all msl_* keys to Supabase user_progress table
+4. ~~`src/components/auth/AuthModal.jsx`~~ — 3-method sign-in modal (Google, GitHub, email magic link)
+5. ~~`src/tabs/SignedOutHome.jsx`~~ — full-screen landing with ghost data snippets
+6. ~~`src/tabs/ProfilePage.jsx`~~ — 5 cards: identity, stats, sync, study plans, settings
+7. ~~App.jsx wiring~~ — user state, onAuthStateChange, topbar sign-in/avatar, AuthModal at root end
+8. ~~`docs/SETUP_AUTH.md`~~ — setup guide (Supabase project, OAuth, SQL table, Vercel env vars)
+9. ~~`@supabase/supabase-js`~~ — installed
+
+**To activate:** Run `npm install @supabase/supabase-js` (done), create Supabase project, run SQL from SETUP_AUTH.md, enable Google + GitHub OAuth, add VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY to Vercel → redeploy.
+
 ## ✅ DONE: PAL/GSL parity sprint (v4.70)
 
 1. ~~`src/utils/unlock.js`~~ — single source of truth for access logic (`isUnlocked`, `unlock`, `getAccessTier`, `ACCESS_CODE`, `STORAGE_KEY`)

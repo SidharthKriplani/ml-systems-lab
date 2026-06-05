@@ -46,6 +46,31 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.72 — Auth sprint: Supabase, AuthModal, SignedOutHome, ProfilePage, 3-tier Plans (2026-06-05)
+
+**New files:**
+- `src/utils/supabase.js` — env-var gated Supabase client. `authEnabled` export. `onAuthStateChange` with no-op fallback.
+- `src/utils/auth.js` — `signInWithGoogle`, `signInWithGitHub`, `signInWithEmail`, `signOut`. All no-ops when supabase=null.
+- `src/utils/syncProgress.js` — `pushProgressToSupabase` + `pullProgressFromSupabase`. Covers all static `msl_*` keys + dynamic `msl_score:*` + `msl_activity_*` prefix scan.
+- `src/components/auth/AuthModal.jsx` — fixed overlay (z:1000). 3 sign-in methods: Google OAuth, GitHub OAuth, email magic link. 2 steps: main + sent. Rendered at App root end.
+- `src/tabs/SignedOutHome.jsx` — full-screen landing when authEnabled=true and no session. Ghost data snippets (15 floating ML strings), dual radial orbs, two CTAs.
+- `src/tabs/ProfilePage.jsx` — 5 cards: Identity, Practice stats, Cross-device sync, Study plans, Settings (theme/export/import).
+- `docs/SETUP_AUTH.md` — step-by-step setup guide (Supabase project, OAuth providers, SQL table, Vercel env vars, local .env.local).
+
+**App.jsx wiring:**
+- `user` + `showAuth` state added. `onAuthStateChange` useEffect with SIGNED_IN, INITIAL_SESSION, TOKEN_REFRESHED, SIGNED_OUT events. Pulls progress from Supabase on fresh SIGNED_IN.
+- `showSignedOut = authEnabled && !user` — renders SignedOutHome + AuthModal when true, skips the full app render.
+- `renderContent()` special-cases `profile` and `plans` tabs to pass `user` + `onShowAuth` props.
+- Topbar: sign-in button (shows when authEnabled + !user) or avatar chip (shows when user). Clicking avatar → profile tab.
+- AuthModal rendered last in return fragment (viewport anchor safety).
+- ProfilePage and SignedOutHome added as lazy tabs.
+
+**Behaviour when auth is not configured (no env vars):** App runs exactly as before — no sign-in UI, no signed-out redirect, localStorage-only. `authEnabled = false` is the default state.
+
+**Package:** `@supabase/supabase-js` added to package.json.
+
+---
+
 ### v4.70 — PAL/GSL parity sprint: monetization plumbing, outcome-framed gates, Plans page, Recently Added (2026-06-05)
 
 **`src/utils/unlock.js` (new file):**
