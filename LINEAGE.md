@@ -46,6 +46,23 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.76 — Interview Trainer Prompt freebie on PlansTab (2026-06-06)
+
+**Interview Trainer Prompt — free resource card (PlansTab.jsx):**
+- Added `TRAINER_PROMPT` constant — full interview prep control system prompt (versioned trace, timed drills, anti-memorization rules, progress dashboard, scoring system, session flow)
+- New "Free resource" card below the feature table: title, description, copy-to-clipboard button with ✓ Copied! confirmation state
+- No LLM integration in MSL — prompt is a standalone freebie users take to Claude/ChatGPT + their resume + JD
+- Architecture decision logged in DECISIONS.md: MSL = context generator, LLM = trainer
+
+**MD spine updates (v4.75 — MD-only commit, same session):**
+- IDEAS.md Tier 1: "Interview Sim Context Export" item added
+- DECISIONS.md: "LLM integration boundary" section added
+- NEXT.md: item 5 added to UX loop sprint
+
+**Files modified:** `src/tabs/PlansTab.jsx`, `LINEAGE.md`, `NEXT.md`, `IDEAS.md`, `DECISIONS.md`.
+
+---
+
 ### v4.74 — Intuition sprint: HowToStrip, unlock statefulness, session memory (2026-06-05)
 
 **Unlock statefulness fix (AccessGate.jsx + App.jsx):**
