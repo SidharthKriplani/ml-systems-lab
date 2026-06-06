@@ -46,6 +46,31 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.77 — ResourcesTab + "Deep Dives" → "Gradient" rename (2026-06-06)
+
+**"Deep Dives" label renamed to "Gradient" in NAV_SECTIONS (App.jsx).**
+
+**`src/tabs/ResourcesTab.jsx` (new tab, id: `resources`):**
+- Full Interview Trainer Prompt (complete system prompt — timed scoring, versioned ledger, anti-memorization, progress dashboard, all case types) stored as `TRAINER_PROMPT` constant
+- Copy-to-clipboard button with ✓ Copied! confirmation state
+- Tag chips: Timed scoring · Versioned ledger · Anti-memorization rules · Progress dashboard
+- Placeholder footer for future resources (system design checklists, failure mode cards, interview frameworks)
+
+**"Resources" added to left sidebar (App.jsx):**
+- `NavItem id="resources"` added below Profile in the top nav links
+- `ResourcesTab` added to `ALL_TABS` registry and lazy-imported
+- `resources: 'today'` added to `TAB_TO_ZONE`
+
+**PlansTab.jsx cleaned:**
+- `TRAINER_PROMPT` constant removed (moved to ResourcesTab)
+- `copied` state + `handleCopyPrompt` function removed
+- Free resource card removed from PlansTab JSX
+
+**Files created:** `src/tabs/ResourcesTab.jsx`.
+**Files modified:** `src/App.jsx`, `src/tabs/PlansTab.jsx`, `LINEAGE.md`, `NEXT.md`.
+
+---
+
 ### v4.76 — Interview Trainer Prompt freebie on PlansTab (2026-06-06)
 
 **Interview Trainer Prompt — free resource card (PlansTab.jsx):**

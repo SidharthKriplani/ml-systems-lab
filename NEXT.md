@@ -56,6 +56,14 @@ Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint
 
 ---
 
+## ✅ DONE: ResourcesTab + nav fixes (v4.77)
+1. ~~"Deep Dives" → "Gradient" in NAV_SECTIONS~~
+2. ~~`src/tabs/ResourcesTab.jsx` — Interview Trainer Prompt with copy button~~
+3. ~~"Resources" NavItem in left sidebar~~
+4. ~~Trainer prompt removed from PlansTab~~
+
+---
+
 ## CURRENT SPRINT: Intuition sprint continued (P2)
 
 MSL is now at private-test threshold. The highest-leverage work is UX clarity — making every tab self-explanatory without a tutorial.

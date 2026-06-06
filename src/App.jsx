@@ -48,6 +48,7 @@ const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
+const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
 const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
@@ -88,8 +89,9 @@ const ALL_TABS = [
   { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
   { id: 'fraud_detection', component: FraudDetectionTab },
-  { id: 'plans',   component: PlansTab },
-  { id: 'profile', component: ProfilePage },
+  { id: 'plans',     component: PlansTab },
+  { id: 'profile',   component: ProfilePage },
+  { id: 'resources', component: ResourcesTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -148,7 +150,7 @@ const GATE_COPY = {
 
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
-  home: 'today', landscape: 'today', plans: 'today', profile: 'today',
+  home: 'today', landscape: 'today', plans: 'today', profile: 'today', resources: 'today',
   gradient: 'read',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
@@ -326,7 +328,7 @@ const NAV_SECTIONS = [
     id: 'learn',
     label: 'LEARN',
     items: [
-      { id: 'gradient',  label: 'Deep Dives' },
+      { id: 'gradient',  label: 'Gradient' },
       { id: 'landscape', label: 'Landscape' },
     ],
   },
@@ -672,6 +674,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
         <NavItem id="home" label="Home" />
         <NavItem id="plans" label="Plans & Access" />
         <NavItem id="profile" label="Profile" />
+        <NavItem id="resources" label="Resources" />
         <div style={{ height: '1px', background: 'var(--rim)', margin: '6px 0' }} />
 
         {NAV_SECTIONS.map(section => {
