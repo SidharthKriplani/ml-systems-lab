@@ -276,7 +276,7 @@ export default function PlansTab({ onNavigate, onShowAuth, user }) {
       {/* Footer */}
       <div style={{ textAlign: 'center', marginTop: '24px' }}>
         <p style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', lineHeight: 1.8, margin: 0 }}>
-          Stripe payments at launch · Beta access codes available now · Questions?{' '}
+          Sign in separately to access free cases and save progress · Access code unlocks the full lab on top of sign-in · Questions?{' '}
           <a href={FOUNDER_WA} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--prime)', textDecoration: 'none' }}>DM on WhatsApp</a>
         </p>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
+import { authEnabled } from '../utils/supabase.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import HowToStrip from '../components/HowToStrip.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
@@ -1539,7 +1540,7 @@ function BiasVarianceVisualizer() {
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
 const MODULES = [
-  { id: 'zoo',              label: 'Model Failure Zoo',        component: ModelFailureZoo,       difficulty: 'junior', isFree: true,  fidelityTier: 'conceptual' },
+  { id: 'zoo',              label: 'Model Failure Zoo',        component: ModelFailureZoo,       difficulty: 'junior', isFree: true,  guestPreview: true, fidelityTier: 'conceptual' },
   { id: 'ensemble',         label: 'Ensemble Decision Lab',    component: EnsembleDecisionLab,   difficulty: 'mid',    isFree: false, fidelityTier: 'conceptual' },
   { id: 'hyperparam',       label: 'Hyperparameter Priority',  component: HyperparamPriority,    difficulty: 'senior', isFree: false, fidelityTier: 'conceptual' },
   { id: 'naive_bayes',      label: 'Naive Bayes Failures',     component: NaiveBayesFailures,    difficulty: 'mid',    isFree: false, fidelityTier: 'conceptual' },
@@ -1550,7 +1551,7 @@ const MODULES = [
 // ── Coming Soon ───────────────────────────────────────────────────────────────
 const COMING_SOON = []
 
-export default function ClassicalMLTab({ onNavigate }) {
+export default function ClassicalMLTab({ onNavigate, user, onShowAuth }) {
   const [activeModule, setActiveModule] = useState(() => {
     try { return localStorage.getItem('msl_classical_active') || 'zoo' } catch { return 'zoo' }
   })
@@ -1631,7 +1632,14 @@ export default function ClassicalMLTab({ onNavigate }) {
 
       {/* Module content */}
       <div className="animate-slide-up">
-        {activeModuleData && !activeModuleData.isFree && !unlocked ? (
+        {activeModuleData && authEnabled && !user && !activeModuleData.guestPreview ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.13em', marginBottom: '14px' }}>Sign in required</div>
+            <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '19px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Sign in to access free scenarios</h3>
+            <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.65, maxWidth: '360px', margin: '0 auto 22px' }}>Free-tier scenarios require a free account. Sign in separately to access free cases and save progress.</p>
+            <button onClick={onShowAuth} className="btn-primary" style={{ padding: '10px 24px', fontSize: '13px' }}>Sign in →</button>
+          </div>
+        ) : activeModuleData && !activeModuleData.isFree && !unlocked ? (
           <AccessGate
             onUnlock={() => setUnlocked(true)}
             title="Mid & senior Classical ML scenarios"

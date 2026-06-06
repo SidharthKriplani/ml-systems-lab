@@ -190,6 +190,30 @@ A user who opens the app in 3 seconds and starts a 45-min mock exam has a better
 
 **Gate implementation:** `src/components/AccessGate.jsx` — rendered in `renderContent()` in App.jsx when a premium tab is requested and `msl_access !== 'DAI2026'`. Premium tabs are defined in the `PREMIUM_TABS` set in App.jsx. Lock indicators (SVG padlock) are shown on PracticeCard and InterviewToolCard when locked. Grids remain visible — FOMO is the conversion mechanism.
 
+**Two-gate model (canonical — v4.79):**
+
+Three tiers: Guest → Signed-in Free → Signed-in + Access Code (Full).
+
+Sign-in is mandatory for all non-preview content. The access code is an upgrade on top of sign-in, not a replacement for it. Gates fire in strict sequence — auth first, content second.
+
+Gate logic for premium tabs (App.jsx renderContent):
+1. `authEnabled && !user` → inline "Sign in to access" card (auth gate)
+2. `!isUnlocked` → `<AccessGate />` (content gate)
+
+Gate logic for free tabs (per-module):
+1. `authEnabled && !user && !module.guestPreview` → inline "Sign in to access free scenarios" card
+2. `!unlocked && !module.isFree` → `<AccessGate />` (content gate)
+
+Two case-level flags per module in free tabs:
+- `guestPreview: true` — one module per free tab; accessible without sign-in. Guest preview modules MUST also have `isFree: true` to prevent the contradictory "no account needed → sign in needed" flow.
+- `isFree: true` — accessible to signed-in free users; auth required but no access code needed.
+
+`guestPreview` modules (one per free tab): store (FeatureEng), zoo (ClassicalML), metric (ModelEval), pca (ModelsMath).
+
+When `authEnabled = false` (no Supabase env vars): auth gate is a no-op. App runs in localStorage-only mode — treat everyone as signed-in free. Only content gate applies.
+
+Copy rule: never use "no account needed" on any surface. Correct footer language: "Sign in separately to access free cases and save progress."
+
 **v2 enhancement (✅ completed v4.46):** Granular scenario-level difficulty gating within free Practice modules — easy/junior scenarios free, medium/senior/staff gated. 46 scenarios tagged in 4 free modules (Math Foundations, Feature Engineering, Model Evaluation, Classical ML). AccessGate.jsx ready for scenario-level checks at render time.
 
 **Two-layer gating model (✅ locked v4.71 — 3-tier from PAL MONETIZATION.md):**

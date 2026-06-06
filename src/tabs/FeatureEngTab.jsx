@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
+import { authEnabled } from '../utils/supabase.js'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
@@ -1264,7 +1265,7 @@ function InteractionLeakage() {
 
 const MODULES = [
   { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator,             difficulty: 'senior', isFree: false, readMin: 8  },
-  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner,      difficulty: 'junior', isFree: true,  readMin: 6  },
+  { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner,      difficulty: 'junior', isFree: true,  guestPreview: true, readMin: 6  },
   { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder,  difficulty: 'mid',    isFree: false, readMin: 7  },
   { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo,         difficulty: 'mid',    isFree: false, readMin: 10 },
   { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider,      difficulty: 'senior', isFree: false, readMin: 6  },
@@ -1292,7 +1293,7 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
   )
 }
 
-export default function FeatureEngTab({ onNavigate }) {
+export default function FeatureEngTab({ onNavigate, user, onShowAuth }) {
   const [active, setActive] = useState(() => {
     try { return localStorage.getItem('msl_featureeng_active') || 'skew' } catch { return 'skew' }
   })
@@ -1342,7 +1343,14 @@ export default function FeatureEngTab({ onNavigate }) {
         </div>
       )}
       <div key={active} className="tab-enter">
-        {activeModuleData && !activeModuleData.isFree && !unlocked ? (
+        {activeModuleData && authEnabled && !user && !activeModuleData.guestPreview ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.13em', marginBottom: '14px' }}>Sign in required</div>
+            <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '19px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Sign in to access free scenarios</h3>
+            <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.65, maxWidth: '360px', margin: '0 auto 22px' }}>Free-tier scenarios require a free account. Sign in separately to access free cases and save progress.</p>
+            <button onClick={onShowAuth} className="btn-primary" style={{ padding: '10px 24px', fontSize: '13px' }}>Sign in →</button>
+          </div>
+        ) : activeModuleData && !activeModuleData.isFree && !unlocked ? (
           <AccessGate
             onUnlock={() => setUnlocked(true)}
             title="Senior & mid-level Feature Engineering modules"

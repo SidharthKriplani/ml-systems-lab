@@ -56,6 +56,13 @@ Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint
 
 ---
 
+## ✅ DONE: Two-gate access model (v4.79)
+1. ~~Auth gate before content gate in App.jsx (premium tabs)~~
+2. ~~`guestPreview` flag on one module per free tab (store/zoo/metric/pca)~~
+3. ~~Two-gate logic in 4 free tabs: auth check → content check~~
+4. ~~PlansTab footer copy fixed — "sign in separately to access free cases"~~
+5. ~~DECISIONS.md updated with canonical gate model~~
+
 ## ✅ DONE: PlansTab pricing redesign (v4.78)
 1. ~~4-plan cards: Monthly/Quarterly/Annual/Sprint with ₹ pricing~~
 2. ~~Beta banner: inline sign-in + access code~~

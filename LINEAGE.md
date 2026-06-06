@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.79 — Two-gate access model: auth gate + content gate in sequence (2026-06-06)
+
+**Gate model corrected (was: access code replaces sign-in; now: sign-in required first, access code upgrades on top):**
+
+Three tiers: Guest (guestPreview only) → Signed-in Free (isFree scenarios) → Signed-in + Access Code (Full).
+Sign-in is mandatory for all non-preview content. Access code is an upgrade on top of sign-in, not a replacement.
+
+**App.jsx — premium tab gate split into two sequential checks:**
+- Auth gate (fires first): `authEnabled && !user` → inline "Sign in to access" card with Sign in → button
+- Content gate (fires second): `!isUnlocked` → AccessGate (access code)
+- When `authEnabled = false` (no env vars): auth gate is a no-op, app works in localStorage-only mode as before
+- Free tabs (features/eval/classical/models) now receive `user` + `onShowAuth` props via dedicated block in renderContent
+
+**4 free tabs — `guestPreview` flag added + two-gate logic:**
+- FeatureEngTab: `guestPreview: true` on `store` (Feature Store Designer)
+- ClassicalMLTab: `guestPreview: true` on `zoo` (Model Failure Zoo)
+- ModelEvalTab: `guestPreview: true` on `metric` (Metric Selector)
+- ModelsMathTab: `guestPreview: true` on `pca` (PCA Explorer)
+- Each tab imports `authEnabled`, accepts `user` + `onShowAuth` props
+- Gate order: auth check (`authEnabled && !user && !module.guestPreview`) → content check (`!unlocked && !module.isFree`)
+- Rule enforced: `guestPreview: true` modules all also have `isFree: true` — no contradictory gate flow
+
+**PlansTab.jsx — copy fixed:**
+- Footer: "Sign in separately to access free cases and save progress · Access code unlocks the full lab on top of sign-in"
+- Removed all "no account needed" language
+
+**DECISIONS.md:** Two-gate model documented under "Freemium gating."
+
+**Files modified:** `src/App.jsx`, `src/tabs/FeatureEngTab.jsx`, `src/tabs/ClassicalMLTab.jsx`, `src/tabs/ModelEvalTab.jsx`, `src/tabs/ModelsMathTab.jsx`, `src/tabs/PlansTab.jsx`, `DECISIONS.md`, `LINEAGE.md`, `NEXT.md`.
+
+---
+
 ### v4.78 — PlansTab pricing redesign: 4-plan cards matching PAL (2026-06-06)
 
 **PlansTab.jsx — full rewrite to 4-plan pricing layout:**

@@ -943,16 +943,42 @@ export default function App() {
         </Suspense>
       )
     }
-    if (PREMIUM_TABS.has(activeTab) && !isUnlocked) {
-      const copy = GATE_COPY[activeTab] || {}
-      return (
-        <AccessGate
-          onUnlock={handleUnlock}
-          title={copy.title}
-          body={copy.body}
-          ctaLabel={copy.ctaLabel}
-        />
-      )
+    if (PREMIUM_TABS.has(activeTab)) {
+      // Auth gate fires first — sign-in required for all premium content
+      if (authEnabled && !user) {
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: '40px 20px' }}>
+            <div style={{ maxWidth: '400px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.13em', marginBottom: '16px' }}>Sign in required</div>
+              <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 12px', lineHeight: 1.2 }}>
+                Create a free account to continue
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.65, margin: '0 0 24px' }}>
+                Sign in to access this section. A full-lab access code unlocks everything on top of your free account.
+              </p>
+              <button
+                onClick={() => setShowAuth(true)}
+                className="btn-primary"
+                style={{ padding: '11px 28px', fontSize: '13px' }}
+              >
+                Sign in →
+              </button>
+            </div>
+          </div>
+        )
+      }
+      // Content gate fires second — access code required for premium content
+      if (!isUnlocked) {
+        const copy = GATE_COPY[activeTab] || {}
+        return (
+          <AccessGate
+            onUnlock={handleUnlock}
+            title={copy.title}
+            body={copy.body}
+            ctaLabel={copy.ctaLabel}
+          />
+        )
+      }
     }
     // Profile page needs user + onShowAuth props
     if (activeTab === 'profile') {
@@ -969,6 +995,16 @@ export default function App() {
           <PlansTab onNavigate={goTo} onShowAuth={() => setShowAuth(true)} user={user} />
         </Suspense>
       )
+    }
+    // Free tabs with two-gate model need user + onShowAuth
+    const FREE_TABS_WITH_AUTH = new Set(['features', 'eval', 'classical', 'models'])
+    if (FREE_TABS_WITH_AUTH.has(activeTab)) {
+      const Component = ALL_TABS.find(t => t.id === activeTab)?.component
+      return Component ? (
+        <Suspense fallback={<LoadingSpinner />}>
+          <Component onNavigate={goTo} user={user} onShowAuth={() => setShowAuth(true)} />
+        </Suspense>
+      ) : null
     }
     const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (
