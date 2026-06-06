@@ -56,6 +56,11 @@ Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint
 
 ---
 
+## ✅ DONE: PlansTab pricing redesign (v4.78)
+1. ~~4-plan cards: Monthly/Quarterly/Annual/Sprint with ₹ pricing~~
+2. ~~Beta banner: inline sign-in + access code~~
+3. ~~Feature table updated to 20 rows~~
+
 ## ✅ DONE: ResourcesTab + nav fixes (v4.77)
 1. ~~"Deep Dives" → "Gradient" in NAV_SECTIONS~~
 2. ~~`src/tabs/ResourcesTab.jsx` — Interview Trainer Prompt with copy button~~

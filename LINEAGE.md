@@ -46,6 +46,19 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.78 — PlansTab pricing redesign: 4-plan cards matching PAL (2026-06-06)
+
+**PlansTab.jsx — full rewrite to 4-plan pricing layout:**
+- 4 pricing cards: Monthly ₹799, Quarterly ₹1,999, Annual ₹5,999 (Best Value, mint highlight), Interview Sprint ₹2,499/14 days
+- "Get early access →" buttons link to founder WhatsApp (Stripe not yet live)
+- Beta banner below cards: sign-in state + inline access code input + Unlock button (replaces old 3-card layout)
+- Feature table updated: Guest / Free Account / Full Lab columns, 20 rows, correct free-tier values
+- Footer: "Stripe payments at launch · Beta access codes available now"
+
+**Files modified:** `src/tabs/PlansTab.jsx`, `LINEAGE.md`, `NEXT.md`.
+
+---
+
 ### v4.77 — ResourcesTab + "Deep Dives" → "Gradient" rename (2026-06-06)
 
 **"Deep Dives" label renamed to "Gradient" in NAV_SECTIONS (App.jsx).**
