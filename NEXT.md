@@ -80,6 +80,7 @@ After intuition sprint:
 2. **Challenge Log on Home** — global completion summary (X/Y scenarios, wrong-answer count, uncovered tabs).
 3. **91-day practice heatmap** — GitHub-style activity grid. Data in `msl_activity_YYYY-MM-DD` already written.
 4. **ELI5 mode on Gradient posts** — simplified-language toggle. Static simplified version per post.
+5. **"Start Interview Sim" context export** — button reads localStorage (weak modules, scores, session memory) → generates pre-filled prompt block → user pastes into Claude/ChatGPT + trainer prompt + resume/JD. S effort. Architecture decision logged in DECISIONS.md: MSL = context generator, LLM = trainer. No LLM calls inside MSL.
 
 ---
 

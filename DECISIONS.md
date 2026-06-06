@@ -308,3 +308,19 @@ Three padding/spacing values identified in v4.48 Item 2 audit as exceeding 5+ re
 
 **Extraction trigger:** When refactoring any tab file and touching card/section padding, extract these tokens first. Prevents future drift.
 
+## LLM integration boundary (2026-06-06)
+
+**MSL does not embed LLM calls. MSL is a context generator; the LLM is the trainer.**
+
+Decided after evaluating whether to add the Interview Trainer system prompt (a versioned, timed, scored interview prep control system built by Avinash) directly into MSL. Decision: no.
+
+Rationale:
+- MSL's "no backend" constraint means LLM calls require either a backend proxy or user-supplied API keys, both of which introduce trust/security surface and account complexity MSL explicitly avoids.
+- The trainer prompt works correctly standalone (Claude / ChatGPT + resume + JD). Embedding it in MSL gains nothing architecturally and loses the portability that makes it useful.
+- The correct integration is a "Start Interview Sim" export button — MSL reads localStorage (scores, weak modules, session memory), assembles a pre-filled context block, and the user pastes it into their LLM of choice alongside the trainer prompt and their resume/JD. Zero infrastructure change. Pure string template.
+
+**What this means for future decisions:**
+- Do not add LLM API calls to MSL speculatively. The first legitimate case (e.g., AskTab with user-supplied key, or a backend feature in Ideas Tier 3) will be evaluated on its own merits.
+- `AskTab` is exempt from this rule — it already uses the Web Speech API and is a distinct interaction mode. An LLM integration there (user-supplied key) is tracked separately in Ideas.
+- Any prompt, template, or trainer tool that works standalone stays standalone. MSL's job is to generate the context, not run the trainer.
+
