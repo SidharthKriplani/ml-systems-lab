@@ -73,6 +73,26 @@ New SERIES: 'search' (Search & IR, posts 79,80,90), 'ds' (DS & Causal, posts 81-
 
 ---
 
+### v4.86 — Gradient: 10 "From Ground Up" posts (101–110) with interview Qs (2026-06-17)
+
+**New series 'ground' — From Ground Up. 10 foundational posts covering the math and CS layer that every advanced post assumes. Each post ends with 4 interview questions with full answers.**
+
+Posts added:
+- 101: Probability for ML (Bayes, distributions, conditional independence, base rate fallacy) — featured
+- 102: Linear Algebra (eigenvalues, SVD, PCA as eigendecomp, dot product as similarity)
+- 103: Calculus for ML (gradients, Jacobian, chain rule, residual connections via math, Adam derivation)
+- 104: Information Theory (entropy, KL divergence, cross-entropy = MLE, mutual information)
+- 105: MLE and MAP (unifying framework, MSE←Gaussian, XEnt←Bernoulli, L2←Gaussian prior, L1←Laplace prior)
+- 106: EM Algorithm (GMMs, k-means as hard EM, HMMs, Baum-Welch, convergence proof sketch)
+- 107: Logistic Regression From Scratch (GLM derivation, log-odds, IRLS, class imbalance)
+- 108: Decision Trees and Random Forests (information gain, bias-variance, bagging variance proof, MDI vs MDA)
+- 109: Word2Vec (skip-gram, negative sampling, embedding geometry, king-man+woman=queen explained)
+- 110: CV Before ViTs (convolution, ResNet, FPN, YOLO, U-Net, why ViTs eventually won)
+
+New SERIES 'ground' (From Ground Up). Total: 110 posts, 12 series. Brace diff 0.
+
+---
+
 ### v4.85 — Gradient: 5 final posts (96–100), 100 posts total (2026-06-17)
 
 **GradientTab now at 100 posts — the full staff DS/ML interview curriculum is complete.**

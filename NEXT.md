@@ -76,6 +76,14 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Gradient "From Ground Up" series — 10 foundational posts (v4.86, 2026-06-17)
+
+Posts 101–110. New SERIES 'ground' (From Ground Up). Each post includes 4 interview Qs with full answers + Colab challenge.
+Probability · Linear Algebra · Calculus · Information Theory · MLE/MAP · EM Algorithm · Logistic Regression · Decision Trees/RF · Word2Vec · CV Before ViTs.
+Total: 110 posts, 12 series. File ~9,200 lines. Brace diff 0.
+
+---
+
 ## ✅ DONE: Gradient 100 posts milestone — 5 final posts (v4.85, 2026-06-17)
 
 Posts 96–100. GradientTab complete at 100 posts:

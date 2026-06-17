@@ -5771,6 +5771,564 @@ Use FL when: data cannot legally or practically be centralised (healthcare, fina
     domain: 'dl',
     youtube: [],
   },
+  {
+    id: 101,
+    slug: 'probability-for-ml-from-ground-up',
+    title: 'Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: true,
+    excerpt: 'Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probability fundamentals — distributions, Bayes, conditional independence — you are operating machinery you cannot explain. This post builds it from scratch.',
+    body: `Probability is the language ML is written in. Most practitioners learn it backwards — they encounter it inside model derivations and patch their understanding reactively. This post builds it forwards: from the axioms up to the tools you need in practice.
+
+**The three probability axioms (Kolmogorov, 1933)**
+
+Every probability statement rests on three axioms: P(A) ≥ 0 for all events A. P(Ω) = 1 where Ω is the full sample space. For mutually exclusive events A and B: P(A ∪ B) = P(A) + P(B). Everything else — conditional probability, Bayes' theorem, independence — is derived from these three.
+
+**Conditional probability and the multiplication rule**
+
+P(A|B) = P(A ∩ B) / P(B). Read this as: given we know B happened, what fraction of B-worlds also have A? The multiplication rule follows: P(A ∩ B) = P(A|B) P(B) = P(B|A) P(A). This is not a formula to memorise — it is a definition rearranged. Chain rule for n events: P(A₁ ∩ A₂ ∩ ... ∩ Aₙ) = P(A₁) P(A₂|A₁) P(A₃|A₁,A₂) ... P(Aₙ|A₁,...,Aₙ₋₁). This is the foundation of language models: P(sentence) = Π P(word_t | word_1, ..., word_{t-1}).
+
+**Bayes' theorem**
+
+Derived directly from conditional probability: P(A|B) = P(B|A) P(A) / P(B). In ML terminology: posterior = likelihood × prior / evidence. The evidence P(B) = Σ_A P(B|A) P(A) is the marginal — sum over all possible values of A. Bayesian thinking: your prior P(A) is your belief before seeing data. The likelihood P(B|A) is how probable the data is under hypothesis A. The posterior P(A|B) is your updated belief after seeing B. This is exactly what Naive Bayes classifiers compute.
+
+**Independence and conditional independence**
+
+A and B are independent if P(A ∩ B) = P(A) P(B), equivalently P(A|B) = P(A). Knowing B tells you nothing about A. A and B are conditionally independent given C — written A ⊥ B | C — if P(A ∩ B | C) = P(A|C) P(B|C). This is a strictly weaker statement than marginal independence. The classic example: rain (A) and wet sidewalk (B) are not independent — rain causes wet sidewalks. But given that the sprinkler is on (C), knowing it rained tells you nothing extra about the sidewalk. Conditional independence is the engine of graphical models (Naive Bayes, Bayesian networks, Markov random fields). Naive Bayes assumes all features are conditionally independent given the label — this is wrong for most real datasets, but the model often works anyway.
+
+**The distributions you must know**
+
+Bernoulli(p): models a single binary outcome. P(X=1) = p, P(X=0) = 1-p. Mean = p, Variance = p(1-p). This is logistic regression's output distribution — the log-odds log(p/(1-p)) is modelled as linear.
+
+Binomial(n, p): number of successes in n independent Bernoulli trials. P(X=k) = C(n,k) p^k (1-p)^(n-k). Mean = np, Variance = np(1-p).
+
+Gaussian (Normal) N(μ, σ²): the central distribution of statistics. PDF: f(x) = (1/√(2πσ²)) exp(-(x-μ)²/(2σ²)). Why it is everywhere: Central Limit Theorem — the sum (or mean) of n independent, identically distributed variables with finite variance converges in distribution to a Gaussian as n→∞, regardless of the original distribution. This is why residuals tend to be approximately Gaussian and why we can test means with t-tests.
+
+Poisson(λ): count events occurring at a constant rate. P(X=k) = e^(-λ) λ^k / k!. Mean = Variance = λ. Use for: click counts, arrivals per second, requests per minute. If events happen continuously at rate λ per time unit and independently, counts over a fixed window are Poisson.
+
+Beta(α, β): a distribution over [0,1]. Used as a prior over probabilities (conjugate to Binomial). Mean = α/(α+β), mode = (α-1)/(α+β-2). As α and β grow, it concentrates. Beta(1,1) = Uniform[0,1]. This is exactly the distribution Thompson Sampling maintains over bandit arm success probabilities.
+
+Dirichlet(α₁, ..., αK): generalization of Beta to K categories. A distribution over probability vectors that sum to 1. Used as a prior over categorical distributions (conjugate to Multinomial). The foundation of Latent Dirichlet Allocation (LDA) for topic modelling.
+
+**Law of Total Expectation and Total Variance**
+
+E[X] = E[E[X|Y]]. Compute the conditional expectation of X given Y, then average over Y. This is the tower property and it is used constantly in derivations. Law of total variance: Var(X) = E[Var(X|Y)] + Var(E[X|Y]). Variance decomposes into within-group variance plus between-group variance. This is the decomposition behind ANOVA and mixed-effects models.
+
+**Interview questions on this topic**
+
+"Why does Naive Bayes work even when the independence assumption is violated?" — Because even if the probability estimates are wrong, the class with the highest posterior is often still correct. The decision boundary can still be good even if the probabilities are miscalibrated.
+
+"A disease affects 1% of the population. A test is 99% accurate (99% TPR, 99% TNR). You test positive. What is the probability you have the disease?" — Apply Bayes: P(disease|positive) = P(positive|disease) P(disease) / P(positive) = (0.99 × 0.01) / (0.99 × 0.01 + 0.01 × 0.99) = 0.5. This is the base rate fallacy. With rare diseases, even accurate tests have low PPV.
+
+"What is the difference between independence and conditional independence? Give an ML example." — Marginal: features X₁ and X₂ are independent in the general population. Conditional: X₁ and X₂ are independent given the class label Y. Naive Bayes uses the latter. They can each hold without the other.
+
+"A/B test: how do you choose between a t-test and a z-test?" — z-test when the population variance is known or n > 30 (CLT gives approximately normal sample mean). t-test when variance is unknown and n is small; uses the t-distribution, which has heavier tails.
+
+**Try on Colab:** sample 1000 points from a Binomial(n=20, p=0.3) and a Poisson(λ=6). Plot their histograms and compare their means and variances. Show that Poisson(λ) approximates Binomial(n,p) when n is large and p is small with np=λ. Then implement Naive Bayes from scratch on the Iris dataset using only scipy.stats distributions — no sklearn.`,
+    tags: ['Models & Math', 'Probability', 'Bayes Theorem', 'Distributions', 'Conditional Independence', 'Ground Up'],
+    domain: 'math',
+    youtube: [{ id: 'uzkc-qNVoOk', title: 'Bayes Theorem — 3Blue1Brown' }],
+  },
+  {
+    id: 102,
+    slug: 'linear-algebra-for-ml-from-ground-up',
+    title: 'Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    excerpt: 'PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot products as similarity. This post builds those four from scratch, in order, in the 90 minutes it would have taken your university course if it started with applications.',
+    body: `Linear algebra is the operating system of machine learning. Matrix multiplication is the operation every neural network layer performs. Eigendecomposition is what PCA computes. SVD is what collaborative filtering and LSA are built on. Dot products are the similarity measure in attention and in nearest-neighbour search. You cannot deeply understand any of these without the linear algebra underneath.
+
+**Vectors: what they actually are**
+
+A vector is a list of numbers that represents a point or a direction in some space. In ML, a row in your dataset is a vector in feature space — a point in ℝᵈ where d is the number of features. The dot product u · v = Σᵢ uᵢvᵢ = ||u|| ||v|| cos(θ) where θ is the angle between u and v. This geometric interpretation is the reason dot products measure similarity: if two vectors point in the same direction, cos(θ) = 1 (maximum similarity); if orthogonal, cos(θ) = 0 (no similarity); if opposite, cos(θ) = -1. Every attention mechanism and every embedding similarity search uses this fact.
+
+**Matrices as linear transformations**
+
+A matrix A ∈ ℝᵐˣⁿ is a function that maps vectors from ℝⁿ to ℝᵐ. The transformation is linear: A(u + v) = Au + Av. What does this mean geometrically? Every matrix transformation does some combination of rotation, scaling, shearing, and projection. No curving allowed — that is what "linear" means. A neural network layer with no activation function is a linear transformation. Stacking multiple linear layers gives another linear layer — which is why we need nonlinear activations to make deep networks more expressive than a single layer.
+
+**Eigenvalues and eigenvectors**
+
+For a square matrix A, vector v is an eigenvector with eigenvalue λ if Av = λv. The matrix transforms v by pure scaling (by λ) rather than rotating it. Geometrically: eigenvectors are the "axes" of the transformation — the special directions that don't get rotated, only stretched or flipped. Positive λ: stretching. Negative λ: flipping. |λ| > 1: expanding. |λ| < 1: contracting. |λ| = 0: collapsing to zero (the matrix is rank-deficient). For a symmetric matrix A = Aᵀ (like a covariance matrix), all eigenvalues are real and eigenvectors are orthogonal. This is the spectral theorem. Covariance matrices are always symmetric — which is why PCA's eigenvectors (principal components) are orthogonal.
+
+**PCA as eigendecomposition of the covariance matrix**
+
+Given data matrix X ∈ ℝⁿˣᵈ (n samples, d features), the covariance matrix C = (1/n) XᵀX ∈ ℝᵈˣᵈ. PCA finds the directions of maximum variance, which are the eigenvectors of C with the largest eigenvalues. Eigendecomposition: C = VΛVᵀ where V is the matrix of eigenvectors (columns) and Λ = diag(λ₁, ..., λᵈ) with λ₁ ≥ λ₂ ≥ ... ≥ λᵈ. Project data onto the top-k eigenvectors: X_reduced = X V_k. Explained variance ratio of component i: λᵢ / Σⱼ λⱼ. Plot the cumulative explained variance (scree plot) to choose k.
+
+**Singular Value Decomposition (SVD)**
+
+SVD generalises eigendecomposition to rectangular matrices: A = UΣVᵀ, where U ∈ ℝᵐˣᵐ (left singular vectors), Σ ∈ ℝᵐˣⁿ (diagonal, singular values σ₁ ≥ σ₂ ≥ ... ≥ 0), Vᵀ ∈ ℝⁿˣⁿ (right singular vectors). The singular values measure how much of the "signal" lives in each dimension. Low-rank approximation: A ≈ U_k Σ_k V_k ᵀ (keep only the top k singular vectors/values) is the best rank-k approximation in the Frobenius norm (Eckart-Young theorem). Where SVD appears in ML: PCA — SVD of the data matrix X gives the same result as eigendecomposition of XᵀX (faster and numerically more stable). Collaborative filtering — the user-item rating matrix R ≈ UΣVᵀ; the product gives reconstructed ratings and reveals latent factors. Latent Semantic Analysis (LSA) — SVD of the term-document matrix reveals latent topic structure. Word2vec training is closely related to SVD of the PMI matrix (Levy & Goldberg, 2014). Neural network weight matrices have their largest singular values regulated by spectral normalisation in GANs.
+
+**The rank of a matrix**
+
+Rank = number of linearly independent columns (= number of linearly independent rows = number of non-zero singular values). A matrix is full-rank if rank = min(m, n). A rank-deficient matrix cannot be inverted — this is the multicollinearity problem in regression. When your feature matrix X has rank less than d (more features than independent information), OLS is undefined and you need regularisation (ridge, lasso) or dimensionality reduction.
+
+**Matrix norms**
+
+Frobenius norm: ||A||_F = √(Σᵢⱼ Aᵢⱼ²) = √(Σᵢ σᵢ²). The sum of squared entries. Used in L2 regularisation on weight matrices. Spectral norm: ||A||₂ = σ₁ (largest singular value). Controls how much a layer can amplify a signal. Used in spectral normalisation for GANs. Nuclear norm: ||A||_* = Σᵢ σᵢ. Promotes low-rank solutions when used as a regulariser (matrix completion).
+
+**Interview questions on this topic**
+
+"What does it mean for two vectors to be orthogonal? Why does this matter in PCA?" — Their dot product is zero, cos(θ) = 0, they share no similarity. PCA components are orthogonal because the covariance matrix is symmetric (spectral theorem) — each component captures variance that no other component captures.
+
+"You have a user-item rating matrix with 10M users and 1M items and 0.01% fill rate. How would you use SVD?" — Truncated SVD on the sparse matrix (using scipy.sparse.linalg.svds) to get rank-k factorization. The left singular vectors are user embeddings, right singular vectors are item embeddings. Predict missing ratings as the dot product. This is exactly matrix factorisation collaborative filtering.
+
+"What is the relationship between PCA and SVD?" — SVD of the centred data matrix X = UΣVᵀ gives principal components as columns of V and principal component scores as columns of UΣ. Eigendecomposition of XᵀX = V(Σ²)Vᵀ gives the same V. SVD is preferred numerically.
+
+"Why does vanishing gradient happen in terms of linear algebra? How does it connect to singular values?" — During backprop, gradients are multiplied by Jacobians. If the Jacobians have small singular values (nearly rank-deficient), gradient magnitudes shrink exponentially with depth. Large singular values cause exploding gradients. Proper initialisation (He, Xavier) sets the singular value distribution of the initial weight matrices so gradients stay in a stable range.
+
+**Try on Colab:** take the MovieLens 100K dataset. Build the user-item rating matrix (sparse). Apply truncated SVD with k=10, 50, 100 components. Measure reconstruction error on observed ratings. Plot the singular value spectrum. Compare the top singular vector as a "latent genre" — which movies load most heavily on component 1?`,
+    tags: ['Models & Math', 'Linear Algebra', 'SVD', 'Eigenvalues', 'PCA', 'Ground Up'],
+    domain: 'math',
+    youtube: [{ id: 'PFDu9oVAE-g', title: 'Eigenvectors and eigenvalues — 3Blue1Brown' }],
+  },
+  {
+    id: 103,
+    slug: 'calculus-for-ml-gradients-chain-rule',
+    title: 'Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Backpropagation is just the chain rule applied to a computational graph. Every other "magic" in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calculus. This post builds the calculus from scratch: derivatives, partial derivatives, gradients, the Jacobian, and the chain rule, each with a direct ML payoff.',
+    body: `Calculus in ML has exactly one job: given a loss function L(θ) that maps model parameters θ to a scalar loss, compute ∂L/∂θ — the direction in parameter space that increases L. Gradient descent then moves in the opposite direction. Everything else is book-keeping.
+
+**Derivatives: the local linearisation view**
+
+The derivative f'(x) = df/dx = lim_{h→0} (f(x+h) - f(x)) / h is not just "the slope of the tangent" — it is the best linear approximation to f at x. Locally, f(x+h) ≈ f(x) + f'(x)h. This is the first-order Taylor expansion and it is the mathematical foundation of gradient descent: we approximate the loss surface locally as a plane and step in the direction that decreases it.
+
+**Partial derivatives and gradients**
+
+For a function f(x₁, x₂, ..., xd) of multiple inputs, the partial derivative ∂f/∂xᵢ measures the rate of change holding all other inputs constant. The gradient ∇f = (∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xd)ᵀ is the vector of all partial derivatives. Geometric meaning: ∇f points in the direction of steepest ascent of f, and ||∇f|| is the rate of steepest ascent. Gradient descent update: θ ← θ - α ∇L(θ). We subtract because we want to descend.
+
+**The chain rule**
+
+If y = f(g(x)), then dy/dx = df/dg · dg/dx. The derivative of a composition is the product of derivatives at each step. For neural networks: L = loss(ŷ), ŷ = output(z), z = w·x + b. dL/dw = (dL/dŷ)(dŷ/dz)(dz/dw). Each factor is a local derivative computed at the current values. The chain rule telescopes through the graph.
+
+**The Jacobian**
+
+When f maps vectors to vectors — f: ℝⁿ → ℝᵐ — the derivative is the Jacobian matrix J ∈ ℝᵐˣⁿ where J_{ij} = ∂fᵢ/∂xⱼ. Each row is the gradient of one output dimension. The chain rule for vector functions: if y = f(g(x)) where f: ℝᵐ → ℝᵏ and g: ℝⁿ → ℝᵐ, then J_y/x = J_y/g · J_g/x (Jacobian product). This is backpropagation: the backward pass computes this Jacobian chain multiplication efficiently using the structure of the forward computation graph.
+
+**Computational graphs and automatic differentiation**
+
+A neural network is a directed acyclic graph where each node is an operation (add, multiply, sigmoid, softmax) and each edge is a tensor flowing through. Forward pass: evaluate the graph from inputs to loss. Backward pass: apply the chain rule at each node, propagating gradients from the loss back to the parameters. Autograd engines (PyTorch, JAX, TensorFlow) build this graph dynamically and compute exact gradients automatically. The key insight: each operation needs only to know its own local derivative — it does not need to know the full computation graph.
+
+**Useful derivatives to know cold**
+
+Sigmoid σ(x) = 1/(1+e^(-x)): σ'(x) = σ(x)(1 - σ(x)). This clean form is why sigmoid appears in logistic regression and LSTM gates. ReLU: f'(x) = 1 if x > 0, 0 if x < 0 (undefined but set to 0 at x=0 in practice). Softmax: ∂softmax_i/∂z_j = softmax_i(δ_{ij} - softmax_j). The Jacobian is not diagonal — the ith output depends on all inputs. Cross-entropy with softmax: ∂L/∂z_i = ŷ_i - y_i (the prediction minus the one-hot label). This is the beautifully simple gradient that makes training classification networks practical.
+
+**Why residual connections fix vanishing gradients**
+
+Without residuals: x → f₁(x) → f₂(f₁(x)) → ... The gradient of the loss w.r.t. the input to layer k is a product of Jacobians: Π_{l=k}^{L} J_l. If ||J_l|| < 1 for all layers, this product shrinks exponentially with depth. With residuals: output = x + f(x). Gradient: d(output)/d(input) = I + df/d(input). The identity term I ensures the gradient has a direct path that bypasses the layers — no matter how bad the other Jacobians are, the gradient is at least I. Gradient flow is guaranteed through the skip connection.
+
+**Second-order methods: what the Hessian tells you**
+
+The Hessian H = ∇²L ∈ ℝᵈˣᵈ is the matrix of second derivatives: H_{ij} = ∂²L/∂θᵢ∂θⱼ. It captures the curvature of the loss surface. Eigenvalues of H: positive definite (all λ > 0) → local minimum. Indefinite (mixed signs) → saddle point. Newton's method uses the Hessian: θ ← θ - H⁻¹ ∇L. It accounts for curvature and converges in fewer steps than gradient descent. Problem: for a neural network with d parameters, H is d×d. For GPT-3, d ≈ 175B — H is completely intractable. Approximate second-order methods (Adam, K-FAC, Shampoo) use low-rank or diagonal approximations to the Hessian.
+
+**Interview questions on this topic**
+
+"Derive the gradient of cross-entropy loss with softmax output." — L = -Σ_i y_i log(ŷ_i), ŷ = softmax(z). Using the softmax Jacobian and chain rule: ∂L/∂z_i = ŷ_i - y_i. Walk through the derivation step by step.
+
+"Why does the sigmoid activation cause vanishing gradients?" — σ'(x) = σ(x)(1-σ(x)) ≤ 0.25 for all x (maximum at x=0). After many layers, chained products of ≤0.25 shrink exponentially. ReLU gradient is 1 for positive inputs, so it doesn't shrink in the forward-active region.
+
+"What is the difference between gradient descent, SGD, and mini-batch SGD?" — Full GD computes the gradient over all n training examples per step: exact but O(n) per step. SGD uses 1 example: O(1) per step but very noisy. Mini-batch SGD uses batch size B: noise-variance trade-off, the practical default. With batch size B, gradient variance is σ²/B.
+
+"How does Adam differ from plain SGD? What does it actually do?" — Adam maintains exponential moving averages of the gradient (m_t = β₁ m_{t-1} + (1-β₁) g_t) and of the squared gradient (v_t = β₂ v_{t-1} + (1-β₂) g_t²). The update is θ -= α m̂_t / (√v̂_t + ε). This is adaptive per-parameter learning rates: parameters with consistently large gradients get smaller updates; parameters with small gradients get larger updates. Bias correction (m̂, v̂) accounts for the cold start.
+
+**Try on Colab:** implement gradient descent from scratch to minimise the Rosenbrock function f(x,y) = (1-x)² + 100(y-x²)² (a classic ill-conditioned test case). Implement vanilla GD, GD with momentum, and Adam. Plot the loss trajectories and the paths through the (x,y) parameter space. Observe how Adam escapes the banana-shaped valley faster.`,
+    tags: ['Models & Math', 'Calculus', 'Gradients', 'Chain Rule', 'Backpropagation', 'Optimisation', 'Ground Up'],
+    domain: 'math',
+    youtube: [{ id: 'tIeHLnjs5U8', title: 'Backpropagation calculus — 3Blue1Brown' }],
+  },
+  {
+    id: 104,
+    slug: 'information-theory-entropy-kl-cross-entropy',
+    title: 'Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same answer: information theory. Shannon built it in 1948 to study communication. ML borrowed all of it.',
+    body: `Information theory was invented by Claude Shannon in 1948 to answer one question: how much information does a message contain? The answer, entropy, turned out to be the bedrock of modern machine learning — the language in which we write every loss function and every notion of model-data fit.
+
+**The intuition: rare events contain more information**
+
+If a coin flip comes up heads, you have learned something — heads and tails are equally likely, so either outcome is surprising. If the sun rises, you have learned almost nothing — it was virtually certain. The information content of an event with probability p is: I(x) = -log₂(p(x)) bits (using log base 2) or -ln(p(x)) nats (using natural log). Rare events (p small) have high information content. Certain events (p → 1) have near-zero information. This is the fundamental quantification.
+
+**Shannon Entropy: average surprise**
+
+The entropy of a distribution P over K discrete outcomes is: H(P) = -Σᵢ p(xᵢ) log p(xᵢ) = E[-log P(X)]. It is the expected information content — the average surprise per observation. Maximum entropy: a uniform distribution over K outcomes has entropy log K — maximum uncertainty. Zero entropy: a deterministic distribution (one outcome has probability 1) has entropy 0 — no uncertainty. Entropy measures how unpredictable a distribution is. For a fair coin: H = -(0.5 log 0.5 + 0.5 log 0.5) = 1 bit. For a biased coin with p=0.9: H ≈ 0.47 bits.
+
+**Cross-Entropy: measuring model fit**
+
+Cross-entropy between the true distribution P and our model Q is: H(P, Q) = -Σᵢ p(xᵢ) log q(xᵢ) = E_P[-log Q(X)]. When our model Q matches P exactly, H(P,Q) = H(P) — the minimum possible. When Q is a bad model of P, H(P,Q) > H(P). In classification: P is the one-hot true label distribution (p=1 for the correct class, 0 for others). Q is the softmax output of our model. H(P,Q) = -log q(y_true) — just the log probability assigned to the correct class. Minimising cross-entropy loss is equivalent to maximising log-likelihood under the model Q.
+
+**KL Divergence: the gap between distributions**
+
+KL(P || Q) = Σᵢ p(xᵢ) log(p(xᵢ)/q(xᵢ)) = H(P,Q) - H(P). It is the excess bits needed to encode samples from P using a code optimised for Q. KL ≥ 0 always (Gibbs inequality). KL = 0 iff P = Q. KL is asymmetric: KL(P||Q) ≠ KL(Q||P). The asymmetry matters: KL(P||Q) penalises heavily when q(x) ≈ 0 where p(x) > 0 — the model assigns near-zero probability to a likely event. KL(Q||P) penalises q(x) > 0 where p(x) ≈ 0 — the model puts mass in impossible regions. In VAEs, we minimise KL(Q_φ(z|x) || P(z)) — the KL from the posterior to the prior — to regularise the latent space (see Post 62).
+
+**Why cross-entropy = MLE**
+
+Training a model by maximising log-likelihood: max Σᵢ log q(yᵢ|xᵢ). Equivalently: minimise -Σᵢ log q(yᵢ|xᵢ) = -n E_P[log Q(Y|X)] = n H(P, Q). Minimising cross-entropy loss IS maximum likelihood estimation. This is not a choice we make — it is a mathematical identity. Cross-entropy loss is the only correct loss for classification under the probabilistic model that the true labels are samples from the softmax distribution.
+
+**Mutual Information: shared information between variables**
+
+I(X; Y) = H(X) + H(Y) - H(X, Y) = H(X) - H(X|Y) = KL(P(X,Y) || P(X)P(Y)). It measures how much knowing Y reduces uncertainty about X (and vice versa — it is symmetric). I(X;Y) = 0 iff X and Y are independent (their joint distribution factors). Large I(X;Y) means X and Y share a lot of information — knowing one tells you a lot about the other. Applications in ML: feature selection (maximise I(feature; label)). InfoNCE and contrastive learning objectives (like CLIP, see Post 69) maximise a lower bound on mutual information between paired views. Information bottleneck theory: learning compresses X into representation Z while maximising I(Z;Y) (preserving task-relevant information).
+
+**Entropy and model calibration**
+
+A well-calibrated model with low uncertainty (concentrated distribution over few classes) has low entropy in its outputs. A confused model outputs nearly uniform distributions — high entropy. Predictive entropy = H(p̂) is a calibration and uncertainty measure. Low entropy on the correct class = confident and right. High entropy = uncertain. Low entropy on the wrong class = overconfident and wrong. This is the basis of entropy-based uncertainty quantification in production (flag high-entropy predictions for human review).
+
+**Interview questions on this topic**
+
+"Why do we use cross-entropy loss and not mean squared error for classification?" — MSE assumes the label distribution is Gaussian (it is the MLE loss under a Gaussian model). Labels in classification are Bernoulli/Categorical. Cross-entropy is the MLE loss under the correct model. Additionally, MSE on logits has flat gradients near the boundaries (sigmoid saturation); cross-entropy with softmax has gradient ŷ - y everywhere.
+
+"KL divergence is not symmetric. Does the direction matter? Give an example where each direction is preferred." — KL(P||Q): mode-covering, since we penalise q=0 when p>0. Used when we want Q to cover all modes of P (e.g., variational inference posteriors, don't miss any valid latent configuration). KL(Q||P): mode-seeking, since we penalise q>0 when p=0. Used when we want Q to be precise, not spread mass in impossible regions.
+
+"What is the connection between entropy and data compression?" — Shannon's source coding theorem: you cannot losslessly compress data from distribution P to fewer than H(P) bits per symbol on average. H(P) is the fundamental limit. Cross-entropy H(P,Q) is the number of bits used by a code designed for Q when the true distribution is P — always ≥ H(P).
+
+"Where does KL divergence appear in the VAE loss and what does it do?" — The ELBO = E[log p(x|z)] - KL(q(z|x) || p(z)). The first term is reconstruction quality. The KL term regularises the posterior q(z|x) to stay close to the prior p(z) = N(0,I). Without it, the encoder could map each point to a unique z with no overlap — the decoder cannot generalise.
+
+**Try on Colab:** generate samples from a mixture of two Gaussians (P). Train a single Gaussian model (Q) to approximate it by minimising KL(P||Q) and KL(Q||P) separately using Monte Carlo gradient estimates. Visualise the fitted distributions. Observe: KL(P||Q) produces a Q that covers both modes (smeared over the gap); KL(Q||P) produces a Q that collapses to one mode (mode-seeking).`,
+    tags: ['Models & Math', 'Information Theory', 'Entropy', 'KL Divergence', 'Cross-Entropy', 'MLE', 'Ground Up'],
+    domain: 'math',
+    youtube: [{ id: 'ErfnhcEV1O8', title: 'Entropy in information theory — Khan Academy' }],
+  },
+  {
+    id: 105,
+    slug: 'mle-map-the-unifying-framework',
+    title: 'MLE and MAP: The Unifying Framework Behind Every Model',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under different distributional assumptions about the data. MAP estimation adds a prior, which turns out to be exactly equivalent to L1 or L2 regularisation. This post shows the connections.',
+    body: `Maximum Likelihood Estimation (MLE) is the single most important idea in classical statistics and machine learning. Understanding it means understanding why we use the loss functions we use — not just as convention but as mathematical necessity given our modelling assumptions.
+
+**The MLE principle**
+
+Given: a family of distributions P(data | θ) parameterised by θ, and observed data D = {x₁, ..., xₙ}. MLE finds the parameters that make the observed data most probable: θ_MLE = argmax_θ P(D | θ). Assuming i.i.d. data: P(D | θ) = Πᵢ P(xᵢ | θ). Since log is monotone, maximising the product is equivalent to maximising the sum of log-probabilities: θ_MLE = argmax_θ Σᵢ log P(xᵢ | θ). This is the log-likelihood. Maximising it is equivalent to minimising the negative log-likelihood (NLL), which is the loss function.
+
+**Linear regression as MLE under Gaussian noise**
+
+Model: y = wᵀx + ε where ε ~ N(0, σ²). Therefore: P(y | x, w) = N(y; wᵀx, σ²). Log-likelihood: Σᵢ log P(yᵢ | xᵢ, w) = -n/2 log(2πσ²) - (1/2σ²) Σᵢ (yᵢ - wᵀxᵢ)². Maximising this over w is equivalent to minimising Σᵢ (yᵢ - wᵀxᵢ)² — mean squared error. MSE is not an arbitrary loss function. It is the MLE loss under the assumption that noise is Gaussian. Change the noise assumption and you get a different loss.
+
+**Logistic regression as MLE under Bernoulli**
+
+Model: P(y=1|x,w) = σ(wᵀx) = 1/(1+e^(-wᵀx)). Therefore: P(y|x,w) = σ(wᵀx)^y (1-σ(wᵀx))^(1-y). Log-likelihood: Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Negated: binary cross-entropy loss. Logistic regression minimises cross-entropy because the label distribution is Bernoulli, not Gaussian. Choosing cross-entropy for binary classification is not a design choice — it is the correct MLE derivation.
+
+**L2 regression as MLE under Laplace noise**
+
+If ε ~ Laplace(0, b), then P(y|x,w) = (1/2b) exp(-|y - wᵀx|/b). Log-likelihood: -Σᵢ |yᵢ - wᵀxᵢ|/b - const. Maximising this minimises mean absolute error (MAE). MAE is the MLE loss under Laplace noise. Laplace distribution has heavier tails than Gaussian — it is more robust to outliers. When you choose MAE over MSE, you are implicitly assuming your residuals have heavier tails.
+
+**MAP estimation: adding a prior**
+
+MAP (Maximum A Posteriori) finds the mode of the posterior: θ_MAP = argmax_θ P(θ | D) = argmax_θ [log P(D | θ) + log P(θ)]. The log prior log P(θ) acts as a regulariser. Gaussian prior on weights P(w) = N(0, λI): log P(w) = -(λ/2) ||w||². Adding this to the log-likelihood: θ_MAP = argmin_θ [NLL + (λ/2) ||w||²]. This is L2 regularisation (ridge regression). Gaussian prior = L2 regularisation — they are mathematically identical. Laplace prior on weights P(w) = Laplace(0, 1/λ): log P(w) = -λ ||w||₁. Adding this: θ_MAP = argmin_θ [NLL + λ||w||₁]. This is L1 regularisation (Lasso). Laplace prior = L1 regularisation. The sparsity-inducing property of Lasso falls out naturally: the Laplace prior has a spike at zero, placing high prior probability on sparse weights.
+
+**Naive Bayes as generative MLE**
+
+Naive Bayes is a generative classifier: model P(X, Y) = P(Y) P(X|Y), then classify using P(Y|X) ∝ P(Y) P(X|Y). Under the conditional independence assumption: P(X|Y) = Πⱼ P(Xⱼ|Y). MLE for each component: P(Y=c) = count(Y=c)/n. P(Xⱼ=v|Y=c) = count(Xⱼ=v, Y=c)/count(Y=c). At test time: ŷ = argmax_c P(Y=c) Πⱼ P(Xⱼ|Y=c). Naive Bayes is MLE of a factored generative model. Adding a Dirichlet prior to the class-conditional distributions gives MAP estimation — this is Laplace smoothing.
+
+**The bias-variance-noise decomposition via MLE**
+
+MLE minimises the KL divergence between the empirical data distribution and the model family: KL(P_data || P_θ). Minimising KL(P_data || P_θ) = H(P_data, P_θ) - H(P_data) = H(P_data, P_θ) + const. So MLE = cross-entropy minimisation = NLL minimisation. The expected MSE of a model decomposes as: E[(y-f(x))²] = Bias² + Variance + σ²_noise. MLE is the unique estimator that is consistent (converges to the truth as n→∞) and asymptotically efficient (achieves the Cramér-Rao lower bound on variance). This makes it the theoretically justified default.
+
+**Interview questions on this topic**
+
+"What is the difference between MLE and MAP? When would you use each?" — MLE maximises likelihood alone; MAP adds a prior. MAP = MLE with regularisation. Use MLE with large data (the prior is dominated). Use MAP when data is limited and you have reliable prior knowledge. With an uninformative (uniform) prior, MAP = MLE.
+
+"Linear regression uses MSE. Why not cross-entropy?" — MSE is the correct MLE loss when errors are Gaussian. Cross-entropy is the correct MLE loss for Bernoulli/Categorical outcomes. Using cross-entropy for regression (continuous targets) would be wrong unless you model the output as a categorical distribution over bins.
+
+"What prior distribution corresponds to L1 regularisation? What does it imply about the solution?" — Laplace prior. The Laplace distribution has a sharp peak at zero, placing large prior probability on zero weights. The resulting MAP solution is sparse — many weights are exactly zero. This is why Lasso does feature selection and Ridge does not.
+
+"How does Naive Bayes perform text classification? What are its failure modes?" — MLE of P(word|class) from word counts, then Bayes rule to classify. Failure modes: rare words (estimated probability = 0 → need smoothing), strong feature correlations violating the independence assumption, and poor probability calibration (though classification accuracy can still be high).
+
+**Try on Colab:** implement MLE from scratch for a Gaussian mixture model using scipy.optimize.minimize on the negative log-likelihood. Fix the number of components K=3. Fit to 1000 samples from a known 3-component mixture and recover the means, standard deviations, and mixing proportions. Compare with sklearn.mixture.GaussianMixture (which uses EM). Why does scipy.optimize sometimes get stuck?`,
+    tags: ['Models & Math', 'MLE', 'MAP', 'Regularisation', 'Bayesian', 'Loss Functions', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 106,
+    slug: 'em-algorithm-gmms-kmeans-hmms',
+    title: 'The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 13,
+    featured: false,
+    excerpt: 'The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling in the missing variables (E-step) and maximising the likelihood (M-step) — and it is why we can train Gaussian Mixture Models, HMMs, and topic models at all.',
+    body: `Maximum likelihood estimation is straightforward when all variables are observed: write down the log-likelihood, take the gradient, set it to zero. But many powerful models have latent variables — variables that are never observed. Gaussian Mixture Models have cluster assignments. Hidden Markov Models have hidden state sequences. Topic models (LDA) have topic assignments per word. You cannot take the gradient of the log-likelihood directly because summing over all possible latent configurations is intractable. The EM algorithm solves this.
+
+**The core idea: complete data vs incomplete data**
+
+Define complete data as (x, z) where x is observed and z is the latent variable. If we knew z, the log-likelihood log P(x, z | θ) — the complete-data log-likelihood — might be easy to maximise. We do not know z. The EM algorithm iterates: E-step: compute Q(θ | θ_old) = E_{z|x,θ_old}[log P(x, z | θ)] — the expected complete-data log-likelihood, where the expectation is over the posterior of z given current parameters. M-step: θ_new = argmax_θ Q(θ | θ_old) — maximise the expected complete-data log-likelihood. Repeat until convergence.
+
+**Why EM is guaranteed to converge**
+
+EM converges because each iteration non-decreasingly improves the observed-data log-likelihood log P(x | θ). The proof uses Jensen's inequality applied to the log-concavity of the expectation: log P(x|θ) ≥ Q(θ|θ_old) + H(posterior). The M-step increases Q, which means the bound increases, which means log P(x|θ) cannot decrease. Convergence is to a local maximum or saddle point — EM does not guarantee the global MLE. Initialisation matters enormously.
+
+**Gaussian Mixture Models (GMMs)**
+
+Model: a mixture of K Gaussians. The generative process: (1) sample cluster assignment z ~ Categorical(π₁, ..., πK). (2) Sample x ~ N(μ_z, Σ_z). Observed: x. Latent: z. E-step: compute soft cluster assignments (responsibilities): r_{nk} = P(z_n = k | x_n, θ) = π_k N(x_n; μ_k, Σ_k) / Σ_j π_j N(x_n; μ_j, Σ_j). Each point x_n gets a soft assignment to each cluster — the r_{nk} sum to 1 over k. M-step: update parameters using the weighted data. N_k = Σ_n r_{nk} (effective number of points in cluster k). π_k = N_k / n. μ_k = Σ_n r_{nk} x_n / N_k (weighted mean). Σ_k = Σ_n r_{nk} (x_n - μ_k)(x_n - μ_k)ᵀ / N_k (weighted covariance). These updates are closed-form — this is the M-step maximisation in action.
+
+**k-Means as hard-assignment EM**
+
+k-Means is EM on a GMM with hard assignment (no soft probabilities) and spherical, equal-variance, equal-weight Gaussians. E-step → assignment step: each point is assigned to its nearest centroid (argmax_k r_{nk} = 1, all others 0). M-step → update step: centroids are updated as the mean of assigned points. k-Means minimises Σ_n min_k ||x_n - μ_k||² — the total within-cluster sum of squares. This is not the log-likelihood of any natural generative model; it is a hard approximation that works well empirically when clusters are roughly spherical and equal-sized.
+
+**Hidden Markov Models (HMMs)**
+
+A sequence model: hidden states z₁, z₂, ..., zT with Markov transitions P(zₜ|zₜ₋₁ = A (transition matrix), observations xₜ ~ P(xₜ|zₜ) = B (emission model). We observe x₁:T; we do not observe z₁:T. E-step — forward-backward algorithm: efficiently computes the posterior over hidden states γₜ(k) = P(zₜ = k | x₁:T, θ) and state transition posteriors ξₜ(j,k) = P(zₜ₋₁=j, zₜ=k | x₁:T, θ). The forward-backward algorithm exploits the Markov structure to do this in O(TK²) instead of O(KT). M-step — Baum-Welch: update A, B, π using the posterior counts, exactly as in GMMs. The Baum-Welch algorithm IS EM for HMMs.
+
+**Latent Dirichlet Allocation (LDA)**
+
+LDA is a topic model: documents are mixtures of topics, topics are distributions over words. Latent variable: topic assignments for each word. Because the Dirichlet-Multinomial conjugacy makes the full posterior tractable, LDA can be trained with variational EM (approximate E-step using a variational distribution) or collapsed Gibbs sampling. The core structure — latent variables, E-step to compute posteriors, M-step to update parameters — is still EM.
+
+**Practical considerations**
+
+Initialisation: k-Means++ initialisation (choose initial centroids with probability proportional to distance from existing centroids) dramatically improves convergence. For GMMs, initialise with k-Means output. Multiple restarts: run EM from many random starting points and pick the highest likelihood solution. Convergence criterion: stop when log-likelihood improvement drops below a threshold (e.g., 1e-6). Degenerate solutions: a Gaussian can collapse on a single data point with σ → 0 and likelihood → ∞. Fix by adding a minimum covariance floor.
+
+**Interview questions on this topic**
+
+"Explain the EM algorithm in one minute." — We have observed data x and latent variables z. Direct MLE is hard because we'd need to marginalise over all z. EM alternates: E-step computes the expected log-likelihood under the current posterior over z; M-step maximises that expectation. Each iteration is guaranteed not to decrease the observed log-likelihood. Converges to a local maximum.
+
+"How is k-Means a special case of EM for GMMs?" — k-Means uses hard cluster assignments (each point belongs to exactly one cluster) and assumes equal, spherical Gaussians. GMMs use soft assignments (each point belongs partially to each cluster) and learn cluster shapes. In the limit of zero variance, the soft GMM assignments approach hard k-Means assignments.
+
+"Why does EM not always find the global maximum? What do you do about it?" — EM climbs the likelihood from its starting point and converges to a local max or saddle. With multiple modes, different initialisations converge to different solutions. In practice: multiple restarts, choosing the solution with the highest final likelihood. For k-Means specifically, k-Means++ gives a better-than-random initialisation with provable 8 ln k approximation guarantee.
+
+"When would you use GMMs vs k-Means in practice?" — GMMs: when you need soft cluster assignments (uncertainty about which cluster a point belongs to), when clusters are not spherical (full covariance GMM), when you want a proper generative model (can sample from it, compute likelihoods). k-Means: faster, when hard assignments suffice, when clusters are roughly spherical and balanced in size.
+
+**Try on Colab:** implement GMM from scratch using the EM algorithm on the Old Faithful eruption dataset (2D). Initialise with k=2 components. Plot the decision boundaries and ellipses at each EM step to visualise convergence. Compare log-likelihood trajectories for 10 random starts. Show that k-Means initialisation (warm start) converges faster and more reliably than random initialisation.`,
+    tags: ['Models & Math', 'EM Algorithm', 'GMM', 'Clustering', 'HMM', 'Latent Variables', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 107,
+    slug: 'logistic-regression-from-scratch-mle-glm',
+    title: 'Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right loss? What does the weight on a feature actually mean? This post derives it all from first principles and covers the GLM framework it sits inside.',
+    body: `Logistic regression is the canonical binary classification model. It is used in production at every major tech company for click-through rate prediction, churn modelling, and credit risk scoring. Its simplicity makes it interpretable; its calibration properties make it reliable. But most ML practitioners cannot derive it from first principles. This post fixes that.
+
+**The modelling choice: sigmoid**
+
+For binary classification (y ∈ {0, 1}), we want to model P(y=1|x). This probability must lie in [0,1], but a linear model wᵀx can output any real number. We need a link function that squashes ℝ to (0,1). The sigmoid: σ(z) = 1/(1+e^(-z)) = e^z/(1+e^z). It is S-shaped, differentiable everywhere, σ(0)=0.5, σ(z)→1 as z→∞, σ(z)→0 as z→-∞. The logistic regression model: P(y=1|x,w) = σ(wᵀx + b). But why sigmoid specifically, and not tanh or any other S-shaped function?
+
+**The GLM derivation: sigmoid falls out of the exponential family**
+
+Generalised Linear Models (GLMs) answer "which link function is correct for which distribution." A GLM has three components: random component (the distribution of y), systematic component (the linear predictor wᵀx), and link function connecting them. The Bernoulli distribution is in the exponential family: P(y|η) = exp(ηy - log(1+e^η)) where η is the natural parameter. If we set η = wᵀx (the linear predictor equals the natural parameter — the canonical link), then: P(y=1|x,w) = e^(wᵀx) / (1 + e^(wᵀx)) = σ(wᵀx). The sigmoid falls out of the Bernoulli exponential family with the canonical link. It is not an arbitrary choice — it is the mathematically natural choice.
+
+**Log-odds interpretation**
+
+log(P(y=1)/P(y=0)) = log(σ(wᵀx)/(1-σ(wᵀx))) = wᵀx. The log-odds (logit) is linear in the features. This is where "logistic" comes from (logit = log-odds). Each weight wⱼ is the change in log-odds per unit change in feature xⱼ, holding all other features constant. Exponentiating: e^wⱼ is the odds ratio for feature j. If wⱼ = 0.7, then e^0.7 ≈ 2 — a one-unit increase in xⱼ approximately doubles the odds of y=1.
+
+**Deriving the loss function from MLE**
+
+Label model: P(y|x,w) = σ(wᵀx)^y (1-σ(wᵀx))^(1-y). Log-likelihood: ℓ(w) = Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Negate to get the loss (binary cross-entropy): L(w) = -Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Gradient: ∂L/∂w = Σᵢ (σ(wᵀxᵢ) - yᵢ) xᵢ = Xᵀ(ŷ - y). This is the residual (prediction minus label) times the feature vector — exactly the same form as the linear regression gradient. This is not coincidence: GLMs all have the same gradient structure.
+
+**Training: gradient descent and its variants**
+
+There is no closed-form solution for logistic regression weights (unlike linear regression). We use iterative optimisation. Full gradient descent: w ← w - α Xᵀ(ŷ - y). Mini-batch SGD: sample a batch, compute gradient on batch, update. Newton's method converges in fewer iterations: w ← w - H⁻¹ ∇L where H = Xᵀ W X (W = diag(σ(1-σ)) is the weight matrix). Newton is expensive (O(d²) per step) but used in the IRLS (Iteratively Reweighted Least Squares) implementation.
+
+**Regularisation**
+
+L2 (Ridge): L_reg = L + (λ/2)||w||². Gradient adds λw. Shrinks all weights toward zero, never to exactly zero. Equivalent to Gaussian prior on weights. L1 (Lasso): L_reg = L + λ||w||₁. Produces sparse solutions — some weights exactly zero (feature selection). Equivalent to Laplace prior. Elastic Net: L + λ₁||w||₁ + λ₂||w||². Combines sparsity and shrinkage.
+
+**Multiclass: Softmax regression**
+
+For K > 2 classes, logistic regression generalises to softmax regression (also called multinomial logistic regression): P(y=k|x,W) = exp(wₖᵀx) / Σⱼ exp(wⱼᵀx). One weight vector per class. The loss is categorical cross-entropy: -Σᵢ Σₖ y_{ik} log P(y=k|xᵢ,W). Softmax regression is the output layer of every neural network classification head.
+
+**Interview questions on this topic**
+
+"Why does logistic regression output probabilities rather than just 0/1 labels?" — Because the model is P(y=1|x) under the Bernoulli distribution. The sigmoid maps the real-valued linear score to a valid probability. This allows uncertainty quantification and calibration.
+
+"What is the decision boundary of logistic regression? What shape is it?" — The decision boundary is where P(y=1|x) = 0.5, i.e., σ(wᵀx) = 0.5, i.e., wᵀx = 0. This is a hyperplane — logistic regression is a linear classifier. It can separate linearly separable data only. For non-linear boundaries, use feature engineering (polynomial features) or a nonlinear model.
+
+"Why does logistic regression with L2 regularisation never have exactly zero weights, but L1 does?" — L2 penalty λw_j²: gradient is λw_j, which is smooth and approaches zero as w_j→0 but never becomes exactly zero. L1 penalty λ|w_j|: the subgradient at w_j=0 is the interval [-λ,λ], which includes zero — if the loss gradient is small enough, the optimizer can stay at w_j=0.
+
+"You have a 1:100 positive-to-negative class imbalance. How does this affect logistic regression training and inference?" — The model is pushed toward predicting the majority class. Solutions: reweight the loss by class frequency (positive class weight = 100x), oversample positives (SMOTE), undersample negatives, or lower the classification threshold below 0.5 at inference time. The log-likelihood gradient is dominated by the majority class without reweighting.
+
+**Try on Colab:** implement logistic regression from scratch using only NumPy. Use gradient descent with learning rate schedule and L2 regularisation. Train on the Breast Cancer Wisconsin dataset. Plot the training loss curve and verify it matches sklearn.LogisticRegression with the same regularisation. Then implement Newton's method (IRLS) and compare convergence speed (iterations to reach 1e-6 gradient norm).`,
+    tags: ['Models & Math', 'Logistic Regression', 'MLE', 'GLM', 'Classification', 'Sigmoid', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 108,
+    slug: 'decision-trees-random-forests-information-gain-bagging',
+    title: 'Decision Trees and Random Forests: From Information Gain to Why Bagging Reduces Variance',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,163,0,0.2)' },
+    readMin: 13,
+    featured: false,
+    excerpt: 'Decision trees are the most interpretable non-linear model. Random forests take a collection of overfit trees and average their variance away. Gradient boosted trees (XGBoost) take a collection of underfit trees and reduce their bias iteratively. Understanding why these ensemble methods work requires understanding variance decomposition — and that starts with a single tree.',
+    body: `Decision trees and their ensembles are the most widely deployed ML models in tabular data across industry. Not because they are theoretically elegant (though they are), but because they handle mixed types, missing values, outliers, and non-linear relationships with little preprocessing, and because their predictions can be explained.
+
+**Decision trees: structure and splitting**
+
+A decision tree recursively partitions the feature space with axis-aligned splits. At each node, we choose a feature j and a threshold t and split: left child gets samples where xⱼ ≤ t; right child gets samples where xⱼ > t. A leaf predicts the majority class (classification) or the mean outcome (regression). The recursive partitioning continues until a stopping criterion: maximum depth, minimum samples per leaf, or impurity below threshold.
+
+**Impurity measures: what we actually optimise**
+
+The split is chosen to maximise the reduction in impurity. Gini impurity: Gini(S) = 1 - Σₖ pₖ² where pₖ is the proportion of class k in set S. Intuition: if you randomly pick two samples from S, what is the probability they have different labels? Gini = 0 for pure nodes (all same class); Gini = 1-1/K for maximum disorder. Entropy: H(S) = -Σₖ pₖ log pₖ (information entropy from Post 104). Both measure disorder; Gini is cheaper to compute (no log) and preferred by CART. Information gain: IG(S, j, t) = H(S) - [|S_L|/|S| H(S_L) + |S_R|/|S| H(S_R)]. We subtract the weighted average entropy of the two child nodes from the parent's entropy. The best split maximises information gain. For regression: replace entropy/Gini with variance reduction.
+
+**The bias-variance view of a single tree**
+
+An unpruned decision tree grown to full depth can perfectly memorise the training set (zero bias, very high variance). Different random training sets would produce very different trees. A shallow tree has high bias (underfits) but low variance. This is the fundamental bias-variance trade-off made concrete in a single model.
+
+**Bagging: why averaging reduces variance**
+
+Bagging (Bootstrap Aggregation, Breiman 1994): train B models on independently bootstrapped datasets (sample n with replacement from training set), average their predictions. Mathematical result: if each model has variance σ² and models are uncorrelated, the average has variance σ²/B. Correlation between models (they all see similar data) reduces the variance reduction — you can never get better than the average of B identical models: Var(average) = σ²/B + ((B-1)/B) ρ σ² where ρ is the pairwise correlation. The key to bagging is decorrelating the trees. This is what randomness buys you.
+
+**Random Forests: decorrelating the trees**
+
+Random Forests (Breiman, 2001) add feature randomness on top of bootstrap sampling: at each node, only a random subset of features (m ≪ d, typically m = √d for classification) are considered as split candidates. This decorrelates the trees because they can no longer all pick the same dominant feature. Effect: ρ decreases → more variance reduction from averaging. Typically m = √d for classification, m = d/3 for regression. Out-of-bag error (OOB): for each training sample, it is not included in ≈37% of bootstrap samples. Use those B*0.37 trees that didn't see this sample to predict it — gives a free validation estimate without a holdout set.
+
+**Feature importance in Random Forests**
+
+Mean Decrease Impurity (MDI): average the impurity decrease from each split on feature j, weighted by the number of samples reaching that node, across all trees. Fast but biased toward high-cardinality features and sensitive to correlated features. Mean Decrease Accuracy (MDA / permutation importance): for each tree's OOB samples, permute feature j's values and measure the drop in accuracy. Average across all trees. Slower but more robust and model-agnostic. SHAP TreeExplainer computes exact Shapley values for tree ensembles in O(T L d) time — the preferred method for interpretable RF.
+
+**Boosting vs bagging**
+
+Bagging: parallel training, reduces variance, works best with low-bias high-variance base learners (deep trees). Boosting: sequential training, reduces bias, works best with high-bias low-variance base learners (shallow trees / stumps). In gradient boosting (XGBoost, LightGBM), each new tree fits the residuals (negative gradient of the loss) of the current ensemble — see Post 73. Random Forests almost always underperform well-tuned gradient boosted trees on tabular data, but are faster to train and require less hyperparameter tuning.
+
+**Interview questions on this topic**
+
+"Why do Random Forests not overfit as you add more trees?" — Adding more trees reduces variance (each tree's noise averages out) but does not increase bias. You can keep adding trees until variance is negligible. You can overfit by growing very deep trees (high individual variance) but the averaging prevents the ensemble from overfitting in the same way a single deep tree does.
+
+"What is the difference between Gini impurity and entropy as splitting criteria? When does it matter?" — Gini is cheaper to compute. Entropy can produce slightly different splits in theory but in practice the trees look nearly identical and performance differences are negligible. Neither is reliably better.
+
+"A feature has very high MDI (mean decrease impurity) importance but near-zero MDA (permutation importance). What does this mean?" — The feature is correlated with other informative features. MDI is inflated because the tree uses the feature as a proxy for the correlated features. Permutation importance captures the unique contribution of the feature — since correlated features can substitute, shuffling one doesn't hurt accuracy much.
+
+"Why does Random Forest use √d features per split? What happens if you use all d features?" — With all d features, trees are correlated (all tend to split on the same dominant features), reducing the variance benefit of averaging. √d is a heuristic that balances individual tree quality (more features = better individual splits) and decorrelation (fewer features = less correlated trees). Tuning m is often worthwhile.
+
+**Try on Colab:** grow a single decision tree to depth 1, 3, 5, unlimited on the Wisconsin Breast Cancer dataset. Plot training vs test accuracy as a function of depth. Then train a Random Forest with 10, 100, 1000 trees. Show that test accuracy stops improving and never degrades as tree count increases. Compare MDI vs MDA feature importances for the top 5 features.`,
+    tags: ['Models & Math', 'Decision Trees', 'Random Forests', 'Information Gain', 'Bagging', 'Ensemble Methods', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 109,
+    slug: 'word2vec-embedding-geometry-negative-sampling',
+    title: 'Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since — GloVe, BERT, GPT, CLIP — is a successor to this idea. Understanding word2vec means understanding why the geometry works, not just that it does.',
+    body: `Word2Vec (Mikolov et al., Google, 2013) is the paper that created the modern notion of a word embedding — a dense vector representation of a word that captures semantic and syntactic relationships through geometric proximity. It is the ancestor of every embedding system in use today.
+
+**Before word2vec: one-hot encodings**
+
+Before 2013, NLP typically represented words as one-hot vectors: a vector of length |vocabulary| with a 1 in the position of the word and 0 elsewhere. These are orthogonal — every pair of words has zero cosine similarity regardless of semantic relationship. "Cat" and "kitten" are no more similar than "cat" and "airplane." You cannot generalise from training examples about cats to test examples about kittens.
+
+**The distributional hypothesis**
+
+"You shall know a word by the company it keeps" — Firth, 1957. Words that appear in similar contexts tend to have similar meanings. "Bank" appears near "money," "loan," "finance" in financial contexts and near "river," "fish," "shore" in geographic contexts. This polysemy is a problem for static embeddings but the core insight — context defines meaning — is correct and powerful.
+
+**Skip-gram: the word2vec training objective**
+
+Skip-gram model: given a target word w_t, predict the context words within a window of size k. For each target word, we define the positive context words (those that appear within the window) and learn embeddings that maximise the probability of context words given the target. The probability: P(w_c | w_t) = exp(v_{w_c}ᵀ u_{w_t}) / Σ_{w'} exp(v_{w'}ᵀ u_{w_t}), where u_{w_t} is the target embedding and v_{w_c} is the context embedding. The denominator sums over the entire vocabulary — O(|V|) per gradient step, which is too expensive for vocabulary sizes of millions.
+
+**Negative sampling: the computational trick**
+
+Instead of computing the full softmax, negative sampling trains a binary classifier: does this (target, context) pair come from real co-occurrence or from random sampling? Objective: for each positive pair (w_t, w_c), maximise log σ(v_{w_c}ᵀ u_{w_t}) + Σ_{k=1}^{K} E_{w_neg~P_n}[log σ(-v_{w_neg}ᵀ u_{w_t})]. The first term pushes the positive context word's embedding to be similar to the target. The K negative terms push K randomly sampled words (from the unigram^{3/4} distribution) to be dissimilar. This is O(K) per step instead of O(|V|). Typical K = 5-20. The unigram^{3/4} distribution downweights frequent words (reducing their dominance as negatives) and upweights rare words.
+
+**CBOW vs Skip-gram**
+
+CBOW (Continuous Bag of Words): predict the target word from the average of context embeddings. Faster training, slightly worse for rare words (averaging loses the individual context structure). Skip-gram: predict context words from the target. Slower to train but better on rare words. Skip-gram is generally preferred.
+
+**Why the geometry works**
+
+After training, the learned embeddings capture semantic analogies through vector arithmetic: king - man + woman ≈ queen. This works because the embedding space has learned consistent directions for semantic relationships. The direction man→king is approximately the same as woman→queen because co-occurrence patterns around "man" vs "woman" modify "king" vs "queen" in consistent ways. These are not directions we engineered — they emerged from the training objective. The phenomenon is more surprising than it sounds and is not fully theoretically understood.
+
+**Word2Vec as implicit matrix factorisation**
+
+Levy & Goldberg (2014) showed that skip-gram with negative sampling is implicitly factorising the matrix M_{ij} = PMI(wᵢ, wⱼ) - log k, where PMI is pointwise mutual information and k is the number of negatives. GloVe (Pennington et al., 2014) makes this explicit: it directly fits word vectors to the log co-occurrence matrix, using weighted least squares. GloVe is faster to train and produces similar quality embeddings.
+
+**From word2vec to modern embeddings**
+
+Word2Vec produces static embeddings: each word has one vector regardless of context. "Bank" has one embedding that tries to average over financial and geographic usages. BERT (Post 67) produces contextual embeddings: the embedding for "bank" depends on the sentence it appears in. The attention mechanism computes context-aware representations. CLIP (Post 69) extends the co-occurrence idea to image-text pairs: images and captions that co-occur should have similar embeddings.
+
+**Interview questions on this topic**
+
+"Explain the king - man + woman = queen analogy. Why does this work geometrically?" — The embedding space learns a consistent direction for 'royalty' and a consistent direction for 'gender.' The vector (king - man) captures the royalty direction for males; adding woman's embedding yields a point near queen because the royalty-female neighbourhood is near queen. The analogy works when the relationship is consistent and well-represented in the training corpus.
+
+"What is the difference between word2vec and TF-IDF? When would you use each?" — TF-IDF is a sparse, high-dimensional, count-based representation. It captures word importance per document but not semantic similarity. Word2Vec is dense, low-dimensional, distributed. Two words with identical TF-IDF fingerprints could be semantically unrelated; two words with nearby word2vec embeddings are semantically similar. Use TF-IDF for exact keyword matching and search; word2vec/embeddings for semantic similarity and as features for downstream models.
+
+"Why does negative sampling use a 3/4 power of the unigram distribution?" — It empirically outperforms the raw unigram and uniform distributions. The 3/4 power reduces the dominance of very frequent words (which would otherwise be sampled too often as negatives and provide low-information training signal) and increases the relative sampling rate of rare words.
+
+"What are the failure modes of static word embeddings like Word2Vec?" — Polysemy (one vector per word regardless of sense). Poor handling of rare words (few co-occurrences → noisy vectors). No subword information (misspellings or morphological variants are unknown). Cultural and corpus biases are encoded and amplified. BERT and fastText (subword) address the last two.
+
+**Try on Colab:** train word2vec using gensim on the text8 corpus (Wikipedia subset). Extract embeddings for 'man', 'woman', 'king', 'queen', 'paris', 'france', 'london', 'england'. Verify king-man+woman≈queen and paris-france+england≈london using cosine similarity. Visualise 50 words using TSNE — observe that semantically related words cluster together.`,
+    tags: ['Deep Learning', 'Word2Vec', 'Embeddings', 'NLP', 'Negative Sampling', 'Representation Learning', 'Ground Up'],
+    domain: 'dl',
+    youtube: [],
+  },
+  {
+    id: 110,
+    slug: 'computer-vision-before-vits-cnn-detection-segmentation',
+    title: 'Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    excerpt: 'Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, object detection pipelines, and segmentation architectures. This post builds from convolution as template matching up through YOLO, RCNN, and U-Net.',
+    body: `Computer vision went through three architectural revolutions: hand-crafted features (HOG, SIFT, 2000s), convolutional neural networks (AlexNet 2012 → ResNet 2015), and transformers (ViT 2020 → DINO, SAM 2023). Each revolution obsoleted the previous one — but understanding the logic of each layer is essential for understanding the whole arc.
+
+**Convolution: what it actually computes**
+
+A 2D convolution slides a small filter (kernel) K ∈ ℝᵏˣᵏ over an image I and computes: (I * K)[i,j] = Σ_{m,n} I[i+m, j+n] K[m,n]. This is a dot product between the kernel and each local patch of the image. A 3×3 edge detector kernel produces large responses where edges exist and small responses elsewhere. In a CNN, the kernels are not hand-designed — they are learned from data. The learned filters in the first layer of AlexNet look like Gabor filters and edge detectors. Deeper layers compute increasingly abstract features (textures, object parts, objects).
+
+**Key architectural ideas in CNNs**
+
+Weight sharing: the same kernel is applied at every position in the image. This gives translation equivariance (the response shifts when the image shifts) and dramatically reduces parameters compared to a fully connected layer. Pooling: max-pooling takes the maximum over a local region, downsampling the feature map. This gives approximate translation invariance (small shifts don't change the output) and reduces spatial resolution. Receptive field: the region of the original image that influences a given neuron. Grows with depth — deeper neurons "see" more of the image. With stride-2 convolutions, receptive field grows faster.
+
+**ResNet: why residual connections were necessary**
+
+Before ResNets (He et al., 2015), adding more layers hurt accuracy — the vanishing gradient problem made very deep networks harder to train than shallow ones. The residual connection: output = F(x) + x. The identity skip connection ensures gradients can flow directly to early layers. Without residuals, depth bottomed out at ~20 layers in practice. With residuals, networks of 50, 101, 152 layers trained stably and set new benchmarks. The 1×1 convolution is used for channel-wise dimensionality change (bottleneck architecture).
+
+**Object detection: from classification to localisation**
+
+Image classification: one label per image. Object detection: bounding boxes (x, y, w, h) + class labels for all objects in the image. The difficulty: variable number of objects, objects at different scales, overlapping objects. Two-stage detectors: Selective Search (RCNN, 2014) generates ~2000 region proposals; a CNN classifies each. Slow. Fast RCNN: share the CNN backbone across proposals using RoI Pooling. Faster RCNN: replace Selective Search with a Region Proposal Network (RPN) sharing the backbone — fully end-to-end, real-time capable. One-stage detectors (YOLO, SSD): divide the image into a grid; each cell predicts bounding boxes and classes directly without a separate proposal stage. Faster but less accurate on small objects.
+
+**YOLO: the canonical one-stage detector**
+
+YOLO (You Only Look Once, Redmon et al. 2015): divide image into S×S grid. Each cell predicts B bounding boxes (x,y,w,h,confidence) and C class probabilities. Total output: S×S×(5B + C) tensor. At once. No proposals. At inference: run the tensor through the network, apply Non-Maximum Suppression (NMS) to remove duplicate detections (keep the box with highest confidence score; suppress boxes with IoU > threshold). YOLO family has iterated through v2→v8, improving accuracy at high speed through anchor-free prediction, multi-scale feature pyramids (FPN), and attention-based necks.
+
+**Feature Pyramid Networks (FPN)**
+
+Objects appear at different scales. A single feature map loses either spatial detail (from deep layers) or semantic information (from early layers). FPN (Lin et al., 2017) builds a top-down feature pyramid: high-resolution low-semantic features from early layers are merged with low-resolution high-semantic features from deep layers. Each level of the pyramid detects objects at a different scale. FPN became the standard neck in detection architectures.
+
+**Segmentation: pixel-level classification**
+
+Semantic segmentation: assign a class label to every pixel. Instance segmentation: detect individual object instances and predict a pixel mask per instance. Panoptic segmentation: semantic + instance (every pixel gets a class, instances get IDs). U-Net (Ronneberger et al., 2015): contracting path (encoder) extracts features; expanding path (decoder) recovers spatial resolution with skip connections from corresponding encoder layers. Skip connections address the vanishing gradient problem in the encoder-decoder gap and preserve spatial detail lost during downsampling. U-Net became the dominant architecture for medical image segmentation.
+
+**Why ViTs eventually won**
+
+CNNs have inductive biases built in: translation equivariance (from weight sharing) and locality (from small kernels). These biases help with limited data but constrain the model. ViTs (Dosovitskiy et al., 2020) have no such biases — they split the image into patches and apply self-attention globally. With large enough data, ViTs learn better representations. With smaller data, ViTs need pre-training. The key insight of DINOv2, SAM, and EVA: very large self-supervised pre-training enables ViTs to outperform CNNs even on tasks where spatial locality matters. The CNN priors are not needed if you have enough data to learn locality from scratch.
+
+**Interview questions on this topic**
+
+"What is the difference between semantic segmentation and instance segmentation?" — Semantic segmentation labels every pixel with a class (all cars are the same label). Instance segmentation labels every pixel AND distinguishes individual instances (car 1, car 2). Panoptic segmentation does both: each pixel has a semantic class and a unique instance ID where applicable.
+
+"Explain IoU and NMS. Why is NMS necessary in object detection?" — IoU (Intersection over Union) = area(A ∩ B) / area(A ∪ B). NMS: after detection, many overlapping boxes may predict the same object. NMS keeps the box with the highest confidence, suppresses all boxes with IoU > threshold with it, and repeats. Without NMS, each object would be detected multiple times.
+
+"What is the receptive field of a 5-layer 3×3 convolutional network with no downsampling?" — Each 3×3 conv adds 1 to the radius: receptive field grows by 2 per layer. After 5 layers: 1 + 2×5 = 11×11. With stride-2 downsampling, the effective receptive field grows faster because each pooled position corresponds to a larger input region.
+
+"Why did ViTs need much more data than CNNs before they outperformed them?" — CNNs have inductive biases (locality, translation equivariance) baked in. ViTs have no such biases and must learn spatial relationships from data. With limited data, CNNs' priors give them an advantage. With large-scale pre-training (JFT-300M, ImageNet-21K), ViTs learn these patterns and surpass CNNs. Data is the substitute for inductive bias.
+
+**Try on Colab:** use torchvision with a pretrained ResNet-50 feature extractor. Visualise the learned filter kernels in layer 1 — how many look like edge detectors? Use Faster RCNN (pretrained on COCO) to run object detection on 3-5 images from your local machine. Visualise the bounding boxes and confidence scores. Then change the NMS IoU threshold from 0.5 to 0.1 and 0.9 — observe how many duplicate boxes appear at low threshold.`,
+    tags: ['Deep Learning', 'Computer Vision', 'CNN', 'YOLO', 'Object Detection', 'Segmentation', 'U-Net', 'Ground Up'],
+    domain: 'dl',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -5787,6 +6345,7 @@ const SERIES = [
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
   { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93] },
   { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
+  { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110] },
 ]
 
 const GRADIENT_DOMAINS = [
