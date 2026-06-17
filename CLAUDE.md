@@ -148,6 +148,25 @@ git push          # auto-deploys to Vercel
 
 **Sandbox limitation:** The AI sandbox cannot run `npm run build` successfully (Rollup ARM64 platform mismatch). Use Node.js brace-counting as a build proxy: `node -e "const f=require('fs').readFileSync('src/tabs/X.jsx','utf8'); const o=(f.match(/\{/g)||[]).length, c=(f.match(/\}/g)||[]).length; console.log(o-c)"` — should output `0`.
 
+**Mandatory pre-commit string audit — run this before every commit, no exceptions:**
+
+```bash
+python3 -c "
+import re, glob
+broken = []
+for fpath in sorted(glob.glob('src/**/*.jsx', recursive=True)):
+    for i, line in enumerate(open(fpath).readlines()):
+        if any(p in line for p in [\"q: '\", \"a: '\", \"checkpoint: '\", \"checkpointAnswer: '\", \"explanation: '\", \"fix: '\", \"answer: '\", \"hint: '\", \"staffFraming: '\", \"reveal: '\"]):
+            clean = re.sub(r'\"[^\"]*\"', '\"\"', line.replace(\"\\\\'\", 'XX'))
+            if clean.count(\"'\") % 2 != 0:
+                broken.append(f'{fpath}:{i+1}')
+                print('BROKEN:', fpath, i+1, line.strip()[:80])
+print('OK' if not broken else f'{len(broken)} broken strings — fix before committing')
+"
+```
+
+This catches unescaped apostrophes in single-quoted JS data strings (`user's`, `it's`, `don't`, etc.) which cause esbuild to fail at build time. **If it prints anything other than `OK`, fix before committing.** Fix: change the affected string from single quotes to double quotes (`a: "..."` instead of `a: '...'`).
+
 ---
 
 ## Session operating model

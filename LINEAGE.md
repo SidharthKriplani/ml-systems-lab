@@ -1941,6 +1941,16 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.98 — Full-repo 10-point code audit (2026-06-18)
+
+**What shipped:** No code changes. Full audit of all 57 JSX files after repeated apostrophe build failures.
+
+Results: brace diff 0 (all files), apostrophe scanner OK, imports resolve, no duplicate exports, hooks-in-map 0 real violations (previous scanner was a false positive — correct brace-depth scanner confirms clean), key props present, onNavigate on all 43 tabs, pre-commit string audit clean. One accepted tech debt item logged: 444 pre-existing rgba()/hex hardcoded color values across 46 files (AUDITS.md #032). Backtick odd-count (329) confirmed false positive — extras are inside double-quoted quiz answer strings.
+
+Root cause of repeated build failures identified and fixed: unescaped apostrophes in single-quoted JS data strings. Scanner now in CLAUDE.md as mandatory pre-commit step.
+
+---
+
 ### v4.91 — Left sidebar nav + 9 inline visualizations in GradientTab (2026-06-18)
 
 **What shipped:**

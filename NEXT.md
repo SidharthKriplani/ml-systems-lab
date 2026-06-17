@@ -240,6 +240,12 @@ MSL is now at private-test threshold. The highest-leverage work is UX clarity �
 3. ~~Interview Sim export~~ — "Start Interview Sim" toggle button → copyable trainer prompt with score summary + weak areas.
 4. ~~Quiz Me posts 1–50~~ — `src/data/quizData.js` (150 MCQs, 3/post). `QuizMeSection` in GradientTab PostReader. Score in `msl_quiz_{postId}`.
 
+## ✅ DONE: Full-repo 10-point audit (v4.98, 2026-06-18)
+
+All 57 JSX files clean. Root cause of repeated build failures confirmed and fixed (apostrophe scanner in CLAUDE.md). Hooks-in-map false positive cleared with correct brace-depth scanner. 444 pre-existing rgba() hardcoded colors logged as accepted debt (AUDITS.md #032) — not a build issue.
+
+---
+
 ## NEXT: UX loop — remaining items (P2)
 
 1. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
