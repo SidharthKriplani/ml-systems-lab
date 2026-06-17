@@ -1874,6 +1874,22 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.96 — Gap-fill sprint: 5 new Gradient posts (122–126) (2026-06-18)
+
+**What shipped:**
+
+5 new GradientTab posts covering the Bangalore senior/lead DS/MLE interview surface:
+
+- **Post 122: Graph ML for Fraud** (domain: dl, series: dl) — Why tabular models miss fraud rings, message passing for fraud, homophily, heterogeneous graphs, label propagation baseline, inductive vs transductive, over-smoothing, production two-stage architecture. 4 interviewQs: why GNNs catch rings, one message-passing step, cold-start handling, over-smoothing.
+- **Post 123: Real-Time Feature Engineering** (domain: features, series: arch) — Latency budget breakdown, what needs to be real-time vs batch, streaming architecture (Kafka → Flink → Redis), point-in-time correctness, late arrivals, watermarks, training-serving skew in streaming (4 failure patterns), feature store as single source of truth. 4 interviewQs: point-in-time correctness, latency budget, streaming skew patterns, real-time vs batch decision framework.
+- **Post 124: LLM Production Engineering** (domain: dl, series: dl) — Memory bandwidth problem, KV cache mechanics + cost, PagedAttention (vLLM), continuous batching vs static, speculative decoding when it helps/hurts, INT8 vs INT4 quantisation tradeoffs, prefill vs decode management, chunked prefill. 4 interviewQs: KV cache bottleneck, continuous batching, speculative decoding, INT8 vs INT4.
+- **Post 125: Hierarchical Forecasting** (domain: math, series: ds) — Coherence problem, summing matrix, bottom-up vs top-down vs middle-out, MinT (Minimum Trace) GLS reconciliation, when MinT outperforms bottom-up, temporal hierarchies + THIEF, intermittent demand. 4 interviewQs: coherence problem, strategy comparison, MinT when it wins, THIEF.
+- **Post 126: Auction Theory for Ads ML** (domain: math, series: ds) — Second-price vs first-price, eCPM ranking, GSP vs VCG, pCTR's two jobs (ranking + pricing), miscalibration revenue impact, reserve prices + floor price optimisation, explore-exploit in auctions. 4 interviewQs: second-price rationale, pCTR miscalibration, GSP vs VCG, reserve price ML.
+
+Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds adds 125, 126. Brace diff 0.
+
+---
+
 ### v4.94 — ML Coding 4-type framework + Search diagnostic scenarios + CUPED post (2026-06-18)
 
 **What shipped:**

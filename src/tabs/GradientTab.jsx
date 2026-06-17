@@ -7707,6 +7707,460 @@ Using a covariate measured during the experiment: if X overlaps with the experim
 
 **Try on Colab:** simulate an A/B test with n=5000 users, revenue Y = 5 + 2*treatment + 10*user_type + noise (user_type ~ N(0,1), noise ~ N(0,3)). Set X = user_type (simulating a pre-period covariate). Compute the standard t-test on Y and the CUPED-adjusted t-test on Y_cuped. Compare: (1) the variance of the treatment estimator under both, (2) the achieved power at α=0.05, (3) the required sample size to achieve 80% power. Show that CUPED reduces the required n by roughly 1/(1-ρ²).`
   },
+  {
+    id: 122,
+    slug: 'graph-ml-fraud-detection-gnns',
+    title: 'Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(244,132,95,0.1)', text: '#F4845F', border: 'rgba(244,132,95,0.2)' },
+    readMin: 15,
+    featured: false,
+    domain: 'dl',
+    youtube: [],
+    tags: ['Fraud Detection', 'Graph Neural Networks', 'GNN', 'Message Passing', 'Production ML', 'Deep Learning'],
+    interviewQs: [
+      {
+        q: 'Why do tabular fraud models miss fraud rings that GNNs catch?',
+        a: 'Tabular models see each transaction or user in isolation. A fraud ring shares devices, IP addresses, phone numbers, and bank accounts across dozens of accounts — none of which look individually unusual. A GNN propagates information across these shared edges. An account that looks clean in isolation becomes suspicious when its device is connected to 30 flagged accounts. The GNN aggregates neighbor features and labels, making the graph structure itself a feature. This is the homophily property: fraudsters associate with other fraudsters, and GNNs exploit that signal. Tabular models simply cannot represent this without explicit join features that are expensive to compute and brittle to maintain.'
+      },
+      {
+        q: 'Walk through one step of message passing in a fraud GNN.',
+        a: 'Each node maintains a feature vector h_v (user age, account balance, velocity, etc.). In one message passing step: (1) Aggregate: for each neighbor u of node v, compute a message m_u = MSG(h_u, e_uv) where e_uv is the edge feature (shared device, shared IP, transaction amount). (2) Update: h_v_new = UPDATE(h_v, AGGREGATE({m_u : u ∈ N(v)})). Common aggregators: mean, sum, max, attention-weighted. After k layers, each node's representation encodes its k-hop neighbourhood. For fraud: after 2 layers, a clean account whose device is shared with 1-hop fraudsters begins to accumulate risk signal. After 3 layers, even more distant ring members are captured. The fraud label from a flagged account diffuses across the graph during training.'
+      },
+      {
+        q: 'How do you handle cold-start (new user, no graph edges) in a fraud GNN?',
+        a: 'Cold-start is the fundamental limitation of GNNs for fraud. Options: (1) Inductive learning: train the GNN so node representations are computed from features + neighbourhood structure, not from a lookup table. GraphSAGE is designed for this — it samples and aggregates from available neighbours without requiring the node to have been seen during training. (2) Fallback to tabular: for truly isolated new nodes with no edges, run a parallel tabular model and blend scores (GNN score when edges exist, tabular score for isolated nodes). (3) Edge creation at onboarding: device fingerprint, IP, email domain — create synthetic edges at account creation even before transaction history exists. (4) Accept cold-start risk: new accounts without history get conservatively throttled by business rules, not ML. In practice, most production fraud systems use (2) + (4).'
+      },
+      {
+        q: 'What is over-smoothing in GNNs and when does it hurt fraud detection?',
+        a: 'Over-smoothing: with many message-passing layers (k > 4–5), all node representations converge to similar vectors regardless of their local neighbourhood. The gradient of the loss w.r.t. node features vanishes because all nodes look the same to the network. In fraud detection, over-smoothing erases the signal you want: the local neighbourhood structure that distinguishes fraud rings from clean clusters. If every node looks like the graph average, the model loses its ability to identify suspicious local patterns. Fix: use 2–3 layers maximum for most fraud graphs. Add skip/residual connections (h_v_new = UPDATE(h_v, agg) + h_v) to preserve original features. Use PairNorm or differentiating techniques to penalise representation similarity during training.'
+      }
+    ],
+    body: `Fraud detection is one of the few production ML problems where graph structure is not a nice-to-have — it is the primary signal. This post covers why, and what building a GNN-based fraud system actually involves.
+
+**Why graphs?**
+
+A fraudster opening accounts for a synthetic identity ring reuses resources: the same device, the same IP subnet, the same phone number, the same email domain pattern. Each individual account may look completely clean — legitimate transaction amounts, normal velocity, plausible name. But the device connects 40 accounts, 38 of which are confirmed fraud.
+
+A tabular model sees one row per user. It can engineer "number of accounts sharing this device" as a feature, but this requires an explicit join, a daily batch computation, and a schema update every time a new connection type is discovered. A GNN is structural by design — the edges are the model.
+
+**The graph structure for fraud**
+
+Nodes: accounts, devices, IP addresses, phone numbers, email addresses, bank accounts (for payment fraud), merchants.
+
+Edges: "account A used device D" (shared resource edge), "account A sent money to account B" (transaction edge), "account A and B have the same phone number" (identity edge).
+
+This is a heterogeneous graph: different node types and different edge types. GraphSAGE, GAT (Graph Attention Network), and HGT (Heterogeneous Graph Transformer) all handle this. The simplest production approach: convert to a homogeneous graph by treating all node types as "entities" and all edge types as weighted connections.
+
+**Message passing for fraud**
+
+In a GNN, each node updates its representation by aggregating from its neighbours. After k layers, node v's representation encodes its k-hop neighbourhood.
+
+Layer 0: h_v = [account_age, balance, velocity_7d, country_code, ...]
+Layer 1: h_v = σ(W · CONCAT(h_v, mean({h_u : u ∈ N(v)})))
+Layer 2: h_v = σ(W · CONCAT(h_v, mean({h_u : u ∈ N(v)})))
+
+After 2 layers, a clean account whose device is shared with one confirmed fraud account has absorbed that fraud account's representation into its own vector. The fraud label diffuses through edges. A clean account two hops from a fraud ring gets a risk score 3-4× higher than an isolated clean account, even without any individual suspicious features.
+
+**Label propagation as a baseline**
+
+Before building a GNN, always try label propagation. Starting from confirmed fraud labels, propagate a fraud score outward through edges with exponential decay: score(v) = Σ_u (α × score(u)) for neighbours u, where α < 1. This is cheap, interpretable, and surprisingly effective. At Alibaba, label propagation on their transaction graph outperformed their tabular XGBoost model before they added GNN features. Use LP as your baseline, then measure GNN uplift on top of it.
+
+**Temporal graphs**
+
+Fraud rings are dynamic. An account may share a device with clean accounts at first, then the device gets compromised. Edges should decay: a connection made 90 days ago carries less risk signal than one made yesterday.
+
+Implementation: timestamp each edge, use exponential decay: edge_weight = exp(-λ × days_since_edge). CTDNE (Continuous-Time Dynamic Network Embeddings) and TGN (Temporal Graph Networks) handle this explicitly — they maintain node memory that updates as new edges arrive. Simpler production approach: rebuild the graph weekly with a 30-day lookback window and retrain.
+
+**Inductive vs transductive**
+
+Transductive GNNs (early GCNs): learn an embedding for each specific node in the training graph. Cannot generalise to new nodes at inference. Useless for fraud — new accounts appear continuously.
+
+Inductive GNNs (GraphSAGE, GAT): learn a function that computes a node's embedding from its features and neighbourhood, not from a fixed embedding table. Can generalise to new nodes as long as the node has features and some edges. GraphSAGE is the standard choice for production fraud systems for this reason.
+
+**Feature engineering for the graph**
+
+Node features on user accounts: account age, verified status, KYC score, transaction velocity (7d, 30d), device count, average transaction amount, refund rate. Edge features on transaction edges: amount, time of day, merchant category, direction (send/receive). Edge features on shared-resource edges: resource type (device vs IP vs phone), resource age, how many total accounts share this resource.
+
+**Production architecture**
+
+Two-stage: GNN pre-computes node embeddings in batch (daily or hourly) → stored in Redis → served at transaction time alongside real-time tabular features → fed into a final classifier (XGBoost or logistic regression). The GNN handles the slow, structural signal; the tabular model handles fast, transaction-level signals.
+
+Real-time GNN inference is possible but expensive — GraphSAGE with 2 layers and 10 neighbours per hop requires 100 feature lookups per prediction. Most teams precompute embeddings in batch and refresh every 1–4 hours.
+
+**The over-smoothing trap**
+
+With more than 3–4 message-passing layers, all node representations converge. The fraud ring members and the clean accounts look identical to the GNN. Use 2 layers for most fraud graphs. Add skip connections to preserve original features. Monitor embedding diversity (pairwise cosine similarity across nodes) as a training health metric.
+
+**Try on Colab:** build a small fraud detection GNN using PyTorch Geometric. Create a synthetic dataset: 1000 accounts, 50 marked as fraud, connected in 5 rings of 10 accounts via a shared device node. Train a 2-layer GraphSAGE with BCELoss. Compare AUC against a tabular logistic regression using only node features (no edges). The GNN should achieve AUC > 0.95; the tabular model will be near-random for ring members who have no individual suspicious features.`
+  },
+  {
+    id: 123,
+    slug: 'real-time-feature-engineering-streaming',
+    title: 'Real-Time Feature Engineering: Latency, Correctness, and the Streaming Trap',
+    category: 'Feature Engineering',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    domain: 'features',
+    youtube: [],
+    tags: ['Feature Engineering', 'Streaming', 'Kafka', 'Flink', 'Real-Time ML', 'Feature Store', 'Training-Serving Skew'],
+    interviewQs: [
+      {
+        q: 'What is point-in-time correctness and why does it matter for streaming features?',
+        a: 'Point-in-time correctness means: when computing features for a training example at time T, you must use only data that was available at time T — not data that arrived or was processed after T. In streaming, this is violated in three ways: (1) Late arrivals — events with timestamps before T that arrive in the stream after T (e.g., a transaction at 10:00 that arrives in the pipeline at 10:03). If you train with a 10-minute aggregation window and include late-arriving events, your training features reflect more data than the model will see at serving time. (2) Reprocessing — if you regenerate training features from a stream replay, the replay may process events in a different order. (3) Watermark lag — Flink/Spark Streaming watermarks allow out-of-order processing; if your training dataset was built with a different watermark setting than serving, features differ. The fix: always build training features from the same streaming pipeline as serving, with identical watermark configuration, and log served feature values to a feature store for training.'
+      },
+      {
+        q: 'What is the latency budget breakdown for real-time feature serving at 10ms p99?',
+        a: 'A 10ms p99 SLA for a scoring request breaks down roughly as: network overhead 0.5ms, feature lookup (Redis point read) 1–2ms, feature assembly + type casting 0.5ms, model inference (gradient boosting, 100 trees) 1–2ms, response serialisation 0.5ms. That leaves 4–5ms of headroom. Implications: (1) You cannot make sequential feature lookups — Redis pipeline or mget all features in one call. (2) You cannot do any database joins at serving time — all features must be precomputed and indexed by entity key (user_id, session_id). (3) Neural network inference is often out of budget — a BERT model takes 15–50ms. Use distilled models, quantised models, or pre-compute embeddings. (4) Each additional feature group (user, item, context) that requires a separate Redis call costs 1–2ms. Two calls max: one for user features, one for item features.'
+      },
+      {
+        q: 'How does training-serving skew manifest in streaming feature pipelines specifically?',
+        a: 'Four patterns: (1) Aggregation window boundary: training aggregates a "7-day rolling count" using a batch Spark job that looks back exactly 7 × 86400 seconds. Serving computes the same window in Flink but the window closes at event-time boundaries, not wall-clock time — the counts differ by up to several percent. (2) Null handling: missing values in a Kafka message are dropped in the training pipeline (assumed never-null) but occur in 0.3% of production events — the model has never seen null for that feature. (3) Feature encoding: training one-hot encodes categorical features with sklearn LabelEncoder; serving encodes with a hardcoded map that wasn't updated when a new category appeared. New categories are silently mapped to 0. (4) Timestamp precision: training features computed from Parquet files with millisecond timestamps; serving features computed from Kafka with second timestamps — rolling window counts differ by off-by-one errors at boundaries. Fix: feature parity tests that run the serving pipeline and training pipeline on the same historical slice and compare distributions.'
+      },
+      {
+        q: 'When should a feature be computed in real-time vs pre-computed in batch?',
+        a: 'Decision framework: (1) Freshness requirement — does the feature change faster than the batch refresh rate (hourly/daily)? User's last 3 clicks: real-time. User's 30-day purchase history: batch. (2) Latency budget — can you afford the streaming aggregation cost at serving time? If the feature requires scanning 1000 events for each prediction, batch it. (3) Cardinality — features on high-cardinality entities (individual users) need precomputed storage. Low-cardinality global features (hour of day, day of week) can be computed inline. (4) Correctness criticality — fraud velocity (clicks in the last 10 minutes) must be real-time; staleness enables fraud. Recommendation freshness is less critical — 1-hour-old user embeddings are fine. Practical split: pre-compute user profile features (batch, 6hr refresh), item features (batch, 30min refresh), interaction/context features (streaming, sub-minute), model outputs like embeddings (batch, triggered on events). Avoid pure streaming for features where batch is sufficient — streaming infrastructure is 5–10× more expensive to operate.'
+      }
+    ],
+    body: `The gap between "I can compute this feature" and "I can compute it at 10ms p99 with correct training-serving parity" is where most ML systems break in production. This post covers that gap.
+
+**The latency budget**
+
+A real-time scoring call has a budget. For fraud: 30ms. For ad serving: 10ms. For search reranking: 50ms. The feature engineering layer must fit inside this budget alongside model inference, network I/O, and serialisation.
+
+Rule of thumb: features get 30–40% of the latency budget. At 10ms, that's 3–4ms for all feature retrieval and assembly. This rules out: SQL joins, cross-service API calls, anything that recomputes from raw events at inference time.
+
+What works within budget: Redis point reads (1–2ms), in-process computation from a payload already in memory, pre-scored embeddings looked up by key.
+
+**What needs to be real-time**
+
+Not all features need to be real-time. The question is: does staleness materially hurt model quality or create business risk?
+
+Must be real-time: fraud velocity signals (count of transactions in the last 10 minutes — stale signals let fraud through), session context (last 3 clicks in this session — stale context makes recommendations irrelevant), real-time inventory (showing an out-of-stock item because the feature is 2 hours stale).
+
+Can be batch: user lifetime value, 30-day engagement history, demographics, item embeddings (item inventory rarely changes meaning within hours), global statistics (average order value by category).
+
+The mistake: building a full streaming pipeline for every feature because streaming feels more "real-time." Streaming infrastructure (Kafka + Flink + state management) is expensive, operationally complex, and introduces new failure modes. Default to batch. Move to streaming only when you can show that staleness is costing you.
+
+**The streaming architecture**
+
+Events → Kafka → Flink (windowed aggregations) → Redis (precomputed feature storage) → Serving layer (feature lookup at inference time).
+
+Flink computes windowed aggregations: "count of transactions per user in a sliding 10-minute window." The result is a keyed state: {user_id → count}. On each new event, Flink updates this state and writes the result to Redis. The serving layer reads from Redis, not from Flink directly.
+
+This decoupling matters: Flink is a stateful computation engine, not a low-latency lookup store. Never query Flink directly at serving time — it's designed for throughput, not p99 latency.
+
+**Point-in-time correctness**
+
+This is the hardest correctness problem in streaming features. When you build a training dataset, every feature value must reflect what the model would have seen at the time of the label event — not what was available afterward.
+
+The failure mode: you compute "count of logins in the last 7 days" for a training example at timestamp T. But your batch job runs at T+2 hours and includes events that arrived late (timestamps < T but processed after T due to network delays). Your training feature includes 5 logins; at serving time, the model sees 3 logins (late events haven't arrived yet). The training distribution and serving distribution differ. This is point-in-time contamination.
+
+The fix: log feature values at the time they were served to the model. Store them in a feature store with the serving timestamp. Use these logged feature values for training, not recomputed values. This is the "log-and-join" pattern used at Uber, Airbnb, and DoorDash.
+
+**Late arrivals and watermarks**
+
+Streaming engines handle out-of-order events via watermarks: a signal that says "we've received all events with timestamp before W." Events arriving after the watermark for their timestamp are "late" and can be dropped or handled separately.
+
+If your watermark is 2 minutes: events arriving more than 2 minutes late are dropped. If your training data was generated with a 5-minute watermark (including more late events), your training features are systematically richer than your serving features.
+
+Production rule: use identical watermark configuration in training and serving pipelines. Prefer 1-minute watermarks for fraud, 5-minute for recommendations. Document the watermark as part of the feature contract.
+
+**Training-serving skew in streaming**
+
+The four most common skew sources in streaming feature pipelines:
+
+1. Window boundary semantics: a "7-day rolling window" computed in batch (last 7 × 86400 seconds from query time) vs in streaming (event-time window that closes at midnight) produces different counts. At boundary events (midnight, week boundaries), the counts diverge by up to 5%.
+
+2. Null/missing handling: production Kafka messages have missing fields 0.1–1% of the time (schema drift, partial failures). Training Parquet files were cleaned — null values were imputed or dropped. The model has never seen the null representation that serving uses.
+
+3. Encoding divergence: training uses sklearn's LabelEncoder with a fixed vocabulary. A new category appears in production. The serving encoder maps it to 0 (OOV bucket). The model interprets 0 as the first category, not as unknown. Silent wrong encoding.
+
+4. Feature version mismatch: feature v1 in training, feature v2 in serving (after a schema change). If the feature store doesn't version features, served values silently differ from training values.
+
+**The feature store as the single source of truth**
+
+A feature store solves the training-serving skew problem by providing a single computation and storage layer. Training reads from the feature store's point-in-time API (give me feature values as of timestamp T). Serving reads from the feature store's online API (give me current feature values for entity E).
+
+The feature store's job: maintain both the offline (historical) and online (low-latency) representations of every feature, with identical computation logic.
+
+Feast, Tecton, and Vertex Feature Store all implement this. The critical capability: the offline store (for training) and online store (for serving) run the same feature transformation code. "Same code, two paths" is the invariant that prevents skew.
+
+**Try on Colab:** build a minimal feature parity test. Create a batch pipeline that computes "7-day rolling click count per user" from a Parquet file. Create a streaming simulation that processes the same events in order with a 1-minute watermark. For 100 users, compare the feature values from both pipelines. Find at least one user where the counts differ by more than 0 and explain which boundary condition caused it.`
+  },
+  {
+    id: 124,
+    slug: 'llm-production-engineering-kv-cache-batching-quantization',
+    title: 'LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(78,168,222,0.1)', text: '#4EA8DE', border: 'rgba(78,168,222,0.2)' },
+    readMin: 16,
+    featured: false,
+    domain: 'dl',
+    youtube: [],
+    tags: ['LLM Serving', 'KV Cache', 'Quantisation', 'vLLM', 'Inference', 'Speculative Decoding', 'Deep Learning'],
+    interviewQs: [
+      {
+        q: 'What is the KV cache and why is it the central bottleneck in LLM serving?',
+        a: 'In autoregressive generation, each new token attends to all previous tokens. Without caching, generating token N requires recomputing the keys and values for all tokens 1 to N-1 — O(N²) compute per sequence. The KV cache stores K and V matrices for all previously generated tokens. Generating token N only requires computing K and V for token N, then doing one attention step against the cached K/V. This reduces per-token compute from O(N) to O(1) per layer. The bottleneck: each token's KV cache for a 70B model takes ~1MB per layer × 80 layers = ~80MB per token position. A batch of 100 sequences at 1000 tokens each needs 8TB of KV cache — far more than A100 HBM. Memory becomes the binding constraint, not compute. GPU throughput is measured in tokens/sec/GB of HBM, not TFLOPS. Serving LLMs is a memory bandwidth problem, not a compute problem.'
+      },
+      {
+        q: 'Why does static batching waste GPU utilisation, and how does continuous batching fix it?',
+        a: 'Static batching: a batch of N sequences starts together and finishes together. Sequences have different lengths — some finish at 50 tokens, some at 500. The short sequences sit idle (padded) while the GPU generates the remaining tokens for long sequences. GPU utilisation collapses to the fraction of sequences still generating. At a batch of 32, once half the sequences finish, you're running 16 active sequences through a kernel optimised for 32 — 50% wasted. Continuous batching (also called iteration-level scheduling, vLLM's core innovation): the batch is dynamic. When a sequence finishes, a new request is immediately slotted into its position. The GPU always runs at near-full batch size. Throughput improvement in practice: 2–4× over static batching at the same latency budget. The engineering challenge: variable batch sizes require careful KV cache management — each sequence's cache must be allocated and freed independently. PagedAttention (vLLM) solves this by treating KV cache like virtual memory pages.'
+      },
+      {
+        q: 'Explain speculative decoding: when does it help and when does it not?',
+        a: 'Speculative decoding uses a small draft model to propose K tokens ahead, then verifies all K with the large target model in one parallel forward pass. If the target model accepts the draft tokens, you've generated K tokens in roughly the time it would take the target model to generate 1. Acceptance rate depends on how often the draft and target agree. For common tokens ("the", "a", punctuation), acceptance is near 100%. For creative/specific outputs, acceptance drops. Speedup = (K × acceptance_rate) / (1 + overhead). Typical gains: 1.5–2× for greedy generation on structured tasks (code, JSON). Helps when: draft model shares vocabulary with target, output is predictable (structured formats, common phrases). Doesn't help when: temperature > 0 (sampling makes acceptance rate low), creative tasks where draft model diverges, latency is dominated by prefill not decode. Common setup: Llama-7B as draft, Llama-70B as target.'
+      },
+      {
+        q: 'What are the real trade-offs between INT8 and INT4 quantisation for production LLM serving?',
+        a: 'INT8 (8-bit weights): 2× memory reduction vs FP16. Quality loss: near-zero on most benchmarks — perplexity increases by 0.1–0.5 points. Throughput gain: 1.3–1.8×, primarily from reduced memory bandwidth (moving weights from HBM to compute units). Works reliably on Llama, Mistral, GPT families with LLM.int8() or smooth quant. Use when you need minimal quality loss. INT4 (4-bit weights): 4× memory reduction vs FP16. Quality loss: 0.5–2 perplexity points — significant for sensitive tasks (legal, medical), acceptable for most general use. Throughput gain: 1.5–2.5×. Methods: GPTQ (post-training, calibration data required), AWQ (activation-aware, less quality loss than GPTQ). Production reality: INT4 enables a 70B model to fit on a single A100-80GB (70B × 4b/8b × 2 bytes = ~35GB); FP16 requires 2×A100. The memory reduction often matters more than the compute gain. Avoid INT4 for: tasks requiring precise factual recall, multi-step reasoning, or where benchmark degradation exceeds business tolerance.'
+      }
+    ],
+    body: `Serving a language model in production is a different engineering discipline from training one. This post covers the three systems-level concepts that determine whether your LLM inference is economically viable.
+
+**The memory bandwidth problem**
+
+LLM inference has two phases: prefill (process the entire input prompt in one parallel forward pass) and decode (generate one token at a time, autoregressively). Prefill is compute-bound — you process many tokens in parallel and GPUs are good at this. Decode is memory bandwidth-bound — you load model weights once per token from HBM (GPU memory) to compute units, even though you only use them for a single token generation step.
+
+A100 peak compute: 312 TFLOPS (FP16). A100 memory bandwidth: 2 TB/s. Llama-70B weights: 140GB (FP16). Loading all weights once for one decode step: 140GB / 2TB/s = 70ms. At 70ms/token, throughput is 14 tokens/second per GPU — nowhere near the hardware's compute ceiling. The GPU is spending most of its time waiting for weights to arrive from HBM, not computing.
+
+This is why quantisation, KV cache efficiency, and batching all matter so much: they attack the memory wall, not the compute wall.
+
+**KV cache: why it exists and why it's expensive**
+
+In transformer attention, each token attends to all previous tokens using stored Key and Value matrices. Without a cache, generating the 500th token requires recomputing K and V for tokens 1–499 from scratch — 499 full forward passes through the attention layers.
+
+The KV cache stores these matrices after they're computed. Token 500 only needs to attend to the cached K/V, not recompute them. This reduces per-token compute dramatically. But: each token's KV cache requires 2 × num_layers × num_heads × head_dim × float16_bytes of memory. For Llama-70B (80 layers, 64 heads, 128 head_dim): 2 × 80 × 64 × 128 × 2 bytes ≈ 2.6MB per token position. A sequence of 4096 tokens needs 10.6GB of KV cache alone. Batching 8 such sequences fills an entire A100-80GB with KV cache.
+
+**PagedAttention and vLLM**
+
+The naive KV cache allocates memory proportional to maximum sequence length at request start. A request expected to generate 2048 tokens gets 2048 × 2.6MB = 5.3GB of KV cache pre-allocated, even if it only generates 50 tokens. 90% of that allocation is wasted.
+
+PagedAttention (vLLM) treats KV cache like virtual memory. KV cache is divided into fixed-size blocks (pages). Each sequence's KV cache is stored in non-contiguous pages, with a page table mapping logical positions to physical pages. Memory is allocated one page at a time as the sequence grows. Freed immediately when a sequence completes. This eliminates internal fragmentation and enables continuous batching — the freed pages are immediately available for new sequences.
+
+In benchmarks, vLLM achieves 2–4× higher throughput than Hugging Face Text Generation Inference with naive static batching on the same hardware.
+
+**Continuous batching (iteration-level scheduling)**
+
+Static batching: send 32 requests, wait for all 32 to finish, send the next 32. As sequences finish early, the remaining computation is wasted on padding. If 16 of 32 sequences finish at 50 tokens and the remaining 16 continue to 500 tokens, the last 450 tokens of those 16 sequences run at 50% batch efficiency.
+
+Continuous batching: the batch is rebuilt after each decode step. When a sequence finishes, a new request replaces it immediately. The GPU runs at near-maximum batch size throughout. Result: 2–4× throughput improvement vs static batching.
+
+The implementation complexity: each sequence in the dynamic batch may be at a different position in its generation. Attention masks, position encodings, and KV cache management all need to handle variable-position sequences in the same batch. vLLM, TGI (Text Generation Inference), and TensorRT-LLM all implement this.
+
+**Quantisation for serving**
+
+FP16 (16-bit floating point): full quality, 2 bytes per parameter. A 70B model = 140GB. Requires 2× A100-80GB.
+
+INT8 (8-bit integer): 1 byte per parameter, 70GB for 70B model. Quality loss: <0.5 perplexity points on standard benchmarks. Throughput: 1.3–1.8× improvement (memory bandwidth reduction). Methods: LLM.int8() (mixed-precision for outlier activations), SmoothQuant (migrates quantisation difficulty from activations to weights). Production choice for quality-sensitive deployments.
+
+INT4 (4-bit integer): 0.5 bytes per parameter, 35GB for 70B model — fits on a single A100-80GB. Quality loss: 0.5–2 perplexity points. Methods: GPTQ (requires calibration dataset, 10–30 minutes to run), AWQ (activation-aware, typically higher quality than GPTQ). Production choice when you need to serve a large model on minimal hardware or maximise throughput. Avoid for tasks where accuracy matters significantly (medical, legal, precise factual recall).
+
+**Prefill vs decode phase management**
+
+Prefill is fast and compute-bound: a 1000-token prompt is processed in one parallel pass. Decode is slow and memory-bound: generating 100 tokens requires 100 sequential forward passes.
+
+At high request rates, queued prefill work can starve decode work (and vice versa). Chunked prefill: split long prompts into fixed-size chunks, interleave with decode steps. This prevents head-of-line blocking where one long-prompt prefill delays all in-flight decode steps.
+
+For time-to-first-token (TTFT) SLAs: prioritise fast prefill scheduling (batching prompts together, not interleaving). For generation throughput (tokens/sec): prioritise efficient decode, maximise batch size during decode. The optimal policy depends on your SLA: if users care about TTFT, optimise prefill; if they care about full response latency, optimise decode.
+
+**Speculative decoding**
+
+Small draft model (Llama-7B) generates K token guesses in parallel. Large target model (Llama-70B) verifies all K guesses in one forward pass using parallel decoding. If the target accepts all K drafts: you've generated K tokens in approximately the time of 1 target-model step. Expected speedup: K × acceptance_rate.
+
+Acceptance rate is high when output is predictable: code generation, JSON formatting, common phrases. Low for creative text, high-temperature sampling. Typical production speedup: 1.5–2× for code tasks, 1.1–1.3× for creative tasks.
+
+Operational complexity: requires deploying and co-locating two models (draft + target). Shared KV cache between models requires careful engineering. Most useful when: your target model is very large (>70B), your workload is structured/predictable, and your draft model is fast.
+
+**Try on Colab:** use the transformers library to benchmark naive autoregressive generation vs generation with KV caching enabled on a small model (GPT-2). Generate 200 tokens from a 50-token prompt. Compare: (1) time per token with KV caching, (2) time per token without KV caching (set use_cache=False). The speedup should increase with sequence length. Then quantise GPT-2 to INT8 using bitsandbytes and compare throughput again.`
+  },
+  {
+    id: 125,
+    slug: 'hierarchical-forecasting-reconciliation-mint',
+    title: 'Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation',
+    category: 'Data Science',
+    catColor: { bg: 'rgba(78,168,222,0.1)', text: '#4EA8DE', border: 'rgba(78,168,222,0.2)' },
+    readMin: 13,
+    featured: false,
+    domain: 'math',
+    youtube: [],
+    tags: ['Forecasting', 'Hierarchical', 'Time Series', 'MinT', 'Reconciliation', 'Demand Forecasting'],
+    interviewQs: [
+      {
+        q: 'Explain the coherence problem in hierarchical forecasting and why naive forecasting violates it.',
+        a: 'A hierarchy is coherent if forecasts at all levels are consistent: the sum of region-level forecasts equals the national forecast, the sum of SKU-level forecasts equals the category forecast. Naive forecasting: train a separate model at each level independently. The national model predicts 1000 units. The two region models predict 600 and 500 (total 1100). Incoherent — you'll order 1100 units but plan for 1000. This creates operational problems: inventory planning uses the aggregate forecast; replenishment uses the SKU forecasts; they disagree. In practice, one level is chosen as "truth" and others are scaled to match, which wastes the forecasting signal from the other levels. Reconciliation methods force coherence across all levels simultaneously, without discarding any model's signal.'
+      },
+      {
+        q: 'Compare bottom-up, top-down, and middle-out hierarchical forecasting strategies.',
+        a: 'Bottom-up: forecast at the lowest level (SKU × store), sum up. Advantages: captures local demand patterns, seasonality at the finest granularity. Disadvantages: SKU-level data is sparse and noisy, especially for slow-moving items. Errors at the bottom amplify when summed. Best when: bottom-level data is rich and the hierarchy has few levels. Top-down: forecast at the aggregate level, disaggregate using historical proportions. Advantages: aggregate series are less noisy, easier to model. Disadvantages: the disaggregation uses fixed proportions that don't adapt to local trends — a store opening in a new region gets the same proportions as an established one. Best when: bottom-level data is sparse, aggregate forecast is accurate. Middle-out: forecast at a middle level (e.g., category × region), sum up and disaggregate in both directions. A practical compromise for 3-level hierarchies. Optimal reconciliation (MinT): forecast at all levels independently, then find the jointly optimal reconciled forecasts. Outperforms all three when base forecast accuracy varies across levels.'
+      },
+      {
+        q: 'What is MinT reconciliation and when does it outperform bottom-up?',
+        a: 'MinT (Minimum Trace) is a GLS-based reconciliation method. You have base forecasts ŷ at all levels. MinT finds reconciled forecasts ỹ = Sβ where S is the summing matrix (encodes the hierarchy structure) and β minimises the trace of the forecast error covariance matrix. The key insight: base forecasts at different levels have different accuracies and correlated errors. MinT weights each level's forecast contribution inversely proportional to its error variance, and accounts for cross-level correlations. MinT outperforms bottom-up when: aggregate-level base forecasts are significantly more accurate than bottom-level (common for new or sparse SKUs), cross-level correlations are informative, you have sufficient history to estimate the covariance matrix reliably. Bottom-up outperforms MinT when: bottom-level data is rich and high-quality, the hierarchy has few levels, you can't reliably estimate the large covariance matrix. In practice: use MinT when you have 50+ bottom-level series and 24+ months of history.'
+      },
+      {
+        q: 'How does temporal hierarchical forecasting work and what is THIEF?',
+        a: 'Temporal hierarchical forecasting: instead of a cross-sectional hierarchy (SKU → category → total), use a temporal hierarchy: daily forecasts → weekly → monthly → quarterly. A daily model sees high granularity but short-range patterns. A monthly model captures long-range seasonality. THIEF (Temporal HIErarchical Forecasting) applies reconciliation across these temporal levels. Base forecasts are computed at each frequency independently (e.g., ARIMA at daily, ETS at weekly, a trend model at monthly). MinT or OLS reconciliation is applied to make all levels coherent — the sum of 7 daily forecasts equals the weekly forecast, the sum of 4 weekly forecasts equals the monthly. Benefits: combines the short-range accuracy of daily models with the long-range stability of monthly models. Particularly useful for intermittent demand (retail, spare parts) where daily series are too sparse for reliable modelling but monthly series are stable. Python: the hts package and nixtla's HierarchicalForecast library both implement THIEF.'
+      }
+    ],
+    body: `Almost every business forecasting problem is hierarchical. Sales → by region → by store → by SKU. Traffic → by country → by device → by page. Any model that forecasts at only one level is leaving information on the table and creating planning inconsistencies.
+
+**The hierarchy structure**
+
+A hierarchy has levels connected by a summing constraint: each level aggregates exactly from the level below. Total sales = sum of regional sales. Regional sales = sum of store sales. Store sales = sum of SKU sales.
+
+The summing matrix S encodes this. For a two-level hierarchy (total T, two regions R1, R2): S = [[1,1], [1,0], [0,1]]. The base forecasts ŷ = [ŷ_R1, ŷ_R2] (forecast at the bottom level). The hierarchy-consistent forecasts at all levels: Sŷ = [ŷ_R1 + ŷ_R2, ŷ_R1, ŷ_R2]. Coherence means forecasts satisfy Sŷ_bottom = ŷ_all_levels. This is trivially true for bottom-up, but not for independently-generated forecasts at each level.
+
+**Why naive multi-level forecasting fails operationally**
+
+At a major retailer, three teams independently forecast: the national demand planning team (top-level), the regional replenishment team (mid-level), the store operations team (bottom-level). The national team forecasts 10,000 units for a product. The regional teams collectively forecast 12,000. The store teams collectively forecast 9,500. Procurement orders 10,000. Replenishment sends 12,000 to stores. Stores have plans for 9,500. The result: stores are overstocked by 25%, discount, write down inventory. This is the coherence problem with real financial consequences.
+
+**Bottom-up: aggregate from the finest level**
+
+Forecast at the SKU × store level (the leaf nodes of the hierarchy). Sum up to get category, regional, and total forecasts.
+
+Advantages: captures local patterns that aggregate models miss (a store near a stadium has demand spikes on game days invisible in the regional average). Changes at the bottom automatically propagate up.
+
+Disadvantages: SKU-level series are sparse. A slow-moving SKU might sell 3 units/week on average — forecasting that series reliably requires years of data, and even then a model produces wide confidence intervals. Errors at the bottom are not averaged out — they're summed. If every SKU forecast is off by 5%, the category-level forecast is off by 5%, not by 0.5%.
+
+**Top-down: disaggregate from the aggregate**
+
+Forecast at the total level (the root). Disaggregate using proportions derived from historical data.
+
+Disaggregation: SKU_forecast = total_forecast × (historical_SKU_share_of_total).
+
+Advantages: aggregate series are less noisy, seasonality is cleaner, long-range trends are easier to detect. One accurate model produces consistent forecasts across all levels.
+
+Disadvantages: proportions are fixed (or slowly-moving). A new store opening in a fast-growing region starts with the same proportion as an established store. Promotional events that affect one SKU don't change the proportion used to disaggregate it. The disaggregation discards all local signal.
+
+**Optimal reconciliation: MinT**
+
+MinT (Hyndman et al., 2011) doesn't discard any model. Base forecasts are generated at every level independently. Then they're reconciled jointly:
+
+ỹ = S (SᵀΣ⁻¹S)⁻¹ Sᵀ Σ⁻¹ ŷ
+
+where S is the summing matrix, ŷ is the vector of all base forecasts, and Σ is the forecast error covariance matrix.
+
+Σ captures: which levels forecast most accurately (diagonal) and how forecast errors covary across levels (off-diagonal). A level with high forecast accuracy gets high weight; a noisy level gets low weight.
+
+In practice, Σ is estimated from historical forecast residuals. Three approximations: (1) OLS: Σ = I (treat all forecasts equally). (2) WLS: Σ = diag(w1, w2, ...) where weights are forecast error variances. (3) MinT shrinkage: estimate the full covariance matrix with a shrinkage estimator (requires 24+ months of data).
+
+MinT with WLS is the standard starting point: it's simple, outperforms both top-down and bottom-up in most benchmarks, and doesn't require estimating off-diagonal covariance terms.
+
+**Temporal hierarchies**
+
+The same framework applies across time scales. A daily demand series can be aggregated to weekly, monthly, quarterly. Base models are trained at each frequency: a SARIMA for daily (captures day-of-week patterns), an ETS for weekly (captures weekly seasonality), an ARIMA for monthly (captures long-range trends).
+
+MinT reconciliation across time levels produces a daily forecast that is consistent with weekly and monthly forecasts — the sum of Monday–Sunday forecasts equals the weekly forecast. This prevents the common failure: a daily model that predicts high demand on day 7 of a 7-day window, creating a spike that looks real at the daily level but contradicts the smoother weekly forecast.
+
+**Intermittent demand**
+
+Hierarchical forecasting is particularly valuable for intermittent demand (many zero observations). A SKU that sells 0–2 units/day is nearly unforecastable at the daily level. At the weekly level (0–14 units/week), the series has better signal. At the monthly level (0–60 units/month), even better.
+
+Croston's method or TSB (Teunter-Syntetos-Babai) forecasts intermittent demand at the item level. Temporal hierarchical forecasting reconciles these item-level forecasts with the more reliable category-level weekly/monthly forecasts, pulling the item-level forecast toward the category trend.
+
+**Implementation**
+
+Python: nixtla/hierarchicalforecast implements all reconciliation methods (OLS, WLS, MinT, ERM). The hts package for R (the original MinT implementation). The API: fit base models → generate base forecasts → apply reconciler → get reconciled forecasts at all levels.
+
+Practical steps: (1) Choose your hierarchy depth — more levels adds reconciliation power but requires more data. (2) Choose base models per level — simpler models (ETS, ARIMA) for sparse lower levels, more complex models (LightGBM, Prophet) for data-rich upper levels. (3) Estimate Σ with WLS using cross-validation residuals. (4) Apply MinT reconciliation. (5) Evaluate RMSSE (Root Mean Squared Scaled Error) and MASE at each level separately — a reconciliation that improves aggregate RMSSE at the cost of bottom-level RMSSE is not always a win.
+
+**Try on Colab:** create a 3-level hierarchy (1 total, 3 regions, 9 SKUs) with synthetic weekly sales data. Generate base forecasts for each series independently using ETS. Apply bottom-up, top-down, and MinT-OLS reconciliation. Evaluate RMSSE at each level for all three methods. Confirm that MinT outperforms both on the aggregate metric while bottom-up wins at the SKU level when data is rich.`
+  },
+  {
+    id: 126,
+    slug: 'auction-theory-ads-ml-gsp-vcg-pctr',
+    title: 'Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does',
+    category: 'ML System Design',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    domain: 'math',
+    youtube: [],
+    tags: ['Ads ML', 'Auction Theory', 'pCTR', 'GSP', 'VCG', 'Revenue Optimisation', 'Calibration'],
+    interviewQs: [
+      {
+        q: 'Why is the second-price auction the standard in ads, not the first-price auction?',
+        a: 'In a first-price auction, winning bidders pay exactly what they bid. This incentivises bid shading: advertisers bid below their true value to avoid overpaying. Bid shading requires sophisticated bidding strategies that vary by auction, audience, and competition. The Nash equilibrium is complex, bidder strategies require constant recalibration, and revenue is unpredictable. In a second-price (Vickrey) auction, the winner pays the second-highest bid. The dominant strategy is to bid your true value — bidding more than your value risks paying more than it's worth; bidding less risks losing an auction you'd have profited from at your true value. Truthful bidding is optimal regardless of what others bid. Result: simpler advertiser interface (bid what the impression is worth to you), stable revenue, less adverse selection. In practice, the Generalised Second Price (GSP) mechanism used by Google/Meta is not fully truthful in a game-theoretic sense (unlike VCG), but it approximates truthfulness well enough in practice and is simpler to implement.'
+      },
+      {
+        q: 'What does pCTR actually do in the auction ranking, and what happens when it's miscalibrated?',
+        a: 'In a cost-per-click (CPC) auction, advertisers bid a price-per-click (b_i). The platform optimises for revenue = Σ b_i × pCTR_i. Ranking is by effective CPM: eCPM_i = b_i × pCTR_i. The winner is the advertiser with highest eCPM, not highest raw bid. They pay: (second_highest_eCPM) / pCTR_winner (so their cost per click equals the minimum bid required to win). pCTR is doing two jobs: (1) rank ordering — determining who wins. (2) Pricing — determining what the winner pays. Miscalibration: if pCTR_i is systematically 2× too high for advertiser A (overconfident), A's eCPM appears 2× higher than it should. A wins auctions it should lose. The platform charges A less per click than A's true eCPM would warrant (because the denominator is inflated). Platform revenue drops; A gets cheap clicks. Conversely, if pCTR is underestimated, the best-quality ad loses the auction to a higher-bidding lower-quality ad. Calibration is a revenue-critical ML problem, not just an accuracy problem.'
+      },
+      {
+        q: 'What is the difference between GSP and VCG, and why does it matter for advertiser incentives?',
+        a: 'GSP (Generalised Second Price): rank ads by bid × quality score. Winner i pays: (b_{i+1} × q_{i+1}) / q_i — the minimum bid to maintain rank above the next advertiser, adjusted for quality. Simple to compute, easy to explain, dominant in practice. Not truthful in game theory: advertisers have incentives to shade bids based on competitor bids, because the payment rule creates strategic interactions. VCG (Vickrey-Clarke-Groves): truthful by construction. Each winner pays the externality they impose on others — the loss in value to other advertisers caused by the winner occupying a slot. VCG is theoretically optimal (maximises social welfare, truthful for all advertisers simultaneously). More complex to compute; payment explanations are harder to give to advertisers. In practice: Google historically used GSP. Facebook/Meta used a form of VCG. Both converge to similar outcomes at scale because sophisticated advertisers learn to bid near-truthfully even in GSP. The practical difference matters most when: advertiser sophistication is low (GSP creates more shading), multi-slot auctions with complex externalities (VCG is cleaner), or when truthfulness guarantees matter for regulatory reasons.'
+      },
+      {
+        q: 'How do reserve prices work and what ML problem does floor price optimisation solve?',
+        a: 'A reserve price is the minimum bid below which the platform would rather show no ad (or a house ad) than sell the impression at that price. Reserve prices serve two functions: (1) Revenue floor — prevent advertisers from winning premium inventory at near-zero prices when competition is low. (2) Quality filter — exclude low-quality ads that damage user experience and long-term revenue. Static reserve prices are suboptimal: the right floor for a high-intent user on a premium publisher is 10× the right floor for a low-intent user on a remnant publisher. Dynamic reserve price optimisation: train a model that predicts, for each auction context, the expected revenue-maximising floor. Features: user value signals (LTV segment, device, behaviour), publisher quality, time of day, historical bid distribution in similar contexts. The ML objective is not CTR or conversion rate — it's expected revenue given the predicted bid distribution. Concretely: if you know bids are typically distributed as log-normal(μ, σ) for this context, the revenue-maximising reserve is a function of μ and σ. The ML model predicts these distribution parameters. Regulatory note: personalised reserve prices can raise fairness questions if they systematically disadvantage certain advertiser segments.'
+      }
+    ],
+    body: `The recommendation model drives engagement. The ranking model orders candidates. But none of it generates revenue without the auction mechanism that converts model scores into prices. Understanding auction theory is what separates a senior ads ML engineer from a junior one.
+
+**The core auction problem**
+
+Multiple advertisers want to show an ad to a user. The platform must decide: who wins the impression, and how much they pay. Objectives: maximise platform revenue (short-term) and advertiser value (long-term — advertisers who get good ROI keep spending).
+
+The inputs: each advertiser i submits a bid b_i (their value per click, per impression, or per conversion). The platform knows (or estimates) the quality of each ad — specifically, the probability it gets clicked (pCTR_i) and the user experience impact.
+
+**Effective CPM: the auction ranking signal**
+
+In a cost-per-click (CPC) auction, advertisers pay per click. But the platform earns per impression shown. To compare a $2 bidder with 10% pCTR against a $10 bidder with 1% pCTR:
+
+eCPM_i = b_i × pCTR_i
+
+$2 × 0.10 = $0.20 eCPM
+$10 × 0.01 = $0.10 eCPM
+
+The $2 bidder wins. Expected revenue per impression is higher from the high-quality, lower-bidding ad.
+
+This is the central insight: ranking by raw bid is wrong. Ranking by expected revenue (bid × predicted click probability) is correct. The ML model that predicts pCTR is therefore directly in the revenue calculation — not just a quality signal.
+
+**Second-price auctions and why they work**
+
+In a first-price auction, you pay what you bid. Rational advertisers shade bids below their true value, requiring constant recalibration as competitors change strategies. Revenue is volatile and hard to predict.
+
+In a second-price auction, the winner pays the second-highest bid (or, in multi-slot auctions, the minimum bid required to maintain their rank). The dominant strategy is simple: bid your true value. You can't benefit from bidding higher (you'd just pay more if you already win) or lower (you'd lose auctions you'd have profited from). Truthful bidding is optimal regardless of competitor strategies.
+
+For CPC auctions with quality scores (GSP), the payment rule extends: winner i in position k pays (b_{k+1} × q_{k+1}) / q_i — enough to maintain rank above the next ad, adjusted for relative quality scores.
+
+**GSP vs VCG**
+
+GSP (Generalised Second Price) is used by Google Ads, Bing Ads, and most programmatic exchanges. It's simple, explainable, and approximates truthfulness in practice even though it's not theoretically truthful. Sophisticated advertisers learn to bid near their true values.
+
+VCG (Vickrey-Clarke-Groves) is theoretically optimal. Each winner pays the externality they impose — the loss in value to other advertisers caused by occupying a slot. VCG is truthful: all advertisers simultaneously have incentive to bid their true values. Facebook/Meta historically used a form of VCG. Complexity: computing VCG payments requires running the auction N+1 times (once with each bidder removed). Explanation is harder: "you pay the harm you cause to others" is harder to communicate than "you pay the second-highest bid."
+
+At scale, the revenue and allocation differences between GSP and VCG are small — sophisticated advertisers converge toward truthful bidding in both. The practical differences emerge in long-tail advertisers and complex multi-format auctions.
+
+**The pCTR calibration problem**
+
+pCTR is doing two jobs in the auction: ranking (determining who wins) and pricing (determining what the winner pays). Miscalibration in either direction has revenue consequences.
+
+Systematic overestimation: model predicts 5% CTR, true rate is 2%. The ad's eCPM appears 2.5× higher than it should. It wins auctions it should lose. The payment per click is lower than the platform should charge (because the denominator in the payment formula is inflated). Platform revenue falls; advertiser gets cheap clicks — until they stop converting.
+
+Systematic underestimation: model predicts 0.5% CTR, true rate is 2%. The ad's eCPM appears 4× lower. It loses auctions it should win. A lower-quality ad with higher raw bid wins instead. User experience degrades; long-term revenue falls.
+
+This is why calibration is a revenue-critical ML problem, not just an accuracy problem. A model with 0.80 AUC but poor calibration can be worse for revenue than a model with 0.75 AUC that is well calibrated.
+
+**Reserve prices and floor price optimisation**
+
+A reserve price (floor price) is the minimum an impression sells for. Below the floor, the impression is not sold. Reserve prices serve two purposes: prevent underselling premium inventory to low-value advertisers in low-competition auctions, and filter out low-quality ads.
+
+Static floors are suboptimal. A $0.50 floor is too high for a low-intent user on a remnant publisher, too low for a high-intent user on a premium publisher. Dynamic floor optimisation: train a model that predicts the revenue-maximising floor for each auction context. If bid distributions are predictable from context features (user value, publisher, time of day), the optimal floor is a function of those distribution parameters.
+
+The revenue-maximising floor for a single-bidder auction: if bid B ~ F(b), the optimal reserve r* satisfies: r* = (1 - F(r*)) / f(r*) (the Myerson optimal reserve). In practice, this is approximated by the empirical bid distribution. The ML model learns to predict this distribution from context features.
+
+**Explore-exploit in auctions**
+
+A cold-start advertiser has no click history — pCTR is estimated from limited data. The model may underestimate their quality, placing them below their true eCPM rank and reducing their chance to accumulate feedback. The exploration problem: occasionally slot cold-start advertisers into positions above their estimated eCPM, observe click rates, update pCTR. This has a direct revenue cost (you're serving a lower-eCPM ad). The platform bears this cost in exchange for better long-term advertiser quality estimates.
+
+UCB and Thompson Sampling (from multi-armed bandits, post 96) apply here: maintain a posterior distribution over each advertiser's true pCTR, sample from that posterior when allocating slots. Advertisers with uncertain pCTR get more exploration. Advertisers with reliable estimates get allocated by eCPM.
+
+**Try on Colab:** simulate a 10-advertiser, 3-slot GSP auction. Give each advertiser a random bid and a random true CTR. Your pCTR model estimates CTR with some calibration noise (multiply true CTR by a random factor 0.7–1.3 per advertiser). Compute: (1) auction allocation under GSP with your miscalibrated pCTR, (2) auction allocation under GSP with true pCTR, (3) platform revenue difference, (4) which advertiser benefited most from miscalibration. Run 10,000 simulations. Show that systematic pCTR overestimation for one advertiser reduces platform revenue by X%.`
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -7715,13 +8169,13 @@ const SERIES = [
   { id: 'all',       label: 'All Series' },
   { id: 'failures',  label: 'Silent Failures',          posts: [1,3,5,20,21,26,27,38,41,42,43,45,46] },
   { id: 'diag',      label: 'Production Diagnostics',   posts: [22,23,25,35,39,40] },
-  { id: 'arch',      label: 'Architecture Decisions',   posts: [4,7,11,12,15,16,24,44,48,49] },
+  { id: 'arch',      label: 'Architecture Decisions',   posts: [4,7,11,12,15,16,24,44,48,49,123] },
   { id: 'found',     label: 'Math & Foundations',       posts: [2,6,9,10,17,28,29,36,37,47,50,51,52,53,73,74,75,86,87,88,95,96,97] },
   { id: 'career',    label: 'Interview & Career',       posts: [8,13,14,18,19] },
-  { id: 'dl',        label: 'Deep Learning',            posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,78,99,100] },
+  { id: 'dl',        label: 'Deep Learning',            posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,78,99,100,122,124] },
   { id: 'recsys',    label: 'RecSys & Ranking',         posts: [70,71,72] },
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
-  { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93,121] },
+  { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93,121,125,126] },
   { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
   { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120] },
 ]

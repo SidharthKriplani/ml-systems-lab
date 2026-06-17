@@ -76,6 +76,12 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Gap-fill sprint — 5 Gradient posts 122–126 (v4.96, 2026-06-18)
+
+Post 122: Graph ML for Fraud (GNN message passing, fraud rings, inductive learning, over-smoothing). Post 123: Real-Time Feature Engineering (latency budget, point-in-time correctness, streaming skew patterns, feature store). Post 124: LLM Production Engineering (KV cache, continuous batching, speculative decoding, INT8 vs INT4). Post 125: Hierarchical Forecasting (MinT reconciliation, THIEF, intermittent demand). Post 126: Auction Theory for Ads ML (GSP vs VCG, pCTR two jobs, floor price optimisation). All 4 interviewQs. dl series +122/124, arch +123, ds +125/126. Total: 126 posts. Brace diff 0.
+
+---
+
 ## ✅ DONE: ML Coding 4-type + Search scenarios + CUPED post (v4.94, 2026-06-18)
 
 **MLCodingTab:** 4-type framework (Implement / Debug / Optimise / Design) with TYPE_META constant and colored badges. 3 new problems: mlc13 Debug leaking cross-validator (2 leakage bugs to find), mlc14 Optimise pandas 10× (iterrows→groupby), mlc15 Design feature store 100K QPS (reference architecture). Type filter pills added. `filtered` array replaces `PROBLEMS.map`. Brace diff 0.

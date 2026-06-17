@@ -3,11 +3,11 @@ import { downloadProgressJSON } from '../utils/export.js'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
-  { date: '2026-06-18', label: 'ML Coding — 4-type framework', desc: 'Type 2: Debug (leaking CV), Type 3: Optimise (10× pandas), Type 4: Design (feature store 100K QPS) + type filter', tab: 'mlcoding' },
-  { date: '2026-06-18', label: 'Gradient — visualisations + CUPED', desc: '9 inline interactive diagrams (attention, bias-variance, L1/L2, PR slider…) + post 121: CUPED variance reduction', tab: 'gradient' },
+  { date: '2026-06-18', label: 'Gradient — 5 new posts (122–126)', desc: 'Graph ML for Fraud · Real-Time Features · LLM Serving · Hierarchical Forecasting · Auction Theory', tab: 'gradient' },
+  { date: '2026-06-18', label: 'ML Coding — 4-type framework', desc: 'Type 2: Debug (leaking CV), Type 3: Optimise (10× pandas), Type 4: Design (feature store 100K QPS)', tab: 'mlcoding' },
+  { date: '2026-06-18', label: 'Gradient — 9 inline visualisations', desc: 'Interactive: attention heatmap, bias-variance, L1/L2 geometry, PR threshold slider, gradient descent path…', tab: 'gradient' },
   { date: '2026-06-18', label: 'Interview Cheatsheet',      desc: '4-tier last-minute prep: 50 flashcards · 12 formulas · traps · domain audit · 7-day plan + company profiles', tab: 'cheatsheet' },
   { date: '2026-06-18', label: 'Gradient — 200 interview Qs', desc: '4 Q&As per post across posts 51–100: RecSys, Search, Fraud, Pricing, Causal, DL, and more', tab: 'gradient' },
-  { date: '2026-06-18', label: 'Search diagnostics — 4 new scenarios', desc: 'ret4–ret6: BM25 AND-collapse, embedding upgrade distribution shift, query intent drift by time-of-day', tab: 'design' },
 ]
 
 // ── Section tab registry ───────────────────────────────────────────────────────
