@@ -2098,6 +2098,51 @@ const RETRIEVAL_SCENARIOS = [
     diagnosis: 'Domain mismatch: "force majeure" in a query and "force majeure" in a document should be near-neighbours in embedding space. For a web-trained model, they may not be — the model has seen these terms in different contexts and assigns them different representations. Precision collapses when query-document vocabulary diverges from training distribution.',
     fix: 'Fine-tune the sentence transformer on legal query-document pairs using contrastive loss (positive pairs: query + relevant document; hard negatives: query + plausible-but-wrong document). Even 5,000–10,000 domain-specific pairs significantly improve in-domain precision. Evaluate on a held-out legal retrieval benchmark before and after fine-tuning.',
   },
+  {
+    id: 'ret4',
+    title: 'BM25 recall collapse on short queries',
+    context: 'An e-commerce search system uses BM25 as the sole retrieval stage. Single-word queries ("shoes", "laptop") have good recall. But two-word queries ("running shoes", "gaming laptop") show recall@100 dropping from 0.92 to 0.61. No infrastructure changes were made.',
+    question: 'BM25 recall drops from 0.92 on 1-word queries to 0.61 on 2-word queries. Corpus and index are unchanged. What is the structural reason BM25 behaves this way on multi-word queries, and what retrieval architecture change fixes it?',
+    options: [
+      'BM25 needs retuning of the k1 and b parameters for multi-word queries.',
+      'BM25 uses AND-style matching by default in many implementations — multi-word queries require all terms to be present, eliminating documents that contain synonyms or rephrased versions of the query terms.',
+      'The inverted index needs to be rebuilt with position information for phrase matching.',
+      'Multi-word queries require a different tokenizer.',
+    ],
+    answer: 1,
+    diagnosis: 'BM25 is a bag-of-words model. With AND semantics (common in Elasticsearch defaults), "running shoes" requires both "running" AND "shoes" in the document. A product titled "Nike Air jogger footwear" contains neither exact term — BM25 misses it completely. Recall collapses as query length increases because the intersection of matching documents shrinks. Vocabulary mismatch between query and document is invisible to BM25.',
+    fix: 'Add a dense retrieval stage alongside BM25 (hybrid search): embed the query with a bi-encoder, retrieve top-K dense candidates, merge with BM25 results via RRF (Reciprocal Rank Fusion). For e-commerce specifically: add product synonym expansion at query time and title synonym normalisation at index time. Switch Elasticsearch BM25 operator from AND to OR with field boosting for titles.',
+  },
+  {
+    id: 'ret5',
+    title: 'Recall collapse after embedding model upgrade',
+    context: 'Your team upgrades the bi-encoder from sentence-transformers/all-MiniLM-L6-v2 (384 dims) to sentence-transformers/all-mpnet-base-v2 (768 dims). Offline cosine similarity scores improve. But NDCG@10 in the A/B test drops 8 points. The HNSW index was rebuilt with new embeddings before the test.',
+    question: 'New embedding model shows better offline cosine scores but NDCG@10 drops 8 points in A/B. HNSW rebuilt cleanly. What is the most likely cause and fix?',
+    options: [
+      'The new model is too slow and latency is degrading user experience.',
+      'The cross-encoder re-ranker was trained on relevance signals from the old embedding space. Retrieved candidates from the new model are different enough that the re-ranker assigns scores poorly — the ranking stage is trained on a different retrieval distribution than it now receives.',
+      'The HNSW ef_search parameter was not tuned for 768-dimensional embeddings.',
+      'The new model produces embeddings in a different norm range, breaking cosine similarity.',
+    ],
+    answer: 1,
+    diagnosis: 'Two-stage pipeline distribution shift: the cross-encoder re-ranker was trained on (query, candidate) pairs where candidates came from the old retrieval system. The old system retrieved a specific distribution of candidates. The new bi-encoder retrieves a different set of candidates — semantically richer but unfamiliar to the re-ranker. The re-ranker\'s calibration breaks on out-of-distribution candidates, producing incorrect score orderings even when the retrieved set is actually more relevant.',
+    fix: 'Re-collect training data for the cross-encoder using the new bi-encoder\'s retrieval outputs. Fine-tune the cross-encoder on (query, new-bi-encoder-retrieved-candidates, relevance-labels) before running the A/B test. Alternatively: use a distillation-based approach where the old cross-encoder scores candidates from the new retrieval to create soft labels, then train the new cross-encoder on those. Always treat retrieval and re-ranking as a joint system.',
+  },
+  {
+    id: 'ret6',
+    title: 'Query intent drift across sessions',
+    context: 'A recipe search engine\'s NDCG@5 is 0.84 at 09:00 and degrades to 0.71 by 19:00. The model, index, and serving infrastructure are unchanged throughout the day. Traffic volume is similar across time windows.',
+    question: 'NDCG@5 degrades from 0.84 to 0.71 between morning and evening. Same model, same index, similar traffic. What phenomenon explains time-of-day metric degradation in a search system and what monitoring would catch it?',
+    options: [
+      'The HNSW index is degrading under write load from new recipe additions.',
+      'Query intent distribution shifts across the day — morning queries ("breakfast smoothie", "overnight oats") are navigational/known-item; evening queries ("what to cook with chicken and rice") are exploratory/multi-intent. The model was optimised for morning-style precision but fails on exploratory evening queries.',
+      'Caching effects cause stale results to be served more frequently in the evening.',
+      'The embedding model has worse performance on longer queries, which are more common in the evening.',
+    ],
+    answer: 1,
+    diagnosis: 'Query intent shift: morning users have narrow, specific intents (navigational). Evening users have broad, multi-intent queries ("dinner ideas for four people"). A ranking model trained on pooled daily data implicitly weights the majority query distribution. If morning queries dominate training data (volume or signal quality), the model excels at navigational queries but degrades on exploratory ones. This shows up as a NDCG cliff at intent transition time.',
+    fix: 'Slice query logs by intent type (navigational / informational / exploratory — classify using query length + click-through pattern). Train and evaluate the ranking model separately per intent type. Add query intent classification as a first-stage router: short known-item queries → BM25+title boosting; long exploratory queries → dense retrieval + diversification re-ranking. Monitor NDCG by time-of-day cohort as a standing dashboard metric.',
+  },
 ]
 
 function RetrievalFailures() {

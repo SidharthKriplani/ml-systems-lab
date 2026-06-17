@@ -7617,6 +7617,96 @@ For matrix-valued functions, the gradient can be derived using the Frobenius inn
     domain: 'math',
     youtube: [],
   },
+  {
+    id: 121,
+    slug: 'cuped-variance-reduction-ab-testing',
+    title: 'CUPED: How to Run More Sensitive A/B Tests Without More Traffic',
+    category: 'Data Science',
+    catColor: { bg: 'rgba(78,168,222,0.1)', text: '#4EA8DE', border: 'rgba(78,168,222,0.2)' },
+    readMin: 14,
+    featured: false,
+    excerpt: 'A/B tests are expensive. Getting more statistical power usually means waiting longer or sending more traffic. CUPED gives you a third option: use pre-experiment data you already have to shrink the variance of your estimator. In practice, CUPED reduces required sample size by 30–70% and is standard practice at Netflix, Booking.com, and Airbnb.',
+    domain: 'ds',
+    youtube: [],
+    tags: ['Experimentation', 'A/B Testing', 'CUPED', 'Variance Reduction', 'Statistics', 'Causal Inference'],
+    interviewQs: [
+      {
+        q: 'Explain CUPED in one minute to a PM who took intro stats.',
+        a: 'Imagine you ran an A/B test last week measuring revenue per user. Users vary a lot in baseline revenue — power users spend 10×. That noise makes it hard to detect a real treatment effect. CUPED says: use each user's revenue from the week *before* the experiment. That pre-experiment revenue is correlated with their experiment revenue, but not caused by the treatment. We subtract off the predictable part (the part explained by the covariate) and what's left is much less noisy. Same data, same traffic, tighter confidence intervals.'
+      },
+      {
+        q: 'Walk through the CUPED variance reduction formula and when the variance reduction is maximised.',
+        a: 'Y_cuped = Y - θ(X - E[X]) where X is the pre-experiment covariate, θ = Cov(Y,X)/Var(X) (the OLS coefficient from regressing Y on X), and E[X] is estimated from the data. Variance of Y_cuped: Var(Y_cuped) = Var(Y)(1 - ρ²) where ρ = Corr(Y, X). So: (1) variance reduction is 1 - ρ² — if ρ = 0.8 you keep 36% of original variance, cutting sample size by 64%. (2) Reduction is maximised when ρ is close to ±1. (3) Using the same metric from the prior period as the covariate usually achieves ρ ≈ 0.6–0.8 in practice. (4) E[X] is shared across treatment/control, so the estimator remains unbiased.'
+      },
+      {
+        q: 'What are the assumptions CUPED makes and when do they break?',
+        a: 'Assumptions: (1) X is not affected by the treatment — X must be measured before experiment start. If X post-dates the experiment, you introduce bias. (2) The relationship between Y and X is roughly linear — θ is an OLS coefficient, so non-linear relationships reduce efficiency but don't cause bias (the estimator is always unbiased regardless of the shape of the relationship). (3) X is available for all experiment units — users who appear in the experiment but have no pre-period data must be dropped or imputed. Breaks when: new users (no pre-period data — common workaround: impute with population mean, or apply CUPED only to returning users). Seasonal/structural breaks between covariate period and experiment period reduce ρ and reduce effectiveness. Very short pre-periods also reduce ρ.'
+      },
+      {
+        q: 'How does CUPED compare to stratified randomisation and regression adjustment? When would you use each?',
+        a: 'Stratified randomisation (pre-experiment): bucket users into strata (high/medium/low spenders), randomise within strata. Effective but must be done before experiment launch; can't apply retroactively. CUPED (post-experiment): applied to data after collection; can reduce variance on any already-run experiment. Regression adjustment (ANCOVA): regress Y on treatment + X in a single linear model — asymptotically equivalent to CUPED but slightly different finite-sample properties. CUPED is the simpler, portable version. Use stratification when you can plan ahead and want guaranteed balance. Use CUPED retroactively or when the infrastructure doesn't support stratified assignment. Use MLRATE (machine-learning-based CUPED) when you have many potential covariates and want to select the best linear combination automatically — Netflix uses this.'
+      }
+    ],
+    body: `CUPED stands for Controlled-experiment Using Pre-Experiment Data. It was published by Deng et al. at Microsoft Research in 2013 and is now standard practice at Netflix, Booking.com, Airbnb, Uber, and most companies running large-scale experimentation.
+
+**The problem it solves**
+
+A/B tests detect treatment effects by estimating the difference in means between treatment and control. The variance of that estimate is proportional to the variance of the metric across users. When users vary enormously — a power user spends 100× a casual user — the metric is noisy and you need large samples to detect small effects.
+
+Options before CUPED: wait longer (more traffic), accept lower power (higher Type II error rate), or use stratified randomisation (only works pre-experiment). CUPED is a fourth option that requires no additional traffic and can be applied retroactively.
+
+**The key insight: variance decomposition**
+
+Any outcome Y can be decomposed: Y = f(X) + ε, where X is a pre-experiment covariate correlated with Y, f(X) is the part of Y predictable from X, and ε = Y - f(X) is the residual. Since X pre-dates the experiment, the treatment cannot affect X. Therefore: E[f(X) | treatment] = E[f(X) | control] — f(X) is balanced by randomisation. This means we can subtract f(X) from Y without biasing the treatment effect estimate, but we reduce the variance of our estimator by removing the variance attributable to f(X).
+
+**The formula**
+
+CUPED uses a linear approximation for f(X):
+
+Y_cuped = Y - θ(X - E[X])
+
+where θ = Cov(Y, X) / Var(X) — the OLS slope from regressing Y on X.
+
+The mean correction term E[X] is included to keep E[Y_cuped] = E[Y]: E[Y_cuped] = E[Y] - θ(E[X] - E[X]) = E[Y]. The treatment effect estimate is τ_cuped = mean(Y_cuped | treatment) - mean(Y_cuped | control), which equals the original τ but has lower variance.
+
+Variance reduction: Var(Y_cuped) = Var(Y)(1 - ρ²) where ρ = Corr(Y, X). If ρ = 0.7, you retain 1 - 0.49 = 51% of the original variance — effectively doubling your statistical power.
+
+**Computing θ in practice**
+
+θ is estimated from the pooled experiment data (treatment + control). Critically: θ is estimated jointly, not separately per arm. If you estimate θ_treatment and θ_control independently, you introduce bias (because θ itself becomes a function of the treatment). The standard implementation: (1) pool all experiment users, (2) regress Y on X using OLS, (3) extract the coefficient as θ, (4) apply Y_cuped = Y - θ(X - X_bar) to every unit.
+
+**Choosing the covariate X**
+
+The covariate X should be: (1) measured before experiment launch — anything measured during or after the experiment could be influenced by the treatment and would bias the estimate, (2) highly correlated with Y — the pre-experiment version of the same metric (revenue last week, engagement last month) usually achieves ρ ≈ 0.6–0.8, (3) available for all experiment units — users without pre-period data must be handled. Common choices: same-metric from prior period (7-day window, 28-day window, year-over-year), related metrics (sessions before the experiment for a revenue metric), user-level features (account age, historical spend quantile).
+
+**Handling new users**
+
+New users have no pre-experiment history (X is missing). Options: (1) exclude new users from CUPED and apply it only to returning users — analyse as a mixed estimator, (2) impute X = 0 or X = population_mean — reduces effectiveness but allows inclusion, (3) apply CUPED only to the returning-user segment and report both segments separately. In practice, most teams apply CUPED to returning users and report a separate unadjusted estimate for new users.
+
+**CUPED vs regression adjustment (ANCOVA)**
+
+ANCOVA runs a single regression: Y = α + τ·treatment + βX + ε and uses τ̂ as the treatment effect estimate. Asymptotically, ANCOVA and CUPED produce identical results. In finite samples, ANCOVA is slightly more efficient because it can accommodate non-constant θ across strata, but CUPED is computationally simpler and easier to implement in distributed systems (compute θ once, apply as a column transform).
+
+**MLRATE: when one covariate isn't enough**
+
+MLRATE (Machine Learning Regression-Adjusted Treatment Effect Estimator) replaces θX with a machine learning model: Y_mlrate = Y - g(X) where g is trained on pre-experiment data (could be any model — gradient boosting, ridge regression, neural network). This allows leveraging many covariates simultaneously. Netflix uses a version of this. Requirements: (1) g must be trained on held-out data (not the experiment data itself), or on pre-experiment data entirely, to avoid overfitting bias, (2) the asymptotic guarantee of unbiasedness still holds regardless of g's form — any function of pre-experiment data can be subtracted without bias.
+
+**Implementation at scale**
+
+At Airbnb/Netflix scale, CUPED is a pipeline step:
+(1) Join experiment assignment table with pre-period metric table on user_id.
+(2) Compute θ using pooled regression (Spark or SQL + Python).
+(3) Compute Y_cuped for each user.
+(4) Run standard t-test / z-test on Y_cuped.
+
+The key engineering consideration: the pre-period window must be fixed in the experiment config before launch (to prevent data dredging). Most experimentation platforms allow you to specify "use 28-day pre-period revenue as the CUPED covariate" at experiment creation.
+
+**Common mistakes**
+
+Using a covariate measured during the experiment: if X overlaps with the experiment window, treatment can affect X, biasing the estimate. This is the most common implementation error. Estimating θ separately per arm: biases the estimator. Applying CUPED when ρ ≈ 0: CUPED adds minimal value but also adds noise from the θ estimation step. Use a pre-check: if estimated |ρ| < 0.2, the variance reduction is less than 4% — not worth the complexity. Forgetting to re-compute p-values on Y_cuped: some teams apply the transform but run the t-test on the original Y. The variance of Y_cuped is different from Y — always run the test on the transformed metric.
+
+**Try on Colab:** simulate an A/B test with n=5000 users, revenue Y = 5 + 2*treatment + 10*user_type + noise (user_type ~ N(0,1), noise ~ N(0,3)). Set X = user_type (simulating a pre-period covariate). Compute the standard t-test on Y and the CUPED-adjusted t-test on Y_cuped. Compare: (1) the variance of the treatment estimator under both, (2) the achieved power at α=0.05, (3) the required sample size to achieve 80% power. Show that CUPED reduces the required n by roughly 1/(1-ρ²).`
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -7631,7 +7721,7 @@ const SERIES = [
   { id: 'dl',        label: 'Deep Learning',            posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,78,99,100] },
   { id: 'recsys',    label: 'RecSys & Ranking',         posts: [70,71,72] },
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
-  { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93] },
+  { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93,121] },
   { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
   { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120] },
 ]

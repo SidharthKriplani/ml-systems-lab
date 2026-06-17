@@ -76,6 +76,16 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: ML Coding 4-type + Search scenarios + CUPED post (v4.94, 2026-06-18)
+
+**MLCodingTab:** 4-type framework (Implement / Debug / Optimise / Design) with TYPE_META constant and colored badges. 3 new problems: mlc13 Debug leaking cross-validator (2 leakage bugs to find), mlc14 Optimise pandas 10× (iterrows→groupby), mlc15 Design feature store 100K QPS (reference architecture). Type filter pills added. `filtered` array replaces `PROBLEMS.map`. Brace diff 0.
+
+**SystemDesignTab RETRIEVAL_SCENARIOS:** +4 scenarios: ret4 BM25 AND-semantics recall collapse, ret5 embedding upgrade distribution mismatch, ret6 query intent drift morning vs evening. Total: 7 scenarios. Brace diff 0.
+
+**GradientTab post 121 CUPED:** Full derivation, Y_cuped formula, MLRATE, 4 interviewQs, implementation at scale. Added to 'ds' series. Total: 121 posts. Brace diff 0.
+
+---
+
 ## ✅ DONE: Left sidebar nav + 9 inline visualizations (v4.91, 2026-06-18)
 
 `src/components/GradientVisuals.jsx` — 9 React SVG components (BiasVariancePlot, NDCGVisual, AttentionHeatmap, L1L2Geometry, PRThresholdSlider, TransformerBlock, CalibrationPlot, TwoTowerDiagram, GradientDescentPath). Each wired to a specific post via `POST_VISUALS` map; imported into GradientTab PostDetail. GradientTab list view now has a sticky left sidebar (176px) with Mode / Series / Domain as vertical nav, replacing the horizontal filter pills. Active filter label + clear button above posts grid. Brace diff 0.

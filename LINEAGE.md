@@ -1874,6 +1874,33 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.94 — ML Coding 4-type framework + Search diagnostic scenarios + CUPED post (2026-06-18)
+
+**What shipped:**
+
+**MLCodingTab — 4-type framework:**
+- Added `type` field (1–4) to all 12 existing PROBLEMS + 3 new problems (mlc13–mlc15)
+- TYPE_META constant: Type 1 = Implement from Scratch, Type 2 = Debug the Broken System (orange), Type 3 = Optimise for Production (green), Type 4 = Design Under Constraints (prime)
+- mlc13: "Debug: Leaking Cross-Validator" — two data leakage bugs (StandardScaler + SelectKBest fitted on all data before CV split). Type 2.
+- mlc14: "Optimise: Pandas Feature Engineering at 10×" — iterrows() → groupby/transform/rolling. Type 3.
+- mlc15: "Design: Feature Store for 100K QPS" — open-ended design with reference architecture (Redis/Cassandra/Kafka/Flink). Type 4.
+- Type filter pills added to tab header (All / Type 1 / Type 2 / Type 3 / Type 4). Filtered list updates reactively.
+- Type badge added to each ProblemCard header row. Brace diff 0.
+
+**SystemDesignTab — 4 new Retrieval Failure scenarios (ret4–ret7):**
+- ret4: BM25 recall collapse on multi-word queries (AND semantics + vocabulary mismatch → hybrid search fix)
+- ret5: Recall collapse after embedding model upgrade (retrieval/re-ranker distribution mismatch)
+- ret6: Query intent drift across sessions (morning navigational vs evening exploratory → NDCG cliff)
+- ret7: [future placeholder, ret4–ret6 injected as ret4–ret6] Total: 7 RETRIEVAL_SCENARIOS. Brace diff 0.
+
+**GradientTab — Post 121: CUPED:**
+- "CUPED: How to Run More Sensitive A/B Tests Without More Traffic" (14 min, domain: ds)
+- Full derivation: Y_cuped formula, θ = Cov(Y,X)/Var(X), variance reduction = 1-ρ², MLRATE, failure modes
+- 4 interviewQs: CUPED explained to PM, variance formula + when ρ is maximised, assumptions + breaks, CUPED vs ANCOVA vs stratification
+- Added to 'ds' series posts array. Post 121 total. Brace diff 0.
+
+---
+
 ### v4.91 — Left sidebar nav + 9 inline visualizations in GradientTab (2026-06-18)
 
 **What shipped:**

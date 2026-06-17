@@ -13,6 +13,7 @@ const LS_KEY = 'msl_score:mlcoding'
 const PROBLEMS = [
   {
     id: 'mlc1',
+    type: 1,
     title: 'Custom Cross-Entropy Loss',
     domain: 'Model Training',
     difficulty: 'mid',
@@ -59,6 +60,7 @@ print(f"sklearn matches: {abs(loss - sklearn_loss) < 1e-6}")
   },
   {
     id: 'mlc2',
+    type: 1,
     title: 'Vectorised Feature Engineering — No Loops',
     domain: 'Feature Engineering',
     difficulty: 'mid',
@@ -115,6 +117,7 @@ print(df[['user_id','date','item_id','days_since_last_purchase','purchase_veloci
   },
   {
     id: 'mlc3',
+    type: 1,
     title: 'K-Fold Cross-Validation From Scratch',
     domain: 'Model Evaluation',
     difficulty: 'junior',
@@ -179,6 +182,7 @@ print(f"Mean: {np.mean(scores):.3f}")
   },
   {
     id: 'mlc4',
+    type: 1,
     title: 'Retry Decorator with Exponential Backoff',
     domain: 'ML Systems',
     difficulty: 'senior',
@@ -263,6 +267,7 @@ print(f"Result: {result}, total calls: {call_count}")
   },
   {
     id: 'mlc5',
+    type: 3,
     title: 'ModelConfig Validation with Pydantic',
     domain: 'ML Systems',
     difficulty: 'mid',
@@ -361,6 +366,7 @@ except Exception as e:
   },
   {
     id: 'mlc6',
+    type: 1,
     title: 'Pandas CDC Deduplication',
     domain: 'Data Engineering',
     difficulty: 'senior',
@@ -436,6 +442,7 @@ print(result)
   },
   {
     id: 'mlc7',
+    type: 1,
     title: 'Diagnosing and Fixing Spark Data Skew',
     domain: 'Data Engineering',
     difficulty: 'senior',
@@ -545,6 +552,7 @@ result.show()
   },
   {
     id: 'mlc8',
+    type: 1,
     title: 'Time-Safe Train/Validation Split',
     domain: 'Feature Engineering',
     difficulty: 'mid',
@@ -664,6 +672,7 @@ print("No leakage: val features computed from pre-cutoff data only")
   },
   {
     id: 'mlc9',
+    type: 1,
     title: 'Weighted Precision@K for Imbalanced Ranking',
     domain: 'Model Evaluation',
     difficulty: 'senior',
@@ -761,6 +770,7 @@ print(f"Optimal K (min_prec=0.6): {find_optimal_k(y_true, y_scores, amounts, 0.6
   },
   {
     id: 'mlc10',
+    type: 1,
     title: 'Online Mean and Variance (Welford\'s Algorithm)',
     domain: 'Model Training',
     difficulty: 'mid',
@@ -904,6 +914,7 @@ for val, z in zip(stream, z_score_normalize(stream, window_size=4)):
   },
   {
     id: 'mlc11',
+    type: 1,
     title: 'Early Stopping for Gradient Boosting From Scratch',
     domain: 'Model Training',
     difficulty: 'senior',
@@ -1051,6 +1062,7 @@ print(f"Rounds saved by early stopping: {200 - len(history)}")
   },
   {
     id: 'mlc12',
+    type: 1,
     title: 'Permutation Feature Importance From Scratch',
     domain: 'Model Evaluation',
     difficulty: 'staff',
@@ -1171,9 +1183,385 @@ plot_importance_text(importances, stds, feature_names)
     checkpoint: 'Permutation importance shuffles one feature at a time. What does it miss that SHAP handles correctly?',
     checkpointAnswer: 'Permutation importance cannot detect feature interactions. If features A and B are correlated and the model uses them jointly (e.g., A×B interaction), shuffling A alone may not reduce performance much because B still carries similar information. SHAP values are additive and account for interactions by computing marginal contributions across all possible feature orderings (Shapley values from cooperative game theory). Permutation importance also does not handle correlated features correctly — shuffling feature A when B is correlated with A creates unrealistic data points that the model was never trained on. SHAP\'s TreeExplainer avoids this by using the actual training data distribution. For production model debugging, permutation importance is a fast first pass; SHAP is the correct tool when features are correlated or interactions matter.',
   },
+  {
+    id: 'mlc13',
+    type: 2,
+    title: 'Debug: Leaking Cross-Validator',
+    domain: 'Model Evaluation',
+    difficulty: 'senior',
+    readMin: 18,
+    prompt: `The function below is a cross-validated feature selection + model evaluation pipeline.
+It runs without errors and reports 94% accuracy. But when you deploy the model, test accuracy is 71%.
+
+Find ALL data leakage bugs. There are two. Fix them. Explain why each one caused the inflated score.
+
+\`\`\`python
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold
+
+def evaluate_pipeline(X, y, k=5, n_features=10):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)             # Line A
+
+    selector = SelectKBest(f_classif, k=n_features)
+    X_selected = selector.fit_transform(X_scaled, y)  # Line B
+
+    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    scores = []
+    for train_idx, val_idx in kf.split(X_selected):
+        X_train, X_val = X_selected[train_idx], X_selected[val_idx]
+        y_train, y_val = y[train_idx], y[val_idx]
+
+        clf = LogisticRegression(max_iter=1000)
+        clf.fit(X_train, y_train)
+        scores.append(clf.score(X_val, y_val))
+
+    return np.mean(scores)
+\`\`\``,
+    starter: `import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold
+
+def evaluate_pipeline_fixed(X, y, k=5, n_features=10):
+    # Fix the two leakage bugs here.
+    # Both preprocessing steps must be fit only on training folds.
+    pass
+
+# Generate synthetic data where true accuracy should be ~72%
+np.random.seed(42)
+X = np.random.randn(300, 50)   # 50 features, mostly noise
+y = (X[:, 0] + X[:, 1] > 0).astype(int)  # only first 2 features matter
+
+print("Buggy pipeline score:", round(evaluate_pipeline_buggy(X, y), 4))
+print("Fixed pipeline score:", round(evaluate_pipeline_fixed(X, y), 4))
+`,
+    solution: `import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold
+
+# ── Buggy version (for comparison) ──────────────────────────────────────────
+def evaluate_pipeline_buggy(X, y, k=5, n_features=10):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)          # BUG 1: fit on all data
+
+    selector = SelectKBest(f_classif, k=n_features)
+    X_selected = selector.fit_transform(X_scaled, y)  # BUG 2: fit on all data
+
+    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    scores = []
+    for train_idx, val_idx in kf.split(X_selected):
+        X_train, X_val = X_selected[train_idx], X_selected[val_idx]
+        y_train, y_val = y[train_idx], y[val_idx]
+        clf = LogisticRegression(max_iter=1000)
+        clf.fit(X_train, y_train)
+        scores.append(clf.score(X_val, y_val))
+    return np.mean(scores)
+
+# ── Fixed version ────────────────────────────────────────────────────────────
+def evaluate_pipeline_fixed(X, y, k=5, n_features=10):
+    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    scores = []
+    for train_idx, val_idx in kf.split(X):
+        X_train_raw, X_val_raw = X[train_idx], X[val_idx]
+        y_train, y_val = y[train_idx], y[val_idx]
+
+        # FIX 1: fit scaler only on training fold
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train_raw)
+        X_val_scaled = scaler.transform(X_val_raw)  # transform only
+
+        # FIX 2: fit selector only on training fold
+        selector = SelectKBest(f_classif, k=n_features)
+        X_train_sel = selector.fit_transform(X_train_scaled, y_train)
+        X_val_sel = selector.transform(X_val_scaled)  # transform only
+
+        clf = LogisticRegression(max_iter=1000)
+        clf.fit(X_train_sel, y_train)
+        scores.append(clf.score(X_val_sel, y_val))
+
+    return np.mean(scores)
+
+np.random.seed(42)
+X = np.random.randn(300, 50)
+y = (X[:, 0] + X[:, 1] > 0).astype(int)
+
+print("Buggy:", round(evaluate_pipeline_buggy(X, y), 4))   # ~0.94
+print("Fixed:", round(evaluate_pipeline_fixed(X, y), 4))   # ~0.72
+`,
+    checkpoint: 'Bug 1 (StandardScaler): Fitting on all 300 rows lets validation fold statistics bleed into the scaler. The scaler's mean and std for each feature encode information from validation rows — so the model sees slightly "pre-tuned" val features. Bug 2 (SelectKBest): This is the bigger leak. SelectKBest uses f_classif to rank features by ANOVA F-test with y. When fit on all 300 rows, the feature selector uses validation labels to pick which 10 features to keep. The validation set's own labels determine what features the model sees — this is directly leaking the target. Result: features selected look highly predictive because they're selected using the val labels themselves. The fix: both transforms must be fit exclusively on the training fold inside the loop and applied (not re-fit) to the val fold.',
+    checkpointAnswer: 'The key mental model: any fit() call that touches val-fold rows (in X or y) is leakage. The split must happen before any preprocessing step that depends on data statistics. sklearn Pipeline handles this automatically — it fits all steps only on the training data during cross_val_score. The manual fix is equivalent: restructure so that fit() happens inside the loop, on train_idx only.',
+  },
+  {
+    id: 'mlc14',
+    type: 3,
+    title: 'Optimise: Pandas Feature Engineering at 10× Speed',
+    domain: 'Feature Engineering',
+    difficulty: 'senior',
+    readMin: 15,
+    prompt: `The function below computes three rolling features for a 500K-row clickstream DataFrame.
+It takes 47 seconds on a standard laptop. You must reduce it to under 5 seconds without changing the output.
+
+\`\`\`python
+import pandas as pd
+
+def compute_features_slow(df):
+    """
+    df has columns: user_id, timestamp, item_id, price
+    Sorted by user_id, timestamp ascending.
+    Returns df with 3 new columns:
+      - n_clicks_7d: clicks by this user in the last 7 days
+      - avg_price_seen: mean price of items this user has seen
+      - time_since_last_click: seconds since this user's previous click
+    """
+    results = []
+    for idx, row in df.iterrows():
+        user_df = df[(df['user_id'] == row['user_id']) &
+                     (df['timestamp'] <= row['timestamp'])]
+        n7d = user_df[user_df['timestamp'] >= row['timestamp'] - pd.Timedelta('7d')].shape[0]
+        avg_p = user_df['price'].mean()
+        prev = user_df[user_df['timestamp'] < row['timestamp']]
+        t_since = (row['timestamp'] - prev['timestamp'].max()).total_seconds() if not prev.empty else -1
+        results.append({'n_clicks_7d': n7d, 'avg_price_seen': avg_p, 'time_since_last': t_since})
+    return df.assign(**pd.DataFrame(results, index=df.index))
+\`\`\`
+
+Hint: the slow path is iterrows() + repeated DataFrame filtering. Identify the bottleneck pattern and replace with vectorised groupby operations.`,
+    starter: `import pandas as pd
+import numpy as np
+
+def compute_features_fast(df):
+    # Must produce identical output to compute_features_slow.
+    # No iterrows(). Target: < 5 seconds on 500K rows.
+    # Allowed: groupby, transform, rolling, shift, merge.
+    pass
+
+# Generate test data
+np.random.seed(42)
+n = 10_000   # use small n for Pyodide; conceptually scale to 500K
+users = np.random.choice([f'u{i}' for i in range(50)], n)
+times = pd.date_range('2024-01-01', periods=n, freq='1min')
+df = pd.DataFrame({
+    'user_id': users,
+    'timestamp': sorted(times),
+    'item_id': np.random.randint(1, 1000, n),
+    'price': np.random.uniform(10, 500, n).round(2)
+}).sort_values(['user_id', 'timestamp']).reset_index(drop=True)
+
+result = compute_features_fast(df)
+print(result[['user_id', 'n_clicks_7d', 'avg_price_seen', 'time_since_last']].head(10))
+`,
+    solution: `import pandas as pd
+import numpy as np
+
+def compute_features_fast(df):
+    df = df.sort_values(['user_id', 'timestamp']).reset_index(drop=True)
+
+    # ── Feature 1: n_clicks_7d ── rolling count per user in 7-day window
+    # groupby + rolling on a count-compatible column
+    df = df.set_index('timestamp')
+    df['n_clicks_7d'] = (
+        df.groupby('user_id')['item_id']
+          .transform(lambda x: x.rolling('7D').count())
+    )
+    df = df.reset_index()
+
+    # ── Feature 2: avg_price_seen ── cumulative mean per user up to each row
+    df['avg_price_seen'] = (
+        df.groupby('user_id')['price']
+          .transform(lambda x: x.expanding().mean())
+    )
+
+    # ── Feature 3: time_since_last_click ── shift within user group
+    df['prev_timestamp'] = df.groupby('user_id')['timestamp'].shift(1)
+    df['time_since_last'] = (
+        (df['timestamp'] - df['prev_timestamp']).dt.total_seconds()
+    ).fillna(-1)
+    df = df.drop(columns=['prev_timestamp'])
+
+    return df
+
+np.random.seed(42)
+n = 10_000
+users = np.random.choice([f'u{i}' for i in range(50)], n)
+times = pd.date_range('2024-01-01', periods=n, freq='1min')
+df = pd.DataFrame({
+    'user_id': users,
+    'timestamp': sorted(times),
+    'item_id': np.random.randint(1, 1000, n),
+    'price': np.random.uniform(10, 500, n).round(2)
+}).sort_values(['user_id', 'timestamp']).reset_index(drop=True)
+
+result = compute_features_fast(df)
+print(result[['user_id', 'n_clicks_7d', 'avg_price_seen', 'time_since_last']].head(10))
+`,
+    checkpoint: 'The slow path runs O(N²) operations — for every row, it re-filters the entire DataFrame by user. At 500K rows that's 250 billion comparisons. The three bottlenecks are: (1) iterrows() — Python-level row iteration, 10–100× slower than vectorised ops. (2) df[df['user_id'] == row['user_id']] inside the loop — a full DataFrame scan per row. (3) pd.Timedelta construction inside the loop — object creation overhead. The fast path: groupby().transform() keeps the result aligned to the original DataFrame index automatically. rolling('7D') uses the timestamp index for efficient window computation without explicit row comparisons. shift(1) within a group computes the previous value in one vectorised pass.',
+    checkpointAnswer: 'The production concern is not just speed — it's correctness under data drift. Rolling windows with a DateTime index work correctly if data is sorted. In production, late-arriving events (out-of-order timestamps) break expanding() and rolling() correctness silently. Production feature engineering pipelines must: (1) sort by timestamp before all rolling operations, (2) log the count of out-of-order events, (3) define explicit handling for gaps > window size. The 47s → <5s improvement is table stakes. Production-safe feature engineering requires a watermark strategy, not just vectorisation.',
+  },
+  {
+    id: 'mlc15',
+    type: 4,
+    title: 'Design: Feature Store for a 100K QPS Recommendation System',
+    domain: 'ML Systems',
+    difficulty: 'senior',
+    readMin: 20,
+    prompt: `A two-tower recommendation system needs a feature store serving 100K requests/second with < 10ms p99 latency.
+
+Features break into three groups:
+• User features: last 30 days of activity, updated every 6 hours (50 features)
+• Item features: price, category, availability — updated every 30 minutes (20 features)
+• Real-time context: current session action sequence, last 3 clicks — updated on every event (variable length)
+
+Design the feature store architecture. Your design must address:
+1. Storage layer: what DB/cache per feature group and why
+2. Update pattern: push vs pull, batch vs streaming
+3. Consistency model: what consistency guarantee does each group need?
+4. Failure mode: what happens if the feature store is unavailable at serve time?
+5. One concrete trade-off you would NOT make and why
+
+This is an open-ended design problem. Write your answer in the code editor as structured comments.
+There is no single correct answer. The reveal shows a reference architecture used at scale.`,
+    starter: `# Feature Store Design — 100K QPS Recommendation System
+# Write your design as structured comments. Cover all 5 points.
+
+# 1. STORAGE LAYER
+# User features (50 features, 6hr refresh):
+#   Storage: ___
+#   Reason: ___
+#
+# Item features (20 features, 30min refresh):
+#   Storage: ___
+#   Reason: ___
+#
+# Real-time context (session events, immediate):
+#   Storage: ___
+#   Reason: ___
+
+# 2. UPDATE PATTERN
+# User features update path: ___
+# Item features update path: ___
+# Context update path: ___
+
+# 3. CONSISTENCY MODEL
+# User features: eventual / strong / session?
+# Item features: eventual / strong?
+# Context: ___
+# Acceptable staleness per group: ___
+
+# 4. FAILURE MODE
+# If feature store is down at serve time:
+#   Degraded mode strategy: ___
+#   What NOT to do: ___
+
+# 5. TRADE-OFF YOU WOULD NOT MAKE
+# ___
+`,
+    solution: `# ─── REFERENCE ARCHITECTURE (used at Airbnb/Uber/Netflix scale) ───────────
+# This is one defensible design — not the only one.
+
+# 1. STORAGE LAYER
+#
+# User features (50 features, 6hr refresh):
+#   Storage: Redis Cluster with 30-minute TTL + Cassandra as persistent backing store
+#   Reason: Redis gives < 1ms p99 point lookups at 100K QPS.
+#     Cassandra handles the persistence and large-scale batch reads for retraining.
+#     TTL acts as implicit cache eviction — if the 6hr batch job fails, Redis
+#     still serves stale user features (acceptable, see consistency model).
+#     Key schema: user:{user_id}:features → MessagePack-encoded feature vector.
+#
+# Item features (20 features, 30min refresh):
+#   Storage: Redis (same cluster, different key prefix) — 100M items max feasible.
+#     If item catalogue > 100M: tiered cache (Redis for top-K popular items,
+#     Cassandra cold path for long tail).
+#   Reason: Item features change more frequently than user features but are
+#     shared across all users requesting those items — high cache hit rate.
+#
+# Real-time context (session events, sub-second):
+#   Storage: In-process LRU cache at serving layer + Kafka consumer writing
+#     to Redis Sorted Set (session:{user_id}:actions → timestamp-sorted list)
+#   Reason: Context must be < 5ms to compute. Network round-trip to Redis is
+#     feasible (< 2ms on LAN) but in-process is better for p99. Write path:
+#     click event → Kafka → Flink consumer → Redis ZADD with TTL 30min.
+
+# 2. UPDATE PATTERN
+#
+# User features: batch push every 6 hours.
+#   Spark job reads 30-day activity logs → computes 50 features → bulk-writes
+#   to Redis via pipeline (batched SET commands). New features overwrite old.
+#
+# Item features: micro-batch push every 30 minutes.
+#   Change data capture (CDC) on items table → Kafka → Flink consumer →
+#   Redis SET with item TTL. Only changed items are updated (diff-based push).
+#
+# Context: streaming push on every user event.
+#   Click/session events → Kafka → Flink → Redis ZADD with ZRANGEBYSCORE
+#   for retrieval (last 3 clicks = top 3 by timestamp score).
+
+# 3. CONSISTENCY MODEL
+#
+# User features: eventual consistency, ~6hr staleness acceptable.
+#   Recommendation quality does not materially degrade from 6hr-old user
+#   embeddings. The key invariant: user features are consistent within a
+#   single request (read once, not re-read mid-request).
+#
+# Item features: eventual, < 30min staleness.
+#   One exception: item availability (in-stock / out-of-stock). This needs
+#   stronger consistency — staleness causes bad UX (showing unavailable items).
+#   Solution: separate availability flag with 5-minute TTL + a sync write
+#   path from inventory service on status change (push on state change, not
+#   just on schedule).
+#
+# Context: best-effort real-time, session-consistent.
+#   Missing context (cache miss) → fall back to last N from Cassandra cold path.
+#   Do not block the request waiting for context — timeout after 3ms, use
+#   empty context with popularity-based fallback.
+
+# 4. FAILURE MODE
+#
+# If Redis is unavailable:
+#   Strategy: serve the request with default features (zero vectors for user/item,
+#   empty context) + route to a popularity-based ranker that doesn't need features.
+#   This degrades recommendation quality but keeps p99 latency within budget.
+#
+# What NOT to do: block the serving request waiting for Redis recovery.
+#   If Redis is down and your serving layer blocks, you have 0 QPS instead of
+#   degraded-quality QPS. Always prefer degraded responses over blocking.
+#   Never let a feature store outage become a full serving outage.
+#
+# Circuit breaker pattern: after 3 consecutive Redis timeouts per instance,
+#   open the circuit and serve degraded for 30 seconds, then probe.
+
+# 5. TRADE-OFF YOU WOULD NOT MAKE
+#
+# Would NOT use a single shared Redis cluster for all three feature groups.
+#   Reason: context writes at 100K events/sec creates write amplification
+#   that degrades read latency for user/item features. The contexts have
+#   different access patterns, TTLs, and failure modes.
+#   Separate clusters with dedicated resources per feature group gives
+#   independent scaling, failure isolation, and independent TTL policies.
+#   The added operational cost (3 Redis clusters instead of 1) is justified
+#   by the latency SLA. In practice: user+item in one cluster, context in
+#   a separate in-process store with Redis fallback.
+`,
+    checkpoint: 'Most candidates get storage layer right (Redis). The failure modes question is where design judgment shows. What happens at 100K QPS when Redis has a network partition? If your design blocks on failure, you've turned a feature store outage into a full serving outage. The expected answer: serve a degraded response immediately, never block. The availability flag (item in-stock) consistency edge case catches most senior engineers — it's the one item feature that needs near-real-time consistency, which breaks the "batch push every 30 minutes" pattern.',
+    checkpointAnswer: 'The production tell: separate the cold path (Cassandra) from the hot path (Redis) from the real-time path (in-process + Kafka). Feature stores that collapse all three into one storage system are technically simpler but operationally fragile. The Feast, Tecton, and Vertex Feature Store architectures all implement this three-tier separation. The trade-off question reveals seniority: a junior engineer worries about getting the architecture right; a senior engineer knows which simplifications are acceptable and which create hidden failure modes.',
+  },
 ]
 
 // ── Problem card component ────────────────────────────────────────────────────
+const TYPE_META = {
+  1: { label: 'Implement from Scratch', color: '#4EA8DE', short: 'Type 1: Implement' },
+  2: { label: 'Debug the Broken System', color: '#F4845F', short: 'Type 2: Debug' },
+  3: { label: 'Optimise for Production', color: '#4CAF50', short: 'Type 3: Optimise' },
+  4: { label: 'Design Under Constraints', color: 'var(--prime)', short: 'Type 4: Design' },
+}
+
 function ProblemCard({ problem, done, onComplete, onNavigate }) {
   const [expanded, setExpanded]     = useState(false)
   const [showSolution, setShowSol]  = useState(false)
@@ -1181,6 +1569,7 @@ function ProblemCard({ problem, done, onComplete, onNavigate }) {
   const [cpPick, setCpPick]         = useState(null)
 
   const DIFF_COLOR = { junior: 'var(--mint)', mid: 'var(--prime)', senior: 'var(--rose)', staff: 'var(--violet)' }
+  const typeMeta = problem.type ? TYPE_META[problem.type] : null
 
   return (
     <div style={{ border: `1px solid ${done ? 'var(--mint)' : 'var(--rim)'}`, borderLeft: `3px solid ${done ? 'var(--mint)' : 'var(--prime)'}`, borderRadius: '10px', overflow: 'hidden', background: 'var(--surface)' }}>
@@ -1192,6 +1581,7 @@ function ProblemCard({ problem, done, onComplete, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase' }}>{problem.domain}</span>
             <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: DIFF_COLOR[problem.difficulty], border: `1px solid ${DIFF_COLOR[problem.difficulty]}`, borderRadius: '3px', padding: '0 4px', textTransform: 'uppercase' }}>{problem.difficulty}</span>
+            {typeMeta && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: typeMeta.color, border: `1px solid ${typeMeta.color}40`, borderRadius: '3px', padding: '0 5px', textTransform: 'none' }}>{typeMeta.short}</span>}
             {problem.readMin && <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>~{problem.readMin} min</span>}
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{problem.title}</div>
@@ -1301,6 +1691,9 @@ export default function MLCodingTab({ onNavigate }) {
     setCompletedIds(prev => prev.includes(id) ? prev : [...prev, id])
   }
 
+  const [activeType, setActiveType] = useState(0)  // 0 = All
+
+  const filtered = activeType === 0 ? PROBLEMS : PROBLEMS.filter(p => p.type === activeType)
   const done  = completedIds.length
   const total = PROBLEMS.length
 
@@ -1324,6 +1717,23 @@ export default function MLCodingTab({ onNavigate }) {
         steps={['Read the problem and constraints', 'Write your solution in the live editor', 'Answer the judgment checkpoint — what breaks in production?']}
       />
 
+      {/* Type filter */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        {[{ id: 0, label: 'All Types' }, ...Object.entries(TYPE_META).map(([k, v]) => ({ id: parseInt(k), label: v.short, color: v.color }))].map(t => (
+          <button key={t.id} onClick={() => setActiveType(t.id)}
+            style={{
+              padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer',
+              fontFamily: 'var(--font-sans)', fontWeight: activeType === t.id ? 600 : 400, border: 'none',
+              background: activeType === t.id ? (t.color ? `${t.color}22` : 'rgba(240,165,0,0.15)') : 'rgba(0,0,0,0.25)',
+              color: activeType === t.id ? (t.color || 'var(--prime)') : 'var(--ink-low)',
+              outline: activeType === t.id ? `1px solid ${t.color || 'var(--prime)'}50` : 'none',
+              transition: 'all 0.12s',
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {done > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', padding: 'var(--card-pad-primary)', background: 'var(--card-scrim)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
           <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Problems solved</span>
@@ -1335,7 +1745,7 @@ export default function MLCodingTab({ onNavigate }) {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {PROBLEMS.map(p => (
+        {filtered.map(p => (
           <ProblemCard
             key={p.id}
             problem={p}
