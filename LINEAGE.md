@@ -1941,6 +1941,16 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.101 — GradientTab crash fix: missing excerpt on posts 122–126 (2026-06-18)
+
+**What shipped:**
+
+`GradientTab.jsx` — posts 122–126 (Graph ML for Fraud, Real-Time Feature Engineering, LLM Production Engineering, Hierarchical Forecasting, Auction Theory for Ads ML) were missing the `excerpt` field. Two render sites call `post.excerpt.slice(...)` without a null guard (lines ~8829, ~8864 in PostReader). Accessing `.slice()` on `undefined` threw a TypeError on first open of any of these posts, crashing the entire GradientTab component and producing the black screen + yellow topbar symptom.
+
+Fix: added `excerpt` field to all 5 posts. Confirmed 126/126 posts have excerpt. Brace diff 0. Apostrophe scan OK.
+
+---
+
 ### v4.100 — Mobile fix (GradientTab sidebar) + METRICS.md sync (2026-06-18)
 
 **What shipped:**

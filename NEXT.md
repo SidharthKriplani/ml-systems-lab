@@ -256,6 +256,12 @@ All 57 JSX files clean. Root cause of repeated build failures confirmed and fixe
 
 ---
 
+## ✅ DONE: GradientTab crash fix (v4.101, 2026-06-18)
+
+Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostReader threw TypeError on undefined → black screen. Added excerpts to all 5 posts. 126/126 confirmed. Brace diff 0.
+
+---
+
 ## NEXT: UX loop — remaining items (P2)
 
 1. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
