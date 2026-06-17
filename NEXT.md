@@ -76,6 +76,12 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Left sidebar nav + 9 inline visualizations (v4.91, 2026-06-18)
+
+`src/components/GradientVisuals.jsx` — 9 React SVG components (BiasVariancePlot, NDCGVisual, AttentionHeatmap, L1L2Geometry, PRThresholdSlider, TransformerBlock, CalibrationPlot, TwoTowerDiagram, GradientDescentPath). Each wired to a specific post via `POST_VISUALS` map; imported into GradientTab PostDetail. GradientTab list view now has a sticky left sidebar (176px) with Mode / Series / Domain as vertical nav, replacing the horizontal filter pills. Active filter label + clear button above posts grid. Brace diff 0.
+
+---
+
 ## ✅ DONE: Interview Cheatsheet tab (v4.89, 2026-06-18)
 
 `src/tabs/CheatsheetTab.jsx` — 4-tier last-minute prep tab:

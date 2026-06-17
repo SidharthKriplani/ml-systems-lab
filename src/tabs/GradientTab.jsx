@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { getRead, toggleRead, isRead } from '../utils/read.js'
+import { POST_VISUALS } from '../components/GradientVisuals.jsx'
 const POSTS = [
   {
     id: 1,
@@ -8112,6 +8113,9 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         {/* Body */}
         <div>{renderBody(post.body)}</div>
 
+        {/* Inline Visual */}
+        {POST_VISUALS[post.id] && (() => { const V = POST_VISUALS[post.id]; return <V /> })()}
+
         {/* Interview Questions */}
         {post.interviewQs && post.interviewQs.length > 0 && (
           <InterviewQsSection questions={post.interviewQs} />
@@ -8459,79 +8463,110 @@ export default function GradientTab({ onNavigate }) {
         </div>
       )}
 
-      {/* Reading mode */}
-      <div style={{ marginBottom: '12px' }}>
-        <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Reading mode</div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      {/* ── Two-column layout: sidebar + posts ── */}
+      <div style={{ display: 'flex', gap: '0', alignItems: 'flex-start' }}>
+
+        {/* ── Left Sidebar ── */}
+        <div style={{ width: '176px', flexShrink: 0, position: 'sticky', top: '16px', paddingRight: '20px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+
+          {/* Mode */}
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', marginTop: '2px' }}>Mode</div>
           {[
             { id: 'all',        label: 'All Posts' },
             { id: 'revise',     label: '↩ Revise' },
             { id: 'learn',      label: '→ Learn' },
             { id: 'whats_next', label: '✶ What\'s Next' },
           ].map(m => (
-            <button key={m.id} onClick={() => { setReadingMode(m.id); setActiveSeries('all'); setActiveDomain('all') }}
+            <button key={m.id}
+              onClick={() => { setReadingMode(m.id); setActiveSeries('all'); setActiveDomain('all') }}
               style={{
-                padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer',
-                fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
-                background: readingMode === m.id ? 'rgba(240,165,0,0.15)' : 'rgba(0,0,0,0.25)',
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '6px 10px', borderRadius: '7px', marginBottom: '3px',
+                fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500,
+                cursor: 'pointer', border: 'none', transition: 'all 0.12s',
+                background: readingMode === m.id ? 'rgba(240,165,0,0.15)' : 'transparent',
                 color: readingMode === m.id ? 'var(--prime)' : 'var(--ink-low)',
-                border: readingMode === m.id ? '1px solid rgba(240,165,0,0.4)' : '1px solid var(--rim)',
               }}>
               {m.label}
             </button>
           ))}
-        </div>
-      </div>
 
-      {/* Series filter */}
-      <div>
-        <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Series</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {SERIES.map(s => (
-            <button key={s.id} onClick={() => handleSeriesChange(s.id)}
+          {/* Series */}
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', marginTop: '20px' }}>Series</div>
+          {SERIES.map(s => {
+            const count = s.posts ? s.posts.length : POSTS.length
+            const active = activeSeries === s.id
+            return (
+              <button key={s.id} onClick={() => handleSeriesChange(s.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  width: '100%', textAlign: 'left',
+                  padding: '6px 10px', borderRadius: '7px', marginBottom: '2px',
+                  fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: active ? 600 : 400,
+                  cursor: 'pointer', border: 'none', transition: 'all 0.12s',
+                  background: active ? 'rgba(240,165,0,0.15)' : 'transparent',
+                  color: active ? 'var(--prime)' : 'var(--ink-low)',
+                }}>
+                <span style={{ flex: 1, lineHeight: 1.3 }}>{s.label}</span>
+                {s.id !== 'all' && (
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: active ? 'var(--prime)' : 'var(--ink-ghost)', marginLeft: '4px', flexShrink: 0 }}>{count}</span>
+                )}
+              </button>
+            )
+          })}
+
+          {/* Domain */}
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', marginTop: '20px' }}>Domain</div>
+          {GRADIENT_DOMAINS.map(d => (
+            <button key={d.id} onClick={() => setActiveDomain(d.id)}
               style={{
-                padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
-                fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
-                background: activeSeries === s.id ? 'rgba(240,165,0,0.15)' : 'rgba(0,0,0,0.25)',
-                color: activeSeries === s.id ? 'var(--prime)' : 'var(--ink-low)',
-                border: activeSeries === s.id ? '1px solid rgba(240,165,0,0.4)' : '1px solid var(--rim)',
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '6px 10px', borderRadius: '7px', marginBottom: '2px',
+                fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: activeDomain === d.id ? 600 : 400,
+                cursor: 'pointer', border: 'none', transition: 'all 0.12s',
+                background: activeDomain === d.id ? 'rgba(240,165,0,0.15)' : 'transparent',
+                color: activeDomain === d.id ? 'var(--prime)' : 'var(--ink-low)',
               }}>
-              {s.label}
+              {d.label}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Domain filter */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-        {GRADIENT_DOMAINS.map(d => (
-          <button key={d.id} onClick={() => setActiveDomain(d.id)}
-            style={{
-              padding: '5px 12px', borderRadius: '7px', fontSize: '12px', cursor: 'pointer', border: 'none',
-              fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.12s',
-              background: activeDomain === d.id ? (d.color ? `${d.color}20` : 'rgba(255,255,255,0.15)') : 'rgba(0,0,0,0.25)',
-              color: activeDomain === d.id ? (d.color ?? 'var(--ink-hi)') : 'var(--ink-low)',
-              border: activeDomain === d.id ? `1px solid ${d.color ?? 'var(--rim)'}40` : '1px solid var(--rim)',
-            }}>
-            {d.label}
-          </button>
-        ))}
-      </div>
+        {/* ── Right: Posts ── */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Active filter label */}
+          {(activeSeries !== 'all' || activeDomain !== 'all') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)' }}>
+                {activeSeries !== 'all' && SERIES.find(s => s.id === activeSeries)?.label}
+                {activeSeries !== 'all' && activeDomain !== 'all' && ' · '}
+                {activeDomain !== 'all' && GRADIENT_DOMAINS.find(d => d.id === activeDomain)?.label}
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{filtered.length} posts</span>
+              <button onClick={() => { setActiveSeries('all'); setActiveDomain('all') }}
+                style={{ fontSize: '11px', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontFamily: 'var(--font-mono)' }}>
+                × clear
+              </button>
+            </div>
+          )}
 
-      {/* Posts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-        {featured.map(p => <PostCard key={p.id} post={p} featured isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
-        {rest.map(p => <PostCard key={p.id} post={p} isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
-      </div>
+          {/* Posts grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            {featured.map(p => <PostCard key={p.id} post={p} featured isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
+            {rest.map(p => <PostCard key={p.id} post={p} isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
+          </div>
 
-      {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', fontSize: '14px' }}>
-          {readingMode === 'revise' && 'No weak areas detected yet — complete some practice modules first.'}
-          {readingMode === 'learn' && 'You\'ve read all posts in your active domains. Explore a new series!'}
-          {readingMode === 'whats_next' && 'You\'ve touched every domain. Try Revise mode to strengthen weak areas.'}
-          {readingMode === 'all' && 'No posts in this category yet.'}
+          {filtered.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', fontSize: '14px' }}>
+              {readingMode === 'revise' && 'No weak areas detected yet — complete some practice modules first.'}
+              {readingMode === 'learn' && 'You\'ve read all posts in your active domains. Explore a new series!'}
+              {readingMode === 'whats_next' && 'You\'ve touched every domain. Try Revise mode to strengthen weak areas.'}
+              {readingMode === 'all' && 'No posts in this category yet.'}
+            </div>
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   )
 }

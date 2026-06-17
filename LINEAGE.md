@@ -1874,6 +1874,27 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.91 — Left sidebar nav + 9 inline visualizations in GradientTab (2026-06-18)
+
+**What shipped:**
+
+`src/components/GradientVisuals.jsx` — 9 self-contained inline React visualization components, zero external deps (SVG + inline styles + CSS variables):
+- `BiasVariancePlot` — SVG U-curve with Bias²/Variance/Total error, optimal point marker (post 74)
+- `NDCGVisual` — position discount table comparing actual vs ideal ranking, live DCG/IDCG/NDCG computation (post 71)
+- `AttentionHeatmap` — interactive 5×5 attention weight matrix with hover highlight (post 54)
+- `L1L2Geometry` — SVG diamond vs circle constraint region side-by-side with sparse/shrunk solution dots (post 112)
+- `PRThresholdSlider` — interactive threshold slider driving live Precision/Recall/F1 updates with plotted PR curve (post 114)
+- `TransformerBlock` — Transformer decoder architecture diagram with residual connection arrows (post 55)
+- `CalibrationPlot` — reliability diagram (overconfident model) showing bars below the perfect-calibration diagonal (post 76)
+- `TwoTowerDiagram` — side-by-side retrieval vs cross-encoder architecture diagram with latency comparison (post 70)
+- `GradientDescentPath` — interactive loss contour with animated descent path controlled by step slider (post 56)
+
+`POST_VISUALS` map (post id → component) exported; imported in GradientTab.jsx and rendered inline in PostDetail between body and InterviewQsSection.
+
+**Left sidebar nav in GradientTab:** Series filter pills and Domain filter pills moved into a sticky left sidebar (176px). Layout changed from single flex-column to two-column (sidebar + posts). Mode, Series (with post counts), Domain all vertical in sidebar. Active filter label + clear button above posts grid. Brace diff 0.
+
+---
+
 ### v4.89 — Interview Cheatsheet tab (2026-06-18)
 
 **What shipped:**
