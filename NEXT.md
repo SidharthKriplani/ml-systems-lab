@@ -76,6 +76,12 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Interview questions on posts 51-100 (v4.88, 2026-06-18)
+
+200 structured Q&A pairs (4 per post × 50 posts) injected into posts 51-100. Rendered via InterviewQsSection collapsible accordion. Brace diff 0.
+
+---
+
 ## ✅ DONE: Gradient Ground Up series complete — 10 more posts (v4.87, 2026-06-18)
 
 Posts 111–120. Ground Up series now 20 posts total (101–120). Every foundational layer covered.

@@ -1874,6 +1874,18 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.88 — Interview questions injected into posts 51-100 (2026-06-18)
+
+**What shipped:**
+
+200 structured interview Q&A pairs (4 per post × 50 posts) added to GradientTab.jsx posts 51-100. Topics covered: Transfer Learning, BERT vs GPT, Tokenization, Contrastive/CLIP, Two-Tower, Learning to Rank, RecSys Stack, XGBoost, Bias-Variance, Bayesian Inference, Calibration, Feature Stores, Distillation, BM25/Search, Semantic Search/RAG, Price Elasticity, LTV/Churn, Attribution/MMM, Uplift Modeling, Multiple Testing/FDR, PCA, Clustering, Time Series, Ads CTR, RAG, Network Effects/SUTVA, DiD/RDD, Metrics Definition, Concept Drift, Anomaly Detection, Multi-Armed Bandits, SVMs, Fairness in ML, RLHF/DPO, Federated Learning.
+
+All Q&As rendered via the `InterviewQsSection` collapsible accordion component (added in prior session). Brace diff 0 verified. Injection approach: 10 Node.js scripts (5 posts each) to avoid socket size errors.
+
+File: `src/tabs/GradientTab.jsx`
+
+---
+
 ### v4.48 — Freemium gating polish, difficulty filter, lazy loading, role readiness, keyboard nav, progress export, audits (2026-06-02)
 
 **What shipped (commit pending — 35+ files staged, git lock constraint in sandbox):**

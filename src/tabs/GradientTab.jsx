@@ -3452,6 +3452,12 @@ The Jacobian of a composed function is the product of the Jacobians at each laye
     tags: ['Deep Learning', 'Backpropagation', 'Gradient Descent', 'Chain Rule', 'Neural Networks', 'Foundations'],
     domain: 'dl',
     youtube: [{ id: 'Ilg3gGewQ5U', title: 'Backpropagation calculus — 3Blue1Brown Neural Networks Ch.4' }],
+    interviewQs: [
+    { q: "What is the chain rule and why is it necessary for backpropagation?", a: "The chain rule states that d(f∘g)/dx = (df/dg)·(dg/dx). In a neural network — a composition of functions — you need the gradient of the loss w.r.t. every weight. Without the chain rule you'd have to perturb each weight independently (O(params) forward passes). The chain rule lets you compute all gradients in one backward pass by reusing intermediate partial derivatives computed layer by layer." },
+    { q: "Why do you need to store activations during the forward pass?", a: "To compute a node's local gradient during backprop, you need the value of its input at the time of the forward pass. For ReLU, d/dz = 1 if z > 0 else 0 — you need to know whether z was positive. For tanh, d/dz = 1 − tanh(z)². Without storing these, you'd have to recompute them, doubling memory or compute. Gradient checkpointing trades this: recompute on demand to reduce memory at the cost of ~30% extra compute." },
+    { q: "Explain the vanishing gradient problem and how ReLU addresses it.", a: "Sigmoid's local gradient peaks at 0.25. In a 10-layer network, gradients pass through 10 sigmoid derivatives — product ≤ 0.25^10 ≈ 10⁻⁶. Early layers see near-zero gradients and don't learn. ReLU's gradient is 1 for positive inputs, so the gradient product stays close to 1 across active neurons. Trade-off: dead neurons (negative inputs get zero gradient permanently), addressed with Leaky ReLU or careful initialization." },
+    { q: "How does gradient flow differ in a residual network vs a plain deep network?", a: "In a plain network, gradients must pass through every layer multiplicatively. If any layer's Jacobian has small singular values, the gradient shrinks. ResNets add a skip connection: output = F(x) + x. The gradient of the loss w.r.t. the input is dL/dF + 1. The +1 term provides an unobstructed highway for gradients to flow directly from the loss to early layers, regardless of what F(x) learns. This is why 100+ layer networks became trainable only after ResNets." },
+    ],
   },
   {
     id: 52,
@@ -3500,6 +3506,12 @@ The other benefit: a residual block can learn to be the identity (F(x) = 0) if t
     tags: ['Deep Learning', 'CNN', 'Convolutional Neural Networks', 'ResNet', 'Computer Vision', 'Foundations'],
     domain: 'dl',
     youtube: [{ id: 'KuXjwB4LzSA', title: 'But what is a convolution? — 3Blue1Brown' }],
+    interviewQs: [
+    { q: "What is weight sharing in CNNs and why does it matter?", a: "A convolutional filter applies the same learned weights at every spatial position. A 3×3 filter has 9 parameters regardless of whether the image is 64×64 or 512×512. Without weight sharing, a fully connected layer on a 512×512 image would need ~786K parameters per neuron. Weight sharing encodes the inductive bias that the same feature (edge, texture) can appear anywhere in the image. It also makes CNNs equivariant to translation." },
+    { q: "What is a receptive field and how does it grow with depth?", a: "The receptive field of a neuron is the region of the input it can \"see.\" A 3×3 conv has receptive field 3. Stack two 3×3 convs: the second layer neuron sees a 5×5 region of the input. Stack k layers of 3×3 convs: receptive field = 2k+1. Larger receptive fields capture longer-range dependencies. Alternatives: dilated convolutions (skip positions, RF grows faster), pooling (downsamples, smaller feature map means larger effective RF at later layers)." },
+    { q: "Why did ResNets solve the degradation problem that plain deep networks had?", a: "As plain networks went deeper, training error increased — not due to overfitting but because deeper networks were harder to optimize. ResNets reformulate each block to learn a residual F(x) = H(x) − x rather than H(x) directly. If the optimal mapping is close to identity, it's easier to push F(x) → 0 than to learn H(x) → x. The skip connection also provides direct gradient flow to early layers, preventing vanishing gradients in 100+ layer networks." },
+    { q: "How would you debug a CNN that achieves high training accuracy but poor test accuracy?", a: "Classic overfitting. Diagnose first: plot train vs val loss curves — if val loss diverges early, you're overfitting. Fixes in order of impact: (1) more data or augmentation (random crop, flip, colour jitter); (2) dropout after fully connected layers; (3) reduce model capacity; (4) stronger regularization (L2 weight decay); (5) batch normalization to smooth the loss landscape. Also check that test distribution matches train — if not, that's data shift, not overfitting." },
+    ],
   },
   {
     id: 53,
@@ -3554,6 +3566,12 @@ Beyond first-order connections, graph structure encodes higher-order relationshi
     tags: ['Deep Learning', 'Graph Neural Networks', 'GNN', 'PinSage', 'Recommendation Systems', 'GraphSAGE', 'Message Passing'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "What is message passing in a GNN and what information does it aggregate?", a: "In each message passing step, every node v collects representations from its neighbors N(v), aggregates them (sum/mean/max), and combines with its own representation to produce a new state. Formally: h_v^(k) = UPDATE(h_v^(k−1), AGGREGATE({h_u^(k−1) : u ∈ N(v)})). After k steps, each node's representation encodes its k-hop neighborhood. The choice of aggregation function affects expressivity: sum is strictly more expressive than mean or max for distinguishing graph structures." },
+    { q: "What is the over-smoothing problem in GNNs and when does it occur?", a: "As you stack more GNN layers, node representations converge to indistinguishable values — all nodes look the same. This happens because repeated averaging across neighbors makes representations a weighted sum of all reachable nodes, losing local structure. Empirically, 2–3 layers is usually optimal. Fixes: JK-Nets (jump connections that preserve early-layer representations), DropEdge (randomly drop edges during training), or limiting depth and using positional encodings instead." },
+    { q: "How does PinSage scale GNNs to graphs with billions of nodes?", a: "Full-batch GNN training is infeasible at Pinterest scale (3B nodes). PinSage uses neighborhood sampling: for each target node, sample a fixed number of neighbors (not all of them), compute their representations, aggregate. This caps compute per node regardless of actual degree. It also uses random walks to define \"importance-weighted\" neighborhoods rather than uniform sampling, and importance pooling to weight neighbor contributions. Training is mini-batch; inference uses MapReduce for the full graph." },
+    { q: "When would you use a GNN over a standard MLP for a prediction task?", a: "Use a GNN when the data has relational structure that matters — friendship graphs, molecular bonds, citation networks, knowledge graphs. MLPs ignore edge structure; GNNs explicitly model it. Concretely: fraud detection (a user connected to flagged accounts is suspicious), drug discovery (atom connectivity determines molecular properties), recommendation (user-item interaction graph). If the graph is a red herring (features are sufficient, edges add noise), an MLP or gradient boosted tree will win on speed and often accuracy." },
+    ],
   },
   {
     id: 54,
@@ -3604,6 +3622,12 @@ Computing Q · K^T for a sequence of length n produces an n×n attention matrix.
     tags: ['Deep Learning', 'Attention', 'Transformer', 'Self-Attention', 'NLP', 'Foundations'],
     domain: 'dl',
     youtube: [{ id: '5vcj8kSwBCY', title: 'Attention in transformers, visually explained — 3Blue1Brown' }],
+    interviewQs: [
+    { q: "Why does self-attention scale dot products by √d_k?", a: "For large d_k, the dot product Q·Kᵀ grows in magnitude (variance ≈ d_k if Q and K are unit normal). Large values push the softmax into saturation regions where gradients are near zero, making training unstable. Dividing by √d_k keeps the variance at 1 regardless of d_k. Empirically this matters: without scaling, attention in large models collapses to near-hard argmax, losing the soft mixture that makes attention useful." },
+    { q: "What is multi-head attention and what does each head learn?", a: "Multi-head attention runs h independent attention operations in parallel, each with its own Q/K/V projections (d_model/h dimensions), then concatenates and projects back. Each head can attend to different aspects simultaneously — one head might attend to syntactic relationships, another to coreference, another to positional structure. This is different from running a single larger attention, which would be dominated by the highest-scoring key. Empirically, heads do specialize, though what they learn is emergent." },
+    { q: "What is the computational complexity of self-attention and how is it addressed at long contexts?", a: "Standard self-attention is O(n²d) time and O(n²) memory — every token attends to every other. At n=100K tokens this is prohibitive. Approximations: Sparse attention (only attend to local window + global tokens), Linear attention (kernel trick to approximate softmax as product of feature maps, O(nd²)), Flash Attention (IO-aware exact attention, O(n²) compute but O(n) HBM memory by tiling), and sliding window attention (Longformer). Flash Attention is now standard in production transformers." },
+    { q: "How would you explain attention to a non-technical stakeholder?", a: "Think of it as a soft lookup. When processing the word \"bank\" in a sentence, attention asks: which other words in this sentence are most relevant for understanding what \"bank\" means here? If \"river\" scored high, the model learns it's a riverbank. If \"money\" scored high, it's a financial institution. The model learns to ask good questions (query), what to match against (keys), and what information to retrieve (values). Every word gets a context-aware representation based on weighted information from all other words." },
+    ],
   },
   {
     id: 55,
@@ -3650,6 +3674,12 @@ The trade-off: O(n^2) memory for the attention matrix vs O(n) for RNN hidden sta
     tags: ['Deep Learning', 'Transformer', 'Architecture', 'NLP', 'Attention', 'Foundations'],
     domain: 'dl',
     youtube: [{ id: 'wjZofJX0v4M', title: 'But what is a GPT? Visual intro to Transformers — 3Blue1Brown' }],
+    interviewQs: [
+    { q: "Walk through the components of a Transformer encoder layer.", a: "Two sub-layers: (1) Multi-head self-attention: each token attends to all others, producing context-aware representations. (2) Feed-forward network: two linear layers with a ReLU/GELU in between, applied independently to each position. Each sub-layer is wrapped with residual connection + layer norm: output = LayerNorm(x + Sublayer(x)). The residual + norm combination keeps gradients well-conditioned and allows very deep stacking. In practice: 12 layers for BERT-base, 96 for GPT-3." },
+    { q: "Why does positional encoding matter and what are the main approaches?", a: "Self-attention is permutation-equivariant: shuffling the input tokens gives the same output (shuffled). Without positional information, \"dog bites man\" and \"man bites dog\" look identical. Sinusoidal encoding (original Transformer): adds fixed sin/cos patterns of different frequencies to each position. Learned absolute positions (BERT): learned embeddings per position, limited to training length. RoPE (Rotary Position Embedding): encodes relative positions by rotating Q and K vectors — generalizes better to unseen lengths. ALiBi: adds a linear position bias to attention scores — simple and effective." },
+    { q: "What is the difference between encoder-only, decoder-only, and encoder-decoder Transformers?", a: "Encoder-only (BERT): bidirectional attention, every token sees all others. Good for classification, NER, extractive QA. Decoder-only (GPT): causal/autoregressive attention — each token only sees past tokens. Good for generation. Encoder-decoder (T5, BART): encoder processes the full input bidirectionally; decoder generates output attending to encoder output + its own past tokens. Good for seq2seq tasks (translation, summarization). Modern trend: large decoder-only models (GPT-4, Claude) have displaced encoder-decoder for most tasks due to scale." },
+    { q: "How does KV caching work and why is it critical for inference?", a: "During autoregressive generation, at each step you need K and V for all previous tokens. Without caching, you'd recompute them from scratch every step — O(n²) total compute for a sequence of length n. KV cache stores K and V tensors from all previous steps. Each new token only needs to compute K and V for itself and append to the cache. Compute goes from O(n²) to O(n). Memory cost: 2 × n × n_layers × d_model × dtype bytes. At 4K context with GPT-3 dims, this is ~GB per sequence — KV cache memory is a primary bottleneck for long-context inference." },
+    ],
   },
   {
     id: 56,
@@ -3702,6 +3732,12 @@ The absolute learning rate matters less than the schedule. Common patterns: cosi
     tags: ['Deep Learning', 'Optimization', 'Adam', 'SGD', 'Gradient Descent', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "Why does vanilla SGD struggle with saddle points and ill-conditioned loss landscapes?", a: "SGD takes steps proportional to the raw gradient. In ill-conditioned loss surfaces (loss curves much faster in one direction than another), a step size small enough to not overshoot the sharp direction is too small to make progress in the flat direction. Saddle points have zero gradient, so SGD stalls. Momentum helps by accumulating velocity across steps — a ball rolling through a saddle point carries momentum to escape. Adam addresses conditioning by normalizing gradients with per-parameter running variance estimates." },
+    { q: "Explain the intuition behind Adam's bias correction terms.", a: "Adam maintains exponential moving averages of gradients (m) and squared gradients (v). At initialization, m and v are 0. With β₁=0.9 and β₂=0.999, after one step m ≈ 0.1·g and v ≈ 0.001·g². These underestimate the true moments. Bias correction divides by (1−β₁ᵗ) and (1−β₂ᵗ) to correct this early underestimation. Without it, early steps are tiny, slowing convergence. After enough steps (t large), bias correction terms → 1 and have no effect." },
+    { q: "What is learning rate warmup and when is it necessary?", a: "Warmup linearly increases the learning rate from 0 to the target value over the first N steps. It's necessary because at initialization, model weights are random and gradients are noisy. Large learning rates early cause large, poorly-directed updates that can destroy initialization and cause loss spikes. Warmup lets the optimizer accumulate reliable gradient statistics (Adam's v estimate needs time to stabilize) before taking large steps. Critical for large transformers: without warmup, training often diverges in the first 100 steps." },
+    { q: "When would you prefer AdamW over Adam, and what does weight decay actually do in each?", a: "In Adam, L2 regularization (adding λ·w to gradients) interacts with the adaptive scaling — the regularization effect is effectively scaled down for parameters with large gradient variance. AdamW decouples weight decay from the gradient update: weights are shrunk directly by λ at each step, independent of the gradient magnitude. This makes the regularization effect consistent across parameters. Empirically, AdamW generalizes better for large models. Use AdamW for transformers by default; Adam is fine for smaller models where this distinction matters less." },
+    ],
   },
   {
     id: 57,
@@ -3752,6 +3788,12 @@ Attention has O(n^2) memory but O(1) sequential operations: all positions are co
     tags: ['Deep Learning', 'RNN', 'LSTM', 'Vanishing Gradient', 'Sequence Models', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "What problem do LSTMs solve that vanilla RNNs cannot?", a: "Vanilla RNNs apply the same weight matrix W_hh at every timestep. Gradients through T timesteps are proportional to W_hh^T. If the largest eigenvalue of W_hh is <1, gradients vanish exponentially; if >1, they explode. LSTMs introduce a cell state c_t with additive (not multiplicative) updates. The forget gate f_t controls how much c_t persists: c_t = f_t ⊙ c_{t-1} + i_t ⊙ g_t. Additive updates mean gradients flow back through c_t with much smaller decay — long-range dependencies become learnable." },
+    { q: "Explain the role of each gate in an LSTM.", a: "Four components: Forget gate f_t = σ(W_f·[h_{t-1}, x_t] + b_f) — how much of old cell state to retain. Input gate i_t = σ(W_i·[h_{t-1}, x_t]) — which new information to write. Cell candidate g_t = tanh(W_g·[h_{t-1}, x_t]) — what to write. Output gate o_t = σ(W_o·[h_{t-1}, x_t]) — what to expose from cell state. Cell update: c_t = f_t ⊙ c_{t-1} + i_t ⊙ g_t. Hidden state: h_t = o_t ⊙ tanh(c_t). All four use [h_{t-1}, x_t] as input, learned jointly." },
+    { q: "When would you still use an RNN/LSTM over a Transformer in production?", a: "RNNs process one timestep at a time — O(1) memory per new input, O(T) total. Transformers need O(T²) memory for attention over T steps. For streaming/real-time inference on long sequences (audio, sensor streams) where you must process each timestep immediately, LSTMs win on memory and latency. Also for on-device deployment (tiny model footprint) and when training data is very limited (transformers need more data to shine). SSMs like Mamba now offer a middle ground: transformer-quality with RNN-style inference." },
+    { q: "What is the vanishing gradient problem in RNNs and how do GRUs address it vs LSTMs?", a: "GRUs simplify LSTMs to two gates: reset gate r_t (how much past hidden state to use when computing new candidate) and update gate z_t (interpolation between old hidden state and new candidate): h_t = (1−z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t. The 1−z_t term creates a direct path for gradients from h_t back to h_{t-1}, similar to the LSTM cell state pathway. GRUs have fewer parameters and train faster; LSTMs slightly outperform on tasks needing fine-grained memory control. In practice, the gap is small and both are outperformed by Transformers when data is sufficient." },
+    ],
   },
   {
     id: 58,
@@ -3802,6 +3844,12 @@ The placement matters too: Pre-LN (layer norm applied before the sub-layer, as i
     tags: ['Deep Learning', 'Batch Normalization', 'Layer Normalization', 'Training Stability', 'Optimization', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "What problem does Batch Normalization solve, and why does it work?", a: "Without BN, the distribution of each layer's inputs shifts as earlier layers update (internal covariate shift). Layers must continuously re-adapt to new distributions, slowing convergence. BN normalizes each feature across the batch to zero mean and unit variance, then applies learned scale γ and shift β. This keeps activations in a consistent range, allowing larger learning rates and faster convergence. It also has a mild regularization effect (each sample's normalization depends on the batch, adding noise)." },
+    { q: "Why doesn't Batch Normalization work well for small batches or RNNs, and what are the alternatives?", a: "BN statistics (mean, variance) estimated from small batches are noisy — unstable training. For RNNs, you'd need different statistics at each timestep (different sequence lengths), making BN awkward. Layer Norm (LN) normalizes across the feature dimension for each sample independently — batch size doesn't matter. LN is standard for Transformers. Group Norm divides channels into groups, normalizes within each — good for CV with small batches. Instance Norm normalizes each sample's spatial map independently — used in style transfer." },
+    { q: "How does Batch Normalization behave differently at training vs inference?", a: "Training: normalize using the current mini-batch mean and variance. Inference: use running averages of mean and variance accumulated during training (via momentum update: running_mean = (1−α)·running_mean + α·batch_mean). Using batch statistics at inference would make predictions depend on which samples happened to be in the batch — non-deterministic and wrong. Forgetting to switch to eval mode (model.eval() in PyTorch) is a common bug: the model uses batch stats at inference, giving wrong outputs on single-sample inputs." },
+    { q: "What does a large γ or very small β in learned BN parameters indicate?", a: "γ (scale) and β (shift) are learned per-feature. If γ for a particular neuron is very large, the network is learning that this feature should have high variance — it matters a lot. If γ → 0, the network is effectively zeroing out that feature, which is a form of implicit feature selection. β is the learned mean offset. In practice, inspecting γ values after training can reveal which features the network is relying on most heavily. Some pruning methods use γ to identify and remove unimportant channels (network slimming)." },
+    ],
   },
   {
     id: 59,
@@ -3850,6 +3898,12 @@ Stopping training before full convergence is a regularisation strategy. As a mod
     tags: ['Deep Learning', 'Regularization', 'Dropout', 'L2', 'Overfitting', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "How does Dropout act as an ensemble method?", a: "Each training forward pass uses a different random binary mask over neurons — effectively training a different sub-network. With p=0.5 and 1000 neurons, the number of possible sub-networks is 2^1000. At test time, no dropout is applied (all neurons active, weights scaled by 1−p). This approximates averaging predictions across all 2^1000 sub-networks. Bagging would require training each explicitly; dropout achieves the regularization effect cheaply. This is why dropout consistently reduces variance and improves generalization." },
+    { q: "What is the difference between L1 and L2 regularization in terms of their effect on weights?", a: "L2 adds λ·||w||² to loss: gradient contribution is 2λw, so weights shrink proportionally to their magnitude (large weights shrink faster). Result: many small weights, none exactly zero. L1 adds λ·||w||₁: gradient contribution is λ·sign(w), constant regardless of magnitude. Small weights get the same shrinkage as large ones — they hit zero and stay there. L1 produces sparse solutions. Practical rule: use L2 for most neural networks (smoother loss, easier to optimize); use L1 when you need feature selection or a sparse model. ElasticNet combines both." },
+    { q: "When should you use dropout vs weight decay for regularization?", a: "Weight decay (L2) is always on and operates at the parameter level. Dropout is a structural regularizer — it operates during forward passes and is more aggressive. Use both together for large models. Dropout is most effective on fully connected layers; less effective on conv layers (spatial correlation means dropping a neuron doesn't remove the information, which is present in neighboring neurons — DropBlock is better for conv). Weight decay is essential for all architectures. For transformers, AdamW's weight decay is standard; dropout rates of 0.1 are typical." },
+    { q: "What is early stopping and why is it considered regularization?", a: "Early stopping halts training when validation loss stops improving (with patience N steps). It prevents the model from overfitting to training data in later epochs. It's regularization in the statistical sense: it restricts the model to a constrained region of weight space (nearby the initialization), similar to L2 regularization. In practice: monitor val loss, checkpoint the best model, restore it at end. The checkpoint at minimum val loss is the regularized solution. It's free — no hyperparameter tuning — but requires a held-out validation set, reducing training data." },
+    ],
   },
   {
     id: 60,
@@ -3894,6 +3948,12 @@ For embedding-based models (face recognition, recommendation, semantic search), 
     tags: ['Deep Learning', 'Loss Functions', 'Cross-Entropy', 'MSE', 'KL Divergence', 'Focal Loss', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "Why is cross-entropy preferred over MSE for classification?", a: "MSE on logits creates a flat loss surface near confident wrong predictions. If the model predicts 0.99 for the wrong class, MSE gradient is (0.99−0)²=0.98, which is large — but the gradient of MSE w.r.t. the logit involves the sigmoid derivative, which is near zero when the sigmoid is saturated. Cross-entropy avoids this: its gradient w.r.t. the pre-softmax logit simplifies to (predicted − true), which is non-zero and proportional to the error regardless of confidence. Clean, strong gradients everywhere. MSE is correct for regression outputs." },
+    { q: "Explain the intuition behind focal loss and when to use it.", a: "Focal loss = −(1−pₜ)^γ · log(pₜ) where pₜ is the probability of the correct class and γ>0. The (1−pₜ)^γ term downweights easy examples (high pₜ) and focuses learning on hard ones (low pₜ). With γ=2, a correctly classified example with pₜ=0.9 contributes only 1% as much to the loss as with γ=0. Use case: object detection with extreme class imbalance (1 object vs 1000 background patches). Standard cross-entropy gets dominated by easy negatives; focal loss forces the model to learn from the hard examples." },
+    { q: "What is the KL divergence term in VAE loss and what does it regularize?", a: "VAE loss = reconstruction loss + β·KL(q(z|x)||p(z)). The KL term measures how much the encoder's posterior q(z|x) diverges from the prior p(z)=N(0,I). Without KL, the encoder would learn to map each input to a delta function at a unique latent code — effectively memorizing, not learning a generative model. The KL term penalizes posteriors that deviate from the prior, forcing the latent space to be smooth and continuous. β-VAE (β>1) increases this pressure, producing more disentangled representations at the cost of reconstruction quality." },
+    { q: "When is Huber loss preferable to MSE, and what is the tradeoff?", a: "Huber loss is MSE for |error|<δ and linear for |error|≥δ. MSE penalizes outliers quadratically — one bad prediction can dominate the entire loss and drive weight updates toward that outlier. Huber transitions to linear, capping the gradient for large errors. Use when your targets have outliers you can't or don't want to remove (e.g., price prediction, bounding box regression). Tradeoff: you need to tune δ (the transition point). δ=1.0 is a common default. MAE (all linear) is the extreme case — fully robust to outliers but harder to optimize (non-smooth at 0)." },
+    ],
   },
   {
     id: 61,
@@ -3940,6 +4000,12 @@ The key engineering challenge: approximate nearest-neighbour search at scale. Li
     tags: ['Deep Learning', 'Embeddings', 'Word2Vec', 'BERT', 'NLP', 'Representation Learning', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "Why can't you use one-hot encoding for words in a neural network and what do embeddings give you?", a: "A one-hot vector of size 50K has no notion of similarity — \"cat\" and \"kitten\" are as distant as \"cat\" and \"democracy.\" One-hot also creates a 50K-dimensional sparse input, making the first linear layer huge. Embeddings map each word to a dense d-dimensional vector (d=128–1024) via a learned lookup table. Similar words end up nearby in this space (cosine similarity). The embedding matrix is also parameter-efficient: 50K × 128 = 6.4M params vs 50K × 50K = 2.5B for a direct linear layer." },
+    { q: "Explain how Word2Vec learns word embeddings from raw text.", a: "Skip-gram: given a center word, predict surrounding context words within a window. The training signal is: when word w appears near word c, their embedding dot product should be high; for random negative samples, it should be low. After training on billions of words, the dot product of two embeddings correlates with co-occurrence probability, which correlates with semantic similarity. The resulting embeddings capture analogies: v(king) − v(man) + v(woman) ≈ v(queen), because these words appear in similar syntactic/semantic contexts." },
+    { q: "What is the difference between static embeddings (Word2Vec/GloVe) and contextual embeddings (BERT)?", a: "Static: one vector per word type, regardless of context. \"bank\" has the same embedding in \"river bank\" and \"bank account.\" BERT produces contextual embeddings: each token gets a representation that depends on all surrounding tokens in the specific sentence. The attention mechanism mixes information from context, so the same word gets different vectors in different sentences. Static embeddings are fast and work well for bag-of-words tasks. Contextual embeddings capture polysemy and syntactic nuance — necessary for tasks like NER, QA, and reading comprehension." },
+    { q: "How would you handle OOV (out-of-vocabulary) words at inference time?", a: "Several strategies: (1) Subword tokenization (BPE, WordPiece, SentencePiece) — decompose OOV words into known subword units. \"unhappily\" → \"un\", \"happi\", \"ly\". Standard in modern transformers; eliminates OOV entirely. (2) Character-level embeddings — compose word embeddings from character n-grams (FastText). Generalizes to morphological variants. (3) UNK token — map all OOV to a single [UNK] embedding. Loses information but simple. (4) Hash embedding — hash word to one of N buckets. Some collision but no OOV. Subword tokenization is the right answer for any transformer-based system." },
+    ],
   },
   {
     id: 62,
@@ -3988,6 +4054,12 @@ VAEs produce blurry generations because the reconstruction loss (typically MSE o
     tags: ['Deep Learning', 'VAE', 'Generative Models', 'Latent Space', 'ELBO', 'Variational Inference', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "What is the reparameterization trick in VAEs and why is it necessary?", a: "The VAE encoder outputs μ and σ. You want to sample z ~ N(μ, σ²) and backpropagate through it. But sampling is a stochastic operation — gradients can't pass through it. The reparameterization trick: sample ε ~ N(0,I), then compute z = μ + σ·ε. Now z is a deterministic function of μ and σ (plus a fixed noise ε). Gradients flow through μ and σ normally: ∂z/∂μ = 1, ∂z/∂σ = ε. Without this trick, the encoder parameters receive no gradient signal and the model can't be trained end-to-end." },
+    { q: "What does the VAE latent space allow you to do that a regular autoencoder cannot?", a: "A regular autoencoder maps inputs to arbitrary latent codes — the space can have \"holes\" (regions where decoding produces garbage). VAEs regularize the latent space toward N(0,I) via the KL term. This ensures: (1) you can sample z ~ N(0,I) and decode it to a realistic output (generation); (2) interpolating between two latent codes produces semantically smooth outputs; (3) the space is continuous, so nearby latent vectors decode to similar outputs. Regular autoencoders give none of these properties — they're useful for compression/reconstruction, not generation." },
+    { q: "How does a VAE differ from a GAN in what they optimize and what they produce?", a: "VAE: maximizes the ELBO (evidence lower bound), a tractable proxy for log p(x). Trains with a reconstruction loss + KL divergence. Outputs are smooth averages — VAEs tend to produce blurry images because the reconstruction loss (pixel MSE) penalizes any deviation. GAN: trains a generator G and discriminator D adversarially. G minimizes the discriminator's ability to distinguish real from generated. No explicit reconstruction loss — G can produce sharp, high-frequency details if the discriminator demands them. GAN samples are sharper; VAE samples are more consistent. Modern approaches (diffusion, VQ-VAE-2) combine the best of both." },
+    { q: "What is β-VAE and what tradeoff does it introduce?", a: "β-VAE multiplies the KL term by β>1: loss = reconstruction + β·KL. Higher β imposes stronger pressure for the posterior to match N(0,I), encouraging the latent space to be more disentangled — individual dimensions correspond to interpretable factors of variation (e.g., one dim controls rotation, another controls scale). But stronger KL pressure means the encoder has less capacity to encode input details, worsening reconstruction quality. β=1 is the original VAE. Choosing β involves a tradeoff between reconstruction fidelity and disentanglement. Used in representation learning research." },
+    ],
   },
   {
     id: 63,
@@ -4038,6 +4110,12 @@ Reinforcement Learning from Human Feedback (RLHF) is the training method behind 
     tags: ['Reinforcement Learning', 'Deep Learning', 'Policy Gradient', 'Q-Learning', 'DQN', 'RLHF', 'Foundations'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "Explain the exploration-exploitation tradeoff in RL and give a concrete example of when getting it wrong causes failures.", a: "A purely exploiting agent always picks the action with the highest estimated value — it never discovers that an unexplored action might be better. A purely exploring agent ignores what it knows and acts randomly — never accumulates the good behavior it has already learned. Example failure: ε-greedy with too low ε on a sparse reward task. The agent finds one path to reward and exploits it, never discovering a much shorter path through unexplored states. Conversely, too high ε in a task with a time limit means the agent wastes budget on random actions instead of collecting reward." },
+    { q: "What is the Bellman equation and what does it say intuitively?", a: "Q*(s,a) = E[r + γ · max_{a'} Q*(s',a')] — the optimal Q-value of taking action a in state s equals the immediate reward plus the discounted best Q-value in the next state. Intuition: the value of an action decomposes into what you get now plus what you can get from here onward. Q-learning works by repeatedly applying this backup: Q(s,a) ← Q(s,a) + α·[r + γ·max Q(s',a') − Q(s,a)]. At convergence, Q(s,a) satisfies the Bellman equation exactly and is the optimal policy." },
+    { q: "Why does DQN use a replay buffer and a target network?", a: "Two problems with naive Q-learning on neural networks: (1) Correlation — consecutive transitions are highly correlated; training on them in order makes the network overfit to recent experience. The replay buffer stores past transitions and samples randomly, breaking correlation. (2) Non-stationary targets — the target r + γ·max Q(s',a') uses the same network you're updating, so targets shift every step, causing instability. The target network is a copy of Q updated every N steps, providing stable targets. Both are necessary — without them, DQN diverges on almost all Atari games." },
+    { q: "When would you choose RL over supervised learning for a production ML system?", a: "RL is appropriate when: (1) ground-truth labels are unavailable but feedback signals are — e.g., user clicks, revenue, A/B test outcomes; (2) the optimal action depends on future consequences, not just the current state — sequential decisions with delayed reward (ad bidding, recommendation sequences, robotics); (3) you can define a reward function that captures the actual objective. RL is inappropriate when supervised learning can work: you have labeled data, the task is stateless (single prediction), or the reward function is hard to specify correctly. Reward misspecification is the most common reason RL systems fail in production." },
+    ],
   },
   {
     id: 64,
@@ -4082,6 +4160,12 @@ Running diffusion in pixel space at 512×512 requires denoising a 786,432-dimens
     tags: ['Deep Learning', 'Diffusion Models', 'Generative Models', 'DDPM', 'Score Matching', 'Stable Diffusion'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "What is the forward process in a diffusion model and why is it designed this way?", a: "The forward process gradually adds Gaussian noise to data over T steps: q(x_t|x_{t-1}) = N(x_t; √(1−β_t)·x_{t-1}, β_t·I). By choosing β_t carefully (variance schedule), x_T ≈ N(0,I) regardless of x_0. This design has a closed-form marginal: x_t = √ᾱ_t·x_0 + √(1−ᾱ_t)·ε, where ε~N(0,I) and ᾱ_t = ∏β_i. This means you can jump directly to any noise level without simulating all intermediate steps — critical for efficient training (sample a random t, add noise at that level, train the denoiser)." },
+    { q: "What does the diffusion model actually learn to predict, and why predict noise rather than the image?", a: "The model learns to predict the noise ε added to a clean image x_0 to produce x_t (ε-prediction, Ho et al. 2020). Alternatively, it can predict x_0 directly (x-prediction) or the score function ∇log p(x_t) (score matching). ε-prediction works better empirically: noise has a consistent scale across timesteps (always N(0,I)), while x_0 varies in scale and structure. Also, the model gradient w.r.t. loss is simpler in ε-space. At inference, given the predicted ε, you can recover x_0 directly: x_0 = (x_t − √(1−ᾱ_t)·ε_pred) / √ᾱ_t." },
+    { q: "Why are diffusion models slower to sample from than GANs, and how is this addressed?", a: "Standard DDPM requires T=1000 denoising steps — 1000 forward passes through a large UNet. A GAN requires one. DDPM sampling is therefore 1000x slower. Solutions: DDIM (denoising diffusion implicit models) — deterministic sampling skipping steps, achieves comparable quality in 50 steps; Consistency Models — single-step generation via distillation from a diffusion model; LCM (Latent Consistency Models) — 4-step generation in latent space; Latent Diffusion (Stable Diffusion) — run diffusion in a VAE latent space (64×64) not pixel space (512×512), dramatically reducing compute per step." },
+    { q: "How does classifier-free guidance work and what does the guidance scale control?", a: "CFG trains a single model conditioned on a class/text label c, with random dropout of c (replaced with ∅) during training. At inference, you run two forward passes: one with condition c and one without. The guided score is: ε_guided = ε(x,∅) + w·(ε(x,c) − ε(x,∅)). w is the guidance scale. Higher w pulls samples strongly toward the condition — more faithful to the prompt but less diverse, sometimes sacrificing realism. w=1 is unguided; w=7.5 is typical for Stable Diffusion. Tradeoff: guidance scale is the key quality vs diversity knob in text-to-image generation." },
+    ],
   },
   {
     id: 65,
@@ -4122,6 +4206,12 @@ Fréchet Inception Distance (FID) measures the distance between the distribution
     tags: ['Deep Learning', 'GAN', 'Generative Models', 'Mode Collapse', 'WGAN', 'StyleGAN'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+    { q: "Explain the GAN training objective and why it is described as a minimax game.", a: "min_G max_D V(D,G) = E[log D(x)] + E[log(1−D(G(z)))]. The discriminator D maximizes its ability to distinguish real data x from generated G(z). The generator G minimizes the discriminator's ability — i.e., tries to make D(G(z)) → 1. This is adversarial: neither player has a dominant strategy, and optimum is a Nash equilibrium where G generates the true data distribution and D outputs 0.5 everywhere (cannot distinguish). In practice, G is trained with the non-saturating loss −log(D(G(z))) instead of log(1−D(G(z))), providing stronger gradients early in training." },
+    { q: "What is mode collapse and how does it manifest in practice?", a: "Mode collapse: the generator finds a small subset of outputs that fool the discriminator, and collapses to only producing those. Example: a GAN trained on faces might generate only one type of face (young female, specific hair color) and reject all diversity. The discriminator then adapts to recognize this specific face as fake, so G switches to another mode — and so on. Symptoms: generated samples are all similar despite diverse training data, evaluation metrics (FID) remain high. Fixes: Wasserstein GAN (different loss based on earth-mover distance, better gradient signal), minibatch discrimination (discriminator sees batch statistics), spectral normalization." },
+    { q: "Why is GAN training unstable, and what are the main architectural stabilizers?", a: "Training instability arises because you're simultaneously optimizing two networks whose objectives conflict. If D becomes too strong, G gets vanishing gradients (D(G(z)) → 0, gradient → 0). If G gets too strong, D can't distinguish anything and provides no useful signal. Stabilizers: (1) WGAN-GP — gradient penalty on D constrains it to 1-Lipschitz, preventing D from dominating; (2) Spectral normalization — normalize weight matrices to control D's Lipschitz constant; (3) Progressive growing (ProGAN) — start at low resolution, add layers gradually; (4) Self-attention (SAGAN) — lets G and D see long-range dependencies." },
+    { q: "When would you use a GAN vs a diffusion model for image generation in production?", a: "GANs: single forward pass → fast inference (ms). Suitable for real-time applications (video, interactive tools). Harder to train, prone to mode collapse, requires careful tuning. Diffusion: stable training, better mode coverage, state-of-the-art quality for text-to-image. Slow inference (50–1000 steps) unless using distilled models (LCM, SDXL-Turbo). For production content generation at quality bar: distilled diffusion (4–8 steps) is now the default. For applications requiring <50ms inference and modest quality: GAN or VAE. GANs have been largely displaced for generation quality tasks but remain relevant for discriminative applications (deepfake detection, anomaly detection)." },
+    ],
   },
   {
     id: 66,
@@ -4170,6 +4260,25 @@ Transfer learning can degrade performance if the source and target tasks are neg
     tags: ['Deep Learning', 'Transfer Learning', 'Fine-Tuning', 'LoRA', 'Domain Adaptation', 'Pretrained Models'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between feature extraction and fine-tuning in transfer learning?",
+            "a": "Feature extraction freezes pretrained weights and only trains a new head on top. Fine-tuning unfreezes some or all pretrained layers and trains them at a low learning rate. Feature extraction is faster and works well when your dataset is small and similar to the pretraining domain. Fine-tuning is better when you have more data or when the target domain differs enough that pretrained representations need adjustment. A common heuristic: freeze the backbone for the first few epochs, then unfreeze and fine-tune with a learning rate 10–100x lower than the head."
+        },
+        {
+            "q": "Why do you use a lower learning rate when fine-tuning pretrained layers?",
+            "a": "Pretrained weights encode valuable representations learned from massive data. A high learning rate would destroy this information in the first few gradient steps — this is called catastrophic forgetting. A low rate (typically 1e-5 to 1e-4 vs 1e-3 for the head) lets the pretrained layers adapt slowly to the new task while preserving their structure. Some practitioners use layer-wise learning rate decay: even lower rates for earlier layers whose representations are more general and should change least."
+        },
+        {
+            "q": "When does transfer learning fail, and what do you do about it?",
+            "a": "Transfer learning fails when the source and target domains are sufficiently dissimilar — negative transfer, where pretraining hurts rather than helps. Common cases: pretraining on ImageNet then applying to medical imaging (textures differ fundamentally), or NLP models pretrained on English applied to code. Remedies: domain-adaptive pretraining (continue pretraining on in-domain unlabeled text before fine-tuning), using a model pretrained on a closer domain, or reducing the number of frozen layers. You can detect negative transfer by comparing fine-tuned performance against a randomly-initialized baseline."
+        },
+        {
+            "q": "How does LoRA make fine-tuning large models feasible?",
+            "a": "LoRA (Low-Rank Adaptation) freezes the pretrained weights and injects trainable low-rank decomposition matrices into attention layers. Instead of updating a d×d weight matrix directly, you train two small matrices A (d×r) and B (r×d) where r ≪ d, and add their product to the frozen weights. For r=8 and d=4096, this reduces trainable parameters by 500x. Memory scales with r, not d, so you can fine-tune 7B-parameter models on a single GPU. At inference, BA can be merged into the frozen weights with no added latency."
+        }
+    ],
+
   },
   {
     id: 67,
@@ -4216,6 +4325,25 @@ Use an encoder (BERT-family) when: you have labelled data for a specific task, y
     tags: ['Deep Learning', 'BERT', 'GPT', 'Transformer', 'NLP', 'Language Models', 'Pretraining'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the core architectural difference between BERT and GPT, and why does it matter?",
+            "a": "BERT uses bidirectional attention — each token attends to all other tokens in both directions. GPT uses causal (left-to-right) attention — each token only attends to previous tokens. This makes BERT better at understanding tasks (classification, NER, extractive QA) because it has full context for each token. GPT is better for generation because it naturally models the conditional probability of each next token given the past. You cannot use BERT directly for generation without architectural modifications."
+        },
+        {
+            "q": "What is masked language modeling and why does BERT use it instead of next-token prediction?",
+            "a": "MLM masks 15% of tokens at random and trains the model to predict them. Because the model sees both left and right context around the masked token, it is forced to learn bidirectional representations. Next-token prediction (GPT's objective) only uses left context, producing unidirectional representations. The trade-off: MLM produces richer contextual representations but cannot be used for autoregressive generation. MLM also has lower sample efficiency — only 15% of tokens produce training signal per sequence, versus 100% for next-token prediction."
+        },
+        {
+            "q": "How does BERT's [CLS] token work for classification?",
+            "a": "BERT prepends a special [CLS] token to every input. During pretraining, [CLS] is trained on the Next Sentence Prediction task, which forces it to aggregate information from the entire sequence. At fine-tuning time, the final hidden state of [CLS] (a d-dimensional vector) is fed into a linear classifier. In practice, the NSP objective was later found to add little value, but the [CLS] token still works well for classification because fine-tuning trains it end-to-end to capture task-relevant information from the full sequence via attention."
+        },
+        {
+            "q": "Why do GPT-style models scale better than BERT-style models?",
+            "a": "Next-token prediction is a self-supervised objective that uses every token as a training signal and requires no human labels. This makes it trivially scalable — any text corpus becomes training data. BERT's MLM also scales, but the bidirectional architecture becomes computationally expensive at inference: attention is O(n²) and you need the full sequence to produce any prediction. Decoder-only models (GPT) also unify pretraining and generation into a single framework, making instruction tuning, RLHF, and in-context learning natural extensions. This is why the field has largely converged on decoder-only architectures for foundation models."
+        }
+    ],
+
   },
   {
     id: 68,
@@ -4260,6 +4388,25 @@ Token counting determines cost (API pricing), context length (will the prompt fi
     tags: ['NLP', 'Deep Learning', 'Tokenization', 'BPE', 'WordPiece', 'Language Models'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between BPE, WordPiece, and SentencePiece tokenization?",
+            "a": "BPE (Byte-Pair Encoding) starts with characters and iteratively merges the most frequent adjacent pair until a vocabulary size is reached. WordPiece is similar but maximizes likelihood of training data rather than raw frequency — it merges pairs that most improve the language model. SentencePiece treats input as a raw byte stream (no whitespace assumption), making it language-agnostic and better for multilingual models. GPT uses BPE, BERT uses WordPiece, and multilingual models like mBERT and XLM-R use SentencePiece."
+        },
+        {
+            "q": "Why does tokenization quality affect model performance, especially for non-English languages?",
+            "a": "A tokenizer trained on English-heavy data will over-segment non-English text — a single Chinese or Arabic word that would be one token in English might become 3-10 tokens. This wastes context window, increases inference cost, and degrades performance because the model sees semantically coherent concepts as many fragmented pieces. It also affects arithmetic: \"123\" might be one token in English tokenizers but digit-by-digit in others. Multilingual tokenizers solve this by including all languages in the BPE/SentencePiece training corpus proportionally."
+        },
+        {
+            "q": "What is token fertility and why does it matter for LLM APIs?",
+            "a": "Token fertility is the ratio of tokens to words in a text. High fertility (many tokens per word) means longer sequences, which increases API cost (most providers charge per token), hits context window limits sooner, and slows inference. English text averages ~1.3 tokens/word with GPT tokenizers. Code has lower fertility (~1.1) because identifiers are common. Languages with rich morphology or non-Latin scripts can have fertility of 3-5x. When building multilingual systems or code-heavy applications, fertility analysis is essential for cost and latency estimation."
+        },
+        {
+            "q": "What is the tokenization issue with arithmetic, and how do models work around it?",
+            "a": "Multi-digit numbers are often split into arbitrary token boundaries — \"12345\" might become [\"123\", \"45\"] or [\"1\", \"2345\"] depending on the tokenizer. This means the model sees no consistent positional structure in numbers, making arithmetic unreliable. Mitigations include: character-level tokenization for numbers (digits always split individually), scratchpad reasoning that externalizes computation to text, tool use (calling a calculator), and chain-of-thought prompting that forces step-by-step decomposition. None fully solves the problem at the tokenization level."
+        }
+    ],
+
   },
   {
     id: 69,
@@ -4306,6 +4453,25 @@ Subsequent work showed negatives are not required. DINO (Caron et al., 2021) use
     tags: ['Deep Learning', 'Contrastive Learning', 'CLIP', 'Self-Supervised Learning', 'SimCLR', 'Multimodal'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "How does CLIP align image and text representations?",
+            "a": "CLIP trains an image encoder and a text encoder jointly using contrastive loss on 400M image-text pairs. For a batch of N pairs, it computes all N² similarity scores between image and text embeddings. The loss maximizes similarity for the N correct pairs on the diagonal and minimizes it for the N²-N incorrect pairs. This forces both encoders to map semantically similar images and texts to nearby points in a shared embedding space. At inference, you can compute zero-shot classification by comparing an image embedding to embeddings of class name prompts."
+        },
+        {
+            "q": "What is the InfoNCE loss and why is temperature important?",
+            "a": "InfoNCE treats contrastive learning as a classification problem: given an anchor, classify which of N candidates is the true positive. The loss is the negative log-probability assigned to the true pair: -log(exp(sim(anchor, positive)/τ) / Σ exp(sim(anchor, negative_i)/τ)). Temperature τ controls the sharpness of the distribution. Low τ creates a peaky distribution — hard negatives dominate and gradients concentrate on the most confusable pairs. High τ spreads probability mass more evenly. CLIP uses a learned temperature parameter initialized at 0.07 and clips it to prevent collapse."
+        },
+        {
+            "q": "What is the role of hard negatives in contrastive learning?",
+            "a": "Random negatives in a large batch are usually easy to distinguish from the positive (an image of a dog is clearly not \"a photo of a cat\"). Easy negatives produce near-zero gradients and don't improve representations. Hard negatives are semantically similar but incorrect — an image of a husky paired with \"a photo of a wolf.\" These produce large gradients and force the model to learn fine-grained distinctions. Techniques: in-batch hard negative mining, cross-encoder re-ranking for hard negative selection, or using a momentum encoder to maintain a large queue of negatives (MoCo). SimCSE found that simple dropout creates surprisingly effective soft hard negatives."
+        },
+        {
+            "q": "How would you use CLIP-style embeddings in a production image search system?",
+            "a": "At indexing time: run each image through the CLIP image encoder and store the resulting embedding in a vector database (Pinecone, Weaviate, FAISS). At query time: encode the user's text query with the CLIP text encoder and run approximate nearest neighbor search (HNSW or IVF-PQ) against the index. CLIP embeddings support cross-modal retrieval natively — text queries retrieve images and vice versa. For domain-specific search (medical images, product photos), fine-tune CLIP on domain data with contrastive loss to shift the embedding space. Use two-stage retrieval: CLIP recall a few hundred candidates, then a cross-encoder re-ranker scores them precisely."
+        }
+    ],
+
   },
   {
     id: 70,
@@ -4354,6 +4520,25 @@ YouTube's original two-tower retrieval paper uses: user tower = DNN over user hi
     tags: ['ML System Design', 'Recommendation Systems', 'Two-Tower Model', 'Retrieval', 'Embeddings', 'YouTube'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "Why is a two-tower architecture preferred over a cross-encoder for retrieval at scale?",
+            "a": "A cross-encoder concatenates query and item and scores them jointly — it sees the interaction but requires a forward pass per (query, item) pair. Scoring 10M items at query time is infeasible. A two-tower model encodes query and item independently, so all item embeddings can be precomputed offline. At query time, only the query encoder runs; retrieval is ANN over a prebuilt index. The trade-off: two towers cannot model fine-grained query-item interaction (they can only use a dot product or cosine at the final step). The standard solution is two-stage: two-tower for recall (top-K candidates), cross-encoder for re-ranking."
+        },
+        {
+            "q": "How do you train a two-tower model for recommendation?",
+            "a": "Training uses contrastive or softmax loss over (user, item) pairs. Positive pairs: actual user-item interactions (clicks, purchases, watches). Negatives: items the user did not interact with. In-batch negatives are simple but biased toward popular items. Better approaches: random uniform negatives from the item corpus, hard negatives (items the model currently scores highly but the user rejected), or importance-sampled negatives that correct for popularity bias. Loss: typically sampled softmax or BPR (Bayesian Personalized Ranking). The item tower embeds static features; the user tower embeds interaction history via pooling or a transformer over recent events."
+        },
+        {
+            "q": "How do you handle the item cold-start problem in a two-tower system?",
+            "a": "Cold-start items have no interaction history, so collaborative filtering signals are unavailable. Solutions: (1) Content-based features — embed item metadata (title, description, category, price) through the item tower so new items get a reasonable representation from content alone. (2) Warm-up batching — when a new item is uploaded, force it into a small number of early exposure slots to collect initial feedback. (3) Bayesian uncertainty — track item embedding confidence and explore uncertain items more aggressively. (4) Hybrid index — keep a separate content-only index for cold items and blend it with the main collaborative index at retrieval time."
+        },
+        {
+            "q": "What is the position bias problem in retrieval and how do two-tower systems address it?",
+            "a": "Position bias: users click items shown higher in the list more often, regardless of relevance. If you train on click data directly, the model learns position as a proxy for relevance and becomes self-reinforcing — top positions stay top because they get more clicks. Fixes: (1) Inverse propensity scoring — weight each training example by 1/P(position) to correct for the exposure bias. (2) Unbiased LambdaRank — a counterfactual estimation approach. (3) Intervention harvesting — occasionally randomize item order and use those impressions as unbiased training signal. (4) Separate position embeddings in the ranker so it explicitly learns to discount position."
+        }
+    ],
+
   },
   {
     id: 71,
@@ -4408,6 +4593,25 @@ A ranking model's raw scores are not probabilities and do not have a natural sca
     tags: ['ML System Design', 'Learning to Rank', 'NDCG', 'LambdaRank', 'Search', 'Recommendation Systems'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between pointwise, pairwise, and listwise learning to rank?",
+            "a": "Pointwise treats ranking as regression or classification on individual items — predict a relevance score for each query-item pair independently. No comparison between items; simple but ignores list structure. Pairwise compares two items and predicts which is more relevant — RankNet, LambdaRank. Captures relative ordering but ignores the position at which the pair appears in the final list. Listwise optimizes a list-level metric directly — LambdaMART optimizes NDCG, ListNet uses a list-level probability. Listwise is most principled but computationally expensive. In practice, LambdaMART (listwise-ish pairwise) with XGBoost/LightGBM dominates production ranking."
+        },
+        {
+            "q": "What is NDCG and why is it preferred over MAP for ranking evaluation?",
+            "a": "NDCG (Normalized Discounted Cumulative Gain) assigns graded relevance to each item and applies a logarithmic discount to positions lower in the list. DCG = Σ (2^rel_i - 1) / log2(i+1). NDCG normalizes DCG by the ideal DCG (best possible ordering). MAP (Mean Average Precision) uses binary relevance and is position-sensitive but treats all relevant items equally regardless of their relative quality. NDCG is preferred when relevance is graded (e.g., 0-4 star ratings) and when position matters more near the top. NDCG@10 is the standard metric for web search."
+        },
+        {
+            "q": "How does LambdaRank handle the non-differentiability of NDCG?",
+            "a": "NDCG is not differentiable — it depends on the discrete rank ordering of items. LambdaRank sidesteps this by defining pseudo-gradients directly: the gradient for a pair (i, j) is |ΔNDCG| × σ(-score_diff), where |ΔNDCG| is the absolute NDCG change from swapping i and j. This means items that, if swapped, would most improve NDCG receive the largest gradient signal. LambdaRank never explicitly defines a loss function — it defines the gradient of an implicit loss that correlates strongly with NDCG. LambdaMART applies this gradient to gradient boosted trees rather than neural networks."
+        },
+        {
+            "q": "What is query-level normalization in ranking and when does it matter?",
+            "a": "Different queries have different difficulty levels and different numbers of relevant items. Without normalization, queries with many relevant items dominate training. Query-level normalization ensures each query contributes equally to the gradient regardless of how many items it has. In LambdaRank/LambdaMART, this is handled by normalizing NDCG per query. In neural rankers, common techniques include per-query softmax normalization of scores and per-query gradient clipping. It matters most in production where query distribution is highly skewed — a few high-traffic navigational queries should not dominate the training signal."
+        }
+    ],
+
   },
   {
     id: 72,
@@ -4458,6 +4662,25 @@ TikTok's architecture (as described in leaked documents) uses a comparatively li
     tags: ['ML System Design', 'Recommendation Systems', 'Retrieval', 'Ranking', 'Re-Ranking', 'YouTube', 'TikTok'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What are the four main components of a production recommendation system?",
+            "a": "Retrieval (candidate generation): a two-tower or ANN-based system that reduces millions of items to thousands of candidates quickly. Filtering: rule-based removal of ineligible items (already purchased, out of stock, policy violations). Ranking: a cross-encoder or gradient boosted model that scores candidates precisely using rich features. Re-ranking: final adjustments for diversity, freshness, business rules, and serendipity. Each stage trades precision for speed — retrieval is fast and approximate, ranking is slow and precise. The architecture is called the \"funnel\" and the interface between stages (what features flow through) is a critical design decision."
+        },
+        {
+            "q": "How do you measure recommendation quality beyond click-through rate?",
+            "a": "CTR measures immediate engagement but can be gamed by clickbait and does not reflect long-term satisfaction. Better metrics: dwell time (did they engage after clicking?), save/share/purchase rate (stronger intent signals), repeat visit rate (did the recommendation bring them back?), discovery rate (did they find items outside their historical taste?), and regret rate (did they immediately close or return the item?). Calibration is also important: if a user likes 20% action movies, recommendations should reflect that proportion, not over-index. Netflix uses a metric called \"hours of satisfying viewing\" which directly ties recommendations to their retention goal."
+        },
+        {
+            "q": "What is the explore-exploit trade-off in recommendations and how do you manage it?",
+            "a": "Exploitation: recommend items similar to what the user has engaged with — high precision, safe. Exploration: recommend novel items to learn more about user preferences and surface potentially great matches — lower precision but reduces filter bubble and improves long-term engagement. Approaches: ε-greedy (show random items ε% of the time), Thompson Sampling (Bayesian uncertainty-driven exploration), Upper Confidence Bound, or dedicated exploration slots (one slot per page reserved for novel content). The right balance depends on business stage: early-stage platforms explore more (less known about users), mature platforms exploit more (rich user history)."
+        },
+        {
+            "q": "How do you handle the feedback loop problem where recommendations influence future training data?",
+            "a": "A model trained on logged interactions is biased toward historically recommended items — items never shown have no interaction data and appear low-quality. This creates a reinforcing loop: popular items get recommended, get more data, get ranked higher, get recommended more. Fixes: (1) Exploration (ε-greedy or UCB) to ensure coverage of the item space. (2) Counterfactual evaluation: use inverse propensity scoring to estimate what engagement would have been had a different item been shown. (3) Unbiased offline datasets collected with uniformly random recommendations. (4) Bandit feedback models that explicitly model the logging policy. This is one of the hardest problems in production RecSys."
+        }
+    ],
+
   },
   {
     id: 73,
@@ -4504,6 +4727,25 @@ Gradient boosted trees win on: tabular data with mixed feature types, small-to-m
     tags: ['Models & Math', 'XGBoost', 'Gradient Boosting', 'Decision Trees', 'Ensemble Methods', 'Foundations'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What makes XGBoost different from random forests, and when would you choose one over the other?",
+            "a": "Random forests build trees independently in parallel using bootstrap sampling and feature subsampling — they reduce variance through averaging. XGBoost builds trees sequentially, each one correcting the residual errors of the ensemble so far — this is gradient boosting. XGBoost has lower bias and can achieve better accuracy on tabular data, but is more prone to overfitting if not regularized. Random forests are more robust out of the box and faster to tune. Choose XGBoost when you have sufficient data, want to compete on accuracy, and are willing to tune learning rate, depth, and regularization. Choose random forests for quick baselines or when data is limited."
+        },
+        {
+            "q": "How does XGBoost handle missing values during training and prediction?",
+            "a": "XGBoost learns a default direction for each split: at training time, when a value is missing for a feature used in a split, XGBoost tries routing missing instances to both the left and right child and picks the direction that minimizes loss. This default direction is stored with the tree. At prediction time, missing values follow the learned default direction. This is superior to mean/median imputation because the optimal direction can differ by node — a missing income value might go left in one subtree and right in another depending on other features. It also means XGBoost can be deployed without imputation preprocessing."
+        },
+        {
+            "q": "What regularization parameters in XGBoost prevent overfitting, and what does each control?",
+            "a": "Key parameters: `max_depth` (tree depth — the single most important; 3-6 is typical), `n_estimators` (number of trees — use early stopping on a validation set), `learning_rate` (shrinkage — lower = more trees needed but better generalization), `subsample` (fraction of rows per tree — like bagging), `colsample_bytree` (fraction of features per tree — reduces correlation between trees), `min_child_weight` (minimum sum of instance weights in a leaf — prevents over-splitting on small groups), `gamma` (minimum loss reduction to split — tree pruning), `reg_alpha`/`reg_lambda` (L1/L2 regularization on leaf weights). In practice, tune max_depth and learning_rate first."
+        },
+        {
+            "q": "How does SHAP work for XGBoost, and why is it preferred over feature importance?",
+            "a": "Default XGBoost feature importance (gain, cover, frequency) is a global aggregate — it tells you which features matter most on average but not for individual predictions. SHAP (SHapley Additive exPlanations) computes each feature's marginal contribution to a specific prediction, averaged over all possible feature orderings. For tree models, SHAP values can be computed exactly in O(TLD) time (T trees, L leaves, D depth) using the TreeSHAP algorithm — no sampling needed. SHAP satisfies desirable axioms (efficiency, symmetry, dummy, linearity) that gain/cover violate. In production, SHAP is used for model debugging, fairness auditing, and generating human-readable explanations."
+        }
+    ],
+
   },
   {
     id: 74,
@@ -4558,6 +4800,25 @@ Classical bias-variance theory predicts a U-shaped test error curve: error is hi
     tags: ['Models & Math', 'Bias-Variance', 'Ensemble Methods', 'Statistics', 'Model Complexity', 'Foundations'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "A model has 95% training accuracy and 72% validation accuracy. What is happening and what do you do?",
+            "a": "Classic high variance (overfitting): the model has memorized training data but fails to generalize. The gap (95-72=23%) is the generalization gap. Steps: (1) Add regularization — L2 weight decay, dropout for neural nets, max_depth/min_child_weight for trees. (2) Get more training data — the variance of an estimator decreases as n increases. (3) Reduce model complexity — fewer parameters, shallower network, fewer features. (4) Use data augmentation to artificially increase effective training set size. (5) Early stopping — stop training when validation loss starts increasing. Distinguish from underfitting: if training accuracy were also 72%, the model has high bias and you need a more complex model or better features."
+        },
+        {
+            "q": "What is the double descent phenomenon and why does it challenge the bias-variance trade-off?",
+            "a": "Classical bias-variance says there's an optimal model complexity beyond which test error increases (overfitting). Double descent shows that as model size keeps increasing past the interpolation threshold (where the model fits training data exactly), test error decreases again — modern overparameterized networks achieve low test error despite fitting training data perfectly. Why: in the overparameterized regime, gradient descent finds the minimum-norm solution (implicit regularization), which tends to generalize well. Double descent also appears as a function of training epochs (epoch-wise double descent) and dataset size. It challenges the view that overfitting is always bad and explains why large neural networks work."
+        },
+        {
+            "q": "How do you diagnose whether a production model failure is high bias or high variance?",
+            "a": "Compare training and validation/test performance. High bias (underfitting): both training and test error are high and close together — the model lacks capacity to capture the pattern. High variance (overfitting): training error is low but test error is much higher — the model has memorized specifics of training data. In production, also check: learning curves (plot train/val error vs. training set size — high bias shows parallel curves at high error; high variance shows large gap that closes as data increases), error analysis on failure cases (are failures on out-of-distribution inputs?), and feature importance stability across time (unstable importance suggests overfitting to training-period patterns)."
+        },
+        {
+            "q": "What is cross-validation and when should you use k-fold vs. time-series cross-validation?",
+            "a": "K-fold CV randomly splits data into k folds, trains on k-1, evaluates on 1, rotates, and averages. Gives a low-variance estimate of generalization error. Use for IID data where temporal order doesn't matter. Time-series CV (expanding window or rolling window) always trains on past data and evaluates on future data — respects temporal ordering. Use whenever training features or the target variable have temporal autocorrelation (nearly always in production ML). Using k-fold on time-series data leaks future information into training (features computed on future rows appear in training folds), producing optimistic estimates that fail in deployment. Also relevant: leave-one-group-out CV for grouped data (user_id, store_id) to measure generalization to unseen groups."
+        }
+    ],
+
   },
   {
     id: 75,
@@ -4610,6 +4871,25 @@ Bayesian approaches shine in: small data regimes where the prior provides meanin
     tags: ['Models & Math', 'Bayesian Inference', 'Statistics', 'Prior', 'Posterior', 'MCMC', 'Foundations'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between frequentist and Bayesian approaches to A/B testing?",
+            "a": "Frequentist A/B testing sets a threshold p-value, runs until the required sample size is reached, and rejects H0 if p < 0.05. It controls false positive rate (Type I error) at a pre-specified level but cannot say anything about the probability that the variant is better. Bayesian A/B testing maintains a posterior distribution over the effect size, updated as data arrives. You can stop when the posterior probability that variant B is better exceeds a threshold (e.g., 95%), or when the expected loss from choosing the wrong option is below a business threshold. Bayesian is more intuitive (\"there's a 94% chance B is better\") and handles early stopping naturally, but requires choosing a prior and defining a loss function."
+        },
+        {
+            "q": "What is a conjugate prior and why is it useful?",
+            "a": "A conjugate prior is a prior distribution that, when combined with a particular likelihood, produces a posterior in the same family. For a Bernoulli likelihood (coin flips, conversion rates), the Beta distribution is conjugate — the posterior is also Beta, with parameters updated by simply adding observed successes and failures. For a Poisson likelihood, the Gamma distribution is conjugate. Conjugate priors make Bayesian inference analytically tractable — no MCMC needed. In practice: Beta-Bernoulli for click-through rates, Gamma-Poisson for event rates, Normal-Normal for continuous metrics. When a conjugate prior is a poor fit for your actual beliefs, use MCMC or variational inference."
+        },
+        {
+            "q": "How does Bayesian inference apply to Thompson Sampling in recommendation systems?",
+            "a": "Thompson Sampling (TS) is a Bayesian bandit algorithm. For each arm (item, ad, treatment), maintain a posterior distribution over its expected reward. At each decision, sample one value from each arm's posterior and choose the arm with the highest sample. As more data is collected for an arm, its posterior narrows and samples concentrate around the true value. Arms with uncertain posteriors get explored more (high variance → occasional high samples), while arms with known high rewards get exploited (concentrated posterior around a high mean). For click-through rates, use Beta posteriors updated by click/no-click observations — O(1) per update, O(K) per decision for K arms."
+        },
+        {
+            "q": "What is posterior predictive distribution and how is it used in ML?",
+            "a": "The posterior predictive distribution p(y_new | data) marginalizes over model parameters: p(y_new | data) = ∫ p(y_new | θ) p(θ | data) dθ. Rather than plugging in a point estimate of θ, you average predictions across all plausible parameter values weighted by their posterior probability. This naturally produces calibrated uncertainty estimates — the predictive distribution is wider when parameters are uncertain (little data) and narrower when they're well-determined (lots of data). In Bayesian neural networks and Gaussian processes, the posterior predictive is the standard output. In practice it's approximated with ensembles or MC dropout because exact integration is intractable for large models."
+        }
+    ],
+
   },
   {
     id: 76,
@@ -4652,6 +4932,25 @@ Credit scoring: a score of 0.7 feeds a decision tree with a specific threshold. 
     tags: ['Model Evaluation', 'Calibration', 'Temperature Scaling', 'Platt Scaling', 'ECE', 'Uncertainty'],
     domain: 'eval',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What does it mean for a model to be well-calibrated, and how do you measure it?",
+            "a": "A model is well-calibrated if its predicted probabilities match observed frequencies: among all predictions of 80% confidence, 80% should actually be correct. Measure with a reliability diagram (plot predicted probability vs. empirical accuracy across bins) or Expected Calibration Error (ECE = weighted average |accuracy - confidence| per bin). A model with high accuracy can still be badly calibrated — neural networks trained with cross-entropy tend to be overconfident. Overconfidence looks like: predicted probabilities cluster near 0 and 1, but accuracy in those bins is lower. Underconfidence: probabilities cluster near 0.5 but accuracy is much higher."
+        },
+        {
+            "q": "What is Platt scaling and when does it fail?",
+            "a": "Platt scaling fits a logistic regression (two parameters: a, b) on a held-out calibration set to map raw model scores to calibrated probabilities: P(y=1|s) = 1/(1+exp(as+b)). Simple, fast, and works well when the score distribution is approximately sigmoidal. Fails when: the score distribution is multimodal or heavily skewed (the logistic assumption is violated), when the calibration set is very small (overfitting), or when calibration is needed across many classes or very different sub-populations (Platt scaling gives one global calibration). In these cases, use isotonic regression (more flexible, non-parametric) or temperature scaling (single parameter, scales the logit)."
+        },
+        {
+            "q": "How does temperature scaling work and why is it popular for neural networks?",
+            "a": "Temperature scaling divides all logits by a single scalar T before applying softmax: P(y=k|x) = softmax(z/T). T > 1 softens the distribution (reduces confidence), T < 1 sharpens it. Only T is learned, on a held-out calibration set, minimizing NLL. Single parameter means it cannot overfit. It does not change the accuracy of the model (argmax is unchanged) — only calibration. It works well for neural networks because overconfidence in NNs is often a uniform overscaling of all logits. Limitation: it applies the same correction everywhere; it cannot fix miscalibration that varies by class, input region, or prediction confidence level."
+        },
+        {
+            "q": "Why is calibration critical in production ML, and where does it have the highest business impact?",
+            "a": "Uncalibrated probabilities make downstream decisions unreliable. In ad auctions, bid prices are a function of predicted CTR probability — an overconfident model overbids and loses money. In medical diagnosis, a model that says 90% confident when the true rate is 60% leads to wrong treatment decisions. In fraud detection, decision thresholds applied to probabilities produce wrong trade-offs between false positives and false negatives. Calibration matters most when: (1) model outputs are used as direct probability estimates in a decision system, (2) multiple models are combined (uncalibrated scores are not comparable across models), (3) the model is applied to distribution-shifted data where calibration degrades."
+        }
+    ],
+
   },
   {
     id: 77,
@@ -4698,6 +4997,25 @@ Some features are highly time-sensitive: user's last action, current cart conten
     tags: ['Feature Engineering', 'Feature Stores', 'MLOps', 'Point-in-Time', 'Training-Serving Skew', 'Production ML'],
     domain: 'features',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What problem do feature stores solve that a simple data warehouse cannot?",
+            "a": "A data warehouse stores historical snapshots of features, queryable offline. But production ML needs features at two points: training (historical, batch) and serving (real-time, per-request). Computing features differently in each context is the training-serving skew problem — a leading cause of production ML failures. Feature stores provide a unified API that serves the same feature logic at training time (batch reads from an offline store) and serving time (low-latency reads from an online store like Redis). The same feature definition runs in both contexts. Without this, two codebases diverge over time and produce different values for what should be the same feature."
+        },
+        {
+            "q": "What is point-in-time correctness in a feature store and why does it matter for training?",
+            "a": "Point-in-time correctness ensures that when generating training data, each training example only uses feature values that would have been available at the time of that event. Without it, you use future feature values to predict past outcomes — label leakage. Example: predicting loan default at application time. If you join on the user's current credit score (which includes post-application history), the model sees future data. A point-in-time join uses the feature value at the timestamp of the training event, not the current value. Most feature stores support this via an `as_of` parameter in offline retrieval. Failure to enforce it produces optimistic offline metrics that fail in production."
+        },
+        {
+            "q": "How do you handle feature freshness requirements when different features have different staleness tolerances?",
+            "a": "Different features have different temporal dynamics. User age can be computed weekly (changes slowly). Session-based features (items clicked in last 30 minutes) must be updated in near-real-time. Item inventory must be updated in seconds for e-commerce. Feature stores handle this by supporting multiple materialization schedules: batch pipelines (hourly, daily), streaming pipelines (Kafka → Flink → online store), and on-demand computation (compute at request time from raw data). Each feature definition specifies its freshness SLA. The serving layer checks freshness at read time and can fall back to a stale value or trigger recomputation. Monitoring feature freshness in production is part of the operational model health stack."
+        },
+        {
+            "q": "What is the cold start problem for feature stores in a new ML system, and how do you bootstrap?",
+            "a": "A new ML system has no historical features logged yet — the feature store is empty. Cold start approaches: (1) Backfill: run the feature computation pipeline over historical event logs to populate the offline store. This works if raw events were logged even before the feature store existed. (2) Proxy features: use features already computed for other models (often available in the data warehouse) as a starting point. (3) Progressive rollout: log features starting now, train on them after sufficient data accumulates (weeks to months). (4) Synthetic data generation for very early stages. The deeper issue is that logging decisions made now determine what training data is available later — feature store design is a long-term investment."
+        }
+    ],
+
   },
   {
     id: 78,
@@ -4738,6 +5056,25 @@ Most deployed LLMs are distilled from larger models. OpenAI distilled GPT-3.5 (t
     tags: ['Deep Learning', 'Knowledge Distillation', 'Model Compression', 'Teacher-Student', 'Soft Labels', 'LLM'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is knowledge distillation and how does it differ from model compression via pruning?",
+            "a": "Distillation trains a small student model to mimic a large teacher model's output distribution (soft labels), not just the hard labels. The student learns from the teacher's probability vector over all classes — this is information-richer than a one-hot label because it captures inter-class relationships (e.g., a \"cat\" image has some probability mass on \"dog\"). Pruning removes weights or neurons from an existing model based on importance scores. Distillation produces a compact architecture trained from scratch (or fine-tuned); pruning modifies an existing model. They can be combined: prune the teacher first, then distill into a student. Distillation often achieves better accuracy-per-parameter than pruning alone."
+        },
+        {
+            "q": "What is the role of temperature in distillation, and why are soft labels more informative?",
+            "a": "In distillation, the teacher's logits are divided by temperature T before softmax. High T softens the distribution, spreading probability across all classes and magnifying the differences between small probabilities. This is key: the information in soft labels is mostly in the tail probabilities (\"this image is 60% cat, 30% dog, 10% fox\") not in the dominant class. Hard labels (1 for cat, 0 for everything else) throw away this relational information. At T=1, soft labels collapse toward hard labels for confident teachers. Hinton et al. (2015) used T=2-5. At inference, T is set to 1 (the student uses its normal logits). The loss is a weighted combination of soft-label KL divergence and hard-label cross-entropy."
+        },
+        {
+            "q": "When does distillation fail, and what is the capacity gap problem?",
+            "a": "Distillation fails when the student is too small to learn the teacher's distribution — the capacity gap problem. A 1M-parameter student cannot faithfully reproduce a 10B-parameter teacher, regardless of training budget. The student will underfit the soft labels. Fixes: (1) Intermediate distillation — match intermediate layer representations (feature maps, attention maps) not just final logits. DistilBERT matches attention distributions per layer. (2) Progressive distillation — use a chain of teachers of decreasing size. (3) Self-distillation — distill the model at a later training epoch into itself at an earlier epoch. (4) Data augmentation — a larger effective training set reduces the gap."
+        },
+        {
+            "q": "How would you distill a 7B LLM into a 1B model for production deployment?",
+            "a": "Step 1: generate a synthetic distillation dataset — run the 7B teacher on a large, diverse prompt set and save the output logits or top-K token probabilities. Step 2: train the 1B student with a combination of: (a) next-token prediction on the teacher's soft labels (KL divergence loss with T=2), (b) supervised fine-tuning on high-quality demonstrations. Step 3: domain-specific distillation — if the 1B model is for a specific task (code, summarization), over-sample teacher outputs from that domain. Step 4: evaluate both accuracy and calibration — distilled models can be well-calibrated if the temperature is tuned. Key trade-off: the 1B model will lose some of the 7B's emergent capabilities (reasoning, multi-step) — identify which capabilities are critical for your use case before distilling."
+        }
+    ],
+
   },
   {
     id: 79,
@@ -4782,6 +5119,25 @@ Elasticsearch's new semantic search uses ELSER (a learned sparse model) that pro
     tags: ['ML System Design', 'Information Retrieval', 'BM25', 'TF-IDF', 'Search', 'Sparse Retrieval'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "How does BM25 score a document, and what are its two key parameters?",
+            "a": "BM25 score = Σ_terms IDF(t) × (tf(t,d) × (k1+1)) / (tf(t,d) + k1 × (1 - b + b × dl/avgdl)). IDF penalizes terms that appear in many documents. tf is term frequency in the document. k1 controls term frequency saturation — at k1=1.2, going from 1 to 2 occurrences gives much more weight than going from 10 to 11. b controls document length normalization — at b=0.75, a longer document is penalized. k1 in [1.2, 2.0] and b=0.75 are typical defaults. The key insight: tf saturation prevents spamming a term 100 times to boost ranking, and length normalization prevents long documents from dominating just because they contain more text."
+        },
+        {
+            "q": "Why does BM25 fail on semantic similarity, and how does dense retrieval solve it?",
+            "a": "BM25 requires lexical overlap — if the query uses \"car\" and the document uses \"automobile,\" BM25 scores zero for that term. It also cannot capture semantic context: \"bank\" in \"river bank\" vs \"financial bank\" are treated identically. Dense retrieval encodes query and document into dense vectors and retrieves by embedding similarity. A document about \"automobiles\" has an embedding close to a query about \"cars.\" Dense retrieval handles synonymy, paraphrase, and semantic similarity that BM25 misses. Weakness: dense retrieval can miss exact keyword matches that BM25 handles perfectly (named entities, product codes, rare terms). This is why hybrid retrieval (BM25 + dense, fused with RRF or linear combination) consistently outperforms either alone."
+        },
+        {
+            "q": "What is the query latency stack for a production search system serving 10K QPS?",
+            "a": "At 10K QPS, every millisecond counts. Typical breakdown: BM25 retrieval from inverted index (Elasticsearch/Lucene) ~5-20ms, dense ANN retrieval (FAISS HNSW or ScaNN) ~5-15ms, result fusion and filtering ~2-5ms, cross-encoder re-ranking of top-50 ~50-150ms. The re-ranker dominates. Optimizations: limit re-ranking to top-20 candidates, use a smaller cross-encoder (MiniLM vs BERT-large), batch multiple requests together, run re-ranking on GPU, use quantized model (INT8). Caching: cache embeddings for head queries (top 1% of queries are 80% of traffic). For very high QPS, pre-compute rankings for head queries and serve from cache with near-zero latency."
+        },
+        {
+            "q": "How do you evaluate a search system, and what is the difference between offline and online evaluation?",
+            "a": "Offline: collect a query-document relevance dataset (human judgments or click logs). Compute NDCG@10, MRR, MAP on held-out queries. Fast and cheap but may not reflect production behavior. Online: A/B test new retrieval/ranking against current system on live traffic. Measure CTR, session depth, zero-result rate, dwell time, conversion. Online is ground truth but slow and risky. Key metric: NDCG@10 offline correlates with CTR online but not perfectly. Also measure: recall@100 for the retrieval stage (what fraction of truly relevant items are in the top-100 before re-ranking), since retrieval recall is an upper bound on end-to-end performance. Zero-result rate is a critical operational metric — queries that return no results are a bad user experience."
+        }
+    ],
+
   },
   {
     id: 80,
@@ -4830,6 +5186,25 @@ Query Performance Prediction (QPP) estimates retrieval quality before retrieving
     tags: ['ML System Design', 'Search', 'Information Retrieval', 'Query Understanding', 'Semantic Search', 'Cross-Encoder'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the retrieval-ranking architecture for semantic search, and where does each component live in the stack?",
+            "a": "Semantic search follows a two-stage pipeline. Retrieval: an encoder (e.g., sentence-transformers) embeds the query at request time; a vector index (FAISS, Pinecone, Weaviate) finds approximate nearest neighbors among precomputed document embeddings. Returns top-K (typically 50-200) candidates in 10-50ms. Re-ranking: a cross-encoder scores each (query, candidate) pair jointly, seeing both simultaneously. More accurate than dot-product similarity but O(K) forward passes — restrict to top-K. Returns a final ranked list in 50-200ms. Infrastructure: embeddings stored in a vector DB with HNSW index, re-ranker runs on GPU-backed inference server (TGI, vLLM, Triton), metadata filters applied at the ANN retrieval stage."
+        },
+        {
+            "q": "How do you build and maintain a vector index for a corpus that changes in real time?",
+            "a": "FAISS requires rebuilding the entire index to add new vectors — fine for static corpora, impractical for real-time updates. Production solutions: (1) HNSW (Hnswlib, Pinecone, Weaviate) supports incremental inserts in O(log n) per insert with no full rebuild. (2) Hybrid index: a small, frequently-updated \"delta\" HNSW index for new documents + large static IVF-PQ index for the bulk corpus, with results merged at query time. (3) Managed vector DBs (Pinecone, Qdrant) handle incremental updates internally. Monitor index quality over time: recall@K on a fixed probe set should stay constant as the index grows. Periodic full rebuilds (weekly/monthly) prevent fragmentation-related recall degradation."
+        },
+        {
+            "q": "What is chunking strategy in RAG and why does it matter more than most people expect?",
+            "a": "RAG retrieves passages, not entire documents. Chunking is how you split documents into passages. Naive fixed-size chunking (every 512 tokens) breaks sentences mid-sentence and loses context. Better strategies: sentence-aware chunking (split at sentence boundaries), paragraph-aware, or semantic chunking (split when embedding similarity drops between adjacent sentences). Chunk size trade-off: smaller chunks are more precise for retrieval but lose context for the LLM; larger chunks give more context but reduce retrieval precision. For long documents, hierarchical chunking (coarse retrieval → fine passage selection within the retrieved section) works well. Overlapping chunks (50% overlap) help when the relevant content spans a boundary."
+        },
+        {
+            "q": "How do you evaluate whether a RAG system is retrieving the right passages?",
+            "a": "Two separate metrics: retrieval quality and generation quality. Retrieval: hit rate@K (does the correct passage appear in the top-K results?), MRR (mean reciprocal rank of the first correct passage), and context precision (what fraction of retrieved passages are actually relevant?). Generation: faithfulness (does the generated answer contradict the retrieved passages?), answer relevance (does the answer address the question?), and answer correctness (is the answer factually right?). The RAGAS framework automates these using an LLM judge. Key insight: a RAG system can fail at retrieval (right passage not retrieved) or at generation (right passage retrieved but ignored or misused). Diagnose which layer fails before improving."
+        }
+    ],
+
   },
   {
     id: 81,
@@ -4874,6 +5249,25 @@ Demand is not a smooth function of price. Demand often drops sharply at certain 
     tags: ['Data Science', 'Pricing', 'Demand Modeling', 'Price Elasticity', 'Causal Inference', 'Revenue'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is price elasticity of demand, and how do you estimate it from observational data?",
+            "a": "Price elasticity = % change in quantity / % change in price. Elastic demand (|ε| > 1): a 10% price increase causes >10% quantity drop — total revenue falls. Inelastic demand (|ε| < 1): quantity drops less than price rises — revenue increases. Estimating from observational data is hard because price and quantity are jointly determined (the endogeneity problem). OLS regression of log(quantity) on log(price) is biased — cheaper prices correlate with promotions that also drive demand independently. Solutions: (1) Instrumental variables (use a supply-side cost shock as an instrument for price). (2) Regression discontinuity (exploit a pricing threshold). (3) A/B price experiments — randomly assign prices to users/markets."
+        },
+        {
+            "q": "What is the endogeneity problem in price elasticity estimation and how do IV regressions solve it?",
+            "a": "Endogeneity: price is not randomly assigned — it correlates with unobserved demand shocks. A company lowers prices when demand is already weak (promotional period) and raises them when demand is strong (holiday). OLS sees price and quantity move together in complex ways and estimates a biased elasticity. IV (instrumental variables) finds a variable that affects price but affects quantity only through price — a supply-side cost shock like fuel prices for airlines or commodity costs for food manufacturers. 2SLS: stage 1 regresses price on the instrument (isolates the exogenous variation in price), stage 2 regresses quantity on the predicted price from stage 1. The instrument must be relevant (strong effect on price) and valid (no direct effect on demand)."
+        },
+        {
+            "q": "How do you build a price optimization model for a multi-product retailer?",
+            "a": "Step 1: estimate elasticity for each product using a log-log regression or causal model. Capture cross-price elasticities (how product A's price affects product B's demand — substitutes vs complements). Step 2: define the objective — maximize revenue, gross margin, or market share subject to constraints (min/max price bounds, MSRP, competitive parity). Step 3: solve the optimization — for independent products, the optimal price is p* = c / (1 + 1/ε) (markup formula). For multi-product firms with substitutes, use a constrained optimization over the full demand system. Step 4: implement guardrails — price changes beyond X% require approval, no price increases on essential goods during crises. Step 5: run A/B tests on price changes before full rollout."
+        },
+        {
+            "q": "What is a demand curve and how is it different from a supply curve?",
+            "a": "A demand curve plots quantity demanded vs. price, holding other factors constant — it slopes downward (higher price → lower quantity). A supply curve plots quantity supplied vs. price — it slopes upward (higher price → more supply offered). Observed market prices and quantities are the intersection of supply and demand (equilibrium). When you see a time series of prices and quantities, you're seeing equilibrium points, not points on a single curve. Shifts in demand (income change, preference change) trace out the supply curve; shifts in supply (cost change) trace out the demand curve. This is why supply-side instruments (cost shocks) help identify the demand elasticity."
+        }
+    ],
+
   },
   {
     id: 82,
@@ -4920,6 +5314,25 @@ Future revenue is worth less than present revenue (time value of money, customer
     tags: ['Data Science', 'LTV', 'Churn', 'Retention', 'Survival Analysis', 'Revenue Modeling'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "How do you build a customer lifetime value model for a subscription product?",
+            "a": "LTV = average revenue per period × average number of periods retained × gross margin. For a subscription product with monthly churn rate c, the expected lifetime is 1/c periods. So LTV = ARPU × (1/c) × margin. In practice, estimate a churn model (logistic regression or survival model) to get per-customer churn probability. LTV is then the expected discounted revenue: LTV = Σ_{t=1}^{∞} ARPU × P(survive to period t) × discount_factor^t. Use cohort analysis: track LTV by acquisition cohort over time. ML adds: segment customers by predicted LTV (high/medium/low), personalize retention spend, and target high-LTV segments in acquisition."
+        },
+        {
+            "q": "What is survival analysis and when is it preferred over logistic regression for churn?",
+            "a": "Logistic regression predicts P(churn) at a fixed time horizon (e.g., in the next 30 days). This throws away timing information and requires you to pick the horizon in advance. Survival analysis models time-to-event: it estimates P(customer churns at time T | survives to T). Key advantage: handles censoring naturally — customers who haven't churned yet are observed for some time but their event hasn't occurred. Cox Proportional Hazards is the standard: it models the hazard rate as baseline_hazard(t) × exp(β'x). Covariates shift the hazard multiplicatively. Output: a per-customer survival curve showing P(active) at every future time point. Use survival analysis when you need time-resolved predictions or have heavy censoring."
+        },
+        {
+            "q": "How would you identify early warning signals of churn using product usage data?",
+            "a": "Feature engineering: compute recency (days since last login), frequency (logins per week vs. prior weeks), breadth (number of features used), depth (engagement with core vs. peripheral features), and engagement trend (slope of weekly usage over last 4 weeks — declining trend is a strong signal). Label: churned vs. active at T+30. Train a gradient boosted model. SHAP analysis typically reveals: recency and engagement trend dominate. For proactive intervention: score users weekly and flag those with predicted churn probability above threshold. Calibrate the threshold to balance intervention cost vs. churn cost. Segment interventions: high-LTV at-risk users get personalized outreach; mid-tier get automated nudges."
+        },
+        {
+            "q": "What is the right metric for a churn model: AUC, precision@K, or something else?",
+            "a": "It depends on the intervention strategy. AUC measures overall discrimination across all thresholds — good for model comparison but not for operational decisions. If you contact the top K% of predicted churners (fixed budget), optimize precision@K (what fraction of the top-K are true churners) and recall@K. If the intervention cost is fixed and the save value varies by customer, optimize expected revenue saved: Σ_{top-K} P(churn_i) × LTV_i. For subscription businesses with a fixed intervention budget, precision@K among high-LTV customers is usually the right metric. Calibration matters too: if you use predicted churn probability to size the intervention (spend more on higher-probability churners), the probabilities must be well-calibrated."
+        }
+    ],
+
   },
   {
     id: 83,
@@ -4968,6 +5381,25 @@ Neither user-level attribution nor MMM gives true causal estimates. The gold sta
     tags: ['Data Science', 'Attribution', 'Shapley Values', 'Media Mix Model', 'Marketing', 'Causal Inference'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is multi-touch attribution and why is last-click attribution wrong?",
+            "a": "Last-click attribution assigns 100% of conversion credit to the last touchpoint before purchase. This undervalues top-of-funnel channels (awareness ads, organic content) that influenced the customer but were not the final click. It overvalues bottom-of-funnel channels (branded search, retargeting) that often just capture intent created elsewhere. Multi-touch attribution distributes credit across all touchpoints in the conversion path. Data-driven MTA uses logistic regression or Shapley values to estimate each touchpoint's marginal contribution to conversion probability, controlling for position and channel type. The gold standard is incrementality testing (holdout groups), but MTA is a practical approximation for always-on channels."
+        },
+        {
+            "q": "What is Marketing Mix Modeling (MMM) and how does it differ from MTA?",
+            "a": "MMM uses time series regression to estimate the contribution of each marketing channel (TV, digital, outdoor, promotions) to sales at an aggregate level. It does not require individual-level data — inputs are weekly spend by channel and weekly sales. Pros: handles offline channels, is privacy-safe (no cookies or user tracking), and captures long-run carryover effects via adstock transformation. Cons: requires years of data for reliable estimates, cannot measure individual-level paths, and cannot separate sub-channels (digital is one variable). MTA works at the individual user level, handles digital channels well, but cannot model offline channels. They are complementary: use MMM for budget allocation across channels, MTA for optimization within digital."
+        },
+        {
+            "q": "What is the adstock transformation in MMM and what does it capture?",
+            "a": "Adstock models the carryover (decay) effect of advertising — an ad seen last week still influences purchase probability this week, but less so. Geometric adstock: adstock_t = spend_t + λ × adstock_{t-1}, where λ ∈ [0,1] is the decay rate. Low λ (0.3): advertising effect decays quickly (appropriate for promotions, direct response). High λ (0.8): advertising effect is durable (appropriate for brand-building TV campaigns). Hilbert transform (delayed adstock) also models a lag before the effect peaks — relevant for big brand campaigns that take time to build awareness. In Bayesian MMM (the industry standard, e.g. Robyn), λ is estimated from data with informative priors."
+        },
+        {
+            "q": "How do you validate an MMM model, and what does a bad model look like?",
+            "a": "Validation approaches: (1) Holdout validation — fit model on years 1-3, predict year 4 sales, measure MAPE. (2) Geo experiments — run spending changes in test markets, compare MMM-predicted lift to observed lift. (3) Channel incrementality tests — pause a channel for 2-4 weeks in test markets. (4) Cross-validation across time. A bad model: R² > 0.99 (overfit to historical data), implausible channel coefficients (negative ROI for a clearly effective channel), coefficients that flip sign across time windows, or attribution that ignores seasonality and assigns it to correlated marketing spend. Warning sign: a model that tells every channel it is the most effective one — check if the channel with highest budget consistently gets highest attribution."
+        }
+    ],
+
   },
   {
     id: 84,
@@ -5012,6 +5444,25 @@ Standard accuracy metrics (AUC, precision) do not apply — you never observe bo
     tags: ['Data Science', 'Uplift Modeling', 'Causal Inference', 'Propensity Score', 'Incrementality', 'Marketing'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is uplift modeling and how is it different from a standard propensity model?",
+            "a": "A propensity model estimates P(outcome | features) — who will convert. An uplift model estimates the incremental effect of a treatment: P(outcome | treated, features) - P(outcome | control, features). These are very different. A customer likely to buy anyway (high propensity) is a waste of a discount — they would have bought regardless. Uplift modeling targets the \"persuadables\": customers who buy if treated but not if untreated. You need randomized experiment data to estimate uplift because you never observe both potential outcomes for the same customer. Methods: two-model approach (train separate models for treated and control), X-learner, R-learner, or direct uplift forests (Causal Forest). Qini coefficient and AUUC (area under uplift curve) are standard metrics."
+        },
+        {
+            "q": "What are the four segments in the Rubin causal model for uplift, and which ones matter?",
+            "a": "The four segments (by (Y_t, Y_c) — outcome under treatment, outcome under control): (1) Always-buyers (1,1): buy regardless of treatment — waste of discount. (2) Persuadables/Compliers (1,0): buy if treated, not if untreated — the target. (3) Never-buyers (0,0): don't buy regardless — waste of treatment. (4) Do-not-disturbers/Defiers (0,1): buy if untreated, don't if treated — treating them is harmful (e.g., customers who cancel when emailed). Most uplift models target persuadables, but identifying do-not-disturbers is also valuable. In practice, you can only identify these groups statistically from experiment data — for any individual, you only observe one potential outcome."
+        },
+        {
+            "q": "How does the two-model (T-learner) approach to uplift work, and what are its weaknesses?",
+            "a": "Train two separate models: μ_1(x) = E[Y | X=x, T=1] on treated data, μ_0(x) = E[Y | X=x, T=0] on control data. Uplift estimate: τ(x) = μ_1(x) - μ_0(x). Simple to implement with any ML model. Weakness: each model is optimized to predict outcome, not the difference. If the treatment group and control group have different sample sizes or covariate distributions, bias is introduced. The models can each be well-calibrated but their difference can be noisy. Better alternatives: S-learner (single model with T as a feature), X-learner (accounts for imbalanced treatment/control), or Causal Forest (doubly robust, non-parametric). Use T-learner as a baseline, then test X-learner or Causal Forest."
+        },
+        {
+            "q": "How do you evaluate an uplift model without knowing individual counterfactuals?",
+            "a": "Since you never observe both Y_t and Y_c for the same individual, you cannot directly measure uplift per person. Evaluation strategies: (1) Qini curve — rank customers by predicted uplift, plot cumulative actual uplift (treatment minus control conversion rate) as you include more customers. A good model front-loads high-uplift individuals. Area under the Qini curve (AUUC) summarizes this. (2) Uplift decile analysis — split customers into deciles by predicted uplift, measure actual treated vs. control outcome rate in each decile. A good model shows high treated-minus-control in the top decile and low (or negative for do-not-disturbers) in the bottom. (3) Net incremental revenue — expected business value of targeting the top K% according to the uplift model."
+        }
+    ],
+
   },
   {
     id: 85,
@@ -5060,6 +5511,25 @@ The standard error at peak sample size assumes the test ran to completion. Looki
     tags: ['Data Science', 'Statistics', 'Multiple Testing', 'FDR', 'Power Analysis', 'A/B Testing', 'Experimental Design'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the multiple testing problem in A/B testing, and how does it arise in practice?",
+            "a": "Each A/B test has a 5% false positive rate (at α=0.05). Running 20 independent tests, you expect 1 false positive just by chance. In practice, the problem compounds: testing multiple metrics per experiment, running many experiments simultaneously, and peeking at results before the planned end date all inflate the false positive rate. Example: an experiment with 20 metrics at α=0.05 each has a family-wise error rate (FWER) of 1-(0.95)^20 ≈ 64%. This means finding a \"significant\" effect for at least one metric by chance is more likely than not. Companies that run hundreds of experiments per year and declare success on any significant metric are accumulating false learnings at high rates."
+        },
+        {
+            "q": "What is the Benjamini-Hochberg procedure and when do you use it instead of Bonferroni?",
+            "a": "Bonferroni correction controls FWER (probability of any false positive) at α/n: divide the significance threshold by the number of tests. Very conservative — with 100 tests you need p < 0.0005. Benjamini-Hochberg (BH) controls FDR (False Discovery Rate: expected proportion of rejections that are false positives) which is less conservative. Procedure: sort p-values p_(1) ≤ ... ≤ p_(k), find the largest i where p_(i) ≤ (i/k)×q (target FDR q), reject all hypotheses up to i. Use Bonferroni when any false positive is very costly (clinical trials, safety tests). Use BH when you run many tests and can tolerate some false discoveries as long as the proportion is controlled (exploratory analysis, feature selection, genomics)."
+        },
+        {
+            "q": "What is p-hacking and how do you prevent it in an experimentation platform?",
+            "a": "P-hacking is any practice that exploits researcher degrees of freedom to achieve p < 0.05: peeking at results and stopping early when significant, testing multiple metrics and reporting only the significant ones, splitting data into subgroups until something is significant, or excluding outliers selectively. Prevention in an experimentation platform: (1) Pre-register hypotheses — declare the primary metric and sample size before running. (2) Sequential testing — use always-valid p-values (mSPRT, e-values) that allow early stopping without inflating false positives. (3) Metric lock — show all pre-registered metrics, not just significant ones. (4) Minimum experiment duration — prevent stopping after 2 days. (5) Audit trails — log every metric looked at, not just the reported ones."
+        },
+        {
+            "q": "How does multiple testing interact with the novelty effect in A/B tests?",
+            "a": "The novelty effect (also called the Hawthorn effect for users) causes new features to get elevated engagement just because they're different, not because they're better. Users explore new UI, click more, dwell longer. This inflates the treatment effect estimate early in the experiment. If you peek at results after 3 days, the novelty effect makes the variant look significantly better. After 4 weeks, engagement returns to normal and the effect is often zero or negative. Prevention: (1) Run experiments long enough (at least 2-4 weeks for user-facing changes). (2) Look at the time series of the metric — a novelty effect shows up as a spike that decays. (3) Holdout new users who have never seen either variant and measure the effect for them separately — they have no reference point, so their response better reflects true utility."
+        }
+    ],
+
   },
   {
     id: 86,
@@ -5112,6 +5582,25 @@ Reconstruct each data point through the k-component PCA approximation. The recon
     tags: ['Models & Math', 'PCA', 'Dimensionality Reduction', 'Eigendecomposition', 'Statistics', 'Anomaly Detection'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What does PCA actually compute, and what is the relationship between eigenvectors, eigenvalues, and variance?",
+            "a": "PCA finds directions in feature space that maximize variance. These directions are the eigenvectors of the covariance matrix X'X/n. The corresponding eigenvalues give the variance explained along each eigenvector. The first principal component (PC1) is the eigenvector with the largest eigenvalue — the direction of greatest variance. PC2 is the eigenvector with the second largest eigenvalue, constrained to be orthogonal to PC1. Projecting data onto the top-k eigenvectors gives the best rank-k approximation of the data in terms of minimizing reconstruction error (Frobenius norm). Equivalently via SVD: X = UΣV', the principal components are the columns of V, and the variance along each is σ_i²."
+        },
+        {
+            "q": "When does PCA fail, and what are the alternatives?",
+            "a": "PCA fails when: (1) Variance is not the right measure of information — in class-separability tasks, PCA may pick up within-class variance and not between-class variance (use LDA instead). (2) The relationships are nonlinear — PCA can only find linear subspaces (use Kernel PCA, UMAP, or t-SNE). (3) Features are not on the same scale — PCA is sensitive to scale (always standardize first). (4) Outliers dominate — a few extreme points determine the high-variance direction (use Robust PCA). (5) Dimensionality reduction is used for visualization — t-SNE and UMAP preserve local structure better for visualization. Use PCA as a preprocessing step to remove noise and redundancy before feeding into downstream models."
+        },
+        {
+            "q": "How do you choose the number of principal components to retain?",
+            "a": "Explained variance ratio: retain enough PCs to explain X% of total variance (80-95% is common). Scree plot: plot eigenvalues in decreasing order; look for an \"elbow\" where additional components add little variance. Reconstruction error: find the minimum k such that ‖X - X_reconstructed‖² is below a tolerance threshold. Task-specific validation: try k=10, 50, 100 as features in a downstream model and pick the k that maximizes validation performance. In production, the right answer often comes from a held-out evaluation — dimensionality reduction is a hyperparameter like any other. For anomaly detection and monitoring, retain all components and use reconstruction error itself as the anomaly score."
+        },
+        {
+            "q": "How is PCA used in production ML pipelines beyond dimensionality reduction?",
+            "a": "Common production uses: (1) Noise reduction — project to top-k PCs and reconstruct; residual is noise. (2) Multicollinearity removal — correlated features cause instability in linear models; PCA decorrelates. (3) Anomaly detection — reconstruct input from top-k PCs; high reconstruction error = anomaly. (4) Monitoring for data drift — track the mean and variance of principal component scores over time; drift in PC score distribution indicates input distribution shift. (5) Whitening — scale each PC by 1/σ_i to produce unit-variance uncorrelated features, useful for k-means convergence. The transform is fitted on training data and applied at serving time using the same eigenvectors — never refit on serving data."
+        }
+    ],
+
   },
   {
     id: 87,
@@ -5158,6 +5647,25 @@ Agglomerative hierarchical clustering starts with each point as its own cluster 
     tags: ['Models & Math', 'Clustering', 'k-Means', 'DBSCAN', 'GMM', 'Unsupervised Learning'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the inertia criterion in k-means, and how do you use the elbow method to choose k?",
+            "a": "Inertia = Σ_i ‖x_i - μ_{c(i)}‖² — the sum of squared distances from each point to its assigned cluster center. K-means minimizes inertia; it decreases monotonically as k increases (at k=n, inertia=0). The elbow method plots inertia vs k and looks for an \"elbow\" — the point where adding another cluster provides diminishing marginal reduction. The elbow is heuristic and often ambiguous. Better alternatives: Silhouette score (measures how much more similar a point is to its own cluster than to the nearest other cluster — higher is better, range [-1,1]), Gap statistic (compares inertia to expected inertia under a null reference distribution), or domain-driven choice of k."
+        },
+        {
+            "q": "What are the key failure modes of k-means, and which algorithms address each?",
+            "a": "K-means assumes: spherical clusters (equal variance in all directions), similar cluster sizes, and roughly equal density. Failures: elongated clusters → k-means splits them incorrectly (use GMM with full covariance or spectral clustering). Very different cluster sizes → small clusters absorbed into large ones (use DBSCAN or hierarchical). Non-convex shapes (rings, crescents) → k-means fails entirely (use DBSCAN or spectral clustering). Sensitivity to outliers — outliers pull centroids (use k-medoids or DBSCAN with noise points). Initialization sensitivity — bad initialization leads to local optima (use k-means++ which seeds centroids proportional to distance). Always run k-means multiple times with different seeds and pick the run with lowest inertia."
+        },
+        {
+            "q": "How does DBSCAN define clusters, and when is it preferred over k-means?",
+            "a": "DBSCAN defines clusters as dense regions separated by sparse regions. Two parameters: ε (neighborhood radius) and min_samples (minimum points in ε-neighborhood to be a core point). Core points have ≥ min_samples neighbors within ε; they form cluster seeds. Border points are within ε of a core point but are not core themselves. Noise points are neither. Advantages over k-means: (1) Does not require specifying k. (2) Finds arbitrarily shaped clusters. (3) Identifies outliers explicitly (noise points). Use DBSCAN when: you expect non-spherical clusters, you want outlier detection built in, or k is unknown. Weakness: sensitive to ε and min_samples; struggles with varying density (HDBSCAN fixes this by varying ε automatically)."
+        },
+        {
+            "q": "How do you evaluate clustering quality in production when there are no ground truth labels?",
+            "a": "Internal metrics (no labels needed): Silhouette score, Davies-Bouldin index (lower is better — measures average intra-cluster distance / inter-cluster distance ratio), Calinski-Harabasz index (ratio of between-cluster to within-cluster scatter). Practical evaluation: business metrics — if clusters are used for user segmentation, measure downstream conversion rate, churn rate, or LTV per cluster. Stability check: subsample 80% of data twice, cluster each, and measure cluster agreement (e.g., Adjusted Rand Index) — stable clusters are robust to sampling. Visual inspection: PCA or UMAP projection to 2D, visually check if clusters are coherent. Temporal consistency: if the same entity appears in the same cluster over time, the clustering captures a stable property."
+        }
+    ],
+
   },
   {
     id: 88,
@@ -5206,6 +5714,25 @@ Identify time points where y_t deviates from what the model expected. Residuals 
     tags: ['Data Science', 'Time Series', 'ARIMA', 'Prophet', 'Forecasting', 'Temporal Fusion Transformer'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is stationarity and why does it matter for time series modeling?",
+            "a": "A time series is stationary if its statistical properties (mean, variance, autocorrelation) do not change over time. Most time series models (ARIMA, VAR, Granger causality) assume stationarity because they estimate a single set of parameters that are assumed constant throughout. Non-stationary series violate this: a trend means the mean is shifting; seasonality means the mean varies by season; heteroskedasticity means variance is changing. Running a regression on non-stationary series produces spurious correlations — two unrelated trending series appear correlated just because they both trend up. Tests: Augmented Dickey-Fuller (ADF) and KPSS for unit roots. Fix: differencing (subtract lag-1 values) typically induces stationarity."
+        },
+        {
+            "q": "What is the difference between ARIMA, SARIMA, and Prophet, and when do you use each?",
+            "a": "ARIMA(p,d,q): AutoRegressive (p lag terms), Integrated (d differences to achieve stationarity), Moving Average (q lag error terms). Good for short-term forecasting on stationary series. SARIMA extends ARIMA with seasonal components (P,D,Q,m) — handles regular seasonal patterns (weekly, monthly). Requires manual parameter selection (ACF/PACF plots or grid search). Prophet (Facebook): designed for business time series with strong seasonality, holidays, and irregular trends. Uses an additive model: trend + seasonality + holidays. Handles missing data and outliers automatically. Requires less expertise than ARIMA but is a black box relative to ARIMA's interpretability. Use ARIMA for well-understood time series with clear stationarity diagnostics; use Prophet for business metrics with holidays and human-interpretable trends."
+        },
+        {
+            "q": "What is look-ahead bias in time series feature engineering and how do you prevent it?",
+            "a": "Look-ahead bias (data leakage): using information from the future to construct features used to predict that same future. Examples: computing a 7-day rolling average at time t using data from t+1 to t+7, or computing a seasonal adjustment using the full time series including the test period. Prevention: use only past data when computing features at time t. For rolling statistics: use `.shift(1)` before rolling windows. For train-test splits: always use a time-based split (train on t<T, test on t≥T), never random shuffling. For cross-validation: use time series CV (expanding or rolling window). Any feature involving the target variable (lagged target is fine; future target is not). Even subtle leakage — like normalizing using test-period statistics — can inflate metrics by 5-30%."
+        },
+        {
+            "q": "How do you detect and handle anomalies in a time series in production?",
+            "a": "Detection methods: (1) STL decomposition — decompose into trend + seasonality + residual; flag large residuals (|residual| > 3σ) as anomalies. (2) Prophet residual monitoring — fit Prophet, score new points by their distance from the predicted interval. (3) LSTM/Transformer autoencoders — high reconstruction error flags anomalies. (4) Seasonal-Hybrid ESD (S-H-ESD) — Twitter's anomaly detection, handles seasonality explicitly. In production: monitor metric streams for anomalies in near-real-time. Handling: (1) Impute anomalies with interpolation or the preceding value before passing to downstream models. (2) Flag but don't impute — let the model handle them explicitly (tree models are robust to outliers). (3) For training data: remove or winsorize anomalies caused by system errors (logging bugs), keep real anomalies (actual demand spikes)."
+        }
+    ],
+
   },
   {
     id: 89,
@@ -5248,6 +5775,25 @@ The auction relies on P(click) being a true probability, not just a ranking scor
     tags: ['ML System Design', 'Ads', 'CTR Prediction', 'Wide & Deep', 'DeepFM', 'FTRL', 'Auction'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the explore-exploit trade-off in ad serving, and how does an auction solve it?",
+            "a": "Exploitation: show the ad with the highest estimated CTR — maximize immediate revenue. Exploration: show ads with uncertain CTR estimates — gather data to improve future decisions. Pure exploitation causes new ads to never get traffic (cold start) and established ads to be over-served even if better ads exist. Ad auctions blend both: the eCPM (expected revenue) formula = bid × predicted CTR weighs a high bid (economic signal of value) against a high CTR estimate. New ads with few impressions have wide confidence intervals — upper confidence bound (UCB) or Thompson Sampling automatically explores them more. Most ad systems use a variant of exploration for new ads, then shift to exploitation once enough data is collected."
+        },
+        {
+            "q": "How do you model CTR for a new ad with no historical data (cold start)?",
+            "a": "Cold start strategies: (1) Content-based features — use the ad's creative features (image embedding, text embedding, advertiser category, landing page content) to predict CTR from similar historical ads. (2) Hierarchical priors — use the average CTR for the advertiser, then for the category, as a prior for new ads. (3) Thompson Sampling — initialize a Beta(1,1) prior (uniform) and update with each impression. Early on, samples are highly variable (exploration); as data accumulates, the posterior narrows (exploitation). (4) Transfer learning — pre-train a CTR model on historical data; for new ads, initialize from the trained model and fine-tune with few-shot data. The first few hundred impressions are the most expensive to acquire and most informative."
+        },
+        {
+            "q": "What is the position bias correction problem in CTR modeling?",
+            "a": "Ads shown in position 1 get more clicks than position 5, even if equally relevant — this is position bias. If you train a CTR model on raw click data, it learns position as a proxy for quality and perpetuates the bias. Corrections: (1) Position as a feature — include position in the model at training and inference time, explicitly modeling the effect. At serving time, set position to 1 for all candidates so they're scored fairly. (2) Propensity weighting — weight each training example by 1/P(click observed | position), de-biasing the gradient. (3) Separate examination model — factorize CTR = P(click | relevant, shown) × P(shown | position). Train an examination model for propensity and a relevance model for CTR. The DLA (Dual Learning Algorithm) does this jointly."
+        },
+        {
+            "q": "How do you measure the revenue impact of improving a CTR model from 2% to 2.1% average CTR?",
+            "a": "A 5% relative improvement in CTR (2% → 2.1%) translates to revenue through eCPM. In a second-price auction: revenue per impression = second_bid × CTR_predicted. If CTR estimate is more accurate, allocation improves (higher-value ads win more often), and the eCPM per impression increases. Revenue lift ≈ % CTR improvement × total impressions × current eCPM, but this overstates the effect because CTR improvement compounds with auction dynamics. Proper measurement: A/B test the new model on a traffic slice, measure revenue per 1000 impressions (RPM) in treatment vs. control. A 5% CTR improvement typically produces 3-8% RPM improvement depending on competition and bid landscape. Also measure fill rate and auction win rate — sometimes a better CTR model wins fewer auctions if it causes advertiser bids to shift."
+        }
+    ],
+
   },
   {
     id: 90,
@@ -5294,6 +5840,25 @@ Retrieval failure: the relevant document is not retrieved. Cause: wrong embeddin
     tags: ['ML System Design', 'RAG', 'LLM', 'Vector Search', 'Information Retrieval', 'Production ML'],
     domain: 'design',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What are the three failure modes of RAG and how do you diagnose each?",
+            "a": "Retrieval failure: the correct passage is not in the top-K retrieved documents. Diagnose: compute recall@K — if the ground truth passage is in fewer than 80% of top-10 results, the retrieval model needs improvement (better embeddings, chunking, or hybrid retrieval). Context utilization failure: the correct passage is retrieved but the LLM ignores it or fails to extract the answer. Diagnose: manually inspect cases where retrieval recall is high but answer accuracy is low — often caused by long contexts (LLM loses track), multiple conflicting passages, or the answer requiring synthesis across passages. Hallucination: the LLM answers from parametric knowledge rather than the retrieved context. Diagnose: compute faithfulness — what fraction of claims in the generated answer can be attributed to a retrieved passage?"
+        },
+        {
+            "q": "What is the difference between sparse, dense, and hybrid retrieval in RAG?",
+            "a": "Sparse retrieval (BM25): represents documents as sparse TF-IDF vectors, retrieves by keyword match. Fast, interpretable, excellent for exact keyword matches, product codes, named entities. Dense retrieval (DPR, sentence-transformers): encodes documents as dense vectors, retrieves by embedding similarity. Handles synonymy, paraphrase, and semantic similarity. Slower, requires a vector index, struggles with rare terms. Hybrid: combine BM25 and dense retrieval scores using Reciprocal Rank Fusion (RRF) or a linear combination. RRF: score = Σ 1/(k + rank_i) across both rankings. Hybrid consistently outperforms either alone on most benchmarks (BEIR). In production RAG: use hybrid retrieval as the default, tune the BM25/dense blend ratio on a dev set of representative queries."
+        },
+        {
+            "q": "How do you handle long documents in RAG that exceed the context window?",
+            "a": "Chunking: split documents into passages (256-512 tokens). Retrieve the most relevant chunks rather than the full document. Challenge: the answer may span multiple chunks, or the relevant chunk may require surrounding context for coherence. Solutions: (1) Overlapping chunks (50% overlap between adjacent chunks). (2) Hierarchical RAG: retrieve document-level candidates first (using a document-level summary embedding), then retrieve passage-level within those documents. (3) Re-ranking: after retrieving top-50 chunks, use a cross-encoder to select the most relevant 5-10 for the context window. (4) Map-reduce: if no single passage contains the answer, retrieve all relevant passages and summarize them in stages. (5) Structured extraction: for tabular/structured data, retrieve and format as tables rather than free text."
+        },
+        {
+            "q": "How would you evaluate and improve a RAG system end-to-end?",
+            "a": "Evaluation: use RAGAS metrics — faithfulness (is the answer supported by context?), answer relevance (does the answer address the question?), context precision (are retrieved passages relevant?), context recall (are all necessary passages retrieved?). Build an eval set of 50-200 question-answer-source_document triples. Run automated scoring with an LLM judge for faithfulness and relevance. Track all four metrics separately — a retrieval fix improves context recall, a prompt fix improves faithfulness. Improvement levers: (1) Better chunking strategy. (2) Upgraded embedding model (fine-tuned on domain data). (3) Hybrid retrieval (BM25 + dense). (4) Cross-encoder re-ranking of top-50 → top-5. (5) Query rewriting (expand query with synonyms or decompose complex questions). (6) Better prompting (explicit instruction to cite passages, refuse if not in context). (7) Fine-tune the LLM on domain-specific Q&A pairs."
+        }
+    ],
+
   },
   {
     id: 91,
@@ -5342,6 +5907,25 @@ When clusters are the unit of randomisation, variance must be estimated at the c
     tags: ['Data Science', 'A/B Testing', 'Network Effects', 'SUTVA', 'Experimental Design', 'Causal Inference'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the stable unit treatment value assumption (SUTVA) and when does it fail?",
+            "a": "SUTVA requires: (1) no interference — one unit's treatment does not affect another's outcome, and (2) no hidden variations in treatment — treatment is the same for everyone assigned to it. It fails in networked settings: if user A gets a new feature and tells friend B about it, B's behavior changes even though B is in control. This is network interference or spillover. It also fails when the treatment effect depends on the fraction of the population treated (general equilibrium effects) — a new job board affects hiring outcomes for everyone as more people use it. SUTVA violations cause underestimation of treatment effects in A/B tests because control group gets some benefit of the treatment through the network."
+        },
+        {
+            "q": "How do you run A/B tests in a social network where SUTVA is violated?",
+            "a": "Graph cluster randomization: assign entire clusters (social communities) to treatment or control, rather than individual users. Clusters are identified by community detection algorithms (Louvain, label propagation). Treatment users within a cluster interact primarily with other treatment users; control clusters have minimal exposure to treated users. Trade-offs: clusters are a coarser unit → fewer independent observations → lower statistical power. Requires defining clusters before the experiment (cannot adapt). Alternative: ego-network randomization (assign based on a single node, propagate to its immediate neighbors). Another approach: measure the spillover effect directly by comparing outcomes for control users who have varying numbers of treated neighbors."
+        },
+        {
+            "q": "What is a network effect in product growth, and how do you measure whether one exists?",
+            "a": "A network effect means the product becomes more valuable as more users join. Direct network effects: communication tools (WhatsApp has more value with more contacts). Indirect/cross-side: marketplaces (more sellers → better for buyers → attracts more sellers). To measure: (1) Cohort analysis — do later cohorts (joining a larger network) have higher retention and engagement than early cohorts at the same age? If yes, network effect is present. (2) Engagement vs. local network size — does a user's engagement increase as their follower/connection count grows? (3) Within-geography analysis — cities with higher penetration should show higher per-user engagement than low-penetration cities. Separating network effects from selection effects (early adopters are just more engaged) requires quasi-experimental methods (DiD, IV)."
+        },
+        {
+            "q": "What is interference bias in marketplace A/B testing and how does switchback testing help?",
+            "a": "In a marketplace (Uber, Airbnb), treatment and control compete for the same supply. If you put 50% of riders in a treatment that increases demand, they take rides that control riders could have taken — supply is shared. Treatment effect is overestimated (control is artificially supply-constrained). Switchback testing: alternate the entire market between treatment and control on short time windows (15-minute, 1-hour blocks). All users experience the same condition simultaneously → no interference within a time block. Statistical challenge: time blocks are correlated (rush hour affects all windows at 5pm), so standard errors must account for temporal autocorrelation. Switchback gives unbiased estimates but requires careful time-block design and temporal detrending."
+        }
+    ],
+
   },
   {
     id: 92,
@@ -5392,6 +5976,25 @@ Manipulation check: if agents can precisely control the running variable, they m
     tags: ['Data Science', 'Causal Inference', 'Difference-in-Differences', 'Regression Discontinuity', 'Quasi-Experimental', 'Statistics'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the key identifying assumption in difference-in-differences, and how do you test it?",
+            "a": "The parallel trends assumption: in the absence of treatment, the treatment group and control group would have followed the same trend over time. You cannot test this directly (counterfactual is unobserved), but you can falsify it: plot the pre-treatment trends for both groups. If they move in parallel before treatment, the assumption is plausible. Formal pre-trend test: include leads (future treatment indicators) in the DiD regression; if leads are significant, pre-trends differ. Also: event study specification — plot the DiD estimate for each pre-period and each post-period. Pre-period estimates should be near zero; post-period estimates show the treatment effect evolution over time. If pre-period estimates are nonzero, parallel trends is violated and DiD is biased."
+        },
+        {
+            "q": "How is regression discontinuity different from DiD, and when is each appropriate?",
+            "a": "DiD compares a treated group to a control group over time, exploiting a policy change or intervention that affected only the treatment group. Requires: parallel trends, a clear pre/post period, and a comparison group. RDD exploits a threshold rule: units just above a cutoff get treatment, units just below do not. The local average treatment effect (LATE) at the cutoff is identified by comparing outcomes just above vs. just below, assuming smooth potential outcomes. RDD is appropriate when: there's a clear threshold rule (credit score cutoff for loan eligibility, test score cutoff for a program). DiD is appropriate when: there's a policy rollout or natural experiment with a clear before/after and a plausible comparison group. Both require continuity assumptions (no sorting around the cutoff for RDD, parallel trends for DiD)."
+        },
+        {
+            "q": "What is the bandwidth choice problem in RDD and why does it matter?",
+            "a": "RDD estimates the treatment effect only at the cutoff, using observations close to the cutoff. Bandwidth h determines the window: only use units with running variable in [cutoff-h, cutoff+h]. Narrow bandwidth: observations are similar to each other (low bias) but few of them (high variance). Wide bandwidth: more observations (low variance) but units further from the cutoff may have different characteristics (high bias). Optimal bandwidth selection: Imbens-Kalyanaraman (IK) or Calonico-Cattaneo-Titiunik (CCT) minimize mean squared error. Use triangular kernel weighting: units exactly at the cutoff get weight 1, weight decreases linearly to 0 at h. Always check: does the estimate change dramatically with bandwidth? Robust estimates are stable across a range of bandwidths."
+        },
+        {
+            "q": "How would you use DiD to evaluate the impact of a new feature rollout in a tech company?",
+            "a": "Setup: the feature rolls out to a subset of markets/users (treatment) on date T, while other markets/users receive it later (control in the short run). Regression: Y = β0 + β1×Treated + β2×Post + β3×(Treated×Post) + controls + ε. β3 is the DiD estimate of the feature's causal effect. Validity checks: (1) Parallel pre-trends — plot treatment and control means before T. (2) Placebo test — use a fake cutoff date T-30; β3 should be zero. (3) Covariate balance — are treatment and control markets similar on observables before rollout? (4) Check for spillovers if markets are connected. If rolling out to individual users (not geographies), use staggered DiD (Callaway-Sant'Anna or Sun-Abraham estimators) to handle heterogeneous treatment timing correctly."
+        }
+    ],
+
   },
   {
     id: 93,
@@ -5436,6 +6039,25 @@ A good experiment metric is sensitive enough to detect meaningful effects in a r
     tags: ['Data Science', 'Product Analytics', 'Metrics', 'North Star', 'Guardrails', 'Experimentation'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What makes a good metric for a product feature, and what is the difference between north star and guardrail metrics?",
+            "a": "A good metric is sensitive (moves reliably when the feature works), specific (doesn't move for unrelated reasons), actionable (the team can influence it), and interpretable (stakeholders understand what it measures). North star metric: the single metric most closely tied to the product's core value proposition — DAU for a social app, GMV for a marketplace, completed rides for Uber. Optimizing the north star drives long-term success. Guardrail metrics: metrics you must not degrade while pursuing the north star — loading time, support ticket rate, crash rate, revenue per user. A feature that improves DAU by 2% but increases crashes by 10% is a net negative. Guardrails prevent short-term hacks that optimize one metric at the cost of the overall product."
+        },
+        {
+            "q": "What is Goodhart's Law and how does it apply to ML metrics?",
+            "a": "Goodhart's Law: \"When a measure becomes a target, it ceases to be a good measure.\" When a metric is used as an optimization target, agents (models, teams, users) find ways to game it without achieving the underlying goal. Examples: optimizing CTR → clickbait (high CTR, low satisfaction). Optimizing for watch time → addictive but low-quality content. Optimizing for session length → frustrating navigation that makes tasks harder. In ML: a model that optimizes proxy metrics (clicks, ratings) rather than the true objective (user wellbeing, long-term retention) will find shortcuts. Mitigation: use multiple metrics that are harder to simultaneously game, run qualitative user research alongside quantitative metrics, and periodically audit the metric for gaming."
+        },
+        {
+            "q": "How do you detect and respond to metric manipulation or gaming in a production system?",
+            "a": "Detection: (1) Watch for unexpected correlation patterns — if CTR improves but conversion rate drops, something is wrong. (2) Cohort analysis — if only new users show the metric improvement, it may be a novelty effect. (3) Leading vs. lagging indicators — a metric that improves immediately but whose lagging outcome (revenue, retention) doesn't follow suggests gaming. (4) Audit the feature's mechanism — what exactly is driving the metric change? (5) Holdout experiments on a subset that never saw the feature. Response: (1) Add a complementary metric that is harder to game alongside the primary one. (2) Switch to a harder-to-game metric (e.g., completed purchase instead of add-to-cart). (3) Introduce human evaluation as a quality gate. (4) Expand the feedback loop — if the model only optimizes immediate clicks, incorporate 7-day return rate into the reward signal."
+        },
+        {
+            "q": "What is the difference between output metrics and input metrics, and how do you use both?",
+            "a": "Output metrics (lagging): directly measure the goal — revenue, retention, NPS. High business relevance but slow to move (weeks to months), high variance, hard to attribute to a single team's action. Input metrics (leading): team-controllable actions believed to cause output improvements — features shipped, experiment velocity, bug fix rate, model retraining frequency. Move quickly and are attributable, but the link to output is a hypothesis. Good product organizations define an input-output metric tree: output metrics at the top, with input metrics for each team that are hypothesized to drive them. The key risk: optimizing input metrics that are poorly correlated with output (Goodhart's Law). Validate the link periodically: does improving the input metric actually cause the output metric to improve, or just correlate with it?"
+        }
+    ],
+
   },
   {
     id: 94,
@@ -5482,6 +6104,25 @@ Models degrade when features degrade before the model sees them. Feature importa
     tags: ['ML System Design', 'Concept Drift', 'Online Learning', 'Production ML', 'Monitoring', 'MLOps'],
     domain: 'monitor',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What are the three types of concept drift and how do you detect each in production?",
+            "a": "Sudden drift: the relationship between features and target changes abruptly (competitor launch, app redesign). Gradual drift: the relationship shifts slowly over time. Recurring drift: seasonal or cyclical changes (weekend vs. weekday behavior). Detection methods: (1) Feature distribution monitoring — track input feature distributions using PSI (Population Stability Index), KL divergence, or Kolmogorov-Smirnov test against a baseline window. (2) Prediction distribution monitoring — track the model's output score distribution. (3) Performance monitoring — if labels arrive with delay, compute accuracy/AUC on labeled subsets. (4) Residual monitoring — for regression models, track mean and variance of residuals. Different types require different responses: sudden drift may warrant emergency retraining; gradual drift may be caught by scheduled retraining."
+        },
+        {
+            "q": "What is PSI (Population Stability Index) and how is it used for monitoring?",
+            "a": "PSI = Σ (actual% - expected%) × ln(actual% / expected%) across bins of a feature or score. Bins: divide the reference distribution into deciles. Compute the proportion of current data in each bin. PSI < 0.1: negligible shift. 0.1–0.25: moderate shift, investigate. PSI > 0.25: major shift, likely model degradation. PSI is used to monitor: input features (has the age distribution shifted?), model output scores (has the predicted probability distribution shifted?), and derived features. Advantages: scale-free, captures shifts in both mean and shape. Limitations: requires binning (choice of bins affects sensitivity), insensitive to ordinal ordering (KS test is better for order-sensitive detection). In practice: compute PSI weekly against a 30-day reference window, alert on PSI > 0.2."
+        },
+        {
+            "q": "How do you respond to detected concept drift — when do you retrain vs. rebuild?",
+            "a": "Retrain (same architecture, new data): when drift is gradual and the model's feature set still captures the relevant signal, but the relationship has shifted. Update with recent data (sliding window or exponential decay weighting of old data). Typically the right first response. Rebuild (new feature engineering or architecture): when the nature of the problem has fundamentally changed — new categories, new user behaviors the old features cannot represent, or when retraining consistently underperforms a fresh model. Detection signal: retrain on the last 90 days, compare to a fresh model trained from scratch. If the fresh model is significantly better, drift has exceeded what retraining can fix. In production, automate retraining triggers (scheduled + drift-triggered) and treat model retraining as a pipeline, not a manual event."
+        },
+        {
+            "q": "What is the difference between data drift and concept drift, and why does the distinction matter?",
+            "a": "Data drift (covariate shift): the input feature distribution P(X) changes, but the relationship P(Y|X) stays the same. Example: users shift to mobile, so screen size features change, but the click probability given the same features is unchanged. Mitigation: importance weighting (weight training examples to match the new input distribution). Concept drift: P(Y|X) changes — the same features now predict different outcomes. Example: user preferences shifted, so a product previously associated with high purchase probability is now low. Requires retraining, not just reweighting. The distinction matters for diagnosis and response. Monitoring feature distributions detects data drift. Monitoring residuals and model performance detects concept drift. You can have one without the other: data drift without concept drift (distribution shifts but model still generalizes) or concept drift without data drift (inputs look the same but the world changed)."
+        }
+    ],
+
   },
   {
     id: 95,
@@ -5530,6 +6171,25 @@ Anomaly detection without labels requires indirect evaluation: inject synthetic 
     tags: ['Models & Math', 'Anomaly Detection', 'Isolation Forest', 'Autoencoder', 'Fraud Detection', 'Unsupervised Learning'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between point anomaly, contextual anomaly, and collective anomaly?",
+            "a": "Point anomaly: a single observation is anomalous in absolute terms — a transaction of $50,000 when typical transactions are $100. Contextual anomaly: an observation is anomalous given its context but not in isolation — 30°C is normal in July but anomalous in January in Oslo. Collective anomaly: a sequence of individually normal observations is anomalous as a group — a network traffic pattern where each packet is normal but the sequence indicates a port scan. Different detection methods apply: Isolation Forest and z-score for point anomalies; SARIMA residuals or sequence context for contextual; LSTM autoencoders or sliding window statistics for collective. Most production anomaly detection handles point and contextual anomalies; collective anomalies require sequence-aware models."
+        },
+        {
+            "q": "How does Isolation Forest work, and why is it effective for high-dimensional anomaly detection?",
+            "a": "Isolation Forest builds an ensemble of random decision trees. At each node, it randomly selects a feature and a split value (uniform between min and max of that feature). It recursively partitions the data. The key insight: anomalies are rare and different, so they are isolated in fewer splits than normal points. The anomaly score = average path length to isolation across all trees, normalized by the expected path length for n samples. Anomalies have short average path lengths. It scales linearly with n and d (sub-sampling used at each tree), making it efficient for high dimensions. It does not assume any data distribution (unlike z-score or Mahalanobis distance). Weakness: struggles with anomalies that are locally dense (a cluster of unusual points) and is sensitive to the contamination parameter (expected fraction of anomalies)."
+        },
+        {
+            "q": "How do you set the anomaly threshold in a production system, and how do you evaluate it?",
+            "a": "Threshold setting: (1) Business-driven: set the threshold such that the alert rate matches operational capacity — if the team can investigate 50 alerts per day, set the threshold at the top-0.01% of the score distribution. (2) F1-maximizing: if labeled anomalies exist, sweep thresholds and pick the one maximizing F1. (3) Elbow method on the score distribution: anomaly scores often have a bimodal distribution; the valley between modes suggests a natural threshold. Evaluation: precision (what fraction of alerts are true anomalies?), recall (what fraction of true anomalies are caught?), and mean time to detection (MTTD). For production: log all alerts and their outcomes (true positive / false positive) to enable ongoing threshold calibration. Alert fatigue (too many false positives) is the most common operational failure — start with a high threshold and lower it as the team builds capacity."
+        },
+        {
+            "q": "How would you build an end-to-end anomaly detection system for real-time financial transactions?",
+            "a": "Feature engineering: transaction amount (z-score vs. user history, z-score vs. merchant category), velocity features (transactions in last 1/5/60 minutes), location features (distance from last transaction, new geography), time features (unusual hour for user), device features (new device, new IP). Model: Isolation Forest or autoencoder for unsupervised; gradient boosted classifier if labeled fraud data exists (use SMOTE or cost-sensitive learning for class imbalance). Infrastructure: features computed in a stream processing layer (Flink, Kafka Streams) with low-latency feature lookup from a feature store (Redis). Latency requirement: sub-100ms for real-time decisioning. Scoring: transactions above threshold are flagged for rule review or step-up authentication. Feedback loop: log flagged transactions and their outcomes (fraud confirmed / false positive) to retrain the model monthly."
+        }
+    ],
+
   },
   {
     id: 96,
@@ -5578,6 +6238,25 @@ Use A/B testing when: you need strong statistical guarantees, experiments run fo
     tags: ['Models & Math', 'Bandits', 'Thompson Sampling', 'UCB', 'Explore-Exploit', 'Online Learning', 'Experimentation'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the exploration-exploitation dilemma in multi-armed bandits, and how does UCB address it?",
+            "a": "With k arms, you want to maximize cumulative reward but don't know each arm's true reward distribution. Pure exploitation (always pick the best known arm) gets stuck on a suboptimal arm if you started with bad luck. Pure exploration (pick randomly) wastes pulls on known bad arms. UCB (Upper Confidence Bound) adds an optimism bonus: score_i = mean_i + sqrt(2 ln(t) / n_i), where t is total pulls and n_i is pulls on arm i. Rarely-pulled arms have high n_i denominator → large bonus → get selected for exploration. Frequently-pulled arms have lower bonus → selected only if their mean is high. UCB achieves O(log T) regret, which is asymptotically optimal. The key intuition: be optimistic about uncertain arms."
+        },
+        {
+            "q": "How does Thompson Sampling differ from UCB, and in which regime is each preferred?",
+            "a": "UCB is deterministic given the same state — it always selects the arm with the highest score. Thompson Sampling (TS) is stochastic — it samples one value from each arm's posterior and picks the highest sample. TS naturally balances exploration and exploitation: arms with uncertain posteriors occasionally produce high samples and get selected; arms with well-determined high means consistently produce high samples. In theory, both achieve O(log T) regret. In practice: TS often outperforms UCB in experiments, especially with many arms and sparse rewards, because it adapts faster to changes. UCB is preferred when determinism is needed (reproducibility, debugging) and when the optimism bonus can be tuned. TS is preferred for production recommendation and ad serving because it scales to millions of arms via conjugate priors."
+        },
+        {
+            "q": "What is the contextual bandit setting and how does it differ from a standard bandit?",
+            "a": "Standard MAB: no side information — each arm has a fixed unknown mean reward, and you learn globally across all pulls. Contextual bandit: at each step you observe a context vector x (user features, item features, time) before choosing an arm. The reward depends on both the arm and the context: r = f(arm, x). This is the recommendation problem — the best ad/item depends on who the user is. The goal is to learn f(arm, x) and make good arm choices given context. LinUCB models f(arm, x) = θ_a'x (linear model per arm) and maintains a confidence ellipsoid around θ_a. Neural contextual bandits (NeuralUCB, NeuralTS) use a neural network for f with UCB/TS applied to the last-layer uncertainty. Contextual bandits sit between standard bandits (no features) and full reinforcement learning (sequential decisions with state transitions)."
+        },
+        {
+            "q": "How do you move from a bandit experiment to a full A/B test, and when should you prefer bandits?",
+            "a": "A/B testing fixes arm allocation (50/50) for the entire experiment duration regardless of observed performance — it maximizes statistical power for a clean causal estimate at the cost of regret during the experiment. Bandits adaptively shift traffic toward better-performing arms — they minimize regret during the experiment but complicate causal inference (the traffic allocation is correlated with performance, violating randomization). Use bandits when: (1) You want to minimize harm/cost during exploration (medical treatments, safety-critical features). (2) You have many arms and a budget for exploration (recommendation, ads). (3) You don't need a clean unbiased treatment effect estimate for future decisions. Use A/B tests when: you need a statistically clean causal estimate, when regulatory or audit requirements demand equal allocation, or when you have only 2-3 arms and sufficient power."
+        }
+    ],
+
   },
   {
     id: 97,
@@ -5626,6 +6305,25 @@ Both are linear classifiers. SVM maximises the geometric margin (loss is 0 outsi
     tags: ['Models & Math', 'SVM', 'Kernel Trick', 'Classification', 'Maximum Margin', 'RBF'],
     domain: 'math',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the kernel trick in SVMs, and why does it let you train nonlinear classifiers without explicitly computing the feature map?",
+            "a": "The SVM dual formulation depends on the data only through inner products x_i'x_j. The kernel trick replaces these with k(x_i, x_j) = φ(x_i)'φ(x_j), where φ maps inputs to a (possibly infinite-dimensional) feature space. You never compute φ explicitly — you only need to evaluate k(x_i, x_j). The RBF kernel k(x,z) = exp(-‖x-z‖²/2σ²) corresponds to an infinite-dimensional feature space but can be evaluated in O(d) time. This lets SVMs learn nonlinear boundaries in the original space by working with a linear classifier in the kernel space. The kernel matrix K_ij = k(x_i, x_j) must be positive semi-definite (Mercer's condition) for the dual problem to remain convex."
+        },
+        {
+            "q": "What does the C parameter in SVM control, and how does it relate to margin width?",
+            "a": "C is the regularization parameter that trades off margin width against training error. The SVM objective is: minimize ½‖w‖² + C Σ ξ_i, where ξ_i are slack variables allowing misclassification. Small C: allows many misclassified training points (large slack), produces a wide margin. High regularization, low variance. Large C: forces most training points to be correctly classified, produces a narrow margin. Low regularization, high variance (overfitting risk). The margin width is 2/‖w‖ — minimizing ‖w‖² maximizes it. In practice: cross-validate C on a log scale (0.001, 0.01, 0.1, 1, 10, 100). Small C often works for linearly separable data with noise; large C when you need tight classification boundaries."
+        },
+        {
+            "q": "When would you choose an SVM over a gradient boosted tree for a production classification task?",
+            "a": "SVMs are rarely the first choice in 2025 production ML — gradient boosted trees (XGBoost, LightGBM) and neural networks have dominated tabular and sequence data. SVMs still shine in: (1) Small training sets — SVMs have strong theoretical generalization guarantees and work well with n < 10,000 samples. (2) High-dimensional sparse data — text classification with TF-IDF features (linear SVM is fast and competitive with neural models). (3) Kernel applications — if you have a custom domain kernel (graph kernel, string kernel), SVMs are natural. Weaknesses: training is O(n²) to O(n³) in data size (kernelized SVM), making them slow for n > 100K. No native probability output (requires Platt scaling). Hard to update incrementally. No built-in handling of mixed feature types."
+        },
+        {
+            "q": "What is the support vector and why does it define the decision boundary?",
+            "a": "Support vectors are the training points that lie on or inside the margin — ξ_i > 0 or those on the margin boundary (‖w'x + b‖ = 1). The SVM solution has a key sparsity property: only the Lagrange multipliers α_i for support vectors are nonzero. The decision function f(x) = Σ α_i y_i k(x_i, x) + b is a sum only over support vectors — all other training points contribute zero. This has two implications: (1) Prediction cost scales with the number of support vectors, not total training points. (2) The model is invariant to moving non-support-vector points — only the boundary-defining points matter. For RBF SVMs with tight C, many points become support vectors; for large C and clean data, few do. This sparsity makes SVMs interpretable: you know exactly which training points define the classifier."
+        }
+    ],
+
   },
   {
     id: 98,
@@ -5682,6 +6380,25 @@ Interviewers at FAANG companies ask about fairness to test whether you understan
     tags: ['Models & Math', 'Fairness', 'Bias', 'Algorithmic Accountability', 'Equalized Odds', 'Disparate Impact', 'COMPAS'],
     domain: 'eval',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the impossibility theorem of fairness, and what does it mean for choosing a fairness metric?",
+            "a": "Chouldechova (2017) and Kleinberg et al. (2016) proved that calibration, false positive rate parity, and false negative rate parity cannot all hold simultaneously when base rates differ across groups. If a risk score is calibrated (a score of 70% means 70% of people in every group recidivate) and base rates differ (30% in group A vs. 60% in group B), then FPR and FNR must differ across groups mathematically. This means you cannot satisfy all intuitive notions of fairness at once. It forces an explicit choice: which fairness criterion matters most for this application? In criminal justice, FPR parity (equal false positive rates) is prioritized to prevent disparate false accusations. In healthcare, FNR parity (equal false negative rates) is prioritized to prevent disparate missed diagnoses."
+        },
+        {
+            "q": "What is demographic parity vs. equalized odds, and when is each the right criterion?",
+            "a": "Demographic parity: P(Ŷ=1 | A=0) = P(Ŷ=1 | A=1) — the positive prediction rate is equal across groups. Does not condition on the true label Y. Equalized odds: P(Ŷ=1 | Y=y, A=0) = P(Ŷ=1 | Y=y, A=1) for y ∈ {0,1} — both TPR and FPR are equal across groups. Use demographic parity when the goal is equal representation (hiring ratios, loan approval rates) and you want to correct for historical underrepresentation. Use equalized odds when accuracy is the primary goal but you want equal error rates across groups — loan default prediction where you want equal TPR and FPR regardless of race. Equalized odds is stricter and more compatible with utility maximization; demographic parity can require lower accuracy for the majority group to achieve parity."
+        },
+        {
+            "q": "How does Fairlearn help mitigate bias in a classification model?",
+            "a": "Fairlearn provides two main mitigation strategies: (1) Reductions — reformulates the constrained fairness problem as a sequence of standard ML problems. ExponentiatedGradient trains a sequence of classifiers with Lagrangian multipliers penalizing fairness violations. Returns a randomized classifier (mixture of classifiers) that satisfies the fairness constraint approximately. (2) Post-processing — ThresholdOptimizer adjusts per-group decision thresholds after a model is trained. Finds the threshold per group that maximizes accuracy subject to a fairness constraint (equalized odds, demographic parity). Post-processing is simpler to apply to any existing model. Reductions are preferred when you can retrain. Both approaches trade off accuracy vs. fairness — Fairlearn's visualizations show the Pareto frontier."
+        },
+        {
+            "q": "How do you audit a production ML model for bias, and what do you do if you find it?",
+            "a": "Audit process: (1) Identify protected attributes (race, gender, age, disability) and proxy features (zip code, name). (2) Compute performance metrics (accuracy, FPR, FNR, precision) disaggregated by group. (3) Compute fairness metrics (demographic parity ratio, equalized odds difference). Thresholds: demographic parity ratio < 0.8 triggers disparate impact scrutiny in US employment law. (4) Check training data for historical bias — if the training labels encode past discrimination, the model inherits it. If bias is found: (a) Reweight training data to balance group representation. (b) Use Fairlearn reductions or post-processing. (c) Remove or transform proxy features. (d) If bias stems from biased labels, collect new labels with diverse annotators. Document all decisions in a model card, including fairness trade-offs made."
+        }
+    ],
+
   },
   {
     id: 99,
@@ -5726,6 +6443,25 @@ The reward model is a proxy, not the true human preference. Optimising it too ha
     tags: ['Deep Learning', 'RLHF', 'DPO', 'PPO', 'Reward Modeling', 'LLM Alignment', 'InstructGPT'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is RLHF and what problem does it solve that supervised fine-tuning cannot?",
+            "a": "Supervised fine-tuning (SFT) trains on human-written demonstrations — but writing high-quality responses is expensive and the supervision signal is one response per prompt. RLHF uses human preferences: given two model responses to the same prompt, a human says which is better. This is much cheaper to collect than demonstrations and captures nuanced quality that's hard to write explicitly. A reward model is trained on these preferences, then the language model is optimized with PPO to maximize the reward model's score. RLHF solves: (1) teaching behaviors that are hard to demonstrate but easy to evaluate (helpfulness, safety, honesty), (2) aligning the model with values that aren't captured by next-token prediction, (3) reducing harmful outputs by shaping reward to penalize them."
+        },
+        {
+            "q": "What is reward hacking in RLHF and how does KL divergence penalty prevent it?",
+            "a": "Reward hacking: the policy optimized by PPO finds responses that score highly on the reward model but are not actually good — it exploits reward model errors. Examples: very long responses (annotators tend to favor length), repetitive agreeable phrases, confident-sounding incorrect claims. The reward model learned from limited human data has blind spots. Prevention: KL divergence penalty adds -β × KL(π_RL ‖ π_SFT) to the reward, penalizing deviation from the SFT baseline. This constrains how far the RLHF policy can drift from the original fine-tuned model. Too high β: the policy barely moves, RLHF provides little benefit. Too low β: reward hacking dominates. The KL coefficient β is tuned as a hyperparameter. Iterative RLHF (multiple rounds of RM training on RL policy outputs) also helps by correcting reward model blind spots."
+        },
+        {
+            "q": "How does DPO differ from RLHF, and what are its practical advantages?",
+            "a": "DPO (Direct Preference Optimization) bypasses the reward model and PPO entirely. It shows that the optimal RLHF policy has a closed form: the reward is implicitly defined by the ratio of the policy to the reference (SFT) model. DPO directly optimizes this with a binary cross-entropy loss on preference pairs: maximize the log-probability of the preferred response minus the rejected response, relative to the reference model. No reward model training, no PPO, no sampling during training. Practical advantages: (1) Simpler — no RM pipeline, no on-policy sampling. (2) Stable — no PPO hyperparameter tuning or mode collapse. (3) Cheaper — one training run instead of three (SFT → RM → RLHF). Trade-offs: DPO is offline (uses fixed preference data); RLHF with PPO is online (generates new samples during training, which can cover a wider behavior space). Recent work (RAFT, RLOO, REINFORCE) explores middle grounds."
+        },
+        {
+            "q": "What is constitutional AI and how does it relate to RLHF?",
+            "a": "Constitutional AI (CAI, Anthropic) reduces reliance on human feedback for the safety training signal. Stage 1: Red-teaming — a model generates harmful responses to adversarial prompts. The same model then critiques its own responses against a set of principles (the \"constitution\": \"be helpful, harmless, honest\") and revises them. SFT on the revised responses trains a more helpful, less harmful model. Stage 2: RL from AI Feedback (RLAIF) — instead of human labelers ranking responses, a feedback model (guided by the constitution) provides preference labels. This scales safety training without proportional human labeling cost. Relation to RLHF: CAI replaces human preference labels with AI-generated labels from a constitutionally-guided model, but the RL training loop is otherwise the same."
+        }
+    ],
+
   },
   {
     id: 100,
@@ -5770,6 +6506,25 @@ Use FL when: data cannot legally or practically be centralised (healthcare, fina
     tags: ['Deep Learning', 'Federated Learning', 'Privacy', 'FedAvg', 'Differential Privacy', 'Distributed Training'],
     domain: 'dl',
     youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the federated learning protocol, and what privacy guarantees does it provide?",
+            "a": "Federated learning protocol: (1) Server sends current global model to a subset of clients. (2) Each client trains locally on its data, computes a gradient update. (3) Clients send updates (not raw data) to the server. (4) Server aggregates updates (FedAvg: weighted average by local data size). (5) Repeat. Privacy: raw data never leaves the device. But the gradients can leak information — gradient inversion attacks can reconstruct training examples from gradients with high fidelity. FL provides weaker privacy than often claimed without additional mechanisms. True privacy guarantees require: differential privacy (add calibrated noise to gradients before sending), secure aggregation (server sees only the aggregate, not individual updates), or both. FL also does not protect against a malicious server that can infer information from the aggregate."
+        },
+        {
+            "q": "What is non-IID data in federated learning and why is it a major challenge?",
+            "a": "In FL, each client has a different local dataset reflecting its users or use case. Data is non-IID (not independently and identically distributed) when local distributions differ significantly across clients. Example: a keyboard model trained on hospital employees has medical vocabulary; one trained on teenagers has different slang. FedAvg averages these gradients — the averaged model may perform poorly on each individual client's distribution. Failure modes: (1) Client drift — local optima differ across clients; averaging moves each client's model away from its local optimum. (2) Slow convergence — heterogeneous gradients cancel in aggregation. Solutions: FedProx adds a proximal term penalizing deviation from the global model. SCAFFOLD uses control variates to correct for client drift. Personalized FL trains a global model + a per-client adapter."
+        },
+        {
+            "q": "How does differential privacy work in federated learning, and what is the privacy-utility trade-off?",
+            "a": "DP-SGD: before sending the gradient update, each client clips its gradient to norm C (limits the influence of any single data point), then adds Gaussian noise calibrated to C/ε (where ε is the privacy budget). The noise masks the contribution of individual training examples. Server-side DP: server adds noise to the aggregate after receiving all updates — simpler but provides weaker per-client guarantees. Privacy-utility trade-off: more noise (lower ε, stronger privacy) → larger variance in gradients → slower convergence → lower final model accuracy. Typical FL experiments see 1-5% accuracy drop at strong privacy levels (ε < 10). The trade-off worsens with fewer clients (less averaging to cancel out noise) and more heterogeneous data. Composition: each round of FL consumes privacy budget; more rounds mean weaker per-round privacy for the same total ε."
+        },
+        {
+            "q": "What are the operational challenges of deploying federated learning in production?",
+            "a": "Client availability: mobile devices are only available intermittently (plugged in, idle, on wifi — Google's Gboard requirement). Must handle client dropout mid-round. Heterogeneous hardware: clients have different compute, memory, and bandwidth — some cannot run the full model update. Stragglers: slow clients block synchronous rounds; use asynchronous FL or deadline-based cutoffs. Model size: large models cannot fit on-device; requires model compression, quantization, or split learning. Communication cost: FL reduces privacy risk but does not reduce communication — gradient compression (top-k sparsification, quantization) cuts bandwidth 10-100x. Poisoning attacks: a malicious client sends a manipulated gradient to corrupt the global model — mitigate with Byzantine-robust aggregation (Krum, coordinate-wise median). Evaluation: you cannot centrally evaluate on private client data; use federated evaluation (send the model to clients, aggregate metrics)."
+        }
+    ],
+
   },
   {
     id: 101,
@@ -7357,6 +8112,11 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
         {/* Body */}
         <div>{renderBody(post.body)}</div>
 
+        {/* Interview Questions */}
+        {post.interviewQs && post.interviewQs.length > 0 && (
+          <InterviewQsSection questions={post.interviewQs} />
+        )}
+
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
           {post.tags.map(t => (
@@ -7385,6 +8145,35 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
           </button>
           {isRead && <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>Click to unmark</span>}
         </div>
+    </div>
+  )
+}
+
+// ─── Post card ────────────────────────────────────────────────────────────────
+// ─── Interview Q&A section ────────────────────────────────────────────────────
+function InterviewQsSection({ questions }) {
+  const [openIdx, setOpenIdx] = useState(null)
+  return (
+    <div style={{ marginTop: '48px', borderTop: '1px solid var(--rim)', paddingTop: '32px' }}>
+      <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>
+        ⟩ Interview Questions ({questions.length})
+      </div>
+      {questions.map((item, i) => (
+        <div key={i} style={{ marginBottom: '10px', border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden', background: openIdx === i ? 'rgba(240,165,0,0.04)' : 'transparent', transition: 'background var(--t-fast)' }}>
+          <button
+            onClick={() => setOpenIdx(openIdx === i ? null : i)}
+            style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}
+          >
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--ink)', lineHeight: 1.55 }}>Q{i + 1}. {item.q}</span>
+            <span style={{ color: 'var(--prime)', fontSize: '12px', flexShrink: 0, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>{openIdx === i ? '▲' : '▼'}</span>
+          </button>
+          {openIdx === i && (
+            <div style={{ padding: '4px 18px 16px', fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.75, borderTop: '1px solid var(--rim)', paddingTop: '14px' }}>
+              {item.a}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
