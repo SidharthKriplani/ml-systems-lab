@@ -1874,6 +1874,30 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.97 — UX loop sprint: Challenge Log, heatmap, Interview Sim export, Quiz Me posts 1–50 (2026-06-18)
+
+**What shipped:**
+
+- **HomeTab.jsx** — three new sections (all gated on `totalAttempted > 0`):
+  - *Challenge Log*: two stat cards (wrong-answer count, tab coverage X/total) + not-started tab chips, all wired to `onNavigate`
+  - *91-day Activity Heatmap*: GitHub-style 13×7 grid reading `msl_activity_YYYY-MM-DD` localStorage keys; `readAndUpdateStreak()` now writes today's activity key on each new-day visit
+  - *Interview Sim Export*: toggle button → generates a structured trainer prompt (score summary per section, weak areas, last active tab, instructions) in a copyable `<pre>` block
+  - Helpers added: `readActivity()`, `readChallengeStats()`, `buildSimPrompt()`
+  - Three new components: `ActivityHeatmap`, `ChallengeLog`, `InterviewSimExport`
+
+- **src/data/quizData.js** (NEW FILE): 150 precomputed MCQs — 3 per post × posts 1–50. Each question has 4 options and a correct answer index. Production-judgment focused, not trivia.
+
+- **GradientTab.jsx**:
+  - Added `import { QUIZ } from '../data/quizData.js'`
+  - `QuizMeSection` component added (standalone, correct hook usage): toggle to expand, per-question option selection, "Check answer" reveal with correct/incorrect color coding, score tracked in `msl_quiz_{postId}` localStorage
+  - Wired into PostReader after InterviewQsSection for all posts with quiz data (posts 1–50)
+
+**Brace diffs:** HomeTab 0 (544 lines), GradientTab 0 (9,187 lines). quizData.js is pure data (no JSX).
+
+**Deferred:** Quiz Me posts 51–126 (next session). ELI5 mode (too large for one session, logged in NEXT.md).
+
+---
+
 ### v4.96 — Gap-fill sprint: 5 new Gradient posts (122–126) (2026-06-18)
 
 **What shipped:**

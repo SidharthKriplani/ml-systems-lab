@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { getRead, toggleRead, isRead } from '../utils/read.js'
 import { POST_VISUALS } from '../components/GradientVisuals.jsx'
+import { QUIZ } from '../data/quizData.js'
 const POSTS = [
   {
     id: 1,
@@ -8665,6 +8666,9 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
           <InterviewQsSection questions={post.interviewQs} />
         )}
 
+        {/* Quiz Me */}
+        {QUIZ[post.id] && <QuizMeSection postId={post.id} questions={QUIZ[post.id]} />}
+
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
           {post.tags.map(t => (
@@ -8722,6 +8726,72 @@ function InterviewQsSection({ questions }) {
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+// ─── Quiz Me section ──────────────────────────────────────────────────────────
+function QuizMeSection({ postId, questions }) {
+  const lsKey = `msl_quiz_${postId}`
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState({}) // { qIdx: answerIdx }
+  const [revealed, setRevealed] = useState({}) // { qIdx: true }
+  const [score, setScore] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(lsKey) || '{"a":0,"t":0}') } catch { return { a: 0, t: 0 } }
+  })
+
+  function reveal(qIdx) {
+    const isCorrect = selected[qIdx] === questions[qIdx].ans
+    const next = { a: score.a + (isCorrect ? 1 : 0), t: score.t + 1 }
+    setScore(next)
+    try { localStorage.setItem(lsKey, JSON.stringify(next)) } catch {}
+    setRevealed(r => ({ ...r, [qIdx]: true }))
+  }
+
+  return (
+    <div style={{ marginTop: '40px', borderTop: '1px solid var(--rim)', paddingTop: '28px' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: open ? '20px' : 0 }}>
+        <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>⟩ Quiz Me ({questions.length} Qs)</span>
+        {score.t > 0 && <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: score.a === score.t ? 'var(--mint)' : 'var(--ink-ghost)', background: 'var(--rim)', borderRadius: '999px', padding: '1px 7px' }}>{score.a}/{score.t}</span>}
+        <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && questions.map((q, qi) => {
+        const sel = selected[qi]
+        const rev = revealed[qi]
+        return (
+          <div key={qi} style={{ marginBottom: '18px', padding: '16px 18px', background: rev ? (sel === q.ans ? 'rgba(52,211,153,0.06)' : 'rgba(244,63,94,0.06)') : 'var(--depth)', border: `1px solid ${rev ? (sel === q.ans ? 'rgba(52,211,153,0.2)' : 'rgba(244,63,94,0.2)') : 'var(--rim)'}`, borderRadius: '10px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '12px', lineHeight: 1.5 }}>Q{qi + 1}. {q.q}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+              {q.opts.map((opt, oi) => {
+                let bg = 'transparent', border = '1px solid var(--rim)', color = 'var(--ink-mid)'
+                if (rev) {
+                  if (oi === q.ans) { bg = 'rgba(52,211,153,0.12)'; border = '1px solid rgba(52,211,153,0.3)'; color = 'var(--mint)' }
+                  else if (oi === sel) { bg = 'rgba(244,63,94,0.1)'; border = '1px solid rgba(244,63,94,0.25)'; color = 'var(--rose)' }
+                } else if (oi === sel) { bg = 'rgba(240,165,0,0.1)'; border = '1px solid rgba(240,165,0,0.3)'; color = 'var(--prime)' }
+                return (
+                  <button key={oi} disabled={rev}
+                    onClick={() => !rev && setSelected(s => ({ ...s, [qi]: oi }))}
+                    style={{ textAlign: 'left', padding: '8px 12px', background: bg, border, borderRadius: '7px', cursor: rev ? 'default' : 'pointer', color, fontSize: '12px', fontFamily: 'var(--font-sans)', lineHeight: 1.5, transition: 'all 0.15s' }}>
+                    {['A','B','C','D'][oi]}. {opt}
+                  </button>
+                )
+              })}
+            </div>
+            {!rev && sel !== undefined && (
+              <button onClick={() => reveal(qi)}
+                style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', padding: '5px 14px', cursor: 'pointer' }}>
+                Check answer
+              </button>
+            )}
+            {rev && (
+              <div style={{ fontSize: '12px', color: sel === q.ans ? 'var(--mint)' : 'var(--rose)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                {sel === q.ans ? '✓ Correct' : '✗ Incorrect — answer: ' + ['A','B','C','D'][q.ans]}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

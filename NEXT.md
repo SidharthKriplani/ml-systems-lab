@@ -233,15 +233,18 @@ MSL is now at private-test threshold. The highest-leverage work is UX clarity �
 
 ---
 
-## NEXT: UX loop sprint (P2-later)
+## ✅ DONE: UX loop sprint (v4.97, 2026-06-18)
 
-After intuition sprint:
+1. ~~Challenge Log on Home~~ — wrong-answer count + tab coverage cards + not-started chip list. `readChallengeStats()`.
+2. ~~91-day activity heatmap~~ — 13×7 grid, `msl_activity_YYYY-MM-DD` keys. `readAndUpdateStreak()` now writes activity key.
+3. ~~Interview Sim export~~ — "Start Interview Sim" toggle button → copyable trainer prompt with score summary + weak areas.
+4. ~~Quiz Me posts 1–50~~ — `src/data/quizData.js` (150 MCQs, 3/post). `QuizMeSection` in GradientTab PostReader. Score in `msl_quiz_{postId}`.
 
-1. **Quiz Me on Gradient posts** — precomputed 3 MCQs per post. Static, no LLM. Read→practice loop.
-2. **Challenge Log on Home** — global completion summary (X/Y scenarios, wrong-answer count, uncovered tabs).
-3. **91-day practice heatmap** — GitHub-style activity grid. Data in `msl_activity_YYYY-MM-DD` already written.
-4. **ELI5 mode on Gradient posts** — simplified-language toggle. Static simplified version per post.
-5. **"Start Interview Sim" context export** — button reads localStorage (weak modules, scores, session memory) → generates pre-filled prompt block → user pastes into Claude/ChatGPT + trainer prompt + resume/JD. S effort. Architecture decision logged in DECISIONS.md: MSL = context generator, LLM = trainer. No LLM calls inside MSL.
+## NEXT: UX loop — remaining items (P2)
+
+1. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
+2. **ELI5 mode on Gradient posts** — simplified 3-sentence summary toggle per post. Start with posts 1–30 only. Store as static data in `src/data/eliData.js`. Toggle button in PostReader header.
+3. **Write activity on scenario completion** — add `localStorage.setItem(\`msl_activity_\${today}\`, '1')` call when any scenario is revealed/submitted, so heatmap reflects actual practice (not just visits). Create `src/utils/activity.js` with `markActivity()` helper, import into the 6 highest-traffic tabs (IncidentRoom, MLCoding, FeatureEng, ClassicalML, ModelEval, GradientTab).
 
 ---
 

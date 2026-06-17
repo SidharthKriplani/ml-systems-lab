@@ -101,8 +101,59 @@ function readAndUpdateStreak() {
     streak = last === yesterday ? streak + 1 : 1
     localStorage.setItem('msl_streak', String(streak))
     localStorage.setItem('msl_last_visit', today)
+    localStorage.setItem(`msl_activity_${today}`, '1')
     return streak
   } catch { return 0 }
+}
+
+function readActivity() {
+  const data = {}
+  for (let i = 0; i < 91; i++) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+    const v = localStorage.getItem(`msl_activity_${d}`)
+    if (v) data[d] = 1
+  }
+  return data
+}
+
+function readChallengeStats() {
+  let totalWrong = 0
+  const gapTabs = []
+  const allTabs = Object.values(SECTION_TABS).flat()
+  allTabs.forEach(tabId => {
+    try {
+      const raw = localStorage.getItem(`msl_score:${tabId}`)
+      if (raw) {
+        const p = JSON.parse(raw)
+        totalWrong += Math.max(0, (p.attempted || 0) - (p.correct || 0))
+      } else {
+        gapTabs.push(tabId)
+      }
+    } catch {}
+  })
+  return { totalWrong, gapTabs, total: allTabs.length }
+}
+
+function buildSimPrompt(sectionProgress) {
+  const lines = ['=== ML Systems Lab — Interview Sim Context ===', '']
+  lines.push('SCORE SUMMARY')
+  Object.entries(sectionProgress).forEach(([section, prog]) => {
+    if (prog.total > 0) {
+      const pct = prog.pct
+      const flag = pct === 0 ? '⬛ not started' : pct < 40 ? '🔴 weak' : pct < 70 ? '🟡 partial' : '🟢 strong'
+      lines.push(`  ${section.padEnd(14)} ${String(prog.attempted).padStart(3)}/${prog.total}  ${pct}%  ${flag}`)
+    }
+  })
+  lines.push('')
+  const weak = Object.entries(sectionProgress).filter(([, p]) => p.total > 0 && p.pct < 50).map(([s]) => s)
+  if (weak.length) lines.push(`WEAK AREAS: ${weak.join(', ')}`)
+  const lastTab = (() => { try { return localStorage.getItem('msl_tab') } catch { return null } })()
+  if (lastTab) lines.push(`LAST ACTIVE: ${lastTab}`)
+  lines.push('')
+  lines.push('INSTRUCTIONS FOR TRAINER')
+  lines.push('Use this context to run a mock ML interview. Start with weak areas. Ask one question at a time.')
+  lines.push('After each answer, give brief feedback then move to the next question. Focus on production judgment.')
+  return lines.join('\n')
 }
 
 function readBookmarks() {
@@ -126,6 +177,8 @@ export default function HomeTab({ onNavigate }) {
   const [sectionProgress, setSectionProgress] = useState(() => readSectionProgress())
   const [streak] = useState(() => readAndUpdateStreak())
   const [bookmarks] = useState(() => readBookmarks())
+  const [activity] = useState(() => readActivity())
+  const [challengeStats] = useState(() => readChallengeStats())
   const lastTab = (() => { try { return localStorage.getItem('msl_tab') } catch { return null } })()
 
   useEffect(() => {
@@ -254,6 +307,29 @@ export default function HomeTab({ onNavigate }) {
         </div>
       </div>
 
+      {/* ── Activity heatmap ─────────────────────────────────────────────── */}
+      {Object.keys(activity).length > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>91-day activity</div>
+          <ActivityHeatmap activity={activity} />
+        </div>
+      )}
+
+      {/* ── Challenge log ─────────────────────────────────────────────────── */}
+      {totalAttempted > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Challenge log</div>
+          <ChallengeLog stats={challengeStats} onNavigate={onNavigate} />
+        </div>
+      )}
+
+      {/* ── Interview Sim export ──────────────────────────────────────────── */}
+      {totalAttempted > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <InterviewSimExport sectionProgress={sectionProgress} />
+        </div>
+      )}
+
       {/* ── Bookmarks ─────────────────────────────────────────────────────── */}
       {bookmarks.length > 0 && (
         <div style={{ marginBottom: '28px' }}>
@@ -368,6 +444,88 @@ function SectionRow({ section, prog, onNavigate }) {
       </div>
       <span style={{ fontSize: '14px', color: 'var(--ink-ghost)', flexShrink: 0 }}>›</span>
     </button>
+  )
+}
+
+function ActivityHeatmap({ activity }) {
+  const days = []
+  for (let i = 90; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+    days.push({ date: d, active: !!activity[d] })
+  }
+  const weeks = []
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7))
+  return (
+    <div style={{ display: 'flex', gap: '3px' }}>
+      {weeks.map((week, wi) => (
+        <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {week.map(day => (
+            <div key={day.date} title={day.date}
+              style={{ width: '10px', height: '10px', borderRadius: '2px', background: day.active ? 'var(--prime)' : 'var(--rim)', opacity: day.active ? 1 : 0.5, transition: 'background 0.2s' }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ChallengeLog({ stats, onNavigate }) {
+  const { totalWrong, gapTabs, total } = stats
+  const covered = total - gapTabs.length
+  return (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ flex: 1, minWidth: '140px', padding: '10px 14px', background: totalWrong > 0 ? 'rgba(244,63,94,0.06)' : 'rgba(52,211,153,0.06)', border: `1px solid ${totalWrong > 0 ? 'rgba(244,63,94,0.18)' : 'rgba(52,211,153,0.18)'}`, borderRadius: '8px' }}>
+        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: totalWrong > 0 ? 'var(--rose)' : 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Wrong answers</div>
+        <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)' }}>{totalWrong}</div>
+      </div>
+      <div style={{ flex: 1, minWidth: '140px', padding: '10px 14px', background: gapTabs.length > 0 ? 'rgba(240,165,0,0.05)' : 'rgba(52,211,153,0.06)', border: `1px solid ${gapTabs.length > 0 ? 'rgba(240,165,0,0.2)' : 'rgba(52,211,153,0.18)'}`, borderRadius: '8px' }}>
+        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: gapTabs.length > 0 ? 'var(--prime)' : 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Tab coverage</div>
+        <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)' }}>{covered}<span style={{ fontSize: '12px', color: 'var(--ink-ghost)', fontWeight: 400 }}>/{total}</span></div>
+      </div>
+      {gapTabs.length > 0 && (
+        <div style={{ width: '100%', padding: '10px 14px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
+          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Not started ({gapTabs.length})</div>
+          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+            {gapTabs.map(t => (
+              <button key={t} onClick={() => onNavigate(t)}
+                style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'transparent', border: '1px solid var(--rim)', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InterviewSimExport({ sectionProgress }) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const prompt = open ? buildSimPrompt(sectionProgress) : ''
+  function copy() {
+    try { navigator.clipboard.writeText(prompt) } catch {}
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <div>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: open ? 'rgba(240,165,0,0.1)' : 'var(--depth)', border: `1px solid ${open ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', width: '100%' }}>
+        <span style={{ fontSize: '13px', color: 'var(--prime)' }}>⬡</span>
+        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', flex: 1, textAlign: 'left' }}>Start Interview Sim</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>generates trainer prompt {open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: '8px', position: 'relative' }}>
+          <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-mid)', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '14px', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.7, maxHeight: '240px', overflowY: 'auto' }}>{prompt}</pre>
+          <button onClick={copy}
+            style={{ position: 'absolute', top: '8px', right: '8px', fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700, color: copied ? 'var(--mint)' : 'var(--prime)', background: 'var(--surface)', border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(240,165,0,0.3)'}`, borderRadius: '5px', padding: '3px 10px', cursor: 'pointer' }}>
+            {copied ? '✓ copied' : 'copy'}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
