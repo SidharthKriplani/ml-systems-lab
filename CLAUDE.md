@@ -30,7 +30,7 @@ React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser
 7. **Context budget — Grep-first for large files.** These files must never be read in full; always Grep to find the section, then Read with offset+limit:
    - `LINEAGE.md` (1,200+ lines) — `grep -n "v4\." LINEAGE.md | tail -5` to find latest entry, then read ±40 lines
    - `AUDITS.md` (900+ lines) — `grep -n "⚠️" AUDITS.md` for open findings, then `grep -n "^### #" AUDITS.md | tail -3` for latest entry
-   - `GradientTab.jsx` (3,900+ lines) — `grep -n "id: 4[0-9],"` to find a post, read ±30 lines
+   - `GradientTab.jsx` (9,200+ lines) — `grep -n "id: 12[0-9],"` to find a recent post, read ±30 lines. Never read in full.
    - `IDEAS.md` (550+ lines) — only read the Done section and Tier 1; skip Tier 2/3 unless planning
    Reading any of these in full wastes 15–60k tokens of context per read.
 
@@ -166,6 +166,29 @@ print('OK' if not broken else f'{len(broken)} broken strings — fix before comm
 ```
 
 This catches unescaped apostrophes in single-quoted JS data strings (`user's`, `it's`, `don't`, etc.) which cause esbuild to fail at build time. **If it prints anything other than `OK`, fix before committing.** Fix: change the affected string from single quotes to double quotes (`a: "..."` instead of `a: '...'`).
+
+**Mandatory pre-commit GradientTab schema audit — run this before every commit that touches GradientTab.jsx:**
+
+```bash
+python3 -c "
+import re, sys
+REQUIRED = ['id', 'slug', 'title', 'excerpt', 'tags', 'body', 'domain']
+lines = open('src/tabs/GradientTab.jsx').readlines()
+starts = [i for i,l in enumerate(lines) if re.match(r'^\s{4}id:\s+\d+,\s*$', l)]
+errors = []
+for idx, s in enumerate(starts):
+    end = starts[idx+1] if idx+1 < len(starts) else len(lines)
+    block = ''.join(lines[s:end])
+    pid = re.search(r'id:\s+(\d+)', lines[s]).group(1)
+    for f in REQUIRED:
+        if not re.search(rf'^\s+{f}:', block, re.MULTILINE):
+            errors.append(f'post {pid}: missing \"{f}\"')
+            print('MISSING:', f'post {pid}: \"{f}\"')
+print('OK' if not errors else f'{len(errors)} schema errors — fix before committing')
+"
+```
+
+This catches missing required fields on Gradient posts. Fields checked: `id`, `slug`, `title`, `excerpt`, `tags`, `body`, `domain`. These are the fields accessed without null guards in PostReader — a missing field causes a runtime TypeError and a black screen. **If it prints anything other than `OK`, add the missing field before committing.**
 
 ---
 
