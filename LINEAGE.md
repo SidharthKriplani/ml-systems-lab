@@ -1941,6 +1941,18 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.100 — Mobile fix (GradientTab sidebar) + METRICS.md sync (2026-06-18)
+
+**What shipped:**
+
+`GradientTab.jsx` — sidebar collapses to `width: 0` on screens < 640px. Mobile filter strip (horizontally scrollable series pills) added above the two-column layout, visible only on narrow screens so filters remain accessible without the sidebar. Brace diff 0.
+
+`METRICS.md` — two updates:
+- `msl_activity_YYYY-MM-DD`: corrected description (was "28-day window", now "91-day heatmap"; written by `markActivity()` utility across 7 locations not just HomeTab)
+- `msl_quiz_{postId}` added: per-post Quiz Me score `{ a, t }`, posts 1–50 active
+
+---
+
 ### v4.99 — Activity heatmap wiring + ContentMap completeness (2026-06-18)
 
 **What shipped:**

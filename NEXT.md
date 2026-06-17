@@ -240,6 +240,10 @@ MSL is now at private-test threshold. The highest-leverage work is UX clarity �
 3. ~~Interview Sim export~~ — "Start Interview Sim" toggle button → copyable trainer prompt with score summary + weak areas.
 4. ~~Quiz Me posts 1–50~~ — `src/data/quizData.js` (150 MCQs, 3/post). `QuizMeSection` in GradientTab PostReader. Score in `msl_quiz_{postId}`.
 
+## ✅ DONE: Mobile fix + METRICS sync (v4.100, 2026-06-18)
+
+1. ~~GradientTab sidebar breaks on mobile~~ — sidebar hides at < 640px; scrollable series pill strip shown instead. METRICS.md updated for `msl_activity_*` (91-day, 7 writers) and `msl_quiz_{postId}` added.
+
 ## ✅ DONE: Activity heatmap wiring + ContentMap fix (v4.99, 2026-06-18)
 
 1. ~~Write activity on scenario completion~~ — `src/utils/activity.js` created. `markActivity()` wired into FeatureEng, ClassicalML, ModelEval, IncidentRoom, MLCoding, GradientTab (Quiz Me reveal). Heatmap now reflects actual practice.

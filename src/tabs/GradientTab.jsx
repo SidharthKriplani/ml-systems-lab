@@ -9079,11 +9079,23 @@ export default function GradientTab({ onNavigate }) {
         </div>
       )}
 
-      {/* ── Two-column layout: sidebar + posts ── */}
+      {/* ── Mobile filter strip — visible only on narrow screens where sidebar is hidden ── */}
+      {typeof window !== 'undefined' && window.innerWidth < 640 && (
+        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', marginBottom: '8px' }}>
+          {[{ id: 'all', label: 'All' }, ...SERIES].map(s => (
+            <button key={s.id} onClick={() => { setActiveSeries(s.id); setActiveDomain('all') }}
+              style={{ flexShrink: 0, padding: '5px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: activeSeries === s.id ? 'var(--prime)' : 'var(--surface)', color: activeSeries === s.id ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
+              {s.label || 'All'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Two-column layout: sidebar + posts (sidebar hidden on mobile) ── */}
       <div style={{ display: 'flex', gap: '0', alignItems: 'flex-start' }}>
 
-        {/* ── Left Sidebar ── */}
-        <div style={{ width: '176px', flexShrink: 0, position: 'sticky', top: '16px', paddingRight: '20px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+        {/* ── Left Sidebar — hidden below 640px ── */}
+        <div style={{ width: typeof window !== 'undefined' && window.innerWidth < 640 ? '0' : '176px', flexShrink: 0, overflow: 'hidden', position: 'sticky', top: '16px', paddingRight: typeof window !== 'undefined' && window.innerWidth < 640 ? '0' : '20px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
 
           {/* Mode */}
           <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', marginTop: '2px' }}>Mode</div>
