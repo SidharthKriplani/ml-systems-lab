@@ -46,6 +46,87 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.84 — Gradient complete FAANG DS/ML curriculum: 17 posts (79–95) (2026-06-17)
+
+**Gradient now covers every major area a staff DS/ML engineer is asked about at FAANG. 95 total posts.**
+
+Posts added:
+- 79: BM25 and TF-IDF (why sparse retrieval still wins, inverted index)
+- 80: Semantic Search Architecture (query understanding, retrieval, ranking, dedup)
+- 81: Price Elasticity and Demand Modeling (endogeneity, IV, dynamic pricing)
+- 82: LTV, Churn, and Retention (BG/NBD, survival analysis, Cox PH, early prediction)
+- 83: Attribution Modeling (multi-touch, Shapley, media mix models, geo experiments)
+- 84: Uplift Modeling and Incrementality (T-learner, X-learner, propensity scoring, Qini)
+- 85: Multiple Testing, FDR, and Power Analysis (BH procedure, Bonferroni, sample size)
+- 86: PCA from Scratch (eigendecomposition, SVD, scree plot, anomaly detection with PCA)
+- 87: Clustering — k-Means, DBSCAN, GMM (objectives, initialisation, when each wins)
+- 88: Time Series Forecasting — ARIMA, Prophet, Neural (STL, cross-validation, features)
+- 89: Ads CTR Prediction full system (FTRL, Wide&Deep, DeepFM, Vickrey auction, calibration)
+- 90: RAG architecture (chunking, embedding, vector stores, re-ranking, failure modes)
+- 91: Network Effects in A/B Tests / SUTVA (cluster randomisation, switchback, bipartite)
+- 92: DiD and Regression Discontinuity (parallel trends, event studies, manipulation tests)
+- 93: Defining ML Metrics (north star, guardrails, HEART framework, proxy validity)
+- 94: Online Learning and Concept Drift (drift types, PSI, monitoring, retraining strategies)
+- 95: Anomaly Detection (Isolation Forest, LOF, Autoencoder, One-Class SVM)
+
+New SERIES: 'search' (Search & IR, posts 79,80,90), 'ds' (DS & Causal, posts 81-85,91-93).
+
+---
+
+### v4.83 — Gradient staff-level curriculum: 15 posts (64–78) (2026-06-17)
+
+**Full FAANG staff DS/ML interview curriculum added to GradientTab. 15 posts covering every major area a staff engineer would be asked about: generative models, architecture variants, NLP internals, RecSys stack, classical ML foundations, statistics, production ML.**
+
+Posts added:
+- 64: Diffusion Models (DDPM, score matching, DDIM, latent diffusion)
+- 65: GANs (min-max game, mode collapse, WGAN, StyleGAN)
+- 66: Transfer Learning & Fine-Tuning (what to freeze, domain adaptation, LoRA)
+- 67: BERT vs GPT (encoder vs decoder, masked LM vs autoregressive, when to use which)
+- 68: Tokenization (BPE, WordPiece, SentencePiece, production failure modes)
+- 69: Contrastive Learning / CLIP (SimCLR, zero-shot, self-supervised)
+- 70: Two-Tower Models for Retrieval (YouTube/Spotify architecture, ANN, hard negatives)
+- 71: Learning to Rank (NDCG, LambdaRank, pointwise/pairwise/listwise)
+- 72: Recommendation System Stack — featured (retrieval→ranking→reranking full funnel)
+- 73: XGBoost / Gradient Boosted Trees (additive ensembles, second-order Taylor, regularisation)
+- 74: Bias-Variance Tradeoff formal (MSE decomposition, ensemble methods, double descent)
+- 75: Bayesian Inference (prior/posterior, conjugates, MCMC, credible intervals)
+- 76: Model Calibration (ECE, reliability diagrams, Platt scaling, temperature scaling)
+- 77: Feature Stores (online vs offline, point-in-time correctness, training-serving skew)
+- 78: Knowledge Distillation (soft labels, dark knowledge, LLM distillation, self-distillation)
+
+New SERIES: `recsys` (RecSys & Ranking, posts 70-72). Updated SERIES: `dl` adds posts 64-69,78; `found` adds posts 73-75.
+
+---
+
+### v4.82 — Gradient DL deep-dive expansion: 10 posts (54–63) (2026-06-17)
+
+**10 more foundational Deep Learning posts added to GradientTab. Full curriculum now covers: Self-Attention (Q/K/V), Transformer Architecture, Optimization (SGD→Adam), RNNs + LSTMs, Batch/Layer Norm, Dropout + Regularization, Loss Functions from first principles, Embeddings + Word2Vec, VAEs, and Reinforcement Learning (Q-learning, policy gradient, RLHF).**
+
+Posts 54–63 all use domain: 'dl', category: 'Deep Learning'. Post 54 (Self-Attention) and Post 51 (Backprop) marked featured: true.
+
+New SERIES entry added: `{ id: 'dl', label: 'Deep Learning', posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63] }`.
+
+Each post ends with a concrete Colab challenge at the "deep enough to have your own ideas" level.
+
+---
+
+### v4.81 — Gradient deep DL sprint: Backprop, CNN, GNN/PinSage (2026-06-17)
+
+**Three new foundational Deep Learning posts in GradientTab. Goal: deep enough to have your own ideas to try on Colab. Not production failure modes — genuine architectural and mathematical understanding.**
+
+- **Post 51: Backpropagation: What the Chain Rule Is Actually Doing** (14 min, featured) — Forward pass as function composition, computational graph gradient routing, why ReLU fixed vanishing gradients, what a large gradient actually means, depth as Jacobian composition. Colab challenge: implement a 2-layer net in raw NumPy and compare weight updates against PyTorch autograd.
+- **Post 52: CNNs: What the Layers Are Actually Computing** (13 min) — Convolution as sliding dot product, weight sharing and translation invariance, receptive field growth through layers, the feature hierarchy (edges → textures → parts → objects), ResNet skip connections from the gradient flow argument. Colab challenge: GradCAM visualisation + layer-1 filter inspection on ResNet-18.
+- **Post 53: Graph Neural Networks: From Message Passing to PinSage** (15 min) — Message passing framework, GCN spectral view, GraphSAGE neighbourhood sampling for inductive learning, PinSage at 3B nodes + 18B edges (random walk sampling, on-the-fly features, curriculum hard negatives, 150% engagement lift). Colab challenge: 2-layer GCN on Cora, measure over-smoothing at 3 hops.
+
+**GradientTab.jsx changes:**
+- Posts 51, 52, 53 inserted before closing `]` of POSTS array (id 50 was last)
+- SERIES 'found' (Math & Foundations) updated: posts array now [2,6,9,10,17,28,29,36,37,47,50,51,52,53]
+- CATEGORIES unchanged — 'Deep Learning' already present
+- GRADIENT_DOMAINS unchanged — 'dl' domain already present; all 3 posts use domain: 'dl'
+- Brace balance verified: node check outputs 0
+
+---
+
 ### v4.80 — Private Study Room: SR overlay + Anki import pipeline (2026-06-17)
 
 **Private spaced-repetition study room for MSL Anki decks. Accessed via Shift+Ctrl+K — not linked from any public nav, never shown to unauthenticated users. All content fetched from Supabase; nothing ships in the JS bundle.**

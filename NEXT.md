@@ -76,6 +76,42 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Gradient complete FAANG DS/ML curriculum — 17 more posts (v4.84, 2026-06-17)
+
+Posts 79–95. Gradient now has 95 posts covering the complete staff DS/ML interview surface:
+BM25/TF-IDF · Semantic Search Stack · Price Elasticity · LTV/Churn · Attribution/MMM · Uplift Modeling · Multiple Testing/FDR · PCA · Clustering · Time Series · Ads CTR · RAG · Network Effects/SUTVA · DiD/RDD · Metrics Definition · Concept Drift · Anomaly Detection.
+New SERIES: 'search' (Search & IR), 'ds' (DS & Causal). Total: 95 posts, 8 series.
+
+---
+
+## ✅ DONE: Gradient staff-level curriculum — 15 more posts (v4.83, 2026-06-17)
+
+Posts 64–78. Full FAANG staff DS/ML interview coverage now in Gradient:
+Diffusion Models · GANs · Transfer Learning · BERT vs GPT · Tokenization · Contrastive/CLIP · Two-Tower · Learning to Rank · RecSys Stack · XGBoost · Bias-Variance · Bayesian Inference · Calibration · Feature Stores · Distillation.
+New SERIES: 'recsys' (RecSys & Ranking). Total Gradient posts: 78.
+
+---
+
+## ✅ DONE: Gradient DL expansion — 10 more posts (v4.82, 2026-06-17)
+
+Posts 54–63 added. Full DL curriculum in Gradient now covers 13 posts across the 'Deep Learning' series (ids 30,37,51–63):
+Self-Attention · Transformer Architecture · Optimization (SGD→Adam) · RNNs + LSTMs · Batch/Layer Norm · Dropout + Regularization · Loss Functions · Embeddings · VAEs · Reinforcement Learning.
+New SERIES 'dl' (Deep Learning) created in GradientTab. Brace balance verified.
+
+---
+
+## ✅ DONE: Gradient DL deep-dive sprint (v4.81, 2026-06-17)
+
+3 new foundational Deep Learning posts in GradientTab. Written at "deep enough to have your own Colab ideas" level — not production failure modes. All tagged domain: 'dl', added to Math & Foundations series.
+
+- Post 51: Backpropagation: What the Chain Rule Is Actually Doing (featured, 14 min)
+- Post 52: CNNs: What the Layers Are Actually Computing (13 min)
+- Post 53: Graph Neural Networks: From Message Passing to PinSage (15 min)
+
+Domain coverage: NN/Backprop, CNN/ResNet, GNN/PinSage. Each ends with a concrete Colab challenge.
+
+---
+
 ## ✅ DONE: Study Room v1 — code shipped (v4.80, 2026-06-17)
 
 All code is merged. The feature is NOT yet live because the Supabase tables haven't been created and the Anki cards haven't been imported. That's manual one-time setup, deferred.
