@@ -46,6 +46,36 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.80 — Private Study Room: SR overlay + Anki import pipeline (2026-06-17)
+
+**Private spaced-repetition study room for MSL Anki decks. Accessed via Shift+Ctrl+K — not linked from any public nav, never shown to unauthenticated users. All content fetched from Supabase; nothing ships in the JS bundle.**
+
+**New files:**
+- `src/study/sr.js` — 4-bucket SR engine. Intervals: Again=1d, Hard=3d, Good=7d, Easy=14d. Exports `getNextInterval(currentInterval, rating)` → `{ nextInterval, nextDue }`. `nextDue` is YYYY-MM-DD via `toLocaleDateString('en-CA')`.
+- `src/study/StudyRoom.jsx` — Full-screen overlay. Wrapper component guards `user !== null` before hooks (avoids hooks-after-return rule violation). Inner component fetches `card_progress` joined with `study_cards` from Supabase (RLS enforced), filters by lane, renders flip-to-reveal card loop. Keyboard: Space=reveal, 1–4=rate, Esc=close. Progress bar, lane filter pills, done state.
+- `supabase/study_schema.sql` — Schema to run once in Supabase SQL editor. Tables: `study_cards` (content, user-scoped), `card_progress` (SR state, unique per user+card). RLS: each user sees/writes only their own rows. Indexes on `(user_id, due_date)` and `(user_id, lane)`.
+- `scripts/import_anki.py` — One-time seeder. Reads lane1–lane6 APKGs from `ANKI_DIR`, strips HTML, inserts into `study_cards` + initial `card_progress` rows with `due_date = today`. Skips lane2_v0.1 (superseded by v0.2), lane7 (GAL), lane8 (PAL). Supports `--dry-run` and `--lane` filter. Config via env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `MSL_USER_ID`, `ANKI_DIR`.
+
+**App.jsx changes:**
+- Direct import of `StudyRoom` (not lazy — no load flash on keypress)
+- `studyOpen` state added
+- Keyboard handler: `Shift+Ctrl+K` toggles study room (only if `user !== null`); existing `Ctrl+K` guard tightened with `!e.shiftKey`; Esc now closes both search and study room
+- Study room rendered as full-screen overlay just before AuthModal
+
+**Anki corpus (MSL-owned, 988 notes total):**
+- lane1: RecSys & Ranking — 387 notes
+- lane2: DL & PyTorch — 150 notes (v0.2)
+- lane3: MLOps — 120 notes
+- lane4: Spark / PySpark — 146 notes
+- lane5: Cloud & Storage — 75 notes
+- lane6: sklearn & pandas — 110 notes
+
+**Architecture decision:** Study room is a private app sharing MSL's auth and Supabase project. All study content is in Supabase behind RLS — zero card text in the JS bundle. Entry keypress is a UX shortcut, not a security mechanism. True security = Supabase RLS + the auth gate in StudyRoom itself.
+
+**Files modified:** `src/App.jsx`. **Files created:** `src/study/sr.js`, `src/study/StudyRoom.jsx`, `supabase/study_schema.sql`, `scripts/import_anki.py`, `DECISIONS.md`, `LINEAGE.md`, `NEXT.md`.
+
+---
+
 ### v4.79 — Two-gate access model: auth gate + content gate in sequence (2026-06-06)
 
 **Gate model corrected (was: access code replaces sign-in; now: sign-in required first, access code upgrades on top):**

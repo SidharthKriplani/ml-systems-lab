@@ -234,6 +234,30 @@ iOS Safari auto-zooms the viewport on focus when an input's font-size is below 1
 
 ---
 
+## Private Study Room
+
+**The study room is a private app that shares MSL's auth and Supabase project, not a feature addition to the public lab.**  
+All study content (card text, progress state) lives in Supabase behind Row Level Security. Zero card text ships in the JS bundle. If someone inspects the bundle, they find Supabase fetch calls — not card content. RLS ensures those calls return nothing without a valid session.
+
+**Entry: Shift+Ctrl+K keypress only. No nav link, no route, no sidebar item.**  
+The keypress is a UX shortcut for the authenticated owner. It is not a security mechanism. Never describe it as such. Real security = Supabase RLS + `if (!user || !supabase) return null` guard in StudyRoom. If the keypress is ever advertised publicly, the content is still protected — unauthenticated users can trigger the shortcut but the component renders nothing.
+
+**Content stays in Supabase — never in localStorage, never in JS constants.**  
+Unlike MSL's public tabs (which hardcode scenarios as JSX constants), the study room has no hardcoded content. This distinction is structural. Violating it — even for one card — breaks the privacy model.
+
+**SR engine: 4-bucket fixed intervals, not full SM-2.**  
+Intervals: Again=1d, Hard=3d, Good=7d, Easy=14d. The `ease_factor` column exists in `card_progress` for a future SM-2 upgrade — leave it null. 4-bucket captures ~90% of SM-2's scheduling benefit with zero drift complexity. Do not add ease-factor adjustment before reviewing actual skip/fail rates.
+
+**Import runs once from terminal, never from the frontend.**  
+`scripts/import_anki.py` uses the Supabase service key (bypasses RLS) to seed `study_cards` and initial `card_progress` rows. This key never goes in the frontend bundle or in any committed file. The import is idempotent per lane — re-running on an already-imported lane creates duplicates. Run it once per lane and check the verification query in `study_schema.sql` before proceeding.
+
+**Lane assignment is permanent:**  
+MSL owns lane1 (RecSys), lane2 (DL/PyTorch), lane3 (MLOps), lane4 (Spark), lane5 (Cloud), lane6 (sklearn/pandas). GAL owns lane7 (LLMs). PAL owns lane8 (Experimentation). Do not import cross-lab lanes into MSL — the card content will be out of context in the SR loop.
+
+**v1 scope is concept cards only.** Code execution cards (Pyodide cells), system design drills, and debug scenarios are v2. Adding them prematurely before the concept loop is proven closes no loop — it just adds complexity.
+
+---
+
 ## Community features
 
 **Community features route through form services, not a backend.**  

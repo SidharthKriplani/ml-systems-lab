@@ -1,6 +1,6 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint (HowTo framing, forward pointers, UX clarity).
+Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current focus: intuition sprint (HowTo framing, forward pointers, UX clarity).
 
 ---
 
@@ -73,6 +73,47 @@ Updated: 2026-06-05. Private test is now unblocked. Next focus: intuition sprint
 2. ~~`src/tabs/ResourcesTab.jsx` — Interview Trainer Prompt with copy button~~
 3. ~~"Resources" NavItem in left sidebar~~
 4. ~~Trainer prompt removed from PlansTab~~
+
+---
+
+## ✅ DONE: Study Room v1 — code shipped (v4.80, 2026-06-17)
+
+All code is merged. The feature is NOT yet live because the Supabase tables haven't been created and the Anki cards haven't been imported. That's manual one-time setup, deferred.
+
+Files shipped:
+- `src/study/sr.js` — 4-bucket SR engine (1/3/7/14 days)
+- `src/study/StudyRoom.jsx` — full-screen overlay, Supabase-fetched queue, flip/rate loop, Shift+Ctrl+K entry
+- `supabase/study_schema.sql` — schema to run in Supabase SQL editor (study_cards + card_progress + RLS)
+- `scripts/import_anki.py` — APKG → Supabase seeder (988 MSL cards across lane1–lane6)
+- `src/App.jsx` — Shift+Ctrl+K wired, studyOpen state, StudyRoom rendered as overlay
+
+## ⏳ PENDING: Study Room activation (one-time manual setup, ~20 min)
+
+Do this when there's time. In order:
+
+1. **Supabase schema** — paste `supabase/study_schema.sql` into Supabase dashboard → SQL Editor → Run
+2. **Env vars in Terminal:**
+   ```
+   export SUPABASE_URL="https://yourproject.supabase.co"
+   export SUPABASE_SERVICE_KEY="eyJ..."   # Settings → API → service_role key
+   export MSL_USER_ID="your-uuid"        # Authentication → Users → your row
+   export ANKI_DIR="/Users/ASUS/Documents/Professional/Anki Files/active work (claude)/batch 1"
+   ```
+3. **Install dep:** `pip install supabase`
+4. **Navigate:** `cd "/Users/ASUS/Documents/Professional/GitHub/upskill platforms (4)/ml-systems-lab"`
+5. **Dry run:** `python scripts/import_anki.py --dry-run --lane lane4`
+6. **Import:** `python scripts/import_anki.py --lane lane4` (Spark, 146 cards — start here)
+7. **Verify:** run the verification query at the bottom of `study_schema.sql`
+8. **Test:** open MSL → sign in → Shift+Ctrl+K
+
+Start with lane4 only. Import lane3 + lane6 once lane4 loop feels right.
+
+## STUDY ROOM v2 (after activation is confirmed — P3)
+- Code drill cards (Pyodide cell in back, assertion-based auto-rating)
+- System design drills (timed textarea + rubric reveal, self-rating)
+- Weak topic tracker (per-lane mastery score, surface overdue lanes)
+- Import lane1 (RecSys, 387 cards) + lane2 (DL, 150) + lane5 (Cloud, 75)
+- "Copy queue as checklist" for manual paste into To Do / Notion
 
 ---
 

@@ -9,6 +9,7 @@ import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase } from './utils/syncProgress.js'
+import StudyRoom from './study/StudyRoom.jsx'
 
 
 const HomeTab           = lazy(() => import('./tabs/HomeTab.jsx'))
@@ -835,8 +836,9 @@ export default function App() {
     try { return localStorage.getItem('msl_theme') || 'dark' } catch { return 'dark' }
   })
   // ── Auth state ───────────────────────────────────────────────────────────────
-  const [user,     setUser]     = useState(null)
-  const [showAuth, setShowAuth] = useState(false)
+  const [user,      setUser]      = useState(null)
+  const [showAuth,  setShowAuth]  = useState(false)
+  const [studyOpen, setStudyOpen] = useState(false)
 
   useEffect(() => {
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
@@ -906,8 +908,10 @@ export default function App() {
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true) }
-      if (e.key === 'Escape') setSearchOpen(false)
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'k') { e.preventDefault(); setSearchOpen(true) }
+      // Shift+Ctrl/Cmd+K → toggle private study room (requires sign-in)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'K') { e.preventDefault(); if (user) setStudyOpen(s => !s) }
+      if (e.key === 'Escape') { setSearchOpen(false); setStudyOpen(false) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -1167,6 +1171,9 @@ export default function App() {
           premiumTabs={PREMIUM_TABS}
         />
       )}
+
+      {/* ── Study Room — Shift+Ctrl+K, private, requires sign-in ── */}
+      {studyOpen && <StudyRoom user={user} onClose={() => setStudyOpen(false)} />}
 
       {/* ── Auth modal — MUST be last in return, never inside a transformed panel ── */}
       <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />

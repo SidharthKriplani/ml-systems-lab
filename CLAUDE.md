@@ -6,7 +6,7 @@ Read this first, every session.
 
 ## What this project is
 
-ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 9-tool Interview simulation zone. No backend. No accounts. Everything in localStorage. Deployed on Vercel.
+ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 9-tool Interview simulation zone. Public lab: localStorage only, no backend. Private study room (Shift+Ctrl+K): Supabase-backed SR loop for personal Anki decks — auth-gated, content never in bundle. Deployed on Vercel.
 
 **Live:** https://ml-systems-lab-v9xe.vercel.app  
 **Repo:** https://github.com/SidharthKriplani/ml-systems-lab
@@ -15,7 +15,7 @@ ML Systems Lab is a browser-only study tool for production ML judgment. It has 3
 
 ## Stack in one line
 
-React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser) · Web Speech API · localStorage only · Vercel auto-deploy on push to main
+React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser) · Web Speech API · localStorage (public lab) + Supabase (auth + private study room) · Vercel auto-deploy on push to main
 
 ---
 
@@ -39,6 +39,10 @@ React 18 + Vite SPA · CSS variables design system · Pyodide (Python in-browser
 ## File structure
 
 ```
+supabase/
+  study_schema.sql          Run once in Supabase SQL editor to create study_cards + card_progress tables with RLS. v4.80.
+scripts/
+  import_anki.py            One-time APKG → Supabase seeder. Reads lane1–lane6 from ANKI_DIR, inserts study_cards + initial card_progress. Activation pending. v4.80.
 src/
   App.jsx                  Zone routing, nav, all tab imports, grid components
   index.css                Design tokens, layout classes (no component styles)
@@ -86,6 +90,9 @@ src/
     FraudDetectionTab.jsx       ← ML Engineering, third ProjectLab dataset — Fraud Detection (1:200 imbalance, precision@K). ALL 4 PHASES COMPLETE (v4.44–v4.45).
                                    Phases 2–4 planned: Model + SMOTE → Monitoring → Deployment + Ops Runbook. `msl_projectlab_fraud_data`.
     (PipelineBlogTab.jsx deleted — was dead code, replaced by GradientTab)
+  study/                        ← Private study room — NOT part of the public lab
+    sr.js                       4-bucket SR engine (Again=1d Hard=3d Good=7d Easy=14d). v4.80.
+    StudyRoom.jsx               Full-screen overlay, Supabase-fetched queue, flip/rate loop. Entry: Shift+Ctrl+K (auth required). v4.80.
   data/
     testimonials.js             Admin-managed testimonials array. (legacy — HomeTab v4.67 no longer renders testimonials)
   components/
