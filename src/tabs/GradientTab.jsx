@@ -5531,6 +5531,246 @@ Anomaly detection without labels requires indirect evaluation: inject synthetic 
     domain: 'math',
     youtube: [],
   },
+  {
+    id: 96,
+    slug: 'multi-armed-bandits-thompson-sampling-ucb',
+    title: 'Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product environments where weeks of suboptimal routing is unacceptable. Thompson sampling and UCB are the two workhorses — each has a different failure mode.',
+    body: `The multi-armed bandit problem formalises the explore-exploit trade-off: you have K arms (treatments, variants, ads, recommendations), each with an unknown reward distribution. At each timestep you choose an arm, observe a reward, and update your beliefs. The objective is to maximise cumulative reward over T timesteps — which means minimising regret relative to always having chosen the best arm.
+
+**Why not just A/B test?**
+
+A/B testing assigns equal traffic to all variants for the entire experiment, then picks the winner. This is safe and statistically valid, but every impression on a losing variant during the experiment is wasted. For a website with 1M daily users running a 2-week test, a bad variant receiving 50% of traffic is a large cost. Bandits trade some statistical rigour for lower regret: they shift traffic toward better-performing arms as evidence accumulates.
+
+**Regret**
+
+Cumulative regret: R(T) = T * μ* − Σ_{t=1}^{T} μ(a_t), where μ* is the mean reward of the best arm. The Lai-Robbins lower bound (1985) shows that for any consistent algorithm, R(T) ≥ Ω(log T). This means some exploration is unavoidable — you cannot learn without occasionally pulling suboptimal arms. Good algorithms achieve O(log T) regret; bad ones achieve O(T) (linear regret = never converging on the best arm).
+
+**ε-Greedy (baseline)**
+
+With probability ε, explore (pull a random arm); with probability 1-ε, exploit (pull the current best arm by empirical mean). Simple, robust, but constant exploration regardless of uncertainty. ε should decay over time but the decay rate is a hyperparameter with no obvious setting.
+
+**Upper Confidence Bound (UCB1)**
+
+UCB1 (Auer et al., 2002): at each step, choose the arm that maximises μ̂_a + √(2 ln t / n_a), where μ̂_a is the empirical mean of arm a, t is the total steps, and n_a is the number of times arm a has been pulled. The second term is an uncertainty bonus — arms pulled less often get larger bonuses, driving exploration. UCB1 is deterministic, interpretable, and achieves O(log T) regret with tight constants. Failure mode: the optimism assumption can be violated when reward distributions are heavy-tailed or non-stationary.
+
+**Thompson Sampling**
+
+Thompson Sampling (Thompson 1933, rediscovered widely post-2010): maintain a Beta(α, β) prior over each arm's success probability (for Bernoulli rewards). After each observation, update the posterior: success → α += 1, failure → β += 1. At each decision point, sample a value from each arm's posterior and pull the arm with the highest sample. This is Bayesian: the randomness is in the posterior sampling, not in an ε parameter. Thompson Sampling achieves O(log T) regret empirically and often outperforms UCB in practice. It generalises to Gaussian, Poisson, and non-conjugate reward models (using Gaussian process or neural network priors for the latter).
+
+**Contextual bandits**
+
+Pure bandits ignore context. Contextual bandits — the framework behind almost every real recommendation and personalisation system — take a feature vector x_t (user features, item features, context) and choose an arm conditioned on x_t. LinUCB (Li et al., 2010) fits a linear reward model per arm with UCB-style exploration: reward_a(x) = x^T θ_a + α √(x^T A_a^{-1} x). Neural bandits replace the linear model with a neural network; the uncertainty estimate comes from the network's output layer or ensemble spread.
+
+**Non-stationarity**
+
+When reward distributions shift over time (product changes, seasonality, user drift), fixed posteriors become stale. Solutions: sliding window Thompson Sampling (forget old observations), discounted UCB (weight recent observations more heavily), or change-point detection triggering a posterior reset.
+
+**Bandit vs A/B test: when to use which**
+
+Use A/B testing when: you need strong statistical guarantees, experiments run for a bounded time, the cost of premature convergence is high (e.g., pharmaceutical trials). Use bandits when: traffic is high, experiment runtime is long, variants are many (multi-armed), and you care more about cumulative reward than causal inference validity. Hybrid: run a short A/B test for 10-15% of traffic to establish priors, then switch to Thompson Sampling for the remaining 85%.
+
+**Try on Colab:** implement Thompson Sampling and UCB1 on the Bernoulli bandit problem with K=5 arms and true probabilities [0.1, 0.3, 0.5, 0.7, 0.9]. Plot cumulative regret over 10,000 steps for both algorithms plus ε-greedy with ε=0.1. Add a non-stationarity test: at t=5000, swap the rewards of arms 1 and 5. Observe how each algorithm adapts.`,
+    tags: ['Models & Math', 'Bandits', 'Thompson Sampling', 'UCB', 'Explore-Exploit', 'Online Learning', 'Experimentation'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 97,
+    slug: 'svms-kernel-trick-first-principles',
+    title: 'SVMs: The Kernel Trick, Maximum Margin, and When They Still Win',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 13,
+    featured: false,
+    excerpt: 'SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an interpretable margin guarantee. More importantly, the kernel trick is one of the most intellectually beautiful ideas in all of machine learning — every practitioner should understand it.',
+    body: `Support Vector Machines are linear classifiers that find the maximum-margin separating hyperplane. The margin is the distance between the hyperplane and the nearest training points from each class (the support vectors). Maximising the margin is a geometric intuition for why SVMs generalise: larger margin means less sensitivity to small perturbations in the data.
+
+**The primal formulation**
+
+Binary classification: find w, b such that y_i(w^T x_i + b) ≥ 1 for all i, minimising ||w||². The constraint says all points must be on the correct side of the hyperplane with at least unit margin. The decision boundary is w^T x + b = 0; the margin is 2/||w||, so minimising ||w||² maximises the margin.
+
+Hard-margin SVM: only works when data is linearly separable. Soft-margin SVM (Cortes & Vapnik, 1995): allow some misclassification via slack variables ξ_i ≥ 0. Minimise ||w||² + C Σ ξ_i subject to y_i(w^T x_i + b) ≥ 1 - ξ_i. C is the regularisation parameter: large C = low tolerance for violations = tighter fit, small C = high tolerance = smoother boundary. This is the bias-variance trade-off in geometric form.
+
+**The dual formulation and why it matters**
+
+The SVM primal has d+1 parameters (w and b, where d is the feature dimension). The Lagrangian dual transforms this into an n-dimensional problem with one dual variable α_i per training point: maximise Σ α_i - (1/2) Σ_{i,j} α_i α_j y_i y_j x_i^T x_j. The critical insight: the optimisation only depends on dot products x_i^T x_j between training examples, not on the raw features themselves. This is the door through which the kernel trick walks.
+
+**The kernel trick**
+
+A kernel function k(x_i, x_j) = φ(x_i)^T φ(x_j) computes the dot product in a high-dimensional (possibly infinite-dimensional) feature space φ(·) without ever computing φ explicitly. Substitute k(x_i, x_j) for x_i^T x_j in the dual: the SVM now learns a decision boundary in an infinite-dimensional space, tractably. Common kernels: Polynomial k(x,z) = (x^T z + c)^d — captures degree-d feature interactions. RBF (Radial Basis Function / Gaussian): k(x,z) = exp(-γ ||x-z||²) — infinite-dimensional feature space, captures arbitrary smooth decision boundaries. The γ hyperparameter controls the reach of each training point. Sigmoid: k(x,z) = tanh(γ x^T z + r) — equivalent to a two-layer neural network in some parameter regimes.
+
+**Mercer's theorem:** a function k is a valid kernel if and only if the kernel matrix K_{ij} = k(x_i, x_j) is positive semi-definite for any set of points. This is the mathematical guarantee that k corresponds to a valid dot product in some feature space.
+
+**Prediction and the support vectors**
+
+At test time, the prediction for a new point x is: f(x) = sign(Σ_i α_i y_i k(x_i, x) + b). The sum runs over all training points, but α_i > 0 only for support vectors — points on or inside the margin boundary. For well-separated data, most α_i = 0, making prediction sparse and fast. The number of support vectors relative to the training set size is an informal measure of problem difficulty.
+
+**Multi-class SVMs**
+
+SVMs are inherently binary. Extensions: One-vs-One (OvO): train C(C-1)/2 classifiers, each distinguishing one class pair; predict by majority vote. One-vs-Rest (OvR): train C classifiers, each distinguishing one class vs. all others; predict the class with highest margin score. OvO is slower to train but often more accurate; OvR is faster.
+
+**When SVMs still win**
+
+Text classification with TF-IDF features: the feature space is already sparse and high-dimensional; RBF kernels work well. Small datasets (n < 10k): XGBoost and neural nets need more data to outperform SVMs. Tabular data with clear geometric structure: the maximum margin guarantee is still meaningful. Anomaly detection (One-Class SVM): see Post 95. When SVMs lose: large n (O(n²) kernel matrix), image/audio data (deep learning dominates), when features need to be learned end-to-end.
+
+**SVM vs logistic regression**
+
+Both are linear classifiers. SVM maximises the geometric margin (loss is 0 outside the margin, grows linearly inside). Logistic regression maximises the log-likelihood (loss is smooth everywhere, all points contribute to the gradient). SVMs are sparser (only support vectors matter). Logistic regression gives calibrated probabilities. In practice, with proper regularisation, the two converge to similar performance on most problems.
+
+**Try on Colab:** use the UCI Breast Cancer dataset. Train an SVM with RBF kernel, tuning C and γ via GridSearchCV with 5-fold cross-validation. Visualise the decision boundary in PCA-2D space and highlight the support vectors. Compare test accuracy, training time, and number of support vectors across C values from 0.01 to 100. Then repeat with a polynomial kernel of degree 2 and 3.`,
+    tags: ['Models & Math', 'SVM', 'Kernel Trick', 'Classification', 'Maximum Margin', 'RBF'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 98,
+    slug: 'fairness-bias-ml-metrics-production',
+    title: 'Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 13,
+    featured: true,
+    excerpt: 'Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates differ across groups. Understanding which definition to use and why is one of the hardest judgment calls in applied ML, and interviewers at FAANG companies ask about it constantly.',
+    body: `Fairness in machine learning is contested not because practitioners are careless, but because the word "fair" means different things to different people — and those differences are irreconcilable under certain data conditions. Every practitioner needs to know the main definitions, their relationships, and when each is appropriate.
+
+**Why fairness is hard: differing base rates**
+
+If the true positive rate (prevalence of the outcome) differs across demographic groups, many fairness definitions become mathematically incompatible. Chouldechova (2017) proved that when base rates differ: a classifier cannot simultaneously achieve equal false positive rates, equal false negative rates, AND be perfectly calibrated across groups. This is not a limitation of current algorithms — it is a mathematical impossibility. You must choose which fairness criterion to prioritise based on the domain and the costs of different error types.
+
+**Demographic parity (Statistical parity)**
+
+P(ŷ = 1 | A = 0) = P(ŷ = 1 | A = 1). The probability of a positive prediction is equal across groups A = 0 and A = 1. The 80% rule (EEOC in the US): if the selection rate for any group is less than 80% of the highest group's rate, disparate impact is presumed. Problem: demographic parity ignores whether the groups actually have different base rates for the outcome. If 30% of Group A and 10% of Group B qualify for a loan based on creditworthiness, demographic parity forces equal approval rates, which means approving unqualified Group B applicants or rejecting qualified Group A applicants.
+
+**Equalized odds**
+
+P(ŷ = 1 | Y = y, A = a) is equal across groups for both y = 0 and y = 1. The true positive rate AND the false positive rate must be equal across groups. This is a stronger condition: not just equal outcomes, but equal accuracy across groups. Weaker version — Equal Opportunity (Hardt et al., 2016): only require equal true positive rates (don't penalise equal false positives). The intuition: if you receive a positive prediction, your true label distribution should be the same regardless of group membership.
+
+**Calibration across groups**
+
+P(Y = 1 | ŷ = p, A = a) = p for all groups a. Among individuals assigned score p, approximately fraction p should be positive outcomes, in every subgroup. COMPAS (the recidivism prediction tool criticised in ProPublica's 2016 investigation) was well-calibrated — among defendants scored 7/10 for recidivism risk, approximately 70% did re-offend in both Black and white defendants. But the false positive rate was much higher for Black defendants. Both can be true simultaneously when base rates differ.
+
+**Individual fairness**
+
+Similar individuals should be treated similarly: if d(x_i, x_j) is small (individual-level distance), then |f(x_i) - f(x_j)| should be small. This avoids group-level aggregation but requires defining a meaningful similarity metric, which is non-trivial and domain-dependent.
+
+**Counterfactual fairness**
+
+A decision is counterfactually fair if, in a world where the protected attribute were different (holding everything else fixed causally), the outcome would be the same. This requires a causal model (DAG) of the data-generating process. Computationally expensive but captures the intuition that protected attributes should not causally influence decisions.
+
+**Proxy variables: the main practical problem**
+
+Removing protected attributes from the model does not achieve fairness. Other features (ZIP code, name, credit history, school) may be highly correlated with protected attributes and serve as proxies. Removing all proxies may destroy model performance. The right approach: measure disparate impact on outcomes, not just on inputs.
+
+**What to do in practice**
+
+Step 1: define the harm. Who can be harmed, in what direction, and at what cost? A false negative in loan approval (rejecting a creditworthy applicant) has different costs from a false positive in recidivism prediction (incarcerating an innocent person). Step 2: pick the fairness criterion that minimises the most serious harm. Step 3: measure. Use a fairness auditing library (Fairlearn, AI Fairness 360) to compute all criteria across demographic slices. Step 4: intervene at the right level. Pre-processing: reweight training data. In-processing: add fairness constraints to the loss function (Lagrangian relaxation). Post-processing: threshold adjustment per group (Hardt et al. equalised odds post-processor).
+
+**Intersectionality**
+
+Single-attribute fairness analysis misses intersectional groups. A model may be fair for women and fair for people over 40 separately, but unfair for women over 40. Test on intersections, especially for high-stakes decisions.
+
+**The interview angle**
+
+Interviewers at FAANG companies ask about fairness to test whether you understand that it is a value choice, not a technical optimisation problem. Good answers: name the competing definitions, explain the impossibility result, and describe how you would structure the trade-off given the specific domain's cost structure. Bad answers: "we use demographic parity" or "we just remove the sensitive feature."
+
+**Try on Colab:** use the Adult Income dataset (UCI). Train a logistic regression model predicting income. Compute demographic parity difference, equalized odds difference, and false positive rate disparity across gender and race using Fairlearn. Apply Fairlearn's ThresholdOptimizer with equalized odds constraint. Report the trade-off between demographic parity and overall accuracy.`,
+    tags: ['Models & Math', 'Fairness', 'Bias', 'Algorithmic Accountability', 'Equalized Odds', 'Disparate Impact', 'COMPAS'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 99,
+    slug: 'rlhf-reward-modeling-ppo-dpo',
+    title: 'RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: true,
+    excerpt: 'RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and also one of the most unstable pipelines to train. DPO (Direct Preference Optimisation) emerged in 2023 as a simpler alternative that achieves comparable results without RL at all.',
+    body: `Language model pretraining on next-token prediction creates a model that is a good statistical approximation of its training corpus. It is not aligned with human intentions: it will complete harmful prompts, give verbose unhelpful answers, and confidently confabulate. RLHF addresses this by fine-tuning the model on human preferences.
+
+**The three-stage RLHF pipeline (InstructGPT, 2022)**
+
+Stage 1 — Supervised Fine-Tuning (SFT): start with the pretrained model and fine-tune it on a dataset of high-quality (prompt, response) pairs written by humans. This teaches the model the desired response format and basic instruction-following. The SFT model is the foundation for the next stages.
+
+Stage 2 — Reward Model Training: sample multiple responses from the SFT model for each prompt. Human raters compare responses and mark which is better. These preference pairs (prompt, response_A, response_B, label: A > B) train a reward model R_θ that outputs a scalar reward for any (prompt, response) pair. The reward model is typically the same architecture as the LLM with the final token prediction head replaced by a regression head. Training objective: Bradley-Terry model — maximise the log probability that the preferred response has higher reward than the rejected response: log σ(R_θ(x, y_w) - R_θ(x, y_l)), where y_w is the preferred response and y_l is the rejected one.
+
+Stage 3 — RL Fine-Tuning with PPO: use the reward model as the reward signal in a reinforcement learning loop. The policy is the LLM; the action is generating tokens; the reward comes from the reward model at the end of the generated sequence. PPO (Proximal Policy Optimisation) is used because it is stable and efficient for large models. The PPO objective includes a KL penalty: reward = R_θ(x, y) - β * KL(π_RL || π_SFT), where π_SFT is the SFT model and β controls how far the RL policy can deviate. Without the KL penalty, the RL model learns to exploit the reward model — generating text that gets high reward scores but is incoherent or degenerate (reward hacking).
+
+**Why PPO is hard**
+
+PPO requires four models loaded simultaneously: the policy (LLM being trained), the SFT reference model (for KL penalty), the reward model (for rewards), and the value model (PPO critic). For a 7B parameter model, this is 4 × 7B × 4 bytes = ~112GB GPU memory just for model weights, before activations. Training instability is common: reward hacking, mode collapse, and sensitivity to hyperparameters. The PPO objective is non-stationary because the policy changes the distribution over which the reward model is evaluated.
+
+**DPO: Direct Preference Optimisation (Rafailov et al., 2023)**
+
+DPO's key insight: the optimal RL policy under KL-constrained reward maximisation can be expressed in closed form. This allows the RL objective to be rewritten directly in terms of the policy model, eliminating the need for a separate reward model and RL training. DPO loss: -log σ(β log(π_θ(y_w|x)/π_SFT(y_w|x)) - β log(π_θ(y_l|x)/π_SFT(y_l|x))). This is a supervised loss on preference pairs that implicitly trains the policy to increase the relative probability of preferred responses over rejected ones, without an explicit reward model. DPO requires only: the SFT model (reference) and the policy model being trained. No reward model, no value model, no RL loop. 2 models instead of 4.
+
+**DPO vs PPO: practical trade-offs**
+
+DPO advantages: simpler implementation, less memory, more stable training, no reward hacking. DPO disadvantages: less flexible (cannot incorporate non-preference feedback signals), no explicit reward model for analysis, less explored for very long-context alignment. In practice, DPO has matched or exceeded RLHF on many benchmarks (TruthfulQA, AlpacaEval) with significantly less engineering overhead. Most open-source fine-tuning pipelines (Axolotl, LLaMA Factory) now default to DPO.
+
+**Constitutional AI (CAI) and RLAIF**
+
+Anthropic's Constitutional AI (2022) replaces human raters with an AI critic. A set of principles (the "constitution") guides the AI critic to evaluate responses. RLAIF: Reinforcement Learning from AI Feedback — use a stronger model to generate preference labels, then run standard RLHF. Scales better than human annotation for large datasets.
+
+**Reward hacking: the core problem**
+
+The reward model is a proxy, not the true human preference. Optimising it too hard produces reward hacking: generating responses that are verbose (longer = rated higher by some raters), sycophantic (agreeing with the user), or formulaic (specific phrases that get high ratings). The KL penalty in PPO and the reference model in DPO both guard against this, but the problem is fundamental to any proxy optimisation.
+
+**Try on Colab:** use the TRL library (Hugging Face) with a small GPT-2 or OPT model. Train a reward model on a subset of the Anthropic HH-RLHF dataset. Compare DPO training (DPOTrainer in TRL) vs PPO training (PPOTrainer) on the same preference data. Measure: training time, memory usage, and win rate of each fine-tuned model against the SFT baseline using the reward model as a judge.`,
+    tags: ['Deep Learning', 'RLHF', 'DPO', 'PPO', 'Reward Modeling', 'LLM Alignment', 'InstructGPT'],
+    domain: 'dl',
+    youtube: [],
+  },
+  {
+    id: 100,
+    slug: 'federated-learning-privacy-distributed-training',
+    title: 'Federated Learning: Privacy-Preserving Training Without Centralising Data',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for keyboard personalisation and Siri. Healthcare researchers use it to train on data that legally cannot leave hospitals. Understanding FL is increasingly expected of staff ML engineers.',
+    body: `Federated learning (McMahan et al., Google Brain, 2017) was motivated by a concrete problem: training a better keyboard model on data that is private, sensitive, and legally constrained to remain on users' devices. The insight: gradient updates contain far less private information than raw data. Send the gradients, not the data.
+
+**The FedAvg algorithm**
+
+FedAvg (Federated Averaging) is the canonical FL algorithm: (1) Server initialises global model weights w_0. (2) Server selects a random subset of K clients. (3) Each selected client downloads w, runs E epochs of SGD on its local data, and computes the updated weights w_k. (4) Clients send their updated weights (or the weight delta) to the server. (5) Server aggregates: w_new = Σ_k (n_k / n) * w_k, where n_k is the number of examples on client k and n = Σ n_k. (6) Repeat for T communication rounds. FedAvg is communication-efficient: clients run multiple local steps before communicating, reducing the number of rounds needed.
+
+**Why FL is hard: the heterogeneity problem**
+
+IID assumption violated: in standard distributed training, data is shuffled across nodes. In FL, each client has a non-IID local distribution (your keyboard data reflects your language, jargon, communication patterns). This causes client drift: local updates push the model toward each client's local optimum, and averaging pulls in incompatible directions. Methods to address client drift: FedProx (Li et al., 2020) adds a proximal term to each client's loss: min L_k(w) + (μ/2)||w - w_global||², penalising deviation from the global model during local training. SCAFFOLD (Karimireddy et al., 2020) uses control variates to correct for client drift more directly.
+
+**Communication efficiency**
+
+Communication is the bottleneck in FL — especially for cross-device scenarios (millions of mobile devices on intermittent connections). Techniques to reduce communication cost: Gradient compression: top-k sparsification (only send the k largest gradient components), random sparsification, quantisation (1-bit SGD). Model distillation: clients share soft labels rather than gradients (avoids transmitting the full gradient vector). Asynchronous FL: the server updates the global model as updates arrive, without waiting for all clients. Faster but introduces staleness bias.
+
+**Privacy: gradients are not safe**
+
+The naive assumption "gradients don't reveal data" is false. Deep Leakage from Gradients (Zhu et al., 2019) showed that raw training data can be reconstructed from gradients with high fidelity, especially for small batches. Defences: Differential Privacy (DP): clip each client's gradient update to a maximum norm, then add calibrated Gaussian noise before aggregation. The formal guarantee is (ε, δ)-DP: the server cannot distinguish whether any individual data point was in the training set. DP-FedAvg adds O(σ²) variance to each gradient; this reduces model quality and requires more communication rounds for convergence. Secure aggregation (SecAgg): cryptographic protocol where the server can compute the sum of client updates but cannot see individual updates. Protects against a curious-but-honest server. More expensive computationally but stronger privacy guarantee than DP alone.
+
+**Cross-device vs cross-silo FL**
+
+Cross-device FL: millions of edge devices (phones, IoT sensors). Clients are unreliable (drop out mid-round), have limited compute, and communicate over narrow pipes. Used by Google (Gboard), Apple (QuickType, Siri), Android on-device models. Cross-silo FL: a small number of institutions (hospitals, banks, government agencies). Clients are reliable, have significant compute, and data heterogeneity between silos is large. Used in healthcare (training on patient data across hospitals), financial fraud detection (banks training on transaction data they cannot share).
+
+**Personalisation**
+
+The global FL model may perform worse than a local model for any individual client, because it must generalise across all clients. Personalisation strategies: Fine-tuning: distribute the global model, let each client fine-tune on local data. Per-FedAvg (Finn et al., 2019): meta-learning approach — train a global model that is easy to personalise with one gradient step (MAML applied to FL). Federated multi-task learning: each client learns a personalised model with a shared representation but client-specific head.
+
+**When to use FL vs centralised training**
+
+Use FL when: data cannot legally or practically be centralised (healthcare, finance, mobile), privacy is a customer expectation (consumer products), or data silos exist across organisations with aligned incentives (research consortia). Use centralised training when: you control the data, latency constraints require single-machine training, or the communication overhead of FL exceeds the privacy benefit. In practice, most production FL deployments are cross-device (Apple, Google) or healthcare-adjacent (federated survival analysis, federated pathology).
+
+**Try on Colab:** simulate FedAvg on MNIST with non-IID data distribution (assign each client only 2 digit classes). Train a CNN with FedAvg (K=10 clients, 5 local epochs, 50 rounds) and compare test accuracy vs centralised training and vs local-only training. Implement FedProx and compare convergence speed. Measure how much accuracy drops as you increase the number of local epochs (more drift).`,
+    tags: ['Deep Learning', 'Federated Learning', 'Privacy', 'FedAvg', 'Differential Privacy', 'Distributed Training'],
+    domain: 'dl',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -5540,12 +5780,13 @@ const SERIES = [
   { id: 'failures',  label: 'Silent Failures',          posts: [1,3,5,20,21,26,27,38,41,42,43,45,46] },
   { id: 'diag',      label: 'Production Diagnostics',   posts: [22,23,25,35,39,40] },
   { id: 'arch',      label: 'Architecture Decisions',   posts: [4,7,11,12,15,16,24,44,48,49] },
-  { id: 'found',     label: 'Math & Foundations',       posts: [2,6,9,10,17,28,29,36,37,47,50,51,52,53,73,74,75,86,87,88,95] },
+  { id: 'found',     label: 'Math & Foundations',       posts: [2,6,9,10,17,28,29,36,37,47,50,51,52,53,73,74,75,86,87,88,95,96,97] },
   { id: 'career',    label: 'Interview & Career',       posts: [8,13,14,18,19] },
-  { id: 'dl',        label: 'Deep Learning',            posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,78] },
+  { id: 'dl',        label: 'Deep Learning',            posts: [30,37,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,78,99,100] },
   { id: 'recsys',    label: 'RecSys & Ranking',         posts: [70,71,72] },
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
   { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93] },
+  { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
 ]
 
 const GRADIENT_DOMAINS = [

@@ -76,6 +76,14 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Gradient 100 posts milestone — 5 final posts (v4.85, 2026-06-17)
+
+Posts 96–100. GradientTab complete at 100 posts:
+Multi-Armed Bandits (Thompson/UCB) · SVMs + Kernel Trick · Fairness in ML (impossibility theorem, Fairlearn) · RLHF + DPO · Federated Learning (FedAvg, DP, SecAgg).
+New SERIES 'ethics' (Fairness & Ethics). All 11 series updated.
+
+---
+
 ## ✅ DONE: Gradient complete FAANG DS/ML curriculum — 17 more posts (v4.84, 2026-06-17)
 
 Posts 79–95. Gradient now has 95 posts covering the complete staff DS/ML interview surface:

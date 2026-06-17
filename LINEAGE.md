@@ -73,6 +73,26 @@ New SERIES: 'search' (Search & IR, posts 79,80,90), 'ds' (DS & Causal, posts 81-
 
 ---
 
+### v4.85 — Gradient: 5 final posts (96–100), 100 posts total (2026-06-17)
+
+**GradientTab now at 100 posts — the full staff DS/ML interview curriculum is complete.**
+
+Posts added:
+- 96: Multi-Armed Bandits (Thompson Sampling, UCB1, ε-greedy, contextual bandits, regret bounds, non-stationarity)
+- 97: SVMs and the Kernel Trick (primal/dual, Mercer's theorem, RBF kernel, support vectors, vs logistic regression)
+- 98: Fairness in ML — featured (demographic parity, equalized odds, calibration, impossibility theorem, Chouldechova, COMPAS, Fairlearn)
+- 99: RLHF — featured (InstructGPT pipeline, reward modeling, PPO, KL penalty, DPO, reward hacking, RLAIF)
+- 100: Federated Learning (FedAvg, client drift, FedProx, DP-FedAvg, SecAgg, personalisation, cross-device vs cross-silo)
+
+New SERIES: 'ethics' (Fairness & Ethics, post 98). Posts 96,97 added to 'found'; posts 99,100 added to 'dl'.
+File: src/tabs/GradientTab.jsx — ~7,200 lines, 100 posts, 11 series, brace diff 0.
+
+---
+
+### v4.84 — Gradient complete FAANG DS/ML curriculum: 17 posts (79–95) (2026-06-17)
+
+---
+
 ### v4.83 — Gradient staff-level curriculum: 15 posts (64–78) (2026-06-17)
 
 **Full FAANG staff DS/ML interview curriculum added to GradientTab. 15 posts covering every major area a staff engineer would be asked about: generative models, architecture variants, NLP internals, RecSys stack, classical ML foundations, statistics, production ML.**
