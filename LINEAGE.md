@@ -1941,6 +1941,28 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.99 — Activity heatmap wiring + ContentMap completeness (2026-06-18)
+
+**What shipped:**
+
+`src/utils/activity.js` — new utility. `markActivity()` writes `msl_activity_${today}` to localStorage. One-liner; try-catch guarded.
+
+Wired into 6 high-traffic tabs on scenario completion:
+- `FeatureEngTab.jsx` — `pick()` function
+- `ClassicalMLTab.jsx` — `pick()` function  
+- `ModelEvalTab.jsx` — `pick()` function
+- `IncidentRoomTab.jsx` — `revealStep()` function
+- `MLCodingTab.jsx` — "Reveal answer" checkpoint button
+- `GradientTab.jsx` — `reveal()` in QuizMeSection
+
+`src/components/ContentMap.jsx` — added `cheatsheet` and `resources` to STATIC_TABS so Cmd+K search finds them.
+
+`src/App.jsx` — removed dead `jdprep` entry from TAB_TO_ZONE (tab was never imported or registered in ALL_TABS).
+
+All brace diffs 0. Apostrophe scan OK.
+
+---
+
 ### v4.98 — Full-repo 10-point code audit (2026-06-18)
 
 **What shipped:** No code changes. Full audit of all 57 JSX files after repeated apostrophe build failures.

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
+import { markActivity } from '../utils/activity.js'
 
 const LS_KEY = 'msl_score:incidentroom'
 
@@ -627,6 +628,7 @@ function IncidentCard({ incident, completed, onComplete, onNavigate }) {
     const next = [...revealed]
     next[stepIdx] = true
     setRevealed(next)
+    markActivity()
   }
 
   function nextStep() {

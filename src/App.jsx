@@ -157,7 +157,7 @@ const TAB_TO_ZONE = {
   gradient: 'read', cheatsheet: 'read',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
-  jdprep: 'interview', defense: 'interview', verbal: 'interview',
+  defense: 'interview', verbal: 'interview',
   spottheflaw: 'interview',
   incidentroom: 'interview',
   mlcoding: 'interview',

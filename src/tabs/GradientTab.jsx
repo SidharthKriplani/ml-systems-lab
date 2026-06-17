@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { getRead, toggleRead, isRead } from '../utils/read.js'
 import { POST_VISUALS } from '../components/GradientVisuals.jsx'
+import { markActivity } from '../utils/activity.js'
 import { QUIZ } from '../data/quizData.js'
 const POSTS = [
   {
@@ -8746,6 +8747,7 @@ function QuizMeSection({ postId, questions }) {
     setScore(next)
     try { localStorage.setItem(lsKey, JSON.stringify(next)) } catch {}
     setRevealed(r => ({ ...r, [qIdx]: true }))
+    markActivity()
   }
 
   return (

@@ -240,6 +240,12 @@ MSL is now at private-test threshold. The highest-leverage work is UX clarity �
 3. ~~Interview Sim export~~ — "Start Interview Sim" toggle button → copyable trainer prompt with score summary + weak areas.
 4. ~~Quiz Me posts 1–50~~ — `src/data/quizData.js` (150 MCQs, 3/post). `QuizMeSection` in GradientTab PostReader. Score in `msl_quiz_{postId}`.
 
+## ✅ DONE: Activity heatmap wiring + ContentMap fix (v4.99, 2026-06-18)
+
+1. ~~Write activity on scenario completion~~ — `src/utils/activity.js` created. `markActivity()` wired into FeatureEng, ClassicalML, ModelEval, IncidentRoom, MLCoding, GradientTab (Quiz Me reveal). Heatmap now reflects actual practice.
+2. ~~ContentMap missing tabs~~ — `cheatsheet` and `resources` added to STATIC_TABS in ContentMap.jsx. Both now appear in Cmd+K search.
+3. ~~Dead `jdprep` in TAB_TO_ZONE~~ — removed.
+
 ## ✅ DONE: Full-repo 10-point audit (v4.98, 2026-06-18)
 
 All 57 JSX files clean. Root cause of repeated build failures confirmed and fixed (apostrophe scanner in CLAUDE.md). Hooks-in-map false positive cleared with correct brace-depth scanner. 444 pre-existing rgba() hardcoded colors logged as accepted debt (AUDITS.md #032) — not a build issue.
@@ -250,7 +256,6 @@ All 57 JSX files clean. Root cause of repeated build failures confirmed and fixe
 
 1. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
 2. **ELI5 mode on Gradient posts** — simplified 3-sentence summary toggle per post. Start with posts 1–30 only. Store as static data in `src/data/eliData.js`. Toggle button in PostReader header.
-3. **Write activity on scenario completion** — add `localStorage.setItem(\`msl_activity_\${today}\`, '1')` call when any scenario is revealed/submitted, so heatmap reflects actual practice (not just visits). Create `src/utils/activity.js` with `markActivity()` helper, import into the 6 highest-traffic tabs (IncidentRoom, MLCoding, FeatureEng, ClassicalML, ModelEval, GradientTab).
 
 ---
 

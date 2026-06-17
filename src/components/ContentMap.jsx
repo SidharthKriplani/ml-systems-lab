@@ -151,9 +151,11 @@ function SearchRow({ item, isPro, onNav, isSelected }) {
 // ── Static tabs ───────────────────────────────────────────────────────────────
 
 const STATIC_TABS = [
-  { id: 'gradient',  label: 'Gradient ∇', desc: 'Production ML essays — read, then practice', domain: 'Read' },
-  { id: 'landscape', label: 'Landscape',  desc: 'ML tools and infrastructure landscape map', domain: 'Today' },
-  { id: 'home',      label: 'Home',       desc: 'Dashboard — streak, role, tracks, continue',  domain: 'Today' },
+  { id: 'gradient',   label: 'Gradient ∇',  desc: 'Production ML essays — read, then practice', domain: 'Read' },
+  { id: 'cheatsheet', label: 'Cheatsheet',  desc: 'Last-minute prep — flashcards, formulas, traps, company profiles', domain: 'Read' },
+  { id: 'landscape',  label: 'Landscape',   desc: 'ML tools and infrastructure landscape map', domain: 'Today' },
+  { id: 'resources',  label: 'Resources',   desc: 'Interview trainer prompt and reference links', domain: 'Today' },
+  { id: 'home',       label: 'Home',        desc: 'Dashboard — streak, role, tracks, continue', domain: 'Today' },
 ]
 
 // ── ContentMap ────────────────────────────────────────────────────────────────

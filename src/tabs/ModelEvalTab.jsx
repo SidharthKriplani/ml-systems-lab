@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
+import { markActivity } from '../utils/activity.js'
 import { authEnabled } from '../utils/supabase.js'
 import HowToStrip from '../components/HowToStrip.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
@@ -67,6 +68,7 @@ function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 
   function pick(i, optIdx) {
     if (items[i].revealed) return
     setItems(prev => prev.map((it, idx) => idx === i ? { ...it, picked: optIdx, revealed: true, open: true } : it))
+    markActivity()
   }
 
   useEffect(() => {

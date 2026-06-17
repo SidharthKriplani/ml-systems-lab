@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import PythonCell from '../components/PythonCell.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
+import { markActivity } from '../utils/activity.js'
 
 const LS_KEY = 'msl_score:mlcoding'
 
@@ -1644,7 +1645,7 @@ function ProblemCard({ problem, done, onComplete, onNavigate }) {
               {problem.checkpoint}
             </p>
             {!cpRevealed ? (
-              <button className="btn-primary" onClick={() => setCpRevealed(true)} style={{ fontSize: '12px' }}>
+              <button className="btn-primary" onClick={() => { setCpRevealed(true); markActivity() }} style={{ fontSize: '12px' }}>
                 Reveal answer
               </button>
             ) : (
