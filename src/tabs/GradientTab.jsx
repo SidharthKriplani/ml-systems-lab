@@ -6329,6 +6329,538 @@ CNNs have inductive biases built in: translation equivariance (from weight shari
     domain: 'dl',
     youtube: [],
   },
+  {
+    id: 111,
+    slug: 'ols-linear-regression-normal-equations-gauss-markov',
+    title: 'OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 13,
+    featured: false,
+    excerpt: 'Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geometrically, or what the Gauss-Markov theorem guarantees. This post derives it from scratch and maps exactly where each assumption can break in real data.',
+    body: `Ordinary Least Squares (OLS) linear regression is the baseline against which every other model is judged. If your problem is not substantially non-linear, OLS with proper feature engineering often matches or beats complex models while remaining fully interpretable. Understanding it deeply means understanding projection geometry, the normal equations, and the five Gauss-Markov assumptions.
+
+**The setup**
+
+Given n observations and d features: design matrix X ∈ ℝⁿˣᵈ (each row is one sample), target vector y ∈ ℝⁿ. We want to find weights w ∈ ℝᵈ such that ŷ = Xw ≈ y. OLS minimises the residual sum of squares: RSS(w) = ||y - Xw||² = (y - Xw)ᵀ(y - Xw) = yᵀy - 2wᵀXᵀy + wᵀXᵀXw.
+
+**Deriving the normal equations**
+
+Take the gradient of RSS with respect to w and set to zero: ∂RSS/∂w = -2Xᵀy + 2XᵀXw = 0. Therefore: XᵀXw = Xᵀy. This is the normal equations. If XᵀX is invertible (X has full column rank): w_OLS = (XᵀX)⁻¹Xᵀy. The matrix (XᵀX)⁻¹Xᵀ is called the Moore-Penrose pseudoinverse of X, often written X⁺.
+
+**Geometric interpretation: projection onto the column space**
+
+The columns of X span a d-dimensional subspace of ℝⁿ — the column space col(X). The vector Xw is a linear combination of X's columns. OLS finds the w such that Xw is the orthogonal projection of y onto col(X). Why orthogonal? Because the residual e = y - Xw must be perpendicular to every column of X: Xᵀe = Xᵀ(y - Xw) = 0 — exactly the normal equations. Geometrically, OLS drops a perpendicular from y to the nearest point in the subspace col(X). This is the minimum-distance (minimum RSS) solution.
+
+**The Gauss-Markov theorem: when OLS is optimal**
+
+Under five assumptions, OLS is the Best Linear Unbiased Estimator (BLUE) — no other linear unbiased estimator has lower variance: (1) Linearity: y = Xw + ε (the relationship is truly linear). (2) Strict exogeneity: E[ε|X] = 0 (errors are mean-zero given the features; no omitted variable bias). (3) No perfect multicollinearity: X has full column rank (XᵀX is invertible). (4) Homoscedasticity: Var(εᵢ|X) = σ² for all i (constant error variance). (5) No autocorrelation: Cov(εᵢ, εⱼ|X) = 0 for i ≠ j (errors are uncorrelated across observations). Under (1)-(5), the OLS estimator is unbiased: E[w_OLS] = w*, and has variance Var(w_OLS) = σ²(XᵀX)⁻¹ — the smallest possible for any linear unbiased estimator.
+
+**R² and adjusted R²**
+
+Total Sum of Squares: TSS = Σᵢ(yᵢ - ȳ)² (total variance in y). Residual Sum of Squares: RSS = Σᵢ(yᵢ - ŷᵢ)². R² = 1 - RSS/TSS. Proportion of variance explained. R² always increases when you add features, even noise features — it cannot decrease. Adjusted R² penalises for the number of features: R²_adj = 1 - (RSS/(n-d-1)) / (TSS/(n-1)). Can decrease when you add useless features. R² = 0 for a model that predicts the mean everywhere; R² = 1 for a perfect fit. R² < 0 is possible if the model is worse than just predicting the mean.
+
+**When OLS breaks and what to do**
+
+Multicollinearity (assumption 3 violated): XᵀX becomes near-singular. OLS weights are numerically unstable with huge variance — small changes in data cause wild changes in weights. Detection: Variance Inflation Factor VIF_j = 1/(1-R²_j) where R²_j is the R² from regressing feature j on all other features. VIF > 10 is problematic. Fix: Ridge regression (adds λI to XᵀX → w_Ridge = (XᵀX + λI)⁻¹Xᵀy, always invertible) or drop correlated features. Heteroscedasticity (assumption 4 violated): error variance depends on features (common in financial data, count data). OLS is still unbiased but no longer BLUE — standard errors are wrong, inference is invalid. Fix: Weighted Least Squares (WLS) where each observation is weighted by 1/σᵢ², or robust standard errors (HC3 sandwich estimator). Autocorrelation (assumption 5 violated): common in time series (residuals at t are correlated with residuals at t-1). OLS is still unbiased but standard errors are wrong. Fix: add lagged features, use GLS (Generalized Least Squares), or switch to a time series model. Non-linearity (assumption 1 violated): add polynomial features, interaction terms, or use a non-linear model.
+
+**Interview questions on this topic**
+
+"Derive the OLS estimator. What does it mean geometrically?" — Take ∂RSS/∂w = 0 → XᵀXw = Xᵀy → w = (XᵀX)⁻¹Xᵀy. Geometrically: ŷ = Xw is the orthogonal projection of y onto the column space of X. The residual y - ŷ is perpendicular to all columns of X.
+
+"What is R² and why can it be misleading?" — Proportion of variance explained, 1 - RSS/TSS. Misleading because: (1) always increases with more features even if they are noise, (2) high R² does not imply the model is correct — a misspecified model can have high R², (3) R² says nothing about predictive accuracy on new data.
+
+"What happens to OLS when two features are perfectly correlated?" — XᵀX is singular (non-invertible); the normal equations have infinitely many solutions. Any combination of the two correlated weights that produces the same fitted values has identical RSS. In practice near-collinearity makes the inverse ill-conditioned — weights have huge variance. Ridge regression fixes this by adding λI.
+
+"When would you use WLS instead of OLS?" — When the error variance is not constant (heteroscedasticity). For example: modelling average income by region (larger regions have lower variance in averages due to averaging over more people); fitting log-transformed data back on original scale; any setting where you know the precision of each observation varies. WLS weights each observation by 1/σᵢ² to give more influence to precise observations.
+
+**Try on Colab:** fit OLS on the California Housing dataset. Plot residuals vs fitted values — if the plot shows a funnel shape, you have heteroscedasticity. Compute VIF for all features. Introduce artificial collinearity by adding a feature = 2×feature_1 + noise(0, 0.001). Show the VIF spike and the variance explosion in the OLS coefficient. Apply Ridge regression and show the coefficient stabilises.`,
+    tags: ['Models & Math', 'Linear Regression', 'OLS', 'Normal Equations', 'Gauss-Markov', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 112,
+    slug: 'regularization-geometric-picture-l1-l2-dropout',
+    title: 'Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Most explanations of regularisation say "L1 produces sparsity, L2 does not." Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the constrained optimum tends to land on a corner — zeroing a weight. The L2 ball is a smooth sphere with no corners. This post makes the geometry rigorous and then covers every other form of regularisation you will encounter in practice.',
+    body: `Regularisation is the collection of techniques that prevent a model from fitting the training data too precisely — from memorising noise rather than learning signal. It is the primary tool for controlling variance in the bias-variance trade-off. Understanding it geometrically explains every form at once.
+
+**The constraint form vs the penalty form**
+
+The penalty form adds a regularisation term to the loss: min_w L(w) + λ Ω(w). The constraint form enforces a budget on the weights: min_w L(w) subject to Ω(w) ≤ t. These are mathematically equivalent by the KKT conditions of constrained optimisation — for every λ there exists a t that gives the same solution and vice versa. The constraint form has a cleaner geometric interpretation.
+
+**The geometry of L2 (Ridge)**
+
+The constraint Ω(w) = ||w||² ≤ t defines an L2 ball — a sphere in weight space centred at the origin. The unconstrained optimum w* (minimum of L(w) alone) is somewhere outside this ball if t is small. The constrained OLS optimum is where the loss contour ellipse first touches the L2 ball. Because the L2 ball is a smooth sphere, the touching point can be anywhere on the sphere's surface — including points with all weights non-zero. L2 regularisation shrinks all weights toward zero but does not zero any of them exactly. Ridge solution (for OLS): w_Ridge = (XᵀX + λI)⁻¹Xᵀy. The λI term makes the matrix invertible (solves multicollinearity) and shrinks eigenvalues of XᵀX uniformly.
+
+**The geometry of L1 (Lasso)**
+
+The constraint Ω(w) = ||w||₁ ≤ t defines an L1 ball — a diamond (in 2D) or cross-polytope (in higher dimensions). Critically: the L1 ball has corners, and those corners sit exactly on the coordinate axes (where one weight is non-zero and all others are zero). The loss contour ellipse, when it expands from the unconstrained optimum toward the origin, is geometrically most likely to first touch a corner of the L1 ball — because corners stick out. At a corner, all but one weight is exactly zero. This is the sparsity-inducing mechanism. It is a geometric inevitability, not a numerical quirk. Lasso has no closed form (the L1 norm is not differentiable at zero); it is solved with coordinate descent or ISTA/FISTA (proximal gradient methods).
+
+**Elastic Net: combining both**
+
+Elastic Net: min_w L(w) + λ₁||w||₁ + λ₂||w||². Combines the sparsity of L1 with the stability of L2 (Ridge handles correlated features; Lasso arbitrarily picks one). Useful when: you want feature selection but your features are correlated (Lasso picks one arbitrarily; Elastic Net keeps groups together).
+
+**Other forms of regularisation**
+
+Dropout (Srivastava et al., 2014): randomly set each neuron's activation to zero with probability p during training. At test time, multiply all activations by (1-p) to maintain expected values. Interpretation 1: prevents co-adaptation — neurons cannot rely on specific other neurons always being present. Interpretation 2: approximates Bayesian inference over an exponential number of thinned networks. Interpretation 3: ensemble view — different dropout masks produce different architectures; inference averages them. Early stopping: halt training when validation loss stops decreasing. Mathematically equivalent to L2 regularisation under certain conditions (Goodfellow et al.): a model trained for T gradient steps behaves similarly to a model with weight decay λ ≈ 1/(α T) where α is the learning rate. Weight decay: explicitly added to the gradient update: w ← w(1 - αλ) - α ∇L. For SGD, weight decay = L2 regularisation. For Adam, they diverge — weight decay applies to the parameter directly, not to the adaptive gradient, which is why AdamW (weight decay) is preferred over Adam+L2 for transformers. Data augmentation: artificially expand the training set with label-preserving transformations (flips, crops, colour jitter for images; back-translation for text). Reduces overfitting by increasing effective training set size. Label smoothing: replace hard one-hot targets with soft targets (1-ε for the true class, ε/(K-1) for others). Prevents the model from becoming overconfident. Equivalent to adding a KL divergence penalty between the model's output distribution and a uniform distribution.
+
+**Choosing the regularisation coefficient**
+
+λ is a hyperparameter. Too small: no regularisation, overfitting. Too large: underfitting (weights driven to zero). Select via cross-validation on the validation loss. For Lasso, the regularisation path (how the solution changes as λ varies from 0 to ∞) can be computed efficiently — features enter the model one by one as λ decreases, giving a feature ranking.
+
+**Interview questions on this topic**
+
+"Why does L1 regularisation produce sparsity but L2 doesn't? Explain geometrically." — The L1 ball (constraint region) is a diamond with corners on the coordinate axes. The loss function's contours tend to touch those corners first when they expand toward the origin, placing the solution at a corner where all but one weight is zero. The L2 ball is a sphere with no corners — the touching point can be anywhere, so no weight is forced to exactly zero.
+
+"What is the difference between L2 regularisation and weight decay in the context of Adam?" — For SGD they are equivalent: L2 penalty adds λw to the gradient, weight decay multiplies parameters by (1-λ). For Adam, they are not equivalent: L2 adds λw to the gradient before the adaptive scaling, which means the effective penalty varies per-parameter. Weight decay (AdamW) applies the decay directly to parameters after the adaptive update, giving a consistent and better-calibrated penalty. AdamW trains better for large language models.
+
+"How is dropout related to ensemble methods?" — Each dropout mask defines a different 'thinned' subnetwork. Training with dropout approximates averaging over all 2^H possible subnetworks (H = number of units). At test time, using the full network with scaled weights approximates the geometric mean of all these subnetworks' predictions — an implicit ensemble. This is why dropout improves generalisation.
+
+"When would you prefer Elastic Net over Lasso?" — When features are correlated. Lasso tends to select one feature from a correlated group arbitrarily and zeroes the others. Elastic Net uses the L2 penalty to group correlated features together (they shrink together rather than one being selected). Also when p > n (more features than samples) — Lasso selects at most n features; Elastic Net can select more.
+
+**Try on Colab:** fit Lasso, Ridge, and Elastic Net on the Diabetes dataset using LassoCV/RidgeCV/ElasticNetCV. Plot the coefficient paths as λ varies (regularisation path plot). Observe which features go to zero first in Lasso vs Ridge. Plot the number of non-zero coefficients vs λ. Verify that Elastic Net keeps more features than Lasso at the same regularisation strength when features are correlated.`,
+    tags: ['Models & Math', 'Regularisation', 'L1', 'L2', 'Lasso', 'Ridge', 'Dropout', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 113,
+    slug: 'hypothesis-testing-t-test-p-values-confidence-intervals',
+    title: 'Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: true,
+    excerpt: 'Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the parameter with 95% probability. A statistically significant result is not necessarily a practically meaningful one. This post builds the machinery correctly from scratch.',
+    body: `Statistical hypothesis testing is the framework for deciding whether an observed effect in data could plausibly be due to chance. It is the language of A/B testing, clinical trials, and any empirical claim. Almost every practitioner has used it; far fewer can correctly define what a p-value means.
+
+**The hypothesis testing framework**
+
+Null hypothesis H₀: the default — no effect, no difference. The hypothesis we are trying to reject. Alternative hypothesis H₁: the claim — there is an effect, there is a difference. The test procedure: (1) Assume H₀ is true. (2) Compute a test statistic T from the data. (3) Compute p = P(seeing a test statistic at least as extreme as T, assuming H₀ is true). (4) If p < α (significance level, typically 0.05), reject H₀. The significance level α = P(Type I error) = P(rejecting H₀ | H₀ is true) — the false positive rate you are willing to accept. This is set before looking at the data.
+
+**What a p-value actually is**
+
+P-value: the probability of observing a test statistic at least as extreme as the one computed, if the null hypothesis were true. It is NOT: the probability that H₀ is true. The probability that H₁ is true. The probability that the result was due to chance. The importance of the effect. A small p-value means: "if H₀ were true, results this extreme would be very rare." It does not mean H₀ is false — extreme results still occur, just rarely. With n large enough, any non-zero true effect becomes statistically significant, even if it is practically meaningless (e.g., a 0.0001% click-through improvement).
+
+**One-sample t-test**
+
+Setup: you have n observations from a population. You want to test whether the population mean μ equals some value μ₀. Test statistic: t = (x̄ - μ₀) / (s / √n), where x̄ is the sample mean and s is the sample standard deviation. Under H₀: t ~ t_{n-1} (Student's t-distribution with n-1 degrees of freedom). The t-distribution has heavier tails than the Gaussian — accounts for estimating σ from data. As n → ∞, t → Gaussian. Two-tailed p-value: P(|T| ≥ |t_obs|) under H₀. Assumptions: observations are i.i.d., drawn from a distribution with finite variance. With n ≥ 30, the Central Limit Theorem makes the t-test robust to non-normality.
+
+**Two-sample t-test**
+
+Test whether two groups have the same mean. Welch's t-test (unequal variances): t = (x̄₁ - x̄₂) / √(s₁²/n₁ + s₂²/n₂). The degrees of freedom are approximated by the Welch-Satterthwaite equation. Pooled t-test (equal variances): pools the variance estimates. Welch's is the default — it handles unequal variances and sample sizes and is slightly less powerful only when variances are truly equal. For A/B tests, the two-sample t-test (or z-test for large n) is the standard tool.
+
+**Type I and Type II errors**
+
+Type I error (false positive, α): reject H₀ when it is true. Controlled directly by the significance level. Type II error (false negative, β): fail to reject H₀ when it is false. Power = 1 - β = probability of correctly detecting a true effect. Power depends on: effect size (larger effect → easier to detect), sample size (more data → more power), significance level (more lenient α → more power, more Type I errors), and variance (lower noise → more power). Minimum Detectable Effect (MDE): the smallest effect size your experiment can detect at a given power (typically 80%) and significance level (0.05). Used in pre-experiment sample size calculation.
+
+**Confidence intervals**
+
+A 95% confidence interval is: if we repeated this experiment many times and computed the CI each time, 95% of those intervals would contain the true parameter. It is NOT the probability that the true parameter lies in this specific interval. (The true parameter is fixed; there is no probability that it is or is not in any specific interval — frequentist statistics does not put probability on parameters.) Correct: "this interval was constructed by a procedure that captures the true mean 95% of the time." Incorrect: "there is a 95% probability the true mean is in [a, b]." The width of the CI reflects uncertainty about the parameter — wider CI = more uncertainty. A CI that excludes zero for a difference-in-means test implies p < 0.05 (for two-tailed at α = 0.05).
+
+**Chi-square test for independence**
+
+For categorical data: test whether two categorical variables are independent. Under H₀ (independence): expected cell count = row_total × col_total / grand_total. Test statistic: χ² = Σ_{cells} (observed - expected)² / expected. Under H₀: χ² ~ χ²_{(r-1)(c-1)} (chi-square distribution with (rows-1)(cols-1) degrees of freedom). Assumption: expected cell count ≥ 5 in all cells. Use Fisher's exact test when cells are small.
+
+**Effect size**
+
+Statistical significance ≠ practical significance. Effect size measures the magnitude of the effect, independent of sample size. Cohen's d for two means: d = (μ₁ - μ₂) / σ_pooled. Conventions: d = 0.2 (small), 0.5 (medium), 0.8 (large). A d = 0.1 effect is statistically significant with n = 10,000 but practically negligible. Always report effect size alongside p-value.
+
+**Interview questions on this topic**
+
+"Explain p-value to a product manager." — Imagine the null hypothesis is true — there is no real difference between the two variants. The p-value is the probability of seeing a difference as large as we observed just by random sampling variation. If p = 0.03, it means: if there were truly no effect, we'd see a difference this big or bigger only 3% of the time. We consider this unlikely enough to conclude there probably is a real effect.
+
+"What is the difference between a t-test and a z-test? When do you use each?" — Both test whether a mean differs from a value (or two means differ). z-test: assumes the population variance σ² is known, or n is large (CLT → normal distribution). t-test: estimates σ from the data; uses the t-distribution, which has heavier tails to account for this uncertainty. In A/B testing with large samples (n > 1000 per variant), the difference is negligible — the t-distribution converges to the z. Use t-test by default; z-test for proportions with large n.
+
+"Your A/B test shows p = 0.03. The treatment increases revenue per user by $0.02 on a $50 average order. Do you ship?" — Statistically significant but practically trivial (0.04% improvement). Consider: cost of implementing and maintaining the change, opportunity cost, confidence interval width, whether the MDE was set correctly ex ante. Statistical significance is not a sufficient criterion for shipping — effect size and business context matter.
+
+"What is statistical power and how does it affect A/B test design?" — Power = probability of detecting a true effect of size δ. To achieve 80% power at α=0.05 for a given MDE, you need n ≥ 2σ²(z_{α/2} + z_β)²/δ² per group. Under-powered tests have high false negative rates — you miss real effects. Running until significant (peeking) inflates Type I errors; use sequential testing or Bonferroni correction.
+
+**Try on Colab:** run a simulation study of the t-test. Generate 10,000 pairs of samples from the same distribution (H₀ true). Compute p-values for all 10,000 tests. Verify that p-values are uniformly distributed under H₀ and that approximately 5% fall below 0.05 (this is the definition of α). Then repeat with a true effect (shift the mean by 0.5σ) and measure what fraction of tests correctly detect it (= empirical power).`,
+    tags: ['Models & Math', 'Hypothesis Testing', 'p-value', 't-test', 'Confidence Intervals', 'Statistics', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 114,
+    slug: 'evaluation-metrics-precision-recall-auc-roc-pr',
+    title: 'Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures geometrically (a probability, not just an area). This post builds every classification metric from the confusion matrix up.',
+    body: `Choosing the wrong evaluation metric is one of the most common production ML mistakes. A fraud detection model with 99.9% accuracy that predicts "not fraud" for every transaction is useless — but optimising accuracy would rate it highly. The right metric depends on the cost structure of your specific problem.
+
+**The confusion matrix**
+
+Binary classification with a threshold τ: predict positive if P(y=1|x) ≥ τ. For each test sample, one of four outcomes: True Positive (TP): predicted positive, actually positive. False Positive (FP): predicted positive, actually negative. Type I error. False Negative (FN): predicted negative, actually positive. Type II error. True Negative (TN): predicted negative, actually negative. The confusion matrix arranges these as a 2×2 grid. From these four numbers, every classification metric is derived.
+
+**The basic metrics**
+
+Accuracy = (TP + TN) / (TP + FP + FN + TN). Fraction correctly classified. Fails catastrophically with class imbalance. Precision = TP / (TP + FP). Of all predicted positives, what fraction are truly positive? Also called Positive Predictive Value (PPV). Measures: when the model raises an alarm, how often is it right? Recall = TP / (TP + FN). Of all true positives, what fraction did the model catch? Also called Sensitivity or True Positive Rate (TPR). Measures: what fraction of the real positives did we find? Specificity = TN / (TN + FP). Of all true negatives, what fraction did the model correctly label? = 1 - FPR. False Positive Rate = FP / (FP + TN). Fraction of negatives incorrectly labeled as positives.
+
+**The precision-recall trade-off**
+
+Precision and recall trade off against each other as you change the classification threshold τ. Raise τ: model predicts positive only when very confident → fewer false positives → higher precision, lower recall. Lower τ: model predicts positive more aggressively → catches more true positives → higher recall, more false positives → lower precision. There is no universally correct threshold — it depends on the costs. For fraud detection: false negatives (missed fraud) are expensive → lower threshold, higher recall. For medical screening follow-up (expensive test): false positives (unnecessary procedures) are costly → higher threshold, higher precision.
+
+**F1 score: the harmonic mean of precision and recall**
+
+F1 = 2 × (Precision × Recall) / (Precision + Recall) = 2TP / (2TP + FP + FN). Why harmonic mean, not arithmetic? The harmonic mean is dominated by whichever term is smaller. A model with precision=1.0 and recall=0.01 has arithmetic mean = 0.505 (looks decent) but harmonic mean = 0.02 (correctly reflects that the model misses 99% of positives). F1 penalises extreme imbalances between precision and recall. Fβ generalises F1: Fβ = (1+β²) × P × R / (β²P + R). β > 1 weights recall more (catching cases matters more); β < 1 weights precision more.
+
+**ROC curve and AUC-ROC**
+
+The ROC (Receiver Operating Characteristic) curve plots TPR (recall) vs FPR as the threshold τ varies from 1 to 0. Every point on the curve corresponds to one threshold value. AUC-ROC is the area under this curve, ranging from 0.5 (random classifier, diagonal line) to 1.0 (perfect classifier). Probabilistic interpretation: AUC-ROC = P(score(positive) > score(negative)) for a randomly drawn positive-negative pair. A model with AUC = 0.85 ranks a random positive above a random negative 85% of the time. This interpretation is threshold-free — AUC measures the quality of the ranking, not a specific threshold decision. AUC-ROC is insensitive to class imbalance: because FPR divides by total negatives and TPR divides by total positives, a large number of negatives doesn't inflate either axis. Failure case: when the positive class is very rare, FPR stays tiny even with many false positives — the curve looks optimistic.
+
+**Precision-Recall curve and AUC-PR**
+
+The PR curve plots precision vs recall as τ varies. AUC-PR (area under the PR curve) is more informative than AUC-ROC when the positive class is rare (< 5% prevalence). At low recall (high threshold): precision ≈ 1 (only very confident positives predicted). As recall increases, more true positives are caught but precision generally falls. A random classifier on a 1:99 imbalanced dataset has AUC-ROC ≈ 0.5 but AUC-PR ≈ 0.01 (only 1% of random predictions would be correct). This starkly shows PR's sensitivity to imbalance. Use AUC-PR for: fraud detection, rare disease detection, spam filtering — any case where the positive class is rare and false positives and false negatives both matter.
+
+**Multi-class metrics**
+
+Macro average: compute the metric for each class, then average equally across classes. Treats all classes equally regardless of support. Micro average: aggregate TP, FP, FN across all classes first, then compute. Gives larger classes more influence. Weighted average: weight each class's metric by its support (number of true instances). Appropriate when you want accuracy-weighted performance. For imbalanced multi-class problems: use macro F1 to equally weight minority classes.
+
+**Interview questions on this topic**
+
+"When would you prefer AUC-PR over AUC-ROC?" — When the positive class is rare (< 5%). AUC-ROC can be high (0.9+) even for models that perform poorly on the positive class, because the denominator of FPR (total negatives) is large — a large number of false positives is still a small fraction. AUC-PR directly measures how well the model performs on the positive class.
+
+"Your model has high recall but low precision. What does this mean and when is it acceptable?" — The model catches most true positives but also raises many false alarms. Acceptable when the cost of a false negative (missing a true positive) greatly exceeds the cost of a false positive. Example: cancer screening — missing a cancer is far worse than a follow-up test. Not acceptable when false positives are costly: spam filtering (too many legitimate emails marked as spam damages trust).
+
+"Explain AUC-ROC as a probability." — AUC-ROC = P(model scores a randomly drawn positive sample higher than a randomly drawn negative sample). A model with AUC = 0.75 correctly orders 75% of positive-negative pairs. This interpretation comes from the equivalence between the ROC AUC and the Wilcoxon-Mann-Whitney statistic.
+
+"You have 95% negatives and 5% positives. Your model has 98% accuracy. Is this good?" — No. A model that always predicts negative achieves 95% accuracy. The 98% accuracy model may only be marginally better. Check recall on the positive class — if it is near zero, the model is useless for the minority class. Use AUC-PR or F1 on the positive class as the primary metric.
+
+**Try on Colab:** use the Credit Card Fraud dataset (Kaggle) — 0.17% positive rate. Train a logistic regression. Compute AUC-ROC and AUC-PR. Plot both curves. Then plot the precision-recall curve for threshold values from 0.01 to 0.99 and identify the threshold that maximises F1. Compare: does AUC-ROC overstate model quality relative to AUC-PR?`,
+    tags: ['Models & Math', 'Evaluation Metrics', 'Precision', 'Recall', 'AUC-ROC', 'AUC-PR', 'F1', 'Ground Up'],
+    domain: 'eval',
+    youtube: [],
+  },
+  {
+    id: 115,
+    slug: 'convex-optimisation-gradient-descent-convergence-saddle-points',
+    title: 'Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? The answer involves saddle points, loss surface geometry, flat minima, and the implicit regularisation of SGD. This is the "why does any of this work?" post.',
+    body: `Convex optimisation is the branch of mathematics with the strongest guarantees: if your objective is convex, gradient descent will find the global minimum. Machine learning relies heavily on convex problems (linear regression, logistic regression, SVMs, Lasso) but its most powerful models (neural networks) are deeply non-convex. Understanding both is essential.
+
+**Convex sets and functions**
+
+A set C is convex if for any two points x, y ∈ C and any t ∈ [0,1], the point tx + (1-t)y is also in C — the line segment between any two points stays in the set. Examples: ℝⁿ (trivially convex), the positive orthant, any ball or ellipsoid. A function f: C → ℝ is convex if for any x, y ∈ C and t ∈ [0,1]: f(tx + (1-t)y) ≤ tf(x) + (1-t)f(y). The function lies below or on the line segment connecting any two points. Geometrically: the "cup shape" property. Equivalently (for differentiable f): f(y) ≥ f(x) + ∇f(x)ᵀ(y-x) — the function lies above all its tangent hyperplanes. Strictly convex: the inequality is strict for x ≠ y. Strongly convex with parameter μ > 0: f(y) ≥ f(x) + ∇f(x)ᵀ(y-x) + (μ/2)||y-x||² — the function curves up at least as fast as a quadratic.
+
+**Why convexity guarantees a global minimum**
+
+For a convex function, every local minimum is a global minimum. Proof sketch: suppose x* is a local minimum and y is a point with f(y) < f(x*). By convexity: f(tx* + (1-t)y) ≤ tf(x*) + (1-t)f(y) < f(x*) for all t ∈ (0,1). But points tx* + (1-t)y are arbitrarily close to x* for t near 1 — this contradicts x* being a local minimum. Therefore no such y exists. This theorem is why convex ML problems are "solved" — any gradient descent converging to a stationary point has found the global optimum.
+
+**Gradient descent convergence**
+
+For a convex function f with L-Lipschitz gradient (||∇f(x) - ∇f(y)|| ≤ L||x-y||): gradient descent with step size α ≤ 1/L satisfies f(x_T) - f(x*) ≤ ||x₀ - x*||² / (2αT). Convergence rate: O(1/T) in the objective (sublinear). For strongly convex functions (with parameter μ): gradient descent converges geometrically (exponentially fast) at rate O((1 - μ/L)^T). The condition number κ = L/μ determines convergence speed: poorly conditioned problems (large κ) converge slowly. This is why preconditioning (second-order methods, normalisation) helps.
+
+**Is logistic regression convex?**
+
+Yes. The logistic regression loss L(w) = -Σᵢ[yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1 - σ(wᵀxᵢ))] is convex in w. The Hessian H = Xᵀ W X where W = diag(σ(wᵀxᵢ)(1-σ(wᵀxᵢ))) is positive semi-definite (it is a gram matrix). With L2 regularisation: H + λI is positive definite → strongly convex → unique global minimum. This is why logistic regression always converges to the same solution regardless of initialisation.
+
+**Neural network loss surfaces**
+
+Neural network losses are deeply non-convex: many local minima, saddle points, and flat regions. The key empirical observation: in high dimensions, local minima are rare and good. The loss at local minima found by gradient descent is approximately equal across different random initialisations. Most problematic are saddle points — where the gradient is zero but the Hessian has both positive and negative eigenvalues (it is indefinite). In low dimensions, saddle points are rare. In high dimensions (d = millions of parameters), almost every critical point is a saddle point rather than a local minimum (Dauphin et al., 2014). SGD's noise helps escape saddle points: the gradient estimate is noisy, providing perturbations that can push the optimiser off the saddle.
+
+**Flat minima and generalisation**
+
+Not all minima are equal. Sharp minima: the loss surface has high curvature around the minimum (large Hessian eigenvalues). The model is sensitive to parameter perturbations — small changes in weights cause large changes in loss. Sharp minima often correspond to overfit solutions. Flat minima: the loss surface is flat around the minimum. The model is robust to parameter perturbations — a wide valley. Flat minima tend to generalise better (Hochreiter & Schmidhuber, 1997). SGD with larger batch size tends to find sharper minima; SGD with smaller batch sizes finds flatter minima. This is one reason why large-batch training sometimes generalises worse — even if training loss converges to the same value, the flat-vs-sharp nature of the minimum differs.
+
+**Implicit regularisation of SGD**
+
+SGD does not just minimise the training loss — it implicitly regularises the solution. SGD with weight decay finds solutions with lower norm. Adam finds solutions with lower L∞ norm on gradients. The specific optimiser's geometry shapes which solution is found when there are many global minima. This is why the choice of optimiser matters for generalisation, not just convergence speed.
+
+**Interview questions on this topic**
+
+"Is the SVM objective convex? How do you know?" — The SVM primal objective (||w||²/2 + C Σ ξᵢ) is a quadratic with linear constraints. Quadratics with positive semi-definite Hessian are convex. The slack variables and constraints define a convex feasible set. Therefore the SVM is a convex quadratic program with a unique global minimum.
+
+"Why does gradient descent find good solutions for neural networks even though the loss is non-convex?" — (1) In high dimensions, critical points are almost all saddle points rather than bad local minima. (2) Most local minima found in practice have similar test loss (Choromanska et al.). (3) SGD's noise helps escape saddle points and find flat minima that generalise well. (4) Over-parameterisation may create a connected manifold of global minima, making convergence easier.
+
+"What is the difference between a local minimum, a global minimum, and a saddle point?" — Local minimum: ∇f = 0 and Hessian is positive definite (all eigenvalues positive). f is larger in all directions. Global minimum: the lowest local minimum. Saddle point: ∇f = 0 but Hessian is indefinite (some positive, some negative eigenvalues). The function decreases in some directions and increases in others. In high dimensions, saddle points are exponentially more common than local minima.
+
+"What is the condition number and why does it affect gradient descent convergence?" — κ = L/μ (max eigenvalue / min eigenvalue of the Hessian). A high condition number means the loss surface is a very elongated ellipse — gradient descent zig-zags slowly. Condition number of the problem determines how many gradient steps are needed: O(κ log(1/ε)) for strongly convex. Normalisation (batch norm, layer norm) and second-order methods (Adam, K-FAC) reduce the effective condition number.
+
+**Try on Colab:** visualise the loss surface of a 2-parameter logistic regression model on a 2D dataset. Plot the loss as a heat map and overlay gradient descent trajectories from 10 random starting points — all converge to the same minimum (convexity). Then compare: train a 2-layer neural network with random initialisation 10 times and plot final test loss vs training time — show that different runs find solutions with similar test loss despite different parameter values.`,
+    tags: ['Models & Math', 'Convex Optimisation', 'Gradient Descent', 'Saddle Points', 'Loss Surface', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 116,
+    slug: 'neural-network-initialisation-he-xavier-glorot',
+    title: 'Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training',
+    category: 'Deep Learning',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1, signals vanish. Xavier and He initialisation are exact solutions to keeping variance constant through the network — one for linear activations, one for ReLU. This post derives them.',
+    body: `Initialisation seems like a boring implementation detail. It is not. Poor initialisation causes training to fail in the first few steps, before the data has had any effect. The right initialisation keeps the signal well-conditioned through the entire forward and backward pass from step one.
+
+**Why not all zeros?**
+
+If all weights are zero, all neurons in each layer compute the same output — they are symmetric. During backpropagation, they receive identical gradient updates and remain symmetric forever. The network behaves like a single neuron regardless of width. This is the symmetry breaking problem: random initialisation breaks symmetry so different neurons can learn different features.
+
+**Why not large random values?**
+
+Consider a linear network with L layers, each of width n, with weights initialised from N(0, σ²). The output of layer l is z_l = W_l z_{l-1}. The variance of z_l = n σ² × Var(z_{l-1}). After L layers: Var(z_L) = (nσ²)^L × Var(z_0). If nσ² > 1: variance explodes exponentially with depth. Activations saturate for sigmoid/tanh; gradients vanish. If nσ² < 1: variance shrinks exponentially with depth. Activations all collapse to zero; gradients vanish. We need nσ² ≈ 1, i.e., σ² = 1/n — the key insight.
+
+**Xavier / Glorot initialisation (linear / tanh activations)**
+
+Glorot & Bengio (2010) analysed both the forward pass (keep activation variance constant) and the backward pass (keep gradient variance constant). For a layer with n_in inputs and n_out outputs, the two conditions give different σ²: forward only: σ² = 1/n_in. Backward only: σ² = 1/n_out. Xavier/Glorot compromises: σ² = 2/(n_in + n_out). Equivalently, uniform initialisation: Uniform(-√(6/(n_in + n_out)), √(6/(n_in + n_out))). This is optimal for linear activations and approximately correct for tanh (which is approximately linear near zero). In PyTorch: torch.nn.init.xavier_uniform_(layer.weight).
+
+**He / Kaiming initialisation (ReLU activations)**
+
+ReLU(z) = max(0, z) kills half of the activations (all z < 0 become 0). This means only half of the neurons are active, halving the effective fan-in. He et al. (2015) derive: σ² = 2/n_in. Uniform version: Uniform(-√(6/n_in), √(6/n_in)). The factor of 2 compensates for ReLU zeroing half the values. For leaky ReLU with slope a: σ² = 2 / ((1+a²) × n_in). In PyTorch: torch.nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu'). He initialisation is the default for any network with ReLU activations (includes ResNets, VGG, most modern architectures).
+
+**LeCun initialisation (SELU activations)**
+
+Klambauer et al. (2017) derived the Self-Normalising Neural Network using SELU activations, which maintain mean 0 and variance 1 through layers without batch norm. LeCun initialisation: σ² = 1/n_in (the simplest case). When combined with SELU, this produces a self-normalising property that makes very deep networks trainable without batch norm.
+
+**Orthogonal initialisation (RNNs)**
+
+For recurrent networks, the hidden-to-hidden weight matrix W_hh is multiplied at every timestep: h_T = W_hh^T h_0. If the eigenvalues of W_hh are not exactly 1, the signal either explodes or vanishes over T steps. Orthogonal matrices have all eigenvalues on the unit circle — perfect for recurrent weights. Orthogonal initialisation: draw a random matrix, compute its QR decomposition or SVD, use the Q matrix. In PyTorch: torch.nn.init.orthogonal_(layer.weight).
+
+**Batch normalisation as a substitute**
+
+Batch normalisation (Post 58) normalises activations to have zero mean and unit variance within each mini-batch. This makes the network approximately insensitive to initialisation — even poor initialisations converge because batch norm continuously reconditions the signal. However, batch norm adds its own complexity (train vs test behaviour, batch size sensitivity) and is not always appropriate (small batch sizes, sequence models prefer layer norm).
+
+**Interview questions on this topic**
+
+"Why does He initialisation use 2/n_in while Xavier uses 2/(n_in + n_out)?" — ReLU kills half the input signal (zeros the negative half), so the effective fan-in is halved. Multiplying by 2 compensates. Xavier targets symmetric activations (linear, tanh) where the full fan-in contributes; the factor accounts for both forward and backward pass by averaging n_in and n_out.
+
+"What happens if you initialise a very deep network with σ = 0.1?" — If σ = 0.1 and n = 1000 (layer width), then nσ² = 10 — signal will explode. If σ = 0.001 and n = 1000, then nσ² = 1 — might be stable. But the exact condition depends on the activation function. Without proper initialisation, gradients will explode or vanish within a few forward passes, and training will stall immediately.
+
+"Can you train a network without random initialisation?" — Not with all-zero or all-constant initialisation due to symmetry breaking. However, structured initialisations exist: identity matrix initialisation for recurrent nets, pre-trained weights for transfer learning, or very specific deterministic constructions in theory. In practice, random initialisation with the correct variance is always used.
+
+"What does the condition 'keep variance constant through layers' mathematically require?" — For a linear layer z = Wx with i.i.d. inputs xᵢ and i.i.d. weights W_{ij} ∼ N(0, σ²), Var(z_j) = n_in × σ² × Var(xᵢ). Setting this equal to Var(xᵢ) requires σ² = 1/n_in. This is the forward-pass condition. The backward-pass condition requires σ² = 1/n_out. Xavier/Glorot averages them.
+
+**Try on Colab:** train a 20-layer MLP on MNIST with three initialisations: (1) all zeros, (2) N(0, 1), (3) He initialisation. Plot the distribution of activations at layer 10 for each case after the first forward pass. Show that zeros give all-zero activations (dead network), N(0,1) gives exploding activations, and He gives well-conditioned activations. Then plot training loss over 10 epochs for each — only He trains successfully.`,
+    tags: ['Deep Learning', 'Initialisation', 'Xavier', 'He', 'Glorot', 'Variance', 'Ground Up'],
+    domain: 'dl',
+    youtube: [],
+  },
+  {
+    id: 117,
+    slug: 'data-preprocessing-scaling-encoding-missing-values',
+    title: 'Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data as if it is MCAR produces biased estimates. This post covers every major preprocessing decision with the underlying reason — not just what to do, but why.',
+    body: `Data preprocessing is treated as boilerplate in most ML courses. It is not. The wrong preprocessing choices introduce subtle biases, destroy the meaning of regularisation, and silently degrade model quality. Each decision has a principled reason.
+
+**The MCAR / MAR / MNAR taxonomy for missing data**
+
+Missing data is not all the same. The type of missingness determines what you can do about it without introducing bias. Missing Completely At Random (MCAR): whether a value is missing is independent of the value itself and all other variables. Example: a lab technician drops a blood sample randomly. Any missing-data strategy is valid — even complete-case analysis (delete rows with missing values) gives unbiased estimates. Missing At Random (MAR): missingness depends on observed variables but not on the missing value itself, given those observed variables. Example: younger patients are less likely to have blood pressure recorded, but conditional on age, whether BP is recorded doesn't depend on BP value. Imputation using observed covariates (regression imputation, MICE) is valid. Complete-case analysis is biased. Missing Not At Random (MNAR): missingness depends on the unobserved value itself. Example: patients with very high blood pressure are less likely to have it recorded (they avoid the doctor). No standard imputation is unbiased without additional assumptions or external data. Must model the missingness mechanism explicitly. MNAR is the hardest case and often ignored in practice — leading to biased models.
+
+**Imputation strategies**
+
+Mean/median imputation: replace missing values with the column mean or median. Valid only under MCAR — creates artificial concentration at the mean, reduces variance, distorts correlations. Always add a binary indicator feature is_missing_j alongside the imputed value so the model can learn that missingness itself is informative. Regression imputation: predict the missing value from other features using a regression model. Valid under MAR. Preserves correlations between features. MICE (Multiple Imputation by Chained Equations): iteratively fit a regression model for each feature with missingness, using all other features as predictors. Repeat for many cycles until convergence. Produces multiple completed datasets; average predictions across them to get correct uncertainty estimates. Gold standard for MAR data. KNN imputation: fill missing values with the weighted average of the k nearest non-missing neighbours in feature space. Simple, often competitive with MICE for tabular data.
+
+**Feature scaling: when it matters and when it doesn't**
+
+StandardScaler: z = (x - μ) / σ. Each feature has zero mean and unit variance. Appropriate for: gradient descent-based models (neural nets, logistic regression, linear SVM) where features on different scales create elongated loss surfaces and slow convergence. L2/L1 regularisation — without scaling, the regularisation penalty is much larger for small-scale features than large-scale ones, biasing feature selection toward large-scale features. Distance-based models (KNN, kernel SVM, k-Means) where Euclidean distance is meaningless across different scales. MinMaxScaler: x_scaled = (x - x_min) / (x_max - x_min). Scales to [0,1]. Sensitive to outliers (one extreme value compresses all other values). Use when you need a bounded range (image pixel values, neural network output bounded to [0,1]) and outliers are not present. RobustScaler: x_scaled = (x - median) / IQR. Uses median and interquartile range instead of mean and std. Robust to outliers. Best when data has significant outliers that you cannot remove. When scaling doesn't matter: tree-based models (Random Forests, XGBoost, LightGBM) are invariant to monotone feature transformations — the split threshold adapts to the scale. Naive Bayes with Gaussian likelihoods — the likelihood computation normalises by the variance anyway. Rule: scale for gradient-based and distance-based models; skip for tree-based models.
+
+**Categorical encoding**
+
+One-hot encoding: create a binary indicator column for each category value. Correct for models that treat features as numeric (linear models, neural nets). Problem: high-cardinality features (e.g., ZIP code with 40,000 values) create 40,000 new columns — curse of dimensionality. Ordinal encoding: map categories to integers 0, 1, 2, .... Only valid when the categories have a true ordinal relationship (cold < warm < hot). Imposing fake ordinality on nominal categories misleads gradient-based models. Target encoding: replace each category with the mean of the target variable for that category. Computationally efficient, handles high cardinality. Critical risk: if computed on the same data used for training, this leaks the target into features — the model sees the answer before the question. Fix: use cross-fitting (compute target encoding from a held-out fold for each training sample). Always use sklearn's TargetEncoder with cv parameter. Frequency encoding: replace each category with its count or frequency in the training set. A simpler high-cardinality solution with no leakage risk. Weight of Evidence (WOE): used in credit risk — log(P(good|category) / P(bad|category)). Naturally handles binary targets and missing values; often the best encoding for logistic regression in financial applications.
+
+**Pipelines and the train/test split rule**
+
+The cardinal rule: all preprocessing statistics (mean, std, quantiles, target encoding statistics, imputation models) must be fit on the training set only and then applied to the test set. Fitting on the combined dataset leaks test information. In sklearn: always use Pipeline objects so that fit_transform is called only on training data and transform is called on test data. Cross-validation: sklearn's cross_validate with a Pipeline correctly re-fits the preprocessor on each fold's training data. Manual splits within a CV loop are error-prone.
+
+**Interview questions on this topic**
+
+"You have a feature 'city' with 5,000 unique values. What encoding strategies would you consider and what are the trade-offs?" — One-hot: 5,000 columns, sparse, correct but creates curse of dimensionality. Target encoding: single column, captures city-level signal, but requires careful cross-fitting to avoid leakage. Frequency encoding: no leakage risk, captures popularity signal but loses class-conditioned information. Embedding layer (if neural net): learns a dense representation end-to-end. Choice depends on model type and city cardinality relative to dataset size.
+
+"What is the difference between MCAR and MAR? Does the distinction matter for imputation?" — MCAR: missingness is independent of everything. MAR: missingness depends on other observed variables but not the missing value itself. For MCAR, simple mean imputation is unbiased. For MAR, you must condition on the observed covariates to get unbiased estimates — regression imputation or MICE is required. For MNAR, no standard method is unbiased. Yes, the distinction matters enormously for inference validity.
+
+"You fit a StandardScaler on your full dataset (train+test) and then do cross-validation. What went wrong?" — Test set statistics contaminate the scaler's mean and std estimates. The model implicitly has access to test set information during training. In practice this inflates cross-validation scores, sometimes significantly on small datasets. Always fit the scaler inside the cross-validation loop on the training fold only.
+
+"Why doesn't tree-based models need feature scaling?" — Decision trees split features at threshold values. Whether a feature is in dollars or thousands of dollars doesn't change the optimal split threshold — the tree just picks a different number. The model is invariant to monotone transformations of features. Scaling would change the specific threshold chosen but not the information content of the split.
+
+**Try on Colab:** take a dataset with mixed feature types (use the Titanic dataset). Introduce 20% missing values in the 'Age' column as MAR (probability of missingness depends on 'Pclass'). Compare four imputation strategies (mean, median, KNN, MICE) by measuring the bias in the estimated mean age per class. Show that mean imputation is biased for MAR missingness; MICE recovers the true conditional mean.`,
+    tags: ['Models & Math', 'Preprocessing', 'Missing Data', 'MCAR', 'Feature Scaling', 'Categorical Encoding', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 118,
+    slug: 'survival-analysis-kaplan-meier-cox-censoring',
+    title: 'Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never experience the event during the observation window. Standard regression ignores this censoring and produces biased estimates. Survival analysis handles it correctly.',
+    body: `Survival analysis is the statistical framework for modelling time-to-event data where some observations are censored — the event has not occurred by the end of the observation period. Using standard regression in these settings produces systematically biased estimates. Every DS team working on subscription products, healthcare, or reliability engineering needs this toolkit.
+
+**The censoring problem**
+
+Consider modelling customer churn (time until a customer cancels). Some customers cancel during your observation window — you observe their exact churn time. Others are still active at the end of your observation window — you do not know when (or if) they will churn. These are right-censored observations. If you simply exclude censored customers, you introduce survivorship bias — the model only learns from churned customers, ignoring the information that uncensored customers survived at least until the observation end. If you treat the observation end date as the churn date, you underestimate survival times. Survival analysis uses all observations correctly: censored customers contribute information up to their censoring time.
+
+**Key functions**
+
+Survival function S(t) = P(T > t): the probability that the event occurs after time t. S(0) = 1, S(∞) = 0, S is monotone non-increasing. For a churn model, S(t) is the probability a customer is still active at time t. Hazard function h(t) = lim_{Δt→0} P(t ≤ T < t+Δt | T ≥ t) / Δt: the instantaneous rate of the event occurring at time t, given survival until t. Not a probability — it is a rate (can exceed 1). Cumulative hazard H(t) = ∫₀ᵗ h(s) ds. Relationship: S(t) = exp(-H(t)). Given the survival function, you can compute the hazard and vice versa.
+
+**Kaplan-Meier estimator**
+
+Kaplan-Meier is a non-parametric estimator of S(t). At each observed event time tⱼ: S(tⱼ) = S(tⱼ₋₁) × (1 - dⱼ/nⱼ), where dⱼ is the number of events at tⱼ and nⱼ is the number at risk (still alive and not censored) just before tⱼ. Between event times, S(t) is constant (step function). The KM estimator is the maximum likelihood estimator of S(t) for censored data with no parametric assumptions. Censored observations "leave" the risk set at their censoring time but are included in all earlier risk sets — this is how they contribute information. KM produces a survival curve, not a model with covariates.
+
+**Log-rank test: comparing survival curves**
+
+To test whether two groups (e.g., treatment vs control in a clinical trial) have the same survival distribution, the log-rank test computes: χ² = (Σⱼ (O₁ⱼ - E₁ⱼ))² / Σⱼ V_{1j}, where O₁ⱼ is the observed events in group 1 at time tⱼ and E₁ⱼ is the expected events under H₀ (no group difference). The log-rank test is most powerful when the hazard ratio is constant over time (proportional hazards assumption). For non-proportional hazards, use the weighted log-rank test or compare restricted mean survival time.
+
+**Cox proportional hazards model**
+
+Cox (1972): a semi-parametric regression model for survival data. The hazard for individual i with covariates xᵢ: h(t|xᵢ) = h₀(t) exp(βᵀxᵢ). h₀(t) is the baseline hazard — a non-parametric function of time shared by all individuals. exp(βᵀxᵢ) is the covariate effect, which is time-constant (the proportional hazards assumption). "Semi-parametric" because h₀(t) is left completely unspecified. Cox fits β without ever estimating h₀(t), using the partial likelihood: L(β) = Πⱼ exp(βᵀxⱼ) / [Σ_{i∈R(tⱼ)} exp(βᵀxᵢ)], where R(tⱼ) is the risk set at event time tⱼ. The denominator sums over everyone still at risk — censored observations contribute to the denominator of every event time before their censoring.
+
+**Interpreting Cox coefficients**
+
+exp(β_j) is the hazard ratio: the multiplicative change in hazard for a one-unit increase in feature xⱼ, holding all others constant. exp(β_j) > 1: feature increases the hazard (risk factor). exp(β_j) < 1: feature decreases the hazard (protective factor). Example in churn: if β_tenure = -0.3, then exp(-0.3) ≈ 0.74 — each additional month of tenure reduces the hazard of churn by 26%.
+
+**Proportional hazards assumption**
+
+The Cox model assumes that the hazard ratio between any two individuals is constant over time. To test: plot log(-log(S(t))) vs log(t) for different groups — parallel lines indicate proportional hazards. Or compute Schoenfeld residuals and test their correlation with time. When violated: use time-varying covariates, stratified Cox (separate h₀(t) per stratum), or flexible parametric models (piecewise exponential, flexible splines).
+
+**ML approaches to survival**
+
+Gradient boosted survival models: XGBoost and LightGBM support survival objectives (accelerated failure time or Cox partial likelihood). Random survival forests (Ishwaran et al., 2008): ensemble of survival trees that output cumulative hazard functions. DeepSurv (Katzman et al., 2018): neural network that outputs β parameters for a Cox model. All preserve the censoring mechanism while using ML's flexibility.
+
+**Interview questions on this topic**
+
+"Why can't you just use linear regression to model time-to-churn?" — Censored observations: customers still active at the observation end don't have a true churn time — you'd have to either exclude them (bias) or use the end date as churn time (underestimates survival). Survival analysis correctly uses all observations, including censored ones, through the likelihood formulation.
+
+"Interpret a Cox coefficient of β = 0.5 on a binary feature 'is_high_usage'." — exp(0.5) ≈ 1.65. High-usage customers have a 65% higher hazard rate at any given time than low-usage customers. Put differently: at any point in time, high-usage customers are 1.65× more likely to experience the event (churn, death, failure) in the next instant, conditional on having survived until that point.
+
+"What is the difference between KM and Cox? When would you use each?" — KM is non-parametric: it estimates the survival curve for the full population or pre-defined subgroups. No covariate modelling. Use KM for: descriptive analysis, comparing two groups, clinical reporting. Cox adds covariate regression: it models how individual features affect the hazard. Use Cox for: understanding which features predict the event, adjusting for confounders, predicting individual risk.
+
+"What does the proportional hazards assumption mean and how do you test it?" — The ratio of hazards between any two individuals is constant over time: h(t|xᵢ)/h(t|xⱼ) = exp(β(xᵢ - xⱼ)) for all t. Test: Schoenfeld residual test (significant correlation of residuals with time indicates violation). Graphically: log-log survival curves should be parallel. Common violation: treatment effect diminishes over time (common in clinical trials).
+
+**Try on Colab:** use the lifelines library with the Telco customer churn dataset (augment with synthetic survival times). Fit a Kaplan-Meier curve for churned vs non-churned. Run a log-rank test comparing high vs low tenure groups. Fit a Cox model with 5 covariates (tenure, monthly charges, contract type, payment method, internet service). Interpret the hazard ratios. Check the proportional hazards assumption using Schoenfeld residuals.`,
+    tags: ['Models & Math', 'Survival Analysis', 'Kaplan-Meier', 'Cox', 'Censoring', 'Churn', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 119,
+    slug: 'generalisation-theory-vc-dimension-double-descent',
+    title: 'Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of billions of parameters trained on trillions of tokens and generalises remarkably. The double descent phenomenon and implicit regularisation of SGD explain why the classical theory is incomplete.',
+    body: `Classical learning theory, developed from the 1960s through 1990s, gave us tools to reason about when a model will generalise from training data to new data. These tools are essential for understanding the foundations. But they fail to explain deep learning. The double descent phenomenon (2019) provided the missing piece, and the story is still being written.
+
+**Empirical risk vs population risk**
+
+The training loss (empirical risk) measures how well the model fits the training data: R̂(f) = (1/n) Σᵢ L(f(xᵢ), yᵢ). The test loss (population risk) measures how well the model generalises: R(f) = E_{(x,y)~P}[L(f(x), y)]. Generalisation gap = R(f) - R̂(f). We want this to be small. Empirical risk minimisation (ERM): pick the function in your hypothesis class H that minimises R̂. If H is too large (too expressive), ERM can find a function with R̂ = 0 (perfect training fit) but large R (poor generalisation). If H is too small, ERM cannot fit the training data well — high bias.
+
+**VC dimension: measuring hypothesis class complexity**
+
+The VC (Vapnik-Chervonenkis) dimension of a hypothesis class H is the largest number of points that H can shatter — label in all 2^n possible ways. Binary linear classifiers in ℝᵈ: VC dimension = d + 1. You can always find d+1 points that can be labelled in all ways by a hyperplane, but never d+2. VC dimension of a single neuron with step activation: d + 1. VC dimension of a neural network with W weights: O(W log W). The fundamental theorem of statistical learning (PAC learning): with probability 1-δ, the generalisation gap satisfies: R(f) - R̂(f) ≤ O(√((VC(H) log n + log(1/δ)) / n)). This bound says: generalisation improves with more data (1/n), worse with more complex models (VC(H)). The bound is pessimistic for deep learning — it predicts catastrophic overfitting for networks with millions of parameters but this does not happen in practice.
+
+**The classical bias-variance-noise decomposition**
+
+For squared loss: E[(y - f(x))²] = Bias(f)² + Var(f) + σ²_noise. Bias²: how far the average prediction is from the true function. Variance: how much the prediction changes across different training sets. Noise: irreducible error from the data generation process. Classical picture: as model complexity increases, bias decreases and variance increases. The optimal complexity balances them — the U-shaped test error curve. This picture is correct for classical models (polynomial regression, k-NN). It fails for overparameterised models.
+
+**Double descent**
+
+Belkin et al. (2019) and Nakkiran et al. (2019) demonstrated double descent: as model complexity or training time increases, the test error follows a double-U shape: (1) Classical U: bias dominates at low complexity, variance dominates at high complexity, optimal point in the middle. (2) At the interpolation threshold (model can exactly fit the training data, zero training loss), test error peaks. (3) For overparameterised models (beyond the interpolation threshold), test error decreases again as you add more parameters and often reaches lower than the classical optimum. Why? Among all interpolating solutions (zero training loss), gradient descent finds the minimum-norm solution — effectively implicit L2 regularisation. With more parameters, the interpolating function can be smoother — it generalises better even at zero training loss.
+
+**Implicit regularisation of gradient descent**
+
+Gradient descent on overparameterised linear models converges to the minimum-norm interpolating solution (the pseudoinverse solution). For neural networks, SGD implicitly biases toward solutions that generalise well — flat minima, low-norm weight matrices, sparse solutions. This implicit regularisation is not fully understood but is the reason that modern deep learning can interpolate training data and still generalise.
+
+**Early stopping as L2 regularisation**
+
+In gradient flow (continuous-time gradient descent) on a quadratic loss, the solution after t steps satisfies: w(t) = w* - (w* - w₀) exp(-H t), where H is the Hessian and w* is the global minimum. For the direction of eigenvalue λ: w_λ(t) = w*_λ (1 - exp(-λt)). Large eigenvalue (well-conditioned direction): converges fast. Small eigenvalue (ill-conditioned direction): converges slowly. Early stopping at time T suppresses directions with λ ≪ 1/T — exactly what L2 regularisation with λ ∝ 1/T does. Early stopping = L2 regularisation from the lens of gradient flow.
+
+**Occam's razor and MDL**
+
+Minimum Description Length (MDL) principle: the best model is the one that most compresses the data. A model that memorises all training points requires describing all training labels; a model that captures the true pattern only requires describing the pattern parameters. This connects to Bayesian model selection: a simpler model with a tighter prior assigns higher marginal likelihood to data that matches the pattern, even if the more complex model fits equally well. Both MDL and Bayesian model selection prefer simpler generalisations.
+
+**Interview questions on this topic**
+
+"What is the VC dimension of a linear classifier in 2D? What does it mean?" — VC dimension = 3 (d+1 = 2+1). This means 3 points can always be shattered (labelled in all 2³ = 8 ways by a line) but no set of 4 points can be. It bounds the generalisation gap: with n training points, the gap shrinks as roughly √(3 log n / n). A more complex classifier (larger VC dimension) has a larger gap bound for the same n.
+
+"Explain the double descent phenomenon. Why does adding more parameters sometimes improve generalisation?" — Classical wisdom says more parameters = more overfitting. But past the interpolation threshold, there are many solutions with zero training loss. Gradient descent finds the minimum-norm one. With more parameters, the minimum-norm interpolating solution can be smoother and better generalises. Essentially, overparameterisation enables implicit regularisation.
+
+"Why does early stopping prevent overfitting? Is it equivalent to regularisation?" — Early stopping halts training before the model has time to fit the noise in the training data. In gradient flow, the equivalent L2 regularisation parameter is λ ≈ 1/(α T). Directions in the parameter space corresponding to small Hessian eigenvalues (noise directions) converge slowly and are effectively suppressed. So yes, early stopping is approximately L2 regularisation with an implicit λ.
+
+"What does it mean for a model to 'generalise'? Is low test loss sufficient?" — Generalisation means the model's performance on new, unseen data from the same distribution matches its training performance. Low test loss on an IID test set is the standard measure. But distribution shift (train and test come from different distributions) breaks this — a model can have low IID test loss and poor real-world generalisation. Robustness to distribution shift, calibration, and worst-case group performance are additional generalisation criteria beyond average test loss.
+
+**Try on Colab:** demonstrate double descent on the MNIST dataset. Train a two-layer neural network with increasing hidden layer width (10, 50, 100, 500, 1000, 5000 neurons). Plot training loss and test loss vs the number of parameters. Identify the interpolation threshold. Show that test loss first rises (classical regime) and then falls again (overparameterised regime) as width increases.`,
+    tags: ['Models & Math', 'Generalisation', 'VC Dimension', 'Double Descent', 'PAC Learning', 'Bias-Variance', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
+  {
+    id: 120,
+    slug: 'matrix-calculus-gradients-backprop-linear-layers',
+    title: 'Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a formula here, a trick there. This post builds the full system: scalar-by-vector, vector-by-vector (Jacobian), and scalar-by-matrix, with four complete worked derivations.',
+    body: `Matrix calculus extends scalar calculus to functions involving vectors and matrices. It is the language in which ML derivations are written, and the gap between "I know what a gradient is" and "I can derive it for any layer" is almost entirely matrix calculus.
+
+**Notation conventions**
+
+We use numerator layout (also called Jacobian layout): if y ∈ ℝᵐ and x ∈ ℝⁿ, then ∂y/∂x ∈ ℝᵐˣⁿ — the derivative has the same shape as the output in the numerator, stacked over the input in the denominator. For a scalar f and a vector x ∈ ℝⁿ: ∂f/∂x ∈ ℝ¹ˣⁿ (a row vector, but often treated as a column vector ∇f for gradient descent). For a scalar f and a matrix X ∈ ℝᵐˣⁿ: ∂f/∂X ∈ ℝᵐˣⁿ — the gradient has the same shape as the matrix.
+
+**Scalar by vector: the gradient**
+
+∂f/∂x = [∂f/∂x₁, ..., ∂f/∂xₙ]. Key identities: ∂(aᵀx)/∂x = a. ∂(xᵀx)/∂x = 2x. ∂(xᵀAx)/∂x = (A + Aᵀ)x = 2Ax if A is symmetric. ∂(aᵀXb)/∂X = abᵀ. Example: f = ||y - Xw||² = (y-Xw)ᵀ(y-Xw). Expand: f = yᵀy - 2wᵀXᵀy + wᵀXᵀXw. ∂f/∂w = -2Xᵀy + 2XᵀXw. Setting to zero: XᵀXw = Xᵀy — the normal equations. Derivation complete.
+
+**The trace trick**
+
+For a scalar f expressed as a trace: f = tr(AᵀB). Then ∂f/∂A = B. Since a scalar equals its own trace (tr(a) = a), we can write any scalar as a trace and use this identity. Useful when the scalar is expressed as a product of matrices: tr(AᵀBCD) can be differentiated by cycling the trace and applying the identity.
+
+**Vector by vector: the Jacobian**
+
+For y = f(x) with y ∈ ℝᵐ and x ∈ ℝⁿ, the Jacobian J ∈ ℝᵐˣⁿ has J_{ij} = ∂yᵢ/∂xⱼ. Key Jacobians: ∂(Ax)/∂x = A (linear map y=Ax: Jacobian is just A). ∂(xᵀA)/∂x = Aᵀ. ∂σ(x)/∂x = diag(σ(x) ⊙ (1-σ(x))) for element-wise sigmoid. ∂ReLU(x)/∂x = diag(𝟙[x > 0]) (diagonal of indicators). ∂softmax(x)/∂x = diag(s) - ssᵀ where s = softmax(x). The softmax Jacobian is not diagonal — each output depends on all inputs.
+
+**Backprop through a linear layer: full derivation**
+
+Forward pass: z = Wx + b, a = σ(z), where W ∈ ℝᵐˣⁿ, x ∈ ℝⁿ, b ∈ ℝᵐ. Suppose upstream gradient ∂L/∂a ∈ ℝᵐ is known. We need: ∂L/∂W, ∂L/∂b, ∂L/∂x (to pass backward). Step 1: ∂L/∂z = ∂L/∂a ⊙ σ'(z) (element-wise multiply by activation derivative). Let δ = ∂L/∂z ∈ ℝᵐ. Step 2 (gradient w.r.t. weights): ∂L/∂W_{ij} = Σₖ (∂L/∂zₖ)(∂zₖ/∂W_{ij}) = δᵢ xⱼ. Therefore: ∂L/∂W = δ xᵀ ∈ ℝᵐˣⁿ. The weight gradient is the outer product of the upstream gradient and the input. Step 3 (gradient w.r.t. bias): ∂L/∂b = δ. Step 4 (gradient w.r.t. input — to pass to previous layer): ∂L/∂x = Wᵀ δ ∈ ℝⁿ. Summary: δ_prev = Wᵀ δ (backprop through W is multiplication by Wᵀ). ∂L/∂W = δ xᵀ (outer product). This is the complete backprop update for a linear layer. Every framework implements exactly this.
+
+**Deriving the attention gradient (sketch)**
+
+Attention: Attention(Q, K, V) = softmax(QKᵀ/√d) V. Let S = QKᵀ/√d, A = softmax(S), output = AV. For scalar loss L and upstream gradient ∂L/∂(AV): ∂L/∂A = (∂L/∂(AV)) Vᵀ. ∂L/∂V = Aᵀ (∂L/∂(AV)). ∂L/∂S uses the softmax Jacobian (full matrix). ∂L/∂Q = (∂L/∂S) K / √d. ∂L/∂K = (∂L/∂S)ᵀ Q / √d. This is what PyTorch's autograd computes — the same chain of matrix products.
+
+**The Frobenius inner product**
+
+For matrix-valued functions, the gradient can be derived using the Frobenius inner product: ⟨A, B⟩_F = tr(AᵀB). The directional derivative of f(X) in direction dX is df = ⟨∇_X f, dX⟩_F = tr((∇_X f)ᵀ dX). To find ∇_X f: compute df, express it as tr(AᵀdX), then ∇_X f = A. Example: f = tr(AXB), df = tr(A dX B) = tr(BAᵀ ... ) ... = tr((AᵀB)ᵀ dX). So ∇_X f = (AᵀB)ᵀ = BᵀA.
+
+**Interview questions on this topic**
+
+"Derive ∂L/∂W for a linear layer given upstream gradient δ." — z = Wx + b, upstream δ = ∂L/∂z. ∂L/∂W_{ij} = Σₖ δₖ ∂zₖ/∂W_{ij} = δᵢ xⱼ. In matrix form: ∂L/∂W = δxᵀ. This is the outer product of the upstream gradient and the layer input.
+
+"Why is the backward pass through a linear layer multiplication by Wᵀ?" — Forward: z = Wx (y = f(x) = Wx, Jacobian = W). Chain rule: ∂L/∂x = Wᵀ ∂L/∂z. The transpose appears because in numerator layout, the Jacobian of Wx w.r.t. x is W, and the chain rule for ∂L/∂x requires multiplying by the transpose Jacobian: ∂L/∂x = (∂z/∂x)ᵀ ∂L/∂z = Wᵀ δ.
+
+"What is the gradient of the cross-entropy loss with softmax output?" — Let z be the logits, s = softmax(z), L = -Σ_k y_k log s_k. Using the softmax Jacobian: ∂L/∂z_i = s_i - y_i. The gradient is simply prediction minus label. This is one of the cleanest gradients in all of deep learning and is the reason softmax + cross-entropy is so well-behaved numerically.
+
+"What shape is ∂L/∂W for a linear layer W ∈ ℝᵐˣⁿ and why?" — ∂L/∂W ∈ ℝᵐˣⁿ — the same shape as W. The gradient of a scalar with respect to a matrix has the same shape as the matrix. Element-wise: (∂L/∂W)_{ij} = ∂L/∂W_{ij} — the partial derivative of L with respect to each parameter.
+
+**Try on Colab:** implement a single linear layer with manual forward and backward passes (no autograd). For an input x ∈ ℝ^{10}, W ∈ ℝ^{5×10}, and MSE loss on a target y ∈ ℝ^5, compute: (1) the forward pass z = Wx, (2) the loss L = ||z - y||², (3) δ = ∂L/∂z = 2(z-y), (4) ∂L/∂W = δxᵀ, (5) ∂L/∂x = Wᵀδ. Verify each gradient against PyTorch autograd using torch.autograd.gradcheck or finite differences.`,
+    tags: ['Models & Math', 'Matrix Calculus', 'Gradients', 'Backpropagation', 'Normal Equations', 'Linear Algebra', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -6345,7 +6877,7 @@ const SERIES = [
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
   { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93] },
   { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
-  { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110] },
+  { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120] },
 ]
 
 const GRADIENT_DOMAINS = [

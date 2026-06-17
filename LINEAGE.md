@@ -73,6 +73,26 @@ New SERIES: 'search' (Search & IR, posts 79,80,90), 'ds' (DS & Causal, posts 81-
 
 ---
 
+### v4.87 — Gradient: 10 more Ground Up posts (111–120), series complete (2026-06-18)
+
+**Ground Up series now complete at 20 posts (101–120). Every foundational layer is covered.**
+
+Posts added:
+- 111: OLS + Linear Regression (normal equations derivation, Gauss-Markov, heteroscedasticity, multicollinearity)
+- 112: Regularisation — geometric picture (L1 sparsity via corners, L2 smoothness, dropout, early stopping, weight decay, AdamW)
+- 113: Hypothesis Testing — featured (p-value definition, t-test, chi-square, confidence intervals, effect size, common misconceptions)
+- 114: Evaluation Metrics (confusion matrix, precision/recall/F1, AUC-ROC probabilistic interpretation, AUC-PR for imbalance, multi-class)
+- 115: Convex Optimisation (convexity definition, convergence proofs, saddle points in high dimensions, flat minima, implicit SGD regularisation)
+- 116: Neural Network Initialisation (Xavier/Glorot derivation, He/Kaiming derivation, orthogonal for RNNs, why zero init fails)
+- 117: Data Preprocessing (MCAR/MAR/MNAR taxonomy, MICE, scaling decision tree, categorical encoding + leakage, pipeline rules)
+- 118: Survival Analysis (Kaplan-Meier, log-rank test, Cox PH, proportional hazards assumption, churn modelling)
+- 119: Generalisation Theory (VC dimension, PAC learning, double descent, implicit regularisation, early stopping = L2)
+- 120: Matrix Calculus (scalar/vector/matrix derivatives, trace trick, OLS normal equations, backprop through linear layer, attention gradient sketch)
+
+Total: 120 posts, 12 series. 'ground' series: 20 posts (101–120). Brace diff 0.
+
+---
+
 ### v4.86 — Gradient: 10 "From Ground Up" posts (101–110) with interview Qs (2026-06-17)
 
 **New series 'ground' — From Ground Up. 10 foundational posts covering the math and CS layer that every advanced post assumes. Each post ends with 4 interview questions with full answers.**

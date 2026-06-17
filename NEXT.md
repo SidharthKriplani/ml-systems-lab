@@ -76,6 +76,15 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Gradient Ground Up series complete — 10 more posts (v4.87, 2026-06-18)
+
+Posts 111–120. Ground Up series now 20 posts total (101–120). Every foundational layer covered.
+OLS/Normal Equations · Regularisation geometry · Hypothesis Testing · Evaluation Metrics · Convex Optimisation · NN Initialisation · Data Preprocessing · Survival Analysis · Generalisation Theory · Matrix Calculus.
+Each post: full derivation + 4 interview Qs with answers + Colab challenge.
+Total: 120 posts, 12 series, ~11,500 lines. Brace diff 0.
+
+---
+
 ## ✅ DONE: Gradient "From Ground Up" series — 10 foundational posts (v4.86, 2026-06-17)
 
 Posts 101–110. New SERIES 'ground' (From Ground Up). Each post includes 4 interview Qs with full answers + Colab challenge.
