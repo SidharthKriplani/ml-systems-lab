@@ -50,6 +50,7 @@ const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
+const CheatsheetTab     = lazy(() => import('./tabs/CheatsheetTab.jsx'))
 const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
@@ -92,7 +93,8 @@ const ALL_TABS = [
   { id: 'fraud_detection', component: FraudDetectionTab },
   { id: 'plans',     component: PlansTab },
   { id: 'profile',   component: ProfilePage },
-  { id: 'resources', component: ResourcesTab },
+  { id: 'resources',   component: ResourcesTab },
+  { id: 'cheatsheet', component: CheatsheetTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -152,7 +154,7 @@ const GATE_COPY = {
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
   home: 'today', landscape: 'today', plans: 'today', profile: 'today', resources: 'today',
-  gradient: 'read',
+  gradient: 'read', cheatsheet: 'read',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
   jdprep: 'interview', defense: 'interview', verbal: 'interview',
@@ -329,8 +331,9 @@ const NAV_SECTIONS = [
     id: 'learn',
     label: 'LEARN',
     items: [
-      { id: 'gradient',  label: 'Gradient' },
-      { id: 'landscape', label: 'Landscape' },
+      { id: 'gradient',   label: 'Gradient' },
+      { id: 'cheatsheet', label: 'Cheatsheet' },
+      { id: 'landscape',  label: 'Landscape' },
     ],
   },
 ]

@@ -3,11 +3,11 @@ import { downloadProgressJSON } from '../utils/export.js'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
+  { date: '2026-06-18', label: 'Interview Cheatsheet',      desc: '4-tier last-minute prep: 50 flashcards · 12 formulas · traps · domain audit · 7-day plan + company profiles', tab: 'cheatsheet' },
+  { date: '2026-06-18', label: 'Gradient — 200 interview Qs', desc: '4 Q&As per post across posts 51–100: RecSys, Search, Fraud, Pricing, Causal, DL, and more', tab: 'gradient' },
+  { date: '2026-06-18', label: 'Gradient — 120 posts',     desc: 'From Ground Up series complete (posts 101–120): OLS, regularisation, hypothesis testing, matrix calculus', tab: 'gradient' },
   { date: '2026-06-05', label: 'Incident Room — 12 cases', desc: 'inc7–inc12: stale data, train/serve skew, cold start, GPU OOM, label leakage, canary miss', tab: 'incidentroom' },
   { date: '2026-06-05', label: 'ML Coding — 12 problems',  desc: 'mlc8–mlc12: time-safe split, weighted P@K, Welford online stats, early stopping, permutation importance', tab: 'mlcoding' },
-  { date: '2026-06-05', label: 'Sign in with Google',      desc: 'Free account — progress sync coming soon. Google OAuth live.',                   tab: 'plans' },
-  { date: '2026-06-05', label: 'Skill-first nav',          desc: 'Features / Evaluation / Systems / Training / Data / Interview / Labs / Learn',   tab: 'home' },
-  { date: '2026-06-05', label: 'Plans & Access page',      desc: 'Free vs Full Lab tier breakdown + access code entry in one place',               tab: 'plans' },
 ]
 
 // ── Section tab registry ───────────────────────────────────────────────────────

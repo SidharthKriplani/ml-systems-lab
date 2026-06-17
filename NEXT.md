@@ -76,6 +76,17 @@ Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current fo
 
 ---
 
+## ✅ DONE: Interview Cheatsheet tab (v4.89, 2026-06-18)
+
+`src/tabs/CheatsheetTab.jsx` — 4-tier last-minute prep tab:
+- Tier 0 "Last Few Hours": 50 flashcard Q&As grouped by Core ML / DL / RecSys / Fraud / Experimentation / Causal / Systems
+- Tier 1 "Last Day": 12 key formulas (NDCG, BM25, UCB, CUPED, PSI, etc.) + 12 common traps + 8 decision frameworks
+- Tier 2 "3 Days": 8-domain audit with must-know concepts, probe questions, Gradient post links
+- Tier 3 "1 Week": 7-day prep plan + 7 company profiles (Flipkart, Swiggy/Zomato, PhonePe/Razorpay, Meesho/Walmart, InMobi/Google, Dream11, GenAI startups)
+Wired into App.jsx (lazy import, ALL_TABS, TAB_TO_ZONE, NAV_SECTIONS learn group). RECENTLY_ADDED updated. Brace diff 0.
+
+---
+
 ## ✅ DONE: Interview questions on posts 51-100 (v4.88, 2026-06-18)
 
 200 structured Q&A pairs (4 per post × 50 posts) injected into posts 51-100. Rendered via InterviewQsSection collapsible accordion. Brace diff 0.

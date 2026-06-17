@@ -1874,6 +1874,14 @@ Experimentation Lab     A/B testing, SRM, CUPED, power analysis, stats
 The labs are intentionally independent — you can use any one without the others. Cross-links exist on each homepage. The unified learning path is the long-term north star.
 
 
+### v4.89 — Interview Cheatsheet tab (2026-06-18)
+
+**What shipped:**
+
+New `src/tabs/CheatsheetTab.jsx` — 4-tier last-minute prep for senior DS/MLE Bangalore market interviews. Bangalore-market-researched company profiles (Flipkart, Swiggy/Zomato, PhonePe/Razorpay/Juspay, Meesho/Walmart, InMobi/Google/Meta, Dream11/MPL, GenAI startups). Content: 50 flashcards, 12 formulas, 12 traps, 8 decision frameworks, 8-domain audit with probe questions, 7-day plan. All inline styles, no Tailwind. Wired into App.jsx and NAV_SECTIONS learn group. RECENTLY_ADDED updated. Brace diff 0.
+
+---
+
 ### v4.88 — Interview questions injected into posts 51-100 (2026-06-18)
 
 **What shipped:**
