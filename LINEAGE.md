@@ -2179,6 +2179,32 @@ Added "Mark as read" toggle with `msl_read` localStorage. New utility: `src/util
 
 ---
 
+### v4.104 — Universal deep links across 7 tabs (2026-06-18)
+
+Every discrete content item in MSL now has a shareable URL. `URLSearchParams` + `replaceState` pattern applied to 7 tabs:
+
+- **CheatsheetTab**: `?tier=N#cheatsheet` + `?tier=1&section=X#cheatsheet`. `initSection` prop on `LastDay` component; URL overrides default on mount.
+- **IncidentRoomTab**: `?scenario=incN#incidentroom`. `autoExpand` prop on `IncidentCard` — true when URL matches, false otherwise.
+- **MLCodingTab**: `?problem=mlcN#mlcoding`. `autoExpand` prop on `ProblemCard`. Same pattern.
+- **SpotTheFlawTab**: `?scenario=stfN#spottheflaw`. Initial state forces `open: true` for matching index. `handlePick('toggle')` writes on open, clears on close.
+- **FeatureEngTab**: `?module=X#features`. URL param overrides localStorage on initial state read.
+- **ModelEvalTab**: `?module=X#eval`. Same pattern.
+- **ClassicalMLTab**: `?module=X#classical`. Same pattern.
+
+**Files changed:** `src/tabs/CheatsheetTab.jsx`, `src/tabs/IncidentRoomTab.jsx`, `src/tabs/MLCodingTab.jsx`, `src/tabs/SpotTheFlawTab.jsx`, `src/tabs/FeatureEngTab.jsx`, `src/tabs/ModelEvalTab.jsx`, `src/tabs/ClassicalMLTab.jsx`
+**Brace diff:** All 0. String audit: OK. Pushed: ✅
+
+---
+
+### v4.103 — Gradient post deep links (2026-06-18)
+
+Every Gradient post now has a shareable URL: `?post={slug}#gradient`. Added `useEffect` on mount to read `window.location.search` and open PostReader directly if a matching slug is found. `openPost(id)` writes URL via `replaceState`; `closePost()` clears it back to `#gradient`. All 4 `setReading` call sites updated to use new helpers. No App.jsx changes — search params don't conflict with hash routing. Prerequisite for LinkedIn post campaign.
+
+**Files changed:** `src/tabs/GradientTab.jsx`
+**Brace diff:** 0. String audit: OK. Pushed: ✅
+
+---
+
 ### v4.47 — Freemium gating polish, difficulty filter, mobile fixes (2026-06-02)
 
 *(See v4.48 above for merged batch summary — v4.47 items 1, 2, 4, 5 completed; item 3 blocked)*

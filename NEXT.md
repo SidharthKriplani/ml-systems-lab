@@ -319,7 +319,10 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 ## Notes for next session
 
 - Read CLAUDE.md + this file first. Then grep AUDITS.md for open findings before touching code.
-- v4.68–v4.73 all in one large uncommitted batch — user must push from terminal
+- v4.103 and v4.104 fully pushed to GitHub (universal deep links). MSL is live at v4.104.
+- GitHub PAT used this session was exposed — user revoked it. Generate a fresh one before next push.
+- Git remote on MSL was switched to HTTPS with PAT. After revoke+regenerate: `git remote set-url origin https://SidharthKriplani:NEW_TOKEN@github.com/SidharthKriplani/ml-systems-lab.git`
 - `RECENTLY_ADDED` in HomeTab.jsx must be updated every time content ships (5-item static array)
 - `GATE_COPY` in App.jsx must have an entry for any new premium tab
 - `BRAIN-TRANSFER.md` + `PENDING.md` stubs still need `git rm` — open finding #030.6
+- LinkedIn post campaign: 5 posts drafted with deep links — pending Sidharth to publish
