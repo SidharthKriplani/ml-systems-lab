@@ -1555,9 +1555,17 @@ const COMING_SOON = []
 
 export default function ClassicalMLTab({ onNavigate, user, onShowAuth }) {
   const [activeModule, setActiveModule] = useState(() => {
-    try { return localStorage.getItem('msl_classical_active') || 'zoo' } catch { return 'zoo' }
+    try {
+      const urlMod = new URLSearchParams(window.location.search).get('module')
+      if (urlMod && MODULES.find(m => m.id === urlMod)) return urlMod
+      return localStorage.getItem('msl_classical_active') || 'zoo'
+    } catch { return 'zoo' }
   })
-  function setActiveModuleAndPersist(id) { setActiveModule(id); try { localStorage.setItem('msl_classical_active', id) } catch {} }
+  function setActiveModuleAndPersist(id) {
+    setActiveModule(id)
+    try { localStorage.setItem('msl_classical_active', id) } catch {}
+    window.history.replaceState(null, '', `?module=${id}#classical`)
+  }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
 
   const ActiveComponent = MODULES.find(m => m.id === activeModule)?.component

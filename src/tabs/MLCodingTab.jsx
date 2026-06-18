@@ -1563,8 +1563,8 @@ const TYPE_META = {
   4: { label: 'Design Under Constraints', color: 'var(--prime)', short: 'Type 4: Design' },
 }
 
-function ProblemCard({ problem, done, onComplete, onNavigate }) {
-  const [expanded, setExpanded]     = useState(false)
+function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
+  const [expanded, setExpanded]     = useState(autoExpand || false)
   const [showSolution, setShowSol]  = useState(false)
   const [cpRevealed, setCpRevealed] = useState(false)
   const [cpPick, setCpPick]         = useState(null)
@@ -1679,6 +1679,8 @@ function ProblemCard({ problem, done, onComplete, onNavigate }) {
 
 // ── Main tab ──────────────────────────────────────────────────────────────────
 export default function MLCodingTab({ onNavigate }) {
+  const urlProblem = new URLSearchParams(window.location.search).get('problem')
+
   const [completedIds, setCompletedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]') }
     catch { return [] }
@@ -1753,6 +1755,7 @@ export default function MLCodingTab({ onNavigate }) {
             done={completedIds.includes(p.id)}
             onComplete={handleComplete}
             onNavigate={onNavigate}
+            autoExpand={urlProblem === p.id}
           />
         ))}
       </div>

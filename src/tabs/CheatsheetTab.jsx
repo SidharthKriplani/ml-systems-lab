@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -659,10 +659,15 @@ function Flashcards() {
   )
 }
 
-function LastDay() {
-  const [section, setSection] = useState('formulas')
+function LastDay({ initSection }) {
+  const [section, setSection] = useState(initSection || 'formulas')
   const [openTrap, setOpenTrap] = useState(null)
   const [openFw, setOpenFw] = useState(null)
+
+  function setAndPersistSection(k) {
+    setSection(k)
+    window.history.replaceState(null, '', `?tier=1&section=${k}#cheatsheet`)
+  }
 
   return (
     <div>
@@ -671,7 +676,7 @@ function LastDay() {
       </p>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
         {[['formulas','Formulas'], ['traps','Common Traps'], ['frameworks','Frameworks'], ['comparisons','Trade-offs ⇄']].map(([k,l]) => (
-          <button key={k} onClick={() => setSection(k)}
+          <button key={k} onClick={() => setAndPersistSection(k)}
             style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', border: '1px solid',
               background: section === k ? 'var(--prime)' : 'transparent',
               color: section === k ? '#000' : 'var(--ink-mid)',
@@ -978,7 +983,15 @@ const TIERS = [
 ]
 
 export default function CheatsheetTab({ onNavigate }) {
-  const [tier, setTier] = useState(0)
+  const params = new URLSearchParams(window.location.search)
+  const urlTier = parseInt(params.get('tier') ?? '', 10)
+  const urlSection = params.get('section') || null
+  const [tier, setTier] = useState(!isNaN(urlTier) && urlTier >= 0 && urlTier <= 3 ? urlTier : 0)
+
+  function selectTier(id) {
+    setTier(id)
+    window.history.replaceState(null, '', `?tier=${id}#cheatsheet`)
+  }
 
   return (
     <div style={{ maxWidth: '820px', margin: '0 auto', padding: '0 0 80px' }}>
@@ -996,7 +1009,7 @@ export default function CheatsheetTab({ onNavigate }) {
       {/* tier selector */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '36px' }}>
         {TIERS.map(t => (
-          <button key={t.id} onClick={() => setTier(t.id)}
+          <button key={t.id} onClick={() => selectTier(t.id)}
             style={{ padding: '14px 12px', borderRadius: '12px', cursor: 'pointer', border: '1px solid', textAlign: 'left', transition: 'all var(--t-fast)',
               background: tier === t.id ? 'var(--prime)' : 'var(--surface)',
               borderColor: tier === t.id ? 'var(--prime)' : 'var(--rim)',
@@ -1009,7 +1022,7 @@ export default function CheatsheetTab({ onNavigate }) {
 
       {/* tier content */}
       {tier === 0 && <Flashcards />}
-      {tier === 1 && <LastDay />}
+      {tier === 1 && <LastDay initSection={urlSection} />}
       {tier === 2 && <ThreeDays onNavigate={onNavigate} />}
       {tier === 3 && <OneWeek />}
     </div>

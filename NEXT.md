@@ -256,9 +256,31 @@ All 57 JSX files clean. Root cause of repeated build failures confirmed and fixe
 
 ---
 
-## ✅ DONE: Cheatsheet trade-off cards (v4.102, 2026-06-18)
+## ✅ DONE: Universal deep links (v4.104, 2026-06-18)
 
-24 comparison cards in CheatsheetTab "Trade-offs ⇄" section (Last Day tier). 6 categories: Training, Architecture, Metrics, Data, MLOps, Retrieval. Each card: mechanism, USE, WATCH, collapsible interviewer probe. Category filter pills. CLAUDE.md schema validator added. Brace diff 0.
+Every discrete content item in MSL now has a shareable URL. 7 tabs updated with `URLSearchParams` + `replaceState`:
+- CheatsheetTab: `?tier=N#cheatsheet` + `?tier=1&section=X#cheatsheet`
+- IncidentRoomTab: `?scenario=incN#incidentroom` (autoExpand prop)
+- MLCodingTab: `?problem=mlcN#mlcoding` (autoExpand prop)
+- SpotTheFlawTab: `?scenario=stfN#spottheflaw` (state + write-back)
+- FeatureEngTab: `?module=X#features` (URL overrides localStorage)
+- ModelEvalTab: `?module=X#eval`
+- ClassicalMLTab: `?module=X#classical`
+All brace diff 0, string audit OK.
+
+---
+
+## ✅ DONE: Gradient post deep links (v4.103, 2026-06-18)
+
+Every Gradient post now has a shareable URL: `?post={slug}#gradient`. `useEffect` on mount reads `window.location.search`, finds post by slug, opens PostReader directly. `openPost(id)` + `closePost()` helpers update URL via `replaceState`. All 4 `setReading` call sites updated. No App.jsx changes needed. Brace diff 0, schema audit OK. Prerequisite for LinkedIn post campaign.
+
+---
+
+## ✅ DONE: Cheatsheet accordion + trade-off cards (v4.102 + v4.102b, 2026-06-18)
+
+v4.102: 24 comparison cards in CheatsheetTab "Trade-offs ⇄" section (Last Day tier). 6 categories: Training, Architecture, Metrics, Data, MLOps, Retrieval. Each card: mechanism, USE, WATCH, collapsible interviewer probe. Category filter pills. CLAUDE.md schema validator added. Brace diff 0.
+
+v4.102b: Redesigned to single-open accordion. Collapsed: title + colored dots + category tag. Open: full options grid + inline probe. `openIdx` state, amber border highlight. Brace diff 0.
 
 ---
 

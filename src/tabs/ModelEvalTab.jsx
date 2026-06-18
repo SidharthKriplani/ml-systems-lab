@@ -785,9 +785,17 @@ function ForwardPointer({ label, tab, onNavigate, accent = 'var(--ink-low)' }) {
 
 export default function ModelEvalTab({ onNavigate, user, onShowAuth }) {
   const [active, setActive] = useState(() => {
-    try { return localStorage.getItem('msl_modeleval_active') || 'metric' } catch { return 'metric' }
+    try {
+      const urlMod = new URLSearchParams(window.location.search).get('module')
+      if (urlMod && MODULES.find(m => m.id === urlMod)) return urlMod
+      return localStorage.getItem('msl_modeleval_active') || 'metric'
+    } catch { return 'metric' }
   })
-  function setActiveAndPersist(id) { setActive(id); try { localStorage.setItem('msl_modeleval_active', id) } catch {} }
+  function setActiveAndPersist(id) {
+    setActive(id)
+    try { localStorage.setItem('msl_modeleval_active', id) } catch {}
+    window.history.replaceState(null, '', `?module=${id}#eval`)
+  }
   const [unlocked, setUnlocked] = useState(() => isUnlocked())
   const ActiveModule = MODULES.find(m => m.id === active)?.component ?? MetricSelector
   const activeModuleData = MODULES.find(m => m.id === active)

@@ -405,11 +405,16 @@ function ScenarioCard({ scenario, state, onPick }) {
 
 export default function SpotTheFlawTab({ onNavigate }) {
   const [states, setStates] = useState(() => {
+    const urlTarget = new URLSearchParams(window.location.search).get('scenario')
+    const targetIdx = urlTarget ? SCENARIOS.findIndex(s => s.id === urlTarget) : -1
     try {
       const saved = JSON.parse(localStorage.getItem('msl_spot_the_flaw') || 'null')
-      if (saved && saved.length === SCENARIOS.length) return saved
+      if (saved && saved.length === SCENARIOS.length) {
+        if (targetIdx !== -1) return saved.map((s, i) => i === targetIdx ? { ...s, open: true } : s)
+        return saved
+      }
     } catch {}
-    return SCENARIOS.map(() => ({ open: false, picked: null, revealed: false }))
+    return SCENARIOS.map((_, i) => ({ open: i === targetIdx, picked: null, revealed: false }))
   })
 
   useEffect(() => {
@@ -419,7 +424,11 @@ export default function SpotTheFlawTab({ onNavigate }) {
   function handlePick(idx, action) {
     setStates(prev => prev.map((s, i) => {
       if (i !== idx) return s
-      if (action === 'toggle') return { ...s, open: !s.open }
+      if (action === 'toggle') {
+        const opening = !s.open
+        window.history.replaceState(null, '', opening ? `?scenario=${SCENARIOS[idx].id}#spottheflaw` : '#spottheflaw')
+        return { ...s, open: opening }
+      }
       return { ...s, picked: action, revealed: true }
     }))
   }

@@ -1941,6 +1941,67 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.104 — Universal deep links across all content tabs (2026-06-18)
+
+**What shipped:**
+
+Every piece of discrete content in MSL now has a shareable URL. Same `URLSearchParams` + `replaceState` pattern as v4.103.
+
+**7 tabs updated:**
+
+`CheatsheetTab.jsx` — `?tier=N#cheatsheet` (0–3) + `?tier=1&section=X#cheatsheet` (formulas/traps/comparisons/frameworks). Main reads `?tier` on init; `LastDay` accepts `initSection` prop, reads `?section`, writes back on pill click.
+
+`IncidentRoomTab.jsx` — `?scenario=incN#incidentroom`. Main reads `?scenario` into `urlScenario`; passes `autoExpand={urlScenario === inc.id}` to each `IncidentCard`; card initializes `expanded` from prop.
+
+`MLCodingTab.jsx` — `?problem=mlcN#mlcoding`. Same `autoExpand` pattern on `ProblemCard`.
+
+`SpotTheFlawTab.jsx` — `?scenario=stfN#spottheflaw`. URL target forces `open: true` in initial `states` array. `handlePick('toggle')` writes back `?scenario=stfN` on open, clears to `#spottheflaw` on close.
+
+`FeatureEngTab.jsx` — `?module=X#features`. URL param checked first in `useState` init (overrides localStorage); `setActiveAndPersist` writes back on every module switch.
+
+`ModelEvalTab.jsx` — `?module=X#eval`. Same pattern.
+
+`ClassicalMLTab.jsx` — `?module=X#classical`. Same pattern.
+
+All 7 files: brace diff 0, string audit OK.
+
+**Complete deep-link inventory after v4.103 + v4.104:**
+- 126 Gradient posts: `?post=slug#gradient`
+- 4 Cheatsheet tiers: `?tier=N#cheatsheet`
+- 4 Cheatsheet Last Day sections: `?tier=1&section=X#cheatsheet`
+- 12 Incident Room scenarios: `?scenario=incN#incidentroom`
+- 15 ML Coding problems: `?problem=mlcN#mlcoding`
+- 12 SpotTheFlaw scenarios: `?scenario=stfN#spottheflaw`
+- Feature Eng modules: `?module=X#features`
+- Model Eval modules: `?module=X#eval`
+- Classical ML modules: `?module=X#classical`
+
+Every tab-level link (`#tabId`) continues to work as before.
+
+---
+
+### v4.103 — Gradient post deep links (2026-06-18)
+
+**What shipped:**
+
+`src/tabs/GradientTab.jsx` — URL-based deep linking for all 126 Gradient posts. Every post now has a shareable URL:
+
+`https://ml-systems-lab-v9xe.vercel.app/?post={slug}#gradient`
+
+Implementation: added `useEffect` on mount to read `?post=slug` from `window.location.search`, find the matching post by slug, and open PostReader directly. Added `openPost(id)` helper that sets the URL via `window.history.replaceState` before calling `setReading`. Added `closePost()` that clears back to `#gradient` on back navigation. All four `setReading` call sites updated to `openPost` / `closePost`. No App.jsx changes — URL search params are independent of hash routing. Brace diff 0, schema audit OK.
+
+**Why:** prerequisite for LinkedIn post strategy — sharing `#gradient` dumps users on the list; sharing `?post=training-serving-skew#gradient` opens the exact post. 126 posts × 1 link each = shareable content inventory.
+
+---
+
+### v4.102b — Cheatsheet comparison cards accordion redesign (2026-06-18)
+
+**What shipped:**
+
+`src/tabs/CheatsheetTab.jsx` — Redesigned 24 comparison cards from expanded-always to single-open accordion. Collapsed state shows title + 2–3 colored dots (one per option) + category tag. Opening a card shows the full options grid + inline probe (no nested toggle). Only one card open at a time (`openIdx` state, `toggle` sets null if same index). Amber border highlight on open card. Brace diff 0.
+
+---
+
 ### v4.102 — Cheatsheet: 24 trade-off comparison cards (2026-06-18)
 
 **What shipped:**

@@ -606,8 +606,8 @@ The model passed every canary check. What happened?`,
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
-function IncidentCard({ incident, completed, onComplete, onNavigate }) {
-  const [expanded, setExpanded]   = useState(false)
+function IncidentCard({ incident, completed, onComplete, onNavigate, autoExpand }) {
+  const [expanded, setExpanded]   = useState(autoExpand || false)
   const [stepIdx, setStepIdx]     = useState(0)
   const [picks, setPicks]         = useState([])
   const [revealed, setRevealed]   = useState([])
@@ -776,6 +776,8 @@ function IncidentCard({ incident, completed, onComplete, onNavigate }) {
 }
 
 export default function IncidentRoomTab({ onNavigate }) {
+  const urlScenario = new URLSearchParams(window.location.search).get('scenario')
+
   const [completedIds, setCompletedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]') }
     catch { return [] }
@@ -833,6 +835,7 @@ export default function IncidentRoomTab({ onNavigate }) {
             completed={completedIds.includes(inc.id)}
             onComplete={handleComplete}
             onNavigate={onNavigate}
+            autoExpand={urlScenario === inc.id}
           />
         ))}
       </div>
