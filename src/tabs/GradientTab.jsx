@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import { getRead, toggleRead, isRead } from '../utils/read.js'
 import { POST_VISUALS } from '../components/GradientVisuals.jsx'
@@ -8880,6 +8880,30 @@ export default function GradientTab({ onNavigate }) {
   const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
   const [read, setRead] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')) } catch { return new Set() } })
 
+  // Deep-link: on mount, check ?post=slug and open that post directly
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get('post')
+    if (slug) {
+      const post = POSTS.find(p => p.slug === slug)
+      if (post) setReading(post.id)
+    }
+  }, [])
+
+  // Open a post and reflect it in the URL for shareability
+  function openPost(id) {
+    const post = POSTS.find(p => p.id === id)
+    if (post) {
+      window.history.replaceState(null, '', `?post=${post.slug}#gradient`)
+    }
+    setReading(id)
+  }
+
+  // Close post and restore clean URL
+  function closePost() {
+    window.history.replaceState(null, '', '#gradient')
+    setReading(null)
+  }
+
   function markRead(id) {
     const next = new Set(read)
     next.add(id)
@@ -9011,7 +9035,7 @@ export default function GradientTab({ onNavigate }) {
 
   if (reading) {
     const post = POSTS.find(p => p.id === reading)
-    if (post) return <PostReader post={post} onBack={() => setReading(null)} onNavigate={onNavigate} isRead={read.has(post.id)} onMarkRead={() => markRead(post.id)} />
+    if (post) return <PostReader post={post} onBack={closePost} onNavigate={onNavigate} isRead={read.has(post.id)} onMarkRead={() => markRead(post.id)} />
   }
 
   if (mode === 'cases') return (
@@ -9069,7 +9093,7 @@ export default function GradientTab({ onNavigate }) {
               const p = POSTS.find(x => x.id === id)
               if (!p) return null
               return (
-                <button key={id} onClick={() => setReading(id)}
+                <button key={id} onClick={() => openPost(id)}
                   style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--rim)', background: 'rgba(0,0,0,0.25)', cursor: 'pointer', transition: 'border-color 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(240,165,0,0.4)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}
@@ -9185,8 +9209,8 @@ export default function GradientTab({ onNavigate }) {
 
           {/* Posts grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-            {featured.map(p => <PostCard key={p.id} post={p} featured isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
-            {rest.map(p => <PostCard key={p.id} post={p} isRead={read.has(p.id)} onClick={() => setReading(p.id)} />)}
+            {featured.map(p => <PostCard key={p.id} post={p} featured isRead={read.has(p.id)} onClick={() => openPost(p.id)} />)}
+            {rest.map(p => <PostCard key={p.id} post={p} isRead={read.has(p.id)} onClick={() => openPost(p.id)} />)}
           </div>
 
           {filtered.length === 0 && (
