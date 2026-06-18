@@ -1941,6 +1941,25 @@ Total: 126 posts, 12 series. Series updates: dl adds 122, 124; arch adds 123; ds
 
 ---
 
+### v4.102 — Cheatsheet: 24 trade-off comparison cards (2026-06-18)
+
+**What shipped:**
+
+`src/tabs/CheatsheetTab.jsx` — new "Trade-offs ⇄" section added to the Last Day tier alongside Formulas / Traps / Frameworks. 24 trade-off comparison cards across 6 categories (Training, Architecture, Metrics, Data, MLOps, Retrieval):
+
+Training (4): L1/L2/Elastic Net · SGD/Adam/AdamW · Dropout/Weight Decay/Early Stopping · LR Warmup/Cosine Annealing/Step Decay
+Architecture (4): BatchNorm/LayerNorm/GroupNorm · ReLU/GELU/Swish · Two-Tower/Cross-Encoder · GRU/LSTM/Transformer
+Metrics (4): Precision/Recall/F1 · AUC-ROC/AUC-PR/Log Loss · NDCG/MAP/MRR · Offline/Online A-B/Shadow
+Data (4): SMOTE/Class Weights/Threshold · One-hot/Ordinal/Target Encoding · StandardScaler/MinMax/Robust · PCA/t-SNE/UMAP
+MLOps (4): Blue-Green/Canary/Shadow · Batch/Real-Time/Streaming · Distillation/Quantisation/Pruning · PSI/KS/Chi-Squared
+Retrieval (4): BM25/Dense/Hybrid · CF/Content-Based/Hybrid · Hard/In-Batch/Random Negatives · Cosine/Dot Product/Euclidean
+
+Each card: mechanism (what it actually does) · USE (when) · WATCH (failure mode) · collapsible INTERVIEWER PROBE question with full answer. Category filter pills. Brace diff 0.
+
+`CLAUDE.md` — added GradientTab schema validator to pre-commit checklist (catches missing required fields; fixed the crash class that produced the black screen). Updated GradientTab line count note (9,200+).
+
+---
+
 ### v4.101 — GradientTab crash fix: missing excerpt on posts 122–126 (2026-06-18)
 
 **What shipped:**

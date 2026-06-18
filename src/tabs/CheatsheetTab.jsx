@@ -353,6 +353,261 @@ const COMPANY_PROFILES = [
   },
 ]
 
+// ─── Trade-off Comparisons ───────────────────────────────────────────────────
+
+const COMPARISONS = [
+  // ── Training ──────────────────────────────────────────────────────────────
+  {
+    title: 'L1 vs L2 vs Elastic Net',
+    category: 'Training',
+    options: [
+      { name: 'L1 (Lasso)', tag: 'Sparse', color: '#F4845F', mechanism: 'Absolute value penalty — drives some weights to exactly zero', use: 'Automatic feature selection; interpretable sparse model', watch: 'Unstable with correlated features — picks one arbitrarily, drops rest' },
+      { name: 'L2 (Ridge)', tag: 'Shrink', color: '#4EA8DE', mechanism: 'Squared penalty — shrinks all weights uniformly, none reach zero', use: 'All features matter; multicollinearity present; neural nets', watch: 'Keeps noisy features — hurts interpretability on wide datasets' },
+      { name: 'Elastic Net', tag: 'Both', color: '#9B8AFB', mechanism: 'α×L1 + (1-α)×L2 — sparse but stable under correlation', use: 'Groups of correlated features where some sparsity is desired', watch: 'Extra hyperparameter α — needs grid search or CV' },
+    ],
+    probe: 'Why does L1 produce exact zeros but L2 never does? (Geometry: diamond corners touch loss contour at axis; circle never does)',
+  },
+  {
+    title: 'SGD vs Adam vs AdamW',
+    category: 'Training',
+    options: [
+      { name: 'SGD + Momentum', tag: 'Classic', color: '#4EA8DE', mechanism: 'Fixed LR × gradient + momentum term. Finds sharper but often more generalisable minima', use: 'Vision models, CNNs, ResNets; when final accuracy matters more than speed', watch: 'Requires careful LR tuning; slow start without warmup' },
+      { name: 'Adam', tag: 'Adaptive', color: '#F4845F', mechanism: 'Per-parameter adaptive LR using m/v moment estimates. Fast convergence', use: 'NLP, transformers, sparse gradients, quick prototyping', watch: 'Weight decay is incorrect (decays adapted LR, not weights) — use AdamW instead' },
+      { name: 'AdamW', tag: 'Corrected', color: '#34C48B', mechanism: 'Adam + decoupled weight decay (λ×w subtracted separately from gradient step)', use: 'Default for any transformer training; BERT, GPT, LLaMA fine-tuning', watch: 'Same compute cost as Adam; no reason not to use over Adam' },
+    ],
+    probe: "What's the difference between L2 regularization and weight decay in Adam? (L2 scales decay by adaptive LR; AdamW doesn't — they behave identically only in SGD)",
+  },
+  {
+    title: 'Dropout vs Weight Decay vs Early Stopping',
+    category: 'Training',
+    options: [
+      { name: 'Dropout', tag: 'Structural', color: '#9B8AFB', mechanism: 'Randomly zero activations during training (p=0.1–0.5). Trains ensemble of thinned networks', use: 'Large fully-connected layers; prevents co-adaptation of neurons', watch: 'Hurts transformers/batch stats; never use on BatchNorm layers' },
+      { name: 'Weight Decay', tag: 'Penalty', color: '#4EA8DE', mechanism: 'Adds λ‖w‖² to loss, penalising large weights at every step', use: 'Universal — default regulariser for all architectures', watch: 'Too high λ underfits; interacts with adaptive optimisers (use AdamW)' },
+      { name: 'Early Stopping', tag: 'Implicit', color: '#F4845F', mechanism: 'Stop when validation loss stops improving. Implicit regularisation via limiting optimisation steps', use: 'When compute is the constraint; ensemble well with light dropout+decay', watch: 'Sensitive to noisy val curves — use patience=5–10 not patience=1' },
+    ],
+    probe: 'Why does dropout hurt transformers more than FFNs? (Attention uses all tokens; random zeroing disrupts attention patterns; use residual dropout or attention dropout instead)',
+  },
+  {
+    title: 'LR Warmup vs Cosine Annealing vs Step Decay',
+    category: 'Training',
+    options: [
+      { name: 'LR Warmup', tag: 'Start', color: '#F4845F', mechanism: 'Linear ramp from 0 to peak_lr over N steps. Stabilises early training when weights are random', use: 'Always — combine with another schedule; critical for transformer training', watch: 'Too short = instability; too long = wastes compute' },
+      { name: 'Cosine Annealing', tag: 'Smooth', color: '#4EA8DE', mechanism: 'LR decays as 0.5×(1 + cos(π×t/T)). Smooth descent to near-zero', use: 'Default for transformers and any long training run', watch: 'With restarts (SGDR) risks jumping out of good minima — tune period' },
+      { name: 'Step Decay', tag: 'Discrete', color: '#9B8AFB', mechanism: 'Multiply LR by γ (e.g. 0.1) every N epochs', use: 'Vision models with fixed epoch budgets; matches published CNN baselines', watch: 'Abrupt drops can destabilise training; fine-grained decay often better' },
+    ],
+    probe: 'Why is LR warmup critical for transformers but less so for CNNs? (Adam moment estimates are unreliable at step 0; high LR + bad gradients → divergence; CNNs with SGD are more robust to this)',
+  },
+
+  // ── Architecture ──────────────────────────────────────────────────────────
+  {
+    title: 'BatchNorm vs LayerNorm vs GroupNorm',
+    category: 'Architecture',
+    options: [
+      { name: 'BatchNorm', tag: 'Batch axis', color: '#F4845F', mechanism: 'Normalise across batch dimension (N) for each channel. Statistics depend on batch size', use: 'CNNs, vision models with large batches (≥32)', watch: 'Fails at batch size 1; breaks with sequence-variable-length; bad for RNNs' },
+      { name: 'LayerNorm', tag: 'Feature axis', color: '#4EA8DE', mechanism: 'Normalise across feature dimension (C) for each sample independently', use: 'Transformers, NLP, RNNs, any variable-length sequences', watch: 'Less effective than BN for CNNs; higher variance with small feature dim' },
+      { name: 'GroupNorm', tag: 'Group axis', color: '#9B8AFB', mechanism: 'Normalise within G groups of channels per sample — batch-size independent', use: 'Object detection, segmentation, small-batch training, medical imaging', watch: 'Group count G is a hyperparameter; G=1 = LayerNorm, G=C = InstanceNorm' },
+    ],
+    probe: 'Why does LayerNorm dominate NLP but BatchNorm dominate vision? (NLP: variable batch, sequence length; BN stats meaningless. Vision: fixed spatial structure, large batches make BN estimates reliable)',
+  },
+  {
+    title: 'ReLU vs GELU vs Swish',
+    category: 'Architecture',
+    options: [
+      { name: 'ReLU', tag: 'Classic', color: '#4EA8DE', mechanism: 'max(0, x). Hard threshold at zero — dying neurons if weights push all inputs negative', use: 'CNNs, ResNets, most vision architectures; fastest compute', watch: 'Dead neuron problem (grad=0 for x<0). Use LeakyReLU if dying neurons observed' },
+      { name: 'GELU', tag: 'Smooth', color: '#F4845F', mechanism: 'x × Φ(x) — weights input by its Gaussian CDF. Smooth, non-monotonic near zero', use: 'Transformers (BERT, GPT, LLaMA) — now the default for NLP', watch: 'More compute than ReLU; negligible in practice at transformer scale' },
+      { name: 'Swish (SiLU)', tag: 'Learned', color: '#9B8AFB', mechanism: 'x × sigmoid(x). Self-gated; similar to GELU but cheaper to compute', use: 'EfficientNet family, MobileNet v4, mobile-focused architectures', watch: 'Marginal over GELU for most tasks; difference rarely exceeds 0.1–0.2% accuracy' },
+    ],
+    probe: 'Why do smooth activations (GELU, Swish) outperform ReLU for transformers? (Attention produces smooth distributions; hard thresholding at zero discards gradient signal around decision boundary)',
+  },
+  {
+    title: 'Two-Tower vs Cross-Encoder',
+    category: 'Architecture',
+    options: [
+      { name: 'Two-Tower', tag: 'Fast', color: '#4EA8DE', mechanism: 'Query and doc encoded independently → dot product similarity. Doc embeddings pre-computed offline', use: 'First-stage retrieval over millions of docs; sub-100ms latency', watch: 'No cross-attention between query and doc — misses nuanced relevance signals' },
+      { name: 'Cross-Encoder', tag: 'Accurate', color: '#F4845F', mechanism: 'Query+doc concatenated → full transformer attention → relevance score', use: 'Re-ranking top-K (K=50–200) candidates after two-tower retrieval', watch: 'Cannot pre-compute — O(N) inference at query time; only viable for small N' },
+    ],
+    probe: 'Why not use cross-encoders for retrieval? (Must score every doc at query time — 1M docs × 20ms = 6 hours per query. Two-tower precomputes all doc embeddings; ANN over vectors = <10ms)',
+  },
+  {
+    title: 'GRU vs LSTM vs Transformer (sequences)',
+    category: 'Architecture',
+    options: [
+      { name: 'GRU', tag: 'Efficient', color: '#34C48B', mechanism: 'Reset + update gates only. Fewer parameters than LSTM, similar performance on short sequences', use: 'Short sequences (<100 steps), latency-sensitive deployment, edge devices', watch: 'Struggles with long-range dependencies beyond ~200 steps' },
+      { name: 'LSTM', tag: 'Standard', color: '#4EA8DE', mechanism: 'Cell state + forget/input/output gates. Can maintain state over long sequences', use: 'When sequence-to-sequence structure matters; time series with irregular gaps', watch: 'Sequential — cannot parallelise across time. 3–5× slower to train than transformers' },
+      { name: 'Transformer', tag: 'Parallel', color: '#F4845F', mechanism: 'Full self-attention — O(n²) compute but fully parallelisable across sequence', use: 'Any task with >500M parameter budget; long context; pre-training', watch: 'O(n²) memory in attention; use FlashAttention or sliding window for long seqs' },
+    ],
+    probe: 'Why did transformers replace LSTMs for NLP but not for all time series? (NLP: long context, parallelism matters. TS: irregular sampling, latency constraints, interpretable gates — LSTM/GRU still competitive)',
+  },
+
+  // ── Metrics ───────────────────────────────────────────────────────────────
+  {
+    title: 'Precision vs Recall — decision guide',
+    category: 'Metrics',
+    options: [
+      { name: 'Optimise Precision', tag: 'FP cost high', color: '#F4845F', mechanism: 'TP / (TP + FP). Of everything you flagged, how much was right?', use: 'Spam filter, ad relevance, content moderation — false alarm is expensive', watch: 'Raising precision threshold kills recall — will miss real positives' },
+      { name: 'Optimise Recall', tag: 'FN cost high', color: '#4EA8DE', mechanism: 'TP / (TP + FN). Of all real positives, how many did you find?', use: 'Cancer screening, fraud detection, safety systems — missing a case is catastrophic', watch: 'Raising recall creates noise — review queue fills with false positives' },
+      { name: 'F1 / Fβ Score', tag: 'Balanced', color: '#9B8AFB', mechanism: 'Harmonic mean of P and R. F_β weights recall β× more than precision', use: 'When both matter; Fβ when asymmetric cost — β>1 for recall-heavy tasks', watch: 'Harmonic mean punishes extremes; still need to check threshold for deployment' },
+    ],
+    probe: 'A fraud model has 95% recall and 10% precision. Is this good? (Depends: 10% precision = 90% of flagged cases are false positives. If human review team capacity = 100/day and fraud volume = 10/day, this is unusable. Precision @ K matters more than threshold-based precision)',
+  },
+  {
+    title: 'AUC-ROC vs AUC-PR vs Log Loss',
+    category: 'Metrics',
+    options: [
+      { name: 'AUC-ROC', tag: 'Ranking', color: '#4EA8DE', mechanism: 'Area under TPR vs FPR curve. P(score_pos > score_neg) for random pair', use: 'Balanced classes; comparing model discrimination at all thresholds', watch: 'Optimistic with extreme class imbalance — 1000:1 neg:pos, random FPR looks tiny' },
+      { name: 'AUC-PR', tag: 'Imbalanced', color: '#F4845F', mechanism: 'Area under Precision-Recall curve. Focuses on positive class performance only', use: 'Fraud, rare disease, anomaly detection — class imbalance > 20:1', watch: 'Interpolation under PR curve is tricky; Average Precision (AP) is more stable' },
+      { name: 'Log Loss', tag: 'Calibration', color: '#9B8AFB', mechanism: '−(y log p + (1−y) log(1−p)). Penalises confident wrong predictions exponentially', use: 'When calibrated probabilities matter (ads CTR, credit scoring, medical)', watch: 'Not threshold-dependent — use alongside AUC; outlier labels dominate' },
+    ],
+    probe: 'Your fraud model AUC-ROC improved from 0.91 to 0.93 but AUC-PR dropped from 0.42 to 0.39. What happened? (Model improved rank ordering on majority negative class but got worse on the rare fraud class — which is the one that matters)',
+  },
+  {
+    title: 'NDCG vs MAP vs MRR (ranking metrics)',
+    category: 'Metrics',
+    options: [
+      { name: 'NDCG@K', tag: 'Graded', color: '#F4845F', mechanism: 'Sum of (2^rel − 1) / log₂(pos+1) over top K, normalised by ideal ordering', use: 'Search, recommendation — items have graded relevance (1-5 stars, dwell time)', watch: 'Requires relevance scores, not just binary labels; sensitive to K choice' },
+      { name: 'MAP@K', tag: 'Binary', color: '#4EA8DE', mechanism: 'Mean of average precision across queries. AP = area under P-R curve per query', use: 'Information retrieval, document ranking — binary relevant/not-relevant labels', watch: 'Gives equal weight to all queries — noisy for rare query types' },
+      { name: 'MRR', tag: 'First hit', color: '#9B8AFB', mechanism: 'Mean of 1/rank of first relevant result across queries', use: 'QA, navigation queries where users only care about first result', watch: 'Ignores everything beyond position 1 — useless for multi-item consumption' },
+    ],
+    probe: 'A search system improves NDCG@10 but MRR drops. What does this tell you? (Better at returning relevant items in top 10, but the single best answer is harder to find — position 1 degraded. Good for exploratory queries, bad for navigational)',
+  },
+  {
+    title: 'Offline eval vs Online A/B vs Shadow mode',
+    category: 'Metrics',
+    options: [
+      { name: 'Offline Eval', tag: 'No traffic', color: '#34C48B', mechanism: 'Replay historical data through new model. AUC, NDCG on holdout set', use: 'Fast iteration; catch regressions early; cheap at any scale', watch: 'Cannot capture position bias, novelty effects, user adaptation — offline ≠ online' },
+      { name: 'Shadow Mode', tag: 'No impact', color: '#4EA8DE', mechanism: 'New model runs in parallel, logs predictions but never serves users', use: 'Validate infrastructure, catch serving skew, measure latency before A/B', watch: 'Feedback loop broken — shadow model gets no user clicks to learn from' },
+      { name: 'Online A/B', tag: 'Real users', color: '#F4845F', mechanism: 'Random traffic split. Measure business metrics (CTR, revenue, retention) on live users', use: 'Final gate before launch; the only metric that truly matters', watch: 'Novelty effect, network effects, long-term effects not captured in 2-week test' },
+    ],
+    probe: 'Offline NDCG improved 2% but online A/B shows no CTR change. Why? (Possible causes: (1) offline labels don\'t reflect user intent, (2) position bias in logged data — users clicked position 1 regardless of quality, (3) novelty effect masking gains)',
+  },
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  {
+    title: 'SMOTE vs Class Weights vs Threshold Tuning',
+    category: 'Data',
+    options: [
+      { name: 'SMOTE', tag: 'Oversample', color: '#9B8AFB', mechanism: 'Generate synthetic minority samples by interpolating between real ones in feature space', use: 'Tree models (XGBoost, RF) that don\'t natively support class weights; small datasets', watch: 'Creates unrealistic synthetic samples near decision boundary; noisy if features are correlated' },
+      { name: 'Class Weights', tag: 'Re-weight', color: '#4EA8DE', mechanism: 'Scale minority class loss by w = N_maj / N_min. Same as oversampling but in loss space', use: 'Neural nets and sklearn models — class_weight=\'balanced\'. Cleanest solution', watch: 'Doesn\'t help if minority class is too small for model to learn patterns' },
+      { name: 'Threshold Tuning', tag: 'Post-hoc', color: '#F4845F', mechanism: 'Move decision threshold from 0.5 to t* that maximises F1 or hits recall target', use: 'After training — cheapest fix; use when recall/precision target is the real constraint', watch: 'Doesn\'t improve model quality, only deployment decision. AUC is unchanged' },
+    ],
+    probe: "What's wrong with SMOTE on fraud data? (Fraud features are highly correlated — device, IP, amount, velocity. Interpolating between two fraud samples creates a 'synthetic fraud' that may look exactly like a clean account in other feature dimensions. Creates noise near decision boundary.)",
+  },
+  {
+    title: 'One-hot vs Ordinal vs Target Encoding',
+    category: 'Data',
+    options: [
+      { name: 'One-hot', tag: 'Nominal', color: '#4EA8DE', mechanism: 'Binary column per category. No ordinal assumption. N-1 columns for N categories', use: 'Low-cardinality categoricals (<20 values) in linear models and neural nets', watch: 'Explodes with high cardinality (1000 cities → 1000 columns); sparsity problems' },
+      { name: 'Ordinal', tag: 'Ordered', color: '#9B8AFB', mechanism: 'Map to integer rank [0, 1, 2...]. Imposes numerical distance between categories', use: 'Only when order is real: size S/M/L/XL, ratings 1-5, education level', watch: 'Assumes equal distance between ranks — wrong for most ordered categoricals' },
+      { name: 'Target Encoding', tag: 'High-card', color: '#F4845F', mechanism: 'Replace category with P(target | category). With smoothing for rare categories', use: 'High-cardinality categoricals (zip code, user_id, product_id) in tree models', watch: 'Catastrophic leakage if computed on training set without fold isolation — always use out-of-fold' },
+    ],
+    probe: 'Why is target encoding dangerous without proper cross-validation? (Computing P(y|x) on training data means the category encodes the target directly — model sees the answer. A 10-fold OOF scheme prevents this; careless implementation is a top-5 Kaggle mistake)',
+  },
+  {
+    title: 'StandardScaler vs MinMax vs RobustScaler',
+    category: 'Data',
+    options: [
+      { name: 'StandardScaler', tag: 'Normal', color: '#4EA8DE', mechanism: '(x − μ) / σ. Zero mean, unit variance. Assumes roughly Gaussian distribution', use: 'Linear models, SVMs, PCA, neural nets — anything sensitive to scale', watch: 'Outliers inflate σ and compress non-outlier values into narrow band' },
+      { name: 'MinMaxScaler', tag: 'Bounded', color: '#F4845F', mechanism: '(x − min) / (max − min) → [0, 1]. Preserves exact range', use: 'Neural nets with sigmoid/tanh outputs; when feature must stay in [0,1]', watch: 'Highly sensitive to outliers — one outlier compresses all other values near zero' },
+      { name: 'RobustScaler', tag: 'Outliers', color: '#9B8AFB', mechanism: '(x − median) / IQR. Uses percentiles instead of mean/std', use: 'Datasets with known outliers — financial transactions, sensor readings', watch: 'Does not bound output range; tree models don\'t need scaling at all' },
+    ],
+    probe: 'Does XGBoost need feature scaling? (No. Tree splits are threshold-based, not distance-based. Scaling is irrelevant to split quality. Scaling for trees wastes compute and obscures feature importance interpretation.)',
+  },
+  {
+    title: 'PCA vs t-SNE vs UMAP',
+    category: 'Data',
+    options: [
+      { name: 'PCA', tag: 'Linear', color: '#4EA8DE', mechanism: 'Orthogonal projection preserving maximum variance. Deterministic, invertible', use: 'Preprocessing before ML (whitening); feature compression; linear structure', watch: 'Cannot capture non-linear manifolds — fails on Swiss roll, word embedding clusters' },
+      { name: 't-SNE', tag: 'Non-linear viz', color: '#F4845F', mechanism: 'Minimises KL divergence between high-dim and low-dim pairwise probabilities. Preserves local structure', use: 'Visualising clusters in 2D — MNIST, embeddings, single-cell biology', watch: 'Not deterministic; inter-cluster distances meaningless; never use for ML preprocessing' },
+      { name: 'UMAP', tag: 'Non-linear fast', color: '#9B8AFB', mechanism: 'Graph-based; preserves both local and some global structure. 10–100× faster than t-SNE', use: 'Large datasets (>100K), when global structure matters, as preprocessing for clustering', watch: 'Also not invertible by default; hyperparameters n_neighbors and min_dist affect topology' },
+    ],
+    probe: "Why can't you use t-SNE cluster distance to infer cluster similarity? (t-SNE's cost function only preserves local neighbourhood — repulsive forces spread all clusters apart uniformly regardless of true high-dim distance. UMAP is slightly better but still warps global geometry.)",
+  },
+
+  // ── MLOps ─────────────────────────────────────────────────────────────────
+  {
+    title: 'Blue-Green vs Canary vs Shadow Deployment',
+    category: 'MLOps',
+    options: [
+      { name: 'Blue-Green', tag: 'Instant switch', color: '#4EA8DE', mechanism: 'Two identical environments. Switch load balancer from old (blue) to new (green). Instant rollback', use: 'Stateless services where fast rollback matters more than gradual ramp', watch: 'No gradual ramp — full blast exposure on switch; 2× infra cost during transition' },
+      { name: 'Canary', tag: 'Gradual ramp', color: '#F4845F', mechanism: '5% → 25% → 50% → 100% traffic ramp. Monitor metrics at each stage', use: 'Model updates in production — the standard for ML deployments', watch: 'Slow — full ramp takes days. Canary users may see degraded experience during ramp' },
+      { name: 'Shadow Mode', tag: 'Zero risk', color: '#9B8AFB', mechanism: 'New model runs parallel, sees real traffic, logs predictions — never serves users', use: 'Validating infrastructure and latency before first real traffic; catching serving skew', watch: 'No user feedback signal; cannot detect business metric regression; only catches hard errors' },
+    ],
+    probe: 'When would you skip canary and go straight to blue-green? (When the model change is a critical hotfix — e.g. a model serving toxic content — and the risk of gradual exposure outweighs rollout risk. Also when stateful dependencies make partial traffic split impossible.)',
+  },
+  {
+    title: 'Batch vs Real-Time vs Streaming Inference',
+    category: 'MLOps',
+    options: [
+      { name: 'Batch', tag: 'Scheduled', color: '#34C48B', mechanism: 'Score all records overnight or on trigger. Scores stored in DB, served at query time', use: 'Credit scoring, churn prediction, recommendation pre-computation for next-day', watch: 'Stale scores — user\'s last 10 actions not reflected until next batch run' },
+      { name: 'Real-Time', tag: 'Synchronous', color: '#F4845F', mechanism: 'Request → feature fetch → model inference → response in single synchronous call', use: 'Fraud detection, live ad scoring, search reranking — freshness is critical', watch: 'Latency SLA constrains model complexity; all features must be pre-computed or fast to retrieve' },
+      { name: 'Streaming', tag: 'Async events', color: '#4EA8DE', mechanism: 'Events flow through Kafka/Flink → inference → downstream system. Decoupled from request', use: 'Continuous monitoring, anomaly detection on event streams, near-real-time features', watch: 'Complex infra; late arrivals create point-in-time correctness problems; harder to debug' },
+    ],
+    probe: 'A fraud model needs features from the last 10 minutes of user activity. What inference pattern do you use? (Streaming: Flink computes rolling 10-min aggregations → writes to Redis. Real-time: lookup precomputed features at inference time. Never compute rolling aggs synchronously in the request path.)',
+  },
+  {
+    title: 'Distillation vs Quantisation vs Pruning',
+    category: 'MLOps',
+    options: [
+      { name: 'Distillation', tag: 'Train smaller', color: '#9B8AFB', mechanism: 'Train small student to match soft logits of large teacher. Knowledge transfer not just labels', use: 'When you can afford a one-time retraining; best quality-size trade-off (DistilBERT, TinyBERT)', watch: 'Requires re-training; teacher must fit in memory during student training' },
+      { name: 'Quantisation', tag: 'Shrink weights', color: '#F4845F', mechanism: 'Reduce weight precision: FP32→INT8 (4× smaller) or FP16→INT4 (8× smaller)', use: 'Post-training (no retraining needed); standard for LLM deployment; edge devices', watch: 'INT4 degrades quality by 0.5–2 perplexity points; calibration dataset needed for best results' },
+      { name: 'Pruning', tag: 'Remove weights', color: '#4EA8DE', mechanism: 'Zero out weights below threshold; structured pruning removes entire heads/channels', use: 'When inference throughput is the bottleneck and sparse hardware is available', watch: 'Unstructured pruning rarely gives speedup on modern hardware without sparse kernels (NVIDIA SpAtten)' },
+    ],
+    probe: 'You need to ship a 70B LLM on a single A100-80GB. What do you do? (Quantise to INT4: 70B × 0.5 bytes = ~35GB. FP16 requires 140GB = 2× A100. INT4 with GPTQ or AWQ fits on one. Distillation would require retraining at this scale — months of compute.)',
+  },
+  {
+    title: 'PSI vs KS Test vs Chi-Squared (drift)',
+    category: 'MLOps',
+    options: [
+      { name: 'PSI', tag: 'Binned dist', color: '#F4845F', mechanism: 'Σ (P_i − Q_i) × ln(P_i/Q_i) over bins. PSI > 0.2 = significant shift', use: 'Production ML monitoring for score/feature distribution drift. Industry standard for credit', watch: 'Sensitive to bin choice; PSI > 0.2 rule-of-thumb ignores feature importance — set per-feature thresholds' },
+      { name: 'KS Test', tag: 'CDF distance', color: '#4EA8DE', mechanism: 'Max absolute difference between empirical CDFs. Non-parametric, no binning needed', use: 'Continuous features; when you want a p-value for drift hypothesis', watch: 'Large samples → trivial p-values even for negligible drift. Use effect size (KS statistic), not p-value' },
+      { name: 'Chi-Squared', tag: 'Categorical', color: '#9B8AFB', mechanism: 'Tests if observed categorical counts match expected. χ² = Σ (O-E)²/E', use: 'Categorical feature drift (device type, country, payment method distribution)', watch: 'Requires expected counts ≥ 5 per cell; merge rare categories before testing' },
+    ],
+    probe: "PSI > 0.2 fires an alert at 3am for seasonal traffic. Is this a model problem? (Probably not. PSI doesn't distinguish seasonal from pathological drift. Set per-feature PSI baselines using historical seasonal ranges. Alert only when current PSI > max_historical_PSI × 1.5.)",
+  },
+
+  // ── Retrieval & RecSys ─────────────────────────────────────────────────────
+  {
+    title: 'BM25 vs Dense Retrieval vs Hybrid',
+    category: 'Retrieval',
+    options: [
+      { name: 'BM25', tag: 'Lexical', color: '#4EA8DE', mechanism: 'TF-IDF variant with saturation. Exact term match weighted by doc length normalisation', use: 'When query terms matter exactly (code search, legal, medical); low-latency; no GPU needed', watch: 'Zero recall for synonyms and paraphrases — "car" misses "automobile"' },
+      { name: 'Dense (ANN)', tag: 'Semantic', color: '#F4845F', mechanism: 'Query + doc → dense vectors via bi-encoder. FAISS/ScaNN ANN search over embedding index', use: 'Paraphrase-heavy queries, cross-lingual search, long-tail vocabulary', watch: 'ANN index rebuild is expensive; cold-start on new docs needs embedding pipeline; 5–10× infra cost vs BM25' },
+      { name: 'Hybrid (RRF)', tag: 'Both', color: '#9B8AFB', mechanism: 'Reciprocal Rank Fusion: merge BM25 and dense rank lists. Minimal overhead, strong results', use: 'Production default — captures both exact match and semantic. Outperforms either alone', watch: 'Needs tuning of fusion weight; adds one index to maintain; query latency = max(BM25, ANN) + merge' },
+    ],
+    probe: 'Your semantic search has high MRR but legal team says exact citations are being missed. Fix? (Hybrid: BM25 as exact-match baseline + dense re-ranking. OR: sparse → dense pipeline where BM25 first-pass ensures exact terms are candidates before semantic re-ranking.)',
+  },
+  {
+    title: 'Collaborative Filtering vs Content-Based vs Hybrid',
+    category: 'Retrieval',
+    options: [
+      { name: 'Collaborative Filtering', tag: 'Interaction', color: '#4EA8DE', mechanism: 'Learn from user-item interaction matrix. "Users like you liked X"', use: 'Large user base with interaction history; discovery use cases (find new things)', watch: 'Cold-start: new users/items have no interactions; popularity bias; filter bubble' },
+      { name: 'Content-Based', tag: 'Item features', color: '#9B8AFB', mechanism: 'Recommend items similar to what user liked, based on item features (genre, tags, text)', use: 'Cold-start for new items; niche interests; explainability required', watch: 'Over-specialises — keeps recommending same type. No serendipity. Limited by feature quality' },
+      { name: 'Hybrid / Two-Stage', tag: 'Both', color: '#F4845F', mechanism: 'Content-based retrieval → CF re-ranking. Or weighted blend of both scores', use: 'Production default for any serious RecSys. Netflix, Spotify, YouTube all use variants', watch: 'More complex to tune; requires both interaction data and item features' },
+    ],
+    probe: 'A new song is uploaded to Spotify. How does it get recommended? (Content-based cold start: audio features + metadata → embed via item encoder → serves in content-based retrieval. After N plays, interaction signal bootstraps CF. Two-stage: content fills gaps CF can\'t cover.)',
+  },
+  {
+    title: 'Hard Negatives vs In-Batch Negatives vs Random Negatives',
+    category: 'Retrieval',
+    options: [
+      { name: 'Random Negatives', tag: 'Easiest', color: '#34C48B', mechanism: 'Sample any non-relevant item as negative. Low collision rate in large corpus', use: 'Baseline training; pre-training stage; when negatives are clearly distinct', watch: 'Too easy — model never learns fine-grained distinctions. Recall@K plateaus early' },
+      { name: 'In-Batch Negatives', tag: 'Efficient', color: '#4EA8DE', mechanism: 'Use other queries\' positives as negatives for current query within the same batch', use: 'Standard for bi-encoder training (DPR, SimCSE). Scales with batch size for free', watch: 'False negative collision: other queries\' positives may actually be relevant to current query' },
+      { name: 'Hard Negatives', tag: 'Strongest', color: '#F4845F', mechanism: 'Mine top BM25 or ANN candidates that are NOT relevant — near misses for the model', use: 'Fine-tuning stage after pre-training. Dramatically improves retrieval precision', watch: 'Requires mining pipeline; too hard too early = training instability and mode collapse' },
+    ],
+    probe: 'Why do hard negatives improve dense retrieval so much? (Model must learn fine-grained semantic distinctions rather than "is this related at all". Hard negatives from BM25 are lexically similar but semantically different — force the encoder to rely on deep semantics not surface overlap.)',
+  },
+  {
+    title: 'Cosine Similarity vs Dot Product vs Euclidean',
+    category: 'Retrieval',
+    options: [
+      { name: 'Cosine Similarity', tag: 'Normalised', color: '#4EA8DE', mechanism: '(u·v) / (‖u‖‖v‖). Angle between vectors — magnitude-independent', use: 'Text embeddings, semantic search — when magnitude should not affect similarity', watch: 'Loses magnitude signal — useful if embedding norms carry information (confidence, popularity)' },
+      { name: 'Dot Product', tag: 'Magnitude', color: '#F4845F', mechanism: 'u·v = ‖u‖‖v‖cosθ. Rewards both angle alignment and high magnitude', use: 'RecSys two-tower when you want popular/high-quality items to score higher naturally', watch: 'Dominated by high-norm vectors — normalise inputs if popularity bias is unwanted' },
+      { name: 'Euclidean Distance', tag: 'Metric', color: '#9B8AFB', mechanism: '‖u − v‖₂. True distance in embedding space; sensitive to translation', use: 'Image retrieval, clustering, k-NN; when absolute position in space matters', watch: 'Sensitive to embedding scale; in high dimensions, distances concentrate — cosine often better' },
+    ],
+    probe: 'Netflix uses dot product not cosine for its recommendation tower. Why? (High-norm user vectors = users who watch a lot → more confident preferences. High-norm item vectors = popular/frequently interacted items. Dot product lets the model use norm as a quality/popularity signal that cosine discards.)',
+  },
+]
+
 // ─── Components ──────────────────────────────────────────────────────────────
 
 function Flashcards() {
@@ -415,7 +670,7 @@ function LastDay() {
         Key formulas, common traps, and decision frameworks. The things that separate senior candidates who know the concept from ones who can apply it.
       </p>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
-        {[['formulas','Formulas'], ['traps','Common Traps'], ['frameworks','Frameworks']].map(([k,l]) => (
+        {[['formulas','Formulas'], ['traps','Common Traps'], ['frameworks','Frameworks'], ['comparisons','Trade-offs ⇄']].map(([k,l]) => (
           <button key={k} onClick={() => setSection(k)}
             style={{ padding: '7px 18px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', border: '1px solid',
               background: section === k ? 'var(--prime)' : 'transparent',
@@ -458,6 +713,8 @@ function LastDay() {
           ))}
         </div>
       )}
+
+      {section === 'comparisons' && <Comparisons />}
 
       {section === 'frameworks' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -618,9 +875,94 @@ function OneWeek() {
 
 // ─── Main Tab ─────────────────────────────────────────────────────────────────
 
+function Comparisons() {
+  const categories = ['All', ...Array.from(new Set(COMPARISONS.map(c => c.category)))]
+  const [cat, setCat] = useState('All')
+  const [openProbe, setOpenProbe] = useState(null)
+  const visible = cat === 'All' ? COMPARISONS : COMPARISONS.filter(c => c.category === cat)
+
+  return (
+    <div>
+      <p style={{ color: 'var(--ink-mid)', fontSize: '14px', marginBottom: '20px', lineHeight: 1.6 }}>
+        24 trade-off pairs across 6 domains. Each card: mechanism, when to use, what breaks, and the probe question interviewers actually ask.
+      </p>
+      {/* category filter */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '28px' }}>
+        {categories.map(c => (
+          <button key={c} onClick={() => { setCat(c); setOpenProbe(null) }}
+            style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', border: '1px solid', transition: 'all var(--t-fast)',
+              background: cat === c ? 'var(--prime)' : 'transparent',
+              color: cat === c ? '#000' : 'var(--ink-mid)',
+              borderColor: cat === c ? 'var(--prime)' : 'var(--rim)',
+              fontWeight: cat === c ? 600 : 400 }}>
+            {c}
+          </button>
+        ))}
+      </div>
+      {/* cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {visible.map((comp, ci) => (
+          <div key={ci} style={{ border: '1px solid var(--rim)', borderRadius: '12px', overflow: 'hidden' }}>
+            {/* card header */}
+            <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink)' }}>{comp.title}</div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', padding: '3px 8px', borderRadius: '4px', flexShrink: 0, marginLeft: '12px' }}>
+                {comp.category}
+              </div>
+            </div>
+            {/* options grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${comp.options.length}, 1fr)`, gap: 0 }}>
+              {comp.options.map((opt, oi) => (
+                <div key={oi} style={{ padding: '14px 16px', borderRight: oi < comp.options.length - 1 ? '1px solid var(--rim)' : 'none' }}>
+                  {/* name + tag */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: opt.color }}>{opt.name}</span>
+                    <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 500,
+                      background: opt.color + '18', color: opt.color, border: `1px solid ${opt.color}30` }}>
+                      {opt.tag}
+                    </span>
+                  </div>
+                  {/* mechanism */}
+                  <div style={{ fontSize: '12px', color: 'var(--ink)', lineHeight: 1.55, marginBottom: '8px', fontStyle: 'italic', opacity: 0.85 }}>
+                    {opt.mechanism}
+                  </div>
+                  {/* use when */}
+                  <div style={{ marginBottom: '6px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#34C48B', marginRight: '5px', fontWeight: 600 }}>USE</span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.use}</span>
+                  </div>
+                  {/* watch out */}
+                  <div>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#F4845F', marginRight: '5px', fontWeight: 600 }}>WATCH</span>
+                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.watch}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* probe question */}
+            <div style={{ borderTop: '1px solid var(--rim)' }}>
+              <button onClick={() => setOpenProbe(openProbe === ci ? null : ci)}
+                style={{ width: '100%', textAlign: 'left', padding: '10px 18px', background: openProbe === ci ? 'rgba(240,165,0,0.05)' : 'transparent',
+                  border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 600 }}>▸ INTERVIEWER PROBE</span>
+                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', flexShrink: 0 }}>{openProbe === ci ? '▲' : '▼'}</span>
+              </button>
+              {openProbe === ci && (
+                <div style={{ padding: '0 18px 14px', fontSize: '13px', color: 'var(--ink)', lineHeight: 1.7, background: 'rgba(240,165,0,0.03)' }}>
+                  {comp.probe}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const TIERS = [
   { id: 0, label: 'Last Few Hours', sub: '50 one-liner Q&As' },
-  { id: 1, label: 'Last Day', sub: 'Formulas · Traps · Frameworks' },
+  { id: 1, label: 'Last Day', sub: 'Formulas · Traps · Frameworks · Trade-offs' },
   { id: 2, label: '3 Days', sub: 'Domain-by-domain audit' },
   { id: 3, label: '1 Week', sub: 'Full plan + company profiles' },
 ]

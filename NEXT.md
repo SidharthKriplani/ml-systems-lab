@@ -256,6 +256,12 @@ All 57 JSX files clean. Root cause of repeated build failures confirmed and fixe
 
 ---
 
+## ✅ DONE: Cheatsheet trade-off cards (v4.102, 2026-06-18)
+
+24 comparison cards in CheatsheetTab "Trade-offs ⇄" section (Last Day tier). 6 categories: Training, Architecture, Metrics, Data, MLOps, Retrieval. Each card: mechanism, USE, WATCH, collapsible interviewer probe. Category filter pills. CLAUDE.md schema validator added. Brace diff 0.
+
+---
+
 ## ✅ DONE: GradientTab crash fix (v4.101, 2026-06-18)
 
 Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostReader threw TypeError on undefined → black screen. Added excerpts to all 5 posts. 126/126 confirmed. Brace diff 0.
