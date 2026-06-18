@@ -878,18 +878,20 @@ function OneWeek() {
 function Comparisons() {
   const categories = ['All', ...Array.from(new Set(COMPARISONS.map(c => c.category)))]
   const [cat, setCat] = useState('All')
-  const [openProbe, setOpenProbe] = useState(null)
+  const [openIdx, setOpenIdx] = useState(null)
   const visible = cat === 'All' ? COMPARISONS : COMPARISONS.filter(c => c.category === cat)
+
+  const toggle = (ci) => setOpenIdx(prev => prev === ci ? null : ci)
 
   return (
     <div>
       <p style={{ color: 'var(--ink-mid)', fontSize: '14px', marginBottom: '20px', lineHeight: 1.6 }}>
-        24 trade-off pairs across 6 domains. Each card: mechanism, when to use, what breaks, and the probe question interviewers actually ask.
+        24 trade-off pairs across 6 domains. Tap a card to expand — mechanism, when to use, what breaks, and the interviewer probe.
       </p>
       {/* category filter */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
         {categories.map(c => (
-          <button key={c} onClick={() => { setCat(c); setOpenProbe(null) }}
+          <button key={c} onClick={() => { setCat(c); setOpenIdx(null) }}
             style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', border: '1px solid', transition: 'all var(--t-fast)',
               background: cat === c ? 'var(--prime)' : 'transparent',
               color: cat === c ? '#000' : 'var(--ink-mid)',
@@ -899,62 +901,70 @@ function Comparisons() {
           </button>
         ))}
       </div>
-      {/* cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {visible.map((comp, ci) => (
-          <div key={ci} style={{ border: '1px solid var(--rim)', borderRadius: '12px', overflow: 'hidden' }}>
-            {/* card header */}
-            <div style={{ padding: '14px 18px 10px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink)' }}>{comp.title}</div>
-              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', padding: '3px 8px', borderRadius: '4px', flexShrink: 0, marginLeft: '12px' }}>
-                {comp.category}
-              </div>
-            </div>
-            {/* options grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${comp.options.length}, 1fr)`, gap: 0 }}>
-              {comp.options.map((opt, oi) => (
-                <div key={oi} style={{ padding: '14px 16px', borderRight: oi < comp.options.length - 1 ? '1px solid var(--rim)' : 'none' }}>
-                  {/* name + tag */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: opt.color }}>{opt.name}</span>
-                    <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 500,
-                      background: opt.color + '18', color: opt.color, border: `1px solid ${opt.color}30` }}>
-                      {opt.tag}
+      {/* accordion cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {visible.map((comp, ci) => {
+          const isOpen = openIdx === ci
+          return (
+            <div key={ci} style={{ border: `1px solid ${isOpen ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color var(--t-fast)', background: isOpen ? 'rgba(240,165,0,0.025)' : 'transparent' }}>
+              {/* clickable header — always visible */}
+              <button onClick={() => toggle(ci)}
+                style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: isOpen ? 'var(--prime)' : 'var(--ink)', transition: 'color var(--t-fast)' }}>{comp.title}</span>
+                  {!isOpen && (
+                    <span style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                      {comp.options.map((opt, oi) => (
+                        <span key={oi} style={{ width: '8px', height: '8px', borderRadius: '50%', background: opt.color, opacity: 0.7, display: 'inline-block' }} />
+                      ))}
                     </span>
-                  </div>
-                  {/* mechanism */}
-                  <div style={{ fontSize: '12px', color: 'var(--ink)', lineHeight: 1.55, marginBottom: '8px', fontStyle: 'italic', opacity: 0.85 }}>
-                    {opt.mechanism}
-                  </div>
-                  {/* use when */}
-                  <div style={{ marginBottom: '6px' }}>
-                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#34C48B', marginRight: '5px', fontWeight: 600 }}>USE</span>
-                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.use}</span>
-                  </div>
-                  {/* watch out */}
-                  <div>
-                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#F4845F', marginRight: '5px', fontWeight: 600 }}>WATCH</span>
-                    <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.watch}</span>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            {/* probe question */}
-            <div style={{ borderTop: '1px solid var(--rim)' }}>
-              <button onClick={() => setOpenProbe(openProbe === ci ? null : ci)}
-                style={{ width: '100%', textAlign: 'left', padding: '10px 18px', background: openProbe === ci ? 'rgba(240,165,0,0.05)' : 'transparent',
-                  border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 600 }}>▸ INTERVIEWER PROBE</span>
-                <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', flexShrink: 0 }}>{openProbe === ci ? '▲' : '▼'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                  {!isOpen && <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'var(--surface)', border: '1px solid var(--rim)', padding: '2px 7px', borderRadius: '4px' }}>{comp.category}</span>}
+                  <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', transition: 'transform var(--t-fast)', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                </div>
               </button>
-              {openProbe === ci && (
-                <div style={{ padding: '0 18px 14px', fontSize: '13px', color: 'var(--ink)', lineHeight: 1.7, background: 'rgba(240,165,0,0.03)' }}>
-                  {comp.probe}
+
+              {/* expanded body */}
+              {isOpen && (
+                <div>
+                  {/* options grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${comp.options.length}, 1fr)`, borderTop: '1px solid var(--rim)' }}>
+                    {comp.options.map((opt, oi) => (
+                      <div key={oi} style={{ padding: '14px 16px', borderRight: oi < comp.options.length - 1 ? '1px solid var(--rim)' : 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: opt.color }}>{opt.name}</span>
+                          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontWeight: 500,
+                            background: opt.color + '18', color: opt.color, border: `1px solid ${opt.color}30` }}>
+                            {opt.tag}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--ink)', lineHeight: 1.55, marginBottom: '8px', fontStyle: 'italic', opacity: 0.85 }}>
+                          {opt.mechanism}
+                        </div>
+                        <div style={{ marginBottom: '6px' }}>
+                          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#34C48B', marginRight: '5px', fontWeight: 600 }}>USE</span>
+                          <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.use}</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#F4845F', marginRight: '5px', fontWeight: 600 }}>WATCH</span>
+                          <span style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>{opt.watch}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* probe — inline at bottom, no nested toggle */}
+                  <div style={{ borderTop: '1px solid rgba(240,165,0,0.2)', padding: '12px 18px', background: 'rgba(240,165,0,0.04)' }}>
+                    <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 600, marginBottom: '6px', letterSpacing: '0.06em' }}>▸ INTERVIEWER PROBE</div>
+                    <div style={{ fontSize: '13px', color: 'var(--ink)', lineHeight: 1.7 }}>{comp.probe}</div>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
