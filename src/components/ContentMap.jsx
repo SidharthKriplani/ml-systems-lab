@@ -152,7 +152,7 @@ function SearchRow({ item, isPro, onNav, isSelected }) {
 
 const STATIC_TABS = [
   { id: 'gradient',         label: 'Gradient ∇',       desc: 'Production ML essays — read, then practice', domain: 'Read' },
-  { id: 'foundations-path', label: '↥ Foundations Path', desc: '34-post first-principles curriculum — math → classical algorithms → production', domain: 'Read' },
+  { id: 'foundations-path', label: '↥ The MLE Path', desc: 'Complete senior-MLE curriculum — observation, math, classical ML, evaluation, production, MLOps, system design, interview', domain: 'Read' },
   { id: 'cheatsheet',       label: 'Cheatsheet',       desc: 'Last-minute prep — flashcards, formulas, traps, company profiles', domain: 'Read' },
   { id: 'landscape',        label: 'Landscape',        desc: 'ML tools and infrastructure landscape map', domain: 'Today' },
   { id: 'resources',        label: 'Resources',        desc: 'Interview trainer prompt and reference links', domain: 'Today' },

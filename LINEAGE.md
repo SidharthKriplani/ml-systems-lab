@@ -46,6 +46,55 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.111 — The MLE Path: complete senior-MLE curriculum (2026-06-19)
+
+**The Foundations Path is renamed to "The MLE Path" and expanded from 34 to 57 posts across 11 tiers — covering observation discipline, math, statistics, classical ML, evaluation, sequence, production engineering, monitoring & MLOps, system design, and interview bridge.**
+
+This is the deepest structural change to the path since v4.105. User feedback after seeing v4.110 was sharp: a "first-principles ML thinking" curriculum is academically beautiful but professionally useless if it doesn't cover the production/MLOps/system design surface that real senior MLE interviews test. People come to MSL to get hired. The expansion absorbs the production, MLOps, system design, and interview-bridge content that already existed in Gradient but was not in the path, and adds five new posts covering gaps the existing universe didn't have.
+
+**Five net-new Rigorous posts written this session:**
+- **Post 128 — Observation Discipline: How to Read Diagnostics Before Naming Concepts** (Tier 0, prologue). The framing meta-skill. Reading evidence carefully, asking "what changed?" before naming a concept, separating evidence from assumption. The production tell: the silent alignment trap where engineers and stakeholders both say "the model drifted" while meaning completely different things.
+- **Post 129 — Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning** (Tier 3). Why accuracy fails on imbalanced data, the base rate's effect on precision, the three families of techniques (class weighting, resampling, threshold moving), cost-sensitive framing, precision@K for action-budget systems. Production tell: AUC 0.92, precision@100 of 0.18 — the gap that ships fraud models that don't work in production.
+- **Post 130 — Data Leakage: The Eleven Types and How to Detect Each** (Tier 5). The full taxonomy: target, temporal, train-test contamination, group/entity, aggregation, feature availability, preprocessing, label-window, feature store, RAG/eval, selection bias. With detection protocols for each. Production tell: "Champion model from last month is still better" — the diagnostic sequence for leakage.
+- **Post 131 — Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group** (Tier 5). Segmentation by sub-population/time/confidence/feature, per-segment confusion matrices, calibration by segment (the analysis everyone skips), cohort analysis vs aggregate metrics. Production tell: 2% AUC lift in aggregate, 8% churn rise in the cohort the business cares about.
+- **Post 132 — Model Explainability: SHAP, Permutation Importance, Local vs Global** (Tier 5). Global vs local explanations, gain-based importance's cardinality bias, permutation importance and its correlation trap, SHAP with TreeSHAP and the interpretation traps. Production tell: SHAP says feature is top driver; removing it doesn't change predictions because of correlated features.
+
+**Four new tiers absorbing existing Gradient posts:**
+- **Tier 7 — Production Engineering**: post 1 (Training-Serving Skew), 7 (Feature Stores), 38 (Training-Serving Taxonomy), 41 (Feature Store API Trap), 43 (Late-Arriving Data).
+- **Tier 8 — Monitoring & MLOps**: 5 (Concept Drift Detection), 23 (Three Drift Signals), 39 (Feature Importance Drift), 40 (Calibration Loss in Production), 46 (Silent Model Staleness).
+- **Tier 9 — System Design**: 24 (6-Step Framework), 4 (How to Design Recsys), 72 (Recsys Stack), 71 (Two-Tower Retrieval), 80 (Semantic Search).
+- **Tier 10 — Interview Bridge**: 8 (MLE Interview Framework), 13 (10 ML Interview Mistakes), 18 (MLE Career Ladder).
+
+**Simplify content for all 23 new and absorbed posts** written into `foundationsSimplify.js`. Each ~500–700 words, authoritative tone, production tell + bridge sentence. The Tier 7-10 absorbed posts get first-class Simplify treatment so the beginner experience covers the production/MLOps/system-design layers too.
+
+**Glossary expansion** (`foundationsGlossary.js`) — 25 new canonical terms added covering observation discipline, class imbalance (SMOTE, threshold moving, cost-sensitive learning, precision@K, base rate), leakage taxonomy (target, temporal, group, point-in-time, feature store leakage), error analysis (cohort analysis, segment calibration), explainability (SHAP, permutation importance, gain importance), production engineering (feature freshness, feature store, late-arriving data), monitoring (PSI, prediction drift, calibration drift, model staleness, champion-challenger), system design (candidate generation, re-ranking, two-tower, BM25, hybrid retrieval, cross-encoder, ANN search), interview (MLE Interview Framework).
+
+**PATH_RELATIONS overhauled.** Every new and absorbed post has prereqs and successors mapped, threading the knowledge graph through the four new tiers. Observation Discipline points forward to Leakage, Error Analysis, and Validation. Class Imbalance points back to Calibration and Logistic Regression. The production-engineering tier prereqs on Tier 5 (you need to understand evaluation before you can debug production). System Design prereqs on Production Engineering. Interview Bridge prereqs on System Design.
+
+**Rename throughout the UI:**
+- Path name surface text: "Foundations Path" → "The MLE Path"
+- HomeTab card: "Weak on fundamentals?" → "Preparing for senior MLE interviews?"
+- SignedOutHome teaser: full updated copy describing the 11-tier curriculum
+- ProfilePage card label updated
+- GradientTab mode button: "↥ Foundations" → "↥ MLE Path"
+- GradientTab path-strip header: "Foundations Path" → "The MLE Path"
+- GradientTab path-view header: "Climb the first-principles ladder" → "The complete senior-MLE preparation curriculum" with updated tier description
+- ContentMap entry: "↥ Foundations Path" → "↥ The MLE Path" with updated description
+- Internal identifiers (`foundations-path` event, `msl_foundations_read` key, etc.) preserved to avoid state migration
+
+**Constants exported** for future single-source-of-truth references: `PATH_NAME`, `PATH_TAGLINE`.
+
+**State, structure, and counts after v4.111:**
+- 57 posts total in the path (was 34)
+- 54 ready posts (was 31) — 5 new + 18 absorbed + 31 existing
+- 3 deferred (KNN, Naive Bayes, Manifold) — unchanged
+- 11 tiers (was 7)
+- 87 + 25 = 112 canonical glossary terms (was 87)
+- foundationsSimplify.js: 31 + 23 = 54 entries
+- foundationsPath.js: PATH_RELATIONS now has 54 entries
+
+Brace diff 0 across all touched files. Apostrophe + backtick audits OK.
+
 ### v4.110b — Mobile hotfix + spine sync (2026-06-19)
 
 Quality pass after user asked "all mobile optimized? md files? statefulness?"

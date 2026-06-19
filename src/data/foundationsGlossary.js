@@ -422,6 +422,169 @@ export const GLOSSARY = {
     postId: 117,
     def: 'Encoding categorical features by replacing each category with the mean target value for that category. Efficient but extremely leak-prone unless computed inside CV folds.',
   },
+
+  // ── Observation, imbalance, leakage, error analysis, explainability (v4.111) ─
+  'observation discipline': {
+    postId: 128,
+    def: 'The skill of describing evidence directly and asking "what changed?" before reaching for memorised concepts like "overfitting" or "drift." Refuses to name the concept before doing the observation work.',
+  },
+  'smote': {
+    postId: 129,
+    def: 'Synthetic Minority Oversampling Technique. Creates new minority-class examples by linearly interpolating between existing ones and their neighbours. Works on continuous tabular features; breaks on categorical and multimodal distributions.',
+  },
+  'threshold moving': {
+    postId: 129,
+    def: 'Adjusting the decision cutoff at serving time to hit the desired operating point (precision-recall balance) without retraining. The cleanest fix for class imbalance in most production settings.',
+    aliases: ['threshold tuning'],
+  },
+  'cost-sensitive learning': {
+    postId: 129,
+    def: 'Framing classification with explicit costs for false positives and false negatives. The optimal decision threshold becomes C_fp / (C_fp + C_fn), derived from business cost rather than picked arbitrarily.',
+    aliases: ['cost sensitive learning'],
+  },
+  'class imbalance': {
+    postId: 129,
+    def: 'When the positive class is rare relative to the negative (fraud at 0.1%, click-through at 2%). Accuracy becomes meaningless; precision, recall, and precision@K become the right metrics.',
+    aliases: ['imbalanced classes', 'imbalanced classification'],
+  },
+  'precision@k': {
+    postId: 129,
+    def: 'Of the top K predictions ranked by model score, what fraction are actually positive. The right metric for any system with an action-budget constraint (fraud queues, ad slots, content moderation).',
+    aliases: ['precision at k'],
+  },
+  'base rate': {
+    postId: 129,
+    def: 'The prevalence of the positive class in the population being scored. Precision drops as base rate drops; recall does not. Many "model degraded" alerts in production trace to unstated base-rate shifts.',
+  },
+  'target leakage': {
+    postId: 130,
+    def: 'A feature that contains information about the label generated after the label was observed. The classical leakage type. Offline metrics look perfect; production collapses.',
+  },
+  'temporal leakage': {
+    postId: 130,
+    def: 'Using random k-fold on time-series data so training folds contain examples from after validation folds. The model has effectively seen the future. Fix: walk-forward cross-validation.',
+  },
+  'point-in-time correctness': {
+    postId: 130,
+    def: 'The discipline of computing every feature using only data available before the prediction timestamp. The single most important property of training data assembled from a feature store.',
+    aliases: ['point in time correctness', 'point-in-time'],
+  },
+  'group leakage': {
+    postId: 130,
+    def: 'The same logical entity (user, customer) appearing in both train and validation, even with no duplicated rows. The model memorises entity-specific patterns. Fix: group-aware CV.',
+    aliases: ['entity leakage'],
+  },
+  'feature store leakage': {
+    postId: 130,
+    def: 'Querying a feature store with "current value" semantics during training data assembly. Returns feature values that reflect post-event state. Fix: point-in-time queries.',
+  },
+  'feature store': {
+    postId: 7,
+    def: 'Infrastructure that stores feature values with timestamps and serves them via both a low-latency online store (for serving) and a historical offline store (for training data assembly). Enforces training-serving consistency.',
+  },
+  'shap': {
+    postId: 132,
+    def: 'Shapley Additive exPlanations. Theoretically grounded local explanation method that assigns each feature a value representing its marginal contribution to a specific prediction. Computable exactly for tree models via TreeSHAP.',
+    aliases: ['shapley values', 'tree shap', 'treeshap'],
+  },
+  'permutation importance': {
+    postId: 132,
+    def: 'A global feature importance metric computed by shuffling each feature\'s values and measuring the resulting drop in performance. Unbiased by cardinality but sensitive to feature correlations.',
+  },
+  'gain importance': {
+    postId: 132,
+    def: 'Tree-model feature importance based on how much each feature reduced the loss across all splits where it was used. Fast but biased toward high-cardinality features (user_id, timestamps).',
+    aliases: ['feature importance gain'],
+  },
+  'error analysis': {
+    postId: 131,
+    def: 'The discipline of slicing aggregate model metrics by segment (user tenure, geography, device, cohort, time) to find where the model is failing. Aggregate metrics hide segment failures.',
+  },
+  'cohort analysis': {
+    postId: 131,
+    def: 'Tracking the same group of users (defined by when they entered the system) over time to distinguish true behaviour drift from composition-effect drift in aggregate metrics.',
+  },
+  'segment calibration': {
+    postId: 131,
+    def: 'Computing calibration plots separately for each population segment. Aggregate calibration error often hides segments where the model is severely overconfident or underconfident.',
+  },
+
+  // ── Tier 7 production engineering terms ───────────────────────────────────
+  'feature freshness': {
+    postId: 7,
+    def: 'How recent the feature values are at serving time. Different features have different freshness requirements; "user activity in last hour" needs minutes-old data, "user lifetime value" can be days old.',
+  },
+  'late-arriving data': {
+    postId: 43,
+    def: 'Events that arrive at the data pipeline minutes or hours after they occurred. Causes systematic differences between training-time aggregates (settled) and serving-time aggregates (still in flight).',
+    aliases: ['late arriving data'],
+  },
+
+  // ── Tier 8 monitoring & MLOps terms ───────────────────────────────────────
+  'psi': {
+    postId: 5,
+    def: 'Population Stability Index. A symmetric KL-divergence variant on binned feature distributions. The most common feature drift detection metric. A canary, not a diagnosis.',
+    aliases: ['population stability index'],
+  },
+  'prediction drift': {
+    postId: 23,
+    def: 'A shift in the distribution of the model\'s output predictions over time. Downstream of either feature drift or concept drift, but often the only signal you can monitor without labels.',
+  },
+  'calibration drift': {
+    postId: 40,
+    def: 'When a model\'s predicted probabilities decouple from observed frequencies over time, even as ranking quality (AUC) stays high. Damaging for any system that uses probabilities in downstream decisions.',
+  },
+  'model staleness': {
+    postId: 46,
+    def: 'The gradual degradation of a deployed model relative to a hypothetical model retrained on the most recent data. Often invisible to standard monitoring; requires explicit freshness gap measurement.',
+    aliases: ['silent model staleness'],
+  },
+  'champion-challenger': {
+    postId: 46,
+    def: 'A deployment pattern where the production "champion" model is continuously compared to a recently-retrained "challenger" model. The challenger is promoted when it consistently beats the champion.',
+    aliases: ['champion challenger'],
+  },
+
+  // ── Tier 9 system design terms ────────────────────────────────────────────
+  'candidate generation': {
+    postId: 72,
+    def: 'The retrieval stage in a recommendation funnel. Reduces millions of items to thousands of candidates in milliseconds using cheap methods (ANN, collaborative filtering). Optimised for recall, not precision.',
+    aliases: ['retrieval stage'],
+  },
+  're-ranking': {
+    postId: 72,
+    def: 'The final stage in a recommendation funnel. Takes ranked items and applies business rules, diversity, freshness, and policy filters. Usually rule-based, not learned.',
+    aliases: ['reranking', 're-rank'],
+  },
+  'two-tower': {
+    postId: 71,
+    def: 'Retrieval architecture with two neural networks producing user and item embeddings independently. Enables serving via precomputed item index plus a user-embedding lookup at query time.',
+    aliases: ['two-tower model', 'two tower'],
+  },
+  'bm25': {
+    postId: 80,
+    def: 'A lexical retrieval algorithm based on term frequency, inverse document frequency, and document length normalisation. Still the right baseline for any search system; complements semantic retrieval.',
+  },
+  'hybrid retrieval': {
+    postId: 80,
+    def: 'Combining lexical (BM25) and semantic (dense embedding) retrieval and merging the results. Captures exact-match queries and meaning-match queries that each method alone misses.',
+  },
+  'cross-encoder': {
+    postId: 80,
+    def: 'A ranking model that processes a (query, document) pair jointly through a neural network to produce a relevance score. Much more accurate than bi-encoder retrieval but much slower.',
+    aliases: ['cross encoder'],
+  },
+  'ann search': {
+    postId: 71,
+    def: 'Approximate Nearest Neighbour search. Finds the most similar vectors in a precomputed index in milliseconds instead of seconds. Implementations: FAISS, ScaNN, HNSW. The serving substrate for two-tower retrieval.',
+    aliases: ['approximate nearest neighbour', 'approximate nearest neighbor', 'faiss', 'hnsw'],
+  },
+
+  // ── Tier 10 interview terms ───────────────────────────────────────────────
+  'mle interview framework': {
+    postId: 8,
+    def: 'The structured rubric modern MLE interviews assess against. Five components: ML fundamentals, ML system design, ML coding, behavioural, depth interview. Knowing the rubric is half the prep.',
+  },
 }
 
 // Build a lookup map keyed by canonical lowercase term AND every alias.

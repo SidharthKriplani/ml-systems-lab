@@ -174,19 +174,19 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </button>
       </Card>
 
-      {/* Card 2 — Foundations Path progress + badge */}
+      {/* Card 2 — The MLE Path progress + badge */}
       {foundationsProg.read > 0 && (
         <Card style={{ borderColor: foundationsComplete ? 'rgba(52,211,153,0.3)' : 'var(--rim)', background: foundationsComplete ? 'rgba(52,211,153,0.04)' : 'var(--depth)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
-              <CardLabel>Foundations Path</CardLabel>
+              <CardLabel>The MLE Path</CardLabel>
               {foundationsComplete ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     ✓ Complete
                   </span>
                   <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>
-                    All {foundationsProg.total} foundation posts read.
+                    All {foundationsProg.total} MLE Path posts read.
                   </span>
                 </div>
               ) : (

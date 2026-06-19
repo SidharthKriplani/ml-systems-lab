@@ -94,11 +94,11 @@ export default function SignedOutHome({ onShowAuth, onNavigate, onExplore }) {
           300+ production ML scenarios across 6 domains. Live Pyodide execution. Interview simulation tools. The judgment that separates a pass from a hire.
         </p>
 
-        {/* Foundations Path teaser */}
+        {/* The MLE Path teaser */}
         <div style={{ marginBottom: '28px', padding: '14px 16px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)', borderRadius: '10px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>↥ Foundations Path</div>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>↥ The MLE Path</div>
           <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.5, marginBottom: '10px' }}>
-            {TOTAL_POSTS}-post first-principles climb from probability up to senior MLE judgment.
+            {TOTAL_POSTS}-post complete senior-MLE curriculum: foundations, classical ML, evaluation, production, MLOps, system design, interview.
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center' }}>
             {FOUNDATIONS_TIERS.map(t => (

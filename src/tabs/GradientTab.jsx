@@ -8249,6 +8249,438 @@ Three almost-identical XGBoost models with different seeds and a meta-learner on
     domain: 'math',
     youtube: [],
   },
+  {
+    id: 128,
+    slug: 'observation-discipline-reading-diagnostics',
+    title: 'Observation Discipline: How to Read Diagnostics Before Naming Concepts',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: true,
+    excerpt: 'Before any ML concept, this comes first. The single most common reason senior MLE candidates fail interviews — and the single most common reason production models die quietly — is jumping from a symptom to a named concept without doing the observation work in between. You see a train-validation gap and you say "variance." You should not. Not yet.',
+    body: `Observation discipline is the skill of looking at evidence carefully, separating what you see from what you assume, and asking "what changed?" before you reach for a label. It is the foundation under every other ML concept in this curriculum. Most failed interviews and most production incidents trace back to its absence, not to a missing technique.
+
+**The lazy label problem**
+
+A senior MLE candidate is shown a training curve and a validation curve. There is a gap. They say "overfitting." The interviewer asks why. The candidate cannot give a mechanism — they have matched the visual pattern to a memorised word.
+
+In production, this is even worse. An on-call engineer sees a metric drop. They say "drift." They retrain. The metric is unchanged because the actual problem was a data pipeline timezone bug, not concept drift. A week of engineering time gets spent on the wrong fix because the first word out of someone's mouth became the working hypothesis.
+
+The discipline is to refuse to name the concept until you have done the observation work. There is no point reaching for "variance" or "drift" or "leakage" if you have not yet asked the basic questions: what specifically did I see, what specifically changed, what would I expect to see for each of the candidate explanations, and how can I tell them apart.
+
+**Reading a learning curve**
+
+A learning curve plots training error and validation error against the size of the training set or the number of training iterations. It looks simple. It is misread constantly.
+
+The four patterns to learn to recognise: (1) High training error AND high validation error AND the curves are roughly equal — this is bias, not variance. The model class lacks capacity to capture the pattern. (2) Low training error AND much higher validation error AND the gap stays roughly constant as data grows — this is variance and adding more data should close the gap. (3) Low training error AND validation error that gets WORSE during training — this is the classical overfit pattern; consider early stopping or regularisation. (4) Training and validation curves that look fine but production metrics fail — this is the most dangerous pattern, and it almost always points to validation contamination (the validation set is not honest) or a metric-vs-objective mismatch.
+
+The discipline: never call a model "overfit" without first ruling out underfit. Never call a model "underfit" without first ruling out validation problems. Never trust a learning curve unless you know exactly how the validation split was constructed.
+
+**Comparing train vs validation properly**
+
+The train-validation comparison is the single most useful diagnostic in classical ML, and it is constantly misused. The questions to ask in order: (1) Are the train and validation distributions actually the same? If you have a time-series problem and you used random k-fold, your train and validation come from different time slices and the comparison is meaningless. (2) Are the labels equally clean in both? Label noise is often concentrated in recent data, which is often the validation slice. (3) Are you measuring the same thing in both? It is shockingly common for the validation pipeline to apply a different preprocessing step than the training pipeline. (4) Is the gap stable across multiple random seeds? A single train-validation comparison is one sample. Variance across seeds is itself a signal.
+
+**Asking "what changed?" before naming**
+
+When a metric moves, the discipline is to first list everything that changed between when the metric was at its old value and now. Code changes. Data source changes. Upstream pipeline changes. Schema migrations. Feature engineering changes. Calendar effects (Diwali, payday, weekday vs weekend). Marketing campaigns. Onboarding flow changes. Only after you have the list do you start ranking hypotheses by which changes could plausibly produce the observed pattern.
+
+The opposite — naming the concept first and then hunting for evidence to fit — is how teams spend weeks investigating drift that turned out to be a feature pipeline bug introduced in the same release as the model.
+
+**Separating evidence from assumption**
+
+The third discipline: when you describe an incident, distinguish between what you have observed and what you have assumed. "Conversion dropped 3% on Tuesday" is an observation. "Conversion dropped because the new model is worse" is an assumption. Most production post-mortems blur the two. The most useful incident write-ups separate them ruthlessly — observations in one column, hypotheses in another, evidence-for-each-hypothesis in a third.
+
+> WARNING — **Production tell: the silent alignment trap.** When an engineer and a stakeholder both reach for the same word for a symptom — "the model drifted" — they often mean very different things. The engineer means the input feature distribution shifted. The stakeholder means the model's predictions stopped matching business expectations. They are talking past each other. The first conversation in any incident response should be to make the engineer say specifically what they observed, free of jargon, and to make the stakeholder describe specifically what they noticed, free of jargon. Only then introduce the technical terms. This single discipline collapses incident-resolution time roughly in half.
+
+**Interview questions on this topic**
+
+"You see a model with 95% training accuracy and 75% validation accuracy. What is your first response?" — The undisciplined answer is "overfitting, regularise more." The disciplined answer is to ask: how was the validation set constructed; is the distribution the same as production; is the label quality the same; is the gap stable across seeds; have I checked feature importances for stability; have I checked calibration on each set. The single number gap is not enough information to act on. The senior candidate refuses to name the concept until they have ruled out the alternatives.
+
+"A production model's precision drops from 0.82 to 0.75 over two weeks. The on-call engineer says it is concept drift. What should you ask before agreeing?" — Was there any pipeline release in that period? Did the threshold get changed by anyone? Has the prevalence of the positive class changed (which would shift precision without any model change)? Is the precision computed on the same population as before, or has the input distribution shifted in a way that means the model is being applied to different cases? Is the labelling pipeline still capturing positives at the same rate? Concept drift is one of perhaps eight plausible explanations and is the least common in practice.
+
+"A junior analyst reports that adding a new feature improved validation AUC by 0.02. Should you ship the change?" — Not until you have audited the feature for leakage. The first questions: is this feature available at prediction time? Is it computed using only data from before the prediction timestamp? Has it ever taken the future value of the target into account, even indirectly through an upstream aggregation? Has the analyst run a temporal cross-validation to confirm the improvement holds? Junior analysts almost always overestimate AUC gains because they almost always miss subtle leakage. Validating the gain is the senior move.
+
+"What is the difference between 'the model is biased' and 'the data is biased'?" — Model bias (as in bias-variance) is systematic prediction error from a too-simple model class. Data bias is a property of the data generation process: certain groups are under-represented, labels are systematically wrong for certain populations, or features have been collected with measurement error that varies by group. Confusing the two leads to wrong fixes: model bias is fixed with a richer model; data bias is fixed by changing how data is collected, labelled, or sampled. A model with high data bias and low model bias will fit the biased data perfectly and fail in production on the under-represented group.
+
+**Try on Colab:** take any well-behaved tabular dataset (Wisconsin Breast Cancer, Adult Income). Train a model. Now deliberately introduce four different problems: (1) random k-fold on a time-shuffled version of the data with a fake timestamp added, (2) a target leakage column constructed as the label plus small noise, (3) a label noise injection (flip 10% of labels in the validation set only), (4) a feature scaling bug where validation uses different scaler parameters than training. Each one will produce a misleading validation result. Walk through the four cases and for each one, identify which observation would have caught the problem before you trusted the metric. This is the practical version of observation discipline.`,
+    tags: ['Models & Math', 'Observation Discipline', 'Diagnostics', 'Validation', 'Foundations', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the single most common mistake you have seen senior MLE candidates make when describing a model failure?",
+            "a": "Reaching for a named concept before describing the evidence. 'It's overfitting' or 'it's drift' before they have said specifically what they observed. The disciplined answer always starts with the observation — what specifically I saw on which slice using which metric — and only then proposes candidate mechanisms with how to distinguish them."
+        },
+        {
+            "q": "An A/B test shows the new model is 2% worse on conversion. Engineering wants to roll back. What do you ask first?",
+            "a": "Is the sample ratio correct (SRM check)? Was the test exposed to the same user cohorts in both arms? Is the metric defined identically across arms (same denominator, same attribution window)? Is the difference statistically significant for the realized sample size, or are we looking at noise? Most 'losses' in A/B tests at typical traffic levels are within noise; rolling back on a non-significant negative result is itself a mistake."
+        },
+        {
+            "q": "A drift alert fires on a feature. The model's overall accuracy is unchanged. Should you act?",
+            "a": "Not necessarily. Feature drift without label-relationship drift is common — payday cycles, holidays, marketing-induced traffic shifts. Run a backtest of the current model on a recent labelled window. If accuracy is intact, the alert is a canary not a crisis. If accuracy is degraded, dig into which segments are affected and whether the degradation traces to the drifting feature specifically. Acting on the alert without this triage is what burns on-call cycles on non-issues."
+        },
+        {
+            "q": "How would you teach observation discipline to a junior engineer?",
+            "a": "Make them write incident reports with three columns: what I observed (only direct evidence), what I assumed (anything not directly observed), what I would expect to see if each candidate hypothesis were true (the falsification step). After they do this for ten incidents, the discipline becomes automatic. Without the structure, they slide back into pattern-matching symptoms to memorised concepts."
+        }
+    ],
+  },
+  {
+    id: 129,
+    slug: 'class-imbalance-base-rate-threshold-cost-sensitive',
+    title: 'Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and lies confidently on imbalanced data. Handling imbalance correctly is what separates a model that ships from a model that looks great on the leaderboard and dies in production.',
+    body: `Most interesting classification problems are imbalanced. Fraud at PhonePe runs at 0.1%. Default at a lender sits at 2%. Conversion in display ads is below 5%. Churn in subscription services is single-digit percent. In each case the positive class is rare and the metrics that work on balanced data become misleading or actively wrong. The handling of class imbalance is not a side topic — it is a fundamental skill for production ML.
+
+**Why accuracy fails first**
+
+A fraud model with 99% accuracy is almost certainly worthless. If the base rate is 1% fraud, then predicting "not fraud" on every transaction achieves 99% accuracy. The number looks fantastic and the model is doing nothing. Accuracy is only meaningful when classes are roughly balanced and the cost of each kind of mistake is roughly equal. Both assumptions fail in fraud, default, churn, and anomaly detection — which is to say, in most real classification work.
+
+The first move with any imbalanced problem is to throw out accuracy as the headline metric. You will look at precision and recall, the precision-recall trade-off curve, PR-AUC, and the realised metrics at the operating threshold the business will actually use. ROC-AUC is fine for ranking but it can hide problems in the high-precision region where you actually operate.
+
+**The base rate and what it does to your metrics**
+
+The base rate — the prevalence of the positive class in the population you are scoring — has a direct effect on precision but not on recall. As base rate drops, the same model achieves lower precision at every recall threshold. This is geometry, not weakness — there are fewer positives in the haystack, so the model's positive predictions are necessarily more likely to be false positives. When you compare two models, both trained on different prevalence assumptions, you cannot read the metrics directly; you have to renormalise.
+
+This also means that when prevalence shifts in production (seasonal effects on fraud, marketing pushes that change conversion rates), your model's apparent precision will shift even if the model is unchanged. The dashboard moves; the model is fine. Many "the model degraded" alerts at the operations level trace to unstated changes in base rate.
+
+**Class weights and resampling**
+
+The first technique most people reach for is class weighting: telling the loss function to penalise mistakes on the minority class more heavily. In sklearn, this is class_weight='balanced'. In gradient boosting, this is scale_pos_weight. The intuition is that the loss should give equal influence to each class regardless of how many examples there are.
+
+The second is resampling. Undersample the majority class by randomly dropping examples. Oversample the minority class by duplicating examples or by generating synthetic ones. SMOTE (Synthetic Minority Oversampling Technique) is the most famous synthetic approach — it generates new positive examples by linearly interpolating between existing positive examples and their nearest neighbours. SMOTE works on tabular data with smoothly distributed features and breaks on categorical features and on data where the minority class has multimodal structure.
+
+The third option is to leave the data alone and adjust the decision threshold. The model still trains on the original distribution but at scoring time you pick a threshold below 0.5 to convert the predicted probabilities into class decisions. This is often the best technique because it does not warp the model's probability estimates and it gives you a single tuning knob (the threshold) that maps directly to the operational trade-off between false positives and false negatives.
+
+**Cost-sensitive learning**
+
+The most principled framing of imbalanced classification is cost-sensitive learning. You assign a cost to each kind of mistake — false positive costs C_fp, false negative costs C_fn — and the optimal decision rule predicts positive whenever P(positive | x) > C_fp / (C_fp + C_fn). The threshold is now derived from the business cost ratio, not picked arbitrarily.
+
+This reframes the whole problem. You no longer ask "what is the right precision-recall trade-off"; you ask "what is the expected cost per prediction under this policy" and you optimise that directly. The advantage is that you can compare models on a single numerical scale that the business actually cares about. The disadvantage is that you have to extract real cost estimates from the business, which is often the hardest part.
+
+**Alert capacity and precision@K**
+
+Many imbalanced problems have a hard capacity constraint downstream. A fraud review team can process 200 cases a day. A content moderation queue can review 5000 posts a day. A bank can call 100 high-risk customers a day. The relevant metric is precision@K — what fraction of the top K predictions are actually positive — and the threshold is determined by the capacity, not by any statistical test.
+
+Optimising for precision@K is the right discipline for any system where action is gated by human or downstream capacity. You measure your model's value as "additional true positives caught per day, at the same capacity" against the baseline model. This is a far more useful metric than AUC for these problems.
+
+> WARNING — **Production tell: AUC looks great, precision@K is terrible, and nobody notices for a quarter.** A common failure mode in imbalanced fraud, default, and churn models. AUC is 0.92 on the validation set. Precision@100 (the actual production operating point) is 0.18. The model is in fact ranking some positives near the top but the ranking is mostly noise in the high-confidence region — which is exactly where you act. AUC is not sensitive to this; PR-AUC is somewhat sensitive; precision@K is the only metric that tells you the truth. Every production imbalanced classifier needs precision@K monitored, and the K has to match the actual operational capacity.
+
+**Threshold moving in practice**
+
+The technique that gets the least respect for how effective it is. Train the model on the original imbalanced distribution. Compute the precision-recall curve on a held-out validation set. Pick the threshold that gives you the operating point your business needs (precision >= X, or recall >= Y, or precision@K). Deploy with that threshold.
+
+The advantages: no data manipulation, no synthetic examples, no probability distortion. The calibration of the original model is preserved. Re-tuning when business needs change is a one-line config update, not a retrain. The threshold is a knob the operations team can hold, not a model artifact you have to redeploy.
+
+**Interview questions on this topic**
+
+"A fraud model achieves 0.95 AUC on the validation set. Should you ship it?" — Not without checking precision@K at the actual operational capacity. AUC measures ranking across the full score distribution; production fraud teams only act on the top few hundred cases. A model with 0.95 AUC and 0.4 precision@100 will overwhelm the review team with false positives and they will (correctly) stop trusting the alerts. Always evaluate at the operating point.
+
+"You apply SMOTE to balance the training data and the model's calibration breaks. What happened?" — SMOTE oversamples the minority class. The model now sees a different base rate at training time than at production time. Its predicted probabilities reflect the synthetic distribution, not reality. The fix is either to recalibrate after training (Platt scaling on un-resampled data) or to use class weighting instead, which preserves the relative probabilities while compensating for the imbalance in the loss.
+
+"A pipeline is consuming 100,000 fraud alerts per day and the review team can only process 200. What's the operational lever you would change first?" — Move the threshold up. Train your model as is, but only flag the top 200 by score. Then measure realised precision at that cutoff and use that as the metric for any future improvement. The pipeline producing 100k alerts is wasted compute and noise — fix the operational point before fixing the model.
+
+"What is the relationship between class weighting and threshold moving — are they redundant?" — They are not redundant but they often partially substitute. Class weighting changes the model's decision boundary by penalising minority class errors more heavily during training. Threshold moving changes the decision rule applied to a model's probabilities at inference time. Both lower the effective threshold for predicting positive. The cleaner approach in most production work is to train without class weighting (preserving calibration) and adjust the threshold at serving time. Class weighting is necessary when the imbalance is so extreme (e.g. 1:1000) that the optimiser cannot learn the positive class signal at all without it.
+
+**Try on Colab:** load the credit card fraud dataset from Kaggle (highly imbalanced, base rate ~0.17%). Train logistic regression and XGBoost. Compare four strategies: (1) class_weight='balanced', (2) SMOTE oversampling, (3) random undersampling, (4) no rebalancing + threshold moving. For each strategy, compute precision@500, recall at fixed precision=0.7, and calibration error. Show that threshold moving gives the best calibration while still hitting useful operating points. Plot the precision-recall curves overlaid for each strategy to make the trade-offs visual.`,
+    tags: ['Models & Math', 'Class Imbalance', 'SMOTE', 'Threshold Moving', 'Cost-Sensitive Learning', 'Fraud', 'Production'],
+    domain: 'eval',
+    youtube: [],
+    interviewQs: [
+        {
+            "q": "Why is accuracy a misleading metric for imbalanced classification?",
+            "a": "Because predicting the majority class for every example achieves accuracy equal to the majority class's prevalence. At a 1% base rate, predicting 'not fraud' for everything gives 99% accuracy and detects zero fraud. Accuracy hides the actual product utility of the model. Use precision, recall, F1, PR-AUC, or precision@K depending on the operational constraint."
+        },
+        {
+            "q": "Your A/B test shows a new fraud model has higher AUC but lower precision@100 than champion. Which do you ship?",
+            "a": "Lower precision@100 means your top-ranked predictions are more often false positives, which is what review teams actually see. AUC is averaged over the full distribution and includes regions you do not operate in. The champion is the better production model for your actual review-capacity constraint, regardless of AUC. Ship the higher precision@K model unless there is a strong reason to expand capacity."
+        },
+        {
+            "q": "When does SMOTE help vs. hurt?",
+            "a": "SMOTE helps when (1) the minority class signal is genuinely under-represented and the model lacks gradient on it, (2) the features are continuous and smoothly distributed, (3) the minority class has unimodal structure. SMOTE hurts when (a) the minority class is multimodal and SMOTE creates samples in low-density regions between modes, (b) features are categorical (interpolation produces nonsense), (c) calibration matters for downstream decisions (oversampling distorts probabilities). In production, threshold moving without resampling is usually safer."
+        },
+        {
+            "q": "Walk through how you would design a cost-sensitive fraud detection system end to end.",
+            "a": "1. Get the business to quantify C_fp (reviewer time + customer friction from blocking a legitimate transaction) and C_fn (the expected loss from missing a fraud). 2. Train a probability-calibrated model with no rebalancing. 3. Set the threshold at C_fp / (C_fp + C_fn), or at the precision-recall point that respects the review-team capacity. 4. Monitor realised precision and recall at the operating point, not just AUC. 5. Re-tune the threshold (not the model) when the cost ratio changes — for example when reviewer headcount scales up. 6. Retrain the model on a cadence tied to drift detection, not the calendar."
+        }
+    ],
+  },
+  {
+    id: 130,
+    slug: 'data-leakage-eleven-types-detection',
+    title: 'Data Leakage: The Eleven Types and How to Detect Each',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: true,
+    excerpt: 'Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise each on sight — because if you do not catch them before deployment, you will see them in production, and they will be much harder to diagnose then.',
+    body: `Data leakage is when information that would not be available at production prediction time bleeds into the training or validation data, making the model look better offline than it can possibly be online. The naive definition — "the target is in the features" — covers maybe one tenth of the cases. The actual taxonomy is broader and the production failures are more varied.
+
+**1. Target leakage**
+
+The classical case. A feature contains information about the target. For a fraud model, a feature like "is_disputed" is a target leak — disputes are filed only after fraud is confirmed. The model achieves near-perfect offline metrics by reading the dispute outcome. In production, at scoring time, no dispute has been filed, the feature is missing or default, and the model collapses. Detection: audit every top-importance feature for "was this value generated before or after the label was observed?" If you cannot answer with certainty, you cannot ship.
+
+**2. Temporal leakage**
+
+You have time-ordered data and you use random k-fold cross-validation. Now your training folds contain examples from after your validation fold. The model has effectively seen the future. Feature values that depend on aggregates ("user's average purchase amount over the last 30 days") now include data from beyond the validation timestamp. Detection: walk-forward cross-validation should give roughly the same number as your random k-fold; if walk-forward is much worse, you have temporal leakage.
+
+**3. Train-test contamination**
+
+You ran preprocessing on the entire dataset before splitting into train and test. Now the test set's distribution influenced the training pipeline (through scaling parameters, imputation values, target encoding, etc.). The model has implicitly seen the test set. Detection: re-fit all preprocessing inside the train fold only; if test metrics drop significantly, you had contamination.
+
+**4. Group / entity leakage**
+
+The same logical unit (a user, a customer, a household) appears in both train and validation, even though no individual row is duplicated. The model learns user-specific patterns from training rows of that user and applies them to validation rows from the same user. It looks like generalisation; it is memorisation of known users. Detection: group-aware cross-validation (group-k-fold by user_id, household_id, etc.); if group-aware metrics are much worse than random k-fold, you had entity leakage.
+
+**5. Aggregation leakage**
+
+You compute an aggregate feature (mean target by category, time-since-event by user) using the full dataset. The aggregate then leaks information from all rows into each row. Even after train-test split, every row's aggregate feature was computed using both halves. Detection: compute aggregates inside the training fold only, then use the training-fold aggregate to score validation/test rows; or use a leave-one-out aggregation that excludes the row itself.
+
+**6. Feature availability leakage**
+
+A feature is in your training data because someone backfilled it. At production prediction time, that feature is computed by an asynchronous pipeline that lags by hours. The model is trained on values it will never see in time at inference. Detection: trace each feature's serving-time availability; for time-sensitive predictions, audit whether the feature will exist at the prediction timestamp.
+
+**7. Preprocessing leakage (the fit-before-split bug)**
+
+You fit a StandardScaler, OneHotEncoder, or any other transformer on the full data, then split. The transformer's parameters were learned from data that includes the test set. The fix is sklearn's Pipeline with fit applied only inside the training fold of each cross-validation split. This is the bug that ships every junior ML engineer's first production model.
+
+**8. Label-window leakage**
+
+You define the positive class as "user churned within 30 days." For training, you take a user, look at the next 30 days, and label. For features, you also accidentally use data from those 30 days (the period during which churn was being measured). The model now has information from inside the label window. Detection: visually map the timeline — features must come from strictly before the prediction timestamp; the label must come from strictly after; the prediction timestamp must be in the middle.
+
+**9. Feature store leakage**
+
+The most modern leakage type. Your feature store has a single row per entity (user) that gets updated whenever the entity's underlying data changes. At training time, you fetch features "as they exist now." But the feature values reflect post-event updates — the user purchased something, the feature got updated to reflect the purchase, then you trained on that updated value to predict whether the user would purchase. Detection: point-in-time correct joins. Your feature store needs versioning by timestamp, not "current value." The training data must be assembled by asking "what was this feature's value at the prediction timestamp" — never "what is it now."
+
+**10. RAG / evaluation set leakage**
+
+In LLM applications, your retrieval index was built using the same documents that appear in your evaluation set. When the model is evaluated, it retrieves the exact answer document and rephrases it. The metric (BLEU, ROUGE, accuracy) is sky-high; the model has merely learned to use the index lookup. Detection: hold out a fully separate document corpus from the index and test only on questions whose answers are in that held-out corpus.
+
+**11. Selection-bias leakage (the survivorship trap)**
+
+The training data was filtered by a process that depends on the label. Customers who made a successful purchase enter the training set; customers who churned before purchasing do not. The model learns patterns specific to surviving customers, who are not the population it will be applied to. Detection: enumerate the data-collection steps; for each step, ask "does this step depend on the outcome we are trying to predict?" If yes, you have selection bias; the training distribution does not match the deployment distribution.
+
+> WARNING — **Production tell: "Champion model from last month is still better."** If your offline metric says the new model is significantly better, but the A/B test in production shows no improvement or worse, 80% of the time it is leakage. The leakage gave you the offline lift; production strips it away. The diagnostic sequence: (1) compute walk-forward CV — if much worse, you have temporal leakage. (2) Compute group-k-fold CV — if much worse, you have entity leakage. (3) Run a leak-check: audit every top feature for whether it could plausibly depend on the label. (4) Audit preprocessing — was anything fit on the full dataset? (5) Trace serving-time availability — is every feature actually present at prediction time? If all five pass, the lift is probably real and the A/B is detecting noise or a serving bug.
+
+**The single most useful discipline**
+
+Point-in-time correctness. For every feature in your training data, you must be able to state: this feature's value was computed using only information available before the prediction timestamp. If you cannot state this for every feature, you have leakage of some kind. Most large companies have moved to feature stores precisely because point-in-time correctness is too hard to enforce manually at scale.
+
+**Interview questions on this topic**
+
+"You discover that your top feature in a churn model is 'days_since_last_login.' Is this safe?" — Possibly not. It depends on when the feature is computed relative to the churn label. If churn is defined as "no login for 30 days" and the feature is "days since last login as of label time," then the feature has trivially perfect predictive power because it definitionally equals 30 for every churned user. You have label-window leakage. The fix is to compute the feature at a fixed lookback before the prediction window (e.g., "days since last login as of T-30, predicting churn in [T-30, T]"), not at T itself.
+
+"Walk through point-in-time correct join semantics for a feature store." — At training time, for each training example, you fetch features as they existed at the prediction timestamp of that example. The feature store stores versioned values: for each entity (user), each feature has a series of (timestamp, value) tuples representing every update. The training join becomes an asof join: for entity X at time T, return the latest feature value with timestamp <= T. This is computationally expensive, which is why feature stores are non-trivial infrastructure. It is also the only correct way to assemble training data from a live feature store.
+
+"You find evidence of leakage in a model in production. What is the right escalation?" — Pause the model. Compute the leak-free metrics on the existing validation set (fit preprocessing inside folds, compute aggregates inside folds, use walk-forward CV, audit point-in-time correctness). Report the corrected metrics to stakeholders. Decide whether the model is still net positive at the corrected metrics — sometimes leaked models are still better than the previous champion at the leak-free metric. If so, ship with disclosure. If not, roll back and revisit the feature design.
+
+"Is cross-validation enough to prevent leakage?" — No. Cross-validation prevents the model from being fit on the test set, but it does not prevent target leakage (a feature that contains the answer), feature-availability leakage (a feature that will not exist at production scoring time), or feature-store leakage (a feature computed using post-event data). Cross-validation is necessary but not sufficient. Feature audit is the complement.
+
+**Try on Colab:** download a public dataset with timestamps (e.g. the Brazilian e-commerce Olist dataset). Build a churn model. Deliberately introduce three of the eleven leakage types listed above — target leakage (add a feature that depends on the post-churn outcome), temporal leakage (random k-fold instead of walk-forward), aggregation leakage (compute user-level aggregates over the full dataset). Show how each type inflates offline AUC and how the diagnostic sequence above catches each one. This is the practical equivalent of memorising the taxonomy.`,
+    tags: ['Model Evaluation', 'Data Leakage', 'Point-in-Time', 'Feature Stores', 'Validation', 'Production'],
+    domain: 'eval',
+    youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between target leakage and temporal leakage?",
+            "a": "Target leakage is when a feature contains information that depends on the label (e.g., a feature that reflects the consequences of fraud — disputes, chargebacks — being used to predict fraud). Temporal leakage is when training data includes information from after the prediction timestamp, often through random k-fold on time-series data or aggregates computed over the full dataset. Target leakage breaks the model's predictions; temporal leakage breaks the validity of the validation metric. Both produce optimistic offline numbers that fail in production."
+        },
+        {
+            "q": "Your model uses 'mean order value for this customer' as a feature. What questions do you ask before trusting it?",
+            "a": "Was this aggregate computed over the entire dataset (aggregation leakage)? Was it computed using only data before each prediction timestamp (point-in-time correctness)? Was the prediction timestamp itself included in the aggregate (off-by-one timestamp errors)? At serving time, will this aggregate be available at the right latency (feature freshness)? Is the aggregate stable for new customers (cold start)? If any of those questions doesn't have a clean answer, the feature is suspect."
+        },
+        {
+            "q": "How do you detect group leakage in a problem where the same user can have many rows?",
+            "a": "Group-k-fold cross-validation: keep all rows for the same user_id in either the training fold or the validation fold, never split a single user across folds. Compare the group-k-fold metric to a random k-fold metric on the same data. If random k-fold is significantly better, the model is learning user-specific patterns that don't generalise to new users — group leakage. The group-k-fold metric is the honest one."
+        },
+        {
+            "q": "A junior teammate runs the StandardScaler on the full dataset and then splits into train and test. Is this leakage?",
+            "a": "Yes — preprocessing leakage. The mean and standard deviation used to scale the test set were learned from data that includes the test set. The test metric is inflated because the test set's distribution was 'seen' through the scaler. The fix is sklearn's Pipeline: scaler.fit_transform on training data, scaler.transform on test data, with fitting done inside each CV fold separately. This is the most common leakage bug and ships in roughly half of all junior production models."
+        }
+    ],
+  },
+  {
+    id: 131,
+    slug: 'error-analysis-segment-metrics-cohort-slicing',
+    title: 'Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. Error analysis is the systematic discipline of breaking the aggregate apart to find where the model is failing, and it is the single highest-leverage debugging skill in applied ML.',
+    body: `When your model fails in production, the symptoms almost never present as "the overall metric is bad." They present as "the model is bad for this kind of user," or "the model is bad on this segment of products," or "the model has lost accuracy on weekends." Error analysis is the discipline of systematically slicing the model's behaviour by feature, by cohort, by time, by segment — to find where the failure actually lives. It is one of the most useful skills in production ML and one of the least taught in textbooks.
+
+**The aggregate metric lie**
+
+Suppose your fraud model has 0.92 AUC on the validation set. Excellent. Now slice by user tenure: new users (< 7 days) get AUC 0.74; established users (> 90 days) get AUC 0.96. The aggregate AUC was a weighted average dominated by the established users. The model is failing exactly on the cohort that matters most — new users where the business is investing the most onboarding effort — and the aggregate hid it completely.
+
+This is the rule, not the exception. Every production model has segments where it performs much worse than the aggregate suggests. If you have not done segment-level analysis, you have not actually understood your model's behaviour.
+
+**The basic segmentation slices**
+
+The first slices to try for any tabular classifier: by sub-population (user tenure, geography, device type, traffic source, business tier), by time (weekday vs weekend, hour of day, by month, around holidays), by prediction confidence (top decile of model scores, bottom decile, the middle), by feature value (slice each top feature into 4-5 bins and compute metrics per bin). For each slice, compute: precision, recall, F1, calibration, predicted positive rate, actual positive rate, base rate within the slice.
+
+The patterns you are looking for: cohorts where precision drops below the operating threshold; cohorts where the model is mis-calibrated (predicted probability does not match observed frequency); cohorts where the base rate is so different from training that any aggregate metric is meaningless; cohorts where the volume is too small to draw conclusions and you need to flag uncertainty rather than report a point estimate.
+
+**Confusion matrix by segment**
+
+The single most useful artifact in error analysis is a segmented confusion matrix. For each segment of interest, compute (true positives, false positives, true negatives, false negatives) at the operating threshold. You will see immediately which segments are dominated by false positives (the model is over-flagging) versus false negatives (the model is missing positives) versus genuinely calibrated.
+
+This breaks down the aggregate metric into actionable components. "Recall dropped 5% overall" is a symptom; "recall dropped 5% overall but it dropped 28% specifically on the segment of users who logged in from new devices" is a diagnosis.
+
+**Calibration by segment**
+
+Calibration is most often computed as a single aggregate Expected Calibration Error (ECE). This hides segment-level miscalibration that can be catastrophic. The pattern: aggregate ECE is 1.5% which looks great. But the model is overconfident on segment A (predicts 0.9, true rate 0.6) and underconfident on segment B (predicts 0.3, true rate 0.5). The two cancel in the aggregate. Decisions made on segment A's probabilities are systematically over-aggressive; on segment B, systematically under-aggressive. Both are wrong, and the dashboard cannot see it.
+
+The fix is to compute per-segment calibration plots. Group predictions into bins, plot predicted vs observed within each segment, and look for segments where the curve deviates from the diagonal more than the aggregate does. Re-calibrate per segment if needed (Platt scaling fitted per group, or isotonic regression per group).
+
+**Threshold by segment**
+
+When error costs differ by segment, the optimal threshold should also differ by segment. A fraud model with one threshold across all geographies will be too aggressive in geographies with low base rate and too permissive in geographies with high base rate. Segment-specific thresholds — computed by group from the calibration data — are the cleaner solution.
+
+In practice this trades model simplicity for fairness and operational accuracy. The right call depends on whether the segment differences are large enough to matter and whether you can compute the segment thresholds reliably from your validation data.
+
+**Cohort analysis over time**
+
+A cohort is a group of users defined by when they entered the system: "users acquired in March 2026." Cohort analysis tracks the same group over time and looks for behaviour patterns that aggregate analysis hides. Most "drift" alerts in production trace to cohort effects — older cohorts have different behaviour than newer ones, and the active cohort mix shifts over time.
+
+The diagnostic question: when conversion drops, is it because each cohort's conversion has dropped, or because the cohort mix has shifted toward lower-converting cohorts? These have completely different root causes and require completely different fixes. Aggregate metrics cannot distinguish them.
+
+**Root-cause analysis from segments**
+
+Once you find a failing segment, the next move is to find what makes that segment different. Compare the feature distributions of failing examples versus successful ones within the segment. Look at the top features the model used. Look at the label noise rate in the segment. Look at the data quality (missing values, default values, error rates from upstream pipelines) within the segment.
+
+The pattern you are usually looking for: a specific feature pipeline is broken for this segment, a specific label collection mechanism is misfiring for this segment, the training data systematically under-represents this segment, or the data distribution for this segment has shifted in a specific way the model cannot generalise to.
+
+> WARNING — **Production tell: overall AUC improved 2 points; the model is shipped; new-user churn rises 8% over the next month.** Classic aggregate-metric trap. The new model is better on average but worse on the cohort that the business invests most heavily in. Onboarding personalisation breaks. The signal was sitting in segment-level recall the whole time. Always check whether the cohort that drives most of the business value is the one the model is improving on — not just the average. Most fights between data science and product teams trace back to this kind of mismatch.
+
+**Interview questions on this topic**
+
+"Your aggregate AUC improved 0.02 in the new model. Product is asking whether to ship. What do you check first?" — Segment performance. Slice by the top 3-4 business segments (user tier, geography, device, tenure). For each segment, compute precision, recall, and calibration. The aggregate improvement might mask a regression on a critical segment. Ship only if there is no critical segment where the new model is significantly worse, even if the aggregate is better.
+
+"You have a fraud model with overall ECE of 1.5%. Should you trust it for setting risk thresholds?" — Not without segment-level calibration plots. ECE is an average across confidence bins. The model might be well-calibrated overall but systematically overconfident on high-risk cohorts (where calibration matters most) and underconfident on low-risk cohorts. Risk thresholds set on average probabilities will be wrong in both segments, with errors compounding in the segments you care about most. Per-cohort calibration before deploying any threshold-based decision.
+
+"A senior product manager says 'I just ran a slice analysis and our model is 5% worse on users from Tier 2 cities.' What questions do you ask?" — How many Tier 2 users in the slice? (Sample size — is the difference statistically meaningful or noise?) What is the base rate in Tier 2? (Different base rate can produce different aggregate metrics without any model failure.) Is the label-generation process the same in Tier 2? (Different label noise leads to different metrics.) Is the slice defined by a feature the model uses, or by a metadata column? (Slicing on a model feature can produce circular results.) The slice analysis is the start of the conversation, not the end.
+
+"How would you implement segment-aware monitoring for a deployed model?" — Define the critical segments upfront (cohorts the business cares about). For each, log predictions and outcomes separately. Compute per-segment metrics (precision, recall, calibration, base rate) on a regular cadence. Alert when any segment's metric deviates more than a threshold from its historical baseline, even if the aggregate is stable. The aggregate-only monitoring everyone defaults to misses exactly the failures you most need to catch.
+
+**Try on Colab:** take a publicly available classification dataset with rich segmentation columns (Adult Income with demographics, or any credit dataset). Train a model. Compute aggregate AUC, precision, recall. Then slice by every demographic column and recompute the metrics within each segment. Find the segment with the largest performance gap from the aggregate. For that segment, compute a calibration plot (predicted probability bins vs observed rate). Compare to the aggregate calibration plot. This is the practical equivalent of error analysis in production.`,
+    tags: ['Model Evaluation', 'Error Analysis', 'Segmentation', 'Cohort Analysis', 'Calibration', 'Production'],
+    domain: 'eval',
+    youtube: [],
+    interviewQs: [
+        {
+            "q": "Why is aggregate AUC insufficient as a primary production metric?",
+            "a": "Because it averages over the full population and can hide segment-level failures. The model can have 0.92 aggregate AUC while failing badly on a critical sub-population (new users, specific geographies, low-volume cohorts). Senior MLE teams always check segment-level performance before shipping; the aggregate is a starting point, not a verdict."
+        },
+        {
+            "q": "How do you detect that a model's failure is concentrated in one cohort vs spread across all users?",
+            "a": "Compute metrics for each cohort separately and compare to the aggregate. If one cohort's metric is significantly worse than aggregate (controlling for sample size), the failure is concentrated there. If all cohorts are roughly worse to a similar degree, the failure is distributional or aggregate. The distinction determines the fix: concentrated failures need cohort-specific features or thresholds; distributional failures need retraining or feature engineering across the board."
+        },
+        {
+            "q": "What is the most common error analysis mistake you have seen?",
+            "a": "Slicing by a feature the model uses, finding the model is worse on a slice, and concluding the model is biased. The model is doing what its features say. The fact that performance varies across slices that are themselves correlated with the features is partly tautological. The right slicing is on dimensions the model does not (or should not) directly use — geography, tenure, cohort entry time. Performance gaps on those tell you something genuinely actionable."
+        },
+        {
+            "q": "Walk through the steps you would take to investigate a sudden drop in production model recall.",
+            "a": "1. Confirm the drop is real (check pipeline freshness, label-collection timing, definition consistency). 2. Slice by time — has the drop been gradual or sudden? Around any release? 3. Slice by user cohort — has it dropped equally across cohorts, or is it concentrated? 4. Slice by feature distribution — has the input distribution shifted on any top feature? 5. Compare model predictions and labels in the affected cohort — has the label distribution shifted, or the feature-label relationship? 6. Form a hypothesis with falsifiable predictions, test by reproducing offline. Most production recall drops trace to data pipeline issues, not model decay."
+        }
+    ],
+  },
+  {
+    id: 132,
+    slug: 'model-explainability-shap-permutation-local-global',
+    title: 'Model Explainability: SHAP, Permutation Importance, Local vs Global',
+    category: 'Model Evaluation',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 12,
+    featured: false,
+    excerpt: 'Stakeholders ask "why did the model predict this?" Regulators demand "what features influenced this decision?" Engineers debug "why is this feature suddenly the top one?" These are three different explainability questions with three different right tools. Getting them confused is one of the most common failures in production ML.',
+    body: `Model explainability is a layered subject. There is no single "explain the model" tool — there are several techniques that answer different questions, and using the wrong one leads to wrong conclusions. The senior practitioner knows which tool answers which question and which traps each tool has.
+
+**Local vs global explanations**
+
+The first distinction. Global explanation tells you what the model has learned overall: which features matter on average, across all predictions. Local explanation tells you what drove a specific individual prediction: which features mattered for this user, this transaction, this query.
+
+Stakeholders and regulators usually want global ("which features does this credit model rely on?"). Operations and customer support usually want local ("why was this specific customer denied a loan?"). The two are not interchangeable. A feature can have high global importance and low importance for any specific prediction (when the feature interacts strongly with others). A feature can have high local importance for an individual case and low global importance (when it is rarely informative but very informative when it is).
+
+**Coefficient inspection (linear models)**
+
+For linear regression and logistic regression, the model's weights are the explanation. The magnitude (after standardising features) tells you global importance. The sign tells you direction. The actual prediction for any input is a linear combination, fully transparent.
+
+This is why linear models remain the workhorse of regulated ML. A credit model where every weight can be inspected and explained to a regulator is fundamentally easier to ship into a regulated industry than a neural network with sixty million parameters, even if the neural network is more accurate.
+
+**Tree-based feature importance**
+
+For decision trees, Random Forests, and gradient boosted models, the standard feature importance is "gain" — how much each feature reduced the loss on average across all the splits where it was used. This is fast to compute, always available, and biased.
+
+The bias: gain-based importance favours high-cardinality features (features with many possible split points). user_id, session_id, timestamp — these often appear as top features even when they're not genuinely informative, because they have many possible splits and any residual variance the regularisation didn't squeeze out gets attributed to them. Acting on gain-based importance ("we should focus on user_id as a feature") is how teams waste sprints on the wrong signal.
+
+**Permutation importance**
+
+The honest alternative. For each feature, randomly shuffle its values and measure how much the model's performance drops on a held-out set. Big drop means the feature was important; small drop means it was not. The advantage over gain: not biased by cardinality. The cost: slow to compute (one model evaluation per shuffle per feature) and sensitive to feature correlations (when two features are correlated, shuffling one doesn't hurt accuracy because the model uses the other; both features end up looking unimportant).
+
+The standard fix for the correlation problem is grouped permutation importance: shuffle correlated features together as a block. This costs more analysis upfront but gives a more honest measure.
+
+**SHAP (Shapley Additive exPlanations)**
+
+The most principled local explanation method. For each prediction, SHAP assigns a value to each feature representing its marginal contribution to the prediction, averaged over all possible orderings of features. SHAP values sum to the difference between the prediction and a baseline (the model's expected output).
+
+The advantages: SHAP values are theoretically grounded (Shapley values from game theory), they satisfy desirable properties (efficiency, symmetry, dummy, linearity), and they give per-prediction explanations. SHAP can also be aggregated across many predictions to get a global view (mean absolute SHAP per feature), which gives a more honest global importance than gain or permutation on the same data.
+
+The cost: SHAP is computationally expensive. For tree models, TreeSHAP computes exact SHAP values efficiently. For neural networks, you need DeepSHAP or sampling-based approaches and the quality of the explanation degrades. For LLM outputs, SHAP is essentially intractable; you have to use other techniques (attention maps, perturbation-based interpretability).
+
+**The interpretation traps**
+
+SHAP explains the model's behaviour, not the real world. A feature with high SHAP value is one the model is using, which is not the same as a feature that has a causal effect on the outcome. If the model learned to use a proxy for the true cause, SHAP will tell you the proxy is important — which is true about the model but not about the world.
+
+Permutation importance assumes feature independence. With correlated features, individual permutation importance under-states each feature's true importance (because the model fills in from the correlated partner). Grouped permutation or conditional permutation are the fixes.
+
+Gain-based importance assumes the model's training-time information is the truth. When features are highly leakage-prone (computed from post-event aggregates, for example), gain might be high simply because the leakage was useful at training time. The feature is not "important" in any production-meaningful sense.
+
+> WARNING — **Production tell: SHAP says this feature is the top driver; removing it doesn't change the model's predictions much. What happened?** Almost always: correlated features. The "top driver" feature has high SHAP because the model used it heavily in training; but a near-duplicate feature is also available and absorbs the signal when the top one is removed. The model is robust to losing any single feature in a correlated group while looking like it depends heavily on each one. The senior move: cluster features by correlation first, then assess importance at the cluster level, not the feature level. This is also why SHAP-based feature engineering ("drop low-SHAP features") can fail badly — you might drop a feature that was the only reliable carrier of an important signal.
+
+**When explainability matters**
+
+Three production scenarios where this is non-negotiable. (1) Regulated industries — credit scoring, medical diagnosis, insurance underwriting — where the model's decisions must be explainable to a regulator or a customer. (2) Debugging — when the model produces a surprising prediction and you need to know why before you can decide whether to trust it. (3) Trust and adoption — when stakeholders need to understand the model to incorporate its outputs into their decisions. In each case, the choice of explanation method has to match the question being asked.
+
+**Interview questions on this topic**
+
+"A regulator asks you to explain why the credit model denied this customer. What do you give them?" — A local explanation. SHAP values for the individual prediction, showing which features pushed the model toward "deny" and by how much. Plus a brief sentence per top feature describing what it represents. Not a global importance chart — the regulator asked about a specific customer, not the model in general. Not the model coefficients alone — modern tree models do not have a single coefficient per feature. The right answer is per-prediction SHAP rendered as a force plot or a waterfall chart, with English descriptions.
+
+"What is the difference between 'this feature is important' and 'this feature is causally important'?" — The former is a statement about the model; the latter is a statement about the world. A model can learn to use a proxy (e.g., zip code) that correlates with the true causal driver (e.g., neighbourhood quality, income). The feature is important to the model but not causally important — interventions on the feature would not change the outcome. Explainability methods (SHAP, permutation) tell you about the model's behaviour, not about causal effects. For causal claims, you need causal inference methods (post 47, 84, 85 in Gradient).
+
+"Permutation importance says all of your top 5 features are equally important. Is this useful?" — Only if you check for feature correlations. If the top 5 features are highly correlated, each one has low permutation importance individually because the model can substitute. The conclusion "they are equally important" is misleading — they might all be redundant carriers of the same underlying signal. Grouped permutation importance, or correlation-aware methods, give a more honest picture. Equal individual permutation importance with high inter-correlation is a sign that the model has heavy feature redundancy.
+
+"You see a feature with high gain-based importance but low SHAP-based importance. What's likely happening?" — Gain over-weights features that get used in many splits — typically high-cardinality features like user_id or timestamps. SHAP gives a more honest picture of marginal contribution. The feature is probably being used as a high-cardinality regulariser (the model splits on it to memorise specific examples) rather than as a genuinely informative feature. Drop it, retrain, see if anything changes — usually nothing does. This is one of the most reliable smoke tests for feature usefulness.
+
+**Try on Colab:** train an XGBoost model on a tabular dataset (Adult Income, German Credit, any reasonable choice). Compute (1) gain-based feature importance, (2) permutation importance on a held-out set, (3) mean absolute SHAP values using TreeSHAP, (4) for a specific individual prediction, the per-feature SHAP values. Compare the three global importance rankings — they will disagree. Investigate the disagreements: which features have high gain but low SHAP, which have high permutation but low SHAP, what does that tell you about how the model is using them. This is the practical experience of explainability in production.`,
+    tags: ['Model Evaluation', 'Explainability', 'SHAP', 'Permutation Importance', 'Feature Importance', 'Production'],
+    domain: 'eval',
+    youtube: [],
+    interviewQs: [
+        {
+            "q": "What is the difference between global and local explanation, and when do you need each?",
+            "a": "Global explanation describes the model's overall behaviour — which features matter on average. Local explanation describes a single prediction — what drove this specific user's score. Regulators and stakeholders typically want global (the model as a whole); operations and customer support typically want local (specific cases). They're not interchangeable. A feature can be globally important but locally irrelevant, or globally weak but the dominant driver of a specific prediction."
+        },
+        {
+            "q": "Why is gain-based feature importance biased, and what should you use instead?",
+            "a": "Gain over-weights features that get used in many splits — typically high-cardinality features like user_id, timestamp, or anything continuous. The bias arises because more possible split points means more opportunities for the tree to use the feature, regardless of whether it carries real signal. The fixes: permutation importance (model-agnostic but sensitive to correlations) or SHAP (theoretically grounded, computable exactly for tree models via TreeSHAP). For most production work, SHAP global importance is the right summary."
+        },
+        {
+            "q": "SHAP says this prediction was driven by feature X. Can you tell the regulator 'X caused this denial'?",
+            "a": "No. SHAP describes the model's use of features, not causal effects. The model may have learned to use X as a proxy for an unmeasured causal factor. Stating 'X caused the denial' implies that intervening on X would change the prediction in the same way — which is a causal claim. The honest framing is 'feature X contributed Y to this denial under the model.' For causal interpretation, you need causal inference techniques and assumptions far beyond what SHAP provides."
+        },
+        {
+            "q": "How would you use explainability to validate that a model is not picking up a protected attribute through a proxy?",
+            "a": "Several layers. Compute the feature correlation matrix — identify features highly correlated with the protected attribute (zip code with race, name with gender, etc.). Train the model with the protected attribute deliberately excluded. Compute SHAP values on a held-out fairness audit set, broken down by the protected attribute. If specific features show systematically different SHAP magnitudes across protected groups, those features are functioning as proxies. The fix is either feature removal, adversarial debiasing, or a calibration step that equalises performance across groups."
+        }
+    ],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -8975,12 +9407,12 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
         </div>
       </div>
 
-      {/* Foundations Path strip — only when post is part of the path */}
+      {/* MLE Path strip — only when post is part of the path */}
       {inFoundationsPath && pathTier && (
         <div style={{ marginBottom: '28px', padding: '14px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
             <div data-toc-root style={{ position: 'relative' }}>
-              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Foundations Path</div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>The MLE Path</div>
               <button onClick={() => setTocOpen(o => !o)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '3px 8px', margin: '-3px -8px', borderRadius: '6px', background: tocOpen ? 'rgba(240,165,0,0.14)' : 'transparent', border: '1px solid transparent', cursor: 'pointer', transition: 'background 0.12s' }}
                 onMouseEnter={e => { if (!tocOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
@@ -9414,12 +9846,12 @@ function FoundationsPathView({ onOpenPost, onExit, posts }) {
 
       {/* Header */}
       <div>
-        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Foundations Path</div>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>The MLE Path</div>
         <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.05em', marginBottom: '12px', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-          Climb the first-principles ladder
+          The complete senior-MLE preparation curriculum
         </h1>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px', margin: 0 }}>
-          {TOTAL_POSTS} posts in sequence across 7 tiers. Math → statistics → linear models → classical algorithms → unsupervised → evaluation → production bridge. Each tier ends with a pointer into the practice tab that applies what you just learned.
+          {TOTAL_POSTS} posts in sequence across 11 tiers. Observation discipline → math → statistics → linear models → classical algorithms → unsupervised → evaluation → sequence → production engineering → monitoring & MLOps → system design → interview bridge. Every tier ends with a pointer into the practice tab that applies what you just learned.
         </p>
       </div>
 
@@ -9752,7 +10184,7 @@ export default function GradientTab({ onNavigate }) {
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ Foundations' }, { k: 'cases', l: 'Cases' }].map(m => (
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ MLE Path' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => m.k === 'path' ? openFoundationsPath() : setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
@@ -9781,7 +10213,7 @@ export default function GradientTab({ onNavigate }) {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ Foundations' }, { k: 'cases', l: 'Cases' }].map(m => (
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ MLE Path' }, { k: 'cases', l: 'Cases' }].map(m => (
             <button key={m.k} onClick={() => m.k === 'path' ? openFoundationsPath() : setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
