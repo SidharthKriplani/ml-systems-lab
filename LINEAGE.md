@@ -46,6 +46,23 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.108 — Foundations Path: clickable ToC + keyboard navigation (2026-06-19)
+
+**Context-without-leaving: while reading any path post, you can now see all 34 posts grouped by tier in one click — and step through with `[` and `]` keys.**
+
+User pointed out that Post N of 34 with only prev/next visible is too narrow a view. You can see one step back and one forward but have no sense of where you are in the larger climb. Built two complementary additions:
+
+- **Clickable ToC dropdown on the "Tier · Post N of 34" chip.** The chip in the Foundations Path strip is now a button with a ▾ caret. Click opens a 380px-wide dropdown anchored below it, scrollable up to 60vh. Contents: all 34 posts grouped by 7 tiers, each tier label in amber, posts as clickable rows. Current post highlighted with amber background, bold text, ← here marker. Deferred posts (KNN, Naive Bayes, Manifold) are disabled and rendered in muted italic with their status. Click any ready post → jump immediately + close dropdown. Click outside or press Esc → close. Top header strip shows "All 34 posts · jump anywhere" and a "[ ] keys to step" hint.
+- **Keyboard nav within path.** When reading a path post: `[` jumps to previous, `]` jumps to next, `Esc` closes the ToC. Listener ignores keystrokes when focus is in an input, textarea, or contentEditable element so it doesn't fight with form fields. Listener only registered when `inFoundationsPath` is true — no side effects on non-path posts.
+
+Implementation notes:
+- Added `tocOpen` state to PostReader, two useEffects (keyboard listener + click-outside).
+- The dropdown is rendered inside a `data-toc-root` container — click-outside detection uses `closest('[data-toc-root]')` to avoid closing when the user clicks inside the dropdown.
+- The dropdown uses `setTimeout(0)` deferral on its document.addEventListener so the opening click doesn't immediately close it.
+- No new state in localStorage — ToC is purely transient UI.
+
+Brace diff 0 on GradientTab.jsx. Apostrophe + backtick audits OK.
+
 ### v4.107 — Foundations Path Session 4 polish: forward pointers, Cmd+K, ProfilePage badge (2026-06-19)
 
 **Completes the Foundations Path UI loop. Path posts now have practice-tab CTAs, discoverability via Cmd+K, and completion badge on ProfilePage.**

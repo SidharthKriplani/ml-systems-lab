@@ -8625,10 +8625,39 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
   inFoundationsPath, foundationsRead, onToggleFoundationsRead,
   onOpenFoundationsPath, onOpenPathPost }) {
   const [scrollPct, setScrollPct] = useState(0)
+  const [tocOpen, setTocOpen] = useState(false)
   const pathTier = inFoundationsPath ? tierForPostId(post.id) : null
   const pathIdx = inFoundationsPath ? sequenceIndexForPostId(post.id) : -1
   const prevPath = inFoundationsPath ? prevPostInPath(post.id) : null
   const nextPath = inFoundationsPath ? nextPostInPath(post.id) : null
+
+  // Keyboard nav within path: [ = previous, ] = next, Esc = close ToC
+  useEffect(() => {
+    if (!inFoundationsPath) return
+    function handler(e) {
+      // ignore when user is typing in inputs
+      const t = e.target
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (e.key === '[' && prevPath) { e.preventDefault(); onOpenPathPost(prevPath.postId) }
+      else if (e.key === ']' && nextPath) { e.preventDefault(); onOpenPathPost(nextPath.postId) }
+      else if (e.key === 'Escape' && tocOpen) { e.preventDefault(); setTocOpen(false) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [inFoundationsPath, prevPath, nextPath, tocOpen, onOpenPathPost])
+
+  // Click-outside closes the ToC dropdown
+  useEffect(() => {
+    if (!tocOpen) return
+    function onClick(e) {
+      const el = e.target
+      if (el && el.closest && el.closest('[data-toc-root]')) return
+      setTocOpen(false)
+    }
+    // defer one tick so the opening click doesn't immediately close
+    const t = setTimeout(() => document.addEventListener('click', onClick), 0)
+    return () => { clearTimeout(t); document.removeEventListener('click', onClick) }
+  }, [tocOpen])
 
   function handleScroll(e) {
     const el = e.currentTarget
@@ -8764,11 +8793,51 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
       {inFoundationsPath && pathTier && (
         <div style={{ marginBottom: '28px', padding: '14px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
-            <div>
+            <div data-toc-root style={{ position: 'relative' }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Foundations Path</div>
-              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
-                {pathTier.label} · Post {pathIdx + 1} of {TOTAL_POSTS}
-              </div>
+              <button onClick={() => setTocOpen(o => !o)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '3px 8px', margin: '-3px -8px', borderRadius: '6px', background: tocOpen ? 'rgba(240,165,0,0.14)' : 'transparent', border: '1px solid transparent', cursor: 'pointer', transition: 'background 0.12s' }}
+                onMouseEnter={e => { if (!tocOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={e => { if (!tocOpen) e.currentTarget.style.background = 'transparent' }}>
+                <span style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                  {pathTier.label} · Post {pathIdx + 1} of {TOTAL_POSTS}
+                </span>
+                <span style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', transform: tocOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+              </button>
+              {tocOpen && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 50, width: 'min(380px, 88vw)', maxHeight: '60vh', overflowY: 'auto', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', padding: '8px 0' }}>
+                  <div style={{ padding: '6px 14px 10px', borderBottom: '1px solid var(--rim)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>All 34 posts · jump anywhere</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>[ ] keys to step</span>
+                  </div>
+                  {FOUNDATIONS_TIERS.map(tier => (
+                    <div key={tier.id} style={{ padding: '8px 0' }}>
+                      <div style={{ padding: '4px 14px', fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                        {tier.label}
+                      </div>
+                      {tier.posts.map(p => {
+                        const isCurrent = p.postId === post.id
+                        const isReady = p.status === 'ready' && p.postId
+                        return (
+                          <button key={p.n}
+                            onClick={() => { if (isReady) { setTocOpen(false); onOpenPathPost(p.postId) } }}
+                            disabled={!isReady}
+                            style={{ width: '100%', textAlign: 'left', padding: '6px 14px', background: isCurrent ? 'rgba(240,165,0,0.15)' : 'transparent', border: 'none', cursor: isReady ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '10px', transition: 'background 0.1s' }}
+                            onMouseEnter={e => { if (!isCurrent && isReady) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                            onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent' }}>
+                            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: isCurrent ? 'var(--prime)' : 'var(--ink-ghost)', minWidth: '22px', flexShrink: 0 }}>{p.n}</span>
+                            <span style={{ fontSize: '12px', fontFamily: 'var(--font-sans)', color: isCurrent ? 'var(--prime)' : (isReady ? 'var(--ink-mid)' : 'var(--ink-ghost)'), fontWeight: isCurrent ? 700 : 400, fontStyle: isReady ? 'normal' : 'italic', lineHeight: 1.4, flex: 1 }}>
+                              {p.title}
+                              {!isReady && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginLeft: '6px' }}>· {p.status === 'deferred' ? 'deferred' : 'soon'}</span>}
+                            </span>
+                            {isCurrent && <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', flexShrink: 0 }}>← here</span>}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button onClick={onOpenFoundationsPath} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--rim)', background: 'transparent', color: 'var(--ink-mid)', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
