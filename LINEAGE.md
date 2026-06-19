@@ -46,6 +46,33 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.105 — Foundations Path: sequenced first-principles curriculum (2026-06-19)
+
+**Self-contained 34-post ladder across 7 tiers, surfaced as a real curriculum (not just a series filter).**
+
+The Gradient universe already had the content for a beginner-to-senior first-principles climb — but the posts were scattered across the `ground`, `found`, `recsys`, and `ds` series with no sequencing, no prerequisites, no progress tracking, no forward pointers into MSL's practice tabs. v4.105 turns that latent curriculum into a real one.
+
+Built this session:
+- **`src/data/foundationsPath.js`** — single source of truth for the ladder. 7 tiers (Pure Math · Statistics & Estimation · Linear Models · Classical Algorithms · Unsupervised & Dim Reduction · Evaluation & Generalization · Sequence/Specialized Bridge). 34 posts in order. Per-tier: outcome statement, prerequisite, forward pointer (`{ tabId, label }`) into the practice tab that applies the tier, optional PAL cross-link. Helper functions: `tierForPostId`, `prevPostInPath`, `nextPostInPath`, `readFoundationsRead/markFoundationsRead/unmarkFoundationsRead`, `tierCompletion`, `overallCompletion`.
+- **`FoundationsPathView` component in `GradientTab.jsx`** — full ladder UI. Per-tier expand/collapse with prereq chip + tier progress bar. Posts render as clickable rows (open in PostReader) or as muted "coming soon" lines for 4 pending posts (KNN, Naive Bayes, Ensemble theory, Manifold Learning). Mint colour for completed tiers. Tier-bottom strip: forward pointer to practice tab + PAL cross-link (dashed-border block) for Tier 1 and Tier 5.
+- **PostReader path strip** — when the active post is part of the path, top of the article shows: tier label, `Post N of 34`, "Path overview" button (jumps back to ladder), "Mark read in path" toggle (separate from global Gradient read state), prev/next buttons that walk the path order rather than chronological IDs.
+- **HomeTab Foundations Path card** — placed right after the first-session directive. "Weak on fundamentals? Start here." for fresh users, "Continue the foundation climb" with a progress bar once any post is marked read. Single CTA opens path. Uses a `msl-open-foundations-path` custom event so it works even when GradientTab is already mounted.
+- **SignedOutHome teaser** — compact "Foundations Path" block with 7 tier-name chips, shown between the subtext and the sign-in CTAs. Demonstrates the curriculum without requiring sign-in.
+- **GradientTab mode switch** — third button added between Posts and Cases: "Foundations". URL deep link `?path=foundations#gradient` opens the path directly.
+
+State model (METRICS.md):
+- `msl_foundations_read` — JSON array, post IDs marked read inside the path. Independent of `msl_read` (the existing global Gradient read state) so a user can track foundations progress separately from general browsing.
+- `msl_foundations_tier` — string `'t0'…'t6'`, the currently-active tier id. Persists the open tier across sessions so "resume where you left off" works.
+
+Coverage today:
+- 30 of 34 posts are ready (existing Gradient posts absorbed in sequence).
+- 4 net-new posts pending (Session 3 backlog): KNN, Naive Bayes, Ensemble methods (Bagging/Boosting/Stacking mechanics), Manifold Learning (t-SNE/UMAP).
+- All 7 tiers have functional forward pointers; Tier 1 + Tier 5 cross-link to PAL for experimentation depth.
+
+Planning doc (`docs/FOUNDATIONS_PATH.md`) shipped alongside as the engineering reference for Sessions 3–4 (content + polish).
+
+Brace diff 0 on GradientTab.jsx, HomeTab.jsx, SignedOutHome.jsx. Apostrophe scan OK.
+
 ### v4.84 — Gradient complete FAANG DS/ML curriculum: 17 posts (79–95) (2026-06-17)
 
 **Gradient now covers every major area a staff DS/ML engineer is asked about at FAANG. 95 total posts.**

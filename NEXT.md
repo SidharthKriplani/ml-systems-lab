@@ -290,10 +290,46 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 
 ---
 
-## NEXT: UX loop — remaining items (P2)
+## ✅ DONE: Foundations Path Session 2 — UI scaffolding (v4.105, 2026-06-19)
 
-1. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
-2. **ELI5 mode on Gradient posts** — simplified 3-sentence summary toggle per post. Start with posts 1–30 only. Store as static data in `src/data/eliData.js`. Toggle button in PostReader header.
+1. ~~`src/data/foundationsPath.js` — 34-post ladder, 7 tiers, helpers~~
+2. ~~`FoundationsPathView` component in GradientTab~~
+3. ~~PostReader path strip + prev/next that walks path order~~
+4. ~~HomeTab "Foundations Path" card~~
+5. ~~SignedOutHome teaser~~
+6. ~~GradientTab mode-switch entry + `?path=foundations#gradient` deep link~~
+7. ~~PAL cross-link on Tier 1 + Tier 5~~
+8. ~~METRICS.md updated (`msl_foundations_read`, `msl_foundations_tier`)~~
+
+---
+
+## NEXT: Foundations Path Session 3 — write the 4 missing posts (P0)
+
+Each post must hit MSL quality bar: intuition → derivation → worked example → **production tell** → 4 interview Q&As with answers → Colab challenge → forward pointer to a specific practice tab. ~600–900 words per post. Add to `POSTS` array in `GradientTab.jsx`, then update `src/data/foundationsPath.js` to swap `status: 'pending'` → `'ready'` and fill `postId`.
+
+1. **KNN: The Lazy Algorithm, Curse of Dimensionality, and When KNN Wins** — Tier 3, position 15. Production tell: "high-dimensional KNN silently degenerates to random — the 'nearest' neighbour and the 'furthest' converge in distance."
+2. **Naive Bayes: The Independence Assumption, When It Lies, and Why It Still Works** — Tier 3, position 16. Production tell: "Naive Bayes is well-ordered but badly calibrated — use Platt scaling or isotonic regression if you're using the scores for thresholds."
+3. **Ensemble Methods: Bagging, Boosting, Stacking — Mechanics and When Each Wins** — Tier 3, position 19. Production tell: "stacking blends overfit silently on the holdout you trained the meta-learner on — use out-of-fold predictions, never in-fold."
+4. **Manifold Learning: t-SNE, UMAP, and Why They Distort Distances** — Tier 4, position 25. Production tell: "cluster sizes and inter-cluster distances in a t-SNE plot are not meaningful — multiple runs with different perplexity will tell you what's stable vs. an artifact."
+
+---
+
+## NEXT: Foundations Path Session 4 — content audit + polish (P1)
+
+1. **Production-tell audit on all 30 ready posts.** Walk each post in the path; if no explicit "In production, this breaks as…" passage, write one and inject. Most likely Ground Up (101–120) already has them; the absorbed posts from `found`/`recsys` (73, 74, 75, 86, 87, 88, 95, 96, 97, 72) probably need supplementation.
+2. **Forward pointer audit.** Every post in the path needs `POST_PRACTICE[postId]` to resolve to a real practice module — otherwise the "Practice this →" CTA in PostReader falls back silently.
+3. **Tier 1 + Tier 5 PAL link verification.** Confirm the PAL URL placeholder (`https://product-analytics-lab.vercel.app`) is the live URL once PAL ships publicly. Update `PAL_URL` constant in `foundationsPath.js`.
+4. **Cmd+K integration.** Add foundations-path entry to `ContentMap.jsx` STATIC_TABS so the path is discoverable in global search.
+5. **ProfilePage badge.** Lightweight "Foundations complete" tag when `overallCompletion().read === overallCompletion().total`.
+
+---
+
+## NEXT: Other queued (P2)
+
+1. ~~**Slug duplicate fix — `ab-test-failure-modes`**~~ — ✅ Fixed 2026-06-18.
+2. ~~**LinkedIn drafts collision**~~ — ✅ Fixed 2026-06-18.
+3. **Quiz Me posts 51–126** — 228 more MCQs (3 × 76 posts). Same format as quizData.js. Add to same file, append to QUIZ export.
+4. **ELI5 mode on Gradient posts** — simplified 3-sentence summary toggle per post. Start with posts 1–30 only. Store as static data in `src/data/eliData.js`. Toggle button in PostReader header.
 
 ---
 

@@ -4,6 +4,12 @@ import { getRead, toggleRead, isRead } from '../utils/read.js'
 import { POST_VISUALS } from '../components/GradientVisuals.jsx'
 import { markActivity } from '../utils/activity.js'
 import { QUIZ } from '../data/quizData.js'
+import {
+  FOUNDATIONS_TIERS, PATH_SEQUENCE, TOTAL_POSTS, PAL_URL,
+  tierForPostId, sequenceIndexForPostId, prevPostInPath, nextPostInPath,
+  readFoundationsRead, markFoundationsRead, unmarkFoundationsRead,
+  readActiveTier, writeActiveTier, tierCompletion, overallCompletion,
+} from '../data/foundationsPath.js'
 const POSTS = [
   {
     id: 1,
@@ -2318,7 +2324,7 @@ def walk_forward_cv(series, model_fn, horizon=7, min_train=90):
   },
   {
     id: 36,
-    slug: 'ab-test-failure-modes',
+    slug: 'ab-test-peeking-srm',
     title: 'The Two Silent Killers of A/B Tests: Peeking and SRM',
     category: 'Data Science',
     catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
@@ -8501,8 +8507,14 @@ const POST_PRACTICE = {
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────
-function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
+function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
+  inFoundationsPath, foundationsRead, onToggleFoundationsRead,
+  onOpenFoundationsPath, onOpenPathPost }) {
   const [scrollPct, setScrollPct] = useState(0)
+  const pathTier = inFoundationsPath ? tierForPostId(post.id) : null
+  const pathIdx = inFoundationsPath ? sequenceIndexForPostId(post.id) : -1
+  const prevPath = inFoundationsPath ? prevPostInPath(post.id) : null
+  const nextPath = inFoundationsPath ? nextPostInPath(post.id) : null
 
   function handleScroll(e) {
     const el = e.currentTarget
@@ -8633,6 +8645,40 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead }) {
           {isRead ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Read' : 'Mark as read'}
         </button>
       </div>
+
+      {/* Foundations Path strip — only when post is part of the path */}
+      {inFoundationsPath && pathTier && (
+        <div style={{ marginBottom: '28px', padding: '14px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.20)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
+            <div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Foundations Path</div>
+              <div style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>
+                {pathTier.label} · Post {pathIdx + 1} of {TOTAL_POSTS}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button onClick={onOpenFoundationsPath} style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--rim)', background: 'transparent', color: 'var(--ink-mid)', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+                ↥ Path overview
+              </button>
+              <button onClick={onToggleFoundationsRead} style={{ padding: '5px 12px', borderRadius: '6px', border: `1px solid ${foundationsRead ? 'rgba(52,211,153,0.4)' : 'rgba(240,165,0,0.4)'}`, background: foundationsRead ? 'rgba(52,211,153,0.12)' : 'rgba(240,165,0,0.12)', color: foundationsRead ? 'var(--mint)' : 'var(--prime)', fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer' }}>
+                {foundationsRead ? '✓ Read in path' : 'Mark read in path'}
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button onClick={() => prevPath && onOpenPathPost(prevPath.postId)} disabled={!prevPath}
+              style={{ flex: 1, minWidth: '140px', padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--rim)', background: prevPath ? 'rgba(0,0,0,0.25)' : 'transparent', color: prevPath ? 'var(--ink-mid)' : 'var(--ink-ghost)', fontSize: '11px', textAlign: 'left', cursor: prevPath ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)' }}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>← Previous</div>
+              <div style={{ lineHeight: 1.3 }}>{prevPath ? prevPath.title : 'Start of path'}</div>
+            </button>
+            <button onClick={() => nextPath && onOpenPathPost(nextPath.postId)} disabled={!nextPath}
+              style={{ flex: 1, minWidth: '140px', padding: '8px 12px', borderRadius: '7px', border: '1px solid var(--rim)', background: nextPath ? 'rgba(0,0,0,0.25)' : 'transparent', color: nextPath ? 'var(--ink-mid)' : 'var(--ink-ghost)', fontSize: '11px', textAlign: 'right', cursor: nextPath ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-sans)' }}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Next →</div>
+              <div style={{ lineHeight: 1.3 }}>{nextPath ? nextPath.title : 'End of path'}</div>
+            </button>
+          </div>
+        </div>
+      )}
 
       <article onScroll={handleScroll} style={{ outline: 'none' }}>
         {/* Meta */}
@@ -8871,23 +8917,214 @@ function PostCard({ post, featured, onClick, isRead }) {
   )
 }
 
+// ─── Foundations Path view ──────────────────────────────────────────────────
+function FoundationsPathView({ onOpenPost, onExit, posts }) {
+  const [readSet, setReadSet] = useState(() => readFoundationsRead())
+  const [activeTier, setActiveTier] = useState(() => readActiveTier())
+  const [expanded, setExpanded] = useState(() => {
+    const t = readActiveTier()
+    const e = {}
+    FOUNDATIONS_TIERS.forEach(x => { e[x.id] = x.id === t })
+    return e
+  })
+
+  function toggleTier(tierId) {
+    setExpanded(e => ({ ...e, [tierId]: !e[tierId] }))
+    setActiveTier(tierId)
+    writeActiveTier(tierId)
+  }
+
+  function handleOpen(postId) {
+    if (!postId) return
+    onOpenPost(postId)
+  }
+
+  function handleMark(postId, currentlyRead) {
+    const next = currentlyRead ? unmarkFoundationsRead(postId) : markFoundationsRead(postId)
+    setReadSet(new Set(next))
+    if (!currentlyRead) markActivity()
+  }
+
+  const overall = overallCompletion(readSet)
+  const pctOverall = overall.total ? Math.round((overall.read / overall.total) * 100) : 0
+
+  return (
+    <div style={{ maxWidth: '880px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {/* Back */}
+      <div>
+        <button onClick={onExit} className="btn-ghost" style={{ fontSize: '13px' }}>← Back to Gradient</button>
+      </div>
+
+      {/* Header */}
+      <div>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Foundations Path</div>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.05em', marginBottom: '12px', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          Climb the first-principles ladder
+        </h1>
+        <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '640px', margin: 0 }}>
+          {TOTAL_POSTS} posts in sequence across 7 tiers. Math → statistics → linear models → classical algorithms → unsupervised → evaluation → production bridge. Each tier ends with a pointer into the practice tab that applies what you just learned.
+        </p>
+      </div>
+
+      {/* Overall progress */}
+      <div style={{ padding: '16px 20px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Your progress</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', color: 'var(--ink-hi)', fontWeight: 600 }}>
+            {overall.read} / {overall.total} posts read · {pctOverall}% complete
+          </div>
+          {overall.pending > 0 && (
+            <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{overall.pending} post{overall.pending === 1 ? '' : 's'} pending (Session 3 backlog)</div>
+          )}
+        </div>
+        <div style={{ minWidth: '180px', height: '8px', background: 'var(--rim)', borderRadius: '4px', overflow: 'hidden', flex: 1, maxWidth: '320px' }}>
+          <div style={{ height: '100%', width: `${pctOverall}%`, background: 'var(--prime)', borderRadius: '4px', transition: 'width 0.3s' }} />
+        </div>
+      </div>
+
+      {/* Tiers */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {FOUNDATIONS_TIERS.map((tier, tierIdx) => {
+          const completion = tierCompletion(tier, readSet)
+          const tierPct = completion.total ? Math.round((completion.read / completion.total) * 100) : 0
+          const isOpen = expanded[tier.id]
+          const tierComplete = completion.total > 0 && completion.read === completion.total
+          return (
+            <div key={tier.id} style={{ borderRadius: '12px', border: `1px solid ${tierComplete ? 'rgba(52,211,153,0.25)' : 'var(--rim)'}`, background: tierComplete ? 'rgba(52,211,153,0.04)' : 'var(--depth)', overflow: 'hidden' }}>
+              {/* Tier header */}
+              <button onClick={() => toggleTier(tier.id)} style={{ width: '100%', textAlign: 'left', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: tierComplete ? 'var(--mint)' : 'var(--ink-low)', minWidth: '24px' }}>{tierComplete ? '✓' : `${tierIdx}`}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '4px' }}>{tier.label}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{tier.outcome}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: tierComplete ? 'var(--mint)' : 'var(--ink-low)' }}>{completion.read}/{completion.total}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{isOpen ? '▲' : '▼'}</span>
+                </div>
+              </button>
+
+              {/* Tier body */}
+              {isOpen && (
+                <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--rim)' }}>
+                  {/* Prereq + tier progress bar */}
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', padding: '14px 0' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)' }}>Prereq: {tier.prereq}</span>
+                    <div style={{ flex: 1, minWidth: '120px', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${tierPct}%`, background: tierComplete ? 'var(--mint)' : 'var(--prime)', transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+
+                  {/* Posts */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {tier.posts.map(p => {
+                      const isReady = p.status === 'ready' && p.postId
+                      const isReadInPath = isReady && readSet.has(p.postId)
+                      return (
+                        <div key={p.n} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', background: isReadInPath ? 'rgba(52,211,153,0.06)' : 'rgba(0,0,0,0.2)', border: `1px solid ${isReadInPath ? 'rgba(52,211,153,0.2)' : 'var(--rim)'}` }}>
+                          <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', minWidth: '24px' }}>{p.n}</span>
+                          {isReady ? (
+                            <button onClick={() => handleOpen(p.postId)} style={{ flex: 1, textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-hi)', lineHeight: 1.4 }}>
+                              {p.title}
+                            </button>
+                          ) : (
+                            <div style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-low)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                              {p.title} <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginLeft: '6px' }}>· coming soon</span>
+                            </div>
+                          )}
+                          {isReady && (
+                            <button onClick={() => handleMark(p.postId, isReadInPath)} title={isReadInPath ? 'Unmark' : 'Mark read'} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isReadInPath ? 'var(--mint)' : 'var(--ink-ghost)', fontSize: '13px', padding: '2px 6px' }}>
+                              {isReadInPath ? '✓' : '○'}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Forward pointer */}
+                  <div style={{ marginTop: '16px', padding: '12px 14px', borderRadius: '8px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>After this tier</div>
+                      <div style={{ fontSize: '12px', color: 'var(--ink-mid)' }}>{tier.forward.label}</div>
+                    </div>
+                    <button onClick={() => onExit(tier.forward.tabId)} className="btn-primary" style={{ fontSize: '11px', padding: '6px 14px' }}>
+                      Practice →
+                    </button>
+                  </div>
+
+                  {/* PAL cross-link */}
+                  {tier.palCross && (
+                    <div style={{ marginTop: '10px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px dashed var(--rim)' }}>
+                      <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Cross-lab → PAL</div>
+                      <div style={{ fontSize: '12px', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
+                        {tier.palCross.note}{' '}
+                        <a href={tier.palCross.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--prime)', textDecoration: 'underline' }}>Open PAL →</a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main tab ────────────────────────────────────────────────────────────────
 export default function GradientTab({ onNavigate }) {
   const [activeDomain, setActiveDomain] = useState('all')
   const [activeSeries, setActiveSeries] = useState('all')
   const [readingMode,  setReadingMode]  = useState('all')
   const [reading,      setReading]      = useState(null)
-  const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases'
+  const [mode,         setMode]         = useState('posts')  // 'posts' | 'cases' | 'path'
   const [read, setRead] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem('msl_read') || '[]')) } catch { return new Set() } })
+  const [foundationsRead, setFoundationsRead] = useState(() => readFoundationsRead())
 
-  // Deep-link: on mount, check ?post=slug and open that post directly
+  // Deep-link: on mount, check ?post=slug or ?path=foundations
   useEffect(() => {
-    const slug = new URLSearchParams(window.location.search).get('post')
+    const params = new URLSearchParams(window.location.search)
+    const slug = params.get('post')
+    const path = params.get('path')
     if (slug) {
       const post = POSTS.find(p => p.slug === slug)
       if (post) setReading(post.id)
+    } else if (path === 'foundations') {
+      setMode('path')
     }
   }, [])
+
+  // Cross-tab signal: HomeTab / SignedOutHome dispatch this when user clicks the Foundations Path card.
+  useEffect(() => {
+    function handler() {
+      window.history.replaceState(null, '', '?path=foundations#gradient')
+      setReading(null)
+      setMode('path')
+    }
+    window.addEventListener('msl-open-foundations-path', handler)
+    return () => window.removeEventListener('msl-open-foundations-path', handler)
+  }, [])
+
+  function openFoundationsPath() {
+    window.history.replaceState(null, '', '?path=foundations#gradient')
+    setMode('path')
+  }
+
+  function exitFoundationsPath(navigateToTab) {
+    window.history.replaceState(null, '', '#gradient')
+    setMode('posts')
+    if (navigateToTab && onNavigate) onNavigate(navigateToTab)
+  }
+
+  function togglePathRead(postId) {
+    const set = foundationsRead.has(postId) ? unmarkFoundationsRead(postId) : markFoundationsRead(postId)
+    setFoundationsRead(new Set(set))
+    if (!foundationsRead.has(postId)) markActivity()
+  }
 
   // Open a post and reflect it in the URL for shareability
   function openPost(id) {
@@ -9035,7 +9272,19 @@ export default function GradientTab({ onNavigate }) {
 
   if (reading) {
     const post = POSTS.find(p => p.id === reading)
-    if (post) return <PostReader post={post} onBack={closePost} onNavigate={onNavigate} isRead={read.has(post.id)} onMarkRead={() => markRead(post.id)} />
+    if (post) return <PostReader
+      post={post} onBack={closePost} onNavigate={onNavigate}
+      isRead={read.has(post.id)} onMarkRead={() => markRead(post.id)}
+      inFoundationsPath={sequenceIndexForPostId(post.id) >= 0}
+      foundationsRead={foundationsRead.has(post.id)}
+      onToggleFoundationsRead={() => togglePathRead(post.id)}
+      onOpenFoundationsPath={openFoundationsPath}
+      onOpenPathPost={(id) => openPost(id)}
+    />
+  }
+
+  if (mode === 'path') {
+    return <FoundationsPathView onOpenPost={openPost} onExit={exitFoundationsPath} posts={POSTS} />
   }
 
   if (mode === 'cases') return (
@@ -9046,8 +9295,8 @@ export default function GradientTab({ onNavigate }) {
           <p style={{ fontSize: '14px', color: 'var(--ink-low)', margin: 0 }}>Production failure post-mortems from ML systems.</p>
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
-            <button key={m.k} onClick={() => setMode(m.k)}
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ Foundations' }, { k: 'cases', l: 'Cases' }].map(m => (
+            <button key={m.k} onClick={() => m.k === 'path' ? openFoundationsPath() : setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>
@@ -9075,8 +9324,8 @@ export default function GradientTab({ onNavigate }) {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-          {[{ k: 'posts', l: '∇ Posts' }, { k: 'cases', l: 'Cases' }].map(m => (
-            <button key={m.k} onClick={() => setMode(m.k)}
+          {[{ k: 'posts', l: '∇ Posts' }, { k: 'path', l: '↥ Foundations' }, { k: 'cases', l: 'Cases' }].map(m => (
+            <button key={m.k} onClick={() => m.k === 'path' ? openFoundationsPath() : setMode(m.k)}
               style={{ padding: '7px 14px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, background: mode === m.k ? 'var(--prime)' : 'rgba(0,0,0,0.3)', color: mode === m.k ? 'var(--void)' : 'var(--ink-mid)', transition: 'all 0.15s' }}>
               {m.l}
             </button>

@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import { downloadProgressJSON } from '../utils/export.js'
+import {
+  FOUNDATIONS_TIERS, TOTAL_POSTS,
+  readFoundationsRead, overallCompletion, isFoundationsTouched,
+} from '../data/foundationsPath.js'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
@@ -179,7 +183,13 @@ export default function HomeTab({ onNavigate }) {
   const [bookmarks] = useState(() => readBookmarks())
   const [activity] = useState(() => readActivity())
   const [challengeStats] = useState(() => readChallengeStats())
+  const [foundationsProg] = useState(() => overallCompletion(readFoundationsRead()))
   const lastTab = (() => { try { return localStorage.getItem('msl_tab') } catch { return null } })()
+
+  function openFoundationsPath() {
+    if (onNavigate) onNavigate('gradient')
+    setTimeout(() => window.dispatchEvent(new CustomEvent('msl-open-foundations-path')), 50)
+  }
 
   useEffect(() => {
     function onProg() { setSectionProgress(readSectionProgress()) }
@@ -242,6 +252,33 @@ export default function HomeTab({ onNavigate }) {
           </button>
         </div>
       )}
+
+      {/* ── Foundations Path card ────────────────────────────────────────── */}
+      <div style={{ marginBottom: '28px', padding: '18px 20px', background: 'linear-gradient(135deg, rgba(240,165,0,0.10) 0%, rgba(240,165,0,0.04) 100%)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '240px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>↥ Foundations Path</div>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+              {foundationsProg.read > 0 ? 'Continue the foundation climb' : 'Weak on fundamentals? Start here.'}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.55 }}>
+              {TOTAL_POSTS} posts across 7 tiers — math → statistics → linear models → classical algorithms → unsupervised → evaluation → production bridge. Every tier ends with a practice tab to apply what you read.
+            </div>
+            {foundationsProg.read > 0 && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '160px', height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
+                  <div style={{ width: `${Math.round((foundationsProg.read / foundationsProg.total) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px' }} />
+                </div>
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)' }}>{foundationsProg.read}/{foundationsProg.total}</span>
+              </div>
+            )}
+          </div>
+          <button onClick={openFoundationsPath}
+            style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--void)', background: 'var(--prime)', border: 'none', borderRadius: '7px', padding: '10px 18px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {foundationsProg.read > 0 ? 'Resume path →' : 'Start the path →'}
+          </button>
+        </div>
+      </div>
 
       {/* ── Recently added ────────────────────────────────────────────────── */}
       {totalAttempted > 0 && (
