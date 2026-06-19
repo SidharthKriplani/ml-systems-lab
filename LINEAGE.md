@@ -46,6 +46,22 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.107 — Foundations Path Session 4 polish: forward pointers, Cmd+K, ProfilePage badge (2026-06-19)
+
+**Completes the Foundations Path UI loop. Path posts now have practice-tab CTAs, discoverability via Cmd+K, and completion badge on ProfilePage.**
+
+Three small UI items shipped to close out the Foundations Path scaffolding:
+
+- **Forward pointer audit (POST_PRACTICE expansion)** — added 30 new entries to the POST_PRACTICE map in GradientTab.jsx, one per Foundations Path post (73, 74, 75, 76, 86, 87, 88, 95, 96, 97, 101–108, 111–120, 127). Every path post now resolves to a specific practice tab — the "Practice this →" CTA at the bottom of PostReader no longer falls back silently. Mapping by tier: Tier 0 math posts → `models` (Math Foundations), Tier 2 linear models → `classical` (Decision Boundary), Tier 3 trees/ensemble/SVM → `classical` (Tree & Ensemble), Tier 4 unsupervised → `classical` (PCA/Clustering), Tier 5 evaluation → `eval`, Tier 6 sequence → `ts`/`monitor`/`causal`.
+- **Cmd+K (ContentMap) integration** — added a new STATIC_TABS entry `foundations-path` with the `↥ Foundations Path` label, description, and a custom `go()` handler that navigates to gradient and dispatches the `msl-open-foundations-path` event so the path view opens directly from search.
+- **ProfilePage badge** — new Card 2 between Identity and Practice Stats. Renders only when `foundationsRead.size > 0`. Shows two states: in-progress (progress bar + "N / 34 posts · X%" + "Continue path →" CTA) or complete (mint-bordered card with "✓ Complete" badge + "Revisit path" CTA). Same `msl-open-foundations-path` event used for the CTA.
+
+Deferred from Session 4:
+- **PAL URL verification** — `PAL_URL` constant in `foundationsPath.js` is still a placeholder. Logged for when PAL ships publicly.
+- **Production-tell audit on the remaining 12 absorbed posts** (107, 108, 111, 112, 119, 75, 86, 87, 88, 95, 96, 97) — explicit user direction was "rest is fine." Most are recent Ground Up posts that likely have production tells from initial drafting. If quality issues surface later, this audit can be run incrementally.
+
+Brace diff 0 on GradientTab.jsx, ContentMap.jsx, ProfilePage.jsx. Apostrophe scan OK.
+
 ### v4.106 — Ensemble Methods post + production-tell audit on tree/linear foundation posts (2026-06-19)
 
 **Bug fix shipped with v4.105 — wrong postIds in foundationsPath.js. New post 127 written. Production tells added to posts 73, 74, 76.**

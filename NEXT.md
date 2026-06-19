@@ -314,13 +314,18 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 
 ---
 
-## NEXT: Foundations Path Session 4 — content audit + polish (P1)
+## ✅ DONE: Foundations Path Session 4 — UI polish (v4.107, 2026-06-19)
 
-1. **Production-tell audit on remaining absorbed posts.** Still need a pass on the linear-model side of the path: posts 107 (Logistic Regression), 108 (Decision Trees/RF), 111 (OLS), 112 (Regularisation), 119 (Generalisation Theory). Ground Up posts likely already have production tells from initial drafting, but worth verifying with a quick scan. Also: post 75 (Bayesian Inference), post 86 (PCA), post 87 (Clustering), post 88 (Time Series), post 95 (Anomaly Detection), post 96 (Bandits), post 97 (SVM).
-2. **Forward pointer audit.** Every post in the path needs `POST_PRACTICE[postId]` to resolve to a real practice module — otherwise the "Practice this →" CTA in PostReader falls back silently. Add entry for post 127 (Ensemble Methods → ClassicalML tab).
-3. **Tier 1 + Tier 5 PAL link verification.** Confirm the PAL URL placeholder (`https://product-analytics-lab.vercel.app`) is the live URL once PAL ships publicly. Update `PAL_URL` constant in `foundationsPath.js`.
-4. **Cmd+K integration.** Add foundations-path entry to `ContentMap.jsx` STATIC_TABS so the path is discoverable in global search.
-5. **ProfilePage badge.** Lightweight "Foundations complete" tag when `overallCompletion().read === overallCompletion().total`.
+1. ~~Forward pointer audit — POST_PRACTICE expanded with 30 entries covering every path post (73, 74, 75, 76, 86, 87, 88, 95, 96, 97, 101–108, 111–120, 127)~~
+2. ~~Cmd+K integration — `foundations-path` entry in ContentMap STATIC_TABS with custom event-dispatching handler~~
+3. ~~ProfilePage badge — in-progress card with progress bar OR mint-bordered "✓ Complete" badge when all posts read~~
+
+---
+
+## DEFERRED (logged, will revisit when relevant)
+
+- **PAL URL verification.** `PAL_URL` constant in `foundationsPath.js` is a placeholder (`https://product-analytics-lab.vercel.app`). Update when PAL ships publicly.
+- **Production-tell audit on remaining 12 absorbed posts** (107, 108, 111, 112, 119, 75, 86, 87, 88, 95, 96, 97). User said "rest is fine" — most are recent Ground Up posts that likely already have tells from initial drafting. Run incrementally if quality issues surface.
 
 ---
 

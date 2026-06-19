@@ -190,6 +190,43 @@ print('OK' if not errors else f'{len(errors)} schema errors — fix before commi
 
 This catches missing required fields on Gradient posts. Fields checked: `id`, `slug`, `title`, `excerpt`, `tags`, `body`, `domain`. These are the fields accessed without null guards in PostReader — a missing field causes a runtime TypeError and a black screen. **If it prints anything other than `OK`, add the missing field before committing.**
 
+**Mandatory pre-commit unescaped-backtick audit — run before every commit that touches a Gradient post body:**
+
+```bash
+python3 -c "
+import re
+content = open('src/tabs/GradientTab.jsx').read()
+lines = content.split('\n')
+in_body = False
+issues = []
+for i, line in enumerate(lines):
+    if re.match(r'^    body: \`', line):
+        in_body = True
+        continue
+    if in_body and re.match(r'^    [a-z_]+:', line):
+        in_body = False
+        continue
+    if in_body:
+        # strip escaped backticks then count remaining
+        clean = line.replace(chr(92)+'\`', '')
+        if '\`' in clean:
+            # skip the closing backtick patterns (end of body)
+            stripped = line.rstrip()
+            if stripped == '\`' or stripped.endswith('\`,') or stripped.endswith('\`'):
+                # only flag if there are interior backticks BEFORE the trailing one
+                rest = stripped[:-1] if stripped.endswith('\`') else stripped[:-2]
+                rest_clean = rest.replace(chr(92)+'\`', '')
+                if '\`' not in rest_clean:
+                    continue
+            issues.append((i+1, line[:150]))
+for ln, l in issues[:5]:
+    print(f'BACKTICK in body line {ln}: {l}')
+print('OK' if not issues else f'{len(issues)} unescaped backticks in post bodies — escape with \\\\\` or remove')
+"
+```
+
+This catches markdown-style code spans (`` `name` ``) inside template-literal body strings — they close the body prematurely and esbuild fails with "Expected `}` but found `identifier`." Post 73 had this bug in v4.106 and broke the Vercel build. Either escape (`` \` ``) or remove backticks entirely.
+
 ---
 
 ## Session operating model

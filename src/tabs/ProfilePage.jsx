@@ -3,6 +3,7 @@ import { signOut } from '../utils/auth.js'
 import { pushProgressToSupabase, pullProgressFromSupabase } from '../utils/syncProgress.js'
 import { authEnabled } from '../utils/supabase.js'
 import { downloadProgressJSON } from '../utils/export.js'
+import { readFoundationsRead, overallCompletion } from '../data/foundationsPath.js'
 
 // ── ProfilePage — 5 cards (PAL pattern) ──────────────────────────────────────
 
@@ -136,6 +137,15 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
     try { return JSON.parse(localStorage.getItem('msl_active_path') || 'null') } catch { return null }
   })()
 
+  const foundationsProg = overallCompletion(readFoundationsRead())
+  const foundationsPct = foundationsProg.total ? Math.round((foundationsProg.read / foundationsProg.total) * 100) : 0
+  const foundationsComplete = foundationsProg.total > 0 && foundationsProg.read === foundationsProg.total
+
+  function openFoundationsPath() {
+    if (onNavigate) onNavigate('gradient')
+    setTimeout(() => window.dispatchEvent(new CustomEvent('msl-open-foundations-path')), 50)
+  }
+
   return (
     <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
@@ -164,7 +174,41 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </button>
       </Card>
 
-      {/* Card 2 — Practice stats */}
+      {/* Card 2 — Foundations Path progress + badge */}
+      {foundationsProg.read > 0 && (
+        <Card style={{ borderColor: foundationsComplete ? 'rgba(52,211,153,0.3)' : 'var(--rim)', background: foundationsComplete ? 'rgba(52,211,153,0.04)' : 'var(--depth)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <CardLabel>Foundations Path</CardLabel>
+              {foundationsComplete ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    ✓ Complete
+                  </span>
+                  <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>
+                    All {foundationsProg.total} foundation posts read.
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', marginBottom: '8px' }}>
+                    {foundationsProg.read} / {foundationsProg.total} posts · {foundationsPct}%
+                  </div>
+                  <div style={{ width: '100%', maxWidth: '220px', height: '6px', background: 'var(--rim)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${foundationsPct}%`, background: 'var(--prime)', borderRadius: '3px', transition: 'width 0.3s' }} />
+                  </div>
+                </>
+              )}
+            </div>
+            <button onClick={openFoundationsPath}
+              style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: foundationsComplete ? 'var(--mint)' : 'var(--prime)', background: 'transparent', border: `1px solid ${foundationsComplete ? 'rgba(52,211,153,0.3)' : 'rgba(240,165,0,0.3)'}`, borderRadius: '7px', padding: '8px 14px', cursor: 'pointer' }}>
+              {foundationsComplete ? 'Revisit path' : 'Continue path →'}
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {/* Card 3 — Practice stats */}
       <Card>
         <CardLabel>Practice stats</CardLabel>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>

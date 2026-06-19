@@ -8576,6 +8576,48 @@ const POST_PRACTICE = {
   48: { tab: 'design',       label: 'System Design — Incident Room' },
   49: { tab: 'design',       label: 'System Design — Two-Tower Explorer' },
   50: { tab: 'causal',       label: 'Causal Inference — Experiment Design Failures' },
+  // ── Foundations Path forward pointers (Tier 0–6, added v4.107) ──────────────
+  // Tier 3 — Classical algorithms
+  73: { tab: 'classical',    label: 'Classical ML — Tree & Ensemble modules' },
+  74: { tab: 'eval',         label: 'Model Evaluation — Bias-Variance Diagnosis' },
+  76: { tab: 'eval',         label: 'Model Evaluation — Calibration & Threshold Lab' },
+  // Tier 1 — Bayesian
+  75: { tab: 'models',       label: 'Math Foundations — Bayesian Inference' },
+  // Tier 4 — Unsupervised
+  86: { tab: 'classical',    label: 'Classical ML — PCA Explorer' },
+  87: { tab: 'classical',    label: 'Classical ML — Clustering Lab' },
+  // Tier 6 — Time series + specialised
+  88: { tab: 'ts',           label: 'Time Series — Forecast Failure Zoo' },
+  95: { tab: 'monitor',      label: 'Monitoring — Anomaly Detection' },
+  96: { tab: 'causal',       label: 'Causal Inference — Bandits & Explore/Exploit' },
+  // Tier 3 — SVM
+  97: { tab: 'classical',    label: 'Classical ML — Kernel & Margin Lab' },
+  // Tier 0 — Pure math
+  101: { tab: 'models',      label: 'Math Foundations — Probability' },
+  102: { tab: 'models',      label: 'Math Foundations — Linear Algebra' },
+  103: { tab: 'models',      label: 'Math Foundations — Calculus' },
+  104: { tab: 'models',      label: 'Math Foundations — Information Theory' },
+  // Tier 1 — Statistics & estimation
+  105: { tab: 'models',      label: 'Math Foundations — MLE & MAP' },
+  106: { tab: 'models',      label: 'Math Foundations — EM Algorithm' },
+  // Tier 2 — Linear models
+  107: { tab: 'classical',   label: 'Classical ML — Decision Boundary Lab' },
+  108: { tab: 'classical',   label: 'Classical ML — Tree Module' },
+  111: { tab: 'classical',   label: 'Classical ML — Linear Regression' },
+  112: { tab: 'classical',   label: 'Classical ML — Regularisation Geometry' },
+  // Tier 5 — Evaluation
+  113: { tab: 'causal',      label: 'Causal Inference — Hypothesis Testing' },
+  114: { tab: 'eval',        label: 'Model Evaluation — Metric Selector' },
+  115: { tab: 'models',      label: 'Math Foundations — Optimisation' },
+  // Tier 0 — NN init + Tier 6 — preprocessing
+  116: { tab: 'dl',          label: 'Deep Learning — Initialisation & Training Stability' },
+  117: { tab: 'features',    label: 'Feature Engineering — Preprocessing & Missingness' },
+  // Tier 6 — Survival, Tier 2 — Generalisation, Tier 0 — Matrix calc
+  118: { tab: 'ts',          label: 'Time Series — Survival Modeling' },
+  119: { tab: 'eval',        label: 'Model Evaluation — Generalisation Diagnostics' },
+  120: { tab: 'models',      label: 'Math Foundations — Matrix Calculus' },
+  // Tier 3 — Ensemble Methods (the post written in v4.106)
+  127: { tab: 'classical',   label: 'Classical ML — Tree & Ensemble modules' },
 }
 
 // ─── Post reader ─────────────────────────────────────────────────────────────
