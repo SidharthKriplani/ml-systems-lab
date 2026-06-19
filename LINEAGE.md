@@ -46,6 +46,18 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.110b — Mobile hotfix + spine sync (2026-06-19)
+
+Quality pass after user asked "all mobile optimized? md files? statefulness?"
+
+**Mobile fix in `GlossaryTerm`.** The hover-card popover anchored `left: 0` relative to the term span, which meant terms near the right edge of a narrow mobile viewport would have their popover overflow off-screen. Added viewport-aware anchor: on open, the component checks `getBoundingClientRect()` and anchors `right: 0` instead if the term is in the right half of the viewport. Also added Escape-to-dismiss and proper document-level click-outside detection using a `data-glossary-popover` boundary marker — both especially important for mobile where hover doesn't exist.
+
+**Statefulness verified clean.** Persistent: `msl_foundations_read` (set of post IDs read in path) and `msl_foundations_tier` (currently-active tier id) both have getter/setter functions in `foundationsPath.js` and are wired correctly into FoundationsPathView, HomeTab card, and ProfilePage badge. Ephemeral React state: viewMode resets to Rigorous on every post change (intentional — fresh post defaults to full); tocOpen and glossary popovers are per-instance. No new keys introduced by Phase 1-4. METRICS.md remains accurate.
+
+**Spine MD files synced.** NEXT.md rewritten with a complete Foundations Path completion summary (v4.105–v4.110), DEFERRED extensions, and general backlog. BRAIN_TRANSFER.md "Context for Next Agent" updated from v4.74 to v4.110 with the Foundations Path subsystem explained and key files listed. CLAUDE.md file-structure listing expanded to mention `foundationsPath.js`, `foundationsSimplify.js`, `foundationsGlossary.js`, and `quizData.js`. IDEAS.md already delegates Done to LINEAGE.md — no stale path entries found.
+
+Brace diff 0 across all four foundations files. Apostrophe + backtick audits OK.
+
 ### v4.110 — Foundations Path Phase 4: concept inline glossary with hover-cards (2026-06-19)
 
 **The knowledge-graph experience the user asked for. Every defined technical term in a path post now has a hover-card with a plain-language definition and a jump link to the post that defines it.**

@@ -158,7 +158,30 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.74 complete — 2026-06-05):**
+**Current state (v4.110 complete — 2026-06-19):**
+
+### The Foundations Path is the major shipped subsystem of June 19, 2026
+A self-contained first-principles ML curriculum built across v4.105–v4.110 in a single working day. Shipped in this order: scaffolding → content gap-fill → forward pointers + Cmd+K + ProfilePage badge → ToC dropdown + keyboard nav → Simplify view + IN THIS POST + Test yourself + prereq/successor graph → concept inline glossary.
+
+Key files:
+- `src/data/foundationsPath.js` — 34-post ladder across 7 tiers. PATH_RELATIONS holds prereq/successor edges. `msl_foundations_read` and `msl_foundations_tier` localStorage keys.
+- `src/data/foundationsSimplify.js` — 31 hand-written Simplify versions, ~600-700 words each. Keyed by postId. Toggled via the "Simplify" button (top-right of PostReader).
+- `src/data/foundationsGlossary.js` — 87 canonical concept entries, 166 lookup keys including aliases. Longest-first regex. Active inside renderInline() on Rigorous view only.
+- `src/tabs/GradientTab.jsx` — FoundationsPathView (ladder), PostReader path strip with prev/next + clickable ToC dropdown + prereq/successor pills, GlossaryTerm component with viewport-aware popover positioning, IN THIS POST box, Test yourself CTA, Simplify toggle. ~9700 lines.
+
+URL deep link: `?path=foundations#gradient` opens the ladder. `?post=<slug>#gradient` opens a specific post. Cross-tab signal `msl-open-foundations-path` event lets HomeTab, SignedOutHome, ProfilePage, and ContentMap trigger the path view when GradientTab is already mounted.
+
+Three deferred path posts (KNN, Naive Bayes, Manifold Learning) are explicitly off the roadmap. They render in the ladder as muted italic "· deferred" labels.
+
+### Version history this day
+- v4.105: Foundations Path scaffolding + UI
+- v4.106: Ensemble Methods post (127) + production-tell audit on 73/74/76 + 4 postId bug fixes
+- v4.107: Forward pointers + Cmd+K + ProfilePage badge
+- v4.108: ToC dropdown + keyboard nav
+- v4.109: Simplify content + prereq graph + IN THIS POST
+- v4.110: Concept inline glossary
+
+### Earlier baseline (v4.74 — 2026-06-05, kept for reference):
 
 ### Version history this session
 - v4.68: P0 fixes (guided path, dead ds, first-session directive, README)

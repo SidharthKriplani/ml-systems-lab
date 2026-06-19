@@ -95,6 +95,10 @@ src/
     StudyRoom.jsx               Full-screen overlay, Supabase-fetched queue, flip/rate loop. Entry: Shift+Ctrl+K (auth required). v4.80.
   data/
     testimonials.js             Admin-managed testimonials array. (legacy — HomeTab v4.67 no longer renders testimonials)
+    quizData.js                 MCQ bank for Quiz Me sections on Gradient posts (150 questions covering posts 1–50; posts 51–126 pending).
+    foundationsPath.js          The 34-post Foundations Path ladder. 7 tiers, 31 ready + 3 deferred. PATH_RELATIONS prereq/successor graph. localStorage helpers for `msl_foundations_read` and `msl_foundations_tier`. v4.105+.
+    foundationsSimplify.js      31 hand-written Simplify versions of every ready path post, ~600-700 words each. Keyed by postId. Toggled via the Simplify button in PostReader. v4.109.
+    foundationsGlossary.js      87 canonical concept entries + 166 lookup keys including aliases. Longest-first regex powers inline hover-cards. v4.110.
   components/
     PythonCell.jsx         Pyodide sandbox wrapper
     GlobalSearch.jsx       Global search component (retained, not wired — replaced by ContentMap)

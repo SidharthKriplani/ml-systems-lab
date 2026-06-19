@@ -1,5 +1,47 @@
 # NEXT.md — Session Queue
 
+Updated: 2026-06-19. **Foundations Path subsystem complete** (v4.105–v4.110): ladder + Simplify content + prereq graph + concept glossary. No active sprint. Decide next direction based on usage signal.
+
+---
+
+## ✅ DONE: Foundations Path full subsystem (v4.105–v4.110, 2026-06-19)
+
+**One coherent unit shipped across 6 patch versions in a single working day.**
+
+- **v4.105** — Scaffolding: 34-post ladder in 7 tiers, `foundationsPath.js` data file, FoundationsPathView UI, PostReader path strip with prev/next, HomeTab card, SignedOutHome teaser, GradientTab mode-switch + `?path=foundations` deep link, localStorage state (`msl_foundations_read`, `msl_foundations_tier`).
+- **v4.106** — Ensemble Methods post (#127) written; production-tell audits on posts 73 (XGBoost), 74 (Bias-Variance), 76 (Calibration); KNN/Naive Bayes/Manifold marked `deferred`; postId bug fix.
+- **v4.107** — Forward pointer audit (POST_PRACTICE entries for all 30 path posts), Cmd+K integration (`foundations-path` STATIC_TABS entry with custom event handler), ProfilePage Foundations badge with in-progress and complete states.
+- **v4.108** — Clickable ToC dropdown on the "Tier · Post N of 34" chip (groups all 34 posts by tier with current highlighted); keyboard nav within path (`[` previous, `]` next, `Esc` close).
+- **v4.109** — Phase 1-3 progression model: Simplify toggle (Simplify ↔ Rigorous), IN THIS POST auto-generated section navigation, Test yourself CTA scrolling to Quiz Me. 31 Simplify versions written (~600-700 words each) in `foundationsSimplify.js`. PATH_RELATIONS prereq/successor graph with helper functions; rendered as a dashed-border strip in PostReader.
+- **v4.110** — Phase 4: concept inline glossary. 87 canonical terms (166 lookup keys including aliases) in `foundationsGlossary.js`. GlossaryTerm hover-card component with viewport-aware anchor positioning (overflows fixed for right-side terms on narrow screens), Escape-to-dismiss, click-outside detection. Wired into renderInline() via wrapGlossary() helper. Active only on Rigorous view in path posts.
+
+---
+
+## DEFERRED — Foundations Path extensions (revisit on signal)
+
+1. **PAL URL placeholder** — `PAL_URL` constant in `foundationsPath.js`. Update when PAL ships publicly.
+2. **Production-tell audit on the other ~28 absorbed posts** — Ground Up posts (101–120) likely already have tells from initial drafting. Run verification scan if quality issues surface.
+3. **Expand glossary beyond 87 terms** — 87 is a strong v1. Add more linear-algebra / DL / time-series terms when gaps surface in actual reading.
+4. **"Continue from last unread" deep link on Home** — currently Home opens the ladder; could deep-link directly to the next unread post. Polish, not core.
+
+---
+
+## General MSL backlog (separate from Foundations Path)
+
+1. **LinkedIn batch_01_msl.md** — drafted in v4.108 turn but unreviewed. Decide PAL vs MSL version before campaign launch.
+2. **Quiz Me MCQs for posts 51–126** — 228 mechanical content questions. Was queued before the Foundations Path pivot.
+3. **Extend Simplify to non-path Gradient posts** — originally framed as "ELI5 for posts 1-30." Simplify pattern from v4.109 is the canonical answer; can be applied to more posts incrementally.
+
+---
+
+## Explicitly off the roadmap (user decision)
+
+- KNN, Naive Bayes, Manifold Learning posts — deferred indefinitely. Low leverage for senior MLE interview prep.
+
+---
+
+## Older completed sprints (kept for history)
+
 Updated: 2026-06-17. Study Room v1 code shipped (activation pending). Current focus: intuition sprint (HowTo framing, forward pointers, UX clarity).
 
 ---

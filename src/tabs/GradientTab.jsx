@@ -8631,13 +8631,42 @@ function slugifyHeading(text) {
 // ─── Glossary term — inline concept card on hover/tap ────────────────────────
 function GlossaryTerm({ term, entry, currentPostId, onJump }) {
   const [open, setOpen] = useState(false)
+  const [anchor, setAnchor] = useState('left') // 'left' | 'right' — decides which edge of the term span the popover anchors to
+  const termRef = useRef(null)
   const isSelf = entry.postId === currentPostId
+
+  function handleOpen(nextOpen) {
+    if (nextOpen && termRef.current) {
+      // Decide anchor side based on where the term sits in the viewport.
+      // If the term is in the right half, anchor the popover to its right edge so it grows leftward.
+      const rect = termRef.current.getBoundingClientRect()
+      const vw = window.innerWidth || 1024
+      setAnchor(rect.left > vw / 2 ? 'right' : 'left')
+    }
+    setOpen(nextOpen)
+  }
+
+  // Dismiss on Escape (mobile users will appreciate this when the popover is taller than the screen)
+  useEffect(() => {
+    if (!open) return
+    function onKey(e) { if (e.key === 'Escape') setOpen(false) }
+    function onDocClick(e) {
+      if (termRef.current && termRef.current.contains(e.target)) return
+      if (e.target && e.target.closest && e.target.closest('[data-glossary-popover]')) return
+      setOpen(false)
+    }
+    const t = setTimeout(() => document.addEventListener('click', onDocClick), 0)
+    window.addEventListener('keydown', onKey)
+    return () => { clearTimeout(t); document.removeEventListener('click', onDocClick); window.removeEventListener('keydown', onKey) }
+  }, [open])
+
   return (
     <span style={{ position: 'relative', display: 'inline' }}>
       <span
-        onMouseEnter={() => setOpen(true)}
+        ref={termRef}
+        onMouseEnter={() => handleOpen(true)}
         onMouseLeave={() => setOpen(false)}
-        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        onClick={(e) => { e.stopPropagation(); handleOpen(!open) }}
         style={{
           borderBottom: '1px dotted rgba(99,179,237,0.55)',
           cursor: 'help',
@@ -8649,15 +8678,16 @@ function GlossaryTerm({ term, entry, currentPostId, onJump }) {
       </span>
       {open && (
         <span
+          data-glossary-popover
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
           style={{
             position: 'absolute',
             top: '100%',
-            left: 0,
+            ...(anchor === 'right' ? { right: 0, left: 'auto' } : { left: 0, right: 'auto' }),
             zIndex: 60,
             marginTop: '6px',
-            width: 'min(320px, 80vw)',
+            width: 'min(320px, 88vw)',
             padding: '12px 14px',
             background: 'var(--depth)',
             border: '1px solid rgba(99,179,237,0.35)',
