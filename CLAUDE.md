@@ -96,9 +96,9 @@ src/
   data/
     testimonials.js             Admin-managed testimonials array. (legacy — HomeTab v4.67 no longer renders testimonials)
     quizData.js                 MCQ bank for Quiz Me sections on Gradient posts (150 questions covering posts 1–50; posts 51–126 pending).
-    foundationsPath.js          The 34-post Foundations Path ladder. 7 tiers, 31 ready + 3 deferred. PATH_RELATIONS prereq/successor graph. localStorage helpers for `msl_foundations_read` and `msl_foundations_tier`. v4.105+.
-    foundationsSimplify.js      31 hand-written Simplify versions of every ready path post, ~600-700 words each. Keyed by postId. Toggled via the Simplify button in PostReader. v4.109.
-    foundationsGlossary.js      87 canonical concept entries + 166 lookup keys including aliases. Longest-first regex powers inline hover-cards. v4.110.
+    foundationsPath.js          The MLE Path ladder. 57 posts across 11 tiers (54 ready, 3 deferred). PATH_RELATIONS prereq/successor graph (54 entries). Exports `PATH_NAME = 'The MLE Path'` + `PATH_TAGLINE` as single source of truth. localStorage helpers for `msl_foundations_read` and `msl_foundations_tier` (key names preserved across the v4.111 rename to keep user progress). v4.105–v4.111.
+    foundationsSimplify.js      54 hand-written Simplify versions of every ready path post, ~500-700 words each. Keyed by postId. Includes Tier 7-10 absorbed posts. Toggled via the Simplify button in PostReader. v4.109, expanded v4.111.
+    foundationsGlossary.js      121 canonical concept entries + 226 lookup keys including aliases. Longest-first regex powers inline hover-cards across the full path including production engineering, MLOps, system design, and interview terms. v4.110, expanded v4.111.
   components/
     PythonCell.jsx         Pyodide sandbox wrapper
     GlobalSearch.jsx       Global search component (retained, not wired — replaced by ContentMap)

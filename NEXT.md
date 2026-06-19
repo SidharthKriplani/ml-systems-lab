@@ -1,8 +1,19 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-19. **Foundations Path subsystem complete** (v4.105–v4.110): ladder + Simplify content + prereq graph + concept glossary. No active sprint. Decide next direction based on usage signal.
+Updated: 2026-06-19. **The MLE Path complete** (v4.105–v4.111): 57 posts across 11 tiers, dual-view (Rigorous + Simplify), prereq/successor knowledge graph, 121-term inline glossary. Renamed from "Foundations Path" in v4.111 to reflect the expanded scope (foundations through production engineering / MLOps / system design / interview bridge). No active sprint. Decide next direction based on usage signal.
 
 ---
+
+## ✅ DONE: The MLE Path — expansion + rename (v4.111, 2026-06-19)
+
+**Restructure:** 7 → 11 tiers. 34 → 57 posts. 31 → 54 ready. 3 deferred unchanged. Renamed "Foundations Path" → "The MLE Path" throughout UI; internal identifiers (`foundations-path` event, `msl_foundations_read` key) preserved so existing user progress survives.
+
+- **4 new tiers absorbing existing Gradient posts:** Tier 7 Production Engineering (posts 1, 7, 38, 41, 43), Tier 8 Monitoring & MLOps (5, 23, 39, 40, 46), Tier 9 System Design (24, 4, 72, 71, 80), Tier 10 Interview Bridge (8, 13, 18).
+- **5 new Rigorous posts** written into GradientTab.jsx POSTS array: 128 Observation Discipline, 129 Class Imbalance, 130 Data Leakage Taxonomy (the 11 types), 131 Error Analysis, 132 Model Explainability.
+- **23 new Simplify versions** written into foundationsSimplify.js — 5 for new posts, 18 for absorbed posts in Tier 7-10. Total Simplify entries: 54.
+- **25 new glossary terms** in foundationsGlossary.js. Total: 121 canonical / 226 lookup keys with aliases.
+- **PATH_RELATIONS** overhauled. 54 entries with prereq/successor edges threading the full 11-tier graph.
+- **UI rename:** HomeTab card, SignedOutHome teaser, ProfilePage card, ContentMap entry, GradientTab path view, path strip, mode button — all show "The MLE Path."
 
 ## ✅ DONE: Foundations Path full subsystem (v4.105–v4.110, 2026-06-19)
 
@@ -364,10 +375,23 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 
 ---
 
-## DEFERRED (logged, will revisit when relevant)
+## DEFERRED — MLE Path extensions (revisit on signal)
 
-- **PAL URL verification.** `PAL_URL` constant in `foundationsPath.js` is a placeholder (`https://product-analytics-lab.vercel.app`). Update when PAL ships publicly.
-- **Production-tell audit on remaining 12 absorbed posts** (107, 108, 111, 112, 119, 75, 86, 87, 88, 95, 96, 97). User said "rest is fine" — most are recent Ground Up posts that likely already have tells from initial drafting. Run incrementally if quality issues surface.
+- **PAL URL placeholder.** `PAL_URL` constant in `foundationsPath.js` is `https://product-analytics-lab.vercel.app`. Update when PAL ships publicly.
+- **Production-tell audit on remaining absorbed posts** (107, 108, 111, 112, 119, 75, 86, 87, 88, 95, 96, 97). Posts 73, 74, 76 done in v4.106. Posts 1, 7, 38, 41, 43, 5, 23, 39, 40, 46, 24, 4, 72, 71, 80, 8, 13, 18 all have production tells already (these are production-failure / system-design / interview posts by nature). Most Ground Up posts likely have tells from initial drafting. Run verification scan only if quality issues surface.
+- **ToC dropdown density.** 57 posts in one scrollable list may feel dense. Consider a "collapse all tiers except current" default.
+- **Glossary coverage in Tier 7-10 Simplify versions** is good but not exhaustive — add terms as gaps surface in actual reading.
+- **Tier-progress bar inside each post** (not just inside the path view). Polish item; build if usage demands it.
+- **"Continue from last unread post" deep link on Home** — currently the Home button opens the ladder; could deep-link directly to the next unread post.
+- **KNN, Naive Bayes, Manifold Learning posts** — explicitly off the roadmap per user direction. Low leverage for senior MLE interview prep.
+
+---
+
+## General MSL backlog (separate from The MLE Path)
+
+- **`docs/linkedin/batch_01_msl.md`** — drafted in v4.108-era session but unreviewed. PAL has a separate version. Decide on PAL vs MSL version before any LinkedIn campaign goes live.
+- **Quiz Me MCQs for posts 51–126** — 228 mechanical content questions. Was originally queued before the MLE Path pivot.
+- **Extend Simplify pattern to non-path Gradient posts** — originally framed as "ELI5 for posts 1-30." Simplify pattern from v4.109/v4.111 is the canonical answer; could be applied to more posts incrementally.
 
 ---
 

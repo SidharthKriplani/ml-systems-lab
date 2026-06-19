@@ -158,28 +158,43 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.110 complete — 2026-06-19):**
+**Current state (v4.111 complete — 2026-06-19):**
 
-### The Foundations Path is the major shipped subsystem of June 19, 2026
-A self-contained first-principles ML curriculum built across v4.105–v4.110 in a single working day. Shipped in this order: scaffolding → content gap-fill → forward pointers + Cmd+K + ProfilePage badge → ToC dropdown + keyboard nav → Simplify view + IN THIS POST + Test yourself + prereq/successor graph → concept inline glossary.
+### The MLE Path is the major shipped subsystem of June 19, 2026
+A complete senior-MLE preparation curriculum built across v4.105–v4.111 in a single working day. Originally launched as "Foundations Path" in v4.105; renamed to "The MLE Path" in v4.111 when the scope expanded from pure first-principles to full senior-MLE-interview coverage (production engineering, MLOps, system design, interview bridge).
 
 Key files:
-- `src/data/foundationsPath.js` — 34-post ladder across 7 tiers. PATH_RELATIONS holds prereq/successor edges. `msl_foundations_read` and `msl_foundations_tier` localStorage keys.
-- `src/data/foundationsSimplify.js` — 31 hand-written Simplify versions, ~600-700 words each. Keyed by postId. Toggled via the "Simplify" button (top-right of PostReader).
-- `src/data/foundationsGlossary.js` — 87 canonical concept entries, 166 lookup keys including aliases. Longest-first regex. Active inside renderInline() on Rigorous view only.
-- `src/tabs/GradientTab.jsx` — FoundationsPathView (ladder), PostReader path strip with prev/next + clickable ToC dropdown + prereq/successor pills, GlossaryTerm component with viewport-aware popover positioning, IN THIS POST box, Test yourself CTA, Simplify toggle. ~9700 lines.
+- `src/data/foundationsPath.js` — 57-post ladder across 11 tiers (54 ready, 3 deferred). PATH_RELATIONS holds 54 prereq/successor entries. Exports `PATH_NAME = 'The MLE Path'` and `PATH_TAGLINE` as single source of truth for any future renames. `msl_foundations_read` and `msl_foundations_tier` localStorage keys (internal identifiers preserved across rename to keep user progress intact).
+- `src/data/foundationsSimplify.js` — 54 hand-written Simplify versions, ~500-700 words each. Keyed by postId. Includes Tier 7-10 absorbed posts (1, 7, 38, 41, 43, 5, 23, 39, 40, 46, 24, 4, 72, 71, 80, 8, 13, 18) and the 5 new posts (128, 129, 130, 131, 132). Toggled via the "Simplify" button (top-right of PostReader).
+- `src/data/foundationsGlossary.js` — 121 canonical concept entries, 226 lookup keys including aliases. Longest-first regex. Active inside renderInline() on Rigorous view only. Coverage spans math foundations through production engineering, MLOps, system design, and interview-specific terms.
+- `src/tabs/GradientTab.jsx` — FoundationsPathView (ladder, rendered with the "MLE Path" name), PostReader path strip with prev/next + clickable ToC dropdown + prereq/successor pills, GlossaryTerm component with viewport-aware popover positioning, IN THIS POST box, Test yourself CTA, Simplify toggle. Posts 128-132 written this day. ~12,500 lines.
 
-URL deep link: `?path=foundations#gradient` opens the ladder. `?post=<slug>#gradient` opens a specific post. Cross-tab signal `msl-open-foundations-path` event lets HomeTab, SignedOutHome, ProfilePage, and ContentMap trigger the path view when GradientTab is already mounted.
+URL deep link: `?path=foundations#gradient` opens the ladder (URL identifier preserved across rename). `?post=<slug>#gradient` opens a specific post. Cross-tab signal `msl-open-foundations-path` event lets HomeTab, SignedOutHome, ProfilePage, and ContentMap trigger the path view when GradientTab is already mounted.
 
 Three deferred path posts (KNN, Naive Bayes, Manifold Learning) are explicitly off the roadmap. They render in the ladder as muted italic "· deferred" labels.
 
 ### Version history this day
-- v4.105: Foundations Path scaffolding + UI
+- v4.105: Path scaffolding + UI (Foundations Path)
 - v4.106: Ensemble Methods post (127) + production-tell audit on 73/74/76 + 4 postId bug fixes
 - v4.107: Forward pointers + Cmd+K + ProfilePage badge
 - v4.108: ToC dropdown + keyboard nav
-- v4.109: Simplify content + prereq graph + IN THIS POST
-- v4.110: Concept inline glossary
+- v4.109: Simplify content (31 versions) + prereq graph + IN THIS POST + Test yourself CTA
+- v4.110: Concept inline glossary (87 terms)
+- v4.110b: Mobile hotfix (glossary popover) + spine MD sync
+- v4.111: The MLE Path expansion + rename. 4 new tiers, 5 new Rigorous posts, 23 new Simplify versions, 25 new glossary terms.
+
+### The path structure (after v4.111)
+- Tier 0: Observation Discipline & Pure Math (7 posts, all ready)
+- Tier 1: Statistics & Estimation (4 ready)
+- Tier 2: Linear Models (4 ready)
+- Tier 3: Classical Algorithms (9 total, 7 ready, 2 deferred — KNN/NB)
+- Tier 4: Unsupervised & Dim Reduction (3 total, 2 ready, 1 deferred — Manifold)
+- Tier 5: Evaluation & Diagnostics (7 ready)
+- Tier 6: Sequence & Specialised (5 ready)
+- Tier 7: Production Engineering (5 ready — posts 1, 7, 38, 41, 43)
+- Tier 8: Monitoring & MLOps (5 ready — posts 5, 23, 39, 40, 46)
+- Tier 9: System Design (5 ready — posts 24, 4, 72, 71, 80)
+- Tier 10: Interview Bridge (3 ready — posts 8, 13, 18)
 
 ### Earlier baseline (v4.74 — 2026-06-05, kept for reference):
 

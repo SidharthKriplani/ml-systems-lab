@@ -46,6 +46,12 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.111b — Spine MD sync + statefulness verification (2026-06-19)
+
+Quality pass after v4.111 ship. Updated NEXT.md, BRAIN_TRANSFER.md, CLAUDE.md, METRICS.md to reflect The MLE Path's expanded state (57 posts, 11 tiers, 54 ready, 121 glossary terms, 54 Simplify entries). Verified statefulness: no new localStorage keys introduced; internal identifiers (`msl_foundations_read`, `msl_foundations_tier`, `msl-open-foundations-path` event, `?path=foundations` URL param) preserved across the user-visible rename so existing user progress survives the upgrade. Cross-tab event wiring (HomeTab + ProfilePage + ContentMap dispatch → GradientTab listens) intact. METRICS.md updated to note tier range extended from t0…t6 to t0…t10 with old tier ids continuing to resolve correctly.
+
+Brace diff 0 across all 8 path-touched files.
+
 ### v4.111 — The MLE Path: complete senior-MLE curriculum (2026-06-19)
 
 **The Foundations Path is renamed to "The MLE Path" and expanded from 34 to 57 posts across 11 tiers — covering observation discipline, math, statistics, classical ML, evaluation, sequence, production engineering, monitoring & MLOps, system design, and interview bridge.**
