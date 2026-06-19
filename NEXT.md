@@ -303,21 +303,21 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 
 ---
 
-## NEXT: Foundations Path Session 3 — write the 4 missing posts (P0)
+## ✅ DONE: Foundations Path Session 3 — Ensemble post + tree/linear audits (v4.106, 2026-06-19)
 
-Each post must hit MSL quality bar: intuition → derivation → worked example → **production tell** → 4 interview Q&As with answers → Colab challenge → forward pointer to a specific practice tab. ~600–900 words per post. Add to `POSTS` array in `GradientTab.jsx`, then update `src/data/foundationsPath.js` to swap `status: 'pending'` → `'ready'` and fill `postId`.
-
-1. **KNN: The Lazy Algorithm, Curse of Dimensionality, and When KNN Wins** — Tier 3, position 15. Production tell: "high-dimensional KNN silently degenerates to random — the 'nearest' neighbour and the 'furthest' converge in distance."
-2. **Naive Bayes: The Independence Assumption, When It Lies, and Why It Still Works** — Tier 3, position 16. Production tell: "Naive Bayes is well-ordered but badly calibrated — use Platt scaling or isotonic regression if you're using the scores for thresholds."
-3. **Ensemble Methods: Bagging, Boosting, Stacking — Mechanics and When Each Wins** — Tier 3, position 19. Production tell: "stacking blends overfit silently on the holdout you trained the meta-learner on — use out-of-fold predictions, never in-fold."
-4. **Manifold Learning: t-SNE, UMAP, and Why They Distort Distances** — Tier 4, position 25. Production tell: "cluster sizes and inter-cluster distances in a t-SNE plot are not meaningful — multiple runs with different perplexity will tell you what's stable vs. an artifact."
+1. ~~Bug fix: 4 wrong postIds in foundationsPath.js (v4.105 regression) — Bayesian, XGBoost, Bias-Variance, Calibration~~
+2. ~~Post 127 written: Ensemble Methods (Bagging vs Boosting vs Stacking)~~
+3. ~~Production-tell audit on post 73 (XGBoost) — 4 failure modes + new interview Q on ntree_limit bug~~
+4. ~~Production-tell audit on post 74 (Bias-Variance) — 4 patterns mapping bias/variance to production tells~~
+5. ~~Production-tell audit on post 76 (Calibration) — 4 patterns ECE dashboards miss~~
+6. ~~KNN, Naive Bayes, Manifold Learning marked `status: 'deferred'` — explicitly not on roadmap~~
 
 ---
 
 ## NEXT: Foundations Path Session 4 — content audit + polish (P1)
 
-1. **Production-tell audit on all 30 ready posts.** Walk each post in the path; if no explicit "In production, this breaks as…" passage, write one and inject. Most likely Ground Up (101–120) already has them; the absorbed posts from `found`/`recsys` (73, 74, 75, 86, 87, 88, 95, 96, 97, 72) probably need supplementation.
-2. **Forward pointer audit.** Every post in the path needs `POST_PRACTICE[postId]` to resolve to a real practice module — otherwise the "Practice this →" CTA in PostReader falls back silently.
+1. **Production-tell audit on remaining absorbed posts.** Still need a pass on the linear-model side of the path: posts 107 (Logistic Regression), 108 (Decision Trees/RF), 111 (OLS), 112 (Regularisation), 119 (Generalisation Theory). Ground Up posts likely already have production tells from initial drafting, but worth verifying with a quick scan. Also: post 75 (Bayesian Inference), post 86 (PCA), post 87 (Clustering), post 88 (Time Series), post 95 (Anomaly Detection), post 96 (Bandits), post 97 (SVM).
+2. **Forward pointer audit.** Every post in the path needs `POST_PRACTICE[postId]` to resolve to a real practice module — otherwise the "Practice this →" CTA in PostReader falls back silently. Add entry for post 127 (Ensemble Methods → ClassicalML tab).
 3. **Tier 1 + Tier 5 PAL link verification.** Confirm the PAL URL placeholder (`https://product-analytics-lab.vercel.app`) is the live URL once PAL ships publicly. Update `PAL_URL` constant in `foundationsPath.js`.
 4. **Cmd+K integration.** Add foundations-path entry to `ContentMap.jsx` STATIC_TABS so the path is discoverable in global search.
 5. **ProfilePage badge.** Lightweight "Foundations complete" tag when `overallCompletion().read === overallCompletion().total`.

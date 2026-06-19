@@ -7,7 +7,7 @@ Follow these steps exactly. Do them in order. Takes ~20 minutes.
 ## 1. Install the Supabase package
 
 ```bash
-cd ~/Documents/GitHub/ml-systems-lab
+cd "/Users/ASUS/Documents/Professional/GitHub/upskill platforms (4)/ml-systems-lab"
 npm install @supabase/supabase-js
 ```
 

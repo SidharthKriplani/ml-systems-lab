@@ -4732,6 +4732,10 @@ n_estimators: number of trees. More trees → lower training loss; potential ove
 
 Gradient boosted trees win on: tabular data with mixed feature types, small-to-medium datasets (< 10M examples), when training time matters, when interpretability via feature importance is needed. Neural networks win on: images, text, audio, sequences, large datasets where representation learning is the bottleneck, multi-task settings.
 
+**Production tells — how XGBoost actually fails**
+
+The four most common production failures look identical in dashboards but trace to different causes. (1) **Gain-based feature importance lies on high-cardinality columns.** "user_id" or "session_id" as a top feature is almost never real signal — it's the tree exploiting any residual variance the regularisation didn't squeeze out. Drop it, retrain, see if anything changes; usually nothing does. (2) **The quantile binning in the approximate algorithm assumes train-serve feature distributions match.** When they don't (e.g., feature scaling drift, currency change, schema migration), the same numeric value falls into a different bin and the tree routes it down a wrong branch. Silent. (3) **Categorical encoding inconsistency.** XGBoost does not handle raw categoricals natively (unlike CatBoost). If your training pipeline uses pandas categorical codes and your serving pipeline uses a different encoder (one-hot, target encoding, hashing), the model receives a feature value that has nothing to do with the training-time meaning. Test this before every deploy. (4) **Number-of-trees mismatch between training (with early stopping) and serving (default predict uses all trees).** If you train with `early_stopping_rounds` and never call `predict(ntree_limit=best_iteration)`, you serve the overfit late trees. Half the production XGBoost regressions traced to this one line.
+
 **Try on Colab:** train XGBoost on the Adult Income dataset. Plot the training loss vs validation loss as a function of n_estimators — identify the early stopping point. Then vary max_depth (2, 4, 6, 8) and learning_rate (0.01, 0.1, 0.3) independently. Visualise feature importances. Compare against a random forest baseline and a logistic regression baseline — the gradient boosting gain over random forests is typically 2-5% accuracy.`,
     tags: ['Models & Math', 'XGBoost', 'Gradient Boosting', 'Decision Trees', 'Ensemble Methods', 'Foundations'],
     domain: 'math',
@@ -4752,6 +4756,10 @@ Gradient boosted trees win on: tabular data with mixed feature types, small-to-m
         {
             "q": "How does SHAP work for XGBoost, and why is it preferred over feature importance?",
             "a": "Default XGBoost feature importance (gain, cover, frequency) is a global aggregate — it tells you which features matter most on average but not for individual predictions. SHAP (SHapley Additive exPlanations) computes each feature's marginal contribution to a specific prediction, averaged over all possible feature orderings. For tree models, SHAP values can be computed exactly in O(TLD) time (T trees, L leaves, D depth) using the TreeSHAP algorithm — no sampling needed. SHAP satisfies desirable axioms (efficiency, symmetry, dummy, linearity) that gain/cover violate. In production, SHAP is used for model debugging, fairness auditing, and generating human-readable explanations."
+        },
+        {
+            "q": "An XGBoost model trained with early stopping at iteration 312 is performing 3% worse in production than on the validation set. Champion model from last month is still better. What's your first hypothesis?",
+            "a": "The most likely cause is a serving-time bug, not a model-quality issue. Specifically: the inference code is calling `predict()` without `ntree_limit=312` (or equivalent `iteration_range` in newer versions), so production is using all trees the trainer built — including the 200+ trees after the early-stopping point that hurt validation loss. The model object stores `best_iteration` but doesn't use it by default. Confirm by re-running the production inference with explicit `ntree_limit=model.best_iteration` and comparing against the dashboard. Second hypothesis: feature pipeline mismatch (categorical encoding or quantile bin shift) — verify by checking the distribution of a few input features between training and serving."
         }
     ],
 
@@ -4804,6 +4812,10 @@ Stacking: combine diverse models (high-variance estimators) with a meta-learner.
 **The double descent phenomenon**
 
 Classical bias-variance theory predicts a U-shaped test error curve: error is high at low complexity (high bias), decreases as complexity increases, then rises again at high complexity (high variance). Modern deep learning empirically violated this: very large neural networks (overparameterised — more parameters than training examples) continue to improve test performance even as training error reaches zero. This "double descent" curve shows a second descent after the classical peak. The mechanism: overparameterised models have many solutions that perfectly fit the training data; gradient descent converges to a minimum-norm solution that implicitly regularises and generalises. The classical bias-variance analysis assumed a fixed model class — the analysis breaks down for models that implicitly regularise through optimisation.
+
+**Production tells — what bias and variance look like in real systems**
+
+Four patterns map directly to the decomposition. (1) **"We doubled the training data and nothing improved."** Almost always a bias problem. More data shrinks variance, not bias. You need a different model class — interactions, non-linearities, a richer feature set — not more rows. (2) **"Feature importance changed dramatically between two retrains on the same pipeline."** Variance. The model is overfitting to specific patterns in the training period, and a slightly different random sample produces different "top features." Stable importance across retrains is a healthier signal than a high test score. (3) **"The model is great on average but breaks in segments."** Variance is unequal across the feature space. Sparse regions (new geographies, rare user types, edge cases) have far higher variance than the dense centre. Segment-wise CV will surface this; aggregate CV will hide it. (4) **"Cross-validation said 0.91 AUC; production is 0.72."** CV violated IID — either temporal leakage (k-fold on time-series data is the most common one) or group leakage (same user_id in train and test folds). The CV estimate was measuring variance reduction across folds, not generalisation to genuinely held-out data.
 
 **Try on Colab:** generate a 1D nonlinear regression dataset with noise σ=1. Fit polynomial regression models of degree 1, 3, 5, 9, 20. For each degree, repeat the training on 50 different random draws of the same-size dataset. Plot the mean prediction (bias) and the variation across runs (variance) at each test point. The degree-1 model will show flat systematic error (bias). The degree-20 model will show wild fluctuations across runs (variance).`,
     tags: ['Models & Math', 'Bias-Variance', 'Ensemble Methods', 'Statistics', 'Model Complexity', 'Foundations'],
@@ -4936,6 +4948,10 @@ Isotonic regression is a non-parametric monotone calibrator: it learns a step-fu
 **When calibration is critical in production**
 
 Credit scoring: a score of 0.7 feeds a decision tree with a specific threshold. If the model is overconfident (true default rate at 0.7 confidence is 0.4), the risk model sets incorrect thresholds and the business takes on more risk than modelled. Medical diagnosis: a 0.9 probability of disease feeds treatment decisions. Miscalibration can cause over- or under-treatment. Ensemble models: if you combine predictions from multiple models, each model's confidence should be a meaningful probability. Uncalibrated ensemble members degrade the combination.
+
+**Production tells — calibration failures that don't show up in your ECE dashboard**
+
+Four patterns. (1) **Recalibration drift.** The calibration parameters (Platt's a, b or temperature T) are fit at training time, then stored. Next retrain reuses them. The underlying score distribution shifted between retrains, so the cached calibration parameters are now wrong. ECE on the new training set will not catch this — you have to refit calibration on every retrain. (2) **Threshold decisions set on uncalibrated scores.** Ops set "block at score > 0.7" based on tuning at v3 of the model. v4 ships with the same accuracy but a tighter score distribution; the same threshold now blocks 3× the volume. The model "didn't change" from any accuracy metric's point of view; downstream is broken. Set thresholds on calibrated probabilities, not on raw scores. (3) **Aggregate ECE hides per-segment miscalibration.** Overall ECE of 1.5% looks great. But the model is overconfident in low-confidence predictions (where the 1.5% calibration error compounds) and underconfident in high-confidence ones, and the two cancel out in the aggregate. Per-bin reliability plots and per-class ECE will surface this. (4) **Calibration measured on the wrong distribution.** ECE computed on a uniform sample of the calibration set looks fine. The model is deployed to a slice (new market, new device, weekend traffic) where calibration is much worse. Cohort-stratified ECE is the fix.
 
 **Try on Colab:** train ResNet-20 on CIFAR-10. Plot its reliability diagram and compute ECE before calibration. Apply temperature scaling: minimise NLL on a held-out calibration set (5% of training data) over T in [0.5, 2.0]. Plot the reliability diagram after temperature scaling. ECE should drop from ~8% to ~1-2%.`,
     tags: ['Model Evaluation', 'Calibration', 'Temperature Scaling', 'Platt Scaling', 'ECE', 'Uncertainty'],
@@ -8174,6 +8190,62 @@ UCB and Thompson Sampling (from multi-armed bandits, post 96) apply here: mainta
 
 **Try on Colab:** simulate a 10-advertiser, 3-slot GSP auction. Give each advertiser a random bid and a random true CTR. Your pCTR model estimates CTR with some calibration noise (multiply true CTR by a random factor 0.7–1.3 per advertiser). Compute: (1) auction allocation under GSP with your miscalibrated pCTR, (2) auction allocation under GSP with true pCTR, (3) platform revenue difference, (4) which advertiser benefited most from miscalibration. Run 10,000 simulations. Show that systematic pCTR overestimation for one advertiser reduces platform revenue by X%.`
   },
+  {
+    id: 127,
+    slug: 'ensemble-methods-bagging-boosting-stacking',
+    title: 'Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins',
+    category: 'Models & Math',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 14,
+    featured: false,
+    excerpt: 'Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But "ensemble" is not one thing. Bagging, boosting, and stacking are three fundamentally different recipes that combine weak models into strong ones, and they win on different problems. Knowing which to reach for is what separates a senior MLE from someone who just types xgboost.fit().',
+    body: `Ensembling — combining multiple models to outperform any single one — is the most reliably successful technique in applied ML. Almost every Kaggle winner and almost every production tabular system uses one. But three different recipes get called "ensembling," and they work for different reasons. Understanding the mechanics is what lets you reach for the right one and debug it when it fails.
+
+**Why ensembles work: the variance-bias decomposition**
+
+The expected squared error of any model decomposes as: error = bias² + variance + irreducible_noise (from post 73). Different ensemble methods attack different terms. Bagging reduces variance while leaving bias unchanged. Boosting reduces bias while leaving variance roughly unchanged (or sometimes increasing it slightly). Stacking does both in a different way — by learning which model to trust in which region of the feature space. The error term you have most of is the one you need to attack.
+
+**Bagging — variance reduction via averaging**
+
+Bagging (Bootstrap Aggregation, Breiman 1994): train B models on B independently bootstrapped datasets (each sampled n-with-replacement from the original training set), then average their predictions. The mathematical guarantee: if each model has variance σ² and the models are pairwise uncorrelated, the variance of the average is σ²/B. If they have pairwise correlation ρ, variance becomes σ²[(1-ρ)/B + ρ]. The first term shrinks to zero as B → ∞; the second term is a floor you cannot beat by adding more models. So the entire engineering challenge in bagging is reducing ρ — making the base models as decorrelated as possible. Bootstrap sampling alone gets you partway. Random Forests add feature-subset randomness at every split, which decorrelates the trees further. Extra Trees take this further with random thresholds. Bagging works best when the base model is low-bias and high-variance — deep decision trees, deep neural nets that overfit. It does almost nothing for a linear regression on top of a small feature set, because there's no variance to reduce.
+
+**Boosting — sequential bias reduction**
+
+Boosting trains weak models sequentially, each one focused on the errors of its predecessors. AdaBoost (Freund and Schapire, 1995): each training sample carries a weight. Train a weak classifier h₁. Misclassified samples get their weights increased — h₂ pays more attention to them. The final prediction is a weighted vote: sign(Σ αₜ hₜ(x)) where αₜ depends on the weak learner's accuracy. Gradient Boosting (Friedman, 2001) generalises this: each new model fits the negative gradient of the loss with respect to the current ensemble's predictions. For squared loss, that's the residual y - F(x). For log loss, it's a weighted residual. XGBoost, LightGBM, CatBoost are all gradient boosting machines with engineering refinements (second-order Newton step in XGBoost, leaf-wise growth in LightGBM, ordered boosting in CatBoost for target leakage protection). Boosting works best with high-bias low-variance base learners: shallow trees, stumps (depth 1). The base learner deliberately underfits; the sequence of corrections is where the model capacity comes from.
+
+**Stacking — meta-learning over base models**
+
+Stacking (Wolpert, 1992) trains a meta-learner whose inputs are the outputs of several base models. The meta-learner learns when to trust which model. Layer 1: train several diverse base models (e.g., logistic regression, random forest, XGBoost, neural net). Layer 2: train a meta-learner (often a simple linear model or shallow tree) whose features are the predictions of the layer-1 models. Stacking shines when the base models have genuinely different inductive biases and make different kinds of errors. A linear model and an XGBoost model fail on different examples; the meta-learner can learn which to trust.
+
+> WARNING — **Production tell for stacking: out-of-fold predictions or you have already shipped a leakage bug.** The trap: train base models on the full training set, predict on the full training set, feed those predictions to the meta-learner. The base models have already seen the labels they're predicting — their training-set predictions are unrealistically good. The meta-learner overfits to those optimistic predictions and collapses on the test set. The fix is k-fold cross-validation: for each fold, train the base models on the other k-1 folds, predict on the held-out fold, and concatenate the held-out predictions to form the meta-learner's training data. Every stacking failure I have seen in production traces back to this. Senior interviews ask this exact question to filter for people who have actually built stacked models.
+
+**When each one wins**
+
+Bagging: when your base model overfits and you have compute to spare. Random Forests are the default — fast to train, robust, almost no hyperparameter tuning, OOB error gives you a free validation estimate. Production teams reach for Random Forests when they need a working model fast and don't want to tune anything.
+
+Boosting: when you need maximum tabular accuracy and you're willing to spend tuning time. Gradient boosted trees are the SOTA for tabular ML and will outperform Random Forests on almost every benchmark — but they require careful hyperparameter tuning (learning rate, max depth, regularisation, early stopping) and they are sensitive to noisy labels in a way RF isn't. XGBoost and LightGBM win nearly every Kaggle tabular competition.
+
+Stacking: when you have several already-trained models and ensembling them gives a real boost. Almost never the right first move — you should tune a single XGBoost or RF first. Stacking is what you do when you already have a strong baseline and need to squeeze out the last 1-2% for a competition or a benchmark.
+
+**Diversity is the constraint, not size**
+
+Three almost-identical XGBoost models with different seeds and a meta-learner on top: marginal improvement, because the base models are correlated. One XGBoost, one Random Forest, one neural net, one linear model, and a meta-learner on top: real improvement, because the base models make different errors. The lesson: ensembles need diverse base learners. You can't ensemble your way out of a single-architecture bottleneck.
+
+**Interview questions on this topic**
+
+"Why does bagging reduce variance but not bias? Why does boosting reduce bias but not variance?" — Bagging averages predictions from models trained on similar data. The expected value of the average equals the expected value of one model (bias is unchanged), but the variance of the average is lower (1/B of the original variance if uncorrelated). Boosting fits each new model to the residuals of the current ensemble. Each model corrects a piece of the bias; the ensemble's expected prediction moves closer to the true function. But because boosting is sequential and depends on the noise in the residuals, it doesn't reduce variance — and aggressive boosting can amplify it (which is why early stopping matters).
+
+"A junior engineer is stacking XGBoost, Random Forest, and a neural net. Their cross-validated stacking ensemble beats every base model by 3%. On the test set, the stacking ensemble does worse than XGBoost alone. What's the most likely bug?" — They almost certainly trained the meta-learner on the base models' training-set predictions instead of out-of-fold predictions. The base models had seen the training labels, so their training-set predictions were unrealistically accurate, the meta-learner overfit to that pattern, and the gap closes on the test set. Fix: regenerate the meta-learner's training data by k-fold cross-validation where each fold's predictions come from base models trained on the other folds.
+
+"You're training XGBoost with 1000 trees and learning rate 0.1. The training loss keeps decreasing but validation loss starts increasing after iteration 300. What are your two main levers and how do they trade off?" — Two levers: lower the learning rate (each tree corrects less, more trees needed to fit the data, less risk of overshooting the validation optimum) or strengthen regularisation (lower max_depth, raise min_child_weight, add L1/L2 on leaf weights). Lower learning rate gives you smoother convergence but costs training time. Stronger regularisation gives you a worse fit at low tree counts but a better fit at high tree counts. Use early stopping with a validation set as the safety net.
+
+"In a Random Forest with 500 trees, you measure pairwise correlation between tree predictions at 0.6 on a holdout set. Should you be concerned?" — Yes — high correlation between trees means the variance reduction from averaging is limited. The variance of the ensemble is σ²[(1-0.6)/500 + 0.6] ≈ 0.6 σ². You're getting only 40% of the variance reduction you'd get from fully decorrelated trees. Likely cause: too many features used per split (try lowering max_features), or one dominant feature that every tree splits on early. Adding more trees won't help past this point — you've hit the correlation floor.
+
+**Try on Colab:** generate a synthetic regression dataset with 1000 samples, 20 features. Train (a) a single deep decision tree, (b) a bagged ensemble of 100 deep trees, (c) a Random Forest with √20 features per split, (d) a gradient boosted ensemble of 100 stumps with learning rate 0.05. Compare training MSE, test MSE, and prediction variance across 10 different random seeds. Then build a stacking ensemble of (c) and (d) with a linear meta-learner. Train it BOTH ways — once with in-fold predictions, once with 5-fold out-of-fold predictions. Show on the test set how the in-fold version overfits.`,
+    tags: ['Models & Math', 'Ensemble Methods', 'Bagging', 'Boosting', 'Stacking', 'XGBoost', 'Random Forest', 'Ground Up'],
+    domain: 'math',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -8190,7 +8262,7 @@ const SERIES = [
   { id: 'search',    label: 'Search & IR',              posts: [79,80,90] },
   { id: 'ds',        label: 'DS & Causal',              posts: [81,82,83,84,85,91,92,93,121,125,126] },
   { id: 'ethics',    label: 'Fairness & Ethics',        posts: [98] },
-  { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120] },
+  { id: 'ground',    label: 'From Ground Up',           posts: [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,127] },
 ]
 
 const GRADIENT_DOMAINS = [
@@ -9031,7 +9103,7 @@ function FoundationsPathView({ onOpenPost, onExit, posts }) {
                             </button>
                           ) : (
                             <div style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-low)', fontStyle: 'italic', lineHeight: 1.4 }}>
-                              {p.title} <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginLeft: '6px' }}>· coming soon</span>
+                              {p.title} <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', marginLeft: '6px' }}>· {p.status === 'deferred' ? 'deferred' : 'coming soon'}</span>
                             </div>
                           )}
                           {isReady && (

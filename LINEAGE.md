@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.106 — Ensemble Methods post + production-tell audit on tree/linear foundation posts (2026-06-19)
+
+**Bug fix shipped with v4.105 — wrong postIds in foundationsPath.js. New post 127 written. Production tells added to posts 73, 74, 76.**
+
+User flagged that tree-based and linear models are higher-priority than KNN/Naive Bayes/Manifold Learning for senior MLE interview prep. Decision: skip those 3, write Ensemble Methods (the only tree-relevant one of the 4 new posts), and audit/deepen the absorbed posts in Tier 3 of Foundations Path.
+
+Bug fix:
+- Foundations Path v4.105 shipped with **4 wrong postIds** in `foundationsPath.js`. Clicking those rows opened the wrong posts. Fixed:
+  - Tier 1 Bayesian: postId 74 → 75
+  - Tier 3 XGBoost: postId 72 → 73
+  - Tier 3 Bias-Variance: postId 73 → 74
+  - Tier 3 Calibration: postId 75 → 76
+
+New content (post 127):
+- **Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins** — added to POSTS array in GradientTab.jsx, included in `ground` series. Full bias-variance derivation of why each method works, mechanics of bagging (bootstrap + decorrelation, ρ floor on variance reduction), boosting (sequential residual fitting, second-order Taylor, AdaBoost vs gradient boosting), and stacking (meta-learner, out-of-fold predictions). Explicit production tell: stacking with in-fold predictions silently overfits the meta-learner; out-of-fold cross-validation is mandatory and is the most common bug in junior stacking implementations. 4 interview Q&As (variance-bias decomposition for each method, the in-fold stacking bug, XGBoost validation divergence diagnosis, RF correlation floor). Colab challenge comparing all four ensemble types + in-fold vs out-of-fold stacking. ~1100 words.
+
+Production-tell audit on 3 absorbed foundations posts:
+- **Post 73 (XGBoost)** — added a "Production tells — how XGBoost actually fails" section covering 4 patterns: gain-based importance lying on high-cardinality features, quantile-binning train/serve mismatch, categorical encoding inconsistency, ntree_limit early-stopping mismatch. Added one new interview Q on diagnosing a champion-vs-challenger production regression that traces to the ntree_limit bug.
+- **Post 74 (Bias-Variance Tradeoff)** — added "Production tells — what bias and variance look like in real systems" covering: "doubling data didn't help" (bias), "feature importance keeps shifting" (variance), "fails in segments" (unequal variance), "CV said 0.91, prod is 0.72" (CV violated IID).
+- **Post 76 (Calibration)** — added "Production tells — calibration failures that don't show up in your ECE dashboard" covering: recalibration drift across retrains, threshold decisions made on uncalibrated scores, aggregate ECE hiding per-segment miscalibration, calibration measured on the wrong distribution.
+
+Foundations Path state model update:
+- Three posts marked `status: 'deferred'` instead of `'pending'` (KNN at n=15, Naive Bayes at n=16, Manifold Learning at n=25). These are explicitly not on the roadmap for now — they're table-stakes ML topics but not high-leverage for senior MLE interviews. UI label updated to render `· deferred` instead of `· coming soon` to communicate intent.
+- Ensemble Methods (n=19) flipped from `'pending'` to `'ready'` with postId 127.
+
+After v4.106:
+- Foundations Path: 31 of 34 posts ready (was 30), 3 deferred (was 4 pending).
+- All Tier 3 (Classical Algorithms) Tier 1 (Statistics) postId references corrected. Path now opens the right post on every click.
+- Posts 73, 74, 76 all have explicit production tells matching the bar set by CLAUDE.md "every scenario must contain a production tell."
+
+Brace diff 0 on GradientTab.jsx and foundationsPath.js. Apostrophe scan OK.
+
 ### v4.105 — Foundations Path: sequenced first-principles curriculum (2026-06-19)
 
 **Self-contained 34-post ladder across 7 tiers, surfaced as a real curriculum (not just a series filter).**

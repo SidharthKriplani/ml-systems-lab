@@ -34,7 +34,7 @@ export const FOUNDATIONS_TIERS = [
       { n: 7, postId: 113, title: 'Hypothesis Testing', status: 'ready' },
       { n: 8, postId: 105, title: 'MLE and MAP', status: 'ready' },
       { n: 9, postId: 106, title: 'The EM Algorithm', status: 'ready' },
-      { n: 10, postId: 74, title: 'Bayesian Inference', status: 'ready' },
+      { n: 10, postId: 75, title: 'Bayesian Inference', status: 'ready' },
     ],
   },
   {
@@ -57,14 +57,14 @@ export const FOUNDATIONS_TIERS = [
     prereq: 'Tier 2.',
     forward: { tabId: 'classical', label: 'Practice → Classical ML · Tree & Ensemble modules' },
     posts: [
-      { n: 15, postId: null, title: 'K-Nearest Neighbors: Lazy Algorithm, Curse of Dimensionality, and When KNN Wins', status: 'pending' },
-      { n: 16, postId: null, title: 'Naive Bayes: The Independence Assumption, When It Lies, and Why It Still Works', status: 'pending' },
+      { n: 15, postId: null, title: 'K-Nearest Neighbors: Lazy Algorithm, Curse of Dimensionality, and When KNN Wins', status: 'deferred' },
+      { n: 16, postId: null, title: 'Naive Bayes: The Independence Assumption, When It Lies, and Why It Still Works', status: 'deferred' },
       { n: 17, postId: 108, title: 'Decision Trees and Random Forests', status: 'ready' },
-      { n: 18, postId: 72, title: 'Gradient Boosted Trees (XGBoost)', status: 'ready' },
-      { n: 19, postId: null, title: 'Ensemble Methods: Bagging, Boosting, Stacking — Mechanics and When Each Wins', status: 'pending' },
+      { n: 18, postId: 73, title: 'Gradient Boosted Trees (XGBoost)', status: 'ready' },
+      { n: 19, postId: 127, title: 'Ensemble Methods: Bagging, Boosting, Stacking — Mechanics and When Each Wins', status: 'ready' },
       { n: 20, postId: 97, title: 'SVMs: The Kernel Trick and Maximum Margin', status: 'ready' },
-      { n: 21, postId: 73, title: 'The Bias-Variance Tradeoff', status: 'ready' },
-      { n: 22, postId: 75, title: 'Model Calibration', status: 'ready' },
+      { n: 21, postId: 74, title: 'The Bias-Variance Tradeoff', status: 'ready' },
+      { n: 22, postId: 76, title: 'Model Calibration', status: 'ready' },
     ],
   },
   {
@@ -76,7 +76,7 @@ export const FOUNDATIONS_TIERS = [
     posts: [
       { n: 23, postId: 86, title: 'PCA from Scratch', status: 'ready' },
       { n: 24, postId: 87, title: 'Clustering: k-Means and DBSCAN', status: 'ready' },
-      { n: 25, postId: null, title: 'Manifold Learning: t-SNE, UMAP, and Why They Distort Distances', status: 'pending' },
+      { n: 25, postId: null, title: 'Manifold Learning: t-SNE, UMAP, and Why They Distort Distances', status: 'deferred' },
     ],
   },
   {

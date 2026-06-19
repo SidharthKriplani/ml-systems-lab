@@ -50,7 +50,7 @@ ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300
 **End of every session, before closing:**
 
 ```bash
-cd ~/Documents/GitHub/ml-systems-lab
+cd "/Users/ASUS/Documents/Professional/GitHub/upskill platforms (4)/ml-systems-lab"
 rm -f .git/index.lock .git/HEAD.lock
 git add -A && git commit -m "v4.X: [what shipped — be specific]" && git push
 ```
