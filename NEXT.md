@@ -395,6 +395,12 @@ Posts 122–126 were missing `excerpt` field. `post.excerpt.slice(...)` in PostR
 
 ---
 
+## Strategic direction logged for reference
+
+`docs/STRATEGY.md` — full competitive analysis (Dataford, Practicai/PracHub, Final Round AI, Pramp, Scaler, Interviewing.io, DataLemur, StrataScratch, Interview Query) + strategic argument for India-first senior MLE positioning + category creation around "Production ML Judgment" + 90-day execution plan. Drafted 2026-06-19. Not a spine file — a working document to revisit when planning go-to-market. The eight build gaps it identifies (company-specific SEO guides, AI mock interview, ₹499 pricing tier, LinkedIn presence, certificate + LinkedIn integration, WhatsApp community, mobile polish, resume-aware path) are the candidate roadmap for the next 90 days if MSL pursues commercial trajectory.
+
+---
+
 ## NEXT: Other queued (P2)
 
 1. ~~**Slug duplicate fix — `ab-test-failure-modes`**~~ — ✅ Fixed 2026-06-18.
