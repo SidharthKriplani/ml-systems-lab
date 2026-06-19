@@ -46,6 +46,24 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.110 — Foundations Path Phase 4: concept inline glossary with hover-cards (2026-06-19)
+
+**The knowledge-graph experience the user asked for. Every defined technical term in a path post now has a hover-card with a plain-language definition and a jump link to the post that defines it.**
+
+This is the deepest knowledge-graph layer in the Foundations Path. The prerequisite/successor strip in v4.109 showed the dependency graph at the post level; this layer surfaces it at the concept level — inline, in prose.
+
+**Data layer.** New file `src/data/foundationsGlossary.js` exports `GLOSSARY` (canonical entries keyed by lowercase term), `GLOSSARY_LOOKUP` (flattened map including aliases), and `GLOSSARY_REGEX` (a single longest-first regex matching any term or alias). 80 high-value technical concepts curated across the path: math foundations (gradient, eigenvalue, SVD, chain rule, Jacobian, Hessian, KL divergence, cross-entropy, convexity, Adam, etc.), statistics & estimation (p-value, confidence interval, MLE, MAP, prior, posterior, EM algorithm, Bayesian inference), linear models (linear regression, logistic regression, sigmoid, L1/L2 regularisation, VC dimension, double descent, overfitting), classical algorithms (decision tree, random forest, Gini, information gain, bootstrap, XGBoost, gradient boosting, bagging, boosting, stacking, SVM, kernel trick, bias-variance), calibration (Platt scaling, temperature scaling, ECE), unsupervised (PCA, principal component, k-means, DBSCAN, clustering), evaluation (precision, recall, F1, AUC, PR-AUC, cross-validation, k-fold, data leakage, walk-forward), time series & specialised (ARIMA, survival analysis, censoring, Isolation Forest, Thompson Sampling, UCB, bandit), production concepts (training-serving skew, feature drift, concept drift, one-hot, target encoding). Each entry: `{ postId, def, aliases? }`. Definitions are 1–2 sentences, plain-language, no notation.
+
+**Matching strategy.** `GLOSSARY_REGEX` is built longest-first so "logistic regression" beats "regression", "gradient descent" beats "gradient", "cross-validation" beats "validation". Whole-word boundaries (`\b...\b`) prevent partial-word matches. Case-insensitive. Aliases (e.g. `weight decay` for L2, `lasso` for L1, `kullback-leibler divergence` for KL divergence) are flattened into the same lookup so any phrasing triggers the card.
+
+**Component (`GlossaryTerm`).** Inline `<span>` that wraps a matched term with a subtle dotted underline (cyan, low-opacity). On hover or tap, opens an absolutely-positioned popover beneath the term: term name in a small uppercase eyebrow, the definition, and (when the term is not defined by the current post) a `→ Read full post (N)` button that calls `onJump(postId)`. Self-references (the post you're already on) suppress the jump button. Popover is hover-bridged — moving the mouse from the underlined term to the popover keeps it open.
+
+**Wiring.** `renderInline()` in PostReader extended with a `wrapGlossary()` helper. After splitting on `**bold**`, each plain-text chunk is scanned by the regex; matches are wrapped in `<GlossaryTerm>`, gaps remain as plain text. Only active when `viewMode === 'rigorous' && inFoundationsPath`. Simplify view stays clean prose (terms aren't underlined there — the Simplify text is the place where the concept is being explained, so cross-linking would be noise).
+
+**Result.** Read any Rigorous path post — the technical terms that you would have had to look up in a separate tab are now annotated inline. Hover (or tap on mobile) to see what something means; one click jumps to the full chapter on that concept. The cross-reference structure that has always existed in the curriculum is now visible at the granularity of individual words.
+
+Brace diff 0 on GradientTab.jsx and foundationsGlossary.js. Apostrophe + backtick audits OK.
+
 ### v4.109 — Foundations Path: progression model — Simplify view + IN THIS POST + Test yourself + Prereq/Successor graph (2026-06-19)
 
 **The biggest single content + UX shift in the Foundations Path. Every post now has a beginner-friendly Simplify view, an auto-generated in-post navigation, a Test yourself CTA, and an explicit prerequisite + successor knowledge-graph strip.**

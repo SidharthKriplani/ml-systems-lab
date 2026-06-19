@@ -12,6 +12,7 @@ import {
   PATH_RELATIONS, prereqsFor, successorsFor, titleForPostId,
 } from '../data/foundationsPath.js'
 import { FOUNDATIONS_SIMPLIFY } from '../data/foundationsSimplify.js'
+import { GLOSSARY_LOOKUP, GLOSSARY_REGEX } from '../data/foundationsGlossary.js'
 const POSTS = [
   {
     id: 1,
@@ -8627,6 +8628,79 @@ function slugifyHeading(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)
 }
 
+// ─── Glossary term — inline concept card on hover/tap ────────────────────────
+function GlossaryTerm({ term, entry, currentPostId, onJump }) {
+  const [open, setOpen] = useState(false)
+  const isSelf = entry.postId === currentPostId
+  return (
+    <span style={{ position: 'relative', display: 'inline' }}>
+      <span
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        style={{
+          borderBottom: '1px dotted rgba(99,179,237,0.55)',
+          cursor: 'help',
+          color: 'inherit',
+          textDecoration: 'none',
+        }}
+      >
+        {term}
+      </span>
+      {open && (
+        <span
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            zIndex: 60,
+            marginTop: '6px',
+            width: 'min(320px, 80vw)',
+            padding: '12px 14px',
+            background: 'var(--depth)',
+            border: '1px solid rgba(99,179,237,0.35)',
+            borderRadius: '8px',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.65)',
+            fontFamily: 'var(--font-sans)',
+            fontSize: '12.5px',
+            color: 'var(--ink-mid)',
+            lineHeight: 1.55,
+            fontStyle: 'normal',
+            fontWeight: 400,
+            display: 'block',
+          }}
+        >
+          <span style={{ display: 'block', fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--info, #63b3ed)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', fontWeight: 700 }}>
+            {entry.canonical}
+          </span>
+          <span style={{ display: 'block', marginBottom: isSelf ? 0 : '8px' }}>{entry.def}</span>
+          {!isSelf && onJump && (
+            <span
+              onClick={(e) => { e.stopPropagation(); setOpen(false); onJump(entry.postId) }}
+              style={{
+                display: 'inline-block',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--prime)',
+                background: 'rgba(240,165,0,0.10)',
+                border: '1px solid rgba(240,165,0,0.30)',
+                borderRadius: '5px',
+                padding: '3px 8px',
+                cursor: 'pointer',
+                marginTop: '2px',
+              }}
+            >
+              → Read full post ({entry.postId})
+            </span>
+          )}
+        </span>
+      )}
+    </span>
+  )
+}
+
 // ─── Post reader ─────────────────────────────────────────────────────────────
 function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
   inFoundationsPath, foundationsRead, onToggleFoundationsRead,
@@ -8702,12 +8776,47 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
     setScrollPct(Math.min(100, pct))
   }
 
-  // Block-based renderer — supports code blocks, callouts, lists, inline bold
-  function renderInline(text) {
+  // Scan a plain-text chunk for glossary terms and wrap matches in GlossaryTerm.
+  // Only active in Rigorous view; Simplify view stays clean prose.
+  function wrapGlossary(text, keyPrefix) {
+    if (viewMode !== 'rigorous' || !inFoundationsPath) return text
+    GLOSSARY_REGEX.lastIndex = 0
+    const out = []
+    let lastIdx = 0
+    let m
+    let i = 0
+    while ((m = GLOSSARY_REGEX.exec(text)) !== null) {
+      const matched = m[0]
+      const lower = matched.toLowerCase()
+      const entry = GLOSSARY_LOOKUP[lower]
+      if (!entry) continue
+      // Push the text before the match
+      if (m.index > lastIdx) out.push(text.slice(lastIdx, m.index))
+      out.push(
+        <GlossaryTerm
+          key={keyPrefix + '-g-' + (i++)}
+          term={matched}
+          entry={entry}
+          currentPostId={post.id}
+          onJump={onOpenPathPost}
+        />
+      )
+      lastIdx = m.index + matched.length
+    }
+    if (lastIdx < text.length) out.push(text.slice(lastIdx))
+    return out.length === 0 ? text : out
+  }
+
+  // Block-based renderer — supports code blocks, callouts, lists, inline bold + glossary terms
+  function renderInline(text, keyPrefix) {
+    const kp = keyPrefix || 'p'
     const parts = text.split(/\*\*(.*?)\*\*/g)
-    return parts.map((part, j) => j % 2 === 1
-      ? <strong key={j} style={{ color: 'var(--ink-hi)', fontWeight: 600 }}>{part}</strong>
-      : part)
+    return parts.map((part, j) => {
+      if (j % 2 === 1) {
+        return <strong key={kp + '-b-' + j} style={{ color: 'var(--ink-hi)', fontWeight: 600 }}>{part}</strong>
+      }
+      return <span key={kp + '-t-' + j}>{wrapGlossary(part, kp + '-' + j)}</span>
+    })
   }
 
   function renderBody(text) {
