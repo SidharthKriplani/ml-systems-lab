@@ -109,6 +109,67 @@ export const FOUNDATIONS_TIERS = [
   },
 ]
 
+// Prerequisite + successor relations for the knowledge graph wiring.
+// Each entry: { prereqs: [postId, ...], successors: [postId, ...] }
+// Only ready postIds are listed. Deferred posts (KNN, Naive Bayes, Manifold) are omitted.
+export const PATH_RELATIONS = {
+  // Tier 0 — Pure Math
+  101: { prereqs: [],          successors: [104, 105, 113] },                 // Probability
+  102: { prereqs: [],          successors: [120, 111, 86] },                  // Linear Algebra
+  103: { prereqs: [],          successors: [120, 115, 107] },                 // Calculus
+  120: { prereqs: [102, 103],  successors: [111, 116] },                      // Matrix Calculus
+  104: { prereqs: [101],       successors: [105, 114] },                      // Information Theory
+  115: { prereqs: [103],       successors: [116, 107, 111] },                 // Convex Optimisation
+  // Tier 1 — Statistics & Estimation
+  113: { prereqs: [101],       successors: [114, 119] },                      // Hypothesis Testing
+  105: { prereqs: [101, 104],  successors: [106, 107, 111, 75] },             // MLE / MAP
+  106: { prereqs: [105],       successors: [87] },                            // EM Algorithm
+  75:  { prereqs: [101, 105],  successors: [76, 96] },                        // Bayesian Inference
+  // Tier 2 — Linear Models
+  111: { prereqs: [102, 103, 120],   successors: [107, 112, 119] },           // OLS
+  107: { prereqs: [105, 111, 115],   successors: [108, 76, 114] },            // Logistic Regression
+  112: { prereqs: [111],             successors: [107, 119, 73] },            // Regularisation
+  119: { prereqs: [113, 111],        successors: [73, 127, 114] },            // Generalisation Theory
+  // Tier 3 — Classical Algorithms
+  108: { prereqs: [104, 107],        successors: [73, 127, 74] },             // Decision Trees / RF
+  73:  { prereqs: [108, 112, 119],   successors: [127, 74, 76] },             // XGBoost
+  127: { prereqs: [108, 73, 74],     successors: [76] },                      // Ensemble Methods (Bagging/Boosting/Stacking)
+  97:  { prereqs: [107, 115],        successors: [127] },                     // SVM
+  74:  { prereqs: [119, 112],        successors: [127, 76] },                 // Bias-Variance
+  76:  { prereqs: [74, 75, 107],     successors: [114, 96] },                 // Model Calibration
+  // Tier 4 — Unsupervised & Dim Reduction
+  86:  { prereqs: [102],             successors: [87, 117] },                 // PCA
+  87:  { prereqs: [86, 106],         successors: [95] },                      // Clustering
+  // Tier 5 — Evaluation
+  114: { prereqs: [113, 76, 119],    successors: [3, 42, 20] },               // Eval Metrics
+  3:   { prereqs: [114],             successors: [42] },                      // AUC Is Not Your Friend
+  42:  { prereqs: [114, 20],         successors: [] },                        // Offline != Online
+  20:  { prereqs: [114],             successors: [42] },                      // Validation Set Lying
+  // Tier 6 — Sequence & Specialised
+  88:  { prereqs: [111, 113],        successors: [95] },                      // Time Series
+  118: { prereqs: [113, 75],         successors: [] },                        // Survival Analysis
+  95:  { prereqs: [87, 88],          successors: [] },                        // Anomaly Detection
+  96:  { prereqs: [75, 113],         successors: [] },                        // Multi-Armed Bandits
+  117: { prereqs: [86],              successors: [73, 108] },                 // Data Preprocessing
+}
+
+export function prereqsFor(postId) {
+  return (PATH_RELATIONS[postId] && PATH_RELATIONS[postId].prereqs) || []
+}
+
+export function successorsFor(postId) {
+  return (PATH_RELATIONS[postId] && PATH_RELATIONS[postId].successors) || []
+}
+
+export function titleForPostId(postId) {
+  for (const t of FOUNDATIONS_TIERS) {
+    for (const p of t.posts) {
+      if (p.postId === postId) return p.title
+    }
+  }
+  return null
+}
+
 // Flat list of every post in path order, for prev/next navigation inside PostReader.
 export const PATH_SEQUENCE = FOUNDATIONS_TIERS.flatMap(t =>
   t.posts.map(p => ({ ...p, tierId: t.id, tierLabel: t.label }))

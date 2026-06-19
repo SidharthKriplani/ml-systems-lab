@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.109 — Foundations Path: progression model — Simplify view + IN THIS POST + Test yourself + Prereq/Successor graph (2026-06-19)
+
+**The biggest single content + UX shift in the Foundations Path. Every post now has a beginner-friendly Simplify view, an auto-generated in-post navigation, a Test yourself CTA, and an explicit prerequisite + successor knowledge-graph strip.**
+
+Three phases shipped in one session because user explicitly directed it ("all 3 phases", "these aren't big").
+
+**Phase 1 — UI shell (PostReader).**
+
+- **Simplify toggle button** in the top-right of PostReader, matching GAL's pattern for consistency across labs. Two states: Rigorous (default — the full existing post body with derivations, formal notation, interview Qs, Quiz Me) versus Simplify (beginner first-principles version with no notation, sound but not rigorous). When Simplify is on, the post body is replaced by the Simplify content in a tinted card; Inline Visual, Interview Qs, and Quiz Me are hidden so the simplified view stays focused.
+- **IN THIS POST box** auto-generated from `**bold heading**` patterns in the post body. Renders 3+ sections as a clickable list anchored above the body. Each heading gets an `id` (slug of the heading text) and the list scrolls to it on click. Only shown on Rigorous view.
+- **Test yourself on this post →** CTA below the excerpt that scrolls to the existing Quiz Me section via a ref. Only shown on posts that have a quiz registered and only on Rigorous view.
+- **`slugifyHeading()`** helper added above PostReader to turn heading text into stable ids.
+
+**Phase 2 — Simplify content for all 31 ready path posts.**
+
+New file: `src/data/foundationsSimplify.js`. Exports `FOUNDATIONS_SIMPLIFY` — an object keyed by post id, each value a multi-paragraph template literal of ~500–700 authoritative plain-language words. Structure per Simplify post: problem framing (what this concept solves, in plain English) → core intuition (the one idea that makes the concept click) → mechanism described without notation → **The production tell** (what breaks in real systems when you misunderstand or misuse this) → **Bridge to the Rigorous version** (one paragraph signaling what the rigorous body adds).
+
+Coverage: 31 Simplify versions covering every ready post in the path. The 3 deferred posts (KNN, Naive Bayes, Manifold Learning) are not included; if a user opens a deferred post the Simplify button doesn't appear.
+
+Tone bar: authoritative, no hedging, specific examples (PhonePe, Razorpay, Flipkart contexts woven in where natural), production tells explicitly called out as the differentiator vs textbook treatments. Length pushed past my initial 250-word draft after user pushback — these read as standalone authoritative pieces, not teasers.
+
+**Phase 3 — Prerequisite + successor strip.**
+
+- `PATH_RELATIONS` added to `src/data/foundationsPath.js` — object keyed by post id, each value `{ prereqs: [postId, ...], successors: [postId, ...] }`. Covers all 31 ready posts with hand-curated dependency edges (Tier 0 has no prereqs; later tiers point back to the math/statistics they require; successors point forward to where each concept gets applied).
+- Helpers `prereqsFor()`, `successorsFor()`, `titleForPostId()` exported alongside.
+- PostReader renders a dashed-border strip inside the Foundations Path strip showing prereqs and successors as clickable post-title pills. Each pill is a small underlined link with the post id in parentheses; clicking calls `onOpenPathPost()` to jump.
+- Result: every path post visibly surfaces its dependency graph. The reader can see at a glance "this builds on Probability (101) and Calculus (103); it builds toward EM Algorithm (106) and Logistic Regression (107)." The graph that was implicit in tier metadata is now explicit in the UI.
+
+**State model unchanged.** No new localStorage keys. Simplify state is per-session (resets to Rigorous on every post change via useEffect). PATH_RELATIONS is static data.
+
+Brace diff 0 on GradientTab.jsx, foundationsPath.js. New file foundationsSimplify.js parses cleanly. Apostrophe + backtick audits OK.
+
 ### v4.108 — Foundations Path: clickable ToC + keyboard navigation (2026-06-19)
 
 **Context-without-leaving: while reading any path post, you can now see all 34 posts grouped by tier in one click — and step through with `[` and `]` keys.**

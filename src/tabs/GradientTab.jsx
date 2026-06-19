@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import { getRead, toggleRead, isRead } from '../utils/read.js'
 import { POST_VISUALS } from '../components/GradientVisuals.jsx'
@@ -9,7 +9,9 @@ import {
   tierForPostId, sequenceIndexForPostId, prevPostInPath, nextPostInPath,
   readFoundationsRead, markFoundationsRead, unmarkFoundationsRead,
   readActiveTier, writeActiveTier, tierCompletion, overallCompletion,
+  PATH_RELATIONS, prereqsFor, successorsFor, titleForPostId,
 } from '../data/foundationsPath.js'
+import { FOUNDATIONS_SIMPLIFY } from '../data/foundationsSimplify.js'
 const POSTS = [
   {
     id: 1,
@@ -8620,16 +8622,51 @@ const POST_PRACTICE = {
   127: { tab: 'classical',   label: 'Classical ML — Tree & Ensemble modules' },
 }
 
+// ─── Heading slug helper ─────────────────────────────────────────────────────
+function slugifyHeading(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)
+}
+
 // ─── Post reader ─────────────────────────────────────────────────────────────
 function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
   inFoundationsPath, foundationsRead, onToggleFoundationsRead,
   onOpenFoundationsPath, onOpenPathPost }) {
   const [scrollPct, setScrollPct] = useState(0)
   const [tocOpen, setTocOpen] = useState(false)
+  const [viewMode, setViewMode] = useState('rigorous') // 'rigorous' | 'simplify'
+  const quizRef = useRef(null)
   const pathTier = inFoundationsPath ? tierForPostId(post.id) : null
   const pathIdx = inFoundationsPath ? sequenceIndexForPostId(post.id) : -1
   const prevPath = inFoundationsPath ? prevPostInPath(post.id) : null
   const nextPath = inFoundationsPath ? nextPostInPath(post.id) : null
+  const simplifyAvailable = !!FOUNDATIONS_SIMPLIFY[post.id]
+  const simplifyText = simplifyAvailable ? FOUNDATIONS_SIMPLIFY[post.id] : null
+  const prereqs = inFoundationsPath ? prereqsFor(post.id) : []
+  const successors = inFoundationsPath ? successorsFor(post.id) : []
+
+  // Reset view mode to rigorous when post changes
+  useEffect(() => { setViewMode('rigorous') }, [post.id])
+
+  // Extract bold-heading sections for the IN THIS POST box
+  const sections = (() => {
+    const out = []
+    const lines = (post.body || '').split('\n')
+    for (const line of lines) {
+      const t = line.trim()
+      const m = t.match(/^\*\*([^*]+)\*\*$/)
+      if (m) out.push({ heading: m[1], id: slugifyHeading(m[1]) })
+    }
+    return out
+  })()
+
+  function scrollToHeading(id) {
+    const el = document.getElementById('section-' + id)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function scrollToQuiz() {
+    if (quizRef.current) quizRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   // Keyboard nav within path: [ = previous, ] = next, Esc = close ToC
   useEffect(() => {
@@ -8762,7 +8799,8 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
       // Paragraph or heading
       const content = block.content.trim()
       if (/^\*\*[^*]+\*\*$/.test(content)) {
-        return <h3 key={idx} style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em' }}>{content.slice(2,-2)}</h3>
+        const headingText = content.slice(2,-2)
+        return <h3 key={idx} id={'section-' + slugifyHeading(headingText)} style={{ fontFamily: 'var(--font-sans)', fontSize: '17px', fontWeight: 700, color: 'var(--ink-hi)', marginTop: '32px', marginBottom: '10px', letterSpacing: '-0.02em', scrollMarginTop: '20px' }}>{headingText}</h3>
       }
       return (
         <p key={idx} style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.85, marginBottom: '18px' }}>
@@ -8779,14 +8817,23 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
         <div style={{ height: '100%', background: 'var(--prime)', width: `${scrollPct}%`, transition: 'width 0.1s', borderRadius: '1px' }} />
       </div>
 
-      {/* Back + mark read */}
+      {/* Back + Simplify toggle + mark read */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '8px' }}>
         <button onClick={onBack} className="btn-ghost" style={{ fontSize: '13px' }}>
           ← Back to Gradient
         </button>
-        <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'var(--prime-bg-light)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
-          {isRead ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg> Read' : 'Mark as read'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {simplifyAvailable && (
+            <button onClick={() => setViewMode(v => v === 'simplify' ? 'rigorous' : 'simplify')}
+              title={viewMode === 'simplify' ? 'Switch to the full rigorous version' : 'Switch to the beginner first-principles version'}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${viewMode === 'simplify' ? 'rgba(99,179,237,0.4)' : 'var(--rim)'}`, background: viewMode === 'simplify' ? 'rgba(99,179,237,0.12)' : 'transparent', color: viewMode === 'simplify' ? 'var(--info, #63b3ed)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: viewMode === 'simplify' ? 600 : 400, transition: 'all 0.15s' }}>
+              {viewMode === 'simplify' ? '✓ Simplify' : 'Simplify'}
+            </button>
+          )}
+          <button onClick={onMarkRead} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: `1px solid ${isRead ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: isRead ? 'var(--prime-bg-light)' : 'transparent', color: isRead ? 'var(--prime)' : 'var(--ink-low)', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}>
+            {isRead ? '✓ Read' : 'Mark as read'}
+          </button>
+        </div>
       </div>
 
       {/* Foundations Path strip — only when post is part of the path */}
@@ -8860,6 +8907,48 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
               <div style={{ lineHeight: 1.3 }}>{nextPath ? nextPath.title : 'End of path'}</div>
             </button>
           </div>
+
+          {/* Prereq + Successor knowledge-graph strip */}
+          {(prereqs.length > 0 || successors.length > 0) && (
+            <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '8px', border: '1px dashed rgba(240,165,0,0.18)', background: 'rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {prereqs.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '9px', flexShrink: 0 }}>← Prereqs</span>
+                  {prereqs.map((pid, i) => {
+                    const t = titleForPostId(pid)
+                    if (!t) return null
+                    return (
+                      <span key={pid}>
+                        <button onClick={() => onOpenPathPost(pid)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontSize: '11px', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                          {t} <span style={{ color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>({pid})</span>
+                        </button>
+                        {i < prereqs.length - 1 && <span style={{ color: 'var(--ink-ghost)', margin: '0 4px' }}>·</span>}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+              {successors.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '6px', fontSize: '11px', fontFamily: 'var(--font-sans)' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '9px', flexShrink: 0 }}>→ Builds toward</span>
+                  {successors.map((sid, i) => {
+                    const t = titleForPostId(sid)
+                    if (!t) return null
+                    return (
+                      <span key={sid}>
+                        <button onClick={() => onOpenPathPost(sid)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontSize: '11px', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                          {t} <span style={{ color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>({sid})</span>
+                        </button>
+                        {i < successors.length - 1 && <span style={{ color: 'var(--ink-ghost)', margin: '0 4px' }}>·</span>}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -8877,9 +8966,39 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
         </h1>
 
         {/* Excerpt */}
-        <p style={{ fontSize: '16px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '36px', borderLeft: `3px solid ${post.catColor.text}`, paddingLeft: '16px', fontStyle: 'italic' }}>
+        <p style={{ fontSize: '16px', color: 'var(--ink-mid)', lineHeight: 1.7, marginBottom: '20px', borderLeft: `3px solid ${post.catColor.text}`, paddingLeft: '16px', fontStyle: 'italic' }}>
           {post.excerpt}
         </p>
+
+        {/* Test yourself CTA — scrolls to Quiz Me section if it exists */}
+        {QUIZ[post.id] && viewMode === 'rigorous' && (
+          <button onClick={scrollToQuiz}
+            style={{ marginBottom: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '999px', border: '1px solid rgba(99,179,237,0.35)', background: 'rgba(99,179,237,0.08)', color: 'var(--info, #63b3ed)', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,179,237,0.16)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(99,179,237,0.08)'}>
+            + Test yourself on this post →
+          </button>
+        )}
+
+        {/* IN THIS POST — only on Rigorous, only when there are 3+ section headings */}
+        {viewMode === 'rigorous' && sections.length >= 3 && (
+          <div style={{ marginBottom: '36px', padding: '14px 18px', borderRadius: '10px', border: '1px solid var(--rim)', background: 'rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px', fontWeight: 700 }}>In this post</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {sections.map(s => (
+                <li key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: 'var(--prime)', fontSize: '11px', marginTop: '2px', flexShrink: 0 }}>•</span>
+                  <button onClick={() => scrollToHeading(s.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.5, transition: 'color 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--prime)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-mid)'}>
+                    {s.heading}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div style={{ height: '1px', background: 'var(--rim)', marginBottom: '36px' }} />
 
@@ -8890,19 +9009,35 @@ function PostReader({ post, onBack, onNavigate, isRead, onMarkRead,
           </div>
         )}
 
-        {/* Body */}
-        <div>{renderBody(post.body)}</div>
+        {/* Body — Simplify or Rigorous */}
+        {viewMode === 'simplify' && simplifyText ? (
+          <div style={{ padding: '20px 24px', borderRadius: '12px', border: '1px solid rgba(99,179,237,0.25)', background: 'rgba(99,179,237,0.04)', marginBottom: '32px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--info, #63b3ed)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '14px', fontWeight: 700 }}>
+              ◇ Simplify view — first principles, plain language
+            </div>
+            <div>{renderBody(simplifyText)}</div>
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(99,179,237,0.18)', fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontStyle: 'italic' }}>
+              The Rigorous version has the derivations, formal notation, and the production tells in technical detail. Toggle Simplify off at the top when you are ready for the full version.
+            </div>
+          </div>
+        ) : (
+          <div>{renderBody(post.body)}</div>
+        )}
 
-        {/* Inline Visual */}
-        {POST_VISUALS[post.id] && (() => { const V = POST_VISUALS[post.id]; return <V /> })()}
+        {/* Inline Visual — only on Rigorous */}
+        {viewMode === 'rigorous' && POST_VISUALS[post.id] && (() => { const V = POST_VISUALS[post.id]; return <V /> })()}
 
-        {/* Interview Questions */}
-        {post.interviewQs && post.interviewQs.length > 0 && (
+        {/* Interview Questions — only on Rigorous */}
+        {viewMode === 'rigorous' && post.interviewQs && post.interviewQs.length > 0 && (
           <InterviewQsSection questions={post.interviewQs} />
         )}
 
-        {/* Quiz Me */}
-        {QUIZ[post.id] && <QuizMeSection postId={post.id} questions={QUIZ[post.id]} />}
+        {/* Quiz Me — only on Rigorous */}
+        {viewMode === 'rigorous' && QUIZ[post.id] && (
+          <div ref={quizRef}>
+            <QuizMeSection postId={post.id} questions={QUIZ[post.id]} />
+          </div>
+        )}
 
         {/* Tags */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--rim)' }}>
