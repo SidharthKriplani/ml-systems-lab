@@ -828,4 +828,144 @@ The signals that move you up the ladder. At L3 to L4: consistent execution and b
 **The production tell.** The most common career-stalling pattern: a senior engineer who is technically excellent but doesn't expand their scope of influence. They keep shipping great systems but their impact is bounded by their individual capacity. Promotion to staff requires showing that the systems and practices around you got better because of your influence — not just that your individual work was excellent. The fix is deliberate: pick a problem larger than yourself, build something that improves your team's or org's practice, get that recognised. This is rarely random; it requires explicit intent.
 
 **Bridge to the Rigorous version.** The Rigorous version walks through each level with specific examples of expected behaviour at top tech companies (Google, Meta, Netflix, Indian unicorns), the compensation bands at each level, the typical career trajectories, and the signals that move you up. It also covers the specific patterns of MLE careers (research-leaning vs systems-leaning vs product-leaning paths) and how to navigate the transitions. The intuition above is the ladder; the Rigorous version is the navigation guide.`,
+
+  // ── Non-path Simplify versions (v4.113) — 10 high-leverage Gradient posts ─
+
+  2: `PySpark shuffle is the single largest source of slow Spark jobs in production. The mental model that prevents shuffle pain: data lives on many machines (partitions); operations that need to reorganise where each row lives cause a "shuffle" — every machine sends data to every other machine. Shuffle is the most expensive operation in Spark, often dominating job runtime by 10× or more.
+
+What triggers a shuffle. Wide transformations: groupBy, join, distinct, orderBy. Anything that needs to combine data across partitions. Narrow transformations like map, filter, select don't shuffle — each partition processes its own data independently.
+
+The classic production failures. A 2-hour Spark job that should take 20 minutes — almost always shuffle. An OutOfMemoryError on one executor — often skew (one partition has 100× the data of others, gets sent disproportionate shuffle traffic). A job that runs fine on 1GB but explodes on 50GB — shuffle scales poorly without tuning.
+
+**The production tell.** spark.sql.shuffle.partitions defaults to 200. That's a number for tutorials, not production. For 100GB of shuffled data: 100×1024 / 200 = 512MB per partition — way too large, leads to OOM and disk spill. Rule of thumb: target 128-256 MB per partition after shuffle. For real workloads, set spark.sql.shuffle.partitions to roughly 2-4× the total cores available, then tune from there. Adaptive Query Execution (AQE) in Spark 3+ does this automatically — turn it on.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the Spark execution model, shuffle internals, partition tuning math, broadcast joins, skew handling, AQE configuration, and the diagnostic patterns for reading the Spark UI to identify shuffle bottlenecks. The intuition above is the framework; the Rigorous version is the toolkit for shipping fast Spark pipelines.`,
+
+  9: `Gradient descent is the algorithm behind almost every neural network you've ever heard of. The intuition: you're standing on a hill in the dark, you want to reach the bottom, you can feel the slope under your feet. You take a small step in the steepest downhill direction, then feel again, step again. After enough steps, you reach a valley. That's gradient descent.
+
+The "hill" is the loss function. The position is your model's parameters. The slope is the gradient — calculated via backpropagation. The "small step" is the learning rate.
+
+What can go wrong. Steps too big — you overshoot the valley, oscillate, never converge. Steps too small — you take forever to reach the bottom. Stuck in a local valley that isn't the global minimum — modern intuition says this rarely happens in high dimensions because saddle points are way more common than local minima. Gradient is zero — you're at a flat point, no direction is downhill. The "vanishing gradient" problem in deep networks: gradients get exponentially smaller layer by layer, early layers barely train.
+
+The variants you'll hear about. SGD (Stochastic Gradient Descent) — uses one example at a time, noisy but fast. Mini-batch — uses small batches, the standard. Momentum — keeps a running average of recent gradients, helps blast through small bumps. Adam — adaptive learning rate per parameter, modern default for deep learning. RMSProp — scales learning rate by recent gradient magnitudes.
+
+**The production tell.** Learning rate is the single most important hyperparameter. If your training loss is exploding (going up rapidly, becoming NaN), your learning rate is too high. If it's not moving, too low. If it oscillates, too high. If it converges to a worse minimum than expected, try learning rate warmup (start small, ramp up) and learning rate decay (start higher, decay down). Most training failures trace to learning rate, not architecture.
+
+**Bridge to the Rigorous version.** The Rigorous version derives gradient descent from calculus, develops momentum and adaptive methods (Adam, RMSProp), explains the geometry of high-dimensional optimisation, covers learning rate schedules and warmup, and walks through diagnosing training failures from loss curves. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  10: `SHAP values are the gold standard for explaining model predictions. The basic problem: a model spits out a prediction (e.g. "this loan applicant has 73% default probability"). The stakeholder asks "why?" Feature importance gives you a global answer ("income matters more than employment status on average"). SHAP gives you a local answer ("for THIS specific applicant, low income contributed +0.15 to their default probability, while long employment contributed -0.08").
+
+The SHAP framework comes from cooperative game theory (Shapley values). The idea: imagine each feature is a "player" contributing to the final prediction. SHAP fairly distributes the difference between the prediction and the average prediction across all features, accounting for interactions. Mathematically clean, theoretically grounded.
+
+For tree models (Random Forests, XGBoost, LightGBM), TreeSHAP computes exact SHAP values in polynomial time — fast enough for production. For deep learning, you typically use DeepSHAP or KernelSHAP (approximations).
+
+What SHAP is good for. Per-prediction explanation for regulated industries (lending, insurance, healthcare). Debugging surprising predictions ("why did the model predict THIS for that customer?"). Stakeholder trust ("here's exactly what drove the recommendation"). Catching unintended biases (segment-level SHAP differences can reveal proxy discrimination).
+
+**The production tell.** SHAP is descriptive, not causal. SHAP tells you what the model is using, NOT what's actually causing the outcome. A model might rely heavily on zip code (high SHAP value) without zip code actually causing default — it might just correlate with the real causal factor. People constantly misinterpret SHAP as causal: "the model says income drives default, so we should help applicants increase income." Wrong inference. The model's reliance on income doesn't mean changing income would change outcomes. For causal inference, you need different tools entirely (counterfactual reasoning, instrumental variables, DiD).
+
+**Bridge to the Rigorous version.** The Rigorous version develops Shapley values from game theory, derives TreeSHAP's algorithm, covers SHAP visualisations (force plots, waterfall plots, summary plots), explains when SHAP misleads (correlated features, model misspecification, causal confusion), and discusses alternatives (LIME, integrated gradients, anchors). The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  11: `Cold start is the recommendation system problem of "what do you show a user with zero history" or "how do you score a brand new item with zero engagement?" Every recommendation system hits this and most have specific mechanisms to handle it gracefully.
+
+For new users: you have no clicks, no purchases, no implicit signals. Options. Onboarding flow — explicitly ask "what are you interested in?" Hard to design well but gives you immediate signal. Demographic priors — recommend what people similar on age/geography/device tend to like. Popular items — show what's trending overall, conservative but safe. Exploration — show diverse items early to learn user preferences quickly. Most modern systems combine all four.
+
+For new items: zero engagement data, you can't use collaborative filtering. Options. Content-based — use item features (text, image, metadata) to compute similarity to existing items. Two-tower with content features — train the item tower to use content features so new items get reasonable embeddings immediately. Bandit exploration — deliberately surface new items to a small slice of traffic, learn from their engagement.
+
+The hidden trap: popularity bias. Without explicit handling, new items struggle to ever accumulate engagement (they're shown less because they have no engagement, they engage less because they're shown less). This compounds over time and is one of the main causes of "the rich get richer" dynamics in marketplaces.
+
+**The production tell.** Most teams measure recommendation quality on warm users and warm items, then discover their cold-start experience is terrible only when retention numbers come in. The fix is explicit cold-start metrics. Measure: time-to-first-engagement for new users, first-week engagement rate for new items, percentage of recommendations that are non-popular content. If any of these degrade significantly between A/B test variants, you've broken cold-start without realising it. Always evaluate recommendation systems on segmented cohorts that include new users and new items.
+
+**Bridge to the Rigorous version.** The Rigorous version develops content-based recommendation, hybrid recommendation patterns, exploration-exploitation trade-offs (multi-armed bandits, Thompson Sampling), how two-tower architectures handle new items, popularity bias mitigation, and the operational patterns for monitoring cold-start health in production. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  14: `The ML engineer salary map exists because compensation in this field varies more by location and company than by individual skill. A great ML engineer in Bangalore at a startup can earn ₹25 lakh; the same engineer at a US FAANG earns $400k+. Same skill, 15× pay difference.
+
+The patterns. By geography: SF Bay Area pays the most globally for senior MLE roles, typically $250k-$600k+ total comp. New York is close behind. London and Berlin are 50-60% of SF. Bangalore is the highest-paying Indian market, at roughly 15-25% of SF for similar levels. Tier-2 Indian cities pay 30-40% less than Bangalore. Remote work has partially decoupled this but most companies still pay by location of hire.
+
+By company: pure tech companies (FAANG, top startups) pay 2-3× what banks pay for ML roles. Indian unicorns like Razorpay, PhonePe, Flipkart pay competitive with global mid-tier tech (in PPP terms). Quant trading firms like Jane Street and HRT pay the highest of any sector, often 3-5× FAANG. Healthcare ML pays middling. Government/research positions pay 30-50% of industry equivalents.
+
+By level: Junior MLE roles range $80k-$150k in the US. Mid-level: $150k-$250k. Senior: $250k-$450k. Staff: $400k-$700k. Principal/Distinguished: $600k+. Indian markets compress these by roughly 4-6×.
+
+By specialisation: GenAI / LLM specialisation premium is currently 20-40% over baseline ML compensation due to talent scarcity. RecSys/RankSys roles pay slightly above baseline at e-commerce companies. Pure research roles pay less than applied roles at the same level.
+
+**The production tell.** The compensation framing that matters most for career: "what's the highest level I can perform at, and what's the highest-paying market that will hire at that level?" Most ML engineers focus on the first half (skill) and ignore the second half (market access). Bangalore-based engineers who interview at US remote roles, or US-based engineers who interview at Bay Area-headquartered companies, often double their compensation without any change in actual work.
+
+**Bridge to the Rigorous version.** The Rigorous version covers compensation by company and city in detail with public-sourced data (Levels.fyi, AmbitionBox, Glassdoor), the negotiation patterns that separate top-of-band offers from bottom-of-band, the role of equity vs cash, the visa pathway for moving between markets, and the specific patterns for crossing from Indian markets to global ones. The intuition above is the map; the Rigorous version is the navigation guide.`,
+
+  25: `Time series forecast failures are predictable and patterned. The "8 silent killers" framework: the eight specific failure modes that cause most production forecasts to drift from accuracy within months of deployment, and how to recognise each early.
+
+The eight. (1) Distribution shift in the input — the system being forecast has changed (new product launch, market expansion, COVID-style shock). (2) Label window shift — what "next month sales" means has changed (currency reweighting, fiscal-year change). (3) Stationarity violation — your model assumed stationary process, the data is now non-stationary. (4) Backtest contamination — your validation included data your training shouldn't have seen (often subtle). (5) Cohort composition shift — the mix of users/customers in your data has changed even though individual cohorts are stable. (6) Reporting delay creep — your data pipeline latency increased silently, your "current" data is actually 2-3 days stale. (7) Seasonality regime change — the seasonal pattern itself has shifted (new shopping holidays added to calendar). (8) Feature pipeline drift — the upstream features you depend on have changed semantics.
+
+What makes these "silent killers." They don't cause obvious failures. The forecast just becomes gradually less accurate over weeks. By the time someone notices in aggregate metrics, the model has been wrong for a long time. The signal-to-noise of forecast error is low so small accuracy drops hide.
+
+**The production tell.** Production forecasts need a monitoring infrastructure separate from any other ML monitoring. Watch: forecast error decomposed by cohort, segment, and time horizon. Watch: forecast quantile coverage (are 80% prediction intervals actually containing 80% of outcomes?). Watch: the relationship between forecast confidence and forecast accuracy (does the model know when it's uncertain?). Most forecast monitoring tracks aggregate accuracy and misses all 8 failure modes. The cohort and quantile patterns are where the real signal lives.
+
+**Bridge to the Rigorous version.** The Rigorous version develops each of the 8 failure modes in detail with diagnostic patterns, walks through stationarity testing (ADF, KPSS), covers cohort-aware backtesting, quantile forecast evaluation (CRPS, pinball loss), and the monitoring infrastructure patterns for forecast systems. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  51: `Backpropagation is the algorithm that makes neural networks trainable. The intuition: you want to know how much each weight in the network contributed to the final error, so you can update each weight in the direction that reduces error. Forward pass: data flows from inputs to outputs through the network. Backward pass: error flows from outputs back to inputs, picking up "credit" for each weight along the way.
+
+Mathematically, backprop is the chain rule of calculus applied recursively. Conceptually, it's a clever bookkeeping algorithm for computing gradients efficiently. The "magic" of backprop is that computing gradients for a 100-million parameter network is no more expensive than computing the output — both are O(network size).
+
+The core insight people miss. Backprop isn't an optimisation algorithm. It only computes gradients. The actual learning happens via gradient descent (or Adam, or any optimiser) applied to those gradients. Backprop + gradient descent = neural network training. Without either, training doesn't work.
+
+Common mental traps. (1) Backprop can compute gradients for any differentiable architecture, not just feedforward. (2) The "vanishing gradient" problem isn't backprop's fault — it's caused by saturating activations (sigmoid, tanh) and deep architectures, fixable with ReLU, residual connections, batch norm. (3) Backprop is not biologically plausible — real neurons don't backpropagate; this is fine, brain-like inspiration is loose. (4) Automatic differentiation (autograd in PyTorch, JAX) implements backprop but with more flexibility.
+
+**The production tell.** Most modern training failures aren't backprop bugs — they're upstream. Data quality, loss function misspecification, learning rate, batch size, gradient clipping. When training is unstable, suspect data first (NaN inputs, label noise, severe class imbalance), then loss (wrong reduction, instability), then optimiser (LR too high), then architecture. Backprop is rarely the actual problem; people blame it because it's mysterious.
+
+**Bridge to the Rigorous version.** The Rigorous version derives backprop from the chain rule, walks through the forward and backward passes for a simple network, covers automatic differentiation, the vanishing/exploding gradient problem and its modern fixes (ReLU, residual connections, batch norm, initialization schemes), and the patterns for debugging training failures. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  56: `Optimisation algorithms for neural networks have evolved through a series of innovations, each addressing specific failure modes of its predecessor. The lineage: SGD → SGD with momentum → AdaGrad → RMSProp → Adam → AdamW. Modern default is Adam or AdamW for most use cases.
+
+SGD (Stochastic Gradient Descent): take a step in the direction of negative gradient, scaled by learning rate. Simple, theoretically well-understood. Problems: oscillates in narrow valleys, gets stuck on plateaus, needs careful learning rate tuning.
+
+SGD with momentum: maintain a running average of gradient directions, blend that with the current gradient. Helps blast through small bumps and accelerate down consistent slopes. The "ball rolling downhill with friction" intuition.
+
+AdaGrad: scale learning rate per parameter by the accumulated squared gradients. Parameters that have seen large gradients get smaller learning rates; parameters that have seen small gradients get larger learning rates. Problem: accumulator grows monotonically, learning rate eventually decays to zero.
+
+RMSProp: same as AdaGrad but uses exponentially-weighted moving average of squared gradients instead of accumulator. Prevents the "learning rate dies" problem.
+
+Adam: combines RMSProp's adaptive learning rate with momentum. Maintains running averages of both gradient and squared gradient. Modern default. AdamW separates weight decay from gradient computation; technically more correct for L2 regularisation.
+
+**The production tell.** Each optimiser has hyperparameters that matter more than people realise. SGD with momentum needs careful momentum tuning (typically 0.9). Adam's β1 (gradient momentum) and β2 (squared gradient momentum) are usually fine at defaults (0.9, 0.999). The learning rate is by far the most important. For Transformer training, Adam at LR 1e-4 is the standard starting point. For CNN training, SGD with momentum at LR 0.1 with cosine decay often beats Adam. Don't blindly pick Adam — different architectures benefit from different optimisers.
+
+**Bridge to the Rigorous version.** The Rigorous version derives each optimiser, develops the convergence guarantees, walks through second-order methods (L-BFGS, Newton's method), covers learning rate schedules (cosine decay, warmup, step decay), explains the difference between L2 regularisation and weight decay in adaptive methods, and includes practical tuning patterns. The intuition above is the lineage; the Rigorous version is the toolkit.`,
+
+  67: `BERT and GPT are both Transformer-based language models but they're designed for different things. BERT is bidirectional and trained for understanding; GPT is unidirectional and trained for generation. Most ML interview confusion about "Transformer models" stems from not understanding this distinction.
+
+BERT (2018) uses the Transformer encoder. It looks at the whole sequence at once, attending bidirectionally. Trained with masked language modelling (randomly mask 15% of tokens, predict them). This bidirectional context is great for understanding tasks: classification, named entity recognition, question answering. You feed BERT a sentence, get back rich embeddings of every token informed by all context.
+
+GPT (2018+) uses the Transformer decoder. It's autoregressive: each position can only attend to previous positions. Trained to predict the next token. This causal structure is required for generation: GPT can produce text by sampling token-by-token. Bidirectional models can't easily generate because they need to see the future to predict tokens.
+
+The technical detail people miss. BERT's bidirectional attention prevents it from being used for generation directly. You can fine-tune BERT for classification but you can't use it to produce coherent paragraphs. Conversely, GPT's causal attention limits its embeddings — the last layer's representation of a token only includes information from previous tokens, missing future context that would help classification.
+
+Modern lineage. BERT spawned RoBERTa, ALBERT, DeBERTa — all encoder-only refinements. GPT spawned GPT-2, GPT-3, GPT-4, plus Llama, Claude, Mistral — all decoder-only at scale. T5 and BART use both encoder and decoder (sequence-to-sequence). The decoder-only architecture has dominated since 2020 because it scales better and unifies tasks via prompting.
+
+**The production tell.** For most modern NLP tasks, decoder-only LLMs (GPT, Llama, Claude) have replaced BERT-style encoders. Even classification can be done by prompting an LLM. BERT remains useful for: latency-sensitive classification (BERT-small is much smaller than even small LLMs), embedding generation (encoders produce richer embeddings per token), search/retrieval (sentence-transformers built on BERT). When latency or cost matters and the task is non-generative, BERT-family models often still win.
+
+**Bridge to the Rigorous version.** The Rigorous version develops both architectures, walks through the masked language modelling and next-token prediction training objectives, covers the patterns of fine-tuning each, explains the prompting vs fine-tuning trade-off in modern LLMs, and discusses when to choose encoder vs decoder vs encoder-decoder. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  81: `Price elasticity is the measure of how much demand changes when price changes. Mathematically: percentage change in demand divided by percentage change in price. Elasticity of -1 means a 10% price increase causes a 10% demand decrease. Elasticity of -2 means a 10% price increase causes a 20% demand decrease (highly elastic). Elasticity of -0.3 means a 10% price increase causes only a 3% demand decrease (inelastic).
+
+For dynamic pricing, price elasticity is the central object. Knowing your product's elasticity tells you whether raising prices increases revenue (inelastic: yes, demand drops less than price rises) or decreases revenue (elastic: no, demand drops more than price rises).
+
+The estimation problem is harder than the formula suggests. You can't just compute "demand at price A vs demand at price B" because everything else also changes. Need experimentation (price A/B tests), instrumental variables (find an exogenous price shifter that doesn't correlate with demand otherwise), or structural models (estimate the joint price-demand system).
+
+Why ML needed for this. Naive elasticity estimates assume one elasticity per product. In reality, elasticity varies by: customer segment (price-sensitive vs price-insensitive), competitor prices (your elasticity depends on what alternatives exist), time (rush hour vs off-peak), and product context (commodity vs differentiated). Modern dynamic pricing systems estimate elasticity as a function of all these features, often with double machine learning or counterfactual modelling.
+
+**The production tell.** Most pricing models fail not on elasticity estimation but on calibration. A model predicts "elasticity is -1.2." Operations sets a price assuming that elasticity. Real elasticity turns out to be -2.4. Revenue drops. The fix is conservative pricing changes (small movements with monitoring) and confidence intervals on elasticity estimates that inform pricing risk. Treat elasticity as a distribution, not a point estimate.
+
+**Bridge to the Rigorous version.** The Rigorous version develops elasticity estimation methods (regression, IV, double ML), covers the identification challenges (endogeneity, omitted variables, simultaneity), walks through dynamic pricing systems (Uber, Airbnb, Stripe), and explains the experimentation patterns for estimating elasticity safely. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  82: `LTV (Lifetime Value) and churn are two sides of the same business question: how much money will this customer generate before they leave? LTV estimates the total expected revenue per customer; churn estimates the probability they'll leave in a given window. The two are mathematically linked.
+
+The basic LTV formula. LTV = expected revenue per period × expected number of periods. The number of periods depends on retention (probability they're still here next period). At simplest: if retention is 80% per month and average monthly revenue is $50, LTV = $50 / (1 - 0.80) = $250. This assumes constant retention and revenue.
+
+Real LTV is harder. Retention isn't constant — early-tenure customers churn more than long-tenure ones. Revenue isn't constant — customers may expand (cohort-level upsell) or contract over time. Marginal cost of serving each customer matters for unit economics. Discount rate for future revenue matters for present value. Modern LTV models use survival analysis (handles censoring), parametric distributions (gamma-gamma for revenue), or deep learning approaches (sequence models on transaction history).
+
+Churn modelling. Frame as classification (will customer churn in next N days) or as time-to-event (when will customer churn). The classification framing is simpler but loses information. The time-to-event framing requires survival analysis (Kaplan-Meier, Cox proportional hazards, accelerated failure time models). Modern churn models combine both.
+
+Use of LTV in business. Determines maximum customer acquisition cost (CAC must be less than LTV for unit economics to work). Targets retention efforts (focus on high-LTV customers at high churn risk). Personalisation (high-LTV customers get premium experiences). A/B test power (LTV affects sample size calculations for retention experiments).
+
+**The production tell.** LTV models trained on historical data systematically over-estimate LTV for new customer segments. The reason: historical data only contains customers who survived long enough to generate revenue (survivor bias). Customers who churned in week 1 may never have entered your training data. The fix is to explicitly model the survival process and include early-tenure customers (censored observations). Also: business KPIs computed from LTV models are usually too aggressive; haircut by 20-30% for realistic planning.
+
+**Bridge to the Rigorous version.** The Rigorous version develops survival analysis for churn, parametric LTV models (gamma-gamma, beta-geometric), cohort-based retention curves, the discount rate question, and the patterns for monitoring LTV models in production. The intuition above is the framework; the Rigorous version is the toolkit.`,
 }

@@ -369,6 +369,32 @@ export default function HomeTab({ onNavigate }) {
         </div>
       </div>
 
+      {/* ── WhatsApp community card — only show if not yet joined ─────────── */}
+      {!localStorage.getItem('msl_community_joined') && totalAttempted > 0 && (
+        <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.20)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'rgb(37,211,102)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', fontWeight: 700 }}>Community · WhatsApp</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+              Indian senior MLE prep group
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.45 }}>
+              Weekly mock interviews, real company interview reports, fast feedback on your prep questions.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+            <a href="https://chat.whatsapp.com/KqFoGxAW0XMF9hNllGyAo9" target="_blank" rel="noopener noreferrer"
+              onClick={() => { try { localStorage.setItem('msl_community_joined', '1') } catch {} }}
+              style={{ padding: '8px 14px', borderRadius: '7px', background: 'rgb(37,211,102)', color: '#ffffff', fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Join →
+            </a>
+            <button onClick={() => { try { localStorage.setItem('msl_community_joined', '1') } catch {}; setSectionProgress({ ...sectionProgress }) }}
+              style={{ padding: '8px 12px', borderRadius: '7px', background: 'transparent', border: '1px solid var(--rim)', color: 'var(--ink-low)', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+              Already in
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Recently added ────────────────────────────────────────────────── */}
       {totalAttempted > 0 && (
         <div style={{ marginBottom: '28px' }}>

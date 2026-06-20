@@ -8682,6 +8682,409 @@ Three production scenarios where this is non-negotiable. (1) Regulated industrie
         }
     ],
   },
+  {
+    id: 133,
+    slug: 'phonepe-senior-mle-interview-guide',
+    title: 'PhonePe Senior ML Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates near 0.1%. The interview surface looks similar to FAANG but the production constraints are sharper. This guide walks through the actual loop, what each round tests, and the prep path.',
+    body: `PhonePe runs one of the most demanding senior MLE loops among Indian unicorns. The reason: PhonePe handles roughly 50% of UPI transactions in India, the production constraints are unforgiving (sub-100ms p99, near-zero downtime), and the cost of a single fraud-detection error is direct revenue loss or customer churn. The interview reflects this.
+
+**The loop structure (Senior MLE / L5)**
+
+PhonePe senior MLE loops typically run 5–6 rounds over 1–2 weeks. The standard structure: phone screen → ML fundamentals → coding → ML system design → production case / behavioural → hiring manager. Variations exist — fraud-team loops emphasise production case rounds; recommendation-team loops emphasise system design.
+
+The phone screen is filter-grade: behavioural plus a couple of ML fundamental probes. Most candidates pass. The ML fundamentals round is where the loop starts being calibrated to PhonePe's bar — expect "explain bias-variance" follow-ups that drill into "what does that look like in your fraud model from last year." The coding round is roughly LeetCode medium plus an ML-flavoured problem (implement a streaming-statistics calculator, debug a leaking cross-validator). The system design round is the highest-variance — expect to design a real-time fraud scoring system at 10k QPS with a 50ms latency budget, or a UPI transaction recommendation system. The production case round is what distinguishes PhonePe from generic FAANG-clone loops.
+
+**The production case round**
+
+Most candidates don't prep for this round and most candidates lose it. The setup: "Your fraud model's precision@100 dropped from 0.78 to 0.61 over two weeks. No deployment in that window. Walk me through what you'd check, in order."
+
+Junior answer: "I'd check for drift." Reject.
+Mid answer: "I'd check feature distributions and recent retrain logs." Pass to mid bar; not senior.
+Senior answer: "First I'd verify the metric calculation hasn't changed — same denominator, same attribution window. Then I'd check whether the underlying base rate of fraud has shifted (precision is sensitive to base rate). Then look at the top features for distribution drift specifically on the failing slice — segment by transaction type, by user tenure, by geography. If feature drift is real, check whether it's a real-world shift or a pipeline issue (UPI provider format change, a vendor data source disruption). If no drift, the model itself may have lost calibration — verify with a recent labelled window. If everything checks out, the failure is downstream — operations changed their case-review priorities, or the action queue is now saturated differently."
+
+The senior answer demonstrates the discipline of observation before naming. PhonePe interviewers grade specifically on this.
+
+**What they test that FAANG doesn't**
+
+PhonePe loops weigh three things FAANG loops weigh less heavily. First, **base-rate awareness** — fraud is 0.1%, model decisions are precision-bound, AUC isn't the relevant metric, and senior candidates are expected to reach for precision@K immediately. Second, **production failure rehearsal** — every senior MLE at PhonePe has been on-call for a production incident; the interview tests whether you have the diagnostic instinct. Third, **scale-vs-latency trade-offs** — designing a system that ranks 1M items in 50ms for 5K QPS is a constraint set most US tutorials skip.
+
+**Top 10 questions PhonePe seniors face**
+
+1. "AUC 0.94, precision@100 of 0.18 — do you ship?"
+2. "Walk through training-serving skew detection for a fraud model with a feature store."
+3. "Design real-time fraud scoring for 10K QPS, 50ms p99. What's your compute, what's your retrieval, what falls back."
+4. "Your model rejects a real customer. They lose their salary deposit, lose their job. What do you fix — model, threshold, calibration, or process?"
+5. "How does class imbalance change your loss AND your decision threshold? Walk through the math."
+6. "Name 11 leakage types. Which apply specifically to a UPI transaction scoring model?"
+7. "How do you handle calibration drift in production when labels arrive 30 days delayed?"
+8. "Feature store vs offline aggregates — when does each matter for fraud at PhonePe scale?"
+9. "Walk through a fraud incident you handled in your last role. What did you observe first, what did you investigate, what did you change?"
+10. "Why is recall@precision often the right metric for fraud, and what threshold would you set?"
+
+**The prep path through MSL**
+
+For a PhonePe Senior MLE loop in 2-3 weeks, the MSL Path coverage that maps directly:
+
+- Tier 3 (Classical Algorithms) — particularly Post 129 (Class Imbalance) and Post 76 (Calibration). PhonePe will probe both deeply.
+- Tier 5 (Evaluation & Diagnostics) — especially Post 3 (AUC critique), Post 130 (Leakage Taxonomy), Post 131 (Error Analysis). These three are the analytical core of the production case round.
+- Tier 7 (Production Engineering) — all 5 posts (1, 7, 38, 41, 43). Training-serving skew + feature store + point-in-time correctness is roughly half the design round.
+- Tier 8 (Monitoring & MLOps) — all 5 posts. Drift detection, calibration loss, model staleness — every production case round draws from this.
+- Tier 9 (System Design) — Post 24 (6-Step Framework) plus the recsys posts. Recommendation system design is a common round.
+- Tier 10 (Interview Bridge) — Post 8 (Interview Framework), Post 13 (10 Mistakes). Calibrate against the senior MLE bar.
+
+For practice: IncidentRoom inc7–12 (production failure scenarios), MLCoding mlc8 (Welford streaming statistics — a common PhonePe coding probe), Combinator timed exam at the senior level.
+
+**Common failure modes**
+
+- Defaulting to AUC when the operating constraint is precision@K — immediate downgrade signal.
+- Naming concepts before clarifying the production context (latency, scale, action capacity).
+- Treating ML system design as architecture-first instead of requirements-first.
+- Inability to discuss a production incident from past experience with specific signal-to-action mapping.
+- Pitching deep learning for tabular fraud (PhonePe runs gradient boosted trees in production for this; senior candidates know why).
+
+**Compensation**
+
+PhonePe Senior ML Engineer total compensation for 5-8 YOE in 2026 ranges roughly ₹50 lakh – ₹85 lakh (base + bonus + RSU equivalent). L6 / Staff scales to ₹1+ crore. These are public-Levels.fyi / AmbitionBox ranges and shift with each fiscal cycle.
+
+**Final note**
+
+PhonePe's interview bar is calibrated to a production engineering discipline most academic-style ML prep misses. The MSL Path tiers 7–10 are specifically designed to close that gap.`,
+    tags: ['Interview Prep', 'PhonePe', 'Senior MLE', 'Fraud', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 134,
+    slug: 'razorpay-senior-mle-applied-scientist-interview-guide',
+    title: 'Razorpay Senior MLE / Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 10,
+    featured: false,
+    excerpt: 'Razorpay\'s ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask "how do you train XGBoost" now asks "your model\'s calibration drifted overnight, walk me through the diagnosis." This guide breaks down the new shape, what each round tests, and the exact MLE Path tiers that map to it.',
+    body: `Razorpay's ML interview loop has changed shape faster than any other major Indian fintech. Two years ago, the bar was calibrated to "do you know ML" — formulas, derivations, classical algorithms. Today, the bar is "have you debugged production ML." Candidates who prep using two-year-old guides routinely fail rounds they would have passed in 2024.
+
+This guide reflects the loop as run in 2026.
+
+**The loop structure (Senior MLE / Applied Scientist, L5–L6)**
+
+Razorpay runs 5–7 rounds depending on level. The standard senior loop: recruiter screen → ML fundamentals + coding (combined) → ML system design → production case → behavioural + project deep-dive → hiring manager → bar-raiser (for L6 only).
+
+Razorpay's calling card is the **production case round in Round 4**. It's typically the round that decides the offer. Most candidates who fail Razorpay fail this round.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Behavioural + role fit. Filter-grade.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. ~25 min of conceptual probing (bias-variance, regularisation, evaluation metrics, calibration), ~25 min coding (LeetCode medium plus one ML-flavoured problem — implement gradient descent, debug a CV leakage bug, optimise pandas operations). The conceptual probing is calibrated to senior bar: an answer like "L2 keeps weights small, L1 produces sparsity" passes mid bar; senior needs the geometric intuition of why the L1 diamond produces sparsity.
+
+**Round 3 — ML system design.** 60 minutes. Razorpay prompts vary by team but the structural expectation is the same: clarify requirements first, define metrics second, design the data and feature layer third, then architecture, then serving + monitoring. Candidates who jump to "I'd use two-tower retrieval" before clarifying QPS, latency, and the action budget get downgraded. The common prompts: design a payment fraud detection system, design a recommendation system for Razorpay's onboarding flow, design a UPI risk scoring system.
+
+**Round 4 — Production case (the round that decides the loop).** 60 minutes. A real production scenario — "your fraud model's precision dropped 30% over 2 weeks, no deployment, debug." The interviewer is grading whether you have the discipline to observe before naming concepts, ask "what changed" before reaching for a memorised explanation, and distinguish evidence from assumption.
+
+**Round 5 — Behavioural + project deep-dive.** 60 minutes. Walk through your most impactful ML project end-to-end. Razorpay grades for: what failure mode did you catch in production, what trade-off did you own, what would you do differently. Project stories that sound polished (no failure mode named) get downgraded.
+
+**Round 6 — Hiring manager.** 45 minutes. Team fit, leadership in technical decisions, ownership stories. Standard FAANG-style behavioural.
+
+**Round 7 — Bar-raiser (L6 only).** 60 minutes. A staff-level technical conversation with someone outside your hiring team. Tests cross-team technical leadership.
+
+**What's different about Razorpay vs PhonePe vs Flipkart**
+
+Razorpay's loop weights the production case round more heavily than PhonePe (where system design is the highest-variance round) and more than Flipkart (where the project deep-dive is the highest-variance). If you have only 1 round of prep time, it goes to production case scenarios.
+
+Razorpay also emphasises payment-domain context. A candidate who can articulate why a UPI fraud model is different from a credit card fraud model (latency budget, settlement window, dispute mechanism, attack vectors) signals senior-level domain awareness.
+
+**Top 10 questions Razorpay seniors face**
+
+1. "Your fraud model's calibration drifted overnight. Walk through the diagnosis, in order."
+2. "Design a payment risk scoring system for 100K TPS at 30ms p99."
+3. "Champion model from last quarter still beats your new model in production. New offline AUC is +2 points. What's likely happening?"
+4. "How do you handle delayed-label fraud detection — labels arrive 14-30 days after the prediction?"
+5. "Walk through the production failure you handled in your last role. What signals did you read first?"
+6. "Class imbalance at 0.05% — class weights vs SMOTE vs threshold moving. What and why?"
+7. "Your model says 'block this payment.' The customer is real, escalates to support. What do you fix?"
+8. "Design feature store for real-time risk scoring. What goes online, what stays offline."
+9. "How do you A/B test a fraud model when the action (blocking) changes the population being measured?"
+10. "Eleven types of leakage. Which apply to payment fraud specifically?"
+
+**The prep path through MSL**
+
+The MSL Path tier mapping for a Razorpay senior loop:
+
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 130 (Leakage Taxonomy) and Post 131 (Error Analysis). The production case round draws heavily from these.
+- Tier 7 (Production Engineering) — all 5 posts. Training-serving skew + feature stores are the system design backbone.
+- Tier 8 (Monitoring & MLOps) — all 5 posts. Particularly Post 40 (Calibration Loss in Production) — Razorpay specifically tests this.
+- Tier 9 (System Design) — Post 24 (6-Step Framework) is the prerequisite for the design round. Then Post 72 (Recsys Stack) for context.
+- Tier 10 (Interview Bridge) — all 3 posts. Particularly Post 13 (10 Interview Mistakes).
+
+For practice: IncidentRoom incidents 7-12, SpotTheFlaw scenarios 9-12 (production-judgment scenarios), and the Mock Interview tab with a real Razorpay JD pasted.
+
+**Common failure modes**
+
+- "It's drift" as the first response to any production case scenario. Razorpay specifically rejects this pattern.
+- Inability to walk through a production failure from your past experience in specific terms (no observation→hypothesis→action chain).
+- Defaulting to deep learning architectures for tabular fraud. Razorpay's production stack is gradient boosting; senior candidates know this and defend it.
+- Treating the project deep-dive round as a presentation rather than a discussion. Razorpay interviewers probe; if your project sounds rehearsed, you get downgraded.
+- Pitching novel research methods over battle-tested production patterns. Razorpay values reliability over novelty in senior hires.
+
+**Compensation**
+
+Razorpay Senior ML Engineer total compensation for 5-7 YOE in 2026 ranges roughly ₹45 lakh – ₹75 lakh. Staff (L6) scales to ₹85 lakh – ₹1.3 crore. Numbers shift each cycle and depend on team (the fraud and platform teams generally pay higher than the analytics teams).
+
+**Final note**
+
+Razorpay's loop in 2026 is calibrated to candidates who have shipped, debugged, and owned ML systems in production. The MSL Path tiers 5, 7, 8 are specifically designed to give academic-track candidates the production judgment they're being interviewed on.`,
+    tags: ['Interview Prep', 'Razorpay', 'Senior MLE', 'Applied Scientist', 'Fraud', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 135,
+    slug: 'flipkart-senior-applied-scientist-interview-guide',
+    title: 'Flipkart Senior Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 11,
+    featured: false,
+    excerpt: 'Flipkart\'s Applied Scientist interviews are calibrated around recommendation, search, and ads — the three ML systems that drive most of Flipkart\'s revenue. Loops include heavier system design weight than most Indian-unicorn loops and a project defense round that consistently surprises candidates. This guide unpacks what each round tests and the MLE Path tiers that map to it.',
+    body: `Flipkart's Applied Scientist loop is among the most system-design-heavy in Indian e-commerce. The reason: Flipkart's ML org is structured around production systems (recommendation, search, ads, fraud) where the boundary between research and engineering is thin. An Applied Scientist at Flipkart owns models end-to-end — training, serving, monitoring, and incident response.
+
+**The loop structure (Applied Scientist / Senior Applied Scientist, L5–L6)**
+
+Flipkart runs 5–6 rounds. Standard senior loop: recruiter call → ML fundamentals + coding → ML system design (often 2 rounds) → project deep-dive → hiring manager.
+
+The two-round system design is a Flipkart distinguishing feature. Round 1 of system design is structural (design recommendation system, design fraud detection, design search ranking) — what most candidates expect. Round 2 of system design is **calibration-and-trade-off-focused** — given the system you designed, how do you tune it under specific constraints. This is where senior candidates separate from mid-level ones.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard behavioural + role context. Filter-grade.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Conceptual probing on classical ML, evaluation metrics, regularisation. Coding is typically a leetcode medium plus an ML-domain problem (implement a recommendation similarity scorer, debug a ranking metric calculation).
+
+**Round 3 — ML system design (structural).** 60 minutes. Design recommendation system for Flipkart's homepage. Design search ranking. Design ads CTR prediction. Standard 6-step framework: requirements → metrics → data → architecture → serving → monitoring. Candidates who jump to architecture before clarifying constraints get downgraded.
+
+**Round 4 — ML system design (trade-offs).** 60 minutes. Given the recommendation system you designed in Round 3, how do you handle: cold start for new users, exploration vs exploitation for new items, the cost-of-recommendation trade-off (a high-confidence recommendation that shows a low-margin item vs a lower-confidence recommendation that shows a high-margin item), real-time vs batch retraining cadence. This round is highly conversational; the interviewer probes deeply into specific trade-offs.
+
+**Round 5 — Project deep-dive.** 60 minutes. Walk through your most impactful ML project end-to-end. Flipkart specifically grades on: what was the failure mode you caught, what trade-off did you own, what business outcome did you drive. Candidates whose projects sound like resume bullet points (no failure mode, no specific trade-off, no business outcome) get downgraded.
+
+**Round 6 — Hiring manager.** 45 minutes. Team fit, leadership stories. Standard.
+
+**What Flipkart weights that other Indian unicorns don't**
+
+Flipkart loops emphasise three things distinctively:
+
+1. **Recommendation-and-search-system depth.** If you can't articulate the difference between candidate generation, ranking, and re-ranking — and why each needs different metrics — you're not at the senior bar for Flipkart.
+2. **Trade-off ownership in system design.** Flipkart interviews probe relentlessly on "what would you change if X." Senior candidates name a trade-off, pick a side with reasoning, and acknowledge what they're giving up.
+3. **Business-outcome translation.** Flipkart Applied Scientists are expected to articulate why their model matters in business terms. Project stories without business outcome framing signal junior-mid bar.
+
+**Top 10 questions Flipkart Applied Scientists face**
+
+1. "Design Flipkart's homepage recommendation system. Walk me through end-to-end."
+2. "Your two-tower retrieval system has 10ms total latency budget. Retrieval takes 8ms. What do you cut?"
+3. "Cold start for a new user with one click in their history. How does your recommendation system handle them?"
+4. "Your search NDCG improved 4% offline. Online CTR is flat. Three hypotheses, in order."
+5. "Design ads CTR prediction at 50K QPS. What architecture, what features, what latency budget per stage?"
+6. "How do you measure 'recommendation quality' beyond click-through rate? What about long-term metrics?"
+7. "Walk through your most impactful project. What was the failure mode you caught early?"
+8. "Two-tower vs cross-encoder for the ranking stage. When each?"
+9. "How would you A/B test a new ranking model when seasonal effects are large?"
+10. "Your model is biased toward popular items. What's your fix, and what does it cost?"
+
+**The prep path through MSL**
+
+For a Flipkart Applied Scientist loop, the MSL Path tier mapping:
+
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 3 (AUC critique) and Post 42 (Offline ≠ Online).
+- Tier 9 (System Design) — all 5 posts. Particularly Post 24 (6-Step Framework), Post 71 (Two-Tower), Post 72 (Recsys Stack), Post 80 (Semantic Search). These are the core of both system design rounds.
+- Tier 7 (Production Engineering) — Posts 1, 7, 38 (training-serving skew + feature stores).
+- Tier 8 (Monitoring & MLOps) — Posts 5, 23, 39 (drift detection patterns for recommendation systems).
+- Tier 10 (Interview Bridge) — Post 13 (10 Interview Mistakes) is specifically calibrated to project deep-dive failures.
+
+For practice: SystemDesignTab (the canvas), Combinator timed exam, Mock Interview with a Flipkart JD pasted.
+
+**Common failure modes**
+
+- Jumping to two-tower as the answer to every retrieval question without justifying it against alternatives.
+- Inability to articulate the metrics that matter beyond AUC and NDCG (business outcomes — GMV, return rate, retention).
+- Treating recommendation system design as architecture-naming rather than trade-off-articulating.
+- Project deep-dives that sound like resume bullets — no failure mode named, no specific decision defended.
+- Ignoring the cold-start problem when asked about a recommendation system.
+
+**Compensation**
+
+Flipkart Senior Applied Scientist (L5/L6) total compensation in 2026 ranges roughly ₹50 lakh – ₹90 lakh. Staff-level (L7) reaches ₹1.2+ crore. These are AmbitionBox / Levels.fyi public ranges.
+
+**Final note**
+
+Flipkart's Applied Scientist loop tests for production-judgment in recommendation, search, and ads systems specifically. The MSL Path Tier 9 is designed exactly for this surface.`,
+    tags: ['Interview Prep', 'Flipkart', 'Applied Scientist', 'Recommendation Systems', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 136,
+    slug: 'swiggy-senior-data-scientist-interview-guide',
+    title: 'Swiggy Senior Data Scientist / ML Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Swiggy\'s senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge, promotions). The loop is shorter than Flipkart and more case-heavy than Razorpay. This guide unpacks the structure and the MLE Path mapping.',
+    body: `Swiggy's senior DS / ML interview is calibrated around three distinct problem domains: logistics ML (delivery time estimation, dispatch optimisation, courier supply forecasting), recommendation (restaurant ranking, homepage personalisation), and pricing (surge pricing, promotion targeting). Candidates are often pre-routed to a specific team, and the loop adapts to the team's domain.
+
+The loop is shorter than Flipkart's (4-5 rounds vs 5-6) and more case-heavy than Razorpay's (live problem-solving in 2 of the 4-5 rounds).
+
+**The loop structure (Senior DS / ML, L5)**
+
+Standard loop: recruiter call → ML + statistics fundamentals → ML system design + case → A/B testing + experimentation case → behavioural + hiring manager.
+
+Swiggy distinguishes itself with the A/B testing round. Most ML candidates underestimate this round; it's specifically calibrated to test experimentation judgment which is core to Swiggy's product culture.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter call.** Standard.
+
+**Round 2 — ML + statistics fundamentals.** 60 minutes. Bias-variance, regularisation, evaluation, A/B testing basics, common statistical tests. Swiggy probes statistical rigor more heavily than other unicorns — expect questions on power analysis, sample size calculation, confidence intervals.
+
+**Round 3 — ML system design + case.** 75 minutes. Two parts. First 30 min: design a delivery time estimation model end-to-end. Second 45 min: a case study around the design — "your delivery ETA model is off by 4 minutes on average. Walk through your diagnosis." The case round specifically tests production diagnostic judgment.
+
+**Round 4 — A/B testing + experimentation case.** 60 minutes. "We launched a new ranking model. It shows +2% CTR but -1.5% order completion rate. Do we ship?" Followed by deep probing on: how do you decompose the metric movement, when is the result statistically significant, what guard-rail metrics matter, what causes a metric change without a treatment effect, what are SUTVA violations, how do you handle ranking experiments with marketplace effects.
+
+**Round 5 — Behavioural + hiring manager.** 45 minutes. Team fit, project ownership, leadership stories.
+
+**What Swiggy weights distinctively**
+
+Three things:
+
+1. **Statistical rigor.** Swiggy interviewers grade more heavily on power analysis, confidence interval interpretation, and multiple-testing corrections than most Indian unicorn loops. The product culture is experimentation-first.
+2. **Marketplace dynamics.** Swiggy is a two-sided marketplace (customers + restaurants + delivery partners). Senior candidates are expected to articulate how ML decisions on one side affect the others. Recommending restaurants affects supply-side ordering; surge pricing affects partner availability.
+3. **Logistics ML specifically.** Time-series forecasting, real-time dispatch, supply-demand prediction. The MLE Path Tier 6 (Sequence & Specialised) maps directly to this.
+
+**Top 10 questions Swiggy senior DS / ML candidates face**
+
+1. "Design Swiggy's delivery ETA model. What features, what target, what loss function?"
+2. "Your ETA model is off by 4 minutes on average. Three hypotheses in order."
+3. "A new ranking model shows +2% CTR but -1.5% order completion. Do we ship?"
+4. "How do you A/B test a ranking model when one user can see different rankings within a session?"
+5. "Design surge pricing for the dinner rush. What signals drive the multiplier, what guards against gaming?"
+6. "Walk me through the most impactful experiment you've designed and run."
+7. "How do you handle the marketplace-spillover effect when running an experiment on a recommendation model?"
+8. "Sample size calculation for an A/B test where the expected lift is 1%. Walk through it."
+9. "Your model predicts 8 minutes; the actual is 16 minutes. The customer cancels. What do you fix — model, threshold, or product surface?"
+10. "Eleven types of leakage. Which apply to delivery time estimation specifically?"
+
+**The prep path through MSL**
+
+For a Swiggy senior DS / ML loop:
+
+- Tier 1 (Statistics & Estimation) — all 4 posts, particularly Post 113 (Hypothesis Testing). Swiggy probes this deeper than other unicorns.
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 42 (Offline ≠ Online) and Post 131 (Error Analysis).
+- Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) is the core of the ETA design round.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design).
+- For experimentation depth, cross-link to PAL (the Product Analytics Lab) — Swiggy's experimentation rounds map closely to PAL's curriculum.
+
+For practice: CausalInferenceTab (experiment design + SUTVA), MLCodingTab, Mock Interview with a Swiggy JD pasted.
+
+**Common failure modes**
+
+- Underestimating the A/B testing round. Candidates who treat it as fundamentals get downgraded.
+- Treating delivery ETA as a generic regression problem (it's time-ordered, marketplace-affected, and has segment-specific failure modes).
+- Inability to articulate marketplace spillover when discussing experiments.
+- Pitching deep learning for problems where simpler statistical models are the production standard (Swiggy's ETA model is gradient-boosted).
+
+**Compensation**
+
+Swiggy Senior DS / ML in 2026 ranges roughly ₹40 lakh – ₹70 lakh for 5-7 YOE. Staff scales to ₹85 lakh+. AmbitionBox and Glassdoor have public ranges.
+
+**Final note**
+
+Swiggy's loop tests for statistical rigor + marketplace judgment + logistics ML. The MSL Path Tiers 1, 5, 6, plus a cross-link to PAL, is the prep map.`,
+    tags: ['Interview Prep', 'Swiggy', 'Senior Data Scientist', 'A/B Testing', 'Logistics ML', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 137,
+    slug: 'meesho-ml-engineer-senior-interview-guide',
+    title: 'Meesho ML Engineer / Senior MLE Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Meesho\'s ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-aware ML and scale-vs-accuracy trade-offs because Meesho operates at thin unit economics. This guide unpacks the structure.',
+    body: `Meesho's senior ML loop is calibrated to a specific business reality: Meesho operates in tier-2 and tier-3 India with thin unit economics. Every ML decision has a cost-vs-accuracy trade-off that's more visible than at Flipkart or Amazon India. Senior MLE candidates are graded on whether they can articulate these trade-offs.
+
+The loop is shorter and tighter than Flipkart's — typically 4-5 rounds — but the cost-awareness probe shows up in every technical round.
+
+**The loop structure (ML Engineer / Senior ML Engineer, L4-L5)**
+
+Standard loop: recruiter call → ML fundamentals + coding → ML system design → production case → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter call.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Conceptual probing on classical ML, evaluation metrics, calibration. Coding is typically a LeetCode medium plus a domain problem (implement a similarity score, optimise a recommendation lookup).
+
+**Round 3 — ML system design.** 60 minutes. Common prompts: design Meesho's product recommendation system, design seller-side ranking for the marketplace, design fraud detection for low-ticket transactions. Meesho specifically probes cost-aware trade-offs — "your recommendation system uses two-tower with embedding lookups. Compute cost is 10 paise per query. Order value is ₹500. Is this profitable? What do you change?"
+
+**Round 4 — Production case.** 60 minutes. A real production scenario — "your seller ranking model improved offline NDCG by 3% but order completion rate dropped by 0.5%. Walk through your diagnosis." Meesho's production case round tests the same observation-before-naming discipline as Razorpay's, with an added cost-awareness dimension.
+
+**Round 5 — Hiring manager.** 45 minutes. Team fit, project ownership.
+
+**What Meesho weights distinctively**
+
+1. **Cost-vs-accuracy trade-offs.** Senior candidates are expected to think in terms of compute cost per query, training cost per cycle, and the marginal lift required to justify each. A candidate who proposes a deep learning ranker without justifying the compute cost gets downgraded.
+2. **Tier-2/3 India context.** Meesho's user base is predominantly tier-2 and tier-3 India. Senior candidates are expected to articulate how this changes the ML problem — different transaction patterns, different fraud vectors, different recommendation success criteria, different latency tolerances (mobile data quality).
+3. **Marketplace fairness.** Meesho sellers depend on the platform. Recommendation and ranking models that produce winner-takes-all dynamics hurt the marketplace long-term. Senior candidates are expected to discuss fairness and exploration alongside accuracy.
+
+**Top 10 questions Meesho senior MLE candidates face**
+
+1. "Design Meesho's product recommendation system. Compute budget is 5 paise per query."
+2. "Your seller ranking improved NDCG +3% but order completion dropped 0.5%. Diagnose."
+3. "Fraud at 0.05% base rate, average order value ₹400. What's your alert capacity, what's your precision target?"
+4. "How does the tier-2 India user behaviour change your recommendation problem?"
+5. "Design real-time seller ranking. Latency budget 30ms. Cost budget 3 paise per query."
+6. "Your model recommends only the top 10 sellers. The other 5000 sellers leave the platform. What's your fix?"
+7. "Walk through your most impactful project. What was the cost-accuracy trade-off you made?"
+8. "How do you A/B test a recommendation model where sellers are part of the population?"
+9. "Cold-start for a new seller with zero transactions. How does your ranking system handle them?"
+10. "Eleven types of leakage. Which apply specifically to marketplace ML?"
+
+**The prep path through MSL**
+
+For a Meesho senior MLE loop:
+
+- Tier 3 (Classical Algorithms) — Post 129 (Class Imbalance) and Post 76 (Calibration). Fraud-team rounds probe both.
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 131 (Error Analysis) for segment-level analysis.
+- Tier 7 (Production Engineering) — Posts 1, 7, 38. Cost-aware feature stores are a Meesho-specific concern.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 72 (Recsys Stack), Post 71 (Two-Tower).
+- For practice: SystemDesignTab, IncidentRoom incidents 7-12, Mock Interview with a Meesho JD pasted.
+
+**Common failure modes**
+
+- Designing systems without articulating compute or training cost. Meesho specifically tests this.
+- Treating the marketplace as user-facing only (ignoring seller-side impact of ML decisions).
+- Pitching deep learning architectures without cost justification.
+- Ignoring the tier-2/3 India context when discussing recommendation or fraud problems.
+- Inability to articulate fairness-vs-accuracy trade-offs in ranking.
+
+**Compensation**
+
+Meesho Senior ML Engineer total compensation in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Staff scales to ₹80 lakh+. Numbers are public-sourced from AmbitionBox and Levels.fyi.
+
+**Final note**
+
+Meesho's loop tests for cost-aware ML judgment in a marketplace context. The MSL Path Tier 9 plus the cost-awareness lens is the prep map.`,
+    tags: ['Interview Prep', 'Meesho', 'Senior MLE', 'Marketplace', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']

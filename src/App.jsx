@@ -51,6 +51,7 @@ const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
 const CheatsheetTab     = lazy(() => import('./tabs/CheatsheetTab.jsx'))
+const MockInterviewTab  = lazy(() => import('./tabs/MockInterviewTab.jsx'))
 const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ const ALL_TABS = [
   { id: 'profile',   component: ProfilePage },
   { id: 'resources',   component: ResourcesTab },
   { id: 'cheatsheet', component: CheatsheetTab },
+  { id: 'mock_interview', component: MockInterviewTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -155,6 +157,7 @@ const GATE_COPY = {
 const TAB_TO_ZONE = {
   home: 'today', landscape: 'today', plans: 'today', profile: 'today', resources: 'today',
   gradient: 'read', cheatsheet: 'read',
+  mock_interview: 'interview',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
   defense: 'interview', verbal: 'interview',
@@ -304,6 +307,7 @@ const NAV_SECTIONS = [
     id: 'interview',
     label: 'INTERVIEW',
     items: [
+      { id: 'mock_interview', label: 'Mock Interview · JD-to-prompt' },
       { id: 'interview',   label: 'Q&A Bank' },
       { id: 'combinator',  label: 'Timed Exam' },
       { id: 'verbal',      label: 'Verbal Practice' },

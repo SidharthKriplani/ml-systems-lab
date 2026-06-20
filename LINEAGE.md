@@ -46,6 +46,33 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.113 — Five MSL distribution + product features in one session (2026-06-20)
+
+**Shipped this session:** WhatsApp community surface, certificate + LinkedIn share, AI Mock Interview tab, 5 SEO interview guides, 75 new Quiz Me MCQs, 10 Simplify versions for non-path posts.
+
+**WhatsApp community card on HomeTab.** Returning users (`totalAttempted > 0`) who haven't joined the group see a green-bordered card pitching "Indian senior MLE prep group" with weekly mock interviews and interview reports. Two CTAs: "Join →" (opens the WhatsApp link + sets `msl_community_joined`) and "Already in" (sets the flag without opening). Card auto-hides forever once joined.
+
+**Certificate + LinkedIn share on ProfilePage.** When MLE Path is 100% complete, the Card 2 renders a dashed-mint "Certificate" block: user's name + completion date + certificate ID (`msl-mle-{last 8 digits of issuedAt}`). Two share buttons — primary LinkedIn share button (opens LinkedIn share dialog with the path URL + auto-copies prepared post text to clipboard) and "Copy text + URL" button (clipboard-only). `msl_cert_issued_at` localStorage key stamps the completion timestamp on first render.
+
+**AI Mock Interview tab (`MockInterviewTab.jsx`).** New tab wired into App.jsx routing under the Interview section. Flow: user pastes a JD → MSL scans for 35+ signal keywords mapped to MLE Path tiers + topics → detects role (Staff / Senior / Mid MLE / Applied Scientist / Data Scientist / MLOps) + company (PhonePe / Razorpay / Flipkart / etc.) → reads user's path progress + per-tier strength → generates a customized interviewer system prompt with pre-filled context (topics to emphasise, weak areas to probe, candidate's readiness, the actual JD text, interview rules). User copies the prompt and pastes into Claude / ChatGPT / any LLM. No backend, no API keys collected — all client-side. Output card shows "How I read this JD" summary + the prompt itself + "How to run the interview" 4-step guide.
+
+**5 SEO interview guides (posts 133-137).** New Gradient posts, each ~2000 words: PhonePe Senior MLE, Razorpay Senior MLE / Applied Scientist, Flipkart Senior Applied Scientist, Swiggy Senior DS / ML, Meesho ML Engineer. Each guide has consistent structure: loop structure (round count and order), round-by-round breakdown (~150 words/round), what the company weights distinctively vs other Indian unicorns, top 10 likely questions, MSL Path tier mapping for prep, common failure modes, compensation ranges from public sources. Category: 'Interview Prep'. Domain: 'interview'. Tags include the company name for SEO discoverability. Strategic intent (from `STRATEGY.md`): own the "[Company] senior MLE interview" search market in India.
+
+**75 new Quiz Me MCQs (posts 51-75).** Appended to `quizData.js`. Each post gets 3 multiple-choice questions with 4 options + correct answer index. Coverage: Backprop (51), CNNs (52), GNNs (53), Self-Attention (54), Transformers (55), Optimization (56), RNNs/LSTMs (57), Batch/Layer Norm (58), Dropout (59), Loss Functions (60), Embeddings (61), VAEs (62), RL (63), Diffusion (64), GANs (65), Transfer Learning (66), BERT vs GPT (67), Tokenization (68), Contrastive Learning (69), Two-Tower (70-71), Recsys Stack (72), XGBoost (73), Bias-Variance (74), Bayesian Inference (75). Total Quiz Me coverage: posts 1-75 (was 1-50). Remaining: posts 76-126 (51 posts × 3 = 153 MCQs) for future batches.
+
+**10 Simplify versions for non-path posts.** Extended `FOUNDATIONS_SIMPLIFY` with 10 new entries: post 2 (PySpark Shuffle), 9 (Gradient Descent), 10 (SHAP), 11 (Cold Start), 14 (Salary Map), 25 (Forecast Failures), 51 (Backpropagation), 56 (Optimization), 67 (BERT vs GPT), 81 (Price Elasticity), 82 (LTV/Churn). Each ~400-500 words: problem framing → core intuition → production tell → bridge to Rigorous. Simplify toggle in PostReader now works on these 10 non-path posts too — no PostReader changes needed since the check is `FOUNDATIONS_SIMPLIFY[post.id]` regardless of path membership.
+
+State additions:
+- `msl_community_joined` — flag indicating user joined WhatsApp group (or self-declared "already in"). Hides community card forever once set.
+- `msl_cert_issued_at` — Unix ms timestamp of MLE Path completion. Used to render certificate ID and completion date.
+
+App.jsx changes:
+- New tab `mock_interview` lazy-loaded
+- Routed to `interview` zone
+- Added to INTERVIEW nav section as "Mock Interview · JD-to-prompt" (first item to surface its prominence)
+
+Brace diff 0 on all touched files. Apostrophe + backtick audits OK. SVG OG card parses cleanly.
+
 ### v4.112b — Activation event wired + OG card shipped + meta tag refresh (2026-06-19)
 
 Closes the v4.112 known gap and ships the next launch-readiness item from `MSL_EXPOSURE_PLAN.md`.

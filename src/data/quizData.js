@@ -254,4 +254,129 @@ export const QUIZ = {
     { q: "CUPED breaks when:", opts: ["The experiment is large","The pre-experiment covariate is weakly correlated with the outcome (low R²) — CUPED's variance reduction is proportional to R²; a covariate with R²=0.01 provides almost no benefit","The covariate is categorical","The sample size is too large"], ans: 1 },
     { q: "The three ways CUPED fails in practice are:", opts: ["Underfitting, overfitting, data leakage","Covariate choice (wrong pre-period metric), temporal leakage (covariate computed using post-experiment data), and heterogeneous treatment effects (CUPED assumes additive effect; multiplicative effects require MLRATE or similar)","Peeking, SRM, and low power","High variance, low bias, wrong metric"], ans: 1 },
   ],
+  51: [
+    { q: "Backpropagation is mathematically:", opts: ["A heuristic for tuning weights","The chain rule of calculus applied recursively from the loss to every parameter","A form of gradient boosting","An optimisation algorithm independent of calculus"], ans: 1 },
+    { q: "Vanishing gradients in deep networks arise because:", opts: ["The learning rate is too low","Repeated multiplication of small derivatives (e.g. sigmoid saturated regions) through many layers makes the gradient signal at early layers exponentially small","Batch size is too small","Weights are initialised randomly"], ans: 1 },
+    { q: "Backprop is computed in reverse rather than forward because:", opts: ["Forward backprop is slower","The chain rule's structure means each layer's gradient depends on the layer above it, so propagating gradients backward is computationally more efficient than re-computing them per-parameter","Backward is more numerically stable","It is a historical convention with no engineering reason"], ans: 1 },
+  ],
+  52: [
+    { q: "A convolutional layer learns:", opts: ["Random kernels at initialization","Translation-equivariant feature detectors via shared weights that slide across the input, exploiting spatial structure","Per-pixel weights with no sharing","Fully connected mappings"], ans: 1 },
+    { q: "Receptive field grows as you go deeper because:", opts: ["Layers are larger","Each layer aggregates outputs from a window of the previous layer, so a neuron at depth n sees an effectively larger region of the input than at depth 1","Of batch normalisation","Pooling increases parameter count"], ans: 1 },
+    { q: "ResNet's skip connections solve:", opts: ["Memory bottlenecks","The optimisation problem in deep networks where gradient signal degrades; the residual path lets gradients flow directly to earlier layers, enabling 100+ layer networks to train","Inference latency","Class imbalance"], ans: 1 },
+  ],
+  53: [
+    { q: "Graph Neural Networks differ from CNNs primarily because:", opts: ["They use ReLU","They learn from irregular, non-Euclidean structure where nodes have varying numbers of neighbours, via message-passing aggregation","They have fewer parameters","They cannot be backpropagated through"], ans: 1 },
+    { q: "Over-smoothing in GNNs refers to:", opts: ["Image filters","Excessive layers causing all node representations to converge to similar values, losing discriminative information","Regularisation","Pooling"], ans: 1 },
+    { q: "PinSage scales GNNs to web-scale graphs by:", opts: ["Using more GPUs","Sampling a fixed number of neighbours via random walks rather than processing all neighbours, and learning embeddings inductively for unseen nodes","Pruning the graph","Eliminating edges below a threshold"], ans: 1 },
+  ],
+  54: [
+    { q: "Self-attention computes:", opts: ["Random weighted sums","For each position, a weighted sum of all positions where weights are derived from query-key dot products softmaxed over the sequence","A convolution","An RNN hidden state"], ans: 1 },
+    { q: "Query, Key, Value in attention play the roles of:", opts: ["Three random projections","Q queries what to attend to, K provides what's being attended to (to match against Q), V provides what to return — three projections of the same input that play distinct roles","Encoder, decoder, output","Loss, gradient, weight"], ans: 1 },
+    { q: "Multi-head attention works because:", opts: ["It uses more parameters","Different heads can specialise in different relationships (syntax vs semantics, short-range vs long-range), and their outputs are concatenated","It runs faster","Heads share weights"], ans: 1 },
+  ],
+  55: [
+    { q: "The Transformer architecture's primary innovation was:", opts: ["Adding RNN layers","Eliminating recurrence entirely — attention plus position encodings let the model attend to all positions in parallel, enabling training at scale","Using more dropout","Pre-training only"], ans: 1 },
+    { q: "Position encodings are necessary because:", opts: ["Weights need bias","Self-attention is permutation-invariant by default; without position encodings the model cannot distinguish word order","Of batch norm","To reduce parameters"], ans: 1 },
+    { q: "The Transformer's quadratic memory in sequence length comes from:", opts: ["Position encodings","The attention matrix being N×N for sequence length N, requiring O(N²) memory","Layer normalisation","Embedding tables"], ans: 1 },
+  ],
+  56: [
+    { q: "Adam combines the benefits of:", opts: ["RMSProp and Adagrad","Momentum (running average of gradients) and per-parameter adaptive learning rates (via running average of squared gradients)","SGD and L-BFGS","Mini-batch and full-batch"], ans: 1 },
+    { q: "The loss landscape of a neural network is typically:", opts: ["Convex","Highly non-convex with many local minima, saddle points, and flat regions; SGD navigates this with stochastic noise that helps escape saddles","Linear","Concave"], ans: 1 },
+    { q: "Learning rate warmup is needed because:", opts: ["It's tradition","Early training has large gradients and unstable updates; starting with a small LR and ramping up prevents divergence in the first few steps","Of regularisation","To save compute"], ans: 1 },
+  ],
+  57: [
+    { q: "LSTMs solve the vanishing gradient problem in RNNs by:", opts: ["Using ReLU","Adding gating mechanisms (input, forget, output gates) that allow the cell state to flow through time with minimal multiplicative compression","Larger batch size","More parameters"], ans: 1 },
+    { q: "The forget gate in an LSTM:", opts: ["Erases the entire state","Learns what fraction of each cell-state dimension to retain at each timestep, enabling selective memory","Adds noise","Is constant"], ans: 1 },
+    { q: "RNNs were displaced by Transformers primarily because:", opts: ["RNNs are slower to inference","RNNs cannot be trained in parallel across time (each timestep depends on the previous), while Transformers process the whole sequence in parallel","RNNs don't generalise","RNNs are not differentiable"], ans: 1 },
+  ],
+  58: [
+    { q: "Batch normalisation works by:", opts: ["Reducing learning rate","Normalising activations within each layer using batch statistics, reducing internal covariate shift and enabling larger learning rates","Adding noise","Pruning weights"], ans: 1 },
+    { q: "Layer normalisation differs from batch norm primarily in that:", opts: ["Layer norm uses larger batches","Layer norm normalises across features within a single example (no batch dependence), making it suitable for RNNs, Transformers, and any setting where batch statistics are unreliable","Layer norm uses median","Layer norm is faster"], ans: 1 },
+    { q: "Batch norm at inference time uses:", opts: ["Current batch statistics","Running averages of mean and variance accumulated during training, since inference may operate on batch size 1","Random statistics","Standard normal"], ans: 1 },
+  ],
+  59: [
+    { q: "Dropout regularises by:", opts: ["Reducing the network size","Randomly zeroing a fraction of activations during training, forcing the network to learn robust representations that don't rely on specific neurons","Adding L2 weight decay","Reducing learning rate"], ans: 1 },
+    { q: "Dropout at inference time should:", opts: ["Apply the same dropout","Be disabled, with activations scaled by the keep probability to maintain consistent magnitude — or equivalently, apply inverse scaling during training","Apply only on some layers","Use a larger rate"], ans: 1 },
+    { q: "Modern alternatives to dropout in Transformers include:", opts: ["More layers","Stochastic depth (drop entire layers) and weight decay, since attention layers benefit less from elementwise dropout","Smaller batch size","Fewer parameters"], ans: 1 },
+  ],
+  60: [
+    { q: "Cross-entropy loss is preferred over MSE for classification because:", opts: ["Cross-entropy is faster","Cross-entropy has steeper gradients when the model is wrong, accelerating learning; MSE's gradient vanishes when prediction is near 0 or 1 for binary classification","Cross-entropy uses log","MSE doesn't work"], ans: 1 },
+    { q: "Focal loss helps with:", opts: ["Multi-task learning","Class imbalance — it down-weights easy examples and focuses gradient on hard examples by raising the cross-entropy term to a power","Faster training","Overfitting"], ans: 1 },
+    { q: "Choosing a loss function is equivalent to choosing:", opts: ["An optimiser","An assumed likelihood/probability model of the data — MSE assumes Gaussian noise, cross-entropy assumes Bernoulli/Multinoulli","A learning rate","A batch size"], ans: 1 },
+  ],
+  61: [
+    { q: "Embeddings are useful because they:", opts: ["Reduce computation","Map discrete entities (words, items, users) to dense vectors where geometric proximity captures semantic similarity, enabling generalisation and arithmetic","Are required by all models","Reduce parameter count"], ans: 1 },
+    { q: "The 'king - man + woman ≈ queen' analogy works because:", opts: ["Lucky alignment","Embedding training (e.g. word2vec) creates a geometry where semantic relationships are encoded as consistent vector offsets","Pre-training","ReLU activations"], ans: 1 },
+    { q: "Out-of-vocabulary handling in embeddings is typically done by:", opts: ["Ignoring the token","Using a learnable unknown-token embedding, or subword embeddings (BPE, WordPiece) that decompose unknown words into known subword units","Random vector","Last seen token"], ans: 1 },
+  ],
+  62: [
+    { q: "Variational Autoencoders differ from regular autoencoders because:", opts: ["VAEs are smaller","VAEs constrain the latent space to follow a probability distribution (typically Gaussian), enabling sampling and interpolation","VAEs use ReLU","VAEs are faster"], ans: 1 },
+    { q: "The reparameterisation trick in VAEs is needed because:", opts: ["Memory efficiency","Sampling is non-differentiable; reparameterising as z = μ + σε (where ε is from a fixed distribution) makes the sample's gradient flow through μ and σ","Faster training","Reduces overfitting"], ans: 1 },
+    { q: "VAE's reconstruction loss + KL divergence terms balance:", opts: ["Training speed","Reconstruction fidelity vs how closely the learned latent distribution matches the prior (typically standard Gaussian)","Memory and compute","Bias and variance"], ans: 1 },
+  ],
+  63: [
+    { q: "The Bellman equation expresses:", opts: ["Loss function","Value of a state as immediate reward plus discounted value of the next state under the optimal policy","Gradient flow","Action probability"], ans: 1 },
+    { q: "Policy gradient methods differ from Q-learning because:", opts: ["They use larger networks","They directly learn a policy (action distribution) and update via gradient on expected reward, while Q-learning learns state-action values and derives the policy implicitly","Faster training","Less memory"], ans: 1 },
+    { q: "The credit assignment problem in RL refers to:", opts: ["Logging actions","Determining which past action(s) contributed to a delayed reward — solved by techniques like temporal difference learning and eligibility traces","Compute budgeting","Hyperparameter tuning"], ans: 1 },
+  ],
+  64: [
+    { q: "Diffusion models generate images by:", opts: ["Direct sampling","Learning to reverse a fixed noise-injection process, gradually denoising from pure noise to a structured image over many steps","GAN training","Autoencoding"], ans: 1 },
+    { q: "Diffusion's training objective is:", opts: ["Cross-entropy","Predicting the noise that was added at each forward step, given the noised image and the timestep — a simple denoising objective","KL divergence","Triplet loss"], ans: 1 },
+    { q: "Classifier-free guidance in diffusion models works by:", opts: ["Adding a classifier","Training the model on both conditioned and unconditioned generations, then at inference combining both predictions to steer toward the conditioning signal","Increasing model size","More training data"], ans: 1 },
+  ],
+  65: [
+    { q: "GANs train via:", opts: ["Supervised learning","A min-max game where the generator tries to fool the discriminator and the discriminator tries to distinguish real from generated samples — adversarial training","Reinforcement learning","Self-supervised learning"], ans: 1 },
+    { q: "Mode collapse in GANs occurs when:", opts: ["Memory overflows","The generator produces only a few modes of the data distribution (e.g. only one digit in MNIST), failing to capture diversity","Training is too long","Batch size is too large"], ans: 1 },
+    { q: "GANs were displaced by diffusion for image generation because:", opts: ["GANs are slower","Diffusion produces higher diversity, more stable training, and better fidelity at the cost of slower inference — the trade-off favoured quality","GANs use too much memory","GANs are not differentiable"], ans: 1 },
+  ],
+  66: [
+    { q: "Transfer learning works because:", opts: ["Pretrained models are smaller","Early layers learn general features (edges, textures, syntactic patterns) that transfer across related tasks, while later layers can be fine-tuned to the specific task","Models share weights","It uses less data"], ans: 1 },
+    { q: "When fine-tuning a pre-trained model, freezing early layers is appropriate when:", opts: ["Always","The target dataset is small and the domain is similar to the pre-training domain; freezing prevents overfitting while preserving general features","Never","The model is small"], ans: 1 },
+    { q: "Catastrophic forgetting refers to:", opts: ["Loss of memory","A model losing its previously learned capabilities when fine-tuned on new data — addressed via techniques like elastic weight consolidation or rehearsal","Hardware failure","Bad initialisation"], ans: 1 },
+  ],
+  67: [
+    { q: "BERT and GPT differ architecturally in that:", opts: ["BERT is smaller","BERT is bidirectional (attends to both directions), trained with masked language modelling; GPT is unidirectional (causal), trained with next-token prediction","BERT uses ReLU","GPT has no embeddings"], ans: 1 },
+    { q: "BERT is preferred for:", opts: ["Generation","Understanding tasks (classification, NER, QA) where bidirectional context matters; bidirectional attention isn't compatible with autoregressive generation","Speed","Memory"], ans: 1 },
+    { q: "GPT's success at scale came from:", opts: ["More layers","Decoder-only architecture + scaling laws (more data, more parameters, more compute → better capabilities), enabling few-shot learning at scale","Better initialisation","Sparse attention"], ans: 1 },
+  ],
+  68: [
+    { q: "Byte-Pair Encoding (BPE) tokenisation works by:", opts: ["Whitespace splitting","Iteratively merging the most frequent character pairs in the training corpus to build a vocabulary that balances vocabulary size and sequence length","Unicode normalisation","Character n-grams only"], ans: 1 },
+    { q: "Subword tokenisation handles out-of-vocabulary words by:", opts: ["Special tokens","Decomposing unknown words into known subword units, ensuring any word can be represented","Skipping them","Approximate matching"], ans: 1 },
+    { q: "WordPiece (BERT) and BPE (GPT) differ primarily in:", opts: ["Speed","The merge criterion — WordPiece uses likelihood-based scoring; BPE uses frequency-based scoring","Vocabulary size","Output format"], ans: 1 },
+  ],
+  69: [
+    { q: "Contrastive learning trains representations by:", opts: ["Reconstruction","Learning to pull similar examples together and push dissimilar ones apart in embedding space — no labels needed for self-supervised variants","Generation","Classification"], ans: 1 },
+    { q: "CLIP aligns images and text by:", opts: ["Joint generation","Contrastive training: matched (image, text) pairs should have high similarity, mismatched pairs should have low similarity in a shared embedding space","Concatenation","Cross-attention only"], ans: 1 },
+    { q: "Negative sampling in contrastive learning matters because:", opts: ["Memory","The model needs to learn what to push apart from; trivial negatives provide weak signal, while hard negatives drive the most learning","Speed","Regularisation"], ans: 1 },
+  ],
+  70: [
+    { q: "A two-tower model decouples user and item encoding because:", opts: ["Smaller models","Item embeddings can be precomputed once and indexed for fast nearest-neighbour retrieval; only the user embedding needs to be computed per query, enabling massive scale","Faster training","Less memory"], ans: 1 },
+    { q: "The retrieval stage in a two-tower system optimises for:", opts: ["Precision","Recall (catching all potentially relevant items) — precision is handled by the downstream ranking stage","F1","Calibration"], ans: 1 },
+    { q: "In-batch negatives in two-tower training work by:", opts: ["Synthetic data","Using other items in the same training batch as negatives for each user, exploiting parallel batch computation to provide negatives without explicit sampling","Adversarial generation","Pretrained negatives"], ans: 1 },
+  ],
+  71: [
+    { q: "Two-tower retrieval differs from cross-encoder ranking in that:", opts: ["It uses different optimisers","Two-tower computes user and item embeddings independently for efficiency at scale; cross-encoder computes a joint representation per (user, item) pair for higher precision but cannot scale to millions of items","It's slower","It has more layers"], ans: 1 },
+    { q: "Cold-start for new items in two-tower retrieval is handled by:", opts: ["Random embeddings","Using content features (metadata, category, image, text) in the item tower so new items can be embedded immediately without engagement data","Excluding them","Smaller embeddings"], ans: 1 },
+    { q: "YouTube's recommendation system uses two-tower retrieval at the candidate generation stage because:", opts: ["Higher accuracy than ranking","Billions of videos make per-(user, item) scoring infeasible; two-tower + ANN search reduces the catalogue to a few thousand candidates in milliseconds","Lower latency than caching","Better embeddings"], ans: 1 },
+  ],
+  72: [
+    { q: "The retrieval → ranking → re-ranking funnel exists because:", opts: ["It's tradition","Different stages have different latency, accuracy, and feature-richness constraints — retrieval is fast and approximate, ranking is precise with rich features, re-ranking applies business rules","Smaller models","Easier to debug"], ans: 1 },
+    { q: "Re-ranking typically handles:", opts: ["Embedding lookup","Diversity, freshness, business rules, and slot-level optimisations that the pointwise ranker cannot — e.g. ensuring not all top recommendations are from the same creator","Coarse retrieval","Initial scoring"], ans: 1 },
+    { q: "Ranking models in recommendation systems use richer features than retrieval because:", opts: ["Tradition","Ranking processes 100s-1000s of candidates (not billions), so it can afford expensive features like cross-user-item interactions, sequence history, and context","Smaller models","Faster computation"], ans: 1 },
+  ],
+  73: [
+    { q: "XGBoost's primary advantage over a single decision tree is:", opts: ["Faster inference","Boosting reduces bias by sequentially adding weak learners that focus on residual errors, while regularisation and feature subsampling control variance","Simpler model","Better visualisations"], ans: 1 },
+    { q: "Early stopping in XGBoost prevents:", opts: ["Slow training","Overfitting — when validation loss stops improving for `early_stopping_rounds` iterations, training halts and the best iteration is saved","Class imbalance","Feature explosion"], ans: 1 },
+    { q: "Calling `predict()` after training with early stopping without `ntree_limit` (or `iteration_range`) causes:", opts: ["A crash","Using all trained trees including those past the optimal iteration, often degrading performance — half of production XGBoost regressions trace to this","Slower inference","Negative scores"], ans: 1 },
+  ],
+  74: [
+    { q: "Bias-variance decomposition expresses total error as:", opts: ["Bias + variance","Bias² + variance + irreducible noise — each term has a specific structural meaning and a specific remedy","Bias × variance","Just variance"], ans: 1 },
+    { q: "More training data primarily reduces:", opts: ["Bias","Variance — bias is a property of model class assumptions, not data quantity. If a linear model can't capture a curve, adding more data won't help","Both equally","Irreducible noise"], ans: 1 },
+    { q: "Double descent describes:", opts: ["Two training runs","A second drop in test error after the classical U-curve, occurring in heavily overparameterised models — explains why modern deep networks generalise despite high VC dimension","Two-stage optimisation","Loss going up and down"], ans: 1 },
+  ],
+  75: [
+    { q: "Bayesian inference computes:", opts: ["Maximum likelihood","A posterior distribution over parameters given the data, combining prior beliefs and likelihood via Bayes' theorem — the output is a distribution, not a point estimate","Confidence intervals","ROC curves"], ans: 1 },
+    { q: "MAP estimation differs from MLE because:", opts: ["It uses more data","MAP adds a prior term, finding the parameter that maximises P(θ|D) = P(D|θ) × P(θ) — equivalent to MLE with regularisation","It's faster","Different output format"], ans: 1 },
+    { q: "A weakly-informative prior is preferred over a flat prior because:", opts: ["Tradition","Flat priors can lead to unreasonably extreme posteriors with small data; weakly-informative priors gently regularise toward sensible values without being dogmatic","Easier computation","Better with deep learning"], ans: 1 },
+  ],
 }
