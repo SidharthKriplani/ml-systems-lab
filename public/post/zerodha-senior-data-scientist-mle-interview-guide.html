@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zerodha Senior DS / MLE Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="" />
+  <meta name="keywords" content="Interview Prep, Zerodha, Senior DS, Senior MLE, Fintech, Trading, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/zerodha-senior-data-scientist-mle-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/zerodha-senior-data-scientist-mle-interview-guide.html" />
+  <meta property="og:title" content="Zerodha Senior DS / MLE Interview Guide" />
+  <meta property="og:description" content="" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Zerodha Senior DS / MLE Interview Guide" />
+  <meta name="twitter:description" content="" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Zerodha Senior DS / MLE Interview Guide",
+  "description": "",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/zerodha-senior-data-scientist-mle-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Zerodha, Senior DS, Senior MLE, Fintech, Trading, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=zerodha-senior-data-scientist-mle-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Zerodha Senior DS / MLE Interview Guide</h1>
+    <p class="excerpt"></p>
+    <p>Zerodha is India's largest discount broker but is culturally engineering-led, not data-led. The senior DS / MLE role is therefore an unusual one — fewer politics, smaller team, more autonomy, and a strong emphasis on building things that hold up in production rather than chasing novel architectures. Senior hires focus on fraud, real-time risk monitoring on Kite, and Coin (mutual funds) personalisation.</p>
+<h2>The loop structure (Senior DS / MLE)</h2>
+<p>Standard loop is shorter than most: recruiter screen → ML / system design conversation → real-world problem → behavioural with senior engineering.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> 30 min. Why Zerodha (the engineering-led culture appeals to a specific kind of senior IC).</p>
+<p><strong>Round 2 — ML / system design conversation.</strong> 90 minutes. More conversational than competitor interviews. Probed for engineering taste, simplicity, observability, and the ability to build small but durable systems.</p>
+<p><strong>Round 3 — Real-world problem.</strong> 90 minutes. A concrete Zerodha problem: detecting abusive trading patterns, real-time risk on margin calls, or improving mutual fund discovery. Tests for hands-on thinking.</p>
+<p><strong>Round 4 — Behavioural with senior engineering.</strong> 60 minutes. Engineering leadership probes simplicity bias, opinion strength, and culture fit. Nithin (founder) sometimes meets senior hires.</p>
+<h2>What Zerodha weights distinctively</h2>
+<p>1. <strong>Engineering simplicity.</strong> Zerodha runs lean; senior MLEs are expected to ship small durable things, not big ambitious models. 2. <strong>Real-time risk thinking.</strong> Trading platforms care about real-time anomaly detection more than batch reporting. 3. <strong>No politics.</strong> Zerodha is bootstrapped and famously consensus-driven. Senior MLEs must thrive without big-team politics. 4. <strong>Long-term thinking.</strong> Zerodha pays well but expects multi-year tenure.</p>
+<h2>Top 10 questions Zerodha senior DS / MLE candidates face</h2>
+<p>1. "Design abuse detection for Kite. What patterns matter, what's the latency budget?" 2. "Real-time risk on margin trading: how do you alert before a margin call becomes systemic?" 3. "Mutual fund recommendation for Coin: SEBI-aware objective, low-novelty features." 4. "Engineering taste: walk me through a recent project where you deliberately chose a simpler approach over a complex one." 5. "Trading anomaly detection — false positives are expensive (users get blocked unfairly). How do you calibrate?" 6. "Walk me through your most impactful project and why it mattered." 7. "When would you NOT recommend ML for a given Zerodha problem?" 8. "Observability for an ML system at trading-platform scale — what's your default stack?" 9. "Concept drift on trading user behaviour — what triggers a model refresh?" 10. "Why do you want to work at Zerodha specifically?"</p>
+<h2>The prep path through MSL</h2>
+<li>Tier 0 (Observation Discipline) — Post 128. Important here.</li>
+<li>Tier 5 (Evaluation) — calibration emphasis.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts.</li>
+<li>Tier 8 (Monitoring) — all 5 posts.</li>
+<li>Posts 95 (Anomaly Detection), 96 (Bandits).</li>
+<li>Practice: IncidentRoom inc1-12.</li>
+<h2>Common failure modes</h2>
+<li>Pushing complex architectures where Zerodha wants simple ones.</li>
+<li>Inability to articulate engineering taste vs. resume-driven choices.</li>
+<li>Trying to game the culture-fit conversation (Zerodha sees through this).</li>
+<h2>Compensation</h2>
+<p>Zerodha Senior DS / MLE in 2026 ranges roughly ₹40 lakh – ₹75 lakh for 5-7 YOE. Total cash compensation (Zerodha doesn't grant ESOPs in the way startups do). Lower variance than competitor offers but higher stability.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=zerodha-senior-data-scientist-mle-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

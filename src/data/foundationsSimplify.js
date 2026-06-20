@@ -1112,4 +1112,359 @@ Speed optimisations. The 1000-step generation of original diffusion is impractic
 **The production tell.** Diffusion model deployments at scale require careful batching. Each generation requires N steps of inference; running them sequentially per request wastes GPU. Continuous batching across requests (each request at its own step in parallel) keeps the GPU busy. Without this, latency and throughput are 5-10× worse than necessary.
 
 **Bridge to the Rigorous version.** The Rigorous version develops the diffusion mathematics (forward and reverse SDE, score-matching), walks through DDPM, DDIM, latent diffusion, classifier-free guidance, and consistency models, covers conditioning architectures, and explains production serving patterns. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  // ── Additional non-path Simplify versions (v4.116) ──────────────────────
+
+  12: `Distributed training is the practical answer to a brutal constraint: modern models are too big and too data-hungry to fit on one GPU. Either the weights don't fit (a 70B-parameter model needs ~140GB just to hold the parameters in fp16, while a single H100 has 80GB), or the dataset is so large that single-GPU training would take months. Distributed training spreads the work across many GPUs — but how you spread the work changes everything about what becomes the bottleneck.
+
+There are three fundamentally different strategies, and a senior MLE picks between them based on what's limiting them. Data parallel means every GPU has a full copy of the model, but each GPU sees a different slice of the batch. Each GPU computes its own gradient, then all GPUs average their gradients (an all-reduce communication step) before applying the update. Data parallel is the simplest and most popular when the model fits on one GPU but you want to train faster on more data.
+
+Model parallel splits the model itself across GPUs — when the model doesn't fit on one. Tensor parallel splits each layer's weights across GPUs and synchronises after each layer. Pipeline parallel assigns whole layers to different GPUs and pipelines batches through, like an assembly line. Both are harder to get right because they trade compute for communication, and communication over PCIe or even NVLink is much slower than compute.
+
+The reality check is that no single strategy wins. Real frontier-model training stacks combine all three — data parallel across nodes, pipeline parallel across GPUs within a node, tensor parallel within tightly-coupled chips, plus tricks like ZeRO optimiser sharding and gradient checkpointing to fit more.
+
+**The production tell.** When a distributed run mysteriously slows down by 10× and you can't find a bug in the code, the problem is almost always communication — a slow interconnect, an all-reduce stalling because one node is slow, a gradient sync running serially when it should be overlapped with the next forward pass. Profiling tools that show per-GPU timeline (NSight Systems, PyTorch Profiler) are what let you see this.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the algorithms (ring all-reduce, recursive halving-doubling), the partitioning strategies (ZeRO-1/2/3, FSDP, tensor parallel math), and the tooling (DeepSpeed, Megatron-LM, FSDP) at the level you'd need to debug a training run that's running at 30% of theoretical FLOPS.`,
+
+  15: `Netflix is the prototype that the rest of the recommender industry copied. Their public papers, blog posts, and talks have shaped how every consumer-grade ML team thinks about ranking, evaluation, and personalisation — so understanding what they actually do is high-leverage for any senior interview.
+
+The Netflix recommendation system is not one model. It is a layered pipeline. Stage one is candidate generation: out of 17,000+ titles, narrow down to maybe 1,000 candidates per user using fast retrieval (collaborative filtering embeddings, content-based filters, recently-released titles). Stage two is ranking: a deeper neural ranker scores those 1,000 candidates using rich features (watch history, time of day, device, context). Stage three is page construction: select diverse, complementary titles to fill the homepage rows, balancing exploration with exploitation and avoiding repetition across rows.
+
+The interesting part is the evaluation framework. Netflix doesn't ship a recommender change based on offline metrics alone. They run A/B tests for weeks because the offline-online gap is real and large. Offline NDCG might go up while real engagement goes down because users got tired of seeing the same five shows. They also measure long-term engagement, not just first-day click-through — a recommendation that gets a click but causes the user to bounce within 5 minutes is worse than one that gets no click but builds trust.
+
+The other lesson is that the product surfaces matter as much as the model. The "Top 10" row, the "Because you watched X" row, and the "Trending now" row are different objectives requiring different models. Netflix's biggest wins have come from designing new product surfaces (and the matching ranker) more than from making one ranker incrementally better.
+
+**The production tell.** When a recommender system has plateaued on offline metrics, the lever to pull is usually not the model — it's a new product surface, a new candidate generator, or a new way of slicing the catalog. Senior MLE interviews probe this judgment: "your ranker's offline AUC has been flat for three months; what do you do?" The bad answer is "try a bigger model." The good answer is "find a surface or a slice where users are clearly under-served, build a candidate gen specific to it, and A/B test."
+
+**Bridge to the Rigorous version.** The Rigorous version walks through Netflix's published architecture papers, the matrix factorisation foundations, deep neural network rankers (DLRM-style), causal inference for recommender evaluation, and how to think about a layered candidate-gen-then-rank pipeline end-to-end.`,
+
+  16: `What an ML stack actually looks like at a real company is almost never what the textbook says. Textbook ML is "train a model, deploy it, monitor it." Real ML is "we have 47 models in production, half of them are different versions of the same logical model serving different geos, three are tree models from 2019 nobody has the courage to retrain, two are giant transformers that consume 60% of our serving cost, monitoring fires alerts no one investigates, retraining is a fragile Airflow DAG, and feature pipelines drift in ways we don't catch for weeks."
+
+The reality is that the model itself is usually the smallest part of the work. The data pipeline that produces features, the offline-online feature parity layer, the training infrastructure, the model registry, the deployment system, the shadow-traffic and canary infrastructure, the monitoring and alerting, the retraining triggers, the labeled-data pipeline — all of these are bigger investments than the model. The "ML" part is maybe 5% of an MLE's time. The "systems" part is 95%.
+
+What separates a senior MLE from a mid-level one is the ability to look at a system and immediately see where the failure modes will accumulate. Where does the feature pipeline have point-in-time correctness problems. Where will the training and serving feature definitions drift apart. Where are the labels noisier than the team realises. Where is the model going to be asked to extrapolate outside its training distribution. Where will a bug in the upstream data show up as a silent model degradation that takes a week to notice.
+
+**The production tell.** "We have a model" is not a system. "We have a model, a way to retrain it on fresh data, a way to validate it before deploying, a way to roll back, a way to detect performance drift, and a way to investigate when drift happens" is a system. Interview questions about what's in your stack are really asking: which of these have you actually built, vs. inherited and prayed about.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through the canonical reference architecture: feature store, training service, model registry, serving service, monitoring/observability, retraining triggers, and how all the components hand off to each other. The Rigorous version names specific tools (Feast, MLflow, Vertex AI, SageMaker, Kubeflow) and shows where each fits.`,
+
+  17: `The history of deep learning from AlexNet (2012) to the current agent era is shorter than most senior MLEs realise, and the lessons compound. Every wave changed the substrate but not the underlying skills. The senior MLE who can navigate every wave is the one who understands why each transition happened, not just what came next.
+
+AlexNet (2012) showed that deep convolutional networks trained on GPUs with large labeled data could blow past classical CV by huge margins. The lesson was: scale matters, GPUs matter, labelled data matters. The next decade was an arms race on those three axes. ResNets (2015) solved the deep-network optimisation problem with skip connections. Transformers (2017) showed that attention could replace recurrence and convolution for sequence modeling. BERT and GPT (2018-2019) showed that self-supervised pre-training on huge unlabelled corpora produced models that could be cheaply fine-tuned for any downstream task. GPT-3 (2020) showed that scaling pre-training alone (no fine-tuning) gave you in-context learning. ChatGPT (2022) showed that RLHF could turn a raw LLM into something users would actually pay for. Tool-use and agents (2023+) showed that LLMs could be given functions to call, and that simple loops could chain actions.
+
+The throughline is that capability emerged from architectural simplicity plus scale, not from architectural complexity. The senior MLE lesson is to be deeply skeptical of any architectural innovation that does not come with a scaling story. If the new architecture is only 5% better at one benchmark and 3× more complicated, it probably will not survive contact with the next generation of scale.
+
+**The production tell.** Architecture trends move faster than production reality. Most production ML teams in 2026 are still running gradient boosted trees for tabular problems, ResNets for vision, and only a handful of LLMs for specific surfaces (search, support, summarisation). The skill is not chasing the latest architecture — it is judging which problems are now solvable by a new architecture and which are still better served by something boring.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through each major architecture (CNN, ResNet, RNN/LSTM, Transformer encoder, Transformer decoder, RLHF stack), the specific paper for each, and the production implication of the transition. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  19: `Where in the world ML jobs are concentrated is a question every senior MLE asks at some point, because it shapes career strategy. The honest answer in 2026: the United States still has the deepest concentration of senior MLE roles at the highest compensation, but a serious second tier exists in London, Berlin, Toronto, Bangalore, Singapore, and Tel Aviv, and remote-from-anywhere senior MLE roles are now routine for the strongest candidates.
+
+Bangalore is the most underrated hub for senior MLE work targeting global products. Every major US tech company has a senior MLE bench in Bangalore now (Google, Microsoft, Amazon, Meta, Adobe, NVIDIA), and the Indian unicorns (PhonePe, Razorpay, Flipkart, Swiggy, Meesho, Cred) are now hiring MLE-2 / Staff MLE roles at compensation that is competitive on a PPP-adjusted basis with mid-tier US cities. The skill bar for senior MLE in Bangalore is high — interviews routinely include production system design, online learning, drift, and judgment questions that would not be out of place in a US senior interview.
+
+The other reality is that immigration friction has dropped the "you must move to SF" requirement significantly. Strong senior MLEs in India are hired into US companies as remote-from-India ICs, with paths to relocation if they want it. The L-1 visa from India offices into US offices is now the dominant immigration pathway, much more reliable than H-1B for senior MLEs.
+
+**The production tell.** The geo question matters less than the company quality question. A senior MLE role at a top-tier remote-friendly company from Bangalore pays better than a senior MLE role at a mid-tier in-office company in San Francisco when you account for cost of living. The optimisation function is: company quality × compensation ÷ cost-of-living × quality of life.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through compensation benchmarking by city/level, the specific hiring patterns of each top company in each geo, the visa pathways, and a decision framework for whether to optimise for location, company, or compensation at each career stage.`,
+
+  27: `Late-arriving data is the silent killer of ML feature pipelines. It refers to data that should have arrived by time T (the time you're computing features for) but actually arrives at time T+delta — sometimes minutes, sometimes hours, sometimes days late. If your pipeline processes time T as soon as the clock ticks past T, you compute features that are missing the late-arrivers, and your model is silently trained on incomplete features. At serving time, those features may or may not be complete depending on what time of day, what data source, and what user behaviour happened — and you get a training-serving skew you cannot easily detect.
+
+The classic example is web events. A user clicks at 10:00 AM, but the event is buffered on their device, the network is slow, and the event arrives in your backend at 10:07 AM. If you compute "clicks in the last hour" at 11:00 AM, the click is captured. If you compute it at 10:30 AM, it isn't. The user's feature vector depends on when you happened to read it, not just who they are.
+
+The standard fixes are watermarking (wait until you're sure all events for a time window have arrived before computing aggregates), late-event tolerance (define a maximum lateness, drop events that arrive later), and point-in-time correctness (compute features "as of" a specific timestamp, using only data that had actually arrived by then). Stream processing systems like Flink and Spark Structured Streaming have these primitives built in. Custom feature pipelines built on Airflow batch jobs usually don't, and they silently corrupt features.
+
+**The production tell.** When a model's offline metrics look great but online performance is mysteriously worse, the first suspect should be feature freshness, including late arrivals. The diagnostic is: pick a recent training example, look at its features as computed in training vs. as computed in serving on a replay of the same event time. If the numbers differ, late-arriving data is one of the most common causes.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the formal model of event-time vs. processing-time, watermarking strategies, point-in-time joins in feature stores, and the specific debugging patterns for diagnosing late-arrival skew in production.`,
+
+  33: `Quantization is the production lever for making big models fit. The idea is simple: most neural networks are trained in float32 (32 bits per number) or bfloat16 (16 bits), but the model doesn't actually need that much precision to make accurate predictions. You can quantise the weights down to int8 (8 bits), int4 (4 bits), or even 2-bit representations, and the model will still be remarkably accurate. The memory and inference speed gains are huge: a 70B-parameter LLM that's 140GB in fp16 is 35GB in int4, and inference is 2-3× faster.
+
+The mechanism. Every floating-point number can be mapped to an integer with a learned scale factor: int_value × scale = float_value. The challenge is choosing the right scale per layer (or per channel within a layer) so the quantisation error is minimised. Modern quantisation methods (GPTQ, AWQ, GGUF, QLoRA) handle this carefully, often by analysing the importance of each weight using calibration data — weights that are critical to predictions get higher precision, weights that aren't get coarser.
+
+The trade-off. Quantisation almost always loses some accuracy. The question is how much. For most LLMs, int8 loses essentially zero (<0.1% accuracy drop on benchmarks). Int4 typically loses 1-3% but is often acceptable for non-critical use cases. Below int4 (2-bit, ternary), the losses start to dominate. The right precision depends on what you're optimising: latency-critical user-facing surfaces need higher precision; offline batch inference can tolerate more aggressive quantisation.
+
+**The production tell.** When a team says "we deployed an LLM and the user complaints are way higher than the eval scores predicted," check the quantisation. A 1% benchmark drop can translate to a 10% user-perceived quality drop on tasks the benchmark doesn't measure well — like specific factuality, or specific instruction-following nuances. The fix is often "use higher precision (int8 vs int4) for the user-facing variant."
+
+**Bridge to the Rigorous version.** The Rigorous version develops the quantisation mathematics (uniform vs non-uniform, symmetric vs asymmetric, per-tensor vs per-channel), the calibration methods (GPTQ, AWQ, SmoothQuant), and the production serving stack for quantised models (vLLM, TGI, llama.cpp).`,
+
+  48: `Recommender feedback loops are the silent quality killer of any ranking system that's been in production for more than a few months. The mechanism is: your recommender shows users certain items, users interact with those items (because those are the items they were shown), you train on the interaction data, and the next version of the recommender shows them more of the same. The system optimises for its own output, not for what users actually want. Over time, the model becomes a self-fulfilling prophecy.
+
+The classic symptom is that the recommender narrows into a few popular items. If item A is shown to 10× more users than item B, item A gets 10× more clicks, the training data weights A more heavily, and item A is shown even more. Item B never gets a chance, even if it would have been better for some users. Recommendation diversity collapses, and users either churn (because they get bored) or get worse outcomes (because better items existed but were never surfaced).
+
+Fixes are all variations of: get the model to learn about items it didn't show. Exploration (epsilon-greedy or contextual bandits) deliberately shows random or under-served items to a fraction of users. Off-policy correction (inverse-propensity weighting) up-weights examples that came from low-probability recommendations during training. Position de-biasing models the position effect explicitly so the model learns "users click position 1 more, separately from how good item 1 is." Counterfactual evaluation lets you measure how a different recommender would have performed using only the data you collected.
+
+**The production tell.** When the recommender's offline metrics are improving but real engagement is flat or declining, feedback loops are the prime suspect. The diagnostic is: pick a hundred users, look at the distribution of items they were shown over time, and see if it has narrowed. If yes, the recommender is collapsing.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the formal model of feedback loops, the IPS weighting math, the contextual bandit framework, and the specific production patterns for diversity-aware ranking.`,
+
+  50: `CUPED (Controlled-experiment Using Pre-Experiment Data) is the variance-reduction trick that turned A/B testing from "wait six weeks" into "wait two." The core idea is simple: for each user in your experiment, you have data about them from before the experiment started (their pre-experiment behaviour). You can use that pre-experiment data to predict what their outcome would have been without any treatment. Then you adjust the outcome by subtracting the prediction error — the part that the pre-experiment data couldn't explain.
+
+The mathematical insight is that subtracting a predictable component reduces variance without changing the expected value. If pre-experiment behaviour explains 50% of the variance in outcomes, CUPED cuts your needed sample size by half. That's a 2× speedup on every experiment, free, just by using data you already have.
+
+The implementation is one regression. You regress the outcome on the pre-period covariate, get a coefficient theta, then transform every user's outcome to outcome_minus_theta_times_covariate. Run your A/B test on the transformed outcome. The treatment effect estimate is unchanged in expectation, but its variance is dramatically lower.
+
+**The production tell.** When an experimentation team says "our tests are too slow, we need bigger sample sizes," the first question is "are you using CUPED?" If no, they can typically halve their experiment durations overnight. If yes, the next question is which covariates they're using — adding stronger pre-period covariates (more weeks of history, more behavioral features) extracts more variance.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the formal derivation, the choice of covariates, the multi-covariate extension, MLRATE for multiplicative effects, and the integration with sequential testing methods.`,
+
+  57: `Recurrent Neural Networks (RNNs) were the first deep learning architecture that could process sequences of arbitrary length. The idea is mechanical: at each time step, the network takes the current input and the previous hidden state, combines them through a learned transformation, and produces the next hidden state. The hidden state is the network's memory of everything it has seen so far in the sequence.
+
+LSTMs (Long Short-Term Memory) solved the practical problem that vanilla RNNs couldn't remember things for long. The gradient signal through many time steps either vanished (becoming zero) or exploded (becoming infinite), so the network couldn't learn long-range dependencies. LSTMs introduced gating mechanisms — input gate, forget gate, output gate — that explicitly control what gets remembered and what gets forgotten. The gradient could flow through the cell state without the vanishing problem.
+
+For about five years (2015-2020), LSTMs were the dominant architecture for sequence modeling — translation, speech, summarisation, sentiment. Then Transformers came and ate their lunch. Transformers parallelise across the sequence (LSTMs are inherently sequential, processing one step at a time), so they're orders of magnitude faster to train. They also handle long-range dependencies natively through attention.
+
+Why study RNNs and LSTMs in 2026. Three reasons. First, some production sequence models (especially on edge devices with limited compute) still use LSTMs because they're smaller and faster to run. Second, time-series forecasting uses LSTM variants extensively because they're well-suited to that domain. Third, understanding the limitations RNNs ran into is what makes you understand why Transformer attention was such a leap.
+
+**The production tell.** When you see an LSTM in production in 2026, ask why. The legitimate answers are "edge deployment, can't afford a Transformer" or "this is time-series with strong recency bias." The illegitimate answer is "we built it in 2018 and never updated." Many production LSTMs are technical debt — Transformers would beat them on both accuracy and latency now.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the LSTM gating equations, walks through bidirectional and stacked variants, develops gradient flow analysis, and shows the specific time-series production patterns where LSTMs still dominate.`,
+
+  58: `The Transformer architecture is the dominant deep learning architecture of the 2020s. Every LLM is a Transformer. Every modern image model uses Transformer ideas. Every modern speech and time-series model has at least a Transformer encoder. Understanding the Transformer is non-negotiable for any senior MLE in 2026.
+
+The key idea is self-attention. Given a sequence of input tokens, each token computes a weighted average over every other token in the sequence (including itself). The weights are learned per layer, per head, based on the content of the tokens. This means the model can "attend" to relevant context regardless of where it is in the sequence — no sequential processing, no vanishing gradients, fully parallelisable across the sequence.
+
+The math is three matrices per head. Each token produces a query vector (what it's looking for), a key vector (what it can match against), and a value vector (what it contributes if matched). The attention weight from token A to token B is the dot product of A's query and B's key, softmaxed across all tokens. The output for token A is a weighted sum of all tokens' values. Multi-head attention runs many of these in parallel with different learned projections, then concatenates.
+
+A Transformer block is: layer norm → multi-head self-attention → residual → layer norm → feedforward MLP → residual. The feedforward layer is just a 2-layer MLP applied independently per token. Stack 12-100+ of these blocks, and you have a Transformer.
+
+**The production tell.** When a Transformer-based system has unexpected behavior, the first diagnostic is to visualise attention patterns. Which heads attend where? Are some heads collapsed (attending only to one position)? Are early-layer heads doing positional things and late-layer heads doing semantic things? Attention visualisation is the production debugging tool for Transformers.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the attention math, walks through positional embeddings (absolute, relative, RoPE), develops encoder-decoder and decoder-only variants, and shows the modern production stack (FlashAttention, KV cache, continuous batching).`,
+
+  59: `BERT (Bidirectional Encoder Representations from Transformers) was the model that convinced everyone that self-supervised pre-training on unlabelled text would beat task-specific supervised training. Released by Google in 2018, it set new SOTA on 11 NLP benchmarks and started the LLM era.
+
+The architecture is a Transformer encoder — bidirectional attention, every token can see every other token. The pre-training task is masked language modeling: randomly mask 15% of input tokens, train the model to predict the masked tokens from context. This teaches the model to build deep representations of language without needing any labels.
+
+The downstream usage was fine-tuning. Take the pre-trained BERT, add a thin classification head, fine-tune on your specific task (sentiment analysis, named entity recognition, question answering). The fine-tuned BERT beat task-specific architectures by a wide margin on virtually every NLP benchmark.
+
+For 2-3 years, BERT-style models dominated NLP production. Then GPT-style decoder models (autoregressive, trained to predict the next token) took over for generation tasks, and instruction-tuned models took over for general-purpose AI. BERT-style encoders are still dominant for embedding models, classification, and ranking — anywhere you need a fixed-size representation of text, not generation.
+
+**The production tell.** When you see a sentence-level classification or retrieval system in production in 2026, it's almost certainly a BERT-family encoder (DistilBERT, MiniLM, BGE, E5). Generation systems use decoder LLMs. The pattern is: "extract a representation" → encoder. "Produce text" → decoder.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through the MLM pre-training, the fine-tuning recipe, the specific variants (RoBERTa, DistilBERT, ALBERT, ELECTRA), and the modern sentence-embedding models (Sentence-BERT, BGE, E5) for retrieval and clustering.`,
+
+  60: `GPT (Generative Pre-trained Transformer) is the decoder-only architecture that powers virtually every modern LLM. The idea is simple — train a Transformer decoder to predict the next token in a sequence, on a massive corpus of text. With enough scale, this single objective produces a model that can do almost any text task.
+
+The architecture is a stack of Transformer decoder blocks. Each block has masked self-attention (each token can only see prior tokens, not future ones), followed by a feedforward MLP. The masking is what makes it autoregressive — at inference time, you feed in a prompt, the model produces a probability distribution over the next token, you sample, append, and repeat.
+
+Scale was the key insight. GPT-1 (2018) was 117M parameters. GPT-2 (2019) was 1.5B. GPT-3 (2020) was 175B. Each scale jump unlocked qualitatively new capabilities — in-context learning, multi-step reasoning, code generation. Scaling laws (Chinchilla, etc.) eventually showed that compute should be split roughly equally between model size and data — undertrained huge models were the dominant failure mode in 2020-2022.
+
+The current frontier uses MoE (Mixture of Experts) to scale parameter counts without proportionally scaling compute. Each token routes through only a subset of "expert" feedforward networks, so a 1T-parameter model might use only 100B parameters per token. Plus the standard tricks: long-context attention, RLHF / DPO for alignment, tool use for grounding.
+
+**The production tell.** Decoder LLMs have a very specific latency profile: prefill (process the prompt, computed in parallel across the prompt) is cheap, decoding (generate tokens one at a time) is expensive. Production systems optimise heavily for decode throughput via KV caching, continuous batching, speculative decoding, and quantisation.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the autoregressive math, walks through the modern decoder stack (RoPE, RMSNorm, GLU activations, MoE routing), develops the production serving optimisations, and connects to the frontier-model architectures (Llama, Mixtral, Qwen, DeepSeek).`,
+
+  61: `Vision Transformers (ViTs) brought Transformer architectures to image processing. Before ViTs (around 2020), every state-of-the-art image model was a CNN. After ViTs, the field rapidly moved toward Transformer-based architectures, especially for large-scale pre-training.
+
+The mechanism is mechanical. Split an image into fixed-size patches (typically 16×16 pixels). Each patch is flattened into a vector and projected to a token embedding via a learned linear layer. Add positional embeddings (because the Transformer is permutation-invariant otherwise). Feed the sequence of patch tokens through a standard Transformer encoder. Use the output token for classification.
+
+What ViTs do well: large-scale image pre-training, especially with self-supervised objectives (MAE, DINO, CLIP). What ViTs don't do as well: small-data regime (CNNs win when training data is limited because their convolutional bias matches images well). What ViTs unlocked: foundational image models that transfer to dozens of downstream tasks with one pre-trained backbone.
+
+Modern image models often combine both. Hierarchical ViTs (Swin, MaxViT) reintroduce locality and multi-scale features. Hybrid architectures use convolutional early layers for local feature extraction and Transformer later layers for global reasoning.
+
+**The production tell.** When deploying an image model in production, ViTs are not always the right choice. For low-latency edge deployment (mobile cameras, IoT), efficient CNNs (MobileNet, EfficientNet) still dominate. For high-accuracy cloud inference where compute is cheap, ViT-derived architectures win. The decision is: data scale and compute budget.
+
+**Bridge to the Rigorous version.** The Rigorous version derives ViT math, walks through hierarchical and hybrid variants, develops the self-supervised pre-training methods (MAE, DINO, CLIP), and shows the specific production deployment patterns.`,
+
+  62: `CLIP (Contrastive Language-Image Pre-training) is the architecture that taught a model to align images and text. Released by OpenAI in 2021, it became the foundation for almost every modern multimodal system — image search, text-to-image generation, image classification with arbitrary categories.
+
+The mechanism. Train two encoders in parallel: a vision encoder (typically a ViT) that produces an embedding for an image, and a text encoder (a Transformer) that produces an embedding for a text caption. Train both encoders such that the embedding of an image is close to the embedding of its caption and far from embeddings of other captions. This is contrastive learning — push correct pairs together, push incorrect pairs apart.
+
+The data is the magic. CLIP was trained on 400M image-text pairs scraped from the web. The web is full of images with associated captions (alt text, surrounding text, filenames), and this provides a massive, free, noisy training signal. With enough data, the contrastive objective produces embeddings where images and texts that describe the same concept land near each other in a shared space.
+
+Downstream uses are everywhere. Zero-shot image classification (compare an image embedding to text embeddings of class names, pick the closest). Image search (encode all images offline, encode the query text at search time, retrieve nearest neighbours). Image-text retrieval. Text-to-image generation (condition a diffusion model on CLIP text embeddings).
+
+**The production tell.** CLIP embeddings are not a panacea. They're trained on web image-text pairs, which means they're great at "an image of X" descriptions but bad at fine-grained distinctions (counting objects, spatial relations, OCR). Production teams that swap CLIP for a fine-tuned alternative on their specific domain often see big gains.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the contrastive objective, walks through the CLIP training recipe, develops the modern variants (OpenCLIP, SigLIP, EVA-CLIP), and shows the specific production patterns for image search, classification, and text-to-image conditioning.`,
+
+  63: `Stable Diffusion is the architecture that brought text-to-image generation to consumer hardware. Released open-source in 2022, it democratised image generation that had previously required massive compute. Understanding it is essential for any senior MLE working with generative systems.
+
+The architecture has three pieces. A text encoder (CLIP text encoder) turns a prompt into a text embedding. A diffusion UNet predicts noise in a noisy latent image, conditioned on the text embedding via cross-attention. A VAE encoder-decoder compresses 512×512 images to 64×64 latents and back, so diffusion runs in a smaller space (16× speedup).
+
+The key trick is the latent diffusion idea. Original diffusion models operated on pixel space, which is expensive — each denoising step processes millions of pixels. Stable Diffusion encodes images to a low-dimensional latent space using a pre-trained VAE, runs diffusion in that latent space (1000× fewer dimensions), then decodes back to pixels at the end. Same quality, much faster.
+
+The generation process. Start with random noise in the 64×64 latent space. Iteratively run the UNet to predict and subtract noise, conditioned on the text embedding. After 20-50 steps, you have a clean latent. Decode through the VAE to get a 512×512 image.
+
+The ecosystem around Stable Diffusion has exploded. LoRAs add task-specific fine-tuning with tiny weights. ControlNet conditions generation on pose, depth, or edge maps. Inpainting modifies regions of an image. Img2img turns one image into another. The architecture's openness is what enabled this.
+
+**The production tell.** Stable Diffusion deployments in production almost always need batching and step-count optimisation. Each generation is 20-50 forward passes through the UNet; throughput depends heavily on continuous batching (combining requests at different steps), step reduction (consistency models, distillation), and quantisation.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the latent diffusion math, walks through the VAE, the UNet, classifier-free guidance, ControlNet, LoRA, and the modern production serving stack for diffusion models.`,
+
+  65: `Reinforcement learning is the framework for learning behaviour from reward feedback. An agent observes a state, takes an action, receives a reward (and a new state), and learns a policy that maximises long-run reward. This frames a huge class of problems: game playing, robotics, recommendation systems, ad bidding, LLM alignment.
+
+The math is the Bellman equation. The value of a state is the immediate reward plus the discounted value of the best next state you can reach. Solving the Bellman equation gives you the optimal policy. The challenge is that in interesting problems, the state space is too large to enumerate, so you approximate.
+
+Two big families. Value-based methods (Q-learning, DQN) learn the value function and derive the policy by taking the action with the highest value. Policy gradient methods (PPO, A2C) directly learn a policy that outputs actions, and optimise it via gradient ascent on expected reward. Actor-critic methods combine both — learn a policy (the actor) and a value function (the critic) that guides policy updates.
+
+Modern RL applications. AlphaGo combined deep neural networks with Monte Carlo Tree Search to beat human champions at Go. RLHF uses PPO to fine-tune LLMs based on human preferences. Robotics uses sim-to-real RL to learn manipulation policies in simulation, then transfer to physical robots. Ad bidding systems use contextual bandits (a simplified RL setting with no state transition) to optimise bid prices.
+
+**The production tell.** RL systems are notoriously brittle. Reward shaping (the choice of what to reward) is critical — a small misspecification produces policies that "game" the reward in unexpected ways. RLHF reward hacking is a current example. Production RL systems need careful monitoring of behaviour patterns, not just reward sums.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the Bellman equation, develops Q-learning and policy gradient algorithms, walks through DQN, PPO, A2C, and the specific applications to LLM alignment (RLHF, DPO) and contextual bandits.`,
+
+  66: `Graph Neural Networks (GNNs) are the architecture for data with explicit relational structure. Most ML treats data as a flat table (rows are samples, columns are features). But many problems have natural graph structure: social networks, molecular structures, knowledge graphs, transaction networks, recommender systems. GNNs let you model these directly.
+
+The mechanism is message passing. Each node has a feature vector. At each layer, every node aggregates information from its neighbours (sum, mean, max, or attention-weighted) and combines it with its own current representation. After K layers, each node's representation incorporates information from up to K hops away in the graph. The output is a per-node embedding that captures both the node's own features and its graph context.
+
+Specific variants. GCN (Graph Convolutional Network) uses a symmetric normalisation of neighbour features. GraphSAGE samples neighbours for scalability. GAT (Graph Attention Network) uses learned attention weights over neighbours. Heterogeneous GNNs handle multiple node and edge types (e.g., user-item-merchant graphs).
+
+Production applications. Fraud detection (transaction graphs reveal fraud rings that tabular models miss). Recommendation systems (user-item bipartite graphs). Drug discovery (molecular graphs). Code analysis (AST graphs). Knowledge graphs (entity-relation graphs for question answering).
+
+**The production tell.** GNNs at production scale require careful sampling. Real-world graphs have hub nodes with millions of edges (popular merchants, viral content). Full neighbour aggregation is infeasible; sampling-based methods (GraphSAGE, PinSAGE) are the production reality.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the message-passing framework, walks through GCN/GraphSAGE/GAT/heterogeneous variants, develops over-smoothing analysis, and shows the production sampling and serving patterns for billion-scale graphs.`,
+
+  68: `Knowledge graphs are structured representations of facts as entities and relations. They underpin search engines (Google's Knowledge Graph), question answering, drug discovery, and increasingly LLM grounding. Understanding them is essential for any senior MLE working with structured data or LLM systems.
+
+The structure. A knowledge graph is a collection of triples: (subject, relation, object). For example, (Tesla, founded_by, Elon Musk), (Tesla, headquartered_in, Texas), (Texas, located_in, USA). Entities are nodes, relations are edges. Real knowledge graphs have billions of triples.
+
+The ML problems. Knowledge graph completion: given an incomplete graph, predict missing triples (link prediction). Knowledge graph embedding (TransE, ComplEx, RotatE) learns vector representations of entities and relations such that (subject + relation ≈ object) for true triples. These embeddings power downstream tasks.
+
+Modern applications. LLM grounding: retrieve relevant triples from a knowledge graph to augment LLM context (better than free-text retrieval for factoid questions). Question answering: parse a natural-language question to a graph query, execute, return the answer. Recommendation: model user-item interactions plus side information (categories, brands) as a heterogeneous graph.
+
+**The production tell.** Knowledge graphs in production are messy. Entity resolution (deciding whether "Tesla" the company and "Tesla" the band are the same node) is brutal. Schema design (which relations to model) requires deep domain expertise. The KG construction pipeline is often more work than the KG model itself.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the KG embedding methods (TransE, ComplEx, RotatE), walks through KG completion and question answering, develops the construction pipeline (entity resolution, relation extraction), and shows the specific production patterns for KG-augmented LLM systems.`,
+
+  69: `Multimodal models process multiple input types (text, image, audio, video) jointly. They're the architectural frontier of 2026: GPT-4V, Gemini, Claude 3, and most frontier models are multimodal. Understanding them matters for any senior MLE working on consumer-facing AI.
+
+The architecture is typically a frozen vision (or audio) encoder feeding into a shared embedding space, where a Transformer decoder generates output text conditioned on both text and vision tokens. The vision encoder is often CLIP or a SigLIP variant. The "vision tokens" are projected to the LLM's embedding dimension and prepended to the text input. The decoder processes them like any other tokens.
+
+Training has two phases. Pre-training aligns the vision encoder's output space with the LLM's input space using image-text pairs. Instruction tuning trains the model on multimodal instruction-following data: questions about images, image captioning, visual reasoning.
+
+Production applications. Visual question answering (describe what's in this image). Document understanding (extract structured data from invoices, receipts). Multimodal RAG (retrieve images and text relevant to a query). Robotics (interpret camera input into action descriptions).
+
+**The production tell.** Multimodal models are token-hungry. A single high-resolution image can consume 1000+ tokens after encoding. Long video can consume tens of thousands. Production deployments need careful image resolution and frame-rate decisions because they directly trade off latency and cost.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the multimodal training objective, walks through the specific architectures (LLaVA, GPT-4V, Flamingo, BLIP-2, Gemini, Claude 3), develops the image-encoder fusion strategies (early, late, cross-attention), and shows the specific production patterns for multimodal inference.`,
+
+  70: `Speech recognition is the task of transcribing audio to text. Modern production systems are dominated by two architectures: end-to-end Transformer models (Whisper, Conformer) and CTC-based models (older but still common on-device). Understanding both matters for any senior MLE working on voice products.
+
+End-to-end Transformer models. Input is raw audio (or its mel-spectrogram representation). A Transformer encoder processes the audio. A Transformer decoder generates text tokens autoregressively, conditioned on the encoder output. Whisper (OpenAI, 2022) is the canonical example — trained on 680K hours of multilingual audio, robust to accents and noise.
+
+CTC-based models. Connectionist Temporal Classification is a loss function that handles the alignment problem: audio has many frames, text has fewer tokens. CTC learns to output a token (or blank) at each frame and collapses runs of identical tokens. The advantage is that CTC inference is one forward pass — fast and parallelisable. The disadvantage is that CTC assumes outputs are conditionally independent given inputs, which limits accuracy on long contexts.
+
+Production realities. Speech is sensitive to noise, accents, codec compression, and domain. Whisper handles general English well but struggles with specialised vocabulary (medical, legal, technical jargon). Production teams fine-tune on domain data, especially for non-English languages. Latency matters — streaming ASR systems use online attention or RNN-T architectures.
+
+**The production tell.** When a speech system has bad word error rate on a specific subset of users, the suspects are: accent mismatch in training data, codec artifacts (Bluetooth, low-bitrate streaming), background noise distribution, or domain vocabulary. The fix is fine-tuning on representative data, not a bigger model.
+
+**Bridge to the Rigorous version.** The Rigorous version derives CTC and attention-based ASR, walks through the modern architectures (Whisper, Conformer, RNN-T, Wav2Vec2), develops the streaming inference patterns, and shows the specific production deployment patterns (acoustic adaptation, decoding strategies).`,
+
+  77: `Knowledge distillation is the technique for compressing a big model into a smaller one while preserving most of its quality. It's how mobile and edge ML systems get good models in tight latency budgets. Understanding it matters for any senior MLE deploying to latency-constrained environments.
+
+The mechanism. Train a small "student" model to mimic a large "teacher" model. The student doesn't just learn from the original labels — it learns from the teacher's full probability distribution over outputs (the "soft labels"). The soft labels contain richer information than hard labels: they encode the teacher's uncertainty and the relationships between classes.
+
+Two losses are combined. Soft loss: KL divergence between the student's output distribution and the teacher's, typically with a temperature parameter that smooths both distributions. Hard loss: standard cross-entropy on the original labels. The balance is a hyperparameter (typically alpha=0.5).
+
+Variants. DistilBERT distilled BERT to 60% the size with 97% of the accuracy. TinyBERT used multi-layer distillation (match teacher's intermediate representations, not just outputs). MobileBERT designed a specific architecture optimised for distillation efficiency. Self-distillation distills a model into itself (smaller version) iteratively.
+
+Production applications. Edge deployment (mobile, IoT) where the full teacher won't fit. Latency-critical serving where the teacher is too slow. Cost reduction at scale where compute savings compound across millions of requests.
+
+**The production tell.** Distillation works best when the teacher is significantly better than the student would be if trained directly. If the teacher and student are similar quality (small gap), distillation barely helps. The decision is: is the teacher's quality gap worth the extra training cost and complexity.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the distillation loss, walks through specific variants (response-based, feature-based, relation-based distillation), develops the temperature and alpha tuning recipe, and shows the production patterns for serving distilled models in latency-critical environments.`,
+
+  89: `Ads CTR (Click-Through Rate) prediction is one of the highest-revenue ML applications in industry. Every ad served by Google, Meta, Amazon, or any major ad network goes through a CTR prediction model. Understanding the unique challenges of this domain matters for any senior MLE in adtech or marketplaces.
+
+The fundamental task. Given a user, a context (page, time, device), and a candidate ad, predict the probability the user will click. Multiply by the bid to get expected revenue. Rank ads by expected revenue and show the top one (or top K in a position auction).
+
+What makes CTR hard. Class imbalance: CTR is typically 0.1-5%, so most examples are negatives. Calibration matters: the predicted probability isn't just used for ranking — it's used to set bids, so it must be calibrated as a probability, not just well-ranked. Distribution shifts: ads change constantly, the ad inventory turns over weekly, user behaviour shifts seasonally. Position bias: position 1 gets more clicks than position 5 regardless of ad quality, so the model must learn to disentangle position effect from ad quality.
+
+Architecture trends. From shallow logistic regression (LR) on millions of hand-crafted features → factorisation machines (FM) that handle feature interactions → wide-and-deep neural networks (LR for memorisation + DNN for generalisation) → DLRM-style architectures with dense and sparse feature embeddings → Transformer-based rankers for richer context modeling.
+
+**The production tell.** Production CTR systems have aggressive retraining cadence (often hourly or daily) because the distribution shifts so fast. They also have rich logging infrastructure to capture all features at serving time, ensuring training data matches what was actually seen at serving. Training-serving skew in CTR systems is catastrophic — it directly affects bids and revenue.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through the architectural evolution (LR → FM → wide-and-deep → DLRM → Transformers), develops the calibration math, develops position-bias correction, and shows the production patterns for high-cadence retraining and bid-aware ranking.`,
+
+  90: `RAG (Retrieval-Augmented Generation) is the dominant production pattern for LLMs that need access to specific information they weren't trained on. Instead of fine-tuning the LLM to know your data (expensive, slow, doesn't update), you retrieve relevant chunks of your data at query time and provide them as context to the LLM. The LLM generates an answer grounded in the retrieved context.
+
+The pipeline has four stages. Chunking: split your documents into chunks (paragraphs, sections, fixed-size windows). Embedding: encode each chunk into a vector using an embedding model (BGE, E5, OpenAI ada). Index: store the embeddings in a vector database (Pinecone, Weaviate, Qdrant, FAISS) for fast similarity search. Retrieve & generate: at query time, encode the query, find the K most similar chunks, and prepend them to the LLM prompt.
+
+What makes RAG hard. Retrieval quality dominates. If the retriever doesn't surface the right chunk, no amount of LLM quality fixes it. Chunking strategy matters more than people realise — too small loses context, too large dilutes relevance. Embedding model choice matters — a generic embedding model may not capture domain-specific similarity well. Reranking (a small model that re-scores the top-K retrieved chunks) often adds significant quality gains.
+
+Evaluation has three layers. Retrieval recall: does the retriever surface the right chunks? Answer faithfulness: does the answer match the retrieved context? Answer correctness: is the answer factually right against ground truth? Each requires its own evaluation set and methodology.
+
+**The production tell.** When a RAG system gives wrong answers, the first diagnostic is to inspect the retrieved chunks. If the retrieved chunks didn't contain the answer, the retriever is the problem (fix chunking, embedding, retrieval). If the retrieved chunks contained the answer but the LLM gave the wrong response, the LLM is the problem (prompt engineering, model upgrade).
+
+**Bridge to the Rigorous version.** The Rigorous version walks through the chunking strategies, the embedding model landscape, the vector database trade-offs (HNSW vs IVF, ANN approximation), the reranking architectures, the evaluation framework (RAGAS, TruLens), and the production patterns for keeping the index fresh as documents change.`,
+
+  91: `Network effects in A/B testing break the standard randomisation assumptions and bias your measured treatment effects. They show up in any product where users interact with each other: social networks, marketplaces, multiplayer games, communication apps. Understanding how to test in these environments is essential for senior MLEs at consumer companies.
+
+The fundamental problem is called SUTVA (Stable Unit Treatment Value Assumption): the standard A/B test assumes that each unit's outcome depends only on its own treatment, not on the treatments of other units. When you have network effects, this is wrong. If you give treatment to user A, and user A then interacts differently with user B (control), user B's outcome is influenced by treatment even though they're in control.
+
+The classic example is a social feature. Test a new "share button" by randomising users to treatment (sees button) or control (doesn't). Treatment users share more posts, which appear in control users' feeds. Control users now have more content to engage with — their engagement goes up. You measure the treatment effect as treatment minus control, but control was contaminated. You underestimate the true effect.
+
+Fixes. Cluster randomisation: randomise whole connected groups (geographies, friend cliques, server shards) to treatment vs control. This isolates spillover within clusters. The trade-off is statistical power (fewer effective independent units). Switchback experiments: in marketplaces, alternate the whole market between treatment and control on a time schedule (e.g. every 30 minutes). This eliminates within-market spillover but introduces serial correlation. Two-sided experiments: randomise both sides of a marketplace independently and look at the cross effects.
+
+**The production tell.** When A/B test results don't match production launch results (test showed +5%, launch is +1%), network effects are a strong suspect. The diagnostic is: are users in the test interacting with each other (or with shared resources)? If yes, your test was probably underestimating spillover.
+
+**Bridge to the Rigorous version.** The Rigorous version develops SUTVA formally, walks through cluster randomisation math, derives switchback experiment estimators, and develops the specific patterns for marketplace, social, and supply-and-demand experimentation.`,
+
+  92: `Difference-in-differences (DiD) and regression discontinuity (RDD) are the two workhorses of quasi-experimental causal inference. They let you estimate causal effects when you can't run a clean A/B test — which is most of the interesting questions a business asks.
+
+DiD answers: what was the effect of a policy change that happened at a specific time, affecting some units (treated) but not others (control). The mechanism: compute the change in outcome from pre to post for the treated group, subtract the change in outcome from pre to post for the control group. The difference is the treatment effect, with time-invariant confounders cancelled out.
+
+The critical assumption is "parallel trends": absent the treatment, the treated and control groups would have evolved the same way over time. You can't test this directly (you don't observe the counterfactual), but you can test pre-period parallel trends and use that as evidence. If pre-period trends look parallel, post-period divergence is plausibly causal.
+
+RDD answers: what was the effect of a treatment assigned by crossing a threshold. The mechanism: compare units just above the threshold (treated) to units just below (untreated). They're nearly identical on every dimension except the treatment, so the difference in outcomes is plausibly causal. Examples: students who scored 80 vs 79 on an entrance exam, voters in districts where their candidate won 50.1% vs lost 49.9%.
+
+The critical assumption is "no manipulation": units can't precisely control whether they're above or below the threshold. If they can manipulate (e.g. choosing to skip the exam if they think they'll fail), the comparison is biased.
+
+**The production tell.** Business questions like "did the new pricing tier increase revenue" or "did the feature launch in Mumbai increase engagement" are often DiD problems. Most teams answer them with "before vs after" comparisons that confound the policy change with secular trends. A senior MLE knows when to push for DiD or RDD.
+
+**Bridge to the Rigorous version.** The Rigorous version derives DiD and RDD estimators, develops parallel trends and no-manipulation tests, walks through staggered adoption DiD (modern updates), and shows the production patterns for policy evaluation in tech companies.`,
+
+  93: `Defining metrics for a product is one of the highest-leverage activities a senior MLE does. The metric you optimise is the system you build, and the wrong metric quietly produces the wrong system. North Star metrics, guardrail metrics, and proxy metrics each have a specific role and getting them wrong is a common failure mode.
+
+A North Star metric captures the long-term value users get from your product. It's deliberately simple (one number), aligned with both user value and business value, and slow-moving (you check it weekly or monthly, not minutely). For Airbnb, it's nights booked. For Spotify, it's hours listened. For ChatGPT, it might be active turns per user per week. Every team in the company can in principle trace their work to North Star impact.
+
+Guardrails are metrics that must not get worse, even if North Star improves. If you push a change that doubles revenue but tanks user trust, that's a guardrail violation. Guardrails protect long-term value from short-term optimisation. They typically include: retention, satisfaction, abuse rates, latency, accessibility, and cost-to-serve.
+
+Proxies are short-term metrics that correlate with North Star, used for fast iteration. A/B testing on "nights booked" takes weeks; testing on "search-to-book conversion" takes days. The proxy is faster, but you must continuously validate that the proxy still predicts North Star. Proxies drift over time as users adapt and Goodhart's Law kicks in (the proxy becomes the target, and people optimise the proxy in ways that don't move North Star).
+
+**The production tell.** When a team has been hitting their KPIs but business outcomes are flat or declining, the proxy has decoupled from North Star. The fix is to re-validate the proxy: pull a sample of changes that improved the proxy and check what happened to North Star. If many improved proxy without improving North Star, the proxy is broken and needs replacement.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the North Star framework, walks through guardrail design, develops proxy validation methods, develops Goodhart's Law and metric gaming, and shows the production patterns for metric ownership and review.`,
+
+  98: `Fairness in ML is the question of whether your model's predictions are systematically biased against protected groups (race, gender, age, disability). It's both a moral and a legal concern — ECOA, GDPR, NYC AI bias law, EU AI Act all impose specific requirements on production ML systems making decisions about people.
+
+The technical formulations are subtle. Demographic parity requires equal acceptance rates across groups, regardless of underlying base rates. Equalized odds requires equal true-positive and false-positive rates across groups. Calibration requires predicted probabilities to mean the same thing across groups. These criteria are mathematically incompatible in most realistic settings — you generally cannot satisfy more than one when base rates differ. This is the impossibility result.
+
+The practical question is which criterion matches your problem. For loan default prediction: calibration matters (the probability should mean the same thing for everyone), but you also can't accept equal proportions of high-risk loans across groups (the law sometimes requires not). For hiring: equalized odds matters (you want equal false-positive rates across genders). For medical triage: demographic parity may be the wrong target if underlying conditions differ across groups.
+
+Mitigation strategies. Pre-processing: re-weight or re-sample training data to balance groups. In-processing: add fairness constraints to the loss function. Post-processing: adjust decision thresholds per group to equalise the chosen metric. Each has trade-offs in accuracy and gameability.
+
+**The production tell.** When a model passes fairness checks in offline testing but causes complaints in production, the model and the deployment are drifting apart. The fixes: continuous fairness monitoring (compute fairness metrics on production predictions, not just on a held-out evaluation set), and decision-policy review (is the threshold the same across groups, or are downstream decisions adding bias?).
+
+**Bridge to the Rigorous version.** The Rigorous version develops the formal fairness criteria, derives the impossibility theorem, walks through pre/in/post processing methods, and shows the specific compliance patterns for ECOA, NYC bias law, and the EU AI Act.`,
+
+  99: `RLHF (Reinforcement Learning from Human Feedback) is the technique that turned raw LLMs into ChatGPT, Claude, and Gemini. Pre-trained LLMs predict the next token well but follow instructions poorly and produce inconsistent, sometimes harmful outputs. RLHF aligns them with human preferences by training on human comparison data.
+
+The pipeline has three stages. SFT (Supervised Fine-Tuning): fine-tune the base LLM on high-quality human-written demonstrations of the desired output. This gives the model a baseline of "doing the right thing." Reward model training: collect pairs of model outputs (for the same prompt) ranked by humans as "A is better than B," train a reward model to predict the human ranking. RL fine-tuning: use PPO (Proximal Policy Optimization) to fine-tune the SFT model to maximise the reward model's score, with a KL penalty to keep the policy close to SFT (prevent reward hacking).
+
+Why this works. The reward model captures human judgment about output quality, which is hard to express in a loss function. PPO optimises the LLM to produce outputs that the reward model rates highly, effectively distilling human preferences into model behaviour. The KL penalty prevents the model from drifting too far from the SFT model into outputs that game the reward model.
+
+DPO (Direct Preference Optimization) is the modern simplification. It replaces the RL stage with a direct loss on preference pairs, achieving similar alignment quality with much simpler training. Most frontier labs have moved to DPO or DPO-variants over PPO.
+
+**The production tell.** RLHF / DPO models can develop subtle behavioral patterns from training data that aren't visible in benchmarks but show up in production. Examples: refusing harmless requests, being verbose, repeating disclaimers. The fix is iterative — collect production examples of the unwanted behaviour, add preference pairs to the training set, retrain.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the PPO and DPO objectives, walks through reward model training, develops KL regularisation analysis, and shows the production patterns for iterating on instruction-tuned models.`,
+
+  100: `Federated learning is the technique for training ML models on data that can't leave its source. The classic motivation is privacy: a model that helps medical institutions, banks, or mobile devices collaborate on training without centralising sensitive data. It's increasingly important as data privacy laws tighten and as edge devices generate more data than can be efficiently centralised.
+
+The mechanism. Each client (hospital, phone, bank) keeps its data local. A central server distributes the current model weights. Each client trains the model on its own data for a few steps, then sends only the weight updates back to the server. The server averages the updates (FedAvg) and distributes the new model. Repeat. The raw data never leaves the client.
+
+The challenges are real and nontrivial. Non-IID data: each client's data distribution may differ (Chennai phones see different language patterns than Bangalore phones). Naive FedAvg converges poorly on non-IID data. Stragglers: slow clients delay rounds. Heterogeneous compute: a low-end phone takes longer than a high-end phone for the same local training. Communication cost: sending model updates over mobile networks is expensive — gradient compression and quantisation matter.
+
+Privacy is a separate concern. FedAvg gives some privacy (raw data never centralised), but model updates can leak information about training data. Differential Privacy (DP) adds calibrated noise to updates, with formal privacy guarantees. Secure Aggregation uses cryptography so the server only sees averaged updates, never individual ones. Production systems combine FedAvg + DP + Secure Aggregation.
+
+**The production tell.** Federated learning systems usually under-perform centralised baselines, sometimes by 5-20%. The decision is: is the privacy gain worth the accuracy cost? For many regulated domains (healthcare, finance) the answer is yes. For consumer products, the answer depends on the specific use case.
+
+**Bridge to the Rigorous version.** The Rigorous version derives FedAvg and its variants (FedProx, SCAFFOLD), walks through the privacy mechanisms (DP, Secure Aggregation), develops the non-IID handling strategies, and shows the production patterns at Google (Gboard), Apple (Siri), and other deployments.`,
+
 }

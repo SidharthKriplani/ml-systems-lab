@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ola Senior Machine Learning Engineer Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanic…" />
+  <meta name="keywords" content="Interview Prep, Ola, Senior MLE, Marketplace ML, Surge Pricing, Real-Time Systems, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ola-senior-machine-learning-engineer-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ola-senior-machine-learning-engineer-interview-guide.html" />
+  <meta property="og:title" content="Ola Senior Machine Learning Engineer Interview Guide" />
+  <meta property="og:description" content="Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanic…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ola Senior Machine Learning Engineer Interview Guide" />
+  <meta name="twitter:description" content="Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanic…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ola Senior Machine Learning Engineer Interview Guide",
+  "description": "Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanic…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ola-senior-machine-learning-engineer-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Ola, Senior MLE, Marketplace ML, Surge Pricing, Real-Time Systems, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ola-senior-machine-learning-engineer-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Ola Senior Machine Learning Engineer Interview Guide</h1>
+    <p class="excerpt">Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanics, real-time systems, and the ability to reason about supply-demand equilibrium. This guide covers it.</p>
+    <p>Ola is one of India's iconic marketplace product companies, and senior MLE roles span ride-hailing, electric vehicles, financial services, and food delivery. The interview tests deep marketplace ML thinking — supply-demand dynamics, real-time matching, surge pricing under SUTVA violations.</p>
+<h2>The loop structure (Senior MLE)</h2>
+<p>Standard loop: recruiter screen → ML fundamentals + coding → ML system design (marketplace) → real-time systems + production case → hiring manager + culture.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> 30 min.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 90 minutes. Standard ML fundamentals with marketplace flavour: ranking under feedback loops, calibration of supply-demand forecasts. Coding is LeetCode medium-hard plus a probability/statistics problem (Bayesian estimation of true driver cancel rate from noisy data).</p>
+<p><strong>Round 3 — ML system design.</strong> 75 minutes. The signature round. "Design Ola's matching system" or "design surge pricing" or "design driver incentive optimisation". Probed deeply for: marketplace SUTVA violations (treated drivers affect control drivers), switchback experiments, equilibrium dynamics, edge cases (zero supply, oversupply).</p>
+<p><strong>Round 4 — Real-time systems + production case.</strong> 60 minutes. ETA prediction debugging, demand forecast accuracy investigation, fraud detection at scale. Tests for: real-time feature engineering, monitoring, on-call discipline.</p>
+<p><strong>Round 5 — Hiring manager + culture.</strong> 45 minutes.</p>
+<h2>What Ola weights distinctively</h2>
+<p>1. <strong>Marketplace mechanics.</strong> Ola is fundamentally a two-sided marketplace. Senior MLEs must reason about supply-demand equilibrium natively. 2. <strong>Real-time discipline.</strong> ETA, surge, matching all need sub-second decisions. Latency engineering matters. 3. <strong>SUTVA violations.</strong> Every ranking/pricing experiment at Ola has spillover. Switchback experimentation is everyday work. 4. <strong>EV stack ramp.</strong> Ola Electric is investing in AI for predictive maintenance, range estimation, charging optimisation. New senior MLEs may be routed there.</p>
+<h2>Top 10 questions Ola senior MLE candidates face</h2>
+<p>1. "Design Ola's driver-rider matching at scale. Goal: maximize total rider-driver-platform welfare." 2. "Why can't you A/B test surge pricing directly with user-level randomisation?" 3. "Walk through a switchback experiment design for testing a new matching algorithm." 4. "ETA prediction has been underestimating in Bangalore for 2 weeks. Walk through diagnosis." 5. "Design demand forecasting for the next 1 hour, 30-min granularity, per zone. What features, what model?" 6. "Driver fraud (gaming incentives by driving in a loop) — how do you detect this?" 7. "Surge pricing model is calibrated but business says it's 'too high too often'. What's happening?" 8. "Design real-time feature engineering for Ola's pricing system. Latency budget: 100ms." 9. "Network effects in marketplace experiments — explain SUTVA and how you'd violate it accidentally." 10. "Walk through your most complex production debugging story."</p>
+<h2>The prep path through MSL</h2>
+<li>Tier 0 (Observation Discipline) — Post 128.</li>
+<li>Tier 3 (Classical Algorithms) — Posts 73-76.</li>
+<li>Tier 5 (Evaluation) — all 7 posts, especially calibration.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts. Real-time features matter at Ola.</li>
+<li>Tier 9 (DS & Causal) — Posts 91 (Network Effects), 92 (DiD/RDD). SUTVA is everyday at Ola.</li>
+<li>Posts 96 (Bandits) for surge pricing.</li>
+<li>Practice: IncidentRoom inc1-6 (real-time debugging), MockInterview with Ola JD pasted.</li>
+<h2>Common failure modes</h2>
+<li>Treating Ola like a non-marketplace company. SUTVA reasoning is mandatory.</li>
+<li>Surface answers on switchback experiments.</li>
+<li>Inability to articulate the equilibrium effects of surge / matching changes.</li>
+<li>Recommending offline batch architectures where real-time is required.</li>
+<h2>Compensation</h2>
+<p>Ola Senior MLE in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Staff reaches ₹85 lakh+. Ola Electric AI roles slightly higher due to talent scarcity in EV ML.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ola-senior-machine-learning-engineer-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

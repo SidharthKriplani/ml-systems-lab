@@ -46,6 +46,32 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.116 — Content backlog crush: 123 MCQs + 30 Simplify + 10 SEO guides (2026-06-20)
+
+**Single-session content drain. Goal was to close the queued backlog from v4.115 as much as fit; result is the biggest content batch of the project.**
+
+**MCQs.** Added MCQs for posts 86–126 (41 posts × 3 questions = 123 new MCQs in `quizData.js`). Covers PCA, k-Means/DBSCAN, Time Series Forecasting, Ads CTR, RAG, SUTVA, DiD/RDD, Metric Design, Online Learning, Anomaly Detection, Bandits, SVMs, Fairness, RLHF, Federated Learning, Probability/Linear Algebra/Calculus/Information Theory, MLE+MAP, EM, LogReg from scratch, Trees+Forests, Word2Vec, CV before ViTs, OLS, Regularisation Geometry, Hypothesis Testing, Eval Metrics, Convex Opt, NN Init, Data Preprocessing, Survival, Generalisation Theory, Matrix Calculus, CUPED, Graph ML for Fraud, Real-Time Features, LLM Production, Hierarchical Forecasting, Auction Theory. Total MCQ count: **378** (was 255).
+
+**Simplify versions for non-path posts.** Added 30 entries to `foundationsSimplify.js` covering high-leverage non-path posts: 12 (Distributed Training), 15 (Netflix), 16 (Real ML Stack), 17 (AlexNet to Agents), 19 (Where in World), 27 (Late-Arriving Data), 33 (Quantization v2), 48 (Recsys Feedback Loops), 50 (CUPED 2), 57–63 (DL series: RNN/LSTM, Transformer, BERT, GPT, ViT, CLIP, Stable Diffusion), 65–66 (RL, GNN), 68–70 (Knowledge Graphs, Multimodal, Speech), 77 (Distillation), 89–93 (Ads CTR, RAG, Network Effects, DiD/RDD, Metric Design), 98–100 (Fairness, RLHF, Federated Learning). Total Simplify entries: **105** (was 75).
+
+**SEO interview guides.** Added 10 more company guides as Gradient posts 146–155: HDFC Bank Risk Modeling (#146), ICICI Bank DS/MLE (#147), Ola MLE (#148), Nykaa DS/MLE (#149), ShareChat MLE (#150), PharmEasy DS/MLE (#151), BYJU'S DS/MLE (#152), Groww MLE/DS (#153), Zerodha DS/MLE (#154), Tata Digital MLE/DS (#155). Total SEO guides: **23** (was 13). Total Gradient posts: **155** (was 145). 27 more guides queued for v4.117+ to hit STRATEGY target of 50.
+
+**Regenerated SEO infrastructure.**
+- `node scripts/build-prerendered-posts.mjs` → 147 static HTML files (was 138).
+- `node scripts/build-sitemap.mjs` → 161 URLs (was 151).
+
+**Audits passed.**
+- Brace diff: GradientTab.jsx, quizData.js, foundationsSimplify.js — all 0.
+- Apostrophe scan: OK.
+- Backtick scan: OK.
+- Schema audit (Gradient required fields): OK on all 155 posts.
+
+**Quirks fixed mid-session.** Initial Edit calls used `\\'` (double-backslash + quote) inside JS string literals for apostrophes in BYJU's / Groww / Zerodha titles+excerpts. Caught immediately by Grep, replaced with double-quoted strings ("BYJU's Senior...") which is the cleaner pattern when content has apostrophes anyway. No production impact — caught before audit step.
+
+**Backlog still queued for next session.**
+- ~28 more Simplify versions for non-path posts (currently 105; total Gradient posts 155 minus 54 path posts = 101 non-path; 51 of those have Simplify so 50 still don't).
+- 27 more SEO interview guides to hit STRATEGY target of 50 (candidates: Cleartax, Practo, Urban Company, Apna, Acko, Navi, ShareChat, Mamaearth, Boat, Ola Uber India, Amazon India, Microsoft India, Google India, Adobe India, Walmart India, Salesforce India, IBM India, Oracle India, BharatPe, Slice, Lenskart, Cred Senior DS, Junglee Senior, etc.).
+
 ### v4.115 — Onboarding complete + pre-rendering for SEO + 4 onboarding fixes + 30 MCQs + 3 SEO guides (2026-06-20)
 
 **Major session shipping the four deferred onboarding fixes + SEO pre-rendering infrastructure + a content batch.**

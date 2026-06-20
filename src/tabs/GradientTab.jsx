@@ -9627,6 +9627,699 @@ CRED Senior MLE / DS in 2026 ranges roughly ₹50 lakh – ₹85 lakh for 5-7 YO
     domain: 'interview',
     youtube: [],
   },
+  {
+    id: 146,
+    slug: 'hdfc-bank-senior-risk-modeling-data-scientist-interview-guide',
+    title: 'HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to build models that hold up to audit. This guide covers what to prepare.',
+    body: `HDFC Bank is one of India's largest private banks and runs serious in-house ML for risk decisioning. Unlike fintechs, the interview emphasises regulatory rigour — RBI guidelines, IFRS-9 ECL, model risk management — and tests whether you can build models that survive a regulatory audit.
+
+**The loop structure (Senior Risk Modeler / DS)**
+
+Standard loop: recruiter screen → SQL + statistics → risk modeling case → ML system design → behavioural with senior leadership.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min. Background check on regulatory experience (RBI, IFRS-9), credit scoring exposure, and reason for change.
+
+**Round 2 — SQL + statistics.** 75 minutes. Heavy SQL — credit risk lifecycle tables, vintage analysis, cohort analysis, default rate calculation across cohorts. Statistics: confidence intervals, hypothesis testing on default rates, validation that a new score outperforms the old (KS, Gini, PSI).
+
+**Round 3 — Risk modeling case.** 90 minutes. The deepest round. Build a PD (Probability of Default) model end-to-end: feature engineering from raw bureau data, scorecard binning (WOE), logistic regression, calibration, segment-wise validation. Expect to derive WOE and Information Value from first principles.
+
+**Round 4 — ML system design.** 60 minutes. Design a real-time risk decisioning system: low-latency scoring (<200ms), version control, A/B for new score variants, model risk management (MRM) review process, monitoring (PSI, KS shift, override rates).
+
+**Round 5 — Behavioural with senior leadership.** 45 minutes. Risk leadership probes regulatory comfort, audit experience, and willingness to push back when business wants to relax a threshold.
+
+**What HDFC Bank weights distinctively**
+
+1. **Regulatory rigour.** RBI guidelines, IFRS-9 ECL, BCBS 239. You need to know these by name, not just concept.
+2. **Audit-ready discipline.** Every modeling decision must be documented, justified, and reproducible. Senior risk modelers own this.
+3. **Scorecard tradition with ML modernisation.** HDFC still uses logistic-regression scorecards for regulatory-grade decisions, with XGBoost / neural nets for marketing and second-pass models.
+4. **Demographic compliance.** ECOA-equivalent Indian regulations: cannot use caste, religion, gender as features. Disparate impact testing.
+
+**Top 10 questions HDFC senior risk DS candidates face**
+
+1. "Derive WOE and Information Value. Why is WOE the right scale for credit scoring?"
+2. "Build a PD model for unsecured personal loans. Walk through every step including segment-wise validation."
+3. "Your PSI on credit score went from 0.05 to 0.18 over 3 months. What's your diagnosis and action?"
+4. "How do you calibrate a PD model after sampling — when you over-sampled defaults during training?"
+5. "ECL under IFRS-9 — explain the 3-stage classification and how PD, LGD, EAD feed into it."
+6. "Design real-time fraud scoring for HDFC NetBanking. Latency budget is 200ms."
+7. "Why might Gini increase but KS decrease at the same time? What does that tell you about model behaviour?"
+8. "Your collections model flags a customer for early collections but they'd been a loyal customer for 8 years. Operations is angry. Walk through your response."
+9. "How do you validate that your new credit score outperforms the existing one before deploying?"
+10. "What's a feature you'd never use in an Indian credit model, even though it's predictive? Why?"
+
+**The prep path through MSL**
+
+For an HDFC Bank senior risk DS loop:
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 2 (Linear Models) — Post 111 (OLS), Post 112 (Regularisation), Post 107 (Logistic Regression).
+- Tier 3 (Classical Algorithms) — Post 74 (Bias-Variance), Post 76 (Calibration). Calibration is critical for credit.
+- Tier 5 (Evaluation) — all 7 posts, especially KS/Gini/PSI sections.
+- Tier 7 (Production Engineering) — Posts 33, 41 (feature store) for real-time scoring.
+- Tier 8 (Monitoring & MLOps) — all 5 posts. PSI is daily life at HDFC.
+- Practice: LoanDefaultTab (ECOA-equivalent practice), IncidentRoom inc4-8.
+
+**Common failure modes**
+
+- Not knowing IFRS-9 / RBI by name. HDFC interviewers expect regulatory vocabulary.
+- Treating credit scoring as a generic ML problem (vs. understanding the segment-wise validation and regulatory constraints).
+- Inability to derive WOE / IV from first principles.
+- Recommending complex deep learning models for regulatory-grade decisions where logistic regression is the right answer.
+
+**Compensation**
+
+HDFC Bank Senior Risk Modeling / Senior DS in 2026 ranges roughly ₹28 lakh – ₹55 lakh for 5-8 YOE. Lead roles ₹65 lakh+. HDFC pays below fintechs but offers stability, regulatory depth, and a strong path into VP/Head-of-Modeling roles.`,
+    tags: ['Interview Prep', 'HDFC Bank', 'Senior Risk Modeling', 'Credit Risk', 'IFRS-9', 'Indian Banking', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 147,
+    slug: 'icici-bank-senior-data-scientist-mle-interview-guide',
+    title: 'ICICI Bank Senior Data Scientist / MLE Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'ICICI Bank runs analytics maturely across retail credit, wholesale risk, fraud, marketing, and i-mobile (their digital banking app). The senior DS / MLE interview probes credit-risk depth, regulatory comfort, and the ability to drive production-grade decisioning. This guide covers the loop.',
+    body: `ICICI Bank's central analytics function is one of the largest in Indian financial services. Senior DS / MLE roles span retail credit underwriting, fraud detection, marketing analytics, collections, and the i-mobile app personalisation. The interview profile depends on the team but shares a common bar: regulatory comfort + production discipline + statistical depth.
+
+**The loop structure (Senior DS / MLE)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML / statistics depth → ML system design → leadership behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min. Background, regulatory experience, motivation.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. Case study: walk through how you would solve a real ICICI problem (e.g. early warning signal for retail loan delinquency, cross-sell ranking for credit card holders). Heavy SQL: cohort analysis, vintage curves, attribution.
+
+**Round 3 — ML / statistics depth.** 75 minutes. Deeper than most. Expect rigorous statistical questions: hypothesis testing power, multiple-testing correction, A/B test SUTVA violations, sequential testing. Expect ML depth: tree-ensemble theory, regularisation derivation, calibration.
+
+**Round 4 — ML system design.** 60 minutes. Real-time fraud scoring, real-time credit decisioning, or i-mobile recommendation. Probed for: latency, regulatory traceability, model risk management, A/B testing infrastructure.
+
+**Round 5 — Leadership behavioural.** 45 minutes. Senior risk / analytics leaders probe project ownership, regulatory comfort, ability to defend modeling choices to business.
+
+**What ICICI Bank weights distinctively**
+
+1. **Statistical rigour.** Stronger than most fintechs. Expect to derive standard results.
+2. **Regulatory comfort.** RBI, IRDA (for insurance arm), BCBS rules.
+3. **Production discipline.** ICICI runs ML in production at scale across many fronts; the interview tests for operational maturity.
+4. **Business sense.** Senior roles need to translate business problems into modeling problems — not the other way around.
+
+**Top 10 questions ICICI senior DS / MLE candidates face**
+
+1. "Design an early warning signal for retail credit delinquency. What features, what target, what model, what threshold?"
+2. "Power analysis for an A/B test on i-mobile. Explain why you might be under-powered even with millions of users."
+3. "Derive the OLS estimator and its variance. When does it break and what do you do then?"
+4. "Cross-sell ranking for credit card holders — what's the target metric and how do you validate before deploying?"
+5. "Your model's KS is 45 in training, 30 in deployment. Walk me through diagnosis."
+6. "Explain calibration vs ranking metrics. When does ICICI care more about each?"
+7. "How do you handle leakage in credit risk modeling? Give an example of subtle leakage you'd catch in code review."
+8. "Build the architecture for real-time fraud scoring across credit card, debit card, and UPI. Latency budget?"
+9. "What's the most rigorous A/B test you've designed? Walk me through the power calculation."
+10. "ECL under IFRS-9 — how does the PD model feed into stage classification?"
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 2 (Linear Models) — Posts 107, 111, 112.
+- Tier 3 (Classical Algorithms) — Posts 73-76 (XGBoost, Bias-Variance, Bayesian, Calibration).
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 9 (Data Science / Causal) — Posts 81-85, 91-93. ICICI tests causal inference more than most banks.
+- Tier 7 (Production Engineering) and Tier 8 (Monitoring) — all posts.
+- Practice: LoanDefaultTab, IncidentRoom inc4-12, MLCoding mlc3-8.
+
+**Common failure modes**
+
+- Treating ICICI like a tech company (it isn't — regulatory rigour matters more than novel architectures).
+- Surface answers on statistics (ICICI probes for derivation, not just usage).
+- Inability to explain the business "why" behind a modeling choice.
+
+**Compensation**
+
+ICICI Bank Senior DS / MLE in 2026 ranges roughly ₹25 lakh – ₹50 lakh for 5-8 YOE. Lead Analytics roles ₹65 lakh+. Below fintech rates but with regulatory depth and stability.`,
+    tags: ['Interview Prep', 'ICICI Bank', 'Senior DS', 'Senior MLE', 'Credit Risk', 'Indian Banking', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 148,
+    slug: 'ola-senior-machine-learning-engineer-interview-guide',
+    title: 'Ola Senior Machine Learning Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Ola hires senior MLEs for marketplace matching (driver-rider), pricing (surge), ETA prediction, fraud, demand forecasting, and the Ola Electric AI stack. The interview is heavy on marketplace mechanics, real-time systems, and the ability to reason about supply-demand equilibrium. This guide covers it.',
+    body: `Ola is one of India's iconic marketplace product companies, and senior MLE roles span ride-hailing, electric vehicles, financial services, and food delivery. The interview tests deep marketplace ML thinking — supply-demand dynamics, real-time matching, surge pricing under SUTVA violations.
+
+**The loop structure (Senior MLE)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design (marketplace) → real-time systems + production case → hiring manager + culture.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + coding.** 90 minutes. Standard ML fundamentals with marketplace flavour: ranking under feedback loops, calibration of supply-demand forecasts. Coding is LeetCode medium-hard plus a probability/statistics problem (Bayesian estimation of true driver cancel rate from noisy data).
+
+**Round 3 — ML system design.** 75 minutes. The signature round. "Design Ola's matching system" or "design surge pricing" or "design driver incentive optimisation". Probed deeply for: marketplace SUTVA violations (treated drivers affect control drivers), switchback experiments, equilibrium dynamics, edge cases (zero supply, oversupply).
+
+**Round 4 — Real-time systems + production case.** 60 minutes. ETA prediction debugging, demand forecast accuracy investigation, fraud detection at scale. Tests for: real-time feature engineering, monitoring, on-call discipline.
+
+**Round 5 — Hiring manager + culture.** 45 minutes.
+
+**What Ola weights distinctively**
+
+1. **Marketplace mechanics.** Ola is fundamentally a two-sided marketplace. Senior MLEs must reason about supply-demand equilibrium natively.
+2. **Real-time discipline.** ETA, surge, matching all need sub-second decisions. Latency engineering matters.
+3. **SUTVA violations.** Every ranking/pricing experiment at Ola has spillover. Switchback experimentation is everyday work.
+4. **EV stack ramp.** Ola Electric is investing in AI for predictive maintenance, range estimation, charging optimisation. New senior MLEs may be routed there.
+
+**Top 10 questions Ola senior MLE candidates face**
+
+1. "Design Ola's driver-rider matching at scale. Goal: maximize total rider-driver-platform welfare."
+2. "Why can't you A/B test surge pricing directly with user-level randomisation?"
+3. "Walk through a switchback experiment design for testing a new matching algorithm."
+4. "ETA prediction has been underestimating in Bangalore for 2 weeks. Walk through diagnosis."
+5. "Design demand forecasting for the next 1 hour, 30-min granularity, per zone. What features, what model?"
+6. "Driver fraud (gaming incentives by driving in a loop) — how do you detect this?"
+7. "Surge pricing model is calibrated but business says it's 'too high too often'. What's happening?"
+8. "Design real-time feature engineering for Ola's pricing system. Latency budget: 100ms."
+9. "Network effects in marketplace experiments — explain SUTVA and how you'd violate it accidentally."
+10. "Walk through your most complex production debugging story."
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 3 (Classical Algorithms) — Posts 73-76.
+- Tier 5 (Evaluation) — all 7 posts, especially calibration.
+- Tier 7 (Production Engineering) — all 5 posts. Real-time features matter at Ola.
+- Tier 9 (DS & Causal) — Posts 91 (Network Effects), 92 (DiD/RDD). SUTVA is everyday at Ola.
+- Posts 96 (Bandits) for surge pricing.
+- Practice: IncidentRoom inc1-6 (real-time debugging), MockInterview with Ola JD pasted.
+
+**Common failure modes**
+
+- Treating Ola like a non-marketplace company. SUTVA reasoning is mandatory.
+- Surface answers on switchback experiments.
+- Inability to articulate the equilibrium effects of surge / matching changes.
+- Recommending offline batch architectures where real-time is required.
+
+**Compensation**
+
+Ola Senior MLE in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Staff reaches ₹85 lakh+. Ola Electric AI roles slightly higher due to talent scarcity in EV ML.`,
+    tags: ['Interview Prep', 'Ola', 'Senior MLE', 'Marketplace ML', 'Surge Pricing', 'Real-Time Systems', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 149,
+    slug: 'nykaa-senior-data-scientist-mle-interview-guide',
+    title: 'Nykaa Senior Data Scientist / MLE Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Nykaa hires senior DS / MLE roles for recommendation, search, personalisation, inventory forecasting, and fraud. The interview tests recommendation depth, fashion/beauty domain understanding, and the ability to drive growth via ranking in a content-rich vertical. This guide covers it.',
+    body: `Nykaa is India's largest beauty and fashion e-commerce player and runs a sophisticated personalisation stack: ranking, search, recommendation, image-based discovery, inventory forecasting. Senior DS / MLE roles split between Nykaa.com (beauty) and Nykaa Fashion, with shared infrastructure.
+
+**The loop structure (Senior DS / MLE)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML / recommendation depth → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. Case: drive incremental revenue through ranking. SQL on consumer e-commerce schema (sessions, conversions, baskets, returns).
+
+**Round 3 — ML / recommendation depth.** 75 minutes. Recommender depth: candidate generation vs ranking, multi-task ranking (CTR + AddToCart + Purchase), cold-start strategies, position bias, exploration. Image recommendation: when do you use image embeddings vs collaborative filtering.
+
+**Round 4 — ML system design.** 60 minutes. Design Nykaa's homepage personalisation, or Nykaa search ranking, or inventory forecasting per SKU per warehouse.
+
+**Round 5 — Behavioural.** 45 minutes.
+
+**What Nykaa weights distinctively**
+
+1. **Recommender depth.** Multi-task ranking is the bread and butter. Position bias correction matters.
+2. **Domain context.** Beauty / fashion has unique signals (skin tone matching, occasion-based purchasing, return patterns). Senior MLEs reason about these.
+3. **Inventory and supply integration.** Recommendation affects inventory dynamics. Out-of-stock items rank lower; this creates feedback effects.
+4. **Image features.** Visual search and image-based recommendation matter more here than in most verticals.
+
+**Top 10 questions Nykaa senior DS / MLE candidates face**
+
+1. "Design Nykaa's homepage personalisation. Goal: incremental revenue per visit."
+2. "Multi-task ranking — CTR, AddToCart, Purchase. How do you train and what loss do you use?"
+3. "Cold-start: a new SKU just launched, how does it get ranked?"
+4. "Position bias — explain why naive CTR-only training is biased and how you'd fix it."
+5. "Image-based recommendation vs collaborative filtering — when does each win for beauty?"
+6. "Walk through diagnosis of falling AddToCart rates on a featured category page."
+7. "Inventory feedback loop: recommendations affect inventory, inventory affects recommendations. How do you design for stability?"
+8. "Design search ranking for Nykaa: typo correction, semantic matching, freshness, price."
+9. "Returns prediction — when do you flag a high-return-risk product to a customer?"
+10. "A/B test on ranking showed +5% CTR but -2% revenue. What happened?"
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, position bias.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 48 (Recommender Feedback Loops), 70-72 (RecSys series), 96 (Bandits for exploration).
+- Tier 9 (DS & Causal) — Posts 91 (Network Effects), 93 (Metrics).
+- Practice: MockInterview with Nykaa JD pasted.
+
+**Common failure modes**
+
+- Surface recommender answers without depth on multi-task, position bias, feedback loops.
+- Ignoring inventory effects on ranking.
+- Inability to articulate revenue vs CTR conflicts.
+
+**Compensation**
+
+Nykaa Senior DS / MLE in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead roles ₹70 lakh+. Below adtech / fintech rates but with strong consumer ML depth and clear growth path.`,
+    tags: ['Interview Prep', 'Nykaa', 'Senior DS', 'Senior MLE', 'Recommender Systems', 'E-commerce ML', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 150,
+    slug: 'sharechat-senior-mle-data-scientist-interview-guide',
+    title: 'ShareChat Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'ShareChat operates Indian-language social platforms (ShareChat, Moj) at massive scale. Senior MLE roles cover feed ranking, content moderation, recommendation, creator analytics, and trust & safety. The interview tests recommendation depth, multi-language NLP, and real-time content ranking. This guide covers it.',
+    body: `ShareChat runs ShareChat (Indian-language social) and Moj (short-form video) with hundreds of millions of users. Senior MLE roles work on the feed ranker, content moderation, creator-facing analytics, and trust & safety models. The interview is heavy on recommender systems with a multi-language NLP overlay.
+
+**The loop structure (Senior MLE)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design (recommendation) → production case → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + coding.** 90 minutes. Standard fundamentals with recommendation flavour, plus an NLP angle (multi-language tokenisation, embedding similarity). Coding: LeetCode medium-hard plus a recommendation similarity problem.
+
+**Round 3 — ML system design.** 75 minutes. "Design Moj's feed ranker" or "design ShareChat's feed ranker." Probed for: candidate gen, multi-task ranking, exploration, cold-start (new creators), diversity, position bias, content moderation integration.
+
+**Round 4 — Production case.** 60 minutes. Diagnosis-style. "Engagement on Moj feed dropped 8% last week." Tests for systematic diagnosis discipline.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What ShareChat weights distinctively**
+
+1. **Recommender depth at scale.** Moj feeds are ranked in real-time across 100M+ DAU. The infrastructure question is significant.
+2. **Multi-language NLP.** ShareChat supports 15+ Indian languages. Embedding models, content classifiers, and search must work across them.
+3. **Content moderation.** Trust & safety models (NSFW, hate speech, misinformation) are mature and central. Senior MLEs may rotate through this.
+4. **Creator economy.** Recommendations affect creator earnings; creator-facing analytics affect content supply. The two sides are coupled.
+
+**Top 10 questions ShareChat senior MLE candidates face**
+
+1. "Design Moj's video feed ranker. Goal: long-term engagement, not just session length."
+2. "Multi-language embedding strategy — when do you use one shared model vs language-specific models?"
+3. "Cold-start: a new creator just joined, how does their content surface?"
+4. "Content moderation pipeline: classifier confidence vs human review. Walk through the trade-offs."
+5. "Diagnose: engagement on the feed dropped 8% last week. Approach?"
+6. "Position bias in feed ranking — explain the problem and your correction strategy."
+7. "Design a creator analytics dashboard. What's the leading indicator of creator churn?"
+8. "Recommendation feedback loops — how do you prevent the feed from collapsing to a few popular creators?"
+9. "Watch-time vs completion-rate vs share — how do you balance these in a multi-task ranker?"
+10. "Real-time feature engineering for the feed. Latency budget?"
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, position bias.
+- Tier 6 (Deep Learning) — Transformer, BERT, embeddings.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 48 (Feedback Loops), 70-72 (RecSys), 90 (RAG), 96 (Bandits).
+- Practice: MockInterview with ShareChat JD pasted.
+
+**Common failure modes**
+
+- Surface recommender answers without depth on multi-task and feedback loops.
+- Ignoring content moderation integration with ranking.
+- Inability to articulate the creator-economy effects of ranking changes.
+- Underestimating the multi-language complexity.
+
+**Compensation**
+
+ShareChat Senior MLE in 2026 ranges roughly ₹40 lakh – ₹70 lakh for 5-7 YOE. Staff roles ₹90 lakh+. Competitive with adtech and SaaS rates.`,
+    tags: ['Interview Prep', 'ShareChat', 'Moj', 'Senior MLE', 'Recommender Systems', 'Multi-language NLP', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 151,
+    slug: 'pharmeasy-senior-data-scientist-mle-interview-guide',
+    title: 'PharmEasy Senior Data Scientist / MLE Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'PharmEasy operates health-tech across e-pharmacy, diagnostics, and teleconsultation. Senior DS / MLE roles cover demand forecasting, recommendation, fraud (prescription validation), inventory, and clinical analytics. The interview tests healthcare-specific judgment alongside ML depth. This guide covers it.',
+    body: `PharmEasy is one of India's largest health-tech companies, operating across pharmacy, diagnostics, and telehealth. Senior DS / MLE roles work on demand forecasting (SKU-level inventory), recommendation, prescription fraud, doctor-patient matching, and clinical analytics. The interview profile differs from generic e-commerce: healthcare regulations and clinical correctness matter.
+
+**The loop structure (Senior DS / MLE)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML depth → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. SQL on pharmacy schema (orders, SKUs, refills, prescriptions). Case: "drive incremental refill rates for chronic medication."
+
+**Round 3 — ML depth.** 75 minutes. Standard ML rigour plus healthcare flavour: time-series forecasting for inventory, classification for prescription validation (OCR + NER), recommendation with safety constraints (no contraindications). Healthcare class imbalance: rare diseases, rare adverse events.
+
+**Round 4 — ML system design.** 60 minutes. "Design demand forecasting for 50,000 SKUs across 100 warehouses" or "design prescription fraud detection pipeline."
+
+**Round 5 — Behavioural.** 45 minutes. Healthcare ethics, mistake handling, regulatory compliance.
+
+**What PharmEasy weights distinctively**
+
+1. **Healthcare correctness.** A wrong recommendation can hurt a patient. Senior MLEs build with safety constraints natively.
+2. **Inventory forecasting depth.** Pharmacy demand is hierarchical (SKU × warehouse × time), often intermittent, with stockout sensitivity.
+3. **Prescription processing.** OCR + NER + drug-drug interaction validation is a unique technical area.
+4. **Regulation.** Drugs and Cosmetics Act, prescription verification rules.
+
+**Top 10 questions PharmEasy senior DS / MLE candidates face**
+
+1. "Design demand forecasting for 50,000 SKUs × 100 warehouses. Many SKUs have intermittent demand."
+2. "Build a prescription validation pipeline: OCR → drug name extraction → dosage parsing → contraindication check."
+3. "Recommendation with safety constraints: never recommend drug A to a patient on drug B due to interaction."
+4. "Calibrate a fraud detection model for prescription validation. Wrong rejections frustrate patients; wrong acceptances are unsafe."
+5. "Diagnose: refill conversion rate dropped 15% in Mumbai. Approach?"
+6. "Hierarchical forecasting — explain reconciliation across SKU, warehouse, region levels."
+7. "Intermittent demand: how does Croston's method differ from standard forecasting and when do you use it?"
+8. "Healthcare class imbalance: 0.01% adverse event rate. How do you train and validate?"
+9. "Doctor-patient matching for telehealth: what's the objective, what are the constraints?"
+10. "When would you NOT deploy an ML model in healthcare even if it improves a metric?"
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, class imbalance.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 88 (Time Series), 95 (Anomaly), 98 (Fairness), 125 (Hierarchical Forecasting).
+- Practice: FraudDetectionTab, LoanDefaultTab.
+
+**Common failure modes**
+
+- Generic ML answers without healthcare correctness layer.
+- Underestimating inventory forecasting complexity.
+- Inability to articulate the safety-vs-accuracy trade-off.
+
+**Compensation**
+
+PharmEasy Senior DS / MLE in 2026 ranges roughly ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead roles ₹65 lakh+. Below pure-tech rates with strong healthcare-ML depth.`,
+    tags: ['Interview Prep', 'PharmEasy', 'Senior DS', 'Senior MLE', 'Healthcare ML', 'Inventory Forecasting', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 152,
+    slug: 'byjus-senior-data-scientist-mle-interview-guide',
+    title: "BYJU'S Senior Data Scientist / MLE Interview Guide",
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: "BYJU's remains India's largest edtech and hires senior DS / MLE roles for personalisation, content recommendation, student progress modeling, churn prediction, and sales analytics. The interview tests edtech-specific judgment alongside ML depth. This guide covers it.",
+    body: `BYJU's runs ML across student-facing personalisation (adaptive learning), recommendation, churn prediction, and sales / marketing analytics. Despite recent business turbulence, the data science org remains a serious place to do edtech ML at scale. Senior DS / MLE roles span the K-12 product and the test-prep verticals.
+
+**The loop structure (Senior DS / MLE)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML depth → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. SQL on edtech schema (sessions, lesson completions, quiz attempts, drop-offs). Case: "improve student retention week 1 to week 4."
+
+**Round 3 — ML depth.** 75 minutes. Standard ML rigour with edtech flavour: knowledge tracing (model what each student has learned), recommendation under sequence constraints (lesson A before lesson B), churn prediction, content quality scoring.
+
+**Round 4 — ML system design.** 60 minutes. "Design adaptive learning path generator" or "design student churn prediction with intervention."
+
+**Round 5 — Behavioural.** 45 minutes.
+
+**What BYJU's weights distinctively**
+
+1. **Education product sense.** Senior MLEs reason about learning outcomes, not just engagement.
+2. **Sequence constraints.** Lessons have prereqs. Recommendation can't be purely collaborative.
+3. **Churn modeling.** High stakes for the business. Long horizon (week-1 → month-3) needs careful design.
+4. **Sales analytics integration.** BYJU's sales engine consumes DS outputs for lead scoring and rep recommendation.
+
+**Top 10 questions BYJU's senior DS / MLE candidates face**
+
+1. "Design adaptive content recommendation respecting prerequisite constraints."
+2. "Knowledge tracing — explain BKT (Bayesian Knowledge Tracing) and DKT (Deep Knowledge Tracing). When do you use each?"
+3. "Churn prediction at day 7 to predict month-3 churn. What features, what target, what validation?"
+4. "Diagnose: engagement on Class 8 Math dropped 12% in the last month."
+5. "Lead scoring for sales: what's the right target metric and how do you handle leakage?"
+6. "Recommendation under cold-start (new lesson, new student) — strategy?"
+7. "Content quality scoring — how do you evaluate without explicit labels?"
+8. "Time-series of student progress — when do you use survival analysis vs classification?"
+9. "Multi-armed bandits for sequencing question difficulty — how do you set up the exploration?"
+10. "Walk me through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 3 (Classical Algorithms) — Posts 73-76.
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (DS & Causal) — Posts 81-85, 91-93.
+- Posts 88 (Time Series), 96 (Bandits), 118 (Survival Analysis).
+- Practice: MockInterview with BYJU's JD pasted.
+
+**Common failure modes**
+
+- Generic recommender answers without sequence-constraint reasoning.
+- Surface answers on churn modeling.
+- Inability to articulate the learning-outcome-vs-engagement trade-off.
+
+**Compensation**
+
+BYJU's Senior DS / MLE in 2026 ranges roughly ₹25 lakh – ₹45 lakh for 5-7 YOE. Lead roles ₹60 lakh+. Below pure-tech rates; consider the business risk before joining.`,
+    tags: ['Interview Prep', "BYJU's", 'Senior DS', 'Senior MLE', 'EdTech ML', 'Knowledge Tracing', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 153,
+    slug: 'groww-senior-machine-learning-engineer-data-scientist-interview-guide',
+    title: 'Groww Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: "Groww is one of India's fastest-growing wealth-tech / discount-broking platforms. Senior MLE / DS roles cover fraud, KYC, lending (Groww Credit), personalisation, content ranking, and product analytics. The interview tests fintech depth at fast pace. This guide covers it.",
+    body: `Groww serves 50M+ users on discount broking, mutual funds, and lending. Senior MLE / DS roles split across fraud / risk (lending and broking), personalisation (homepage, mutual fund recommendation), content ranking (Groww Digest), and product analytics. The interview is fintech-flavoured with a fast-paced execution culture.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design → production case → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + coding.** 90 minutes. Standard ML rigour. Coding: LeetCode medium-hard.
+
+**Round 3 — ML system design.** 75 minutes. Depending on team: fraud detection on broking accounts, personalisation for the homepage, mutual fund recommendation, or lending credit scoring.
+
+**Round 4 — Production case.** 60 minutes. Diagnosis-style scenario.
+
+**Round 5 — Behavioural.** 45 minutes.
+
+**What Groww weights distinctively**
+
+1. **Fintech-flavoured fraud.** Pump-and-dump detection, wash trading, fake KYC.
+2. **Recommendation in regulated context.** Mutual fund recommendation has SEBI guidelines.
+3. **Lending (Groww Credit).** Credit risk modeling with limited bureau data on first-time borrowers.
+4. **Fast iteration culture.** Groww ships quickly; senior MLEs must balance rigour with speed.
+
+**Top 10 questions Groww senior MLE / DS candidates face**
+
+1. "Design fraud detection for broking accounts. Targets include pump-and-dump, wash trading, mule accounts."
+2. "Mutual fund recommendation — what's the SEBI-aware objective and what features?"
+3. "First-time borrower credit scoring with limited bureau data — what alternative data?"
+4. "Diagnose: KYC drop-off jumped 5% in the last week. Approach?"
+5. "Content ranking for Groww Digest — multi-task across read, save, share."
+6. "Personalisation for homepage with mixed asset classes — strategy?"
+7. "A/B testing in fintech — what's allowed and what isn't under SEBI rules?"
+8. "Calibration in fraud detection — why does it matter for action thresholds?"
+9. "Real-time feature engineering for fraud — latency budget?"
+10. "How do you handle a sudden distribution shift after a market event (e.g., a stock-split or a regulatory change)?"
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 89 (CTR), 90 (RAG), 95 (Anomaly).
+- Practice: FraudDetectionTab, LoanDefaultTab.
+
+**Common failure modes**
+
+- Generic ML answers without fintech awareness.
+- Surface answers on fraud-specific patterns.
+- Inability to articulate calibration importance for fraud.
+
+**Compensation**
+
+Groww Senior MLE / DS in 2026 ranges roughly ₹40 lakh – ₹70 lakh for 5-7 YOE. Staff roles ₹90 lakh+. Competitive with PhonePe / Razorpay for senior IC roles.`,
+    tags: ['Interview Prep', 'Groww', 'Senior MLE', 'Senior DS', 'Fintech', 'Wealth-tech', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 154,
+    slug: 'zerodha-senior-data-scientist-mle-interview-guide',
+    title: 'Zerodha Senior DS / MLE Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: "Zerodha is India's largest discount broker by volume but historically light on ML. Recent hires for senior DS / MLE focus on fraud, abuse detection, real-time risk on trading, and Coin (mutual funds) personalisation. The interview emphasises product / engineering taste over ML novelty. This guide covers it.",
+    body: `Zerodha is India's largest discount broker but is culturally engineering-led, not data-led. The senior DS / MLE role is therefore an unusual one — fewer politics, smaller team, more autonomy, and a strong emphasis on building things that hold up in production rather than chasing novel architectures. Senior hires focus on fraud, real-time risk monitoring on Kite, and Coin (mutual funds) personalisation.
+
+**The loop structure (Senior DS / MLE)**
+
+Standard loop is shorter than most: recruiter screen → ML / system design conversation → real-world problem → behavioural with senior engineering.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min. Why Zerodha (the engineering-led culture appeals to a specific kind of senior IC).
+
+**Round 2 — ML / system design conversation.** 90 minutes. More conversational than competitor interviews. Probed for engineering taste, simplicity, observability, and the ability to build small but durable systems.
+
+**Round 3 — Real-world problem.** 90 minutes. A concrete Zerodha problem: detecting abusive trading patterns, real-time risk on margin calls, or improving mutual fund discovery. Tests for hands-on thinking.
+
+**Round 4 — Behavioural with senior engineering.** 60 minutes. Engineering leadership probes simplicity bias, opinion strength, and culture fit. Nithin (founder) sometimes meets senior hires.
+
+**What Zerodha weights distinctively**
+
+1. **Engineering simplicity.** Zerodha runs lean; senior MLEs are expected to ship small durable things, not big ambitious models.
+2. **Real-time risk thinking.** Trading platforms care about real-time anomaly detection more than batch reporting.
+3. **No politics.** Zerodha is bootstrapped and famously consensus-driven. Senior MLEs must thrive without big-team politics.
+4. **Long-term thinking.** Zerodha pays well but expects multi-year tenure.
+
+**Top 10 questions Zerodha senior DS / MLE candidates face**
+
+1. "Design abuse detection for Kite. What patterns matter, what's the latency budget?"
+2. "Real-time risk on margin trading: how do you alert before a margin call becomes systemic?"
+3. "Mutual fund recommendation for Coin: SEBI-aware objective, low-novelty features."
+4. "Engineering taste: walk me through a recent project where you deliberately chose a simpler approach over a complex one."
+5. "Trading anomaly detection — false positives are expensive (users get blocked unfairly). How do you calibrate?"
+6. "Walk me through your most impactful project and why it mattered."
+7. "When would you NOT recommend ML for a given Zerodha problem?"
+8. "Observability for an ML system at trading-platform scale — what's your default stack?"
+9. "Concept drift on trading user behaviour — what triggers a model refresh?"
+10. "Why do you want to work at Zerodha specifically?"
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128. Important here.
+- Tier 5 (Evaluation) — calibration emphasis.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 95 (Anomaly Detection), 96 (Bandits).
+- Practice: IncidentRoom inc1-12.
+
+**Common failure modes**
+
+- Pushing complex architectures where Zerodha wants simple ones.
+- Inability to articulate engineering taste vs. resume-driven choices.
+- Trying to game the culture-fit conversation (Zerodha sees through this).
+
+**Compensation**
+
+Zerodha Senior DS / MLE in 2026 ranges roughly ₹40 lakh – ₹75 lakh for 5-7 YOE. Total cash compensation (Zerodha doesn't grant ESOPs in the way startups do). Lower variance than competitor offers but higher stability.`,
+    tags: ['Interview Prep', 'Zerodha', 'Senior DS', 'Senior MLE', 'Fintech', 'Trading', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 155,
+    slug: 'tata-digital-tata-1mg-senior-mle-data-scientist-interview-guide',
+    title: 'Tata Digital / Tata 1mg Senior MLE / DS Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Tata Digital builds the Tata Neu super-app, integrating Tata 1mg (e-pharmacy), BigBasket, Croma, Air Asia, IHCL hotels, and others. Senior MLE / DS roles cover cross-vertical personalisation, recommendation, demand forecasting, and fraud. The interview tests breadth (multiple verticals) plus depth in one. This guide covers it.',
+    body: `Tata Digital is the Tata Group's consumer-tech ambition: a super-app (Tata Neu) integrating e-pharmacy, grocery, electronics, travel, hotels, and financial services into one stack. Senior MLE / DS hires shape personalisation, recommendation, demand forecasting, and fraud across verticals. The interview profile is unusual — breadth + depth — and the role offers exposure to many domains.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML / system design depth → behavioural with senior leadership.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min. Background, motivation for super-app problem space.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. SQL on multi-vertical schema. Case: "drive cross-vertical engagement (a 1mg user becoming a BigBasket user)."
+
+**Round 3 — ML / system design depth.** 90 minutes. Depending on team: cross-vertical personalisation on Tata Neu homepage, recommendation in one vertical (1mg or BigBasket), demand forecasting for BigBasket SKUs.
+
+**Round 4 — Behavioural with senior leadership.** 45 minutes. Tata Digital leadership probes long-term thinking, ability to navigate matrix-org dynamics across Tata companies.
+
+**What Tata Digital weights distinctively**
+
+1. **Cross-vertical thinking.** The super-app value proposition is cross-selling across Tata properties. Senior MLEs reason about this natively.
+2. **Recommendation depth in any one vertical.** 1mg has pharma recommendation. BigBasket has grocery basket completion. Croma has electronics ranking.
+3. **Matrix org navigation.** Working with autonomous BUs (1mg, BigBasket) plus central Tata Digital. Politics is real.
+4. **Long-term thinking.** Tata pays patient capital. Senior MLE roles expect multi-year tenure.
+
+**Top 10 questions Tata Digital senior MLE / DS candidates face**
+
+1. "Design cross-vertical recommendation on Tata Neu. A 1mg user just bought a chronic medication. What do you recommend on the BigBasket tile?"
+2. "Demand forecasting for BigBasket: SKU × hub × day. What features?"
+3. "Pharma recommendation on 1mg — what safety constraints, what features?"
+4. "Croma electronics ranking — what's the objective and how do you handle long-tail electronics SKUs?"
+5. "Walk through diagnosis of a personalisation regression on Tata Neu homepage."
+6. "Multi-task ranking — CTR, conversion, repeat. How do you train?"
+7. "Position bias in homepage ranking — strategy."
+8. "Calibration: when does Tata Neu care about calibrated probabilities vs. ordinal ranking?"
+9. "What's the right metric for cross-vertical engagement?"
+10. "How do you navigate working with BU (1mg) data and central (Tata Digital) infrastructure?"
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 48 (Feedback Loops), 70-72 (RecSys), 88 (Time Series), 90 (RAG), 93 (Metrics).
+- Tier 9 (DS & Causal) — Posts 91-93.
+- Practice: MockInterview with Tata Digital JD pasted.
+
+**Common failure modes**
+
+- Surface recommender answers without cross-vertical reasoning.
+- Underestimating matrix-org dynamics across Tata BUs.
+- Inability to articulate the super-app strategy in modeling terms.
+
+**Compensation**
+
+Tata Digital Senior MLE / DS in 2026 ranges roughly ₹35 lakh – ₹60 lakh for 5-7 YOE. Lead roles ₹75 lakh+. Tata pays slightly below pure tech but offers strong stability, multi-domain exposure, and a clear long-term path.`,
+    tags: ['Interview Prep', 'Tata Digital', 'Tata Neu', '1mg', 'BigBasket', 'Senior MLE', 'Senior DS', 'Super-app', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']

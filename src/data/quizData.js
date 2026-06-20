@@ -429,4 +429,209 @@ export const QUIZ = {
     { q: "PCA assumes:", opts: ["Categorical data","That high variance directions are informative and that linear projections capture the relevant structure — fails for non-linear manifolds and class-discriminative-but-low-variance directions","Standard normal data","Gaussian noise only"], ans: 1 },
     { q: "PCA on un-scaled data is misleading because:", opts: ["No effect","Variables with larger numerical ranges dominate the variance and the principal components — always standardise (zero mean, unit variance) before PCA unless features are on the same scale by construction","It's faster","Computing changes"], ans: 1 },
   ],
+  86: [
+    { q: "Mathematically, PCA computes:", opts: ["Random projections","The eigendecomposition of the covariance matrix; eigenvectors are the principal components, eigenvalues their explained variances","K-means centroids","Logistic regression"], ans: 1 },
+    { q: "Choosing K principal components is typically guided by:", opts: ["Always K=2","Cumulative explained variance threshold (e.g. retain components explaining 90%) or scree plot elbow", "K equals features","Cross-validation only"], ans: 1 },
+    { q: "PCA fails for non-linear structure because:", opts: ["Speed","It only finds linear subspaces; non-linear manifolds need methods like Kernel PCA, t-SNE, or UMAP","Memory","Convergence"], ans: 1 },
+  ],
+  87: [
+    { q: "K-means assumes:", opts: ["Categorical features","Clusters are roughly spherical (Euclidean distance) and of similar size — fails for elongated, density-varying, or non-convex clusters","Sequential data","Labeled data"], ans: 1 },
+    { q: "DBSCAN distinguishes from k-means by:", opts: ["Faster speed","Identifying clusters as dense regions of arbitrary shape and explicitly marking sparse-region points as noise","Using fewer parameters","Linear scaling"], ans: 1 },
+    { q: "Choosing K in k-means is hard because:", opts: ["Always K=3","There's no ground truth; methods include elbow plot of inertia, silhouette score, gap statistic — all heuristic","K is fixed at 5","Cross-validation works directly"], ans: 1 },
+  ],
+  88: [
+    { q: "Time-series cross-validation must use:", opts: ["Random k-fold","Walk-forward (expanding window) validation that respects time ordering — random folds leak future information","Stratified k-fold","Leave-one-out"], ans: 1 },
+    { q: "ARIMA(p,d,q) models the relationship between:", opts: ["Categorical features","Lagged values (p), differencing for stationarity (d), and lagged errors (q) of the series","Multiple series","Trends only"], ans: 1 },
+    { q: "Concept drift in production forecasting often presents as:", opts: ["No effect","Forecast errors that grow gradually over weeks as the underlying process changes, often invisible to aggregate accuracy until business metrics break","Sudden total failure","Faster inference"], ans: 1 },
+  ],
+  89: [
+    { q: "Ads CTR prediction uses calibrated probabilities because:", opts: ["AUC is enough","Bids in auctions are price × P(click) — miscalibrated probabilities directly translate to over-bidding (loss) or under-bidding (lost impressions)","Speed matters","Tradition"], ans: 1 },
+    { q: "Position bias in CTR data refers to:", opts: ["Header positioning","Higher positions naturally get more clicks regardless of relevance, biasing training data toward top-ranked items","Mobile vs desktop","Side margin"], ans: 1 },
+    { q: "Production CTR models retrain frequently because:", opts: ["Cost","Ad inventories, user behaviour, and external trends shift hourly — daily or sub-daily retraining keeps the model aligned with the current distribution","Hardware needs it","Tradition"], ans: 1 },
+  ],
+  90: [
+    { q: "RAG (Retrieval-Augmented Generation) extends LLMs by:", opts: ["More parameters","Retrieving relevant context documents at query time and providing them to the LLM, enabling factually grounded generation without retraining","Distillation","Quantisation"], ans: 1 },
+    { q: "Hallucination in RAG is often caused by:", opts: ["Bad GPUs","Retrieved context being irrelevant or contradictory, while the LLM still generates a fluent (but wrong) answer; better retrieval is often the fix, not better LLM","Slow models","Memory limits"], ans: 1 },
+    { q: "RAG evaluation should measure:", opts: ["Only answer accuracy","Retrieval quality (recall@K), answer faithfulness to retrieved context, and answer correctness against ground truth — three distinct dimensions","Model size","Latency only"], ans: 1 },
+  ],
+  91: [
+    { q: "SUTVA (Stable Unit Treatment Value Assumption) requires:", opts: ["Random selection","Treatment of one unit doesn't affect outcomes of other units — violated in marketplaces, social networks, where treated users affect control users","Equal sample sizes","Normal distribution"], ans: 1 },
+    { q: "Network effects in A/B tests show up as:", opts: ["Higher variance only","Treatment users influencing control users (or vice versa) through interactions, biasing the measured treatment effect — common in social/marketplace apps","Statistical noise","Random fluctuations"], ans: 1 },
+    { q: "Cluster randomisation addresses SUTVA violations by:", opts: ["Smaller samples","Randomising whole connected groups (geographies, social clusters) to treatment vs control, isolating spillover within clusters","Stronger tests","More peeking"], ans: 1 },
+  ],
+  92: [
+    { q: "Difference-in-differences (DiD) estimates causal effect by:", opts: ["Random assignment","Comparing the change in outcome over time between a treated group and a parallel control group, eliminating time-invariant confounders","Cross-sectional regression","Propensity scoring"], ans: 1 },
+    { q: "DiD's parallel trends assumption requires:", opts: ["Equal treatment","Both groups would have followed the same trend absent the treatment — testable by plotting pre-treatment trends","Same sample size","Equal variance"], ans: 1 },
+    { q: "Regression discontinuity exploits:", opts: ["Random selection","A sharp threshold in treatment assignment (e.g. test score cutoff) where units just above and below are nearly identical — local causal identification","Time variation","Cross-sectional gaps"], ans: 1 },
+  ],
+  93: [
+    { q: "A North Star metric should be:", opts: ["Easy to game","A single metric that captures user value AND business value, infrequently changing, owned by the whole company","Vanity metric","Daily-active-users always"], ans: 1 },
+    { q: "Guardrail metrics exist to:", opts: ["Improve North Star","Prevent the North Star from being optimised at the expense of other critical outcomes (e.g. don't grow revenue by destroying retention)","Speed iteration","Reduce experiments"], ans: 1 },
+    { q: "Proxy metrics in experimentation should:", opts: ["Always replace outcomes","Move in the same direction as the true outcome and be measurable faster — but they must be validated against the real outcome periodically, or you drift into optimising the proxy itself","Be cheaper","Be larger"], ans: 1 },
+  ],
+  94: [
+    { q: "Online learning differs from batch learning by:", opts: ["More data","Updating model parameters incrementally as new data arrives, rather than retraining from scratch on a fixed dataset","Slower convergence","More layers"], ans: 1 },
+    { q: "Concept drift in online learning is handled by:", opts: ["Ignoring it","Adaptive techniques — sliding window learning, decay rates, drift detectors that trigger model resets when statistical change is detected","Larger models","More features"], ans: 1 },
+    { q: "Online learning's main risk in production is:", opts: ["Faster inference","Catastrophic adaptation to noisy or adversarial data — a few bad batches can corrupt the model permanently, motivating monitoring and rollback mechanisms","Memory usage","Distributed training"], ans: 1 },
+  ],
+  95: [
+    { q: "Isolation Forest detects anomalies by:", opts: ["Density estimation","Building random trees and measuring how few splits are needed to isolate a point — anomalies are isolated faster than normal points","Distance to mean","Linear regression"], ans: 1 },
+    { q: "Autoencoder-based anomaly detection works by:", opts: ["Predicting labels","Training to reconstruct normal data; anomalies have high reconstruction error because they don't fit the learned manifold","Classification","Embedding lookup"], ans: 1 },
+    { q: "Production anomaly detection systems must handle:", opts: ["Only static data","Concept drift in 'normal' — what was normal yesterday isn't normal today; the baseline itself shifts, requiring periodic model updates and adaptive thresholds","Fixed thresholds only","Synchronous training"], ans: 1 },
+  ],
+  96: [
+    { q: "Multi-armed bandits balance:", opts: ["Cost and revenue","Exploration (trying suboptimal arms to learn) vs exploitation (pulling the apparent best arm to earn) — central trade-off in sequential decision-making","Bias and variance","Precision and recall"], ans: 1 },
+    { q: "Thompson sampling explores by:", opts: ["Random uniform","Maintaining a posterior over each arm's reward and sampling from it — automatically balances exploration with confidence","Epsilon-greedy","Fixed sequence"], ans: 1 },
+    { q: "UCB (Upper Confidence Bound) picks the arm with:", opts: ["Highest mean","The highest upper confidence bound — explores arms with high uncertainty and exploits arms with high mean reward simultaneously","Lowest variance","Random selection"], ans: 1 },
+  ],
+  97: [
+    { q: "Support Vector Machines maximise:", opts: ["Number of support vectors","The margin between classes — the distance between the decision boundary and the closest training points","Number of features","Layer depth"], ans: 1 },
+    { q: "The kernel trick lets SVMs handle non-linear data by:", opts: ["Bigger features","Implicitly mapping inputs to higher-dimensional spaces where they become linearly separable, without computing the mapping explicitly","Adding layers","Quantising weights"], ans: 1 },
+    { q: "RBF kernels are popular because:", opts: ["They're simple","They effectively act as a similarity measure that maps to an infinite-dimensional space, capturing complex non-linear boundaries with one hyperparameter (gamma)","They're linear","They use less memory"], ans: 1 },
+  ],
+  98: [
+    { q: "Demographic parity in fairness measures whether:", opts: ["Models are accurate","Acceptance rates are equal across protected groups, regardless of underlying base rates — fails when base rates legitimately differ","Loss is small","Calibration holds"], ans: 1 },
+    { q: "Equalized odds requires:", opts: ["Equal accuracy","True positive rate AND false positive rate to be equal across groups — a stronger condition that's often impossible to satisfy simultaneously with calibration","Equal output","Equal precision"], ans: 1 },
+    { q: "Fairness impossibility theorems show:", opts: ["Fairness is always possible","You generally cannot satisfy multiple fairness criteria simultaneously when base rates differ — trade-offs must be made explicitly","Math is wrong","All groups are equal"], ans: 1 },
+  ],
+  99: [
+    { q: "RLHF (Reinforcement Learning from Human Feedback) trains LLMs by:", opts: ["Supervised learning only","Collecting human preference comparisons, training a reward model, then fine-tuning the LLM with RL (typically PPO) to maximise the predicted reward","Direct labels","Knowledge distillation"], ans: 1 },
+    { q: "DPO (Direct Preference Optimization) replaces RLHF's PPO with:", opts: ["Larger models","A direct loss on preference pairs that achieves similar alignment without the instability and complexity of RL training","Random sampling","Smaller models"], ans: 1 },
+    { q: "Reward hacking in RLHF refers to:", opts: ["Cyberattacks","The model learning to maximise the proxy reward (what humans seemed to prefer) in ways that diverge from true human preference — model gets good at gaming the reward model","Slow training","High loss"], ans: 1 },
+  ],
+  100: [
+    { q: "Federated learning trains models without:", opts: ["Loss functions","Centralising training data — clients (phones, hospitals) train locally and only share model updates, preserving data privacy","Backpropagation","Gradient descent"], ans: 1 },
+    { q: "Differential privacy in federated learning adds:", opts: ["Faster training","Calibrated noise to gradient updates to ensure no individual's data can be reconstructed, with a formal privacy guarantee (epsilon)","More layers","Encryption only"], ans: 1 },
+    { q: "Secure aggregation enables federated learning by:", opts: ["Storing data","Cryptographically combining client updates such that the server only sees the aggregate, never individual contributions","Faster networks","Compression"], ans: 1 },
+  ],
+  101: [
+    { q: "A random variable's expected value is:", opts: ["The mode","The probability-weighted average of all possible values it can take","The maximum","The variance"], ans: 1 },
+    { q: "Bayes' theorem relates:", opts: ["Two variances","P(A|B) to P(B|A) via the prior P(A) and the evidence P(B) — the foundation of Bayesian inference","Sample means","Two distributions"], ans: 1 },
+    { q: "Conditional independence means:", opts: ["Always independent","A and B are independent given C — knowing C makes A and B no longer informative about each other","Always dependent","Same distribution"], ans: 1 },
+  ],
+  102: [
+    { q: "An eigenvector of a matrix is:", opts: ["A random vector","A direction that the matrix only scales (by the corresponding eigenvalue), not rotates","The mean column","The first column"], ans: 1 },
+    { q: "Singular Value Decomposition (SVD) decomposes any matrix into:", opts: ["Two matrices","A rotation, a stretch (singular values), and another rotation (U Σ Vᵀ) — universal across non-square matrices, unlike eigendecomposition","Three vectors","Three diagonals"], ans: 1 },
+    { q: "Matrix rank tells you:", opts: ["Matrix size","The number of linearly independent rows or columns — the effective dimensionality of the space spanned by the rows or columns","Determinant size","Trace value"], ans: 1 },
+  ],
+  103: [
+    { q: "The gradient of a scalar function with respect to a vector input is:", opts: ["A scalar","A vector pointing in the direction of steepest increase, with magnitude equal to the rate of change in that direction","A matrix","A determinant"], ans: 1 },
+    { q: "The chain rule in calculus computes derivatives of:", opts: ["Sums only","Composite functions — d/dx[f(g(x))] = f'(g(x)) · g'(x) — the foundation of backpropagation","Constants","Logarithms"], ans: 1 },
+    { q: "Convex functions have the property that:", opts: ["Always 0","Any local minimum is also a global minimum, and the line between any two points on the graph lies above the function","Always negative","Random shape"], ans: 1 },
+  ],
+  104: [
+    { q: "Entropy quantifies:", opts: ["Computational cost","The average uncertainty (or information content) of a random variable — high for uniform distributions, zero for deterministic ones","Sample size","Variance"], ans: 1 },
+    { q: "Cross-entropy between distributions P and Q is:", opts: ["Symmetric","The expected log-loss when using Q to encode events drawn from P — minimised when Q = P; the loss function for classification","A distance","A correlation"], ans: 1 },
+    { q: "KL divergence measures:", opts: ["Distance always","The information gain from observing P relative to Q (asymmetric; KL(P||Q) ≠ KL(Q||P)) — minimised when distributions match","Symmetric distance","Variance ratio"], ans: 1 },
+  ],
+  105: [
+    { q: "Maximum Likelihood Estimation (MLE) finds parameters that:", opts: ["Minimise loss","Maximise the probability of the observed data under the model — equivalent to minimising negative log-likelihood","Are unbiased","Are smallest"], ans: 1 },
+    { q: "MAP (Maximum A Posteriori) differs from MLE by:", opts: ["Larger output","Multiplying the likelihood by a prior — equivalent to MLE with a regularisation term derived from the prior","Smaller output","Different loss"], ans: 1 },
+    { q: "The connection between MLE and L2 regularisation is:", opts: ["No connection","MAP with a Gaussian prior on weights yields L2-regularised MLE — regularisation has a Bayesian interpretation","Different optimisers","Faster computation"], ans: 1 },
+  ],
+  106: [
+    { q: "EM (Expectation-Maximization) algorithm alternates:", opts: ["Forward and backward passes","E-step computing posterior probabilities of hidden variables given current parameters, and M-step updating parameters to maximize the expected complete log-likelihood","Optimisation methods","Two losses"], ans: 1 },
+    { q: "EM is used for Gaussian Mixture Models because:", opts: ["Speed","Cluster assignments are hidden variables — EM iteratively estimates them and the Gaussian parameters","Less memory","Fewer features"], ans: 1 },
+    { q: "K-means is a special case of EM where:", opts: ["Always converges","Hard assignments replace soft posteriors, and clusters are spherical with equal variance — derivable from GMM EM with these constraints","No connection","Equivalent always"], ans: 1 },
+  ],
+  107: [
+    { q: "Logistic regression is named 'regression' but solves:", opts: ["Linear regression","Binary classification — it regresses on the log-odds of class membership, then applies sigmoid to produce a probability","Continuous prediction","Clustering"], ans: 1 },
+    { q: "The decision boundary of logistic regression is:", opts: ["Curved","Linear in the feature space — the model is linear in the log-odds, despite its non-linear sigmoid output","Always parabolic","Determined by data"], ans: 1 },
+    { q: "Logistic regression's loss function is:", opts: ["MSE","Log-loss (negative log-likelihood under Bernoulli assumption) — convex, so gradient descent converges to global minimum","Hinge loss","L2 distance"], ans: 1 },
+  ],
+  108: [
+    { q: "A decision tree splits at each node by:", opts: ["Random feature","Choosing the feature and threshold that maximally reduce impurity (Gini or entropy) of the resulting partitions","Equal split","Mean split"], ans: 1 },
+    { q: "Random Forest reduces overfitting via:", opts: ["Deeper trees","Averaging many trees grown on bootstrap samples with random feature subsets — variance reduction through ensembling decorrelated learners","Pruning only","Fewer trees"], ans: 1 },
+    { q: "Bagging works because:", opts: ["Speed","Variance of the average decreases with more (uncorrelated) base learners — Var(mean) ≈ ρσ² + (1-ρ)σ²/N where ρ is the inter-learner correlation","Bias cancels","Trees disagree"], ans: 1 },
+  ],
+  109: [
+    { q: "Word2Vec's skip-gram model trains by:", opts: ["Predicting labels","Given a word, predicting its surrounding context words — and the learned word embeddings capture semantic similarity","Predicting next word","Autoencoding"], ans: 1 },
+    { q: "Negative sampling speeds up Word2Vec by:", opts: ["Smaller vocabulary","Replacing the expensive softmax over the full vocabulary with binary classification against a few sampled negative words","Larger windows","Distributed training"], ans: 1 },
+    { q: "Word embeddings show 'king - man + woman = queen' because:", opts: ["Coincidence","The training objective creates a geometry where semantic relations are encoded as consistent vector translations","Random luck","Pre-defined relations"], ans: 1 },
+  ],
+  110: [
+    { q: "Before Vision Transformers, image classification relied on:", opts: ["Random projections","Convolutional Neural Networks that exploit translation equivariance and locality via shared filters and pooling","Decision trees","Linear models"], ans: 1 },
+    { q: "Object detection differs from classification by:", opts: ["Larger images","Locating AND classifying multiple objects per image, often via region proposals (R-CNN family) or single-shot grids (YOLO, SSD)","Same task","Different metrics"], ans: 1 },
+    { q: "Semantic segmentation produces:", opts: ["Bounding boxes","A per-pixel class label, requiring architectures (U-Net, DeepLab) that preserve spatial resolution while extracting features","Object IDs","Caption text"], ans: 1 },
+  ],
+  111: [
+    { q: "OLS (Ordinary Least Squares) finds coefficients that minimise:", opts: ["Cross-entropy","Sum of squared residuals — the closed-form solution is β = (XᵀX)⁻¹ Xᵀy","L1 norm","Hinge loss"], ans: 1 },
+    { q: "OLS's Gauss-Markov theorem guarantees:", opts: ["Maximum likelihood","Best Linear Unbiased Estimator under assumptions of linearity, independence, homoscedasticity, and zero-mean errors","Computational efficiency","Fast convergence"], ans: 1 },
+    { q: "OLS breaks down when:", opts: ["Tiny datasets","Multicollinearity (XᵀX nearly singular) makes coefficients unstable, or heteroscedasticity violates the BLUE assumption","Always works","Tiny errors"], ans: 1 },
+  ],
+  112: [
+    { q: "L1 (Lasso) regularisation produces sparse solutions because:", opts: ["Random sparsity","Its diamond-shaped constraint geometry causes the optimum to land on corners (axes), zeroing out coefficients","Computational ease","Larger gradients"], ans: 1 },
+    { q: "L2 (Ridge) regularisation shrinks coefficients toward:", opts: ["Random values","Zero proportionally, without zeroing them out — the spherical constraint penalises large coefficients uniformly","One","Infinity"], ans: 1 },
+    { q: "Elastic Net combines L1 and L2 because:", opts: ["More parameters","It encourages sparsity (L1) while handling correlated features stably (L2), via mixing parameter alpha","Faster","Simpler"], ans: 1 },
+  ],
+  113: [
+    { q: "A p-value represents:", opts: ["Probability of being right","The probability of observing a result at least as extreme as the data, assuming the null hypothesis is true","Effect size","Confidence level"], ans: 1 },
+    { q: "A 95% confidence interval contains the true parameter:", opts: ["Always","In approximately 95% of repeated samples — NOT the probability that the true value lies in this specific interval","Never","Sometimes"], ans: 1 },
+    { q: "Statistical power is:", opts: ["Sample size","The probability of correctly rejecting a false null hypothesis — depends on effect size, sample size, variance, and significance level","P-value","Type I error"], ans: 1 },
+  ],
+  114: [
+    { q: "Precision is:", opts: ["Correct / Total","True positives / (True positives + False positives) — of items flagged positive, what fraction were correct","Recall","F1 always"], ans: 1 },
+    { q: "Recall (sensitivity) measures:", opts: ["Same as precision","True positives / (True positives + False negatives) — of true positives, what fraction were flagged","Precision","Specificity"], ans: 1 },
+    { q: "AUC-PR is preferred over AUC-ROC when:", opts: ["Balanced data","Class imbalance is severe — PR-AUC focuses on the positive class performance, ROC-AUC can mislead with many true negatives","Linear models","Random data"], ans: 1 },
+  ],
+  115: [
+    { q: "A convex optimisation problem has:", opts: ["Many local minima","A convex objective AND convex constraints — guaranteeing any local minimum is global, enabling efficient algorithms","Random solutions","Linear constraints"], ans: 1 },
+    { q: "Gradient descent's convergence guarantee on convex problems is:", opts: ["No guarantee","Provable to converge to global minimum under appropriate step sizes — rate depends on conditioning","Always slow","Random"], ans: 1 },
+    { q: "Non-convex problems (like neural network training) are tractable because:", opts: ["They're convex","Stochastic gradient descent finds 'good enough' local minima — overparameterised networks have many near-equivalent solutions","No guarantees needed","Convex in practice"], ans: 1 },
+  ],
+  116: [
+    { q: "Xavier (Glorot) initialisation scales weights by:", opts: ["1","Variance proportional to 1/n where n is the number of inputs — preserves variance through forward and backward passes for tanh/sigmoid","Random","Layer index"], ans: 1 },
+    { q: "He initialisation differs from Xavier by:", opts: ["Random scaling","Doubling the variance (2/n) — accounts for ReLU which halves activation variance","Same formula","No scaling"], ans: 1 },
+    { q: "Poor initialisation can cause:", opts: ["Faster training","Vanishing or exploding gradients in deep networks — preventing learning altogether or destabilising optimisation","Easier training","No effect"], ans: 1 },
+  ],
+  117: [
+    { q: "Standardisation (z-score normalisation) is appropriate when:", opts: ["Features are bounded","Features are roughly Gaussian and you want zero mean, unit variance — common for linear models and neural networks","Categorical features","Sparse data"], ans: 1 },
+    { q: "Min-max normalisation maps features to:", opts: ["Random ranges","A fixed range (typically [0, 1] or [-1, 1]) — useful when bounds matter (e.g. image pixel intensities)","Mean zero","Variance one"], ans: 1 },
+    { q: "MCAR (Missing Completely At Random) means:", opts: ["Missingness depends on features","Missingness is independent of both observed and unobserved data — the safest case where simple imputation methods work","Always missing","Predictable missingness"], ans: 1 },
+  ],
+  118: [
+    { q: "Survival analysis differs from classification by:", opts: ["Smaller datasets","Modelling time-to-event explicitly, handling right-censored observations (subjects whose event hasn't occurred by the end of observation)","Simpler models","More features"], ans: 1 },
+    { q: "Kaplan-Meier estimator computes:", opts: ["Hazard function","The empirical survival function — probability of surviving past time t, accounting for censoring","Hazard ratio","Cumulative hazard"], ans: 1 },
+    { q: "Cox proportional hazards model assumes:", opts: ["Equal hazards","The hazard ratio between subjects is constant over time, allowing semi-parametric estimation without specifying baseline hazard","No covariates","Random failure"], ans: 1 },
+  ],
+  119: [
+    { q: "VC dimension measures:", opts: ["Layer count","The capacity of a model class — the largest set of points that can be shattered (perfectly fit) in all possible labelings","Parameter count","Sample size"], ans: 1 },
+    { q: "The classical bias-variance trade-off predicts:", opts: ["Always overfit","A U-shaped test error curve — too-simple models underfit, too-complex models overfit","Random shape","Always V-shaped"], ans: 1 },
+    { q: "Double descent challenges classical theory by showing:", opts: ["No effect","Test error drops AGAIN past the interpolation threshold for overparameterised models — modern deep networks generalise despite huge VC dimension","Classical theory holds","Bias always wins"], ans: 1 },
+  ],
+  120: [
+    { q: "The Jacobian matrix represents:", opts: ["A single derivative","Partial derivatives of a vector-valued function with respect to all input dimensions — generalises the derivative to multivariate functions","Sum of gradients","Hessian"], ans: 1 },
+    { q: "Backpropagation is essentially:", opts: ["Forward computation","The chain rule of calculus applied recursively through the network's computational graph — gradients flow backward from loss to parameters","A different algorithm","Random updates"], ans: 1 },
+    { q: "Deriving OLS via matrix calculus uses:", opts: ["Numerical methods","Setting ∂/∂β of (y - Xβ)ᵀ(y - Xβ) to zero, yielding the normal equations β = (XᵀX)⁻¹ Xᵀy","Random search","Approximations"], ans: 1 },
+  ],
+  121: [
+    { q: "CUPED reduces A/B test variance by:", opts: ["More samples","Subtracting predictable pre-experiment covariate variation from the outcome metric — increases statistical power at no data cost","Different metric","Longer tests"], ans: 1 },
+    { q: "CUPED's gain depends on:", opts: ["Sample size","R² between pre-experiment covariate and outcome — high R² (predictable users) means large variance reduction","Random chance","Treatment size"], ans: 1 },
+    { q: "MLRATE extends CUPED for:", opts: ["Smaller experiments","Multiplicative (rather than additive) treatment effects — important when treatment scales with baseline behaviour","Faster tests","Simpler maths"], ans: 1 },
+  ],
+  122: [
+    { q: "Graph Neural Networks help with fraud detection because:", opts: ["Larger models","Fraud rings have graph structure (shared devices, addresses, IPs) — GNNs propagate information across connections, catching collusion tabular models miss","Faster inference","Simpler training"], ans: 1 },
+    { q: "Message passing in GNNs aggregates:", opts: ["Random features","Information from a node's neighbours, iteratively building richer representations that capture multi-hop graph context","Just labels","Pixel values"], ans: 1 },
+    { q: "Over-smoothing in deep GNNs occurs when:", opts: ["Layers too few","Repeated neighbourhood aggregation makes all node representations converge to similar values, destroying useful information","Bad initialisation","Wrong loss"], ans: 1 },
+  ],
+  123: [
+    { q: "Real-time feature engineering requires:", opts: ["Faster batches","Computing features with low latency from streaming data, often using a feature store with online/offline parity","Larger storage","Bigger models"], ans: 1 },
+    { q: "Point-in-time correctness in real-time features prevents:", opts: ["Slow training","Training features that include data unavailable at inference time — causing training-serving skew","Test failures","Compilation errors"], ans: 1 },
+    { q: "Streaming feature skew between training and serving typically arises from:", opts: ["Random noise","Different aggregation windows, different timezones, different data freshness, or different code paths for batch vs stream","Hardware differences","Network latency"], ans: 1 },
+  ],
+  124: [
+    { q: "KV cache in LLM serving stores:", opts: ["Model weights","Computed keys and values from previous tokens, so attention computation doesn't redo them for each new token — speeds up autoregressive generation dramatically","Training data","Logs"], ans: 1 },
+    { q: "Continuous batching in LLM serving improves throughput by:", opts: ["Larger batches","Dynamically merging multiple requests into a single batch, with new requests joining and completed ones leaving each step","Sequential requests","Smaller models"], ans: 1 },
+    { q: "INT8 quantisation typically loses:", opts: ["Major accuracy","Minimal accuracy with significant memory and speed gains; INT4 can lose more accuracy and often requires quantisation-aware training","All accuracy","No accuracy ever"], ans: 1 },
+  ],
+  125: [
+    { q: "Hierarchical forecasting reconciles forecasts at:", opts: ["A single level","Multiple aggregation levels (national → regional → city) so they're consistent — bottom-up, top-down, or optimal reconciliation","Random levels","Same level"], ans: 1 },
+    { q: "MinT (Minimum Trace) reconciliation:", opts: ["Picks bottom only","Computes the linear combination of base forecasts that minimises the trace of reconciliation error covariance — optimal under certain assumptions","Averages forecasts","Picks top only"], ans: 1 },
+    { q: "Intermittent demand forecasting handles:", opts: ["Continuous demand","Sparse demand series with many zero periods (Croston, TSB methods) — naïve approaches dramatically underforecast","Daily seasonality","Multiple products"], ans: 1 },
+  ],
+  126: [
+    { q: "Second-price auctions encourage truthful bidding because:", opts: ["Random outcomes","Bidders pay the second-highest bid, not their own — incentivises bidding their true value","Lower bids","Higher revenue"], ans: 1 },
+    { q: "GSP (Generalized Second-Price) auctions in ads work by:", opts: ["Random allocation","Ranking ads by bid × pCTR (expected revenue), then charging each winner enough to keep their position vs the next bidder","First price","Random pricing"], ans: 1 },
+    { q: "pCTR (predicted Click-Through Rate) in auctions matters because:", opts: ["UI display","Bids are converted to eCPM (bid × pCTR) for ranking — miscalibrated pCTR means suboptimal auction outcomes and revenue loss","Aesthetic reasons","Compliance"], ans: 1 },
+  ],
 }

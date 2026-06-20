@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to…" />
+  <meta name="keywords" content="Interview Prep, HDFC Bank, Senior Risk Modeling, Credit Risk, IFRS-9, Indian Banking, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/hdfc-bank-senior-risk-modeling-data-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/hdfc-bank-senior-risk-modeling-data-scientist-interview-guide.html" />
+  <meta property="og:title" content="HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide" />
+  <meta property="og:description" content="HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide" />
+  <meta name="twitter:description" content="HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide",
+  "description": "HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/hdfc-bank-senior-risk-modeling-data-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, HDFC Bank, Senior Risk Modeling, Credit Risk, IFRS-9, Indian Banking, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=hdfc-bank-senior-risk-modeling-data-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>HDFC Bank Senior Risk Modeling / Data Scientist Interview Guide</h1>
+    <p class="excerpt">HDFC Bank hires for senior risk modeling, fraud, collections analytics, and credit decisioning. The interview tests regulatory rigour (RBI, ECL, IFRS-9), discrimination compliance, and the maturity to build models that hold up to audit. This guide covers what to prepare.</p>
+    <p>HDFC Bank is one of India's largest private banks and runs serious in-house ML for risk decisioning. Unlike fintechs, the interview emphasises regulatory rigour — RBI guidelines, IFRS-9 ECL, model risk management — and tests whether you can build models that survive a regulatory audit.</p>
+<h2>The loop structure (Senior Risk Modeler / DS)</h2>
+<p>Standard loop: recruiter screen → SQL + statistics → risk modeling case → ML system design → behavioural with senior leadership.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> 30 min. Background check on regulatory experience (RBI, IFRS-9), credit scoring exposure, and reason for change.</p>
+<p><strong>Round 2 — SQL + statistics.</strong> 75 minutes. Heavy SQL — credit risk lifecycle tables, vintage analysis, cohort analysis, default rate calculation across cohorts. Statistics: confidence intervals, hypothesis testing on default rates, validation that a new score outperforms the old (KS, Gini, PSI).</p>
+<p><strong>Round 3 — Risk modeling case.</strong> 90 minutes. The deepest round. Build a PD (Probability of Default) model end-to-end: feature engineering from raw bureau data, scorecard binning (WOE), logistic regression, calibration, segment-wise validation. Expect to derive WOE and Information Value from first principles.</p>
+<p><strong>Round 4 — ML system design.</strong> 60 minutes. Design a real-time risk decisioning system: low-latency scoring (<200ms), version control, A/B for new score variants, model risk management (MRM) review process, monitoring (PSI, KS shift, override rates).</p>
+<p><strong>Round 5 — Behavioural with senior leadership.</strong> 45 minutes. Risk leadership probes regulatory comfort, audit experience, and willingness to push back when business wants to relax a threshold.</p>
+<h2>What HDFC Bank weights distinctively</h2>
+<p>1. <strong>Regulatory rigour.</strong> RBI guidelines, IFRS-9 ECL, BCBS 239. You need to know these by name, not just concept. 2. <strong>Audit-ready discipline.</strong> Every modeling decision must be documented, justified, and reproducible. Senior risk modelers own this. 3. <strong>Scorecard tradition with ML modernisation.</strong> HDFC still uses logistic-regression scorecards for regulatory-grade decisions, with XGBoost / neural nets for marketing and second-pass models. 4. <strong>Demographic compliance.</strong> ECOA-equivalent Indian regulations: cannot use caste, religion, gender as features. Disparate impact testing.</p>
+<h2>Top 10 questions HDFC senior risk DS candidates face</h2>
+<p>1. "Derive WOE and Information Value. Why is WOE the right scale for credit scoring?" 2. "Build a PD model for unsecured personal loans. Walk through every step including segment-wise validation." 3. "Your PSI on credit score went from 0.05 to 0.18 over 3 months. What's your diagnosis and action?" 4. "How do you calibrate a PD model after sampling — when you over-sampled defaults during training?" 5. "ECL under IFRS-9 — explain the 3-stage classification and how PD, LGD, EAD feed into it." 6. "Design real-time fraud scoring for HDFC NetBanking. Latency budget is 200ms." 7. "Why might Gini increase but KS decrease at the same time? What does that tell you about model behaviour?" 8. "Your collections model flags a customer for early collections but they'd been a loyal customer for 8 years. Operations is angry. Walk through your response." 9. "How do you validate that your new credit score outperforms the existing one before deploying?" 10. "What's a feature you'd never use in an Indian credit model, even though it's predictive? Why?"</p>
+<h2>The prep path through MSL</h2>
+<p>For an HDFC Bank senior risk DS loop:</p>
+<li>Tier 0 (Observation Discipline) — Post 128.</li>
+<li>Tier 2 (Linear Models) — Post 111 (OLS), Post 112 (Regularisation), Post 107 (Logistic Regression).</li>
+<li>Tier 3 (Classical Algorithms) — Post 74 (Bias-Variance), Post 76 (Calibration). Calibration is critical for credit.</li>
+<li>Tier 5 (Evaluation) — all 7 posts, especially KS/Gini/PSI sections.</li>
+<li>Tier 7 (Production Engineering) — Posts 33, 41 (feature store) for real-time scoring.</li>
+<li>Tier 8 (Monitoring & MLOps) — all 5 posts. PSI is daily life at HDFC.</li>
+<li>Practice: LoanDefaultTab (ECOA-equivalent practice), IncidentRoom inc4-8.</li>
+<h2>Common failure modes</h2>
+<li>Not knowing IFRS-9 / RBI by name. HDFC interviewers expect regulatory vocabulary.</li>
+<li>Treating credit scoring as a generic ML problem (vs. understanding the segment-wise validation and regulatory constraints).</li>
+<li>Inability to derive WOE / IV from first principles.</li>
+<li>Recommending complex deep learning models for regulatory-grade decisions where logistic regression is the right answer.</li>
+<h2>Compensation</h2>
+<p>HDFC Bank Senior Risk Modeling / Senior DS in 2026 ranges roughly ₹28 lakh – ₹55 lakh for 5-8 YOE. Lead roles ₹65 lakh+. HDFC pays below fintechs but offers stability, regulatory depth, and a strong path into VP/Head-of-Modeling roles.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=hdfc-bank-senior-risk-modeling-data-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>
