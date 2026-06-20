@@ -67,13 +67,31 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/adobe-india-senior-mle-applied-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/ads-ctr-prediction-the-full-system.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ajio-reliance-retail-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/alexnet-to-agents-ml-decade.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/amazon-india-senior-mle-applied-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -145,7 +163,25 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bigbasket-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/bm25-tfidf-why-sparse-retrieval-still-wins.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/boat-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bookmyshow-senior-mle-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -421,6 +457,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/google-india-senior-mle-research-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/gradient-boosted-trees-xgboost-internals.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -476,6 +518,12 @@
   </url>
   <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/hypothesis-testing-t-test-p-values-confidence-intervals.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ibm-india-senior-mle-research-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -584,6 +632,18 @@
   </url>
   <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/meesho-ml-engineer-senior-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/meesho-senior-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/microsoft-india-senior-mle-applied-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -709,6 +769,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/oracle-india-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/paytm-senior-mle-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -734,6 +800,12 @@
   </url>
   <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/phonepe-senior-mle-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/policybazaar-senior-mle-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -847,6 +919,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/salesforce-india-senior-mle-applied-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/self-attention-qkv-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -902,6 +980,12 @@
   </url>
   <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/swiggy-senior-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/tata-1mg-senior-mle-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -967,6 +1051,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/uber-india-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/uplift-modeling-incrementality-propensity.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -997,6 +1087,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/walmart-global-tech-india-senior-mle-data-scientist-interview-guide.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/where-in-the-world-to-be-mle.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
@@ -1010,6 +1106,12 @@
   </url>
   <url>
     <loc>https://ml-systems-lab-v9xe.vercel.app/post/word2vec-embedding-geometry-negative-sampling.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/zepto-senior-mle-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

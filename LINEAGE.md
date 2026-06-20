@@ -46,6 +46,30 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.118 — STRATEGY SEO target hit: 17 more SEO guides → 50 total (2026-06-20)
+
+**Third same-day content push. Closes out the content backlog: STRATEGY target of 50 SEO interview guides is now hit.**
+
+**SEO guides (17 new).** Posts 166-182: Uber India (#166), Amazon India (#167), Microsoft India (#168), Google India (#169), Adobe India (#170), Walmart Global Tech India (#171), Salesforce India (#172), Oracle India (#173), IBM India (#174), BookMyShow (#175), boAt (#176), AJIO/Reliance Retail (#177), PolicyBazaar (#178), Meesho DS-focused companion (#179), BigBasket standalone (#180), Tata 1mg standalone (#181), Zepto (#182). Total SEO guides: **50** ✓ (STRATEGY target hit). Total Gradient posts: **182**.
+
+**Regenerated SEO infrastructure.**
+- \`node scripts/build-prerendered-posts.mjs\` → 174 static HTML files (was 157).
+- \`node scripts/build-sitemap.mjs\` → 188 URLs (was 171).
+
+**Audits passed.**
+- Brace diff: GradientTab.jsx = 0.
+- Apostrophe scan: caught + fixed 4 \`\\\\\\'\` patterns mid-session (BookMyShow / boAt / PolicyBazaar / BigBasket excerpts) by switching to double-quoted strings.
+- Schema audit: OK on all 182 posts.
+
+**Content backlog now closed.**
+- Quiz MCQs: 378 covering posts 1-126.
+- Simplify versions: 132 (covers all path posts + every non-path post with conceptual ML content; remaining missing IDs are SEO company guides that don't need a beginner version).
+- SEO interview guides: 50 (STRATEGY target hit).
+- Pre-rendered SEO HTML: 174 static files.
+- Sitemap: 188 URLs.
+
+This is the final v4.11x batch closing the queued content goals laid out across v4.111-v4.117. Next session can shift to: post-launch metrics review, LinkedIn batch_03 outreach scheduling, or new content categories (e.g., system-design deep dives, take-home practice scenarios).
+
 ### v4.117 — Content backlog finish push: 27 Simplify + 10 SEO guides (2026-06-20)
 
 **Same-day continuation of v4.116 — close out the remaining non-path Simplify gap and add 10 more SEO interview guides.**

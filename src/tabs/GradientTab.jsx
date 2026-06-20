@@ -10927,6 +10927,781 @@ Mamaearth / Honasa Senior MLE / DS in 2026 ranges roughly ₹25 lakh – ₹45 l
     domain: 'interview',
     youtube: [],
   },
+  {
+    id: 166,
+    slug: 'uber-india-senior-mle-data-scientist-interview-guide',
+    title: 'Uber India Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Uber India hires senior MLE / DS for marketplace matching, dynamic pricing, ETA, fraud, demand forecasting, and Uber Eats. The interview tests deep marketplace ML at global Uber bar: SUTVA, switchback experiments, real-time systems. This guide covers it.',
+    body: `Uber's Bangalore engineering centre houses one of the largest concentrations of senior MLE / DS work in India, supporting Uber Rides, Uber Eats, Uber Freight, and Uber for Business. Senior roles span marketplace matching, surge pricing, ETA prediction, fraud detection, demand forecasting, and merchant analytics. The interview bar matches Uber HQ — global standard.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard Uber loop: recruiter screen → ML fundamentals + coding → ML system design (marketplace) → data + experimentation case → hiring manager + behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + coding.** 90 minutes. Tight ML fundamentals plus LeetCode medium-hard (often two problems).
+
+**Round 3 — ML system design.** 75 minutes. "Design Uber's matching" or "design surge pricing." Probed at depth: SUTVA, switchback design, equilibrium, edge cases.
+
+**Round 4 — Data + experimentation case.** 60 minutes. Real Uber problem walked through end-to-end. Probed for: causal reasoning, A/B test design under marketplace network effects.
+
+**Round 5 — Hiring manager + behavioural.** 60 minutes. Uber's principles probed; "let builders build" matters.
+
+**What Uber India weights distinctively**
+
+1. **Marketplace SUTVA fluency.** Switchback experimentation is the everyday tool.
+2. **Real-time systems.** Sub-second decisions at planet scale.
+3. **Causal rigour.** Uber publishes heavily on causal inference; expected to know it.
+4. **Production discipline.** Big tech ops standards.
+
+**Top 10 questions**
+1. "Design surge pricing. Why can't you A/B test with user randomisation?"
+2. "Switchback experiment for matching algorithm change — design end-to-end."
+3. "ETA prediction failure modes."
+4. "Driver fraud at scale — patterns and detection."
+5. "Two-sided marketplace metrics — what matters and why?"
+6. "Demand forecasting per cell × hour. Architecture?"
+7. "Calibration vs ranking for surge."
+8. "Most impactful production project — walk through with metrics."
+9. "Walk through a hard production debugging story."
+10. "Why Uber?"
+
+**Prep path through MSL** — Tier 0 (Post 128), Tier 5 (all 7), Tier 7 (all 5), Tier 9 (Posts 91-93), Posts 96 (Bandits), 123 (Real-Time Features). Practice: MockInterview with Uber JD.
+
+**Common failure modes** — Surface SUTVA answers, no switchback experience, weak causal inference, weak coding.
+
+**Compensation.** Uber India Senior MLE / DS in 2026 ranges ₹50 lakh – ₹95 lakh for 5-7 YOE base + RSU. Staff ₹1.2 crore+. Among the highest paying in India.`,
+    tags: ['Interview Prep', 'Uber', 'Uber India', 'Senior MLE', 'Senior DS', 'Marketplace', 'Surge Pricing', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 167,
+    slug: 'amazon-india-senior-mle-applied-scientist-interview-guide',
+    title: 'Amazon India Senior MLE / Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Amazon India hires senior Applied Scientist + SDE-ML roles across recommendation (Amazon.in, Prime Video, Amazon Music), forecasting (supply chain), Alexa, AWS ML services, and ads. The interview tests Amazon LP fluency at every step plus deep ML. This guide covers it.',
+    body: `Amazon India has senior ML hiring across many orgs — retail recommendation, supply chain forecasting (one of the largest forecasting ML operations in the world), Alexa, AWS ML services (SageMaker, Bedrock), and ads. Roles include Applied Scientist (research-leaning) and Senior SDE-ML (engineering-leaning). The interview is structurally distinctive: every round is graded against Amazon's Leadership Principles.
+
+**The loop structure (Senior AS / SDE-ML)**
+
+Standard Amazon loop: phone screen (technical) → on-site 4-5 rounds (each mixes technical + behavioral graded on LPs).
+
+**Round-by-round breakdown**
+
+**Phone screen.** 60 min. Coding + ML fundamentals.
+
+**On-site round 1 — Coding + LP.** 60 min. LeetCode medium-hard + 1-2 LP questions.
+
+**On-site round 2 — ML depth + LP.** 60 min. Probability, statistics, ML fundamentals (XGBoost internals, regularisation derivations, calibration) + 1-2 LP questions.
+
+**On-site round 3 — ML system design + LP.** 60 min. Domain-specific (recommendation, forecasting, search). Plus LP.
+
+**On-site round 4 — Bar-raiser.** 60 min. Hardest round. Senior interviewer from a different org probes deeply across LP + technical.
+
+**What Amazon India weights distinctively**
+
+1. **LP fluency.** Every answer must thread an LP (Customer Obsession, Ownership, Invent and Simplify, etc.). No exceptions.
+2. **STAR format.** Behavioral answers in Situation-Task-Action-Result format. Vague stories fail.
+3. **Frugality + scale.** Amazon builds scalable cheap solutions over elegant expensive ones.
+4. **Long-term thinking.** Multi-year impact valued.
+
+**Top 10 questions**
+1. "Design Amazon's product recommendation. Latency, scale, cold-start."
+2. "Forecasting: design Amazon's supply chain demand model. SKU × node × day."
+3. "Tell me about a time you had to disagree and commit."
+4. "Tell me about a time you delivered something with insufficient data."
+5. "Calibration in ranking — when does Amazon care?"
+6. "Tell me about a time you simplified a complex system."
+7. "Design Alexa wake-word detection at low-power edge."
+8. "Tell me about a time you had to make a decision quickly under uncertainty."
+9. "Real-time feature engineering for product search — architecture."
+10. "What's your most ambitious project and why did it matter?"
+
+**Prep path through MSL** — All Tier 5, Tier 7, Tier 8 posts. Posts 88 (Time Series), 70-72 (RecSys), 125 (Hierarchical Forecasting). Practice: MockInterview + 5-10 LP stories prepped in STAR format.
+
+**Common failure modes** — Weak LP threading, vague STAR stories, surface ML answers without Amazon scale awareness.
+
+**Compensation.** Amazon India Senior Applied Scientist / SDE-ML L6 in 2026 ranges ₹50 lakh – ₹85 lakh for 5-8 YOE base + RSU. L7 (Principal) ₹1.2 crore+.`,
+    tags: ['Interview Prep', 'Amazon', 'Amazon India', 'Senior MLE', 'Applied Scientist', 'Leadership Principles', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 168,
+    slug: 'microsoft-india-senior-mle-applied-scientist-interview-guide',
+    title: 'Microsoft India Senior MLE / Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Microsoft India (Hyderabad + Bangalore) hires senior MLE / AS for Azure AI, M365 Copilot, Bing/Edge AI, Office Copilot, GitHub Copilot, and Dynamics 365. The interview tests strong fundamentals, system design at cloud scale, and product judgment around LLM integration. This guide covers it.',
+    body: `Microsoft India is one of the largest engineering centers globally. Senior MLE / Applied Scientist roles span Azure AI (Cognitive Services, OpenAI integration), M365 Copilot, Office Copilot, GitHub Copilot, Bing, Edge, Dynamics 365, and Xbox. The interview is rigorous, less LP-heavy than Amazon, more product-judgment-focused.
+
+**The loop structure (Senior MLE / AS)**
+
+Standard loop: phone screen → 4-5 on-site rounds (mix of coding, ML, system design, behavioral).
+
+**Round-by-round breakdown**
+
+**Phone screen.** Coding + ML fundamentals.
+
+**On-site rounds.**
+- Coding (2 problems, LeetCode medium-hard).
+- ML fundamentals (probability, stats, ML theory).
+- ML system design (often LLM-flavored now — RAG, agents, evaluation).
+- Behavioral / product judgment.
+
+**What Microsoft India weights distinctively**
+
+1. **Cloud-scale system design.** Microsoft expects Azure-grade thinking.
+2. **LLM integration depth.** Copilot products are the strategic focus; RAG, evaluation, safety probed.
+3. **Product judgment.** Not just "build the model" but "should we build this and what's the right scope."
+4. **Strong fundamentals.** Stats, probability, ML theory probed deeply.
+
+**Top 10 questions**
+1. "Design RAG for GitHub Copilot. What's retrieved and how is it evaluated?"
+2. "Design Office Copilot's grounding system."
+3. "Evaluation framework for an LLM product — what would you build?"
+4. "Latency and cost optimisation for LLM serving at Microsoft scale."
+5. "Calibration in classification — derivation."
+6. "Class imbalance: techniques and trade-offs."
+7. "Walk through your most impactful project."
+8. "Disagreement scenario."
+9. "Design a feature flag rollout for an LLM model upgrade."
+10. "Why Microsoft?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 90 (RAG), 124 (LLM Production), 99 (RLHF), 98 (Fairness). Practice: MockInterview.
+
+**Common failure modes** — Weak LLM production knowledge, weak system-design at cloud scale, surface behavioral answers.
+
+**Compensation.** Microsoft India Senior Applied Scientist / Senior SDE-ML 63/64 in 2026 ranges ₹50 lakh – ₹90 lakh for 5-8 YOE base + stock. Principal (65+) ₹1.3 crore+.`,
+    tags: ['Interview Prep', 'Microsoft', 'Microsoft India', 'Senior MLE', 'Applied Scientist', 'LLM', 'Copilot', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 169,
+    slug: 'google-india-senior-mle-research-scientist-interview-guide',
+    title: 'Google India Senior MLE / Research Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Google India (Bangalore + Hyderabad + Gurgaon) hires senior MLE / Research Scientist roles across Search, Ads, Maps, YouTube, Cloud AI, DeepMind India, and Android. The interview is the deepest of any company — coding, ML, system design, research depth all probed rigorously. This guide covers it.',
+    body: `Google India houses senior ML hiring across Search, Ads (one of the largest ML operations globally), Maps, YouTube, Cloud AI / Vertex, DeepMind India (research), and Android ML. Roles include Senior SWE-ML (L5/L6), Senior Research Scientist (research), and AI Resident-to-FTE. The interview is the deepest in industry.
+
+**The loop structure (Senior SWE-ML / RS)**
+
+Standard Google loop: phone screen (coding) → on-site 4-5 rounds.
+
+**Round-by-round breakdown**
+
+**Phone screen.** 45 min coding (1 problem). High bar.
+
+**On-site rounds.**
+- Coding × 2 (LeetCode hard, 1-2 problems per round).
+- ML system design (production scale).
+- ML / general AI depth (for research roles: walk through a paper, derive math).
+- Googleyness + leadership.
+
+**Bar.** Highest in industry. Even seniors fail for surface answers. Hire/no-hire votes by committee, not just team.
+
+**What Google India weights distinctively**
+
+1. **Coding depth.** LeetCode hard is the standard.
+2. **System design at planetary scale.** Search-quality, YouTube ranking, Ads auctions.
+3. **Research fluency.** For research roles, deep math derivations expected.
+4. **Googleyness.** Collaborative, mission-driven, non-political culture.
+
+**Top 10 questions**
+1. "Design YouTube recommendations end-to-end."
+2. "Design Google Search ranking. What's the ML stack?"
+3. "Code: efficient implementation of a candidate generator using ANN."
+4. "Code: hard graph problem."
+5. "Derive backpropagation for a specific architecture."
+6. "Ads auction theory — pCTR calibration importance."
+7. "Walk through a recent paper that influenced you."
+8. "Most impactful project — with depth."
+9. "Conflict resolution — recent example."
+10. "Why Google?"
+
+**Prep path through MSL** — Tier 0 (Post 128), All Tier 5, Tier 7, Tier 8 posts. Posts 70-72 (RecSys), 89 (CTR), 90 (RAG), 99 (RLHF), 124 (LLM Production), 126 (Auction Theory). Heavy MLCoding practice mlc1-15.
+
+**Common failure modes** — Weak coding (most common), surface ML, no paper depth.
+
+**Compensation.** Google India L5/Senior SWE-ML in 2026 ranges ₹70 lakh – ₹1.2 crore for 5-8 YOE base + stock. L6 (Staff) ₹1.5 crore+. L7 ₹2 crore+. Highest in India.`,
+    tags: ['Interview Prep', 'Google', 'Google India', 'Senior MLE', 'Research Scientist', 'DeepMind', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 170,
+    slug: 'adobe-india-senior-mle-applied-scientist-interview-guide',
+    title: 'Adobe India Senior MLE / Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Adobe India (Noida + Bangalore) hires senior MLE / Applied Scientist across Creative Cloud (Photoshop, Premiere AI), Document Cloud (Acrobat AI), Experience Cloud, Sensei generative AI, and Firefly. The interview tests deep CV / NLP / generative ML plus product judgment. This guide covers it.',
+    body: `Adobe India is one of Adobe's largest engineering centres, housing senior ML roles across Creative Cloud (Photoshop AI, Premiere AI, Lightroom AI), Document Cloud (Acrobat AI), Experience Cloud (marketing analytics + personalisation), Sensei (Adobe's AI platform), and Firefly (generative imaging). Roles range from senior MLE to Applied Scientist.
+
+**The loop structure (Senior MLE / AS)**
+
+Standard loop: phone screen → 4-5 on-site rounds.
+
+**Round-by-round breakdown**
+
+**Phone screen.** Coding + ML fundamentals.
+
+**On-site rounds.** Mix of coding (LeetCode medium-hard), ML fundamentals (deep depending on team — CV for Creative Cloud, NLP for Acrobat AI), ML system design, and behavioural.
+
+**What Adobe India weights distinctively**
+
+1. **CV / NLP / generative depth.** Most teams need deep technical expertise in one of these.
+2. **Product judgment.** Adobe ships to creators; UX-aware ML matters.
+3. **Real-time + interactive ML.** Many Creative Cloud features need low-latency on-device or edge inference.
+4. **Stable engineering culture.** Less startup-pace, more depth-pace.
+
+**Top 10 questions**
+1. "Design real-time selection in Photoshop. Latency, edge deployment, fallback."
+2. "Design Firefly's image generation pipeline."
+3. "OCR + layout for Acrobat AI — architecture."
+4. "Diffusion models for image generation — explain and design."
+5. "Coding: efficient image processing operation."
+6. "Calibration in classification."
+7. "Multi-task learning trade-offs."
+8. "Walk through your most impactful project."
+9. "Disagreement scenario."
+10. "Why Adobe?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 61 (ViT), 62 (CLIP), 63 (Stable Diffusion), 110 (CV), 124 (LLM Production), 77/78 (Distillation for edge).
+
+**Common failure modes** — Weak CV / NLP depth for the specific team, no edge / mobile awareness.
+
+**Compensation.** Adobe India Senior MLE / AS (M5+) in 2026 ranges ₹45 lakh – ₹75 lakh for 5-7 YOE base + RSU. Principal ₹1 crore+.`,
+    tags: ['Interview Prep', 'Adobe', 'Adobe India', 'Senior MLE', 'Applied Scientist', 'Creative Cloud', 'Generative AI', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 171,
+    slug: 'walmart-global-tech-india-senior-mle-data-scientist-interview-guide',
+    title: 'Walmart Global Tech India Senior MLE / DS Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Walmart Global Tech India (Bangalore + Chennai) hires senior MLE / DS for Walmart.com personalisation, supply chain forecasting, search, fraud, and Walmart Connect ads. The interview tests retail ML at global scale plus the engineering bar of a large org. This guide covers it.',
+    body: `Walmart Global Tech India is one of Walmart's largest engineering centres outside the US, supporting Walmart.com, Sam's Club, Walmart Connect (ads), and supply chain. Senior MLE / DS roles cover personalisation, search, demand forecasting (massive scale: many products × stores × days), fraud, returns prediction, and Walmart Connect attribution.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → coding + ML → ML system design → hiring manager + behavioural.
+
+**Round-by-round breakdown**
+
+**Phone + screen.** ML + coding mix.
+
+**On-site rounds.** Two coding (LeetCode medium-hard), one ML depth (probability, ML fundamentals, calibration), one system design (retail scale).
+
+**What Walmart Global Tech India weights distinctively**
+
+1. **Retail scale.** Forecasting and personalisation at billions of impressions.
+2. **Omnichannel.** Online + offline + click-and-collect.
+3. **Supply chain ML.** Demand forecasting integrated with fulfillment.
+4. **Stable, large-org culture.** Less aggressive than fintech, more depth-focused.
+
+**Top 10 questions**
+1. "Design demand forecasting for Walmart at SKU × store × day."
+2. "Personalisation on Walmart.com — architecture."
+3. "Omnichannel attribution — online view, offline buy."
+4. "Search ranking — multi-task across CTR, conversion, GMV."
+5. "Fraud detection at checkout — patterns and architecture."
+6. "Returns prediction — what features?"
+7. "Coding: efficient implementation problem."
+8. "Calibration in CTR for Walmart Connect."
+9. "Diagnose engagement drop on a category page."
+10. "Walk through your most impactful project."
+
+**Prep path through MSL** — Tier 5, Tier 7, Tier 8 (all). Posts 70-72 (RecSys), 89 (CTR), 125 (Hierarchical Forecasting), 88 (Time Series).
+
+**Common failure modes** — Surface forecasting depth, weak coding, no omnichannel awareness.
+
+**Compensation.** Walmart Global Tech India Senior MLE / DS in 2026 ranges ₹40 lakh – ₹70 lakh for 5-7 YOE base + stock. Staff ₹90 lakh+.`,
+    tags: ['Interview Prep', 'Walmart', 'Walmart Global Tech', 'Senior MLE', 'Senior DS', 'Retail ML', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 172,
+    slug: 'salesforce-india-senior-mle-applied-scientist-interview-guide',
+    title: 'Salesforce India Senior MLE / Applied Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Salesforce India (Bangalore + Hyderabad) hires senior MLE / AS for Einstein AI, Agentforce, Service Cloud AI, Sales Cloud AI, and Tableau analytics. The interview tests SaaS-grade ML, multi-tenant production discipline, and LLM agentic flows. This guide covers it.',
+    body: `Salesforce India works on Einstein AI (predictive lead scoring, opportunity scoring), Agentforce (agentic AI for support), Service Cloud AI (case routing, response generation), Sales Cloud AI, and Tableau analytics. Senior MLE / AS roles probe multi-tenant SaaS ML — building one model serving thousands of customers safely.
+
+**The loop structure (Senior MLE / AS)**
+
+Standard loop: recruiter screen → coding + ML → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Phone screen.** ML + coding mix.
+
+**On-site rounds.** Coding (LeetCode medium-hard), ML depth (NLP heavy now), ML system design (multi-tenant SaaS), behavioural.
+
+**What Salesforce India weights distinctively**
+
+1. **Multi-tenant ML.** One model, many customers. Per-customer adaptation without per-customer training.
+2. **Customer-data isolation.** GDPR + SOC2 + per-tenant data boundaries.
+3. **LLM productisation.** Agentforce is heavy on LLM agentic flows.
+4. **Enterprise reliability.** SaaS uptime expectations.
+
+**Top 10 questions**
+1. "Design lead scoring for Einstein. Multi-tenant means one model serves thousands of customers — how?"
+2. "Agentforce: design an autonomous support agent. Architecture + safety."
+3. "Multi-tenant data isolation in training — strategies."
+4. "Per-customer fine-tuning without per-customer training — approaches."
+5. "RAG for support: customer-specific knowledge base, no cross-leak."
+6. "Calibration importance for opportunity scoring."
+7. "Concept drift across customers — handling."
+8. "Walk through your most impactful project."
+9. "Disagreement scenario."
+10. "Why Salesforce?"
+
+**Prep path through MSL** — Tier 5, Tier 7 (all), Posts 90 (RAG), 99 (RLHF), 124 (LLM Production), 98 (Fairness), 100 (Federated Learning for multi-tenant analogy).
+
+**Common failure modes** — Generic ML without multi-tenant thinking, weak LLM production depth.
+
+**Compensation.** Salesforce India Senior MLE / AS (MTS-2/3) in 2026 ranges ₹50 lakh – ₹80 lakh for 5-7 YOE base + RSU. Lead/Principal ₹1.1 crore+.`,
+    tags: ['Interview Prep', 'Salesforce', 'Salesforce India', 'Einstein AI', 'Agentforce', 'Senior MLE', 'Applied Scientist', 'SaaS', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 173,
+    slug: 'oracle-india-senior-mle-data-scientist-interview-guide',
+    title: 'Oracle India Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'Oracle India (Bangalore + Hyderabad) hires senior MLE / DS for OCI (Oracle Cloud Infrastructure) AI services, NetSuite analytics, Oracle Fusion AI, and database AI. The interview tests deep ML fundamentals + cloud production discipline. This guide covers it.',
+    body: `Oracle India works on OCI AI services (NLU, vision, document understanding, generative AI), NetSuite analytics, Oracle Fusion Cloud Applications AI features, and Database AI / vector search. Senior MLE / DS roles tend toward deep technical IC work in a stable, enterprise-customer context.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → coding + ML → ML system design → behavioural.
+
+**What Oracle India weights distinctively**
+
+1. **Enterprise reliability.** SLA-driven production discipline.
+2. **Database integration.** ML often interfaces with Oracle DB-side features (vector search, in-DB inference).
+3. **Stable culture.** Lower iteration pace than startups; higher depth.
+4. **Specific deep work.** Document AI, NLU, autonomous DB tuning ML are unique.
+
+**Top 10 questions**
+1. "Design OCI's document understanding service."
+2. "Vector search in Oracle DB — architecture, latency."
+3. "Autonomous DB tuning with ML — what features and what model?"
+4. "NLU service multi-language scaling."
+5. "ML system design for enterprise SLA."
+6. "Calibration in classification."
+7. "Walk through your most impactful project."
+8. "Disagreement scenario."
+9. "Coding: efficient implementation."
+10. "Why Oracle?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 90 (RAG), 110 (CV / OCR), 124 (LLM Production), 123 (Real-Time Features).
+
+**Compensation.** Oracle India Senior MLE / DS (IC4/5) in 2026 ranges ₹35 lakh – ₹60 lakh for 5-7 YOE base + RSU. Lead ₹75 lakh+.`,
+    tags: ['Interview Prep', 'Oracle', 'Oracle India', 'OCI', 'Senior MLE', 'Senior DS', 'Enterprise', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 174,
+    slug: 'ibm-india-senior-mle-research-scientist-interview-guide',
+    title: 'IBM India Senior MLE / Research Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'IBM India (Bangalore + Pune + Gurgaon) hires senior MLE / Research Scientist for watsonx, IBM Cloud AI, Granite LLM, and enterprise consulting. The interview tests deep ML fundamentals, research depth, and enterprise customer thinking. This guide covers it.',
+    body: `IBM India houses senior ML roles at IBM Research India (research scientist track), watsonx (foundation model + agent platform), IBM Cloud AI services, Granite LLM development, and enterprise consulting AI delivery. The mix of research + product makes it distinctive.
+
+**The loop structure (Senior MLE / RS)**
+
+Standard loop: phone screen → 4-5 on-site rounds.
+
+**What IBM India weights distinctively**
+
+1. **Research depth.** For RS roles, paper portfolio expected.
+2. **Foundation model expertise.** Granite series + watsonx training/serving.
+3. **Enterprise customer thinking.** Customer-specific deployments.
+4. **Stable, depth-pace culture.**
+
+**Top 10 questions**
+1. "Walk through Granite's architecture and training stack."
+2. "Design watsonx's agentic flow for enterprise."
+3. "RAG for enterprise: governance, audit, customer-specific knowledge."
+4. "Pre-training vs fine-tuning vs RLHF — when each."
+5. "Foundation model evaluation framework."
+6. "Calibration for enterprise classification."
+7. "Walk through a paper you authored or admire."
+8. "Disagreement scenario."
+9. "Coding."
+10. "Why IBM?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 90 (RAG), 99 (RLHF), 124 (LLM Production), 98 (Fairness for enterprise).
+
+**Compensation.** IBM India Senior MLE / RS in 2026 ranges ₹35 lakh – ₹65 lakh for 5-7 YOE base + RSU. Distinguished / Research lead ₹1.1 crore+.`,
+    tags: ['Interview Prep', 'IBM', 'IBM India', 'watsonx', 'Granite', 'Senior MLE', 'Research Scientist', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 175,
+    slug: 'bookmyshow-senior-mle-data-scientist-interview-guide',
+    title: 'BookMyShow Senior MLE / DS Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: "BookMyShow runs India's largest event-ticketing platform. Senior MLE / DS roles cover recommendation, dynamic pricing for premium events, fraud detection, demand forecasting, and personalisation. The interview tests recommendation depth plus marketplace event dynamics. This guide covers it.",
+    body: `BookMyShow is India's dominant event-ticketing platform (movies, concerts, sports, plays). Senior MLE / DS roles cover personalisation (which movies/events to surface), demand forecasting (for capacity planning and dynamic pricing), fraud (bot ticket buying), and recommendation across content types.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → behavioural.
+
+**What BookMyShow weights distinctively**
+
+1. **Cold-start at scale.** Every new movie / event is cold-start. Strategy matters.
+2. **Time-sensitive demand.** Pre-release vs opening day vs post-release dynamics.
+3. **Dynamic pricing for premium events.** Concerts, IPL matches.
+4. **Bot fraud.** Ticketing fraud at premium events is severe.
+
+**Top 10 questions**
+1. "Design BookMyShow's movie recommendation. Cold-start strategy?"
+2. "Dynamic pricing for IPL tickets — model and constraints."
+3. "Bot detection at ticket release. Architecture, latency."
+4. "Demand forecasting for a new movie — features?"
+5. "Multi-task ranking — CTR, booking, repeat."
+6. "Diagnose: booking rate dropped 15% for a specific genre in Mumbai."
+7. "Calibration in CTR vs conversion."
+8. "A/B testing in event-driven business — challenges?"
+9. "Walk through your most impactful project."
+10. "Why BookMyShow?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Tier 8 (all). Posts 48 (Feedback Loops), 70-72 (RecSys), 88 (Time Series), 95 (Anomaly).
+
+**Compensation.** BookMyShow Senior MLE / DS in 2026 ranges ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead ₹65 lakh+.`,
+    tags: ['Interview Prep', 'BookMyShow', 'Senior MLE', 'Senior DS', 'Ticketing', 'Recommender Systems', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 176,
+    slug: 'boat-senior-mle-data-scientist-interview-guide',
+    title: 'boAt Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: "boAt operates India's largest audio/wearables D2C brand. Senior MLE / DS roles cover demand forecasting, marketing attribution, recommendation, customer LTV, and wearable analytics. The interview tests D2C ML plus IoT/wearables data depth. This guide covers it.",
+    body: `boAt runs the largest audio + wearables D2C brand in India, with rapidly-growing wearable ML (sleep tracking, heart rate, fitness coaching). Senior MLE / DS roles cover demand forecasting, marketing attribution, recommendation, CLV, and wearable-derived analytics.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML system design → behavioural.
+
+**What boAt weights distinctively**
+
+1. **D2C marketing analytics.** Attribution, incrementality, MMM.
+2. **Wearable data.** Sensor signal processing for fitness ML.
+3. **Marketplace dynamics.** Multiple D2C channels + Amazon/Flipkart.
+4. **Fast iteration.** Brand-driven, growth-mode culture.
+
+**Top 10 questions**
+1. "Marketing attribution for boAt across channels."
+2. "Sensor data — heart rate from PPG. Signal processing + ML."
+3. "Demand forecasting for new product launches."
+4. "Recommendation across audio + wearables."
+5. "MMM — when useful?"
+6. "Anomaly detection on wearable data."
+7. "Walk through your most impactful project."
+8. "Coding."
+9. "Disagreement scenario."
+10. "Why boAt?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 83 (Attribution), 84 (Uplift), 88 (Time Series), 95 (Anomaly), 118 (Survival for CLV).
+
+**Compensation.** boAt Senior MLE / DS in 2026 ranges ₹25 lakh – ₹45 lakh for 5-7 YOE. Lead ₹55 lakh+.`,
+    tags: ['Interview Prep', 'boAt', 'Senior MLE', 'Senior DS', 'D2C', 'Wearables', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 177,
+    slug: 'ajio-reliance-retail-senior-mle-data-scientist-interview-guide',
+    title: 'AJIO (Reliance Retail) Senior MLE / DS Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'AJIO (part of Reliance Retail) competes in fashion e-commerce. Senior MLE / DS roles cover ranking, search, recommendation, demand forecasting, returns, and dynamic pricing. The interview tests fashion-specific ML plus omnichannel integration with offline Reliance Retail. This guide covers it.',
+    body: `AJIO is Reliance Retail's online fashion platform, competing with Myntra and Nykaa Fashion. Senior MLE / DS roles cover ranking, search, recommendation, demand forecasting (massive SKU catalog), returns prediction (fashion has high returns), dynamic pricing, and omnichannel integration with offline Reliance Trends stores.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → behavioural.
+
+**What AJIO weights distinctively**
+
+1. **Fashion-specific ML.** Size prediction, style similarity, occasion-based recommendation.
+2. **Returns handling.** Fashion has 30-40% return rates; predicting and preventing matters.
+3. **Omnichannel.** Online + offline (Reliance Trends, Trends Footwear).
+4. **Scale.** Reliance scale on operations.
+
+**Top 10 questions**
+1. "Design AJIO's homepage personalisation."
+2. "Returns prediction at checkout — flag risky purchases?"
+3. "Size recommendation — model and data."
+4. "Visual / image-based recommendation."
+5. "Demand forecasting per SKU × warehouse for fashion (seasonal)."
+6. "Omnichannel attribution."
+7. "Position bias in ranking."
+8. "Cold-start for new fashion SKUs."
+9. "Walk through your most impactful project."
+10. "Why AJIO / Reliance?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 70-72 (RecSys), 48 (Feedback Loops), 110 (CV), 125 (Hierarchical Forecasting).
+
+**Compensation.** AJIO Senior MLE / DS in 2026 ranges ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead ₹70 lakh+.`,
+    tags: ['Interview Prep', 'AJIO', 'Reliance Retail', 'Senior MLE', 'Senior DS', 'Fashion E-commerce', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 178,
+    slug: 'policybazaar-senior-mle-data-scientist-interview-guide',
+    title: 'PolicyBazaar Senior MLE / DS Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: "PolicyBazaar is India's largest insurance aggregator. Senior MLE / DS roles cover lead scoring, policy recommendation, fraud, claims analytics, and CLV. The interview tests insurance product judgment + ML depth. This guide covers it.",
+    body: `PolicyBazaar (Policybazaar.com / PB Fintech) operates India's largest online insurance distribution platform. Senior MLE / DS roles cover lead scoring (which leads will convert), policy recommendation, fraud detection (fake leads, mis-selling), and customer-lifetime-value modeling.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → behavioural.
+
+**What PolicyBazaar weights distinctively**
+
+1. **Lead scoring depth.** Conversion path is long (research → call → close); attribution and scoring nuanced.
+2. **Insurance-specific recommendation.** Tax-saving, family, age, income constraints.
+3. **Multi-product cross-sell.** Health → life → motor.
+4. **Regulatory awareness.** IRDA compliance.
+
+**Top 10 questions**
+1. "Design lead scoring for life insurance. What's the right target and how do you handle long sales cycles?"
+2. "Policy recommendation under regulatory constraints — architecture."
+3. "Calibration in lead scoring."
+4. "Cross-sell from health to life — when and how?"
+5. "Diagnose: lead-to-policy conversion dropped 12% for term insurance. Approach?"
+6. "Anti-mis-selling: flagging risky agent behaviour."
+7. "Multi-touch attribution for marketing."
+8. "A/B testing in insurance — constraints."
+9. "Walk through your most impactful project."
+10. "Why PolicyBazaar?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 83 (Attribution), 84 (Uplift), 89 (CTR), 95 (Anomaly).
+
+**Compensation.** PolicyBazaar Senior MLE / DS in 2026 ranges ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead ₹70 lakh+.`,
+    tags: ['Interview Prep', 'PolicyBazaar', 'PB Fintech', 'Senior MLE', 'Senior DS', 'Insurance', 'Lead Scoring', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 179,
+    slug: 'meesho-senior-data-scientist-interview-guide',
+    title: 'Meesho Senior Data Scientist (DS-focused) Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'Companion guide to the Meesho MLE post — focused on the DS / analytics-leaning track. Senior DS roles at Meesho cover supply growth analytics, seller health, marketplace causal inference, experimentation. This guide covers the DS-flavoured loop.',
+    body: `Companion to the Meesho MLE interview guide. The DS-flavoured track at Meesho focuses on supply growth (seller acquisition + retention), marketplace causal inference, experimentation infrastructure, and product analytics. Less heavy on production engineering, more on causal rigour and experimentation depth.
+
+**The loop structure (Senior DS)**
+
+Standard loop: recruiter screen → analytics case + SQL → causal inference / stats depth → product judgment → behavioural.
+
+**What Senior DS at Meesho weights distinctively**
+
+1. **Causal inference depth.** Switchback, DiD, RDD, IV.
+2. **Marketplace metric design.** Two-sided metrics, supply health, demand health.
+3. **Experimentation under SUTVA.** Network effects in seller/buyer experiments.
+4. **Product judgment.** Drive PM decisions through data.
+
+**Top 10 questions**
+1. "Switchback experiment for a marketplace ranking change — design."
+2. "Seller retention causal driver analysis."
+3. "DiD: a feature launched in one geo — measure the effect."
+4. "Power analysis for an A/B test under SUTVA."
+5. "Metric design: north star for the seller side."
+6. "Uplift modeling for seller incentives."
+7. "Causal forest — when useful?"
+8. "Diagnose: seller GMV dropped 8% in Tier-2 cities. Causal investigation."
+9. "Walk through your most impactful project."
+10. "Why Meesho?"
+
+**Prep path through MSL** — Tier 9 (Posts 81-85, 91-93), Tier 5 (all), Posts 50 (CUPED), 84 (Uplift).
+
+**Compensation.** Meesho Senior DS in 2026 ranges ₹35 lakh – ₹60 lakh for 5-7 YOE. Lead ₹75 lakh+.`,
+    tags: ['Interview Prep', 'Meesho', 'Senior DS', 'Causal Inference', 'Experimentation', 'Marketplace', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 180,
+    slug: 'bigbasket-senior-mle-data-scientist-interview-guide',
+    title: 'BigBasket Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: "BigBasket (Tata Digital) runs India's largest online grocery. Senior MLE / DS roles cover demand forecasting (very high-frequency), basket recommendation, delivery routing, dark-store inventory, and dynamic pricing. The interview tests grocery-specific ML depth. This guide covers it.",
+    body: `BigBasket (Tata-owned) runs India's largest online grocery operation. Senior MLE / DS roles cover demand forecasting (massive scale: many SKUs × dark stores × hourly), basket recommendation (cross-sell, complete the basket), delivery routing (last mile), dark-store inventory optimisation, and dynamic pricing for fresh produce.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → behavioural.
+
+**What BigBasket weights distinctively**
+
+1. **Grocery-specific forecasting.** Perishables, repeat-buy patterns, fresh produce dynamics.
+2. **Real-time inventory.** Dark-store stock-out probabilities affect slot offerings.
+3. **Delivery routing.** Optimisation for last-mile cost.
+4. **Cross-sell.** Basket completion is high-impact.
+
+**Top 10 questions**
+1. "Design grocery demand forecasting at SKU × dark-store × hour."
+2. "Basket recommendation: complete-the-basket — architecture."
+3. "Dynamic pricing for fresh produce."
+4. "Delivery routing for last-mile — ML + optimisation."
+5. "Calibration in stock-out prediction."
+6. "Diagnose: NPS dropped in Bangalore. Approach?"
+7. "Cold-start for new product launches."
+8. "Position bias in product ranking on category pages."
+9. "Walk through your most impactful project."
+10. "Why BigBasket?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 70-72 (RecSys), 88 (Time Series), 125 (Hierarchical Forecasting), 123 (Real-Time Features).
+
+**Compensation.** BigBasket Senior MLE / DS in 2026 ranges ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead ₹65 lakh+.`,
+    tags: ['Interview Prep', 'BigBasket', 'Tata Digital', 'Senior MLE', 'Senior DS', 'Grocery', 'Demand Forecasting', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 181,
+    slug: 'tata-1mg-senior-mle-data-scientist-interview-guide',
+    title: 'Tata 1mg Senior MLE / DS Interview Guide (standalone)',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'Companion guide focused on Tata 1mg specifically (vs the broader Tata Digital super-app role). Senior MLE / DS at 1mg covers e-pharmacy demand forecasting, doctor consultation matching, prescription processing, and chronic medication recurring orders. This guide covers it.',
+    body: `Companion to the Tata Digital guide, focused specifically on Tata 1mg (the e-pharmacy + diagnostics + teleconsultation vertical). Senior MLE / DS roles at 1mg work on demand forecasting (medicines have specific dynamics — chronic refills vs acute purchases), prescription OCR + processing, doctor matching for teleconsult, recurring-order recommendation, and inventory optimisation.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → behavioural.
+
+**What Tata 1mg weights distinctively**
+
+1. **Chronic refill dynamics.** Pharma demand is bimodal — chronic (predictable) vs acute (spiky).
+2. **Prescription processing.** OCR + drug-name NER + dosage parsing + interaction checks.
+3. **Safety constraints.** Healthcare-specific recommendation safety.
+4. **Tele-consultation matching.** Doctor-patient with availability + specialty + language.
+
+**Top 10 questions**
+1. "Design demand forecasting for medicines — chronic vs acute handling."
+2. "Prescription processing pipeline — OCR + NER + interaction validation."
+3. "Recurring-order recommendation for chronic patients."
+4. "Tele-consultation doctor matching — what's the objective?"
+5. "Safety constraints in pharma recommendation."
+6. "Diagnose: refill conversion dropped 10%."
+7. "Class imbalance for adverse-event detection."
+8. "DPDP compliance considerations."
+9. "Walk through your most impactful project."
+10. "Why 1mg?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 88 (Time Series), 95 (Anomaly), 110 (CV / OCR), 125 (Hierarchical Forecasting), 98 (Fairness).
+
+**Compensation.** Tata 1mg Senior MLE / DS in 2026 ranges ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead ₹65 lakh+.`,
+    tags: ['Interview Prep', 'Tata 1mg', '1mg', 'Senior MLE', 'Senior DS', 'Healthcare ML', 'E-pharmacy', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 182,
+    slug: 'zepto-senior-mle-data-scientist-interview-guide',
+    title: 'Zepto Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 6,
+    featured: false,
+    excerpt: 'Zepto runs 10-minute quick commerce. Senior MLE / DS roles cover demand forecasting (very tight time horizons), dark-store inventory, delivery routing, dynamic pricing, fraud, and recommendation. The interview tests quick-commerce ML at high pace. This guide covers it.',
+    body: `Zepto runs 10-minute quick commerce across major Indian cities, operating through hyperlocal dark stores. Senior MLE / DS roles cover ultra-short-horizon demand forecasting (10-min granularity per dark store), dark-store inventory optimisation, real-time delivery routing, dynamic pricing, fraud (fake orders, gaming promotions), and recommendation.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + SQL → ML system design → hiring manager (often fast-tracked).
+
+**What Zepto weights distinctively**
+
+1. **Ultra-short-horizon forecasting.** Demand prediction in 10-min windows.
+2. **Real-time everything.** Inventory, routing, pricing — all sub-second decisions.
+3. **Fast iteration culture.** Zepto ships extremely quickly.
+4. **Marketplace + dark-store dynamics.** Operations-heavy ML.
+
+**Top 10 questions**
+1. "Design 10-minute demand forecasting at SKU × dark-store level."
+2. "Real-time inventory: predict stockouts in the next 30 min."
+3. "Delivery rider matching — sub-second decisions."
+4. "Dynamic pricing — when and constraints."
+5. "Fraud detection on rider-side and customer-side."
+6. "Recommendation: complete-the-basket in 10 min."
+7. "Diagnose: NPS dropped in a specific dark store."
+8. "Coding: efficient real-time aggregation."
+9. "Walk through your most impactful project."
+10. "Why Zepto?"
+
+**Prep path through MSL** — Tier 5 (all), Tier 7 (all), Posts 88 (Time Series), 123 (Real-Time Features), 125 (Hierarchical Forecasting), 70-72 (RecSys), 95 (Anomaly).
+
+**Compensation.** Zepto Senior MLE / DS in 2026 ranges ₹40 lakh – ₹70 lakh for 5-7 YOE. Lead ₹85 lakh+. Among the most aggressive comp in Indian D2C/quick-commerce.`,
+    tags: ['Interview Prep', 'Zepto', 'Senior MLE', 'Senior DS', 'Quick Commerce', 'Dark Store', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
