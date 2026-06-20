@@ -462,6 +462,16 @@ export default function SpotTheFlawTab({ onNavigate }) {
         </div>
       </div>
 
+      {/* Empty state for first-time visitors */}
+      {attempted === 0 && (
+        <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.30)' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontWeight: 700 }}>Start here</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+            New to Spot the Flaw? Begin with <strong style={{ color: 'var(--ink-hi)' }}>scenario #1</strong>. Each scenario presents a real production ML decision; your job is to identify which choice would silently break the model. The full set takes ~45 minutes.
+          </div>
+        </div>
+      )}
+
       {/* Scenarios */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {SCENARIOS.map((sc, i) => (

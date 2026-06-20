@@ -2222,6 +2222,26 @@ export default function SystemDesignTab({ onNavigate }) {
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: '6px 0 0', fontFamily: 'var(--font-sans)' }}>Each module opens with a production scenario. Pick your answer — then see what breaks in production and why every wrong option fails.</p>
       </div>
 
+      {/* Empty state for first-time visitors */}
+      {(() => {
+        let scoresExist = false
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i)
+            if (k && k.startsWith('msl_score:design')) { scoresExist = true; break }
+          }
+        } catch {}
+        if (scoresExist) return null
+        return (
+          <div style={{ padding: '16px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.30)' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontWeight: 700 }}>Start here</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+              New to System Design? Start with <strong style={{ color: 'var(--ink-hi)' }}>Incident Diagnosis</strong> (the default module). It introduces the production-incident framing every interview round draws from. The other modules build on that pattern.
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Module tabs */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {MODULES.map(m => (

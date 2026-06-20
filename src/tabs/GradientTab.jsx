@@ -9085,6 +9085,349 @@ Meesho's loop tests for cost-aware ML judgment in a marketplace context. The MSL
     domain: 'interview',
     youtube: [],
   },
+  {
+    id: 138,
+    slug: 'zomato-senior-data-scientist-interview-guide',
+    title: 'Zomato Senior Data Scientist / ML Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Zomato\'s senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weight on demand-side modelling and growth analytics. This guide walks through the loop structure and prep path.',
+    body: `Zomato's senior DS / ML interview shares structural similarities with Swiggy's but emphasises different problem domains. Zomato's ML org weights demand-side modelling (predicting what customers will order, when, and at what price point) and growth analytics (cohort retention, marketplace dynamics) more heavily than Swiggy, which leans more into supply-side dispatch optimisation.
+
+**The loop structure (Senior DS / ML, L5)**
+
+Zomato typically runs 4-5 rounds: recruiter call → ML + statistics fundamentals → ML system design + case → experimentation + product analytics case → hiring manager.
+
+The experimentation round is the highest-weight, similar to Swiggy but more product-analytics-flavoured. Candidates who treat it as a basic A/B testing round get downgraded.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter call.** Standard behavioural + role context.
+
+**Round 2 — ML + statistics fundamentals.** 60 minutes. Conceptual probing on classical ML, evaluation, A/B testing fundamentals. Zomato probes regression analysis and causal inference more than other Indian unicorns — expect questions on confounding, propensity score matching, difference-in-differences for marketplace experiments.
+
+**Round 3 — ML system design + case.** 75 minutes. Common prompts: design Zomato's restaurant recommendation system, design demand forecasting for restaurant suppliers, design delivery time estimation. The case half typically asks: "your recommendation model improved CTR by 2% but order completion dropped 1%. Three hypotheses." Tests production-judgment under noisy metric signals.
+
+**Round 4 — Experimentation + product analytics case.** 60 minutes. Real production scenario: "we launched a new restaurant ranking. Restaurant order volume is flat, but restaurant retention dropped 4%. What's happening and what would you do?" The round probes marketplace thinking, two-sided incentive alignment, and the trade-off between short-term and long-term metrics. Candidates who optimise only for the user-facing metric without considering supplier-side effects get downgraded.
+
+**Round 5 — Hiring manager.** 45 minutes. Team fit, project ownership.
+
+**What Zomato weights distinctively**
+
+1. **Two-sided marketplace judgment.** Zomato is restaurants + customers + delivery partners. Decisions on one side ripple to the others. Senior candidates are expected to articulate these effects explicitly.
+2. **Growth analytics depth.** Zomato's ML org has heavy overlap with product analytics. Cohort retention, LTV modelling, funnel analysis — expect deep probing on these.
+3. **Cost-vs-revenue trade-offs.** Zomato operates on thin margins. Cost-aware ML decisions (recommendations that drive high-margin orders, demand forecasting that doesn't over-promise capacity) matter more than pure accuracy.
+
+**Top 10 questions Zomato senior DS / ML candidates face**
+
+1. "Design Zomato's restaurant recommendation system. Your goal is order completion, not click-through."
+2. "Your new ranking improved CTR but dropped order completion. Three hypotheses."
+3. "Design demand forecasting for restaurant partners. What's your loss function — and what's the cost asymmetry between under-prediction and over-prediction?"
+4. "Restaurant retention dropped 4% after a ranking change. What do you investigate?"
+5. "How would you A/B test a ranking model in a two-sided marketplace where the algorithm affects supplier behaviour?"
+6. "Walk through the most impactful experiment you've designed and run."
+7. "Cohort retention shows month-2 churn rising. How would you decompose to find the cause?"
+8. "Design pricing personalisation. What are the fairness considerations?"
+9. "How do you handle delayed labels in restaurant recommendation (the 'real' label is repeat orders 30 days later)?"
+10. "Eleven types of leakage. Which apply to restaurant recommendation specifically?"
+
+**The prep path through MSL**
+
+For a Zomato senior DS / ML loop:
+
+- Tier 1 (Statistics & Estimation) — all 4 posts, particularly Post 113 (Hypothesis Testing).
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) is especially relevant for cohort analysis.
+- Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) for demand modelling.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 72 (Recsys Stack).
+- Cross-link to PAL for deeper experimentation and product analytics depth (Zomato weights this heavier than pure ML).
+
+For practice: CausalInferenceTab (experiment design + SUTVA), Mock Interview with a Zomato JD pasted.
+
+**Common failure modes**
+
+- Treating Zomato problems as user-facing only — ignoring restaurant-supplier side effects.
+- Underestimating the experimentation round.
+- Optimising for proxy metrics (CTR) without articulating second-order effects on the marketplace.
+- Inability to discuss cohort analysis in detail.
+
+**Compensation**
+
+Zomato Senior DS / ML in 2026 ranges roughly ₹38 lakh – ₹68 lakh for 5-7 YOE. Staff levels reach ₹85 lakh+. AmbitionBox is the public reference.`,
+    tags: ['Interview Prep', 'Zomato', 'Senior Data Scientist', 'Marketplace', 'A/B Testing', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 139,
+    slug: 'dream11-ml-engineer-interview-guide',
+    title: 'Dream11 ML Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Dream11\'s ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The bar is high and the production constraints are unusually sharp. This guide walks through what to expect.',
+    body: `Dream11 runs ML at an unusual operating point. The product (fantasy sports gameplay) means traffic is wildly bursty — normal day traffic vs IPL match traffic differs by 100×. Every ML decision has to work under those load curves. Latency budgets are tight (sub-50ms for in-game recommendations). The interview reflects this.
+
+**The loop structure (Senior ML Engineer)**
+
+Dream11 typically runs 5 rounds: recruiter screen → ML fundamentals + coding → real-time ML system design → production scaling case → hiring manager.
+
+The real-time ML focus is the differentiator. Most Indian unicorn loops emphasise offline / batch ML; Dream11's loops emphasise online inference and streaming features.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Standard ML fundamentals plus coding rounds with an emphasis on data structures + streaming algorithms (sliding window statistics, top-K maintenance, reservoir sampling). The streaming flavour is intentional — these patterns show up in production at Dream11.
+
+**Round 3 — Real-time ML system design.** 60 minutes. Common prompts: design a real-time team recommendation system for fantasy sports, design fraud detection for in-app transactions, design real-time player performance prediction. The design has to handle burst load explicitly. Candidates who don't discuss caching strategy, fallback policies, and graceful degradation get downgraded.
+
+**Round 4 — Production scaling case.** 60 minutes. Real scenario: "your recommendation system serves 10K QPS normally but spikes to 1M QPS during an IPL match. Current p99 latency is 80ms but spikes to 800ms during burst. Diagnose and fix." Tests the discipline of production engineering: caching, pre-computation, traffic shaping, graceful degradation, capacity planning.
+
+**Round 5 — Hiring manager.** 45 minutes. Team fit.
+
+**What Dream11 weights distinctively**
+
+1. **Real-time inference at burst scale.** No other Indian company tests this as deeply.
+2. **Sports prediction context.** Sports ML has unique characteristics — strong signal vs noise (player performance is partly random), high dimensionality (many players, matches, conditions), and time-series structure. Sports domain knowledge helps.
+3. **Operational resilience.** Dream11 hires senior MLEs who can keep ML systems running during 50× traffic spikes. The production case round tests for this directly.
+
+**Top 10 questions Dream11 ML Engineer candidates face**
+
+1. "Design a real-time team recommendation system for fantasy sports. Sub-50ms p99 budget, 1M QPS at peak."
+2. "Your model serves 10K QPS, spikes to 1M during IPL. Latency degrades. Walk through the fix."
+3. "Design fraud detection for in-app transactions. What's your inference architecture?"
+4. "How do you serve a 100MB embedding model at low latency? Quantisation? Distillation? Caching?"
+5. "Walk through your most impactful project. What was the production load that broke first?"
+6. "Streaming aggregations vs batch aggregations for player statistics. When each?"
+7. "How do you handle cold start for a new fantasy game variant?"
+8. "Sports prediction has noisy signal — how do you A/B test reliably?"
+9. "Design a real-time pricing system for entry fees. What signals, what update frequency?"
+10. "Eleven types of leakage. Which apply to sports prediction specifically?"
+
+**The prep path through MSL**
+
+For a Dream11 ML Engineer loop:
+
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts. Real-time inference is the core.
+- Tier 8 (Monitoring & MLOps) — all 5 posts. Burst-load monitoring is harder than steady-state.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 71 (Two-Tower).
+- For practice: MLCoding mlc8 (Welford streaming statistics — exactly the kind of streaming pattern Dream11 probes), MockInterview with a Dream11 JD pasted.
+
+**Common failure modes**
+
+- Treating system design as steady-state without acknowledging burst load.
+- Pitching architectures that work at 10K QPS but break at 1M QPS.
+- Inability to discuss caching strategy explicitly.
+- Ignoring graceful degradation patterns.
+- Pitching deep learning architectures without latency justification.
+
+**Compensation**
+
+Dream11 ML Engineer in 2026 ranges roughly ₹35 lakh – ₹70 lakh for 4-7 YOE. Senior MLE reaches ₹90 lakh+. AmbitionBox has public ranges; Dream11 typically pays competitively for the role family.`,
+    tags: ['Interview Prep', 'Dream11', 'ML Engineer', 'Real-time ML', 'Burst Load', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 140,
+    slug: 'inmobi-glance-ml-engineer-interview-guide',
+    title: 'InMobi / Glance ML Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'InMobi (and its consumer brand Glance) runs ML at advertising scale. The interview emphasises CTR prediction, ad targeting, real-time bidding, and personalisation. Closest comparison is to Google Ads ML interviews but with Indian-market context. This guide unpacks the structure and prep.',
+    body: `InMobi's ML organisation runs at advertising scale — billions of ad impressions, real-time auction decisions in single-digit milliseconds, complex multi-objective optimisation balancing advertiser ROI, publisher revenue, and user experience. The interview reflects this.
+
+**The loop structure (Senior ML Engineer)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ad ML system design → real-time bidding case → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Conceptual probing with emphasis on calibration (ad CTR predictions feed bid prices, calibration matters more than ranking quality), AUC vs PR-AUC at imbalanced data (CTR is < 5%, often < 1%), and online learning fundamentals (advertising ML retrains frequently).
+
+**Round 3 — Ad ML system design.** 60 minutes. Common prompts: design a CTR prediction system for display ads, design real-time bidding for ad auctions, design personalised ad targeting. The design has to address feature engineering (user features, ad features, context features, cross features), serving (sub-10ms latency for bidding), and feedback loops (training on logged ad data has bias).
+
+**Round 4 — Real-time bidding case.** 60 minutes. Real scenario: "your CTR model's calibration shifted overnight. Bids are now 30% too high or 30% too low across the board. Diagnose and fix." Tests the discipline of production calibration monitoring.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What InMobi weights distinctively**
+
+1. **Calibration depth.** Ad bidding is calibration-bound. InMobi probes calibration much more deeply than most Indian unicorn loops.
+2. **Auction theory awareness.** Ad ML candidates are expected to understand auction mechanics (first-price vs second-price, bid shading, reserve prices).
+3. **Online learning patterns.** Models retrain on streaming data. Senior candidates are expected to articulate online learning trade-offs.
+
+**Top 10 questions InMobi candidates face**
+
+1. "Design CTR prediction for display ads. CTR base rate is 0.3%."
+2. "Your bid model's calibration shifted. 30% too high or too low. Diagnose."
+3. "How does first-price vs second-price auction change your bidding strategy?"
+4. "Design real-time targeting. What features can you compute in 10ms?"
+5. "Walk through your most impactful ad ML project."
+6. "Click-baiting feedback loop: your model learns to recommend click-baity content. How do you detect and fix?"
+7. "Online learning vs batch retraining for CTR. Trade-offs."
+8. "Eleven types of leakage. Which apply to ad CTR prediction specifically?"
+9. "How do you A/B test a bidding model when the bid changes the population of users you serve?"
+10. "Cold start for a new advertiser. What signals do you use?"
+
+**The prep path through MSL**
+
+For InMobi / Glance:
+
+- Tier 3 (Classical Algorithms) — Post 76 (Calibration) and Post 129 (Class Imbalance) are central.
+- Tier 5 (Evaluation & Diagnostics) — Post 3 (AUC critique) and Post 130 (Leakage Taxonomy).
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring & MLOps) — Post 40 (Calibration Loss in Production) is exactly the round 4 prompt.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 80 (Semantic Search for targeting).
+
+**Compensation**
+
+InMobi / Glance ML Engineer in 2026 ranges roughly ₹40 lakh – ₹75 lakh for 5-7 YOE. Staff reaches ₹95 lakh+. InMobi pays competitively for the role family.`,
+    tags: ['Interview Prep', 'InMobi', 'Glance', 'Ad Tech', 'CTR', 'Calibration', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 141,
+    slug: 'razorpay-senior-data-scientist-interview-guide',
+    title: 'Razorpay Senior Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Razorpay\'s Senior Data Scientist loop is distinct from the Applied Scientist track. DS roles emphasise A/B testing, analytics, marketplace experimentation, and business judgment. The loop is shorter than the MLE loop but probes experimentation more deeply. This guide walks through both.',
+    body: `Razorpay runs separate tracks for Applied Scientist (ML-heavy, production engineering) and Senior Data Scientist (analytics-heavy, experimentation, business intelligence). This guide covers the DS track, which differs from the MLE track in important ways.
+
+**The loop structure (Senior Data Scientist, L5)**
+
+Standard loop: recruiter screen → SQL + Python coding → product analytics case → A/B testing + experimentation deep dive → hiring manager.
+
+The experimentation deep dive is the highest-weight round.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — SQL + Python coding.** 60 minutes. Heavy SQL emphasis (more than the MLE track), data manipulation in pandas, business logic implementation. Razorpay tests SQL deeper than most Indian unicorns for DS roles.
+
+**Round 3 — Product analytics case.** 75 minutes. Real scenario: "merchant churn dropped 8% last month, then bounced back 3%. Investigate and report what's likely driving it." Tests the discipline of metric decomposition, cohort analysis, and hypothesis-driven investigation.
+
+**Round 4 — A/B testing + experimentation.** 60 minutes. Deep probing on: power analysis, sample size, multiple testing corrections, SRM, peeking, novelty effects, marketplace SUTVA violations, sequential testing. The round explicitly tests sophistication on experimentation, not just basics.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What Razorpay DS weights distinctively (vs MLE track)**
+
+1. **SQL depth.** Razorpay DS interviews probe SQL much more than the MLE track.
+2. **Business judgment.** DS candidates are expected to translate analytical findings into business recommendations with clear trade-offs.
+3. **Marketplace experimentation.** Razorpay's two-sided market (merchants + payment users) creates SUTVA-violation concerns. DS candidates are expected to articulate these.
+
+**Top 10 questions Razorpay Senior DS candidates face**
+
+1. "Merchant churn dropped 8% last month. Investigate."
+2. "Design an A/B test for a new merchant onboarding flow. What's your sample size?"
+3. "Your experiment shows +5% conversion but +20% support tickets. Do you ship?"
+4. "Walk through power analysis for a 1% expected lift on a 10% conversion metric."
+5. "Marketplace SUTVA violation: your treatment merchants got more transactions, but those came from control merchants. How do you measure the real treatment effect?"
+6. "SRM check fires on an A/B test. What do you do?"
+7. "Sequential testing vs fixed sample size. When each?"
+8. "How would you measure the LTV of a new merchant cohort?"
+9. "Walk through the most impactful analysis you've delivered."
+10. "How do you handle multiple comparisons when running 20 metrics on one experiment?"
+
+**The prep path through MSL**
+
+For a Razorpay Senior DS loop:
+
+- Tier 1 (Statistics & Estimation) — all 4 posts, particularly Post 113 (Hypothesis Testing).
+- Tier 5 (Evaluation & Diagnostics) — Post 131 (Error Analysis) and Post 42 (Offline ≠ Online).
+- Cross-link to PAL — Razorpay DS roles are partly PAL territory; PAL's experimentation depth covers what MSL doesn't.
+
+For practice: CausalInferenceTab (experiment design, SUTVA), MockInterview with a Razorpay DS JD pasted.
+
+**Common failure modes**
+
+- Treating it like the MLE track (under-investing in SQL and experimentation).
+- Treating A/B testing as basic (Razorpay probes deep).
+- Inability to discuss marketplace dynamics for experimentation.
+
+**Compensation**
+
+Razorpay Senior Data Scientist in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Staff DS reaches ₹85 lakh+. The DS track typically pays slightly less than the MLE track but has different career trajectories.`,
+    tags: ['Interview Prep', 'Razorpay', 'Senior Data Scientist', 'A/B Testing', 'SQL', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 142,
+    slug: 'junglee-games-mpl-ml-engineer-interview-guide',
+    title: 'Junglee Games / MPL ML Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines real-time ML constraints with regulatory awareness (gaming is regulated in India). This guide walks through the prep.',
+    body: `Junglee Games and MPL operate in the regulated real-money gaming space in India. ML systems matter especially for fraud detection (multiple-account exploitation, collusion in card games), matchmaking (balanced opponents drive retention), and player segmentation (regulatory KYC + business segmentation). The interview reflects this.
+
+**The loop structure (Senior ML Engineer)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → fraud / matchmaking system design → production case → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Conceptual probing with emphasis on imbalanced classification (fraud at 0.01%), graph ML (collusion detection requires graph analysis), and matching algorithms.
+
+**Round 3 — Fraud / matchmaking system design.** 60 minutes. Common prompts: design fraud detection for online rummy (where collusion between players is a key fraud mode), design matchmaking for fair gameplay, design player skill rating. The design has to address regulatory constraints (KYC compliance, age verification, payment trail).
+
+**Round 4 — Production case.** 60 minutes. Real scenario: "your fraud model started flagging a specific demographic group at 3× the base rate. Investigate." Tests the discipline of bias detection, segment-level analysis, and the trade-off between fraud catch rate and false positive impact on legitimate users.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What Junglee / MPL weights distinctively**
+
+1. **Graph ML for collusion detection.** Multi-player gaming creates network structure where players collude. Senior candidates are expected to discuss graph neural networks or graph-based features.
+2. **Regulatory awareness.** Real-money gaming in India has compliance requirements. ML decisions interact with KYC, age verification, anti-money-laundering rules.
+3. **Bias-vs-fraud trade-off.** Aggressive fraud detection that disproportionately affects demographic groups creates regulatory and reputational risk. Senior candidates are expected to discuss this.
+
+**Top 10 questions Junglee / MPL candidates face**
+
+1. "Design fraud detection for online rummy. Base rate of fraud is 0.01%."
+2. "Detect collusion between players in card games. What's your architecture?"
+3. "Design matchmaking for skill-based games. What's your skill rating system?"
+4. "Your fraud model flags one demographic at 3× the base rate. Investigate."
+5. "How do you handle the trade-off between fraud catch and false positive impact?"
+6. "Walk through your most impactful project on fraud or matching."
+7. "Graph features vs tabular features for collusion detection."
+8. "How do you A/B test a matchmaking algorithm when matches affect both players?"
+9. "Cold start for new players in matchmaking."
+10. "Eleven types of leakage. Which apply to fraud detection in gaming specifically?"
+
+**The prep path through MSL**
+
+For Junglee / MPL:
+
+- Tier 3 (Classical Algorithms) — Post 129 (Class Imbalance), Post 76 (Calibration).
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) is central for the segment-bias round.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 71 (Two-Tower).
+
+**Compensation**
+
+Junglee Games / MPL Senior ML Engineer in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Higher tier roles reach ₹85 lakh+. The space is growing fast in India; compensation has been climbing.`,
+    tags: ['Interview Prep', 'Junglee', 'MPL', 'Real-money Gaming', 'Fraud', 'Matchmaking', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']

@@ -46,6 +46,29 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.114 — Sitemap + GSC + tab empty-states + 5 more SEO guides + 10 more Simplify (2026-06-20)
+
+**Shipped this session:** sitemap.xml regenerated with proper post URLs, GSC verification meta tag, empty-state polish on 4 high-traffic tabs, 5 more SEO interview guides (posts 138-142), 10 more Simplify versions for non-path posts.
+
+**Sitemap regeneration.** Created `scripts/build-sitemap.mjs` — Node script that extracts every `slug:` value from GradientTab.jsx, builds `public/sitemap.xml` with proper `?post=<slug>#gradient` deep-link URLs + the 8 top-level pages (root, MLE Path, Gradient, Cheatsheet, Plans, Resources, Landscape, Mock Interview). Replaced the broken 31-line sitemap (wrong domain `ml-systems-lab.vercel.app`, fragment-only URLs that don't represent real content) with a clean 700+ line sitemap covering 140 post URLs + 8 top-level. Run `node scripts/build-sitemap.mjs` whenever new posts ship to regenerate.
+
+**Google Search Console verification.** Added `<meta name="google-site-verification" content="REPLACE_WITH_YOUR_GSC_CODE" />` placeholder to index.html. Once GSC verification is initiated, replace the placeholder with the actual code and push. Then submit sitemap.xml from the GSC dashboard to trigger crawling of all 148 URLs.
+
+**Tab empty-states (4 tabs).** Added "Start here" empty-state cards to:
+- **IncidentRoomTab** — shown when `done === 0`, points beginners at incident #1 (Recommender CTR drop) with explanation of the cross-domain diagnostic pattern.
+- **MLCodingTab** — shown when `done === 0`, points beginners at mlc1 (Implement gradient descent) and explains the 4-type framework (Implement / Debug / Optimise / Design).
+- **SpotTheFlawTab** — shown when `attempted === 0`, points to scenario #1.
+- **SystemDesignTab** — shown when no `msl_score:design*` keys exist in localStorage, points to the default Incident Diagnosis module.
+Each card uses the same visual pattern: amber dashed border, "Start here" eyebrow, single sentence guidance with the specific starting point bolded. Closes 1 of the 5 deferred onboarding feedback items (tab empty-states polish).
+
+**5 more SEO interview guides (posts 138-142).** Zomato Senior DS, Dream11 ML Engineer, InMobi / Glance ML Engineer, Razorpay Senior DS (separate from MLE), Junglee / MPL ML Engineer. Same structure as 133-137 (loop breakdown, distinguishing emphasis, top 10 questions, MSL Path tier mapping, common failure modes, compensation). Brings total SEO guide count to **10** (target per STRATEGY.md is 50; 40 to go).
+
+**10 more Simplify versions for non-path posts.** Posts 21 (Validation Set Leakage), 22 (Spark DAG), 26 (Feature Store v2), 30 (Quantization), 47 (Recsys Failures), 52 (CNNs), 53 (GNNs), 54 (Self-Attention), 55 (Transformer), 64 (Diffusion). Total Simplify entries: **75** (was 65; +10).
+
+State additions: none. All new functionality reuses existing patterns and storage keys.
+
+Brace diff 0 across all 8 touched files. Apostrophe + backtick scans clean. Sitemap generates without errors.
+
 ### v4.113 — Five MSL distribution + product features in one session (2026-06-20)
 
 **Shipped this session:** WhatsApp community surface, certificate + LinkedIn share, AI Mock Interview tab, 5 SEO interview guides, 75 new Quiz Me MCQs, 10 Simplify versions for non-path posts.

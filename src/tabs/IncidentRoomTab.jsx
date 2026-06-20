@@ -826,6 +826,16 @@ export default function IncidentRoomTab({ onNavigate }) {
         </div>
       )}
 
+      {/* Empty state for first-time visitors */}
+      {done === 0 && !urlScenario && (
+        <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.30)' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontWeight: 700 }}>Start here</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+            New to Incident Room? Start with <strong style={{ color: 'var(--ink-hi)' }}>incident #1 — Recommender CTR drop</strong>. It introduces the cross-domain diagnostic pattern: production symptom → upstream signal → root cause. Once it clicks, the other 11 incidents take 8-10 minutes each.
+          </div>
+        </div>
+      )}
+
       {/* Incidents */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {INCIDENTS.map(inc => (

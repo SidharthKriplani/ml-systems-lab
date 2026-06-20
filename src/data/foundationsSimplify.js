@@ -968,4 +968,148 @@ Use of LTV in business. Determines maximum customer acquisition cost (CAC must b
 **The production tell.** LTV models trained on historical data systematically over-estimate LTV for new customer segments. The reason: historical data only contains customers who survived long enough to generate revenue (survivor bias). Customers who churned in week 1 may never have entered your training data. The fix is to explicitly model the survival process and include early-tenure customers (censored observations). Also: business KPIs computed from LTV models are usually too aggressive; haircut by 20-30% for realistic planning.
 
 **Bridge to the Rigorous version.** The Rigorous version develops survival analysis for churn, parametric LTV models (gamma-gamma, beta-geometric), cohort-based retention curves, the discount rate question, and the patterns for monitoring LTV models in production. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  // ── More non-path Simplify versions (v4.114) — 10 additional posts ───────
+
+  21: `Validation set leakage is the silent killer of ML projects: your offline metric looks great, you ship, production performance collapses. The cause is almost always one of four specific leakage patterns and most ML engineers don't notice them until production fails.
+
+Pattern 1: temporal leakage. You have time-ordered data (transactions, sessions, sensor readings) and you do random k-fold cross-validation. Now training folds contain examples from after validation folds — the model has seen the future. Features that aggregate over time (rolling 7-day windows, recent activity counts) now include validation-set information. Fix: walk-forward validation that respects time ordering.
+
+Pattern 2: group leakage. The same logical entity (user, customer, household) appears in both train and validation, but no individual row is duplicated. The model learns user-specific patterns and applies them to the same user in validation. Looks like generalisation, actually memorisation. Fix: group-aware cross-validation (group-k-fold by user_id).
+
+Pattern 3: feature engineering leakage. You compute mean target encoding, statistical normalisation, or any aggregation using the full dataset before splitting. Validation set information has now leaked into the training features. Fix: compute every aggregate inside the training fold only, apply to validation fold.
+
+Pattern 4: target leakage. A feature contains information about the label generated after the label was observed. Most common in production data — "is_disputed" or "chargeback_filed" used to predict fraud are post-event consequences of fraud. The model achieves near-perfect offline metrics by reading off the outcome. Fix: audit every top feature for "was this value computed using only data from before the prediction timestamp?"
+
+**The production tell.** "Champion model from last month is still better." If your offline metric says the new model is much better but A/B testing shows no improvement, 80% of the time it's leakage. The diagnostic sequence: run walk-forward CV (catches temporal leakage), group-k-fold CV (catches group leakage), audit top features for time-availability (catches target leakage), refit all preprocessing inside CV folds (catches engineering leakage).
+
+**Bridge to the Rigorous version.** The Rigorous version covers all 11 leakage types in detail (the eleven types of leakage post in the path expands this), develops point-in-time correct joins for feature stores, and walks through the cross-validation strategies for each kind of data. The intuition above is the 4 most common; the Rigorous version is the full taxonomy.`,
+
+  22: `Reading the Spark execution DAG is one of the most useful and least taught skills in production data engineering. When your Spark job is slow, hangs, or produces wrong results, the DAG visualisation in Spark UI is where the truth lives. Most people glance at it and move on; senior engineers stop and decode it.
+
+What the DAG shows. Spark breaks your job into stages (sets of operations that don't require data movement) and tasks (single units of work). Each stage shows up as a box in the DAG. Stages connect via shuffles (data movement across the cluster). The shape of the DAG tells you what your job is doing under the hood.
+
+What to look for. Wide vs narrow transformations: narrow transformations (filter, map, select) stay within a stage; wide transformations (groupBy, join, distinct) require shuffles and create new stage boundaries. Counts of stages: more stages means more shuffles means slower job. Shuffle read/write sizes: huge shuffles mean huge data movement, often the root cause of slowness. Task skew: if one task takes 100× longer than others, you have a data skew problem.
+
+The patterns that diagnose specific problems. Long-running task: usually data skew (one partition has way more data than others). Many small tasks: too many partitions, overhead dominates work. Few large tasks: not enough parallelism, individual tasks too big. Huge shuffle write followed by huge shuffle read: an unnecessary repartition. Stage that should be a broadcast join showing as a sort-merge join: you missed broadcasting a small table.
+
+**The production tell.** A 2-hour Spark job that should take 20 minutes — almost always either a wrong join strategy (sort-merge instead of broadcast for a small table) or a shuffle that could have been avoided (a redundant groupBy or a repartition that didn't need to happen). The DAG shows both immediately. Spark's adaptive query execution (AQE in Spark 3+) handles many of these automatically, but only if you've turned it on (spark.sql.adaptive.enabled=true). Most slow Spark jobs in production are running with AQE off.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through reading the Spark UI step by step, the specific patterns of slow jobs, broadcast join hints, skew handling (salting, custom partitioners), and AQE configuration. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  26: `The feature store time-travel bug is the most subtle production ML failure you'll ever debug. Symptoms: model performs great offline, terrible in production. No obvious bug. Same code, same features, same training data. Yet production keeps failing. Welcome to the world of point-in-time correctness violations.
+
+What happens. Your feature store stores features with timestamps — each feature has a value at each point in time. At training time, you query the store for historical features. At serving time, you query for current features. The bug is in HOW you query at training time. Two patterns:
+
+Wrong way: query the store for "current value" of each feature for each training example. This gives you the feature value as it exists NOW, not as it existed at the prediction timestamp. For a long-tenured user, the feature value has been updated many times since their prediction; you're training on post-event information that won't exist at serving time.
+
+Right way: query the store for the feature value at the specific prediction timestamp of each example. This is an "asof join" — for each (entity, time) pair, return the feature value as of that time. This is point-in-time correct.
+
+The classic failure in fintech. You're predicting loan default. Customer applied 3 months ago, credit score was 720 at application time. They defaulted; credit score is now 580. Wrong query returns 580 for training data. Right query returns 720. The wrong model learns to use post-default features to predict default — looks perfect offline, can't reproduce in production where the prediction must happen at application time.
+
+**The production tell.** A model with 0.95 offline AUC and 0.60 production AUC. The number is too good offline to be real. Reproducing this offline requires rebuilding training data with point-in-time correct queries; the offline AUC then drops to roughly 0.60 and matches production. Most feature store implementations have separate APIs for "current value" (fast, default) and "point-in-time" (slower, opt-in). Senior engineers always use the point-in-time API for training; junior engineers default to current-value.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through point-in-time correct join semantics, the specific APIs of common feature stores (Feast, Tecton, AWS Feature Store), the code review patterns for catching this bug, and the integration tests that prevent it from shipping. The intuition above is the failure mode; the Rigorous version is the toolkit.`,
+
+  30: `Quantization is the process of converting a neural network's floating-point weights (FP32, FP16) to lower precision (INT8, INT4) so the model is smaller, faster, and cheaper to serve. Modern LLM serving is essentially impossible without quantisation — a 70B-parameter model in FP32 is 280GB, in INT8 it's 70GB, in INT4 it's 35GB. The 8× compression is the difference between needing 4 GPUs vs 1.
+
+The basic mechanism. Floating-point weights take 32 bits each (4 bytes). The range of weight values is roughly -1 to +1. You can map this continuous range to 256 discrete levels (8 bits) — quantize to INT8 — by picking a scale factor and rounding. To use the model, you multiply by the scale factor on the fly. The cost: some loss of precision, which can hurt accuracy.
+
+The variants. Post-training quantization (PTQ): quantize after training, simple, sometimes hurts accuracy. Quantization-aware training (QAT): simulate quantization during training so the model learns to be robust to it; better accuracy preservation. Dynamic quantization: scale factor computed at runtime per batch; flexible but slower. Static quantization: scale factor computed once, fastest at inference.
+
+What actually breaks at lower precision. The first weights that matter are layer normalisation and attention scores in Transformers — these are very sensitive to precision loss. The standard practice: quantize most layers to INT8, keep layer norm and attention in FP16 for stability. INT4 is more aggressive — usually requires QAT or knowledge distillation to maintain quality.
+
+Modern LLM quantization techniques. GPTQ: group-wise quantization with calibration on a small dataset. AWQ: activation-aware quantization that protects salient weights. SmoothQuant: smooths the magnitude difference between weights and activations before quantising. Each technique trades off compression ratio, inference speed, and accuracy differently.
+
+**The production tell.** Quantization-induced accuracy regressions are often not uniform across the input distribution. The model might lose 1% accuracy on average but 5% on specific input types (rare words, edge cases, non-English content). The fix is to evaluate quantized models on segmented test sets, not just aggregate metrics. Calibration data quality also matters — quantizing using calibration data from a different distribution than production can introduce silent failures.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the math of quantization (scale factors, zero points, symmetric vs asymmetric), walks through PTQ vs QAT trade-offs, covers modern LLM-specific techniques (GPTQ, AWQ, BitsAndBytes), and explains how to measure and prevent quantization-induced regressions. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  47: `Recommendation systems silently stop recommending in six specific ways. Each looks like normal behaviour from a metric dashboard but compounds into business-critical failure. Recognising these patterns early is one of the most valuable monitoring skills in RecSys.
+
+Way 1: cold-start trap. New items never accumulate enough engagement to be recommended, so they never get engagement, so they never get recommended. The catalog grows but the active recommendation pool shrinks. Detection: track the ratio of items that get recommended per day vs total catalog size.
+
+Way 2: popularity bias compounding. Popular items get more impressions, more clicks, more recommendation weight, more impressions. Long-tail items disappear from the user experience entirely. Detection: track recommendation diversity (Gini coefficient of items recommended) over time.
+
+Way 3: feedback loop tightening. Users click on recommended items; the model trains on those clicks; the model recommends more of the same; user options narrow. Detection: measure the entropy of items recommended per user over time; declining entropy means tightening.
+
+Way 4: stale embeddings. User and item embeddings are precomputed; they should refresh as behaviour changes. When the embedding refresh pipeline fails silently, recommendations gradually become misaligned with current interests. Detection: monitor embedding freshness — when was each user's embedding last updated.
+
+Way 5: candidate retrieval collapse. Retrieval narrows from millions to thousands of candidates before ranking; if retrieval starts returning the same few thousand candidates regardless of user, ranking quality is irrelevant. Detection: monitor candidate set size and diversity per retrieval call.
+
+Way 6: silent threshold drift. Ranking models output scores; production code applies a threshold; that threshold was set months ago. As score distributions drift, the threshold catches different fractions of the population. Detection: monitor the distribution of ranking scores over time, and the fraction of items above the threshold.
+
+**The production tell.** Aggregate recommendation metrics (CTR, NDCG) can stay stable while any of these failures progresses. The business outcomes degrade first — long-tail seller churn, new-user engagement drops, retention cohorts get worse. By the time the aggregate metrics move, the failure has been brewing for weeks. The right monitoring is cohort-level diversity and engagement, not aggregate scores.
+
+**Bridge to the Rigorous version.** The Rigorous version develops each failure mode in detail with diagnostic patterns, covers exploration-vs-exploitation handling (bandits), and walks through the monitoring infrastructure that catches each failure mode before business metrics break. The intuition above is the framework; the Rigorous version is the toolkit.`,
+
+  52: `Convolutional Neural Networks (CNNs) became the dominant approach to computer vision because they exploit a property of images: local patterns matter. A cat's ear looks like a cat's ear regardless of where in the image it appears. CNNs build this assumption into the architecture, making them dramatically more data-efficient than fully-connected networks for visual tasks.
+
+The mechanism. A convolutional layer applies the same small filter (e.g. 3×3 pixels) across the entire image. The filter is learned during training. Each filter learns to detect a specific local pattern — edges, textures, eventually parts of objects, eventually whole objects. The same filter applied everywhere means translation invariance: the network detects the cat ear whether it's in the top-left or bottom-right.
+
+Receptive field. A single 3×3 filter only sees 3×3 pixels. Stack multiple layers, and each layer's output sees a wider region of the input. By the 10th layer, each neuron has a receptive field of maybe 30×30 pixels, enough to detect object parts. By the 20th layer, the receptive field covers most of the image. Depth gives the network the spatial context it needs.
+
+Pooling. Max-pooling (taking the maximum over a small region) reduces spatial resolution while preserving the strongest signals. This makes the model robust to small translations and reduces compute. Modern architectures often use strided convolutions instead of explicit pooling.
+
+The lineage. AlexNet (2012) showed CNNs could win ImageNet. VGG (2014) showed deeper is better. ResNet (2015) showed residual connections enable 100+ layer networks. EfficientNet (2019) optimised the depth-width-resolution trade-off. Vision Transformers (2020) showed attention can replace convolutions when you have enough data and compute. CNNs remain dominant when data is limited or compute is constrained.
+
+**The production tell.** Most production CNN deployments use pretrained backbones (ImageNet-trained ResNet, EfficientNet) and fine-tune on the target task. The backbone provides general visual features; fine-tuning adapts them to the specific task. Training a CNN from scratch on a small dataset almost always underperforms pretraining + fine-tuning. The right architecture for your problem is usually "the smallest pretrained model that gives acceptable accuracy at your latency budget."
+
+**Bridge to the Rigorous version.** The Rigorous version derives convolutions mathematically, develops receptive field calculations, covers pooling and strided convolutions, walks through the major architectures (AlexNet, VGG, ResNet, EfficientNet, ViT) and their trade-offs. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  53: `Graph Neural Networks (GNNs) are designed for data that lives on graphs — social networks, recommendation systems, molecule structures, knowledge bases. The defining feature: nodes have varying numbers of neighbours and no canonical ordering, so traditional neural networks (which expect fixed-size, ordered inputs) can't directly process them.
+
+The core mechanism is message passing. Each node has a feature vector. At each layer, the node aggregates information from its neighbours (sum, mean, max) and combines it with its own features through a learned function. After multiple layers, each node's representation reflects a multi-hop neighbourhood. This is the GNN equivalent of how CNNs build up receptive fields through depth.
+
+Common architectures. GCN (Graph Convolutional Network): basic message passing with normalisation. GraphSAGE: introduces sampling for scalability — sample a fixed number of neighbours instead of using all. GAT (Graph Attention Network): uses attention to weight neighbours differently. PinSage (Pinterest): scales GraphSAGE to web-scale (billions of nodes) with random walk-based neighbour sampling.
+
+What GNNs are good for. Recommendation (user-item bipartite graph, social influence): GNN embeddings capture multi-hop similarity. Fraud detection: collusion shows up as graph structure. Molecule property prediction: chemical bonds form a graph. Knowledge graph completion: predict missing edges.
+
+The challenges. Over-smoothing: after many layers, all node representations converge to similar values because every node has aggregated information from everywhere. Common fix: residual connections + careful depth (typically 2-3 layers). Scalability: full-graph training doesn't scale to billions of nodes. Solutions: sampling (GraphSAGE), clustering (Cluster-GCN), and graph partitioning.
+
+**The production tell.** GNN production deployments often fail at inference time, not training time. The model trains fine on the static training graph. Production graphs change continuously — new nodes appear, edges form, edges disappear. If the inference pipeline doesn't handle graph mutations correctly, embeddings become stale and predictions degrade. The fix is incremental embedding update infrastructure, which is significantly more complex than batch retraining. Most GNN production wins come from solving this engineering challenge, not from better architectures.
+
+**Bridge to the Rigorous version.** The Rigorous version derives message passing formally, walks through GCN/GraphSAGE/GAT/PinSage in detail, covers sampling and scalability techniques, explains over-smoothing and modern fixes, and discusses production patterns for serving GNNs. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  54: `Self-attention is the mechanism that powers Transformers and almost every modern AI system. The intuition: instead of processing tokens in order (RNN-style) or using fixed-size filters (CNN-style), self-attention lets every position in the input directly attend to every other position. Each position decides "which other positions are relevant to me right now" and aggregates information accordingly.
+
+The mechanism. For each input position, three vectors are computed: a Query (Q), a Key (K), and a Value (V). These are linear projections of the input. To compute attention for a position: take its Q, compute dot products with every other position's K (giving "similarity scores"), softmax these scores into weights, and use the weights to take a weighted sum of every position's V. The output is a new representation for each position that's informed by all positions.
+
+The three projections matter. Q is what this position is "asking about." K is what each position has "to offer." V is what gets aggregated. Decoupling these three lets the network learn that "the verb at position 7 needs to know about the subject at position 2" without hardcoding any structural assumptions. The network learns the structure from data.
+
+Multi-head attention. Run multiple attention computations in parallel with different projection matrices, then concatenate. Each "head" can specialise — one head might attend to syntactic relationships, another to long-range semantic dependencies. Empirically, more heads help up to a point.
+
+Position encodings. Self-attention is permutation-equivariant — if you shuffle the inputs, the outputs shuffle the same way. But sequence order matters. Position encodings (sinusoidal in original Transformer, learned in modern variants) inject position information so the network knows the order.
+
+**The production tell.** Self-attention has O(N²) memory in sequence length N. For a 4K context window, that's 16M attention scores per layer per head. For 100K context, that's 10B scores per layer per head — impractical without optimisations. Production LLMs use FlashAttention (memory-efficient computation), grouped-query attention (share K, V across heads), or sliding window attention (only attend within a window) to make long contexts tractable. The architecture decisions cascade into infrastructure decisions.
+
+**Bridge to the Rigorous version.** The Rigorous version derives self-attention mathematically, walks through Q/K/V/multi-head intuition with worked examples, covers position encodings, develops the memory complexity analysis, and explains modern attention optimisations. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  55: `The Transformer architecture (2017) replaced RNNs and CNNs as the default for sequence modelling and most other deep learning tasks. It's now the universal architecture — language, vision, audio, code, biology, robotics. Understanding the Transformer is the prerequisite for understanding modern AI.
+
+The core. A Transformer block is: multi-head self-attention + feedforward network, with residual connections and layer normalisation around each. Stack these blocks (typically 6-100+) and you get the Transformer. The whole thing is permutation-equivariant without position encodings, so position information is added to the input embeddings.
+
+Two flavours. Encoder-only (BERT-style): bidirectional attention, every position attends to every other. Good for understanding tasks (classification, NER). Decoder-only (GPT-style): causal attention, position N only attends to positions ≤ N. Required for generation. Modern LLMs are decoder-only.
+
+Why Transformers won. (1) Parallelisable training — unlike RNNs, the whole sequence is processed simultaneously, enabling much faster training. (2) Long-range dependencies — attention can connect any two positions in one step, unlike RNNs which have to propagate through the sequence. (3) Scales beautifully — empirical scaling laws show Transformer performance improves predictably with more data, more parameters, and more compute. (4) Universality — the same architecture works for almost any modality.
+
+The implications. Transformer architecture choices (number of layers, hidden dimension, number of heads, FFN multiplier) have well-studied scaling relationships. Chinchilla scaling laws tell you the optimal parameter-to-token ratio for a given compute budget. Modern training is engineering against these laws, not architecture innovation.
+
+**The production tell.** Transformer inference cost is dominated by the KV cache during generation. For a 70B model generating 1000 tokens of output, the KV cache is several GBs. Production LLM serving optimisations (paged attention, continuous batching, speculative decoding, prefix caching) are all about managing this cache efficiently. Without these optimisations, throughput drops by 5-10×. Serving Transformers well requires understanding the memory hierarchy and the request patterns, not just the model architecture.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the full Transformer architecture, walks through self-attention + FFN + residuals + layer norm, develops the scaling laws, covers encoder-decoder and decoder-only variants, and explains modern production serving optimisations. The intuition above is the picture; the Rigorous version is the toolkit.`,
+
+  64: `Diffusion models are the architecture that took over image generation from GANs starting in 2022. They produce more diverse, higher-quality images, with more stable training. They also generate slowly (50-1000 steps per image), which has driven a research wave around speedups.
+
+The mechanism is counterintuitive. You define a forward process that gradually adds Gaussian noise to a clean image over T steps, ending in pure noise. You train a neural network to reverse this process — given a noised image at step t, predict the noise that was added. To generate a new image: start with pure noise, iteratively denoise using the trained network. After T denoising steps, you have a clean generated image.
+
+Why this works. Predicting noise from a noisy image is a well-defined supervised learning problem with infinite training data (you can noise any clean image arbitrarily). The optimisation is much more stable than GAN training. The model learns the entire data manifold rather than collapsing to a few modes.
+
+Conditioning. To generate a specific kind of image (a cat, a person in a specific pose), inject conditioning information into the denoising network. Text-to-image models like Stable Diffusion encode text prompts through a text encoder (CLIP) and inject the encoding via cross-attention. Classifier-free guidance trains the model on both conditioned and unconditioned generations, then at inference combines both predictions to steer toward the conditioning signal more aggressively.
+
+Speed optimisations. The 1000-step generation of original diffusion is impractical. Modern variants reduce this dramatically. DDIM: deterministic sampling, fewer steps with similar quality. Distillation: train a faster model to mimic the slow one. Latent diffusion (Stable Diffusion): operate in a compressed latent space, not pixel space — 16× speedup. Consistency models: single-step generation by training the model to map any noised image directly to a clean one.
+
+**The production tell.** Diffusion model deployments at scale require careful batching. Each generation requires N steps of inference; running them sequentially per request wastes GPU. Continuous batching across requests (each request at its own step in parallel) keeps the GPU busy. Without this, latency and throughput are 5-10× worse than necessary.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the diffusion mathematics (forward and reverse SDE, score-matching), walks through DDPM, DDIM, latent diffusion, classifier-free guidance, and consistency models, covers conditioning architectures, and explains production serving patterns. The intuition above is the picture; the Rigorous version is the toolkit.`,
 }

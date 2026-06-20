@@ -1747,6 +1747,15 @@ export default function MLCodingTab({ onNavigate }) {
         </div>
       )}
 
+      {done === 0 && !urlProblem && (
+        <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.30)' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontWeight: 700 }}>Start here</div>
+          <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+            New to ML Coding? Begin with <strong style={{ color: 'var(--ink-hi)' }}>mlc1 — Implement gradient descent</strong>. It covers the 4-type framework (Implement / Debug / Optimise / Design) most senior MLE coding rounds use. The other 14 problems extend that pattern.
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {filtered.map(p => (
           <ProblemCard
