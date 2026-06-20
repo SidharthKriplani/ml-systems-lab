@@ -46,6 +46,28 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.117 — Content backlog finish push: 27 Simplify + 10 SEO guides (2026-06-20)
+
+**Same-day continuation of v4.116 — close out the remaining non-path Simplify gap and add 10 more SEO interview guides.**
+
+**Simplify versions (27 new).** Filled the last 27 high-leverage non-path posts that didn't yet have Simplify: 6 (PCA), 28 (A/B Failure Modes), 29 (TS Model Selection), 31 (Feature Store API Trap), 32 (Group-Level Leakage), 34 (Walk-Forward Validation), 35 (Forecast Failure Zoo), 36 (Peeking + SRM), 37 (Quantization v1), 44 (Cold-Start Trap), 45 (Silent Model Staleness), 49 (Recsys Feedback Loops v2), 78 (Knowledge Distillation v2), 79 (BM25/TF-IDF), 83 (Attribution Modeling), 84 (Uplift), 85 (Multiple Testing / FDR / Power), 94 (Online Learning / Drift), 109 (Word2Vec), 110 (CV Before ViTs), 116 (NN Init), 121 (CUPED v2), 122 (Graph ML Fraud), 123 (Real-Time Features), 124 (LLM Production), 125 (Hierarchical Forecasting), 126 (Auction Theory).
+
+Total Simplify entries: **132** (was 105). Remaining ~23 non-path posts without Simplify are all v4.116/v4.117 SEO company guides (133-165), which don't have ML conceptual content and don't need a Simplify version — they're plain-language by construction.
+
+**SEO interview guides (10 new).** Added Gradient posts 156-165: BharatPe (#156), Slice (#157), Practo (#158), Urban Company (#159), Navi (#160), Acko (#161), Cleartax/ClearOne (#162), Lenskart (#163), Apna (#164), Mamaearth/Honasa (#165). Total SEO guides: **33** (was 23). Total Gradient posts: **165** (was 155). 17 more guides queued for v4.118 to hit STRATEGY target of 50.
+
+**Regenerated SEO infrastructure.**
+- \`node scripts/build-prerendered-posts.mjs\` → 157 static HTML files (was 147).
+- \`node scripts/build-sitemap.mjs\` → 171 URLs (was 161).
+
+**Audits passed.**
+- Brace diff: GradientTab.jsx, quizData.js, foundationsSimplify.js — all 0.
+- Apostrophe scan: OK (2 mid-session \`\\\\\\'\` typos in Navi + Acko excerpts caught + fixed pre-audit; pattern: double-backslash inside single-quoted strings — swap to double-quoted strings instead).
+- Backtick scan: OK.
+- Schema audit (Gradient required fields): OK on all 165 posts.
+
+**Honest scope note.** Started with stated backlog: 50 Simplify + 27 SEO. Delivered: 27 Simplify (the meaningful remainder — the other 23 missing IDs are SEO company guides that don't need a beginner version) + 10 SEO guides. Remaining honest queue for v4.118+: 17 more SEO guides (Cred Senior DS angle, Junglee MPL DS-focus, Ola/Uber India, Amazon India MLE, Microsoft India, Google India, Adobe India, Walmart India, Salesforce India, IBM India, Oracle India, Boat, Ajio, Meesho DS-focus, Tata 1mg standalone, BigBasket standalone, plus 1-2 fresh additions like Acko / PolicyBazaar specific roles).
+
 ### v4.116 — Content backlog crush: 123 MCQs + 30 Simplify + 10 SEO guides (2026-06-20)
 
 **Single-session content drain. Goal was to close the queued backlog from v4.115 as much as fit; result is the biggest content batch of the project.**

@@ -1467,4 +1467,310 @@ Privacy is a separate concern. FedAvg gives some privacy (raw data never central
 
 **Bridge to the Rigorous version.** The Rigorous version derives FedAvg and its variants (FedProx, SCAFFOLD), walks through the privacy mechanisms (DP, Secure Aggregation), develops the non-IID handling strategies, and shows the production patterns at Google (Gboard), Apple (Siri), and other deployments.`,
 
+  // ── Additional non-path Simplify versions (v4.117) ──────────────────────
+
+  6: `PCA (Principal Component Analysis) is the most useful technique in classical ML that the textbook explanation usually botches. The textbook says "it finds the directions of maximum variance." That's true but useless. Here's the intuition that makes it click.
+
+Imagine a flock of birds frozen mid-flight. You want to take a single 2D photo that captures the most information about where the birds are. If they're flying in a long line, you want to photograph from the side (you'd see the line). If you photograph from above (looking down the line), they'd all overlap into one point. PCA is the algorithm that picks the side angle automatically. It looks at your data cloud and finds the angle that spreads the points out the most.
+
+The "components" are just the axes of the new photo. The first component is the direction where the data spreads out most. The second component is the direction perpendicular to the first that captures the second-most spread. And so on. Each component is uncorrelated with the others (perpendicular). You can keep just the top K components and throw away the rest — you've reduced 50 dimensions to maybe 3, while keeping most of the information.
+
+**The production tell.** PCA on un-scaled data is junk. If one feature is in lakhs (income) and another is in years (age), PCA will think "income is the most important direction" just because the numbers are bigger. Always standardise (z-score) features before PCA, unless they're already on the same scale by construction.
+
+**Bridge to the Rigorous version.** PCA formally is the eigendecomposition of the covariance matrix. Eigenvectors are the components; eigenvalues are how much variance each captures. The Rigorous version walks through the linear-algebra derivation, the choice-of-K methods (scree plot, cumulative variance), and the non-linear failure modes (where Kernel PCA, t-SNE, UMAP take over).`,
+
+  28: `A/B tests have two failure modes that look like "the experiment worked" but actually don't: peeking and SRM.
+
+Peeking is checking results mid-experiment and stopping when you see a p-value cross 0.05. This roughly triples your false-positive rate. The math is: if you check 20 times during the test, by chance alone one of those checks will show p < 0.05 even if the treatment does nothing. You stop, declare victory, ship a no-op.
+
+SRM (Sample Ratio Mismatch) is when your treatment and control groups end up with different sizes than you randomised. You assigned 50/50, but the test ended with 55/45. This is a smoking gun that randomisation broke somewhere — maybe a feature flag was sticky, maybe a bot detection rule fired differently in each arm. Whatever the cause, the two groups are no longer apples-to-apples, and any "effect" you measure is potentially just selection bias.
+
+**The production tell.** Mature experimentation platforms automatically check for SRM (chi-squared test on the assignment ratio) and refuse to declare a winner if SRM fires. They also use sequential testing (always-valid p-values) that account for peeking. If your A/B platform doesn't do these, your shipped wins are partly noise.
+
+**Bridge to the Rigorous version.** The Rigorous version develops sequential testing math, SRM detection thresholds, alpha-spending under peeking, and the specific causes (sticky flags, bot filters, network effects) that produce SRM in production.`,
+
+  29: `Picking a time-series model is the cause of half the production forecasting failures. Three families dominate, each fails in a specific way.
+
+ARIMA assumes stationarity (the statistical properties of the series don't change over time). It fails when seasonality is strong, when there are regime changes (COVID, policy shifts), or when the series has long-range memory beyond a few lags. ARIMA is the right answer when you have a short, well-behaved series and want interpretability.
+
+Prophet (Facebook's library) handles seasonality and holidays out of the box. It fails when the series has subtle change-points that don't look like Prophet's expected piecewise-linear trend, or when you have many short related series (where pooling information across series would help). Prophet is the right answer for business series with strong weekly/yearly seasonality and known holidays.
+
+LSTMs (and Transformers) can capture arbitrary patterns including non-linear ones. They fail when you have limited training data, when the series is short, or when interpretability matters. They're the right answer when you have many series, lots of data per series, and complex dynamics.
+
+**The production tell.** "What time-series model should I use?" is the wrong question. The right question is "what's the data-generating process and what failure mode can I afford?" For inventory forecasting (intermittent demand, many SKUs) you might pick Croston or a deep-learning hierarchical model. For server load (strong seasonal, smooth trend) Prophet or even a SARIMA is enough.
+
+**Bridge to the Rigorous version.** The Rigorous version develops ARIMA's stationarity tests, Prophet's piecewise-trend and Fourier seasonality decomposition, LSTM's gradient pathology, and the modern hierarchical forecasting methods.`,
+
+  31: `The feature store API trap is a particular kind of training-serving skew that happens when training code calls one feature-store API and serving code calls a different one, and they return subtly different values.
+
+The classic case: training calls get_features(user_id, "as_of_timestamp"). Serving calls get_features(user_id, "now"). Same function name? No — different signatures. The training call returns features as of a historical timestamp (point-in-time correct). The serving call returns whatever's currently in cache, which may be stale, may include data the user hadn't generated yet at the training timestamp, or may be from a different shard.
+
+The model trains on values from one distribution and serves on values from a different distribution. Performance silently degrades. No alarm fires because the offline metrics looked fine — they were computed on the same biased data the model trained on.
+
+**The production tell.** This bug is detected by feature parity audits — pull a recent production prediction, replay the features as they would have been computed for training, and compare value-by-value. Any feature where the values differ is a suspect. Modern feature stores (Feast, Tecton, Vertex AI Feature Store) build point-in-time correctness in, but custom feature pipelines built ad-hoc almost always have this bug somewhere.
+
+**Bridge to the Rigorous version.** The Rigorous version develops point-in-time joins formally, the difference between online vs offline feature stores, and the audit patterns for catching API-level skew before it ships.`,
+
+  32: `Group-level contamination is leakage that ML interview questions almost never cover but which breaks more production models than any other class of bug.
+
+Standard leakage you've heard of: a future-looking feature ("did this user churn") accidentally available at training time. Group-level leakage is subtler: information about a group of related rows that should be predicted together leaks across the train/test split. Example: predicting whether a user will default on a loan, where your data has multiple loans per user. If you randomly split rows into train/test, the same user appears in both, and your test metrics are wildly optimistic because the model just memorised the user.
+
+The fix is group-aware splitting (GroupKFold in scikit-learn). Split by user, not by row. Every user's rows go entirely to either train or test, never both. This is the right way to estimate how the model will perform on a NEW user it has never seen.
+
+Other examples: time-series with overlapping windows (split by date), conversations with multiple turns (split by conversation), households with multiple members (split by household), images of the same scene from different angles (split by scene).
+
+**The production tell.** If your test accuracy is 95% but production accuracy is 70% on truly new entities, group leakage is the prime suspect. The diagnostic: re-split your data by group ID and re-evaluate. If the metric drops, you had group leakage.
+
+**Bridge to the Rigorous version.** The Rigorous version develops GroupKFold formally, walks through nested CV for hyperparameter selection without leakage, and shows the specific patterns in credit risk, recommendation, and time-series where group leakage is the default trap.`,
+
+  34: `Walk-forward validation is the only honest way to evaluate a time-series model. Most other backtests overstate performance because they leak future information into the past.
+
+The setup: you have 5 years of historical data. You want to know how the model would have performed if deployed. The wrong approach is k-fold cross-validation, which shuffles dates between folds — train on 2022 to predict 2020. Useless. The right approach is walk-forward: train on data through time T, predict T+1, then retrain on data through T+1, predict T+2, and so on. At every point, the model is only using information that would have been available at that point.
+
+This is more expensive (you retrain many times) but it's the only way to estimate how the model would behave in production. It also lets you simulate deployment scenarios: how often does the model need retraining? What's the lag between data availability and predictions? What's the model's degradation rate between retrains?
+
+**The production tell.** "We backtested over five years and got 80% accuracy" is meaningless without specifying the backtest methodology. Senior interviewers will ask: walk-forward or shuffled? What was the training window length? What was the retraining cadence? If the candidate can't answer these, the 80% number is suspect.
+
+**Bridge to the Rigorous version.** The Rigorous version walks through expanding-window vs sliding-window validation, multi-step-ahead vs one-step-ahead, the bias-variance trade-offs of different window lengths, and the specific patterns for high-frequency vs daily vs monthly forecasting.`,
+
+  35: `Six silent killers of time-series forecasting models, the kind that look fine offline and quietly destroy business decisions.
+
+One: lookahead bias from feature engineering. You compute "rolling 30-day average sales" as of date T, but the rolling average accidentally includes T+1 to T+30 sales. Easy mistake in pandas; catastrophic in deployment.
+
+Two: training-serving frequency mismatch. You train on daily aggregates but serve on real-time hourly. The model learns daily patterns that don't apply at the hourly level.
+
+Three: data-quality regime changes. Your data source upgrades its instrumentation in 2023. Pre-2023 history looks subtly different. Model trained on the combined data is biased.
+
+Four: holiday handling. You forget Diwali shifts week-over-week each year. The model thinks Q4 is consistently weird without ever learning the actual calendar mechanism.
+
+Five: censoring. You only observe sales when the product is in stock. Times the product was out of stock look like zero demand to the model — they're actually unmet demand.
+
+Six: hierarchy violations. You forecast each SKU independently. The summed SKU forecasts don't match the category forecast, and business decisions get made on inconsistent numbers.
+
+**The production tell.** Each of these has a specific diagnostic. Lookahead bias: trace every feature computation backward to ensure no future indexes are used. Frequency mismatch: train at the serving frequency. Regime changes: include a regime indicator feature or retrain after the change. Holidays: add calendar features explicitly. Censoring: use survival analysis or censored regression. Hierarchy: use hierarchical forecasting with reconciliation.
+
+**Bridge to the Rigorous version.** The Rigorous version develops each failure mode with code-level patterns and shows how each shows up in dashboards.`,
+
+  36: `Two of the most damaging A/B test bugs are peeking and SRM (Sample Ratio Mismatch), and they're both detectable if you know to look.
+
+Peeking is checking results mid-experiment and stopping when significance crosses 0.05. Roughly triples your false-positive rate. Fixed by sequential testing methods that compute always-valid p-values (alpha-spending, mSPRT, Bayesian sequential).
+
+SRM is when treatment/control sample sizes diverge from your random assignment. You assigned 50/50, but the experiment ended 55/45. This means randomisation broke somewhere: bot filters, sticky feature flags, network effects, asymmetric crash rates. A chi-squared test on sample ratios catches it; mature experimentation platforms run this automatically.
+
+**The production tell.** If your experimentation platform doesn't run automatic SRM checks and doesn't support sequential testing, a meaningful fraction of "winning" experiments are noise. The fix is platform-level: bake SRM detection into the analysis pipeline so it can't be ignored, and ban one-shot p-value checks in favour of always-valid alternatives.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the math of alpha-spending, the chi-squared test for SRM, the specific failure modes that produce SRM in production, and the platform-level controls that prevent both bugs at scale.`,
+
+  37: `Quantization is the production lever for making big models small. Most models train in 32-bit floats (FP32) or 16-bit (FP16/BF16), but most layers don't actually need that precision. You can compress weights to 8-bit integers (INT8), 4-bit (INT4), or lower, and the model stays accurate.
+
+The intuition: a model's predictions depend on certain rough patterns in the weights, not on the precise value of every weight. If a weight is 0.7341, the model usually behaves the same if you round it to 0.73. The quantisation algorithm picks the right scale factor per layer (or per channel) so the rounding error is minimised on data the model is likely to see.
+
+FP16 vs INT8 vs INT4. FP16 cuts memory in half versus FP32 with essentially no accuracy loss. INT8 cuts it in half again, with usually <0.5% accuracy drop. INT4 cuts it in half again, with 1-3% drop on most LLMs. Below INT4, you start seeing serious quality issues without quantisation-aware training.
+
+**The production tell.** Most LLM serving systems quantise at deployment. The decision is which precision. INT4 for latency-critical user-facing chat (the user notices speed more than they notice subtle quality drops). FP16 or INT8 for high-quality offline tasks. Mixed precision (some layers at higher precision than others) is the modern default.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the quantisation math (uniform/non-uniform, symmetric/asymmetric, per-tensor/per-channel), the calibration methods (GPTQ, AWQ, SmoothQuant), and the specific production serving patterns with vLLM, TGI, and llama.cpp.`,
+
+  44: `The cold-start problem is the recommender's Achilles heel. The system works great for users with rich history and items with many interactions. It fails for new users (no clicks yet) and new items (no users have engaged) — exactly the cases that matter most for growth.
+
+For new users: any content-based features you have (signup-time demographics, declared interests, device, geo) become disproportionately important. Many systems show "popular in your area" until they have enough signal. Newer methods learn a "default user" embedding that gets adapted as you learn about the user.
+
+For new items: you need item-side features (description, category, image, creator) to map them into the embedding space alongside items the model already knows about. Two-tower models with item-side features handle this well. So do meta-learning approaches that explicitly train the model to make predictions for new items.
+
+The hidden cost: if the cold-start handling is bad, new content never gets shown enough to learn whether it's good. The recommender collapses to a few popular items, content creators churn, the catalog ossifies. Cold-start handling isn't just a UX problem — it's a marketplace health problem.
+
+**The production tell.** Look at the distribution of recommendations: how concentrated are they on the top 10% of content? If 90% of impressions go to 10% of items, your cold-start system is failing and your catalog is dying slowly.
+
+**Bridge to the Rigorous version.** The Rigorous version develops content-based + collaborative hybrid models, two-tower architectures with item-side features, exploration strategies (epsilon-greedy, Thompson sampling) for cold items, and the marketplace-health metrics for evaluating cold-start handling.`,
+
+  45: `Model staleness is the production failure mode that makes everyone underestimate the cost of "not retraining yet." A model that worked great in January can quietly degrade by April, not because anything dramatic broke, but because the world drifted slowly and the model didn't keep up.
+
+The mechanism: the data distribution your model trained on isn't the data distribution it's serving. Users adopt new behaviours. Products launch. Prices change. Bot traffic shifts. None of these cause sudden alarms. They just slowly move the test-set distribution away from where the model is calibrated to predict.
+
+The detection: PSI (Population Stability Index) on key features tells you when the input distribution has shifted. Prediction drift (the distribution of model output scores) tells you when the model is behaving differently. Actual performance drift (when you have ground truth) tells you when accuracy has dropped. Together, these three signals catch staleness early.
+
+The action: when staleness fires, the right response is to retrain on recent data. Triggered retraining (when drift exceeds a threshold) is more responsive than calendar retraining (every 30 days), but both are better than "we'll retrain next quarter."
+
+**The production tell.** When a model is "performing as expected" on its dashboard but the business is asking why a downstream metric (revenue, conversion, retention) is down, staleness is the prime suspect. Run a PSI on the top 20 input features. If any have shifted significantly, the model is stale.
+
+**Bridge to the Rigorous version.** The Rigorous version develops PSI math, KS-statistic for distribution drift, the different drift detection algorithms, and the specific production triggers for retraining.`,
+
+  49: `The recommender feedback loop you can't easily break: your ranker shows users certain items, users click on those items (because those are what they were shown), you train on the click data, the next ranker shows them more of the same. The system optimises for its own past behaviour. Diversity collapses. Catalog narrows. Users get bored.
+
+The mechanism is sneaky because each step looks correct in isolation. The ranker is doing its job (showing items the model thinks users will like). Users are voting with clicks (their best signal of preference). Training is updating on real outcomes. Yet the loop produces worse outcomes over time.
+
+Fixes are all variations of "make the system learn about items it didn't show." Random exploration (a fraction of impressions go to random items) is the simplest. Contextual bandits explore more intelligently. Inverse propensity weighting during training corrects for the bias that some items got shown more than others. Diversity constraints at serving time deliberately spread impressions across content.
+
+The hardest part is detection. The loop happens slowly. Offline metrics improve. Click-through rates improve. But long-term metrics (DAU, session length, retention) plateau or decline. You only see the loop by comparing the diversity of recommendations now vs. six months ago.
+
+**The production tell.** Track the Gini coefficient of impressions over your content catalog. If it's rising over time (more concentration on top items), the feedback loop is closing. If it's stable or falling, you're handling it.
+
+**Bridge to the Rigorous version.** The Rigorous version develops IPS weighting math, contextual bandits, diversity-aware ranking, and the specific exploration strategies for catalog-health-aware recommendation.`,
+
+  78: `Knowledge distillation lets a small model learn more than it could from the original labels alone — by learning from a big teacher model's full output distribution instead.
+
+The idea: the teacher's softmax output isn't just "the right class" — it's "this class with probability 0.7, this similar class with probability 0.2, this dissimilar class with probability 0.001." The relative probabilities encode the teacher's understanding of class similarity, which is much richer information than just the hard label. A student trained on the teacher's soft outputs (with a higher softmax temperature to amplify the relative-probability signal) learns these similarity relationships and ends up smarter than a student trained on hard labels alone.
+
+DistilBERT was the canonical example — 60% of BERT's size, 97% of BERT's accuracy. Modern distillation extends this with intermediate-layer matching (the student should not just predict like the teacher, it should compute like the teacher at each layer), attention matching (the student's attention patterns should match the teacher's), and dataset distillation (compress the training set itself).
+
+**The production tell.** Distillation works best when the teacher is clearly better than what the student would learn from labels alone. If the teacher is only marginally better, distillation barely helps. Decision: is the teacher's quality gap worth the extra training compute and complexity?
+
+**Bridge to the Rigorous version.** The Rigorous version develops the distillation loss (KL divergence with temperature), walks through response-based, feature-based, and relation-based distillation, develops temperature and alpha tuning, and shows the modern production patterns (DistilBERT, TinyBERT, MobileBERT).`,
+
+  79: `BM25 and TF-IDF are 50-year-old sparse retrieval methods that still beat neural search in many production systems. Understanding why matters.
+
+TF-IDF (Term Frequency × Inverse Document Frequency) ranks documents by how often a query term appears in the document (TF) weighted by how rare the term is across the corpus (IDF). A document containing "cardiomyopathy" five times scores higher than one containing "the" five times — because "cardiomyopathy" is rare and discriminating, "the" isn't.
+
+BM25 is TF-IDF with two refinements: saturation (the 100th occurrence of a term matters less than the 1st) and length normalisation (long documents shouldn't be rewarded just for being long). These tweaks turn out to be incredibly powerful — BM25 is the default ranking function of Elasticsearch and most production search systems.
+
+Why neural search hasn't replaced it: BM25 has zero training cost, no embedding model drift, perfect interpretability (you can explain every ranking), excellent rare-term handling, and is competitive on most retrieval benchmarks. Neural retrievers (DPR, ColBERT, dense embeddings) beat BM25 on semantic similarity (synonyms, paraphrases) but lose on exact-match precision (rare names, identifiers, technical terms).
+
+**The production tell.** Most modern production search is hybrid: BM25 for lexical precision, dense neural retrieval for semantic recall, and a reranker that combines both. Going all-neural usually hurts.
+
+**Bridge to the Rigorous version.** The Rigorous version develops BM25's k1 and b parameters, derives Robertson-Sparck-Jones probabilistic retrieval, walks through hybrid retrieval architectures, and shows the production patterns for sparse + dense + reranking pipelines.`,
+
+  83: `Attribution modeling is the question of "which marketing touchpoint deserves credit for this conversion?" — and the question has no clean answer because in reality, multiple touchpoints contributed.
+
+Three main approaches. Rule-based attribution (first-touch, last-touch, linear, time-decay) is simple but arbitrary — you're just picking a rule, not measuring causation. Shapley-value attribution borrows from game theory: it computes each channel's marginal contribution averaged across all possible orderings. Mathematically rigorous, computationally expensive at scale. Media Mix Models (MMM) regress total sales on total spend per channel over time, accounting for ad stock (carryover effects) and saturation curves. MMM is the dominant approach for top-of-funnel attribution today, especially post-iOS-14 when individual user tracking broke.
+
+**The production tell.** If your attribution shows brand campaigns getting 90% of credit and performance marketing 10% (or vice versa), the model is over-fitting to one paradigm. Real attribution usually shows a mix where every channel contributes something. Pure last-touch (which over-credits the channel right before conversion) is the default trap.
+
+**Bridge to the Rigorous version.** The Rigorous version develops Shapley attribution math, MMM regression with ad stock and saturation curves, incrementality testing as the ground truth for attribution validity, and the specific production patterns for cookie-less attribution.`,
+
+  84: `Uplift modeling answers the question every marketing team should ask but most don't: "did the intervention actually cause the outcome, or was the person going to convert anyway?" The standard CRM playbook ranks users by predicted conversion probability and targets the top ones — but the top ones often convert without any intervention, so you've spent marketing budget on people who didn't need persuading.
+
+Uplift modeling instead predicts the difference in conversion probability between "with intervention" and "without intervention." This separates four user types: persuadables (would convert with intervention but not without — target these), sure things (convert anyway — don't waste money), lost causes (won't convert either way — don't waste money), and "do not disturbs" (the intervention actively annoys them into non-conversion — definitely don't target).
+
+The training data needs both treatment and control groups (randomised). Common methods: two-model approach (train one model on treated, one on control, predict the difference), single-model approach (use treatment indicator as a feature), and causal forests (trees that split on heterogeneous treatment effects directly).
+
+**The production tell.** Uplift modeling almost always shows that 30-50% of your "high conversion probability" targets are sure things who would have converted anyway. Switching from conversion-probability targeting to uplift targeting typically improves ROI by 20-40% with the same budget.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the causal inference framework, walks through two-model, single-model, and causal forest methods, develops the Qini curve evaluation metric, and shows the specific production patterns for incremental-only marketing.`,
+
+  85: `Three statistics fundamentals every DS gets wrong in interviews: multiple testing, FDR, and power analysis.
+
+Multiple testing: when you run 20 A/B tests at p < 0.05, by chance alone you'll see one "significant" result even if nothing is real. The Bonferroni correction divides your alpha by the number of tests (so for 20 tests, use p < 0.0025). It's overly conservative; Benjamini-Hochberg's FDR (False Discovery Rate) procedure is preferred — it controls the expected proportion of false positives among rejected hypotheses, while staying powerful enough to detect real effects.
+
+Power analysis: before running a test, you should know how many samples you need to detect the smallest effect you care about. Power = probability of correctly rejecting a false null. Standard target is 80%. Formula depends on baseline rate, minimum detectable effect, and significance level. Most teams skip power analysis and end up under-powered (test reads "no effect" because the test couldn't have detected an effect even if one existed) or over-powered (running tests longer than necessary, slowing iteration).
+
+FDR (False Discovery Rate): the expected fraction of "significant" findings that are actually false. Different from familywise error rate (Bonferroni controls this) — FDR is more permissive but practically more useful in high-throughput testing.
+
+**The production tell.** When a team runs many concurrent A/B tests on the same surface and reports several wins, ask them what correction they applied. If they say "none," half their wins are noise.
+
+**Bridge to the Rigorous version.** The Rigorous version develops the math of multiple testing corrections, Benjamini-Hochberg procedure, power analysis formulas for different test types, and sequential testing methods that handle peeking without losing power.`,
+
+  94: `Online learning is the framework for models that update continuously as new data arrives, rather than retraining from scratch on a fixed dataset.
+
+The motivation: ad CTR, fraud, recommendation, news ranking — all have distributions that shift hourly or daily. Batch retraining on yesterday's data is always behind. Online learning updates the model after every observation (or small batch), tracking the moving target in real-time.
+
+The algorithms. Online SGD updates weights with each new example. Adaptive methods (AdaGrad, Adam) handle non-stationary gradients. Bandit algorithms (epsilon-greedy, Thompson sampling) balance exploration with exploitation in real-time decision-making. Recursive least squares maintains running statistics that update incrementally.
+
+Concept drift handling. The world changes, so online learning needs detection-and-adaptation mechanisms. Sliding-window approaches train only on the most recent K examples. Forgetting factors weight recent examples more than old ones. Drift detectors (DDM, ADWIN) explicitly trigger model resets when statistical change is detected.
+
+**The production tell.** Online learning's biggest production risk is catastrophic adaptation to noisy or adversarial data. A few bad batches can corrupt the model permanently. Production systems include rollback mechanisms (snapshot the model periodically, roll back if metrics degrade), bounded update magnitudes (cap how much any single example can move the weights), and monitoring (alert if the model's behavior shifts beyond expected ranges).
+
+**Bridge to the Rigorous version.** The Rigorous version develops online SGD convergence, regret bounds for online algorithms, drift detection mathematics, and the production patterns for safe online learning at scale.`,
+
+  109: `Word2Vec is the technique that taught a model to represent words as vectors where similar words have similar vectors. It was the foundation of modern NLP and the breakthrough that made embeddings central to ML.
+
+The mechanism. Walk through a corpus, picking each word and its surrounding context window (typically 5 words on each side). Train two neural network heads: a "skip-gram" head predicts the context words given the centre word, and a "CBOW" head predicts the centre word given the context. The hidden layer of the network is the word embedding — a vector for each word in the vocabulary.
+
+The magic. After training, the embeddings encode semantic relationships geometrically. The famous example: King - Man + Woman ≈ Queen. The reason is that words appearing in similar contexts get pulled toward similar vector representations. Royalty contexts pull "King" and "Queen" together. Gender contexts give consistent vector differences between male/female pairs.
+
+Negative sampling. Computing softmax over a vocabulary of millions is expensive. Negative sampling replaces it with binary classification: given a centre word and a candidate context word, is this a real (positive) context word or a randomly-sampled (negative) one? Far cheaper, and works almost as well.
+
+**The production tell.** Word2Vec embeddings are still used in production for embedding lookup tables, recommendation systems with categorical features (treat each item ID as a token), and as initialization for fine-tuning. But for contemporary NLP, contextualised embeddings (BERT-derived) dominate because they encode word meaning in context, not as a static vector.
+
+**Bridge to the Rigorous version.** The Rigorous version derives skip-gram and CBOW objectives, negative sampling math, GloVe (another foundational embedding method), and the modern contextual embedding methods (BERT, sentence-BERT, BGE, E5).`,
+
+  110: `Before Vision Transformers (ViTs) took over in 2020-2021, computer vision was dominated by Convolutional Neural Networks (CNNs) and three specific architectures: classifiers (ResNet), object detectors (YOLO, R-CNN), and segmenters (U-Net, DeepLab).
+
+Classification. ResNet's key trick was residual connections (skip the layer if it's not adding signal) which allowed networks 100+ layers deep to train stably. It dominated ImageNet for years and is still common in production for image classification tasks.
+
+Object detection. Two families. Two-stage detectors (R-CNN, Faster R-CNN) first propose candidate regions, then classify each region. More accurate but slower. Single-stage detectors (YOLO, SSD) directly predict bounding boxes and classes in one forward pass. Faster, used in real-time applications (driving, security, AR).
+
+Segmentation. Two flavours. Semantic segmentation labels every pixel with its class (sky, road, person). Architectures like U-Net (encoder-decoder with skip connections, originally for biomedical images) and DeepLab (atrous convolutions for multi-scale features) are the workhorses. Instance segmentation also distinguishes individual objects (person 1 vs person 2). Mask R-CNN extends Faster R-CNN with a per-instance mask head.
+
+**The production tell.** In production today, the choice between CNN and ViT depends on data scale and compute budget. CNN-based architectures still dominate edge deployment (mobile cameras, IoT) where MobileNet and EfficientNet provide good accuracy in tight budgets. ViTs win when you have massive pre-training data and cloud compute.
+
+**Bridge to the Rigorous version.** The Rigorous version develops CNN math (convolution as cross-correlation), the architectural lineage (LeNet → AlexNet → VGG → ResNet → EfficientNet), object detection losses (anchor-based vs anchor-free), and segmentation architectures.`,
+
+  116: `Neural network initialization is the unsexy detail that determines whether deep networks train at all. Get it wrong, and your gradients vanish (network can't learn) or explode (training diverges). Get it right, and the network trains stably.
+
+The intuition. Each layer transforms its input vector by multiplying with the weight matrix. If the weights are too small, the output is smaller than the input, and after many layers, signals (and gradients) shrink to zero. If the weights are too large, signals grow exponentially. Either way, the network can't learn.
+
+Xavier (Glorot) initialization scales weights so the variance is preserved through layers for symmetric activations (tanh, sigmoid). Variance proportional to 1/n where n is the number of input neurons.
+
+He initialization is Xavier's modification for ReLU. ReLU halves the signal variance (it zeroes out half the inputs on average), so He doubles the variance compared to Xavier — variance proportional to 2/n. This is the standard initialization for modern deep networks with ReLU.
+
+**The production tell.** When a deep network won't train (loss stuck at random-baseline level), check initialization first. Wrong init is a top-3 cause of "the network won't learn anything." Standard libraries default to sensible inits (He for ReLU, Xavier for tanh), but custom architectures need careful thought.
+
+**Bridge to the Rigorous version.** The Rigorous version derives Xavier and He initialization mathematically, walks through orthogonal initialization for RNNs, layer-wise adaptive initialization (LSUV), and the modern alternatives for very deep networks (residual scaling, T-Fixup for Transformers).`,
+
+  121: `CUPED (Controlled-experiment Using Pre-Experiment Data) is the variance-reduction trick that lets A/B tests detect smaller effects with the same sample size, or detect the same effect with half the sample size. It's the single biggest experimentation efficiency improvement of the last decade.
+
+The intuition. Each user's outcome in your experiment has two components: a predictable part (heavy users will be heavy users regardless of treatment) and a treatment-effect part (what your experiment is actually measuring). The predictable part adds variance to your estimate without adding information. CUPED removes the predictable part using each user's pre-experiment behavior.
+
+The procedure. Before the experiment, run a regression of outcome on pre-period covariate. Get the coefficient θ. During analysis, transform each user's outcome to outcome - θ × covariate. Run your A/B test on the transformed outcome. The treatment effect estimate is unchanged in expectation, but the variance drops by R² (the explained variance of the pre-period regression).
+
+**The production tell.** If your experimentation platform doesn't support CUPED, you're running tests that take 2x longer than necessary. The implementation is simple: store pre-period metrics for each user, run the variance-reduction regression at analysis time. Microsoft, LinkedIn, Booking.com, Airbnb all use it.
+
+**Bridge to the Rigorous version.** The Rigorous version derives the variance reduction formula, walks through multi-covariate CUPED, MLRATE for multiplicative effects, the integration with sequential testing, and the specific platform implementations.`,
+
+  122: `Graph ML is the right answer when your data has structure that tabular models can't see. Fraud detection is the canonical example: fraudsters work in rings, sharing devices, addresses, payment instruments. Tabular features describe each transaction independently. Graph features see the rings.
+
+The mechanism. Build a graph where nodes are entities (users, devices, payment cards) and edges are connections (shared device, shared IP, shared address). Train a Graph Neural Network (GNN) to learn embeddings for each node, where the embedding aggregates information from the node's local neighborhood. Use the embeddings as features in a downstream classifier, or directly classify nodes as fraud/legit.
+
+Why GNNs catch what tabular misses. Tabular fraud detection sees each transaction independently. GNN-based detection sees that this transaction shares a device with three other transactions from different "users" who all share an address with two more "users" who all submitted KYC on the same device — that's a ring of 5+ accounts working together. No tabular feature captures this.
+
+**The production tell.** Production GNN-based fraud systems are heavyweight: real-time graph updates as transactions stream in, sampled neighborhood aggregation for sub-second inference (full graph aggregation is too slow at billions of edges), and explainability layers that produce "why is this flagged" rationales for human review.
+
+**Bridge to the Rigorous version.** The Rigorous version develops GNN architectures (GraphSAGE, GAT, R-GCN for heterogeneous graphs), the sampling strategies (neighborhood sampling, FastGCN), production serving patterns, and the specific fraud-ring detection patterns at PayPal, Stripe, and Indian fintechs.`,
+
+  123: `Real-time feature engineering is the production discipline of computing features for ML serving with sub-100ms latency from streaming data, while maintaining point-in-time correctness with training.
+
+The challenges. Latency budget: you have maybe 30ms to compute features inside a 100ms total inference budget. Correctness: features computed at training (from batch data) and at serving (from streams) must agree, or you have training-serving skew. Data freshness: how stale is "yesterday's average click count" vs "last 5 minutes click count"? Recency matters for some features, not others.
+
+The architecture. A feature store with two paths: an offline path (batch-computed features written to a feature warehouse, used for training) and an online path (stream-computed features cached for low-latency lookup, used for serving). Both paths must compute the same logical feature; this is enforced by either sharing code or by tight contract testing.
+
+Late-arriving data is the silent killer. If an event arrives 7 minutes after it occurred but your feature is "events in the last 5 minutes," the event is missed in training-time recomputation but included at serving time (when you re-look-up the feature later). Result: training data is missing events that serving sees. Skew.
+
+**The production tell.** If your model performs differently at the first second of an hour vs the 59th minute, your real-time feature pipeline has a watermarking bug. The features are computing differently across the time-window boundary.
+
+**Bridge to the Rigorous version.** The Rigorous version develops watermarking math, event-time vs processing-time semantics, point-in-time joins for backfilling, the modern feature store stack (Feast, Tecton, Hopsworks), and the production patterns for sub-100ms feature serving.`,
+
+  124: `LLM production engineering is a discipline that didn't exist three years ago and now consumes massive engineering effort. Three things matter: KV cache, continuous batching, and quantization.
+
+KV cache. When an LLM generates a token, it computes attention against all prior tokens. Without caching, each new token re-computes attention for the entire prior context — quadratic cost. KV cache stores the computed keys and values from prior tokens, so each new token only computes attention with prior cached values. Memory cost grows linearly with context length; compute cost drops dramatically.
+
+Continuous batching. Naive batching processes a group of requests in lockstep — all start together, all finish when the slowest finishes. Wasteful when sequences have different output lengths. Continuous batching dynamically swaps requests in and out of the batch: as soon as one request finishes, a new one joins. GPU stays busy. Throughput typically improves 10-20x.
+
+Quantization. Run the model at INT8 or INT4 instead of FP16. Memory drops 2-4x, allowing larger context or batch sizes. Speed improves because memory bandwidth (not compute) is the bottleneck for LLM inference. Quality drops slightly (usually <1% on benchmarks) but is acceptable for most surfaces.
+
+**The production tell.** A naive LLM deployment costs 5-10x more than a well-optimised one. The optimisation requires the production stack to include vLLM, TGI, or equivalent — not just "deploy the HuggingFace model on a GPU."
+
+**Bridge to the Rigorous version.** The Rigorous version develops KV cache math (memory cost, reuse patterns), continuous batching algorithms (PagedAttention, FlashAttention), speculative decoding, prefix caching, and the production stack comparison.`,
+
+  125: `Hierarchical forecasting is the discipline of forecasting at multiple aggregation levels (SKU, category, region, country, etc.) such that the forecasts at all levels are consistent with each other. Without reconciliation, your category forecast and the sum of your SKU forecasts disagree by 5-15%, and business decisions get made on inconsistent numbers.
+
+Three reconciliation approaches. Bottom-up: forecast only the lowest level (SKU × store × day), and sum up. Simple but loses information from higher-level patterns. Top-down: forecast only the top level (national totals) and disaggregate to lower levels using historical proportions. Loses information about which SKU is growing vs declining. Optimal reconciliation (MinT, OLS): forecast every level independently, then mathematically adjust them so they're consistent while minimizing total reconciliation error.
+
+MinT (Minimum Trace) is the modern standard. It uses the covariance structure of base forecast errors to find the optimal reconciliation weights. In practice, it improves accuracy at most levels by 5-20% versus bottom-up or top-down alone.
+
+**The production tell.** If your forecasting team produces forecasts at multiple levels but no one has reconciled them, the business is making decisions on numbers that don't add up. The hierarchical forecasting fix is usually a 1-2 month project, but the impact is immediate: every decision-maker now sees consistent numbers.
+
+**Bridge to the Rigorous version.** The Rigorous version derives MinT and OLS reconciliation, walks through bottom-up vs top-down trade-offs, develops the GTOP family for non-trace-minimising reconciliation, and shows the production patterns at retailers, demand-planning teams, and capacity-planning systems.`,
+
+  126: `Auction theory is the mathematical foundation of programmatic advertising. Every ad served by Google, Meta, Amazon, or any real-time bidding network is the output of an auction. Understanding the auction format matters for any senior MLE in adtech.
+
+GSP (Generalized Second-Price) is the dominant format for sponsored search ads. Bidders rank ads by bid × predicted CTR (the "ad rank" or "effective CPM"). The top ad wins position 1; the second wins position 2; and so on. Each winner pays the minimum amount needed to maintain their position over the next-ranked bidder. The structure encourages truthful bidding (you should bid your true value per click) and produces revenue-maximising allocation under common assumptions.
+
+Truthful bidding only holds approximately in GSP. Strategic bidders can sometimes do better by shading their bids, especially in dynamic markets. The Vickrey-Clarke-Groves (VCG) auction is the truly truthful alternative — bidders pay the externality they impose on others — but it's computationally complex and gives lower revenue, so GSP wins in practice.
+
+pCTR (predicted Click-Through Rate) matters because bids are converted to expected revenue via bid × pCTR. A pCTR model that's miscalibrated (predicts 10% when reality is 5%) over-ranks low-CTR ads relative to high-CTR ones — directly costing revenue. Calibration is more important than raw accuracy for pCTR models.
+
+**The production tell.** In ad auctions, "the model is more accurate" doesn't necessarily mean "revenue went up." If the new model's calibration changed (even with same AUC), the auction outcomes shift in ways that may help or hurt revenue. A/B testing on revenue (not accuracy) is the only way to know.
+
+**Bridge to the Rigorous version.** The Rigorous version develops GSP mechanics, VCG comparison, pCTR calibration math, reserve price optimisation, and the specific production patterns at Google Ads, Meta, and Amazon Ads.`,
+
 }

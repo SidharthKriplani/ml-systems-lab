@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lenskart Senior MLE / Data Scientist Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, a…" />
+  <meta name="keywords" content="Interview Prep, Lenskart, Senior MLE, Senior DS, E-commerce, Computer Vision, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/lenskart-senior-mle-data-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/lenskart-senior-mle-data-scientist-interview-guide.html" />
+  <meta property="og:title" content="Lenskart Senior MLE / Data Scientist Interview Guide" />
+  <meta property="og:description" content="Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, a…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Lenskart Senior MLE / Data Scientist Interview Guide" />
+  <meta name="twitter:description" content="Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, a…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Lenskart Senior MLE / Data Scientist Interview Guide",
+  "description": "Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, a…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/lenskart-senior-mle-data-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Lenskart, Senior MLE, Senior DS, E-commerce, Computer Vision, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=lenskart-senior-mle-data-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Lenskart Senior MLE / Data Scientist Interview Guide</h1>
+    <p class="excerpt">Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, and customer analytics. The interview tests computer-vision-flavoured recommendation plus retail analytics. This guide covers it.</p>
+    <p>Lenskart is India's largest eyewear retailer (online + 1500+ stores). Senior MLE / DS roles cover face-shape-aware recommendation, AR try-on, computer vision for prescription parsing, demand forecasting per store/SKU, and customer analytics. The interview is recommendation-heavy with a computer vision overlay.</p>
+<h2>The loop structure (Senior MLE / DS)</h2>
+<p>Standard loop: recruiter screen → ML fundamentals + SQL → ML system design → behavioural.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> 30 min.</p>
+<p><strong>Round 2 — ML fundamentals + SQL.</strong> 75 minutes. Standard.</p>
+<p><strong>Round 3 — ML system design.</strong> 75 minutes. Face-shape-aware eyewear recommendation, AR try-on backend, or per-store demand forecasting.</p>
+<p><strong>Round 4 — Behavioural.</strong> 45 minutes.</p>
+<h2>What Lenskart weights distinctively</h2>
+<p>1. <strong>CV-flavoured recommendation.</strong> Face shape, eyewear style geometry. Image embeddings matter. 2. <strong>Omnichannel inventory.</strong> Online + offline. Forecasting per store per SKU per day. 3. <strong>Returns handling.</strong> Eyewear has unique return patterns (fit issues, prescription errors). 4. <strong>Customer-lifetime-value.</strong> Lenskart customers buy infrequently but with high LTV.</p>
+<h2>Top 10 questions Lenskart senior MLE / DS candidates face</h2>
+<p>1. "Face-shape-aware eyewear recommendation — architecture?" 2. "AR try-on backend — what's the ML stack?" 3. "Per-store demand forecasting — SKU × store × week. What features?" 4. "Diagnose: returns rate in a specific frame style jumped 12%. Approach?" 5. "Prescription parsing OCR — error tolerance and human-in-the-loop." 6. "CLV modeling — predict 3-year LTV at first purchase?" 7. "Cold-start: new frame style launched. How does it get exposure?" 8. "Image-based recommendation — when better than collaborative filtering?" 9. "Omnichannel attribution — online browse → offline buy?" 10. "Walk through your most impactful project."</p>
+<h2>The prep path through MSL</h2>
+<li>Tier 5 (Evaluation) — calibration, position bias.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts.</li>
+<li>Posts 48 (Feedback Loops), 70-72 (RecSys), 110 (CV), 118 (Survival for CLV).</li>
+<h2>Compensation</h2>
+<p>Lenskart Senior MLE / DS in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead roles ₹70 lakh+.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=lenskart-senior-mle-data-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

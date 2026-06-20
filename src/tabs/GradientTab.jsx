@@ -10320,6 +10320,613 @@ Tata Digital Senior MLE / DS in 2026 ranges roughly ₹35 lakh – ₹60 lakh fo
     domain: 'interview',
     youtube: [],
   },
+  {
+    id: 156,
+    slug: 'bharatpe-senior-mle-data-scientist-interview-guide',
+    title: 'BharatPe Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'BharatPe hires senior MLE / DS roles for merchant lending, fraud detection, QR-payment analytics, and risk scoring for small-merchant credit. The interview tests credit risk depth on thin-file borrowers plus fast-iteration discipline. This guide covers it.',
+    body: `BharatPe runs UPI payments and lending for small merchants — a unique vertical with thin-file borrowers, high-velocity transactions, and fraud risk patterns that differ from consumer fintech. Senior MLE / DS roles work on merchant credit scoring, fraud, churn prediction, and merchant growth analytics.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + SQL → credit-risk case → ML system design → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + SQL.** 75 minutes. Standard ML rigour plus heavy SQL on payment transaction tables (UPI flows, merchant categories, settlement, refunds).
+
+**Round 3 — Credit-risk case.** 75 minutes. Build a merchant credit score with thin bureau data and rich payment-velocity data. Probed for: feature engineering from transaction histories, segment-wise validation, calibration, regulatory awareness.
+
+**Round 4 — ML system design.** 60 minutes. "Design real-time fraud scoring on UPI payments at BharatPe scale." Latency budget: 200ms.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What BharatPe weights distinctively**
+
+1. **Thin-file credit modeling.** Most merchants don't have rich bureau histories. Payment-velocity features are the differentiator.
+2. **Real-time UPI fraud.** Microsecond-scale transaction patterns matter.
+3. **Fast iteration.** BharatPe ships quickly; senior MLEs must balance rigour with speed.
+4. **Merchant-side perspective.** Unlike consumer fintech, the customer is the merchant. Models reflect merchant behaviour, not consumer.
+
+**Top 10 questions BharatPe senior MLE / DS candidates face**
+
+1. "Build a merchant credit score with no bureau data. What features and what model?"
+2. "Real-time UPI fraud — what's the latency budget and how do you architect for it?"
+3. "Calibration in merchant lending — why does it matter for the business?"
+4. "Diagnose: settlement-day disbursement rate dropped 8%. Approach?"
+5. "Merchant churn prediction — what features predict 30-day churn?"
+6. "Feature engineering from raw UPI transaction logs — what would you build?"
+7. "Segment-wise validation for credit models across merchant categories."
+8. "RBI guidelines for lending — what specifically applies to merchant credit?"
+9. "A/B testing on lending decisions — what's allowed and what isn't?"
+10. "Walk through your most impactful production project."
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 5 (Evaluation) — calibration emphasis.
+- Tier 7 (Production Engineering) — Posts 33, 41, 123.
+- Tier 8 (Monitoring) — all 5 posts.
+- LoanDefaultTab, FraudDetectionTab for hands-on practice.
+
+**Common failure modes**
+
+- Generic credit scoring answers without thin-file awareness.
+- Underestimating real-time fraud latency engineering.
+- Lacking awareness of merchant-side behaviour patterns.
+
+**Compensation**
+
+BharatPe Senior MLE / DS in 2026 ranges roughly ₹35 lakh – ₹60 lakh for 5-7 YOE. Lead roles ₹75 lakh+.`,
+    tags: ['Interview Prep', 'BharatPe', 'Senior MLE', 'Senior DS', 'Fintech', 'Merchant Lending', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 157,
+    slug: 'slice-senior-mle-data-scientist-interview-guide',
+    title: 'Slice Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Slice (now operating as a Small Finance Bank) hires senior MLE / DS for credit underwriting on young / thin-file borrowers, fraud, and product analytics. The interview tests credit risk on a new demographic plus regulatory discipline. This guide covers it.',
+    body: `Slice has pivoted from a credit-card-like product to a Small Finance Bank, but the modeling DNA — underwriting young, thin-file borrowers — remains central. Senior MLE / DS roles cover credit scoring, fraud, transaction enrichment, and product analytics.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + SQL → credit risk case → ML system design → hiring manager + behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + SQL.** 75 minutes. Standard.
+
+**Round 3 — Credit risk case.** 90 minutes. Build a credit score for a 22-year-old first-time borrower with no credit history. Probed for: alternative-data features, calibration, segment validation, regulatory awareness (now SFB licensed).
+
+**Round 4 — ML system design.** 60 minutes.
+
+**Round 5 — Hiring manager + behavioural.** 60 minutes.
+
+**What Slice weights distinctively**
+
+1. **Young / first-time borrower modeling.** Slice's core demographic has minimal bureau history. Alternative data (app usage, device, behavioral) is critical.
+2. **Bank-level discipline.** Now an SFB, Slice has RBI compliance built in. Senior MLEs must know it.
+3. **Product analytics depth.** Cross-functional with PM teams on feature impact.
+4. **Engineering quality.** Slice maintains high code quality standards.
+
+**Top 10 questions Slice senior MLE / DS candidates face**
+
+1. "Credit score for first-time borrowers — what alternative data and how do you model?"
+2. "RBI SFB guidelines — what changed for your modeling vs the pre-license product?"
+3. "Fraud at signup — synthetic identity, mule accounts. How do you detect at scale?"
+4. "Calibration vs ranking for credit. When does each matter for Slice's business?"
+5. "Walk through diagnosis of approval-rate drop in a specific city."
+6. "A/B testing under SFB constraints — what's allowed and what isn't?"
+7. "Feature engineering from app-usage data — examples?"
+8. "Demographic compliance — what features can't you use and why?"
+9. "Walk through your most impactful production project."
+10. "Why Slice specifically (vs other Indian fintechs)?"
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 5 (Evaluation) — calibration emphasis.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- LoanDefaultTab for ECOA-equivalent practice.
+
+**Compensation**
+
+Slice Senior MLE / DS in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead roles ₹70 lakh+.`,
+    tags: ['Interview Prep', 'Slice', 'Senior MLE', 'Senior DS', 'Fintech', 'Credit Scoring', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 158,
+    slug: 'practo-senior-mle-data-scientist-interview-guide',
+    title: 'Practo Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Practo runs doctor-discovery, telehealth, and clinical-documentation analytics. Senior MLE / DS roles cover doctor recommendation, appointment matching, prescription processing (OCR + NER), and clinical analytics. The interview tests healthcare ML judgment alongside ranking depth. This guide covers it.',
+    body: `Practo is one of India's leading health-tech platforms, operating across doctor discovery, telehealth, diagnostics, and electronic health records. Senior MLE / DS roles cover doctor recommendation, search ranking, appointment matching, clinical NLP (prescription parsing, symptom understanding), and patient-side analytics.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML / SQL → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML / SQL.** 75 minutes. Standard ML rigour with healthcare flavor. SQL on healthcare schema.
+
+**Round 3 — ML system design.** 75 minutes. "Design doctor recommendation across specialties" or "design prescription OCR + NER pipeline."
+
+**Round 4 — Behavioural.** 45 minutes. Healthcare ethics emphasis.
+
+**What Practo weights distinctively**
+
+1. **Healthcare correctness.** A wrong recommendation can hurt a patient. Senior MLEs build safety-aware.
+2. **Doctor-patient marketplace dynamics.** Both sides matter for recommendation; doctor utilization affects user wait times.
+3. **Clinical NLP.** Prescription processing (OCR + drug-name NER) is a unique technical area.
+4. **Regulation.** Health data laws (DPDP), telehealth guidelines.
+
+**Top 10 questions Practo senior MLE / DS candidates face**
+
+1. "Design doctor recommendation: what's the objective and what are the safety constraints?"
+2. "Prescription OCR + NER pipeline — architecture?"
+3. "Symptom-to-specialty routing — how do you build this safely?"
+4. "Calibration in fraud / abuse detection for healthcare. Why does it matter?"
+5. "Doctor-patient matching — supply-demand mechanics?"
+6. "Diagnose: appointment-booking rate dropped 10%. Approach?"
+7. "Image-based skin condition triage — what's the ML role and what's the human role?"
+8. "Class imbalance in disease detection — handling?"
+9. "DPDP compliance — what data can you use and how?"
+10. "When would you NOT deploy an ML model in healthcare?"
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, class imbalance.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (DS & Causal) — Posts 91-93.
+- Posts 95 (Anomaly), 98 (Fairness).
+
+**Compensation**
+
+Practo Senior MLE / DS in 2026 ranges roughly ₹25 lakh – ₹45 lakh for 5-7 YOE. Lead roles ₹60 lakh+.`,
+    tags: ['Interview Prep', 'Practo', 'Senior MLE', 'Senior DS', 'Healthcare ML', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 159,
+    slug: 'urban-company-senior-mle-data-scientist-interview-guide',
+    title: 'Urban Company Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Urban Company runs a marketplace for at-home services (cleaning, beauty, repairs). Senior MLE / DS roles cover professional-to-customer matching, dynamic pricing, demand forecasting, quality scoring, and fraud. The interview tests marketplace mechanics. This guide covers it.',
+    body: `Urban Company operates a two-sided marketplace for at-home services. Senior MLE / DS roles cover supply-side (professional onboarding, quality scoring, churn), demand-side (search ranking, recommendation), and marketplace dynamics (matching, pricing, demand forecasting).
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML / SQL → ML system design (marketplace) → production case → hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML / SQL.** 75 minutes. Standard.
+
+**Round 3 — ML system design.** 75 minutes. Marketplace-focused: matching, dynamic pricing, supply forecasting.
+
+**Round 4 — Production case.** 60 minutes. Diagnosis.
+
+**Round 5 — Hiring manager.** 45 minutes.
+
+**What Urban Company weights distinctively**
+
+1. **Marketplace SUTVA.** Professional treatments affect customer outcomes and vice versa. SUTVA reasoning is mandatory.
+2. **Quality scoring.** Customer-visible professional ratings drive marketplace health. Senior MLEs design these.
+3. **Supply forecasting.** Predicting professional supply per city per service per hour is non-trivial.
+4. **Real-time matching.** Sub-second decisions per booking request.
+
+**Top 10 questions Urban Company senior MLE / DS candidates face**
+
+1. "Design professional-to-customer matching for at-home services. Goal: customer satisfaction + professional earnings."
+2. "Dynamic pricing — when do you surge and what are the risks?"
+3. "Quality scoring for professionals — how do you avoid feedback loops?"
+4. "Supply forecasting per city × service × hour. What features?"
+5. "Diagnose: customer NPS dropped 5 points in Bangalore for cleaning. Approach?"
+6. "SUTVA violations in marketplace experiments — explain and design around."
+7. "Cold-start for new professionals — what's the strategy?"
+8. "Fraud detection: fake bookings, gaming reviews. How do you catch?"
+9. "Churn prediction for professionals — what features predict 30-day churn?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, position bias.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (DS & Causal) — Posts 91 (Network Effects), 92 (DiD/RDD).
+- Posts 48 (Feedback Loops), 70-72 (RecSys), 96 (Bandits).
+
+**Compensation**
+
+Urban Company Senior MLE / DS in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead roles ₹70 lakh+.`,
+    tags: ['Interview Prep', 'Urban Company', 'Senior MLE', 'Senior DS', 'Marketplace', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 160,
+    slug: 'navi-senior-mle-data-scientist-interview-guide',
+    title: 'Navi Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: "Navi operates lending, mutual funds, insurance, and UPI under one super-app. Senior MLE / DS roles cover credit underwriting, fraud, mutual fund recommendation, and product personalisation. Sachin Bansal's engineering-driven culture sets a high technical bar. This guide covers it.",
+    body: `Navi runs a financial services super-app: lending, mutual funds, insurance, UPI payments. Founder Sachin Bansal (ex-Flipkart) brings a strong engineering culture that translates into a high technical bar for senior MLE / DS hires. Roles cover credit underwriting, fraud, recommendation, and product personalisation.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design → behavioural with senior leadership.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + coding.** 90 minutes. Standard fundamentals plus coding (LeetCode medium-hard). Slightly higher coding bar than most fintechs.
+
+**Round 3 — ML system design.** 75 minutes. Credit underwriting, fraud, or mutual fund recommendation depending on team.
+
+**Round 4 — Behavioural.** 60 minutes. Engineering culture probe.
+
+**What Navi weights distinctively**
+
+1. **Engineering culture.** Higher coding bar than most fintechs.
+2. **Cross-product personalisation.** Super-app — a credit user can become a MF user, etc.
+3. **Regulatory comfort.** RBI for lending, SEBI for MF, IRDA for insurance.
+4. **Long-term thinking.** Navi takes patient capital approach.
+
+**Top 10 questions Navi senior MLE / DS candidates face**
+
+1. "Credit scoring for unsecured personal loans — what's your model and validation?"
+2. "Cross-product recommendation: a lending customer just paid off a loan. What do you recommend on the MF tab?"
+3. "Real-time fraud across credit + UPI. Latency budget?"
+4. "Calibration in credit — why and how?"
+5. "Diagnose: approval-rate drift over 2 months. Approach?"
+6. "Mutual fund recommendation — SEBI-aware objective?"
+7. "Code: efficient implementation of a streaming feature aggregation."
+8. "A/B testing in lending — what's allowed under RBI rules?"
+9. "Walk through your most impactful project."
+10. "Why Navi specifically?"
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 3 (Classical Algorithms) — Posts 73-76.
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- LoanDefaultTab, FraudDetectionTab.
+
+**Compensation**
+
+Navi Senior MLE / DS in 2026 ranges roughly ₹40 lakh – ₹70 lakh for 5-7 YOE. Lead roles ₹85 lakh+.`,
+    tags: ['Interview Prep', 'Navi', 'Senior MLE', 'Senior DS', 'Fintech', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 161,
+    slug: 'acko-senior-mle-data-scientist-interview-guide',
+    title: 'Acko Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: "Acko is one of India's digital-first general insurers. Senior MLE / DS roles cover actuarial pricing, claims fraud, telematics-based motor pricing, health-claims processing, and customer churn. The interview tests insurance ML specifically. This guide covers it.",
+    body: `Acko is India's digital-first general insurance player, operating across motor, health, electronics, and travel. Senior MLE / DS roles work on actuarial pricing (premium calculation), claims fraud, telematics-based motor pricing, health-claims OCR + processing, customer churn, and customer-lifetime-value modeling.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + actuarial fundamentals → ML system design → behavioural with senior leadership.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML + actuarial fundamentals.** 90 minutes. Standard ML rigour plus actuarial concepts (GLMs, frequency-severity modeling, GAMs for non-linear pricing curves, IRDA compliance for insurance pricing).
+
+**Round 3 — ML system design.** 75 minutes. Actuarial pricing for motor / health, claims fraud detection, or telematics-based pricing.
+
+**Round 4 — Behavioural with senior leadership.** 60 minutes.
+
+**What Acko weights distinctively**
+
+1. **Actuarial fluency.** GLMs (Gamma, Tweedie distributions), frequency-severity modeling. Many candidates fail here.
+2. **IRDA compliance.** Insurance pricing must comply with IRDA rules.
+3. **Claims fraud.** Specific patterns: staged accidents, exaggerated claims, identity theft.
+4. **Long-tail data.** Insurance has very rare events (large claims) — handling tail risk matters.
+
+**Top 10 questions Acko senior MLE / DS candidates face**
+
+1. "Build an actuarial pricing model for motor insurance. Tweedie GLM vs gradient boosting — when do you use each?"
+2. "Frequency-severity decomposition — explain and when to use it."
+3. "Claims fraud detection — what patterns and what model?"
+4. "Telematics data (acceleration, braking) for motor pricing — feature engineering?"
+5. "IRDA file & use vs use & file — what's the modeling implication?"
+6. "Tail risk in insurance — how do you handle extreme but important rare events?"
+7. "Calibration: why is it critical for premium calculation?"
+8. "Diagnose: loss ratio jumped in a specific motor segment. Approach?"
+9. "Churn prediction at policy renewal — features?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 0 (Observation Discipline) — Post 128.
+- Tier 3 (Classical Algorithms) — Posts 73, 74, 76.
+- Tier 5 (Evaluation) — all 7 posts.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring) — all 5 posts.
+- Posts 88 (Time Series), 95 (Anomaly), 118 (Survival).
+
+**Compensation**
+
+Acko Senior MLE / DS in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead actuarial roles ₹70 lakh+.`,
+    tags: ['Interview Prep', 'Acko', 'Senior MLE', 'Senior DS', 'Insurance ML', 'Actuarial', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 162,
+    slug: 'cleartax-senior-mle-data-scientist-interview-guide',
+    title: 'Cleartax Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Cleartax (now ClearOne) operates in tax compliance for individuals and enterprises. Senior MLE / DS roles cover document processing (OCR + NER for invoices and tax documents), entity extraction, anomaly detection in tax filings, and product analytics. The interview tests document AI and tax-domain reasoning. This guide covers it.',
+    body: `Cleartax (rebranded as ClearOne) runs tax compliance and GST infrastructure for individuals and businesses. Senior MLE / DS roles work on document AI (invoice OCR, GST return parsing), entity extraction (vendors, amounts, tax categories), anomaly detection in returns, and product analytics for enterprise customers.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML + NLP fundamentals → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML + NLP fundamentals.** 75 minutes. Standard ML rigour plus NLP depth: document parsing, NER, entity linking. OCR pipeline design.
+
+**Round 3 — ML system design.** 75 minutes. "Design invoice OCR + GST classification pipeline" or "design anomaly detection in GST returns."
+
+**Round 4 — Behavioural.** 45 minutes.
+
+**What Cleartax weights distinctively**
+
+1. **Document AI depth.** OCR + layout-aware NER. The unique tech of this domain.
+2. **Tax-domain expertise.** GST categories, HSN codes, tax classification logic.
+3. **Enterprise reliability.** Tax compliance can't be wrong; explainability matters.
+4. **Bulk processing.** Millions of invoices per day for enterprise customers.
+
+**Top 10 questions Cleartax senior MLE / DS candidates face**
+
+1. "Design invoice OCR pipeline. Latency, accuracy, fallback strategy."
+2. "NER for invoice data — vendor, amount, HSN, tax — what model and how to evaluate?"
+3. "GST classification — predicting HSN codes from item descriptions. Architecture?"
+4. "Anomaly detection in GST returns — what patterns matter?"
+5. "Document layout understanding — when do you use LayoutLM vs simpler approaches?"
+6. "Active learning for invoice labelling — how do you set this up?"
+7. "Diagnose: invoice extraction accuracy dropped 8% in a specific customer segment. Approach?"
+8. "Reconciliation between GSTR-1, GSTR-2A, GSTR-3B — how do you architect this?"
+9. "Class imbalance in tax category prediction (some HSN codes are rare) — handling?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, class imbalance.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Posts 95 (Anomaly), 109 (Word2Vec), 110 (CV before ViTs for OCR).
+- Tier 6 (Deep Learning) — Transformer, BERT for NER.
+
+**Compensation**
+
+Cleartax Senior MLE / DS in 2026 ranges roughly ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead roles ₹65 lakh+.`,
+    tags: ['Interview Prep', 'Cleartax', 'ClearOne', 'Senior MLE', 'Senior DS', 'Document AI', 'GST', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 163,
+    slug: 'lenskart-senior-mle-data-scientist-interview-guide',
+    title: 'Lenskart Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Lenskart runs eyewear e-commerce with strong offline integration. Senior MLE / DS roles cover face-shape/eyewear recommendation, AR-driven try-on, demand forecasting per store, prescription parsing, and customer analytics. The interview tests computer-vision-flavoured recommendation plus retail analytics. This guide covers it.',
+    body: `Lenskart is India's largest eyewear retailer (online + 1500+ stores). Senior MLE / DS roles cover face-shape-aware recommendation, AR try-on, computer vision for prescription parsing, demand forecasting per store/SKU, and customer analytics. The interview is recommendation-heavy with a computer vision overlay.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + SQL → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + SQL.** 75 minutes. Standard.
+
+**Round 3 — ML system design.** 75 minutes. Face-shape-aware eyewear recommendation, AR try-on backend, or per-store demand forecasting.
+
+**Round 4 — Behavioural.** 45 minutes.
+
+**What Lenskart weights distinctively**
+
+1. **CV-flavoured recommendation.** Face shape, eyewear style geometry. Image embeddings matter.
+2. **Omnichannel inventory.** Online + offline. Forecasting per store per SKU per day.
+3. **Returns handling.** Eyewear has unique return patterns (fit issues, prescription errors).
+4. **Customer-lifetime-value.** Lenskart customers buy infrequently but with high LTV.
+
+**Top 10 questions Lenskart senior MLE / DS candidates face**
+
+1. "Face-shape-aware eyewear recommendation — architecture?"
+2. "AR try-on backend — what's the ML stack?"
+3. "Per-store demand forecasting — SKU × store × week. What features?"
+4. "Diagnose: returns rate in a specific frame style jumped 12%. Approach?"
+5. "Prescription parsing OCR — error tolerance and human-in-the-loop."
+6. "CLV modeling — predict 3-year LTV at first purchase?"
+7. "Cold-start: new frame style launched. How does it get exposure?"
+8. "Image-based recommendation — when better than collaborative filtering?"
+9. "Omnichannel attribution — online browse → offline buy?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, position bias.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Posts 48 (Feedback Loops), 70-72 (RecSys), 110 (CV), 118 (Survival for CLV).
+
+**Compensation**
+
+Lenskart Senior MLE / DS in 2026 ranges roughly ₹30 lakh – ₹55 lakh for 5-7 YOE. Lead roles ₹70 lakh+.`,
+    tags: ['Interview Prep', 'Lenskart', 'Senior MLE', 'Senior DS', 'E-commerce', 'Computer Vision', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 164,
+    slug: 'apna-senior-mle-data-scientist-interview-guide',
+    title: 'Apna Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Apna runs job-matching for blue-collar and grey-collar workers across India. Senior MLE / DS roles cover job-candidate matching, fraud (fake jobs, fake profiles), recommendation, and product analytics. The interview tests matching-system mechanics plus the unique signal challenges of the Indian blue-collar market. This guide covers it.',
+    body: `Apna runs a job marketplace for blue-collar and grey-collar workers — drivers, salespeople, factory workers, beauticians, security guards. Senior MLE / DS roles cover job-candidate matching, fraud detection (fake jobs, fake employer profiles), recommendation, and product analytics. The unique challenge: data is noisier than white-collar job markets, and trust signals are scarce.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + SQL → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — ML fundamentals + SQL.** 75 minutes. Standard.
+
+**Round 3 — ML system design.** 75 minutes. Job-candidate matching with sparse signals.
+
+**Round 4 — Behavioural.** 45 minutes.
+
+**What Apna weights distinctively**
+
+1. **Sparse-signal matching.** Resumes are minimal, employer descriptions are short.
+2. **Fraud at scale.** Fake jobs (pyramid schemes), fake profiles, mule employer accounts.
+3. **Multi-language candidates.** Hindi + 10+ regional languages.
+4. **Trust scoring.** Employer trust score is critical for marketplace health.
+
+**Top 10 questions Apna senior MLE / DS candidates face**
+
+1. "Job-candidate matching with sparse profiles. Architecture?"
+2. "Fake-job detection — patterns, features, model?"
+3. "Employer trust scoring — what signals matter and how do you avoid cold-start penalising new legitimate employers?"
+4. "Multi-language matching — strategy?"
+5. "Application-rate prediction — what features?"
+6. "Diagnose: applications-per-job dropped 12% in Pune for sales roles. Approach?"
+7. "Cold-start for new candidates with no application history."
+8. "A/B testing in two-sided marketplaces — SUTVA considerations."
+9. "Salary range prediction from sparse signals — model?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration, position bias.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (DS & Causal) — Posts 91 (Network Effects), 92.
+- Posts 48 (Feedback Loops), 70-72 (RecSys), 95 (Anomaly for fraud).
+
+**Compensation**
+
+Apna Senior MLE / DS in 2026 ranges roughly ₹28 lakh – ₹50 lakh for 5-7 YOE. Lead roles ₹65 lakh+.`,
+    tags: ['Interview Prep', 'Apna', 'Senior MLE', 'Senior DS', 'Marketplace', 'Job Matching', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 165,
+    slug: 'mamaearth-honasa-senior-mle-data-scientist-interview-guide',
+    title: 'Mamaearth (Honasa) Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 7,
+    featured: false,
+    excerpt: 'Mamaearth (under Honasa) operates D2C personal care across multiple brands (Mamaearth, The Derma Co, BBLUNT, Aqualogica). Senior MLE / DS roles cover recommendation, demand forecasting, customer LTV, attribution, and marketing analytics. The interview tests D2C / e-commerce ML plus marketing attribution depth. This guide covers it.',
+    body: `Honasa Consumer (Mamaearth's parent) runs multiple D2C personal care brands: Mamaearth, The Derma Co, BBLUNT, Aqualogica, Ayuga. Senior MLE / DS roles cover recommendation across the multi-brand portfolio, demand forecasting, customer LTV modeling, marketing attribution, and category analytics.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → analytics case + SQL → ML system design → behavioural.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** 30 min.
+
+**Round 2 — Analytics case + SQL.** 75 minutes. SQL on D2C schema. Case: "drive incremental revenue across the brand portfolio."
+
+**Round 3 — ML system design.** 75 minutes. Cross-brand recommendation, demand forecasting, or marketing mix modeling.
+
+**Round 4 — Behavioural.** 45 minutes.
+
+**What Mamaearth / Honasa weights distinctively**
+
+1. **Cross-brand portfolio.** A customer of Mamaearth may also be a fit for The Derma Co. Cross-brand recommendation matters.
+2. **Marketing attribution.** D2C is heavy on paid acquisition; attribution and incrementality analysis are central.
+3. **Demand forecasting for inventory.** SKU × warehouse × day forecasting for online + offline channels.
+4. **CLV depth.** Repeat-rate optimisation is core to D2C profitability.
+
+**Top 10 questions Mamaearth senior MLE / DS candidates face**
+
+1. "Cross-brand recommendation — how does a Mamaearth user discover The Derma Co?"
+2. "Marketing Mix Modeling (MMM) — what's it, when is it useful?"
+3. "Attribution post-iOS14 — what changes?"
+4. "Incrementality testing in performance marketing — design?"
+5. "Demand forecasting for new product launches — strategy?"
+6. "CLV at first purchase — what features predict 12-month LTV?"
+7. "Diagnose: repeat rate dropped 4% for Mamaearth shampoo category. Approach?"
+8. "Cohort analysis — beyond the basics, what would you build?"
+9. "Cold-start for a new SKU. Strategy?"
+10. "Walk through your most impactful project."
+
+**The prep path through MSL**
+
+- Tier 5 (Evaluation) — calibration.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 9 (DS & Causal) — Posts 83 (Attribution), 84 (Uplift), 91-93.
+- Posts 70-72 (RecSys), 88 (Time Series), 118 (Survival for CLV), 125 (Hierarchical Forecasting).
+
+**Compensation**
+
+Mamaearth / Honasa Senior MLE / DS in 2026 ranges roughly ₹25 lakh – ₹45 lakh for 5-7 YOE. Lead roles ₹60 lakh+.`,
+    tags: ['Interview Prep', 'Mamaearth', 'Honasa', 'Senior MLE', 'Senior DS', 'D2C', 'Marketing Attribution', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
