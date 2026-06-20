@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss — ML Systems Lab</title>
+  <meta name="description" content="Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same an…" />
+  <meta name="keywords" content="Models &amp; Math, Information Theory, Entropy, KL Divergence, Cross-Entropy, MLE, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/information-theory-entropy-kl-cross-entropy.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/information-theory-entropy-kl-cross-entropy.html" />
+  <meta property="og:title" content="Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss" />
+  <meta property="og:description" content="Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same an…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss" />
+  <meta name="twitter:description" content="Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same an…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss",
+  "description": "Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same an…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/information-theory-entropy-kl-cross-entropy.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Information Theory, Entropy, KL Divergence, Cross-Entropy, MLE, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=information-theory-entropy-kl-cross-entropy#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Information Theory: Entropy, KL Divergence, and Why Cross-Entropy Is the Right Loss</h1>
+    <p class="excerpt">Why do we minimise cross-entropy for classification? Why is KL divergence asymmetric? What does mutual information actually measure, and why is it in the VAE loss? These questions all have the same answer: information theory. Shannon built it in 1948 to study communication. ML borrowed all of it.</p>
+    <p>Information theory was invented by Claude Shannon in 1948 to answer one question: how much information does a message contain? The answer, entropy, turned out to be the bedrock of modern machine learning — the language in which we write every loss function and every notion of model-data fit.</p>
+<h2>The intuition: rare events contain more information</h2>
+<p>If a coin flip comes up heads, you have learned something — heads and tails are equally likely, so either outcome is surprising. If the sun rises, you have learned almost nothing — it was virtually certain. The information content of an event with probability p is: I(x) = -log₂(p(x)) bits (using log base 2) or -ln(p(x)) nats (using natural log). Rare events (p small) have high information content. Certain events (p → 1) have near-zero information. This is the fundamental quantification.</p>
+<h2>Shannon Entropy: average surprise</h2>
+<p>The entropy of a distribution P over K discrete outcomes is: H(P) = -Σᵢ p(xᵢ) log p(xᵢ) = E[-log P(X)]. It is the expected information content — the average surprise per observation. Maximum entropy: a uniform distribution over K outcomes has entropy log K — maximum uncertainty. Zero entropy: a deterministic distribution (one outcome has probability 1) has entropy 0 — no uncertainty. Entropy measures how unpredictable a distribution is. For a fair coin: H = -(0.5 log 0.5 + 0.5 log 0.5) = 1 bit. For a biased coin with p=0.9: H ≈ 0.47 bits.</p>
+<h2>Cross-Entropy: measuring model fit</h2>
+<p>Cross-entropy between the true distribution P and our model Q is: H(P, Q) = -Σᵢ p(xᵢ) log q(xᵢ) = E_P[-log Q(X)]. When our model Q matches P exactly, H(P,Q) = H(P) — the minimum possible. When Q is a bad model of P, H(P,Q) > H(P). In classification: P is the one-hot true label distribution (p=1 for the correct class, 0 for others). Q is the softmax output of our model. H(P,Q) = -log q(y_true) — just the log probability assigned to the correct class. Minimising cross-entropy loss is equivalent to maximising log-likelihood under the model Q.</p>
+<h2>KL Divergence: the gap between distributions</h2>
+<p>KL(P || Q) = Σᵢ p(xᵢ) log(p(xᵢ)/q(xᵢ)) = H(P,Q) - H(P). It is the excess bits needed to encode samples from P using a code optimised for Q. KL ≥ 0 always (Gibbs inequality). KL = 0 iff P = Q. KL is asymmetric: KL(P||Q) ≠ KL(Q||P). The asymmetry matters: KL(P||Q) penalises heavily when q(x) ≈ 0 where p(x) > 0 — the model assigns near-zero probability to a likely event. KL(Q||P) penalises q(x) > 0 where p(x) ≈ 0 — the model puts mass in impossible regions. In VAEs, we minimise KL(Q_φ(z|x) || P(z)) — the KL from the posterior to the prior — to regularise the latent space (see Post 62).</p>
+<h2>Why cross-entropy = MLE</h2>
+<p>Training a model by maximising log-likelihood: max Σᵢ log q(yᵢ|xᵢ). Equivalently: minimise -Σᵢ log q(yᵢ|xᵢ) = -n E_P[log Q(Y|X)] = n H(P, Q). Minimising cross-entropy loss IS maximum likelihood estimation. This is not a choice we make — it is a mathematical identity. Cross-entropy loss is the only correct loss for classification under the probabilistic model that the true labels are samples from the softmax distribution.</p>
+<h2>Mutual Information: shared information between variables</h2>
+<p>I(X; Y) = H(X) + H(Y) - H(X, Y) = H(X) - H(X|Y) = KL(P(X,Y) || P(X)P(Y)). It measures how much knowing Y reduces uncertainty about X (and vice versa — it is symmetric). I(X;Y) = 0 iff X and Y are independent (their joint distribution factors). Large I(X;Y) means X and Y share a lot of information — knowing one tells you a lot about the other. Applications in ML: feature selection (maximise I(feature; label)). InfoNCE and contrastive learning objectives (like CLIP, see Post 69) maximise a lower bound on mutual information between paired views. Information bottleneck theory: learning compresses X into representation Z while maximising I(Z;Y) (preserving task-relevant information).</p>
+<h2>Entropy and model calibration</h2>
+<p>A well-calibrated model with low uncertainty (concentrated distribution over few classes) has low entropy in its outputs. A confused model outputs nearly uniform distributions — high entropy. Predictive entropy = H(p̂) is a calibration and uncertainty measure. Low entropy on the correct class = confident and right. High entropy = uncertain. Low entropy on the wrong class = overconfident and wrong. This is the basis of entropy-based uncertainty quantification in production (flag high-entropy predictions for human review).</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why do we use cross-entropy loss and not mean squared error for classification?" — MSE assumes the label distribution is Gaussian (it is the MLE loss under a Gaussian model). Labels in classification are Bernoulli/Categorical. Cross-entropy is the MLE loss under the correct model. Additionally, MSE on logits has flat gradients near the boundaries (sigmoid saturation); cross-entropy with softmax has gradient ŷ - y everywhere.</p>
+<p>"KL divergence is not symmetric. Does the direction matter? Give an example where each direction is preferred." — KL(P||Q): mode-covering, since we penalise q=0 when p>0. Used when we want Q to cover all modes of P (e.g., variational inference posteriors, don't miss any valid latent configuration). KL(Q||P): mode-seeking, since we penalise q>0 when p=0. Used when we want Q to be precise, not spread mass in impossible regions.</p>
+<p>"What is the connection between entropy and data compression?" — Shannon's source coding theorem: you cannot losslessly compress data from distribution P to fewer than H(P) bits per symbol on average. H(P) is the fundamental limit. Cross-entropy H(P,Q) is the number of bits used by a code designed for Q when the true distribution is P — always ≥ H(P).</p>
+<p>"Where does KL divergence appear in the VAE loss and what does it do?" — The ELBO = E[log p(x|z)] - KL(q(z|x) || p(z)). The first term is reconstruction quality. The KL term regularises the posterior q(z|x) to stay close to the prior p(z) = N(0,I). Without it, the encoder could map each point to a unique z with no overlap — the decoder cannot generalise.</p>
+<p><strong>Try on Colab:</strong> generate samples from a mixture of two Gaussians (P). Train a single Gaussian model (Q) to approximate it by minimising KL(P||Q) and KL(Q||P) separately using Monte Carlo gradient estimates. Visualise the fitted distributions. Observe: KL(P||Q) produces a Q that covers both modes (smeared over the gap); KL(Q||P) produces a Q that collapses to one mode (mode-seeking).</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=information-theory-entropy-kl-cross-entropy#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

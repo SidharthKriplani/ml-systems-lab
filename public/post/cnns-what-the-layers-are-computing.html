@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNNs: What the Layers Are Actually Computing — ML Systems Lab</title>
+  <meta name="description" content="A convolutional layer is not a black box. It is a sliding dot product applied across space — and once you see it that way, weight sharing, feature maps, receptive fields, and the necessity of skip con…" />
+  <meta name="keywords" content="Deep Learning, CNN, Convolutional Neural Networks, ResNet, Computer Vision, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/cnns-what-the-layers-are-computing.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/cnns-what-the-layers-are-computing.html" />
+  <meta property="og:title" content="CNNs: What the Layers Are Actually Computing" />
+  <meta property="og:description" content="A convolutional layer is not a black box. It is a sliding dot product applied across space — and once you see it that way, weight sharing, feature maps, receptive fields, and the necessity of skip con…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CNNs: What the Layers Are Actually Computing" />
+  <meta name="twitter:description" content="A convolutional layer is not a black box. It is a sliding dot product applied across space — and once you see it that way, weight sharing, feature maps, receptive fields, and the necessity of skip con…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "CNNs: What the Layers Are Actually Computing",
+  "description": "A convolutional layer is not a black box. It is a sliding dot product applied across space — and once you see it that way, weight sharing, feature maps, receptive fields, and the necessity of skip con…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/cnns-what-the-layers-are-computing.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, CNN, Convolutional Neural Networks, ResNet, Computer Vision, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=cnns-what-the-layers-are-computing#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>CNNs: What the Layers Are Actually Computing</h1>
+    <p class="excerpt">A convolutional layer is not a black box. It is a sliding dot product applied across space — and once you see it that way, weight sharing, feature maps, receptive fields, and the necessity of skip connections all follow directly from the math. This is the geometry of what a CNN learns.</p>
+    <p>A convolutional layer applies the same small learnable filter to every position in an input. That one sentence contains most of what makes CNNs work. Everything else — feature maps, translation invariance, hierarchical features, receptive fields — follows from what that operation implies.</p>
+<h2>A convolution is a sliding dot product</h2>
+<p>Take a 3×3 filter — a matrix of 9 learnable weights. Slide it across your 2D input. At each position, compute the dot product between the filter weights and the 9 input values underneath. Record the result. The collection of all these scalar results is one feature map.</p>
+<p>A dot product is high when the filter and the input patch are aligned — when they look similar. So a filter that has learned to look like a vertical edge will produce high activations wherever vertical edges appear in the input, and low activations everywhere else. The filter is a template; the feature map is a map of where that template matches. This is the substance of what "the network learns filters" means. The learning process — via backpropagation — finds filter weights that produce feature maps useful for the task.</p>
+<h2>Weight sharing and why it matters</h2>
+<p>The same 9 weights are used at every spatial position. A network with a 256×256 input and one 3×3 filter has exactly 9 weights for that layer — not 256×256×9. This is weight sharing, and it is why CNNs are tractable for images. It also encodes a strong prior: the patterns that matter in images are translation-invariant. An edge is an edge whether it appears in the upper-left or lower-right of an image. A fully-connected layer would need to relearn the same pattern at every spatial location independently.</p>
+<h2>Multiple filters produce a volume</h2>
+<p>In practice, a convolutional layer has N filters, each independently learned. N filters on a single-channel input produce N feature maps. Stack them and you get a 3D output volume: height × width × N channels. The next convolutional layer applies its filters to this entire volume — each filter now spans all N channels. This is how the network moves from detecting simple patterns (edges in single-channel patches) to combining them (detecting a corner = a horizontal edge and a vertical edge appearing together).</p>
+<h2>Receptive fields: how deep layers see more</h2>
+<p>The receptive field of a unit is the region of the original input that can influence its value. For the first layer, a unit sees a 3×3 patch. For the second layer, a unit sees a 5×5 patch of the original input — it integrates over a 3×3 neighbourhood of first-layer units, each of which saw 3×3. Add more layers and the receptive field grows. Pooling layers (max pool, average pool) reduce spatial dimensions, which accelerates receptive field growth. By the deep layers of a CNN, individual units have receptive fields spanning most of the input — they are sensitive to global patterns rather than local edges.</p>
+<h2>The feature hierarchy</h2>
+<p>Visualising what filters learn in trained CNNs is instructive. Layer 1 filters respond to oriented edges and colour blobs. Layer 2 combines these into textures and corners. Layer 3 detects parts: eyes, wheels, handles. Deep layers respond to semantic concepts regardless of where they appear in the image.</p>
+<p>This hierarchy emerges from training, not design. Backpropagation finds, from scratch, that decomposing images into edges → textures → parts → objects is an efficient way to solve visual tasks. The architecture provides the inductive bias that makes this decomposition representable. The data and the loss provide the supervision.</p>
+<h2>ResNet skip connections: the gradient argument</h2>
+<p>Deep networks trained without skip connections suffer from gradient degradation even with ReLU. Multiplying gradients through 50 layers, even if each is close to 1, accumulates enough loss that early layers barely update.</p>
+<p>Residual connections change the computation from y = F(x) to y = F(x) + x. The gradient of the loss with respect to x is now: d(loss)/d(x) = d(loss)/d(y) * (d(F(x))/d(x) + 1). The +1 term means the gradient flows directly from the output back to x, bypassing however many layers are inside F. Early layers receive a clean gradient regardless of what F learns, enabling stable training at 100+ layers.</p>
+<p>The other benefit: a residual block can learn to be the identity (F(x) = 0) if that is optimal. A plain layer cannot turn itself off — it must always transform its input. Residual blocks can selectively apply transformation where useful and pass inputs through unchanged where not.</p>
+<p><strong>Try on Colab:</strong> load a pretrained ResNet-18 and use GradCAM to visualise which regions of an input image activate the output for a given class. Then manually extract and display the convolutional filters from layer 1 — compare them to the oriented-edge detectors the theory predicts. The match is surprisingly clean even for small models.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=cnns-what-the-layers-are-computing#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

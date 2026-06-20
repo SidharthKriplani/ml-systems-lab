@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Forecast Failure Zoo: Six Silent Killers of Time Series Models — ML Systems Lab</title>
+  <meta name="description" content="Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn&#39;t fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn&#39;t fail; it underf…" />
+  <meta name="keywords" content="Time Series, Forecasting, ARIMA, Prophet, Stationarity, Seasonality, Production Failures, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/forecast-failure-modes.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/forecast-failure-modes.html" />
+  <meta property="og:title" content="The Forecast Failure Zoo: Six Silent Killers of Time Series Models" />
+  <meta property="og:description" content="Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn&#39;t fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn&#39;t fail; it underf…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Time Series" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Forecast Failure Zoo: Six Silent Killers of Time Series Models" />
+  <meta name="twitter:description" content="Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn&#39;t fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn&#39;t fail; it underf…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Forecast Failure Zoo: Six Silent Killers of Time Series Models",
+  "description": "Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn't fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn't fail; it underf…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/forecast-failure-modes.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Time Series, Forecasting, ARIMA, Prophet, Stationarity, Seasonality, Production Failures"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=forecast-failure-modes#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Time Series &middot; ML Systems Lab</div>
+    <h1>The Forecast Failure Zoo: Six Silent Killers of Time Series Models</h1>
+    <p class="excerpt">Time series models fail in ways that break silently. ARIMA assumes stationarity — it doesn&#39;t fail; it forecasts a trend that reverses. Prophet assumes additive seasonality — it doesn&#39;t fail; it underfits multiplicative patterns. LSTM assumes sufficient data — it doesn&#39;t fail; it memorises noise. Here are the six failure modes, the production signals that indicate each, and how to catch them before deployment.</p>
+    <p>Forecasting models don't fail loudly. They fail quietly, producing plausible numbers that are systematically wrong. The six failure modes below are the ones that kill forecasting projects in production.</p>
+<h2>1. Seasonality assumption violations — ARIMA assumes stable seasonality</h2>
+<p>ARIMA learns the seasonal pattern from historical data and assumes it will persist. When seasonality shifts — amplitude changes, frequency changes, or seasonality disappears entirely — ARIMA extrapolates the learned pattern blindly.</p>
+<p>Production signal: your model forecasts with consistent MAPE during training, but its error spikes at the onset of a new season. January is typically high-volume, but a pandemic year shows flat demand. The model forecast January as high; actual is flat.</p>
+<p>Detection: run autocorrelation analysis (ACF) on the residuals. If residuals show the same seasonal pattern the model was supposed to capture, seasonality is changing.</p>
+<p>Fix: don't assume seasonality is stable. Use Prophet with \`yearly_seasonality=False\` for series where annual seasonality is expected to shift. Better: use a rolling forecasting window and retrain monthly.</p>
+<h2>2. Non-stationarity ignored — the model fits the trend instead of the pattern</h2>
+<p>ARIMA assumes the series is stationary (after differencing). If you fit ARIMA to a non-stationary series without proper differencing, the model fits the overall trend rather than the deviations around the trend.</p>
+<p>Production signal: your forecast follows the historical trend perfectly through the holdout period, then diverges. If historical data was rising, the model forecasts continued rise — even when the series mean-reverts.</p>
+<p>Detection: ADF test (Augmented Dickey-Fuller) on the residuals. If p > 0.05, residuals are non-stationary — your model didn't capture the non-stationarity correctly.</p>
+<p>Fix: difference the series until it passes the ADF test (p < 0.05). The number of differences required becomes the d parameter in ARIMA(p,d,q).</p>
+<h2>3. Structural breaks treated as noise — when the regime changes permanently</h2>
+<p>A structural break is a permanent shift in the level, trend, or pattern of a series. New market entrant. Product launch. Regulation change. Macro event. Models trained before the break will forecast as if the old regime continues.</p>
+<p>Production signal: your model's forecast diverges from actuals immediately after a structural break. Mean Absolute Percentage Error jumps 30%+. The break is unambiguous in hindsight but invisible during backtest because your training set didn't include it.</p>
+<p>Detection: use the Chow test or visual inspection. Plot your series with a sliding window of recent data. If the recent distribution looks different from the long-term distribution, a break may have occurred.</p>
+<p>Fix: retrain on post-break data only. Alternatively, use Prophet, which has built-in changepoint detection and can weight pre-break data lower. Or use a structural time series model that explicitly models breaks.</p>
+<h2>4. Evaluation metric mismatch — optimising RMSE when operations cares about MAPE</h2>
+<p>RMSE penalises large errors heavily. MAPE penalises percentage errors. MAE treats all errors equally. If you optimise one metric but operations monitors another, you've solved the wrong problem.</p>
+<p>Production signal: your model reports excellent RMSE in backtest, but operations says it's missing large absolute errors by 20% or more.</p>
+<p>Detection: compute multiple metrics on the same holdout set. If RMSE and MAPE rankings of candidate models are different, the metric choice matters for your use case.</p>
+<p>Fix: choose the metric that aligns with business costs. If missing a 100-unit spike is 10× worse than missing a 10-unit spike, use RMSE. If missing by 20% is uniformly costly, use MAPE. Define the metric before backtesting, not after.</p>
+<h2>5. Look-ahead bias in walk-forward validation — the model already saw the future</h2>
+<p>A common backtest mistake: fit the model once on all historical data, then generate "forecasts" on historical windows. The model has already seen those windows during training. Your backtest is not honest.</p>
+<p>Production signal: your backtest MAPE is 3%, production MAPE is 12%. No model change, no data change. The backtest was measuring how well the model remembers the past, not how well it predicts the future.</p>
+<p>Detection: plot your forecasts against actuals using expanding window cross-validation. If the forecast lags the actual by exactly the seasonal period, you're not forecasting — you're copying last season's values.</p>
+<p>Fix: use expanding or rolling window cross-validation. At each step, fit on all data up to time T, forecast forward to T+H, then move T forward by one period and repeat. This is the only honest backtest.</p>
+<h2>6. Insufficient data for seasonality capture — LSTM memorises noise instead</h2>
+<p>Neural forecasting models need thousands of observations to learn seasonal patterns. A 2-year time series with daily data (730 observations) has only 2 full annual cycles. An LSTM trained on this will overfit to noise rather than learn the seasonal pattern.</p>
+<p>Production signal: your LSTM trains to near-zero loss on the training set, but its forecast on a fresh holdout year is 10× worse than a simple Prophet model. The LSTM has memorised the training years, not learned a generalizable pattern.</p>
+<p>Detection: check your data volume. Count complete seasonal cycles. < 2 cycles: seasonal models are risky. < 3: validate heavily. 5+ cycles: seasonal models are appropriate.</p>
+<p>Fix: start with simpler models (ARIMA, Prophet) that have explicit seasonal components and lower data requirements. Reserve neural models for scenarios with thousands of observations and complex nonlinear dependencies.</p>
+<h2>The production checkpoint:</h2>
+<p>Before deploying a forecast model: (1) Plot the series and identify obvious structural breaks or seasonality changes. (2) Run stationarity tests. (3) Backtest with a proper walk-forward validation where the model never sees future data. (4) Verify your evaluation metric aligns with what operations actually cares about. (5) Validate that your holdout MAPE is within 20% of your cross-validation MAPE. If not, you have a problem — likely one of the six above.</p>
+<h2>Practice this in Time Series to diagnose failures and apply the right preventive checks for your data.</h2>
+<p>\`\`\`python import numpy as np</p>
+<p>def walk_forward_cv(series, model_fn, horizon=7, min_train=90): """Walk-forward validation — the only honest time series backtest. Never lets the model see future data. Each fold: fit on [0:t], predict [t:t+h].""" errors = [] for t in range(min_train, len(series) - horizon): train  = series[:t] actual = series[t : t + horizon] model  = model_fn(train) pred   = model.predict(horizon) mape   = np.mean(np.abs((actual - pred) / (np.abs(actual) + 1e-9))) * 100 errors.append(mape)</p>
+<p>cv_mape   = np.mean(errors) # Sanity check: if holdout MAPE >> cv_mape, you likely have leakage or non-stationarity return {'cv_mape': round(cv_mape, 2), 'n_folds': len(errors)}</p>
+<p># Red flag: cv_mape=4.2% but holdout_mape=38.1% → one of the 6 failure modes above \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=forecast-failure-modes#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

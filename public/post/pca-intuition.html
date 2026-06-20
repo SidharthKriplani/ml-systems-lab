@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCA: The Intuition No One Teaches — ML Systems Lab</title>
+  <meta name="description" content="Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does &quot;variance explained&quot; actually mean? Why does the first principal component always capture the most var…" />
+  <meta name="keywords" content="PCA, Dimensionality Reduction, SVD, Math, sklearn, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/pca-intuition.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/pca-intuition.html" />
+  <meta property="og:title" content="PCA: The Intuition No One Teaches" />
+  <meta property="og:description" content="Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does &quot;variance explained&quot; actually mean? Why does the first principal component always capture the most var…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PCA: The Intuition No One Teaches" />
+  <meta name="twitter:description" content="Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does &quot;variance explained&quot; actually mean? Why does the first principal component always capture the most var…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PCA: The Intuition No One Teaches",
+  "description": "Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does \"variance explained\" actually mean? Why does the first principal component always capture the most var…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/pca-intuition.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "PCA, Dimensionality Reduction, SVD, Math, sklearn"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=pca-intuition#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>PCA: The Intuition No One Teaches</h1>
+    <p class="excerpt">Every ML course covers PCA. Very few explain it in a way that builds genuine intuition. What does &quot;variance explained&quot; actually mean? Why does the first principal component always capture the most variance? And when should you NOT use PCA?</p>
+    <p>PCA is fundamentally about finding a new coordinate system where the axes align with the directions of maximum variance in your data.</p>
+<h2>The geometric view:</h2>
+<p>Imagine a cloud of points in 3D space. The cloud is elongated in one direction (high variance along axis 1), somewhat spread in a second direction (moderate variance along axis 2), and nearly flat in the third (low variance). PCA finds these three directions — PC1, PC2, PC3 — and orders them by variance explained.</p>
+<p>Each principal component is a linear combination of your original features. PC1 = a₁×feature₁ + a₂×feature₂ + ... + aₙ×featureₙ. The coefficients are the eigenvectors of the covariance matrix. The variance explained is the corresponding eigenvalue.</p>
+<h2>The covariance matrix view:</h2>
+<p>Compute Σ = (1/n) × XᵀX (on mean-centered, standardised data). SVD: Σ = UΛUᵀ. The columns of U are the principal components. The diagonal of Λ contains the variances. This is why you always standardise before PCA — features on different scales will have their variance dominated by the highest-magnitude features, and PCA will find them first regardless of information content.</p>
+<h2>When PCA hurts:</h2>
+<p>When your task is classification. PCA maximises variance, not class separability. A feature with high variance might be pure noise. LDA (Linear Discriminant Analysis) maximises class separability instead — that\'s what you want for supervised dimensionality reduction.</p>
+<p>When interpretability matters. PC1 = 0.4×age - 0.3×income + 0.7×account_age ... is not something you can explain to a product team or a regulator. If your features need to remain interpretable, use feature selection (RFE, SHAP-based) instead of PCA.</p>
+<p>When your data is sparse. PCA is dense by construction. For text (TF-IDF matrices), image features, or any high-dimensional sparse data, truncated SVD (LSA) or sparse PCA will work better.</p>
+<h2>The scree plot and the elbow rule:</h2>
+<p>Plot eigenvalues in descending order. The "elbow" — where the curve flattens — is typically a good cutoff. But rules of thumb vary by domain: "keep 90% of variance" is common but arbitrary. Better: keep enough components that cross-validation performance on your downstream task doesn\'t degrade significantly when you add more.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=pca-intuition#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

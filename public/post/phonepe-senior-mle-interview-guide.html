@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhonePe Senior ML Engineer Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates …" />
+  <meta name="keywords" content="Interview Prep, PhonePe, Senior MLE, Fraud, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/phonepe-senior-mle-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/phonepe-senior-mle-interview-guide.html" />
+  <meta property="og:title" content="PhonePe Senior ML Engineer Interview Guide" />
+  <meta property="og:description" content="PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PhonePe Senior ML Engineer Interview Guide" />
+  <meta name="twitter:description" content="PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PhonePe Senior ML Engineer Interview Guide",
+  "description": "PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/phonepe-senior-mle-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, PhonePe, Senior MLE, Fraud, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=phonepe-senior-mle-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>PhonePe Senior ML Engineer Interview Guide</h1>
+    <p class="excerpt">PhonePe interviews senior MLEs primarily for fraud risk, transaction scoring, and recommendation. The bar is calibrated to Indian UPI scale — billions of transactions, sub-100ms inference, base rates near 0.1%. The interview surface looks similar to FAANG but the production constraints are sharper. This guide walks through the actual loop, what each round tests, and the prep path.</p>
+    <p>PhonePe runs one of the most demanding senior MLE loops among Indian unicorns. The reason: PhonePe handles roughly 50% of UPI transactions in India, the production constraints are unforgiving (sub-100ms p99, near-zero downtime), and the cost of a single fraud-detection error is direct revenue loss or customer churn. The interview reflects this.</p>
+<h2>The loop structure (Senior MLE / L5)</h2>
+<p>PhonePe senior MLE loops typically run 5–6 rounds over 1–2 weeks. The standard structure: phone screen → ML fundamentals → coding → ML system design → production case / behavioural → hiring manager. Variations exist — fraud-team loops emphasise production case rounds; recommendation-team loops emphasise system design.</p>
+<p>The phone screen is filter-grade: behavioural plus a couple of ML fundamental probes. Most candidates pass. The ML fundamentals round is where the loop starts being calibrated to PhonePe's bar — expect "explain bias-variance" follow-ups that drill into "what does that look like in your fraud model from last year." The coding round is roughly LeetCode medium plus an ML-flavoured problem (implement a streaming-statistics calculator, debug a leaking cross-validator). The system design round is the highest-variance — expect to design a real-time fraud scoring system at 10k QPS with a 50ms latency budget, or a UPI transaction recommendation system. The production case round is what distinguishes PhonePe from generic FAANG-clone loops.</p>
+<h2>The production case round</h2>
+<p>Most candidates don't prep for this round and most candidates lose it. The setup: "Your fraud model's precision@100 dropped from 0.78 to 0.61 over two weeks. No deployment in that window. Walk me through what you'd check, in order."</p>
+<p>Junior answer: "I'd check for drift." Reject. Mid answer: "I'd check feature distributions and recent retrain logs." Pass to mid bar; not senior. Senior answer: "First I'd verify the metric calculation hasn't changed — same denominator, same attribution window. Then I'd check whether the underlying base rate of fraud has shifted (precision is sensitive to base rate). Then look at the top features for distribution drift specifically on the failing slice — segment by transaction type, by user tenure, by geography. If feature drift is real, check whether it's a real-world shift or a pipeline issue (UPI provider format change, a vendor data source disruption). If no drift, the model itself may have lost calibration — verify with a recent labelled window. If everything checks out, the failure is downstream — operations changed their case-review priorities, or the action queue is now saturated differently."</p>
+<p>The senior answer demonstrates the discipline of observation before naming. PhonePe interviewers grade specifically on this.</p>
+<h2>What they test that FAANG doesn&#39;t</h2>
+<p>PhonePe loops weigh three things FAANG loops weigh less heavily. First, <strong>base-rate awareness</strong> — fraud is 0.1%, model decisions are precision-bound, AUC isn't the relevant metric, and senior candidates are expected to reach for precision@K immediately. Second, <strong>production failure rehearsal</strong> — every senior MLE at PhonePe has been on-call for a production incident; the interview tests whether you have the diagnostic instinct. Third, <strong>scale-vs-latency trade-offs</strong> — designing a system that ranks 1M items in 50ms for 5K QPS is a constraint set most US tutorials skip.</p>
+<h2>Top 10 questions PhonePe seniors face</h2>
+<p>1. "AUC 0.94, precision@100 of 0.18 — do you ship?" 2. "Walk through training-serving skew detection for a fraud model with a feature store." 3. "Design real-time fraud scoring for 10K QPS, 50ms p99. What's your compute, what's your retrieval, what falls back." 4. "Your model rejects a real customer. They lose their salary deposit, lose their job. What do you fix — model, threshold, calibration, or process?" 5. "How does class imbalance change your loss AND your decision threshold? Walk through the math." 6. "Name 11 leakage types. Which apply specifically to a UPI transaction scoring model?" 7. "How do you handle calibration drift in production when labels arrive 30 days delayed?" 8. "Feature store vs offline aggregates — when does each matter for fraud at PhonePe scale?" 9. "Walk through a fraud incident you handled in your last role. What did you observe first, what did you investigate, what did you change?" 10. "Why is recall@precision often the right metric for fraud, and what threshold would you set?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a PhonePe Senior MLE loop in 2-3 weeks, the MSL Path coverage that maps directly:</p>
+<li>Tier 3 (Classical Algorithms) — particularly Post 129 (Class Imbalance) and Post 76 (Calibration). PhonePe will probe both deeply.</li>
+<li>Tier 5 (Evaluation & Diagnostics) — especially Post 3 (AUC critique), Post 130 (Leakage Taxonomy), Post 131 (Error Analysis). These three are the analytical core of the production case round.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts (1, 7, 38, 41, 43). Training-serving skew + feature store + point-in-time correctness is roughly half the design round.</li>
+<li>Tier 8 (Monitoring & MLOps) — all 5 posts. Drift detection, calibration loss, model staleness — every production case round draws from this.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework) plus the recsys posts. Recommendation system design is a common round.</li>
+<li>Tier 10 (Interview Bridge) — Post 8 (Interview Framework), Post 13 (10 Mistakes). Calibrate against the senior MLE bar.</li>
+<p>For practice: IncidentRoom inc7–12 (production failure scenarios), MLCoding mlc8 (Welford streaming statistics — a common PhonePe coding probe), Combinator timed exam at the senior level.</p>
+<h2>Common failure modes</h2>
+<li>Defaulting to AUC when the operating constraint is precision@K — immediate downgrade signal.</li>
+<li>Naming concepts before clarifying the production context (latency, scale, action capacity).</li>
+<li>Treating ML system design as architecture-first instead of requirements-first.</li>
+<li>Inability to discuss a production incident from past experience with specific signal-to-action mapping.</li>
+<li>Pitching deep learning for tabular fraud (PhonePe runs gradient boosted trees in production for this; senior candidates know why).</li>
+<h2>Compensation</h2>
+<p>PhonePe Senior ML Engineer total compensation for 5-8 YOE in 2026 ranges roughly ₹50 lakh – ₹85 lakh (base + bonus + RSU equivalent). L6 / Staff scales to ₹1+ crore. These are public-Levels.fyi / AmbitionBox ranges and shift with each fiscal cycle.</p>
+<h2>Final note</h2>
+<p>PhonePe's interview bar is calibrated to a production engineering discipline most academic-style ML prep misses. The MSL Path tiers 7–10 are specifically designed to close that gap.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=phonepe-senior-mle-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diffusion Models: What Denoising Is Actually Learning — ML Systems Lab</title>
+  <meta name="description" content="Diffusion models generate images by reversing a noise process. But what is the network actually learning? Not the image — it learns the score function, the gradient of the log probability of data. Thi…" />
+  <meta name="keywords" content="Deep Learning, Diffusion Models, Generative Models, DDPM, Score Matching, Stable Diffusion, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/diffusion-models-denoising-score-matching.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/diffusion-models-denoising-score-matching.html" />
+  <meta property="og:title" content="Diffusion Models: What Denoising Is Actually Learning" />
+  <meta property="og:description" content="Diffusion models generate images by reversing a noise process. But what is the network actually learning? Not the image — it learns the score function, the gradient of the log probability of data. Thi…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Diffusion Models: What Denoising Is Actually Learning" />
+  <meta name="twitter:description" content="Diffusion models generate images by reversing a noise process. But what is the network actually learning? Not the image — it learns the score function, the gradient of the log probability of data. Thi…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Diffusion Models: What Denoising Is Actually Learning",
+  "description": "Diffusion models generate images by reversing a noise process. But what is the network actually learning? Not the image — it learns the score function, the gradient of the log probability of data. Thi…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/diffusion-models-denoising-score-matching.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Diffusion Models, Generative Models, DDPM, Score Matching, Stable Diffusion"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=diffusion-models-denoising-score-matching#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Diffusion Models: What Denoising Is Actually Learning</h1>
+    <p class="excerpt">Diffusion models generate images by reversing a noise process. But what is the network actually learning? Not the image — it learns the score function, the gradient of the log probability of data. This is why diffusion models surpass GANs on image quality without adversarial training. The math is simpler than it looks once you see the forward and reverse processes for what they are.</p>
+    <p>Diffusion models belong to the class of generative models that learn to turn random noise into data. Unlike GANs (which learn through adversarial play) or VAEs (which learn through an ELBO objective), diffusion models are trained with a deceptively simple objective: predict the noise that was added to data.</p>
+<h2>The forward process: destroying information gradually</h2>
+<p>Given a data sample x_0, the forward process adds Gaussian noise over T steps. At each step t: x_t = sqrt(1 - β_t) * x_{t-1} + sqrt(β_t) * ε, where β_t is a variance schedule (small values like 0.0001 to 0.02) and ε ~ N(0, I). After T=1000 steps with a well-chosen schedule, x_T is approximately pure Gaussian noise — the original data is completely destroyed. There are no learnable parameters in the forward process. It is a fixed Markov chain.</p>
+<h2>The reverse process: learning to denoise</h2>
+<p>The reverse process tries to invert the forward process: starting from x_T ~ N(0, I), iteratively denoise to recover x_0. At each step, a neural network ε_θ(x_t, t) predicts the noise that was added at step t. The training objective is simple MSE: L = E[||ε - ε_θ(x_t, t)||^2]. The model predicts noise; you subtract it to get a cleaner estimate; repeat for all T steps.</p>
+<h2>What the network is actually learning: the score function</h2>
+<p>Predicting noise is equivalent to estimating the score function: ∇_{x_t} log p(x_t). The score is the gradient of the log probability density — it points from low-probability regions toward high-probability regions. A perfectly trained model learns to point toward the data manifold from any noise level. Sampling is then following this gradient field: start from noise, repeatedly step toward higher density. This is denoising score matching, the statistical framework underlying diffusion models.</p>
+<h2>Why diffusion models beat GANs</h2>
+<p>GANs have high sample quality but three chronic problems: mode collapse (the generator covers only some modes of the data distribution), training instability (the discriminator and generator can diverge), and limited diversity (evaluating FID rewards quality but not full coverage). Diffusion models have no adversarial training. The score function is learned from the full training distribution. They cover all modes and produce diverse, high-quality samples. The trade-off is slow sampling: T=1000 denoising steps per image. DDIM and consistency models reduce this to 10-50 steps without quality loss.</p>
+<h2>The architecture: U-Net with attention</h2>
+<p>DDPM (Ho et al., 2020) uses a U-Net as the denoising network. U-Net is a convolutional architecture with skip connections between encoder and decoder stages — originally designed for medical image segmentation, it is ideal for the noise-prediction task because it operates at the image resolution while capturing multi-scale context. Attention layers are added at the lower spatial resolutions. The timestep t is injected as a conditioning signal (sinusoidal embedding, like positional encoding in Transformers) — the network must denoise differently depending on how much noise is present.</p>
+<h2>Conditional generation: classifier-free guidance</h2>
+<p>Unconditional diffusion models sample from the full data distribution. Text-to-image (Stable Diffusion, DALL·E 2) conditions generation on a text prompt. Classifier-free guidance (Ho & Salimans, 2021) trains the model jointly on conditional and unconditional denoising. At sampling time, the score is interpolated: ε_guided = ε_uncond + w * (ε_cond - ε_uncond). The guidance weight w controls the trade-off between diversity (low w) and prompt fidelity (high w). Values of w=7.5 are common — enough to steer generation toward the prompt while preserving image quality.</p>
+<h2>Latent diffusion: scaling to high resolution</h2>
+<p>Running diffusion in pixel space at 512×512 requires denoising a 786,432-dimensional vector at each step. Latent diffusion (Rombach et al., 2022) instead trains the diffusion model in the compressed latent space of a VAE. A VAE encodes 512×512 images to 64×64×4 latents — a 48× compression. Denoising is done in this small latent space; the VAE decoder converts the final latent to a pixel image. This is what makes Stable Diffusion practical on a single GPU.</p>
+<p><strong>Try on Colab:</strong> run DDPM on MNIST. Train the U-Net noise predictor for 10 epochs. Generate samples by running 1000 denoising steps from pure noise. Then implement DDIM sampling (20 steps) on the same trained model and compare sample quality. The speed improvement from 1000 to 20 steps with minimal quality loss demonstrates why deterministic samplers replaced stochastic ones.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=diffusion-models-denoising-score-matching#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

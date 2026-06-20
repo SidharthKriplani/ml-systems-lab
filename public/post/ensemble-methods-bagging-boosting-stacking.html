@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins — ML Systems Lab</title>
+  <meta name="description" content="Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But &quot;ensemble&quot; is not one thing. B…" />
+  <meta name="keywords" content="Models &amp; Math, Ensemble Methods, Bagging, Boosting, Stacking, XGBoost, Random Forest, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ensemble-methods-bagging-boosting-stacking.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ensemble-methods-bagging-boosting-stacking.html" />
+  <meta property="og:title" content="Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins" />
+  <meta property="og:description" content="Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But &quot;ensemble&quot; is not one thing. B…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins" />
+  <meta name="twitter:description" content="Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But &quot;ensemble&quot; is not one thing. B…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins",
+  "description": "Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But \"ensemble\" is not one thing. B…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ensemble-methods-bagging-boosting-stacking.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Ensemble Methods, Bagging, Boosting, Stacking, XGBoost, Random Forest, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ensemble-methods-bagging-boosting-stacking#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Ensemble Methods: Bagging vs Boosting vs Stacking — Mechanics, Trade-offs, and When Each Wins</h1>
+    <p class="excerpt">Every winning tabular ML system in the last decade is an ensemble. XGBoost, LightGBM, CatBoost, the Random Forest in your favourite sklearn tutorial — all ensembles. But &quot;ensemble&quot; is not one thing. Bagging, boosting, and stacking are three fundamentally different recipes that combine weak models into strong ones, and they win on different problems. Knowing which to reach for is what separates a senior MLE from someone who just types xgboost.fit().</p>
+    <p>Ensembling — combining multiple models to outperform any single one — is the most reliably successful technique in applied ML. Almost every Kaggle winner and almost every production tabular system uses one. But three different recipes get called "ensembling," and they work for different reasons. Understanding the mechanics is what lets you reach for the right one and debug it when it fails.</p>
+<h2>Why ensembles work: the variance-bias decomposition</h2>
+<p>The expected squared error of any model decomposes as: error = bias² + variance + irreducible_noise (from post 73). Different ensemble methods attack different terms. Bagging reduces variance while leaving bias unchanged. Boosting reduces bias while leaving variance roughly unchanged (or sometimes increasing it slightly). Stacking does both in a different way — by learning which model to trust in which region of the feature space. The error term you have most of is the one you need to attack.</p>
+<h2>Bagging — variance reduction via averaging</h2>
+<p>Bagging (Bootstrap Aggregation, Breiman 1994): train B models on B independently bootstrapped datasets (each sampled n-with-replacement from the original training set), then average their predictions. The mathematical guarantee: if each model has variance σ² and the models are pairwise uncorrelated, the variance of the average is σ²/B. If they have pairwise correlation ρ, variance becomes σ²[(1-ρ)/B + ρ]. The first term shrinks to zero as B → ∞; the second term is a floor you cannot beat by adding more models. So the entire engineering challenge in bagging is reducing ρ — making the base models as decorrelated as possible. Bootstrap sampling alone gets you partway. Random Forests add feature-subset randomness at every split, which decorrelates the trees further. Extra Trees take this further with random thresholds. Bagging works best when the base model is low-bias and high-variance — deep decision trees, deep neural nets that overfit. It does almost nothing for a linear regression on top of a small feature set, because there's no variance to reduce.</p>
+<h2>Boosting — sequential bias reduction</h2>
+<p>Boosting trains weak models sequentially, each one focused on the errors of its predecessors. AdaBoost (Freund and Schapire, 1995): each training sample carries a weight. Train a weak classifier h₁. Misclassified samples get their weights increased — h₂ pays more attention to them. The final prediction is a weighted vote: sign(Σ αₜ hₜ(x)) where αₜ depends on the weak learner's accuracy. Gradient Boosting (Friedman, 2001) generalises this: each new model fits the negative gradient of the loss with respect to the current ensemble's predictions. For squared loss, that's the residual y - F(x). For log loss, it's a weighted residual. XGBoost, LightGBM, CatBoost are all gradient boosting machines with engineering refinements (second-order Newton step in XGBoost, leaf-wise growth in LightGBM, ordered boosting in CatBoost for target leakage protection). Boosting works best with high-bias low-variance base learners: shallow trees, stumps (depth 1). The base learner deliberately underfits; the sequence of corrections is where the model capacity comes from.</p>
+<h2>Stacking — meta-learning over base models</h2>
+<p>Stacking (Wolpert, 1992) trains a meta-learner whose inputs are the outputs of several base models. The meta-learner learns when to trust which model. Layer 1: train several diverse base models (e.g., logistic regression, random forest, XGBoost, neural net). Layer 2: train a meta-learner (often a simple linear model or shallow tree) whose features are the predictions of the layer-1 models. Stacking shines when the base models have genuinely different inductive biases and make different kinds of errors. A linear model and an XGBoost model fail on different examples; the meta-learner can learn which to trust.</p>
+<blockquote>WARNING — <strong>Production tell for stacking: out-of-fold predictions or you have already shipped a leakage bug.</strong> The trap: train base models on the full training set, predict on the full training set, feed those predictions to the meta-learner. The base models have already seen the labels they're predicting — their training-set predictions are unrealistically good. The meta-learner overfits to those optimistic predictions and collapses on the test set. The fix is k-fold cross-validation: for each fold, train the base models on the other k-1 folds, predict on the held-out fold, and concatenate the held-out predictions to form the meta-learner's training data. Every stacking failure I have seen in production traces back to this. Senior interviews ask this exact question to filter for people who have actually built stacked models.</blockquote>
+<h2>When each one wins</h2>
+<p>Bagging: when your base model overfits and you have compute to spare. Random Forests are the default — fast to train, robust, almost no hyperparameter tuning, OOB error gives you a free validation estimate. Production teams reach for Random Forests when they need a working model fast and don't want to tune anything.</p>
+<p>Boosting: when you need maximum tabular accuracy and you're willing to spend tuning time. Gradient boosted trees are the SOTA for tabular ML and will outperform Random Forests on almost every benchmark — but they require careful hyperparameter tuning (learning rate, max depth, regularisation, early stopping) and they are sensitive to noisy labels in a way RF isn't. XGBoost and LightGBM win nearly every Kaggle tabular competition.</p>
+<p>Stacking: when you have several already-trained models and ensembling them gives a real boost. Almost never the right first move — you should tune a single XGBoost or RF first. Stacking is what you do when you already have a strong baseline and need to squeeze out the last 1-2% for a competition or a benchmark.</p>
+<h2>Diversity is the constraint, not size</h2>
+<p>Three almost-identical XGBoost models with different seeds and a meta-learner on top: marginal improvement, because the base models are correlated. One XGBoost, one Random Forest, one neural net, one linear model, and a meta-learner on top: real improvement, because the base models make different errors. The lesson: ensembles need diverse base learners. You can't ensemble your way out of a single-architecture bottleneck.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why does bagging reduce variance but not bias? Why does boosting reduce bias but not variance?" — Bagging averages predictions from models trained on similar data. The expected value of the average equals the expected value of one model (bias is unchanged), but the variance of the average is lower (1/B of the original variance if uncorrelated). Boosting fits each new model to the residuals of the current ensemble. Each model corrects a piece of the bias; the ensemble's expected prediction moves closer to the true function. But because boosting is sequential and depends on the noise in the residuals, it doesn't reduce variance — and aggressive boosting can amplify it (which is why early stopping matters).</p>
+<p>"A junior engineer is stacking XGBoost, Random Forest, and a neural net. Their cross-validated stacking ensemble beats every base model by 3%. On the test set, the stacking ensemble does worse than XGBoost alone. What's the most likely bug?" — They almost certainly trained the meta-learner on the base models' training-set predictions instead of out-of-fold predictions. The base models had seen the training labels, so their training-set predictions were unrealistically accurate, the meta-learner overfit to that pattern, and the gap closes on the test set. Fix: regenerate the meta-learner's training data by k-fold cross-validation where each fold's predictions come from base models trained on the other folds.</p>
+<p>"You're training XGBoost with 1000 trees and learning rate 0.1. The training loss keeps decreasing but validation loss starts increasing after iteration 300. What are your two main levers and how do they trade off?" — Two levers: lower the learning rate (each tree corrects less, more trees needed to fit the data, less risk of overshooting the validation optimum) or strengthen regularisation (lower max_depth, raise min_child_weight, add L1/L2 on leaf weights). Lower learning rate gives you smoother convergence but costs training time. Stronger regularisation gives you a worse fit at low tree counts but a better fit at high tree counts. Use early stopping with a validation set as the safety net.</p>
+<p>"In a Random Forest with 500 trees, you measure pairwise correlation between tree predictions at 0.6 on a holdout set. Should you be concerned?" — Yes — high correlation between trees means the variance reduction from averaging is limited. The variance of the ensemble is σ²[(1-0.6)/500 + 0.6] ≈ 0.6 σ². You're getting only 40% of the variance reduction you'd get from fully decorrelated trees. Likely cause: too many features used per split (try lowering max_features), or one dominant feature that every tree splits on early. Adding more trees won't help past this point — you've hit the correlation floor.</p>
+<p><strong>Try on Colab:</strong> generate a synthetic regression dataset with 1000 samples, 20 features. Train (a) a single deep decision tree, (b) a bagged ensemble of 100 deep trees, (c) a Random Forest with √20 features per split, (d) a gradient boosted ensemble of 100 stumps with learning rate 0.05. Compare training MSE, test MSE, and prediction variance across 10 different random seeds. Then build a stacking ensemble of (c) and (d) with a linear meta-learner. Train it BOTH ways — once with in-fold predictions, once with 5-fold out-of-fold predictions. Show on the test set how the in-fold version overfits.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ensemble-methods-bagging-boosting-stacking#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

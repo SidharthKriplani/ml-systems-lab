@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Difference-in-Differences and Regression Discontinuity: When You Can&#39;t Randomise — ML Systems Lab</title>
+  <meta name="description" content="Randomised experiments are the gold standard. But you cannot always randomise — policy changes happen company-wide, product launches happen by geography, and historical decisions were made without you…" />
+  <meta name="keywords" content="Data Science, Causal Inference, Difference-in-Differences, Regression Discontinuity, Quasi-Experimental, Statistics, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/diff-in-diff-regression-discontinuity.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/diff-in-diff-regression-discontinuity.html" />
+  <meta property="og:title" content="Difference-in-Differences and Regression Discontinuity: When You Can&#39;t Randomise" />
+  <meta property="og:description" content="Randomised experiments are the gold standard. But you cannot always randomise — policy changes happen company-wide, product launches happen by geography, and historical decisions were made without you…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Difference-in-Differences and Regression Discontinuity: When You Can&#39;t Randomise" />
+  <meta name="twitter:description" content="Randomised experiments are the gold standard. But you cannot always randomise — policy changes happen company-wide, product launches happen by geography, and historical decisions were made without you…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Difference-in-Differences and Regression Discontinuity: When You Can't Randomise",
+  "description": "Randomised experiments are the gold standard. But you cannot always randomise — policy changes happen company-wide, product launches happen by geography, and historical decisions were made without you…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/diff-in-diff-regression-discontinuity.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Causal Inference, Difference-in-Differences, Regression Discontinuity, Quasi-Experimental, Statistics"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=diff-in-diff-regression-discontinuity#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Difference-in-Differences and Regression Discontinuity: When You Can&#39;t Randomise</h1>
+    <p class="excerpt">Randomised experiments are the gold standard. But you cannot always randomise — policy changes happen company-wide, product launches happen by geography, and historical decisions were made without your consent. Difference-in-differences and regression discontinuity are the two most important quasi-experimental designs for estimating causal effects when randomisation is unavailable. Used correctly, they can provide identification as credible as an RCT.</p>
+    <p>When you cannot randomise, you need a research design that exploits natural variation in treatment assignment to identify causal effects. Two designs dominate applied causal inference in industry and economics: Difference-in-Differences (DiD) and Regression Discontinuity Design (RDD). Both rely on credible assumptions; knowing when those assumptions hold is the skill.</p>
+<h2>Difference-in-Differences</h2>
+<p>DiD estimates the causal effect of a treatment by comparing the change in outcomes for treated units (before and after treatment) to the change for untreated units over the same period. The treated-untreated difference in changes removes confounds that affect both groups equally.</p>
+<p>Setup: you have panel data (multiple units observed over multiple time periods). Some units receive treatment starting at time T; others never do. DiD estimate: (Y_treated,after - Y_treated,before) - (Y_control,after - Y_control,before). In regression form: Y_it = α + β_1 Treated_i + β_2 Post_t + β_3 (Treated_i × Post_t) + ε_it. The coefficient β_3 is the DiD estimator — the causal effect of treatment.</p>
+<h2>The parallel trends assumption</h2>
+<p>DiD requires that in the absence of treatment, treated and control units would have evolved in parallel — the same trends. This is the parallel trends assumption. It is not directly testable (you cannot observe the counterfactual trend for treated units). The standard check: plot pre-treatment time trends for treated and control groups. Parallel pre-trends are necessary (though not sufficient) evidence for parallel trends post-treatment.</p>
+<p>Violations: the treated and control groups differ systematically in ways that produce different trends. Example: you analyse the effect of a minimum wage increase in some states vs others. If high-wage-growth states disproportionately passed the minimum wage, their outcome trends would have diverged even without the policy.</p>
+<h2>Event study plots</h2>
+<p>An event study plots the estimated effect of treatment at each time relative to treatment onset (t=-k, ..., -1, 0, 1, ..., +k). Pre-treatment coefficients should be near zero (supporting parallel trends). Post-treatment coefficients show the dynamic effect over time. A spike exactly at t=0 that grows over time is the pattern consistent with a true treatment effect with ongoing adoption.</p>
+<h2>Regression Discontinuity Design</h2>
+<p>RDD exploits a threshold in a continuous "running variable" that determines treatment assignment. Units just above the threshold receive treatment; units just below do not. Near the threshold, units are nearly identical — the assignment is approximately random. Comparing outcomes just above and just below the threshold gives a causal estimate.</p>
+<p>Example: a company gives a bonus to sales reps who exceeded 100% of quota in Q3. Reps at 99% of quota vs 101% of quota are nearly identical in ability and circumstances — but only the 101% group receives the bonus. Comparing their Q4 performance estimates the causal effect of the bonus.</p>
+<p>Formal estimate: compare E[Y | running_var = c+ε] - E[Y | running_var = c-ε] as ε→0. In practice, fit a polynomial regression on each side of the cutoff separately and extrapolate to the cutoff. The discontinuity in fitted values is the RDD estimate.</p>
+<h2>Fuzzy RDD: imperfect compliance</h2>
+<p>Sharp RDD: everyone above the threshold is treated; everyone below is not. Fuzzy RDD: treatment probability jumps at the threshold but is not 0/1. The threshold is used as an instrument for treatment (see Post 81 on IV). The Fuzzy RDD estimate is a Local Average Treatment Effect (LATE) — the effect for the compliers (units whose treatment changes as a result of crossing the threshold).</p>
+<h2>Bandwidth selection and manipulation</h2>
+<p>The key tuning parameter in RDD is bandwidth: how far from the cutoff to include observations. Wider bandwidth = more data = lower variance, but greater risk of confounding (units far from the cutoff are less comparable). Narrower bandwidth = less data = higher variance, but stronger identification. The Imbens-Kalyanaraman bandwidth selector is the standard data-driven approach.</p>
+<p>Manipulation check: if agents can precisely control the running variable, they may bunch just above the threshold (to receive treatment). This invalidates the RDD. McCrary density test detects discontinuities in the distribution of the running variable at the cutoff. If the density is discontinuous, there is manipulation.</p>
+<p><strong>Try on Colab:</strong> simulate a DiD study — generate two groups with parallel trends pre-treatment; add a treatment effect starting at t=5 for one group. Fit a two-way fixed effects regression and recover the treatment effect. Then add a pre-trend violation (different slopes before treatment) and observe the bias. For RDD: simulate a running variable with a cutoff; generate potential outcomes with a jump at the cutoff; estimate the effect using local linear regression on each side.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=diff-in-diff-regression-discontinuity#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

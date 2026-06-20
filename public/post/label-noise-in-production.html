@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Noise in Production: When Your Ground Truth Lies — ML Systems Lab</title>
+  <meta name="description" content="Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and …" />
+  <meta name="keywords" content="Label Noise, Feature Engineering, Ground Truth, Delayed Labels, Proxy Labels, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/label-noise-in-production.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/label-noise-in-production.html" />
+  <meta property="og:title" content="Label Noise in Production: When Your Ground Truth Lies" />
+  <meta property="og:description" content="Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Feature Engineering" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Label Noise in Production: When Your Ground Truth Lies" />
+  <meta name="twitter:description" content="Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Label Noise in Production: When Your Ground Truth Lies",
+  "description": "Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/label-noise-in-production.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Label Noise, Feature Engineering, Ground Truth, Delayed Labels, Proxy Labels, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=label-noise-in-production#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
+    <h1>Label Noise in Production: When Your Ground Truth Lies</h1>
+    <p class="excerpt">Clean labels are a luxury. In production, ground truth arrives late, gets annotated inconsistently, or is a proxy for what you actually want to predict. Label noise corrupts your model silently — and it is harder to detect than feature drift.</p>
+    <h2>Three Types of Label Noise That Corrupt Production Models</h2>
+<p>Label noise is not a single problem. It comes in at least three distinct forms, each with different detection strategies and different remediation paths.</p>
+<h2>Type 1: Systematic Human Annotation Error</h2>
+<p>Human annotators make mistakes. They also make consistent mistakes — the same kind, over and over, often shaped by ambiguous guidelines, category fatigue, or unclear edge cases. When 30% of your "negative" class in a content moderation dataset was labeled by a single contractor working after midnight, you have systematic noise, not random noise. Random noise is tolerable at low rates; systematic noise creates a biased model that confidently learns the wrong pattern.</p>
+<p>Detection: run inter-annotator agreement scores (Cohen's kappa) on a random audit sample. If agreement is below 0.7 for your label category, your labels are not reliable enough to train on directly.</p>
+<h2>Type 2: Delayed Ground Truth</h2>
+<p>This is the most insidious form and the most commonly underestimated. The true label does not exist at training time — it arrives days, weeks, or months later. Fraud chargebacks arrive 30–90 days after a transaction. Loan defaults arrive months after origination. Medical diagnoses get revised after lab results return.</p>
+<p>Here is what happens in practice: you have a rolling training window of the last 6 months of transactions. Fraud labels for the last 30 days are incomplete — chargebacks have not all arrived yet. Your model trains on a dataset where the most recent 30 days has near-zero fraud rate by construction. It learns that recent transactions are safe. You deploy it and it systematically underscores recent fraud. The bug is invisible in standard AUC calculations because your validation set has the same recency structure as training.</p>
+<p>The fix requires temporal awareness: never use labels that have not had sufficient time to mature. If your label delay is 30 days, your training cutoff must be 30+ days before your evaluation period. Track label maturity as a first-class pipeline metric.</p>
+<h2>Type 3: Proxy Labels</h2>
+<p>You cannot measure what you want to predict, so you measure something correlated with it. Clicks as a proxy for relevance. Watch time as a proxy for content quality. Resolved tickets as a proxy for customer satisfaction. The proxy is observable; the true target is not.</p>
+<p>Proxy labels work until they do not. A churn prediction model trained on "cancelled subscription" might be predicting which users find the cancellation button rather than which users are genuinely dissatisfied. The model learns the proxy faithfully and fails on the target completely.</p>
+<h2>Detection Methods</h2>
+<p>Label audit: sample 200–500 labels per class, manually verify correctness, compute error rate. If error rate exceeds 5% for a critical class, the labels need cleaning before training.</p>
+<p>Temporal label consistency check: compare label rates for the same event cohort measured at 30 days, 60 days, and 90 days. If rates diverge significantly, you have label immaturity — your labels are not yet stable at your current cutoff.</p>
+<h2>Fixes</h2>
+<p>For systematic noise: noise-aware loss functions (generalized cross-entropy), label cleaning pipelines with human review of uncertain examples, confident learning to identify likely mislabeled samples.</p>
+<p>For delayed ground truth: enforce label maturity windows in your pipeline — fail the training job if label completeness for the training period is below a threshold.</p>
+<p>For proxy labels: invest in measuring the true target on a small sample, then evaluate whether your proxy is still predictive. If the correlation degrades over time, the proxy has drifted from the target.</p>
+<h2>Practice this in Feature Engineering to identify how label leakage and noisy ground truth are introduced into training pipelines and how to build defenses against them.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=label-noise-in-production#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

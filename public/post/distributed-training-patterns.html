@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributed Training: Data Parallel vs Model Parallel — ML Systems Lab</title>
+  <meta name="description" content="When your model doesn&#39;t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it&#39;s both, you need pipeline parallelism or tensor parallelis…" />
+  <meta name="keywords" content="Distributed Training, Data Parallel, Model Parallel, ZeRO, Deep Learning, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/distributed-training-patterns.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/distributed-training-patterns.html" />
+  <meta property="og:title" content="Distributed Training: Data Parallel vs Model Parallel" />
+  <meta property="og:description" content="When your model doesn&#39;t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it&#39;s both, you need pipeline parallelism or tensor parallelis…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Distributed Training: Data Parallel vs Model Parallel" />
+  <meta name="twitter:description" content="When your model doesn&#39;t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it&#39;s both, you need pipeline parallelism or tensor parallelis…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Distributed Training: Data Parallel vs Model Parallel",
+  "description": "When your model doesn't fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it's both, you need pipeline parallelism or tensor parallelis…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/distributed-training-patterns.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Distributed Training, Data Parallel, Model Parallel, ZeRO, Deep Learning"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=distributed-training-patterns#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Distributed Training: Data Parallel vs Model Parallel</h1>
+    <p class="excerpt">When your model doesn&#39;t fit on one GPU, you need model parallelism. When it fits but training is too slow, you need data parallelism. When it&#39;s both, you need pipeline parallelism or tensor parallelism — and the choices interact in non-obvious ways.</p>
+    <h2>Data Parallelism:</h2>
+<p>Each GPU gets a full copy of the model and a different mini-batch. Gradients are synchronised across GPUs after each backward pass. This is the default and works well when the model fits in a single GPU's memory.</p>
+<p>AllReduce: the standard gradient synchronisation primitive. Each GPU computes its gradients, then AllReduce averages them across all GPUs. With ring-AllReduce (used by NCCL), communication cost is proportional to gradient size × 2, independent of the number of GPUs.</p>
+<p>PyTorch DDP (DistributedDataParallel): hooks into the backward pass to overlap gradient communication with backward computation. As soon as a gradient is ready, it starts being communicated while other gradients are still being computed. Near-linear scaling up to ~64 GPUs for large models.</p>
+<p>ZeRO (Zero Redundancy Optimizer): addresses memory inefficiency in data parallelism. With naive DDP, each GPU stores the full model parameters, gradients, AND optimiser state. ZeRO-1: shard optimiser state. ZeRO-2: shard gradients. ZeRO-3: shard parameters. ZeRO-3 reduces per-GPU memory by the number of GPUs but introduces communication overhead.</p>
+<h2>Model Parallelism:</h2>
+<p>When the model doesn't fit on one GPU. Two main variants:</p>
+<p>Tensor parallelism: split individual layers across GPUs. A matrix multiply A × B is split so each GPU holds a column shard of B and computes a partial result. Requires all-to-all communication for each layer. Used in Megatron-LM for large transformer models.</p>
+<p>Pipeline parallelism: split the model into stages, each stage on a different GPU. GPU 1 processes layers 1–8, GPU 2 processes layers 9–16, etc. The key challenge: GPU 2 is idle while GPU 1 processes the first micro-batch. Solved with micro-batching: break each batch into 8 micro-batches, pipeline them through the stages. GPU utilisation approaches ~(n-1)/n where n is the number of stages.</p>
+<h2>3D Parallelism:</h2>
+<p>Large language models (GPT-3, PaLM scale) use all three simultaneously: data parallelism across groups of GPUs, pipeline parallelism across stages within a group, tensor parallelism within each stage. Megatron-DeepSpeed uses this configuration for models with hundreds of billions of parameters.</p>
+<h2>Gradient accumulation:</h2>
+<p>Simulates a larger batch size by computing gradients over multiple micro-batches before updating. Useful when you can't increase batch size due to memory but want the stability benefits of larger batches. gradient_accumulation_steps=8 with micro_batch=16 is equivalent to batch=128.</p>
+<h2>Practical guidance:</h2>
+<p>Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.</p>
+<p>\`\`\`python import torch import torch.distributed as dist from torch.nn.parallel import DistributedDataParallel as DDP</p>
+<p>def train_ddp(rank, world_size, model, dataset, accum_steps=4): """Minimal DDP loop with gradient accumulation. accum_steps=4 with micro_batch=8 → effective batch = 32 × world_size.""" dist.init_process_group('nccl', rank=rank, world_size=world_size) model = model.to(rank) model = DDP(model, device_ids=[rank]) optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)</p>
+<p>loader = torch.utils.data.DataLoader( dataset, sampler=torch.utils.data.distributed.DistributedSampler(dataset), batch_size=8, )</p>
+<p>for step, batch in enumerate(loader): loss = model(batch.to(rank)).loss / accum_steps   # scale loss loss.backward() if (step + 1) % accum_steps == 0: torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) optimizer.step() optimizer.zero_grad()</p>
+<p>dist.destroy_process_group()</p>
+<p># Production note: unused params in DDP cause a hang — set find_unused_parameters=True # only as a debug fallback; fix the architecture instead. \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=distributed-training-patterns#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

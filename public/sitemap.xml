@@ -49,841 +49,859 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ab-test-failure-modes.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-peeking-srm#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ab-test-peeking-srm.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ads-ctr-prediction-the-full-system#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ads-ctr-prediction-the-full-system.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=alexnet-to-agents-ml-decade#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/alexnet-to-agents-ml-decade.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=anomaly-detection-isolation-forest-autoencoders#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/anomaly-detection-isolation-forest-autoencoders.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=attribution-modeling-shapley-mmm#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/attribution-modeling-shapley-mmm.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=auc-is-not-your-friend#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/auc-is-not-your-friend.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=auction-theory-ads-ml-gsp-vcg-pctr#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/auction-theory-ads-ml-gsp-vcg-pctr.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=backpropagation-chain-rule-first-principles#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/backpropagation-chain-rule-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=batch-norm-layer-norm-loss-landscape#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/batch-norm-layer-norm-loss-landscape.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=bayesian-inference-prior-posterior-mcmc#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bayesian-inference-prior-posterior-mcmc.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=bert-vs-gpt-encoder-decoder-when-to-use#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bert-vs-gpt-encoder-decoder-when-to-use.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=bias-variance-tradeoff-mse-decomposition#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bias-variance-tradeoff-mse-decomposition.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=bm25-tfidf-why-sparse-retrieval-still-wins#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/bm25-tfidf-why-sparse-retrieval-still-wins.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=calculus-for-ml-gradients-chain-rule#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/calculus-for-ml-gradients-chain-rule.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=calibration-loss-production-auc-mismatch#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/calibration-loss-production-auc-mismatch.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=class-imbalance-base-rate-threshold-cost-sensitive#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/class-imbalance-base-rate-threshold-cost-sensitive.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=clustering-kmeans-dbscan-what-theyre-optimising#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/clustering-kmeans-dbscan-what-theyre-optimising.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cnns-what-the-layers-are-computing#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cnns-what-the-layers-are-computing.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-problem#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cold-start-problem.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-product-not-model#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cold-start-product-not-model.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-trap-personalization#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cold-start-trap-personalization.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=computer-vision-before-vits-cnn-detection-segmentation#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/computer-vision-before-vits-cnn-detection-segmentation.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-detection#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-detection.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-invisible-enemy#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-invisible-enemy.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=contrastive-learning-clip-self-supervised#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/contrastive-learning-clip-self-supervised.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=convex-optimisation-gradient-descent-convergence-saddle-points#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/convex-optimisation-gradient-descent-convergence-saddle-points.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-ab-testing#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cred-senior-mle-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-failures#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cuped-variance-reduction-ab-testing.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=data-leakage-eleven-types-detection#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/cuped-variance-reduction-failures.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=data-preprocessing-scaling-encoding-missing-values#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/data-leakage-eleven-types-detection.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=decision-trees-random-forests-information-gain-bagging#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/data-preprocessing-scaling-encoding-missing-values.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=defining-ml-metrics-north-star-guardrails#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/decision-trees-random-forests-information-gain-bagging.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=did-parallel-trends-violations#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/defining-ml-metrics-north-star-guardrails.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=diff-in-diff-regression-discontinuity#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/did-parallel-trends-violations.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=diffusion-models-denoising-score-matching#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/diff-in-diff-regression-discontinuity.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=distributed-training-patterns#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/diffusion-models-denoising-score-matching.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=dream11-ml-engineer-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/distributed-training-patterns.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=dropout-regularization-ensemble-view#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/dream11-ml-engineer-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=em-algorithm-gmms-kmeans-hmms#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/dropout-regularization-ensemble-view.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=embeddings-representation-geometry#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/em-algorithm-gmms-kmeans-hmms.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ensemble-methods-bagging-boosting-stacking#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/embeddings-representation-geometry.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=error-analysis-segment-metrics-cohort-slicing#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ensemble-methods-bagging-boosting-stacking.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=evaluation-metrics-precision-recall-auc-roc-pr#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/error-analysis-segment-metrics-cohort-slicing.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=fairness-bias-ml-metrics-production#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/evaluation-metrics-precision-recall-auc-roc-pr.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=feature-importance-drift-production#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/fairness-bias-ml-metrics-production.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-architecture#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/feature-importance-drift-production.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/feature-store-architecture.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=feature-store-time-travel-bug#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=feature-stores-online-offline-point-in-time#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel-bug.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=federated-learning-privacy-distributed-training#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/feature-stores-online-offline-point-in-time.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=flipkart-senior-applied-scientist-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/federated-learning-privacy-distributed-training.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=forecast-failure-modes#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/flipkart-senior-applied-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=fp16-quantization-first-principles#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/forecast-failure-modes.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=gans-adversarial-training-mode-collapse#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/fp16-quantization-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=generalisation-theory-vc-dimension-double-descent#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/gans-adversarial-training-mode-collapse.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=gradient-boosted-trees-xgboost-internals#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/generalisation-theory-vc-dimension-double-descent.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=gradient-descent-intuition#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/gradient-boosted-trees-xgboost-internals.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=graph-ml-fraud-detection-gnns#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/gradient-descent-intuition.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=graph-neural-networks-message-passing-pinsage#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/graph-ml-fraud-detection-gnns.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=group-level-leakage#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/graph-neural-networks-message-passing-pinsage.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=hierarchical-forecasting-reconciliation-mint#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/group-level-leakage.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=how-netflix-became-an-ml-company#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/hierarchical-forecasting-reconciliation-mint.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=hypothesis-testing-t-test-p-values-confidence-intervals#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/how-netflix-became-an-ml-company.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=information-theory-entropy-kl-cross-entropy#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/hypothesis-testing-t-test-p-values-confidence-intervals.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=inmobi-glance-ml-engineer-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/information-theory-entropy-kl-cross-entropy.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=junglee-games-mpl-ml-engineer-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/inmobi-glance-ml-engineer-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=knowledge-distillation-teacher-student#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/junglee-games-mpl-ml-engineer-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=label-noise-in-production#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/knowledge-distillation-teacher-student.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=late-arriving-data-retroactive-corruption#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/label-noise-in-production.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=learning-to-rank-ndcg-lambdarank#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/late-arriving-data-retroactive-corruption.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=linear-algebra-for-ml-from-ground-up#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/learning-to-rank-ndcg-lambdarank.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=llm-production-engineering-kv-cache-batching-quantization#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/linear-algebra-for-ml-from-ground-up.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=logistic-regression-from-scratch-mle-glm#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/llm-production-engineering-kv-cache-batching-quantization.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=loss-functions-why-you-minimize-what-you-minimize#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/logistic-regression-from-scratch-mle-glm.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ltv-churn-retention-modeling#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/loss-functions-why-you-minimize-what-you-minimize.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=matrix-calculus-gradients-backprop-linear-layers#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ltv-churn-retention-modeling.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=meesho-ml-engineer-senior-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/makemytrip-senior-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ml-engineer-salary-map-2025#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/matrix-calculus-gradients-backprop-linear-layers.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ml-interview-mistakes#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/meesho-ml-engineer-senior-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ml-system-design-6-step-framework#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ml-engineer-salary-map-2025.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=mle-career-ladder-l3-to-l7#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ml-interview-mistakes.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=mle-interview-system-design-prep#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ml-system-design-6-step-framework.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=mle-map-the-unifying-framework#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/mle-career-ladder-l3-to-l7.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=model-calibration-platt-scaling-ece#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/mle-interview-system-design-prep.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=model-explainability-shap-permutation-local-global#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/mle-map-the-unifying-framework.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=multi-armed-bandits-thompson-sampling-ucb#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/model-calibration-platt-scaling-ece.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=multiple-testing-fdr-power-analysis#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/model-explainability-shap-permutation-local-global.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=network-effects-ab-testing-sutva#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/multi-armed-bandits-thompson-sampling-ucb.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=neural-network-initialisation-he-xavier-glorot#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/multiple-testing-fdr-power-analysis.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=observation-discipline-reading-diagnostics#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/network-effects-ab-testing-sutva.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=offline-eval-vs-online-performance#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/neural-network-initialisation-he-xavier-glorot.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=ols-linear-regression-normal-equations-gauss-markov#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/observation-discipline-reading-diagnostics.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=online-learning-concept-drift-production#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/offline-eval-vs-online-performance.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=optimization-sgd-to-adam-loss-landscape#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/ols-linear-regression-normal-equations-gauss-markov.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=pca-from-scratch-dimensionality-reduction#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/online-learning-concept-drift-production.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=pca-intuition#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/optimization-sgd-to-adam-loss-landscape.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=phonepe-senior-mle-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/paytm-senior-mle-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=price-elasticity-demand-modeling-dynamic-pricing#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/pca-from-scratch-dimensionality-reduction.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=probability-for-ml-from-ground-up#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/pca-intuition.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=quantization-fp16-first-principles#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/phonepe-senior-mle-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=rag-retrieval-augmented-generation-architecture#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/price-elasticity-demand-modeling-dynamic-pricing.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=razorpay-senior-data-scientist-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/probability-for-ml-from-ground-up.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=razorpay-senior-mle-applied-scientist-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/quantization-fp16-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=reading-spark-execution-dag#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/rag-retrieval-augmented-generation-architecture.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=real-ml-stack-seed-to-scale#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/razorpay-senior-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=real-time-feature-engineering-streaming#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/razorpay-senior-mle-applied-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=rec-system-design-framework#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/reading-spark-execution-dag.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-silent-failures#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/real-ml-stack-seed-to-scale.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-stack-retrieval-ranking-reranking#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/real-time-feature-engineering-streaming.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=recsys-feedback-loop#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/rec-system-design-framework.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=regularization-geometric-picture-l1-l2-dropout#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-silent-failures.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=reinforcement-learning-policy-value-credit-assignment#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-stack-retrieval-ranking-reranking.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=rlhf-reward-modeling-ppo-dpo#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/recsys-feedback-loop.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=rnns-lstms-vanishing-gradient#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/regularization-geometric-picture-l1-l2-dropout.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=self-attention-qkv-first-principles#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/reinforcement-learning-policy-value-credit-assignment.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=semantic-search-architecture-query-to-results#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/rlhf-reward-modeling-ppo-dpo.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=shap-feature-importance#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/rnns-lstms-vanishing-gradient.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=silent-model-staleness#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/self-attention-qkv-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=spark-shuffle-mental-model#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/semantic-search-architecture-query-to-results.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=survival-analysis-kaplan-meier-cox-censoring#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/shap-feature-importance.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=svms-kernel-trick-first-principles#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/silent-model-staleness.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=swiggy-senior-data-scientist-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/spark-shuffle-mental-model.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=three-drift-signals-model-failure#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/survival-analysis-kaplan-meier-cox-censoring.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=time-series-forecasting-arima-prophet-neural#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/svms-kernel-trick-first-principles.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=time-series-model-selection#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/swiggy-senior-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=tokenization-bpe-wordpiece-subword#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/three-drift-signals-model-failure.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/time-series-forecasting-arima-prophet-neural.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew-comprehensive#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/time-series-model-selection.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=transfer-learning-fine-tuning-what-actually-works#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/tokenization-bpe-wordpiece-subword.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=transformer-architecture-why-it-won#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=two-tower-retrieval-youtube-spotify#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew-comprehensive.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=uplift-modeling-incrementality-propensity#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/transfer-learning-fine-tuning-what-actually-works.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=validation-set-leakage#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/transformer-architecture-why-it-won.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=variational-autoencoders-latent-space#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/two-tower-retrieval-youtube-spotify.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=walk-forward-validation-honest-backtest#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/uplift-modeling-incrementality-propensity.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=where-in-the-world-to-be-mle#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/validation-set-leakage.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=why-forecasts-fail#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/variational-autoencoders-latent-space.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=word2vec-embedding-geometry-negative-sampling#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/walk-forward-validation-honest-backtest.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ml-systems-lab-v9xe.vercel.app/?post=zomato-senior-data-scientist-interview-guide#gradient</loc>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/where-in-the-world-to-be-mle.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/why-forecasts-fail.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/word2vec-embedding-geometry-negative-sampling.html</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ml-systems-lab-v9xe.vercel.app/post/zomato-senior-data-scientist-interview-guide.html</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

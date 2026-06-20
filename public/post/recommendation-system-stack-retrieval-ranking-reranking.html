@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Recommendation System Stack: Retrieval → Ranking → Re-Ranking — ML Systems Lab</title>
+  <meta name="description" content="No production recommendation system is a single model. It is a funnel: retrieval narrows 100M items to 1,000; ranking scores those 1,000 with a feature-rich model; re-ranking applies business rules, d…" />
+  <meta name="keywords" content="ML System Design, Recommendation Systems, Retrieval, Ranking, Re-Ranking, YouTube, TikTok, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-stack-retrieval-ranking-reranking.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-stack-retrieval-ranking-reranking.html" />
+  <meta property="og:title" content="The Recommendation System Stack: Retrieval → Ranking → Re-Ranking" />
+  <meta property="og:description" content="No production recommendation system is a single model. It is a funnel: retrieval narrows 100M items to 1,000; ranking scores those 1,000 with a feature-rich model; re-ranking applies business rules, d…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Recommendation System Stack: Retrieval → Ranking → Re-Ranking" />
+  <meta name="twitter:description" content="No production recommendation system is a single model. It is a funnel: retrieval narrows 100M items to 1,000; ranking scores those 1,000 with a feature-rich model; re-ranking applies business rules, d…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Recommendation System Stack: Retrieval → Ranking → Re-Ranking",
+  "description": "No production recommendation system is a single model. It is a funnel: retrieval narrows 100M items to 1,000; ranking scores those 1,000 with a feature-rich model; re-ranking applies business rules, d…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-stack-retrieval-ranking-reranking.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Recommendation Systems, Retrieval, Ranking, Re-Ranking, YouTube, TikTok"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-stack-retrieval-ranking-reranking#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>The Recommendation System Stack: Retrieval → Ranking → Re-Ranking</h1>
+    <p class="excerpt">No production recommendation system is a single model. It is a funnel: retrieval narrows 100M items to 1,000; ranking scores those 1,000 with a feature-rich model; re-ranking applies business rules, diversity, and freshness constraints. Each stage trades off recall and precision differently. This is the full stack, with the engineering decisions that made YouTube, Netflix, and TikTok work at scale.</p>
+    <p>A recommendation system has one job: show the right item to the right user at the right time. At the scale of YouTube (800M videos, 200M daily users), doing this naively is physically impossible — you cannot score every item for every user in a latency budget of 100ms. The solution is a staged funnel that progressively narrows the candidate set while increasing prediction quality at each stage.</p>
+<h2>Stage 1: Retrieval — 100M → 1,000</h2>
+<p>Retrieval must be fast (< 20ms) and have high recall (the truly relevant items should be in the retrieved set). It does not need to rank items precisely — it just needs to not miss things. The two-tower architecture (see Post 70) is the standard: precompute item embeddings offline, at query time compute a user embedding and do approximate nearest-neighbour search.</p>
+<p>Multiple retrieval sources are combined: collaborative filtering retrieval (users with similar histories liked this), content-based retrieval (items similar to the user's recent engagements), trending/fresh content (recent items with high early engagement), social graph retrieval (items engaged by people you follow). Each source contributes hundreds of candidates; the combined set is deduplicated to ~1,000.</p>
+<h2>Stage 2: Ranking — 1,000 → 50</h2>
+<p>The ranking model scores all retrieved candidates with a single unified model. Because it only processes ~1,000 items (not millions), it can use expensive features: dense text and image embeddings, user-item interaction features, contextual features, long user history, and cross-features (user demographic × item category interactions). The model is typically a deep neural network (DCN, DeepFM, or a Transformer-based interaction model) or gradient-boosted trees.</p>
+<p>Training objective: predict engagement signals (click, watch duration, like, share, save) from features. Multi-task learning is common: one model head predicts click probability, another predicts watch duration, another predicts like probability. The final ranking score is a weighted combination: score = w1 * P(click) + w2 * E(watch_minutes) + w3 * P(like). The weights encode business priorities — a 10-minute watch is worth more than a click.</p>
+<h2>Stage 3: Re-ranking — 50 → final feed</h2>
+<p>The ranked list is modified before serving to enforce constraints that the ranking model optimised away: diversity (no more than 2 consecutive items from the same channel), freshness (inject a recent item even if the model scores it lower than older ones), policy compliance (remove items flagged by safety classifiers), serendipity (occasionally surface items outside the user's usual pattern to avoid filter bubbles), and business rules (sponsored content slots, promoted items).</p>
+<p>Re-ranking is where the ML pipeline meets business logic. It is often heuristic or rules-based rather than learned, which makes it faster to iterate on but harder to optimise holistically.</p>
+<h2>The feedback loop: closing the system</h2>
+<p>User interactions with the surfaced items become training data for the next iteration of all three models. This feedback loop is what makes recommendations improve over time — and also what creates filter bubbles. If the ranking model learns primarily from clicks, it optimises for click-through rate rather than user satisfaction or content quality. YouTube's 2019 re-design explicitly added a "satisfaction" signal (post-watch survey scores) alongside engagement signals to address this.</p>
+<h2>Feature stores: the infrastructure that makes real-time features possible</h2>
+<p>Both the ranking model and the re-ranker need features computed in real time (user's last 5 actions, current trending items) and in batch (user's 30-day engagement history, item quality scores). Feature stores (see Post 77) provide low-latency access to precomputed features during serving, while ensuring consistency between training-time and serving-time feature values.</p>
+<h2>Cold start: the hardest problem</h2>
+<p>New users have no history. New items have no engagement statistics. Cold-start recommendations must rely entirely on content features, demographic priors, and early weak signals. Common approaches: user onboarding flow (ask preferences explicitly), content-based bootstrapping (recommend items similar to explicitly stated interests), and exploration policies (serve diverse content early to rapidly learn the new user's preferences).</p>
+<h2>TikTok&#39;s architecture: lightweight but effective</h2>
+<p>TikTok's architecture (as described in leaked documents) uses a comparatively lightweight candidate generation phase (~10,000 candidates from a pool including user-specific and global trending pools) followed by a very capable ranking model that uses video content features (sound, visual style, text) alongside collaborative filtering signals. The short video format reduces cold start: even a brand new video can go viral within hours based on early engagement signals, allowing the system to learn quickly.</p>
+<p><strong>Try on Colab:</strong> implement the full funnel on MovieLens-1M. Stage 1: train a two-tower model, retrieve top-500 candidates per user via FAISS. Stage 2: train a gradient-boosted ranker on (user, movie, context) features, score the 500 candidates. Stage 3: apply a diversity rule (max 2 movies per director in final 10). Evaluate recall@500 from retrieval and NDCG@10 from ranking separately, then end-to-end.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-stack-retrieval-ranking-reranking#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

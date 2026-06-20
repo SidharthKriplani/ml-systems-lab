@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BM25 and TF-IDF: Why Sparse Retrieval Still Beats Neural Search in Many Cases — ML Systems Lab</title>
+  <meta name="description" content="Every team building semantic search eventually asks: should we replace BM25 with dense retrieval? The honest answer is often no. BM25 has been the backbone of Google, Elasticsearch, and Solr for decad…" />
+  <meta name="keywords" content="ML System Design, Information Retrieval, BM25, TF-IDF, Search, Sparse Retrieval, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/bm25-tfidf-why-sparse-retrieval-still-wins.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/bm25-tfidf-why-sparse-retrieval-still-wins.html" />
+  <meta property="og:title" content="BM25 and TF-IDF: Why Sparse Retrieval Still Beats Neural Search in Many Cases" />
+  <meta property="og:description" content="Every team building semantic search eventually asks: should we replace BM25 with dense retrieval? The honest answer is often no. BM25 has been the backbone of Google, Elasticsearch, and Solr for decad…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BM25 and TF-IDF: Why Sparse Retrieval Still Beats Neural Search in Many Cases" />
+  <meta name="twitter:description" content="Every team building semantic search eventually asks: should we replace BM25 with dense retrieval? The honest answer is often no. BM25 has been the backbone of Google, Elasticsearch, and Solr for decad…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "BM25 and TF-IDF: Why Sparse Retrieval Still Beats Neural Search in Many Cases",
+  "description": "Every team building semantic search eventually asks: should we replace BM25 with dense retrieval? The honest answer is often no. BM25 has been the backbone of Google, Elasticsearch, and Solr for decad…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/bm25-tfidf-why-sparse-retrieval-still-wins.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Information Retrieval, BM25, TF-IDF, Search, Sparse Retrieval"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=bm25-tfidf-why-sparse-retrieval-still-wins#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>BM25 and TF-IDF: Why Sparse Retrieval Still Beats Neural Search in Many Cases</h1>
+    <p class="excerpt">Every team building semantic search eventually asks: should we replace BM25 with dense retrieval? The honest answer is often no. BM25 has been the backbone of Google, Elasticsearch, and Solr for decades. It handles exact keyword matches, rare terms, and out-of-distribution queries better than neural models. Understanding what BM25 computes — and where it fails — is the prerequisite for knowing when dense retrieval actually helps.</p>
+    <p>Before neural search, information retrieval was dominated by sparse bag-of-words models. TF-IDF (1970s) and BM25 (1994) formalised the intuition that a word is important if it appears frequently in this document but rarely across all documents. They remain competitive baselines and are the default in production search systems.</p>
+<h2>TF-IDF: the intuition</h2>
+<p>Term Frequency-Inverse Document Frequency scores a term t in document d in corpus C. TF(t,d) = count of t in d, or a log-normalised version. IDF(t) = log(N / df(t)), where N is the total number of documents and df(t) is the number containing t. TFIDF(t,d) = TF(t,d) × IDF(t).</p>
+<p>The IDF term down-weights terms that appear in many documents ("the", "a", "is" appear everywhere and carry no signal) and up-weights rare, discriminative terms. A query's score for a document is the sum of TFIDF weights for matching query terms.</p>
+<h2>BM25: fixing TF-IDF&#39;s two weaknesses</h2>
+<p>BM25 (Robertson et al., 1994) is the probabilistic extension that addresses two problems with raw TF-IDF. Problem 1: raw TF grows without bound — a document mentioning "python" 100 times should not score 100× higher than one mentioning it once. BM25 saturates TF: TF_sat = TF * (k1 + 1) / (TF + k1 * (1 - b + b * dl/avgdl)). k1 controls saturation speed (typically 1.2–2.0); the saturation kicks in after a few mentions.</p>
+<p>Problem 2: longer documents match more terms by chance, not because they are more relevant. The document length normalisation term (1 - b + b * dl/avgdl) penalises long documents, where dl is the document length and avgdl is the mean length across the corpus. b=0.75 is the standard setting.</p>
+<h2>Why BM25 still wins in many production settings</h2>
+<p>Exact match: if a user searches "python 3.12 changelog", BM25 exactly matches "python", "3.12", "changelog" as tokens. A dense retrieval model may map "python" near "snake" or near "Django" and miss exact version matches. BM25 never misses exact keyword matches. Rare terms: BM25 gives high IDF to rare tokens (product codes, technical strings, names). Dense models see rare terms as noise or OOV tokens. Out-of-domain queries: BM25 requires no training and generalises perfectly to new vocabularies. Dense models fail on terms not seen at training time.</p>
+<p>In the BEIR benchmark (heterogeneous IR evaluation across 18 datasets), BM25 outperforms many dense retrieval models on out-of-domain datasets. The lesson: dense models trained on MS MARCO do not generalise to biomedical or legal search without domain-specific fine-tuning.</p>
+<h2>Inverted index: how BM25 scales</h2>
+<p>BM25 is efficient because of the inverted index: a data structure mapping each term to a posting list — the list of (document_id, TF) pairs for documents containing that term. Query scoring: for each query term, look up its posting list, score each matching document, merge and rank. With a precomputed inverted index, BM25 can search a billion documents in milliseconds. Dense retrieval requires ANN search which is slower for very large corpora and requires keeping large embedding matrices in memory.</p>
+<h2>Hybrid search: sparse + dense</h2>
+<p>The production answer is rarely pure BM25 or pure dense retrieval. Hybrid search runs both: BM25 for exact/keyword matching, dense retrieval for semantic matching, then fuses the result lists. Reciprocal Rank Fusion (RRF) is the simplest fusion: score = Σ_m 1/(k + rank_m), summing over retrieval methods, where k=60 is standard. RRF is surprisingly effective and does not require calibrated scores from each method.</p>
+<p>Elasticsearch's new semantic search uses ELSER (a learned sparse model) that produces expanded sparse representations — essentially learning which additional terms to add to the BM25 index. This hybrid approach achieves dense-retrieval quality with BM25-like serving efficiency.</p>
+<p><strong>Try on Colab:</strong> use rank_bm25 (Python library) to index Wikipedia abstracts (10K sample). Compare retrieval quality on a set of factoid queries against sentence-transformer dense retrieval. Count how often each method is better. You should find BM25 wins on exact-match and rare-term queries; dense retrieval wins on paraphrase queries ("cardiovascular disease" vs "heart attack"). Implement RRF fusion and measure improvement.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=bm25-tfidf-why-sparse-retrieval-still-wins#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

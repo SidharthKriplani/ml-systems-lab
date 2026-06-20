@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Real ML Stack: From Jupyter Notebook to $10B Infrastructure — ML Systems Lab</title>
+  <meta name="description" content="Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don&#39;t laugh. Twitter&#39;s early recommendation system was basically this. The graveyard of failed ML projects is full of teams who t…" />
+  <meta name="keywords" content="ML Stack, MLOps, Career, Startup, Infrastructure, SageMaker, MLflow, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/real-ml-stack-seed-to-scale.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/real-ml-stack-seed-to-scale.html" />
+  <meta property="og:title" content="The Real ML Stack: From Jupyter Notebook to $10B Infrastructure" />
+  <meta property="og:description" content="Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don&#39;t laugh. Twitter&#39;s early recommendation system was basically this. The graveyard of failed ML projects is full of teams who t…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML Careers" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Real ML Stack: From Jupyter Notebook to $10B Infrastructure" />
+  <meta name="twitter:description" content="Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don&#39;t laugh. Twitter&#39;s early recommendation system was basically this. The graveyard of failed ML projects is full of teams who t…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Real ML Stack: From Jupyter Notebook to $10B Infrastructure",
+  "description": "Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don't laugh. Twitter's early recommendation system was basically this. The graveyard of failed ML projects is full of teams who t…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/real-ml-stack-seed-to-scale.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML Stack, MLOps, Career, Startup, Infrastructure, SageMaker, MLflow"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=real-ml-stack-seed-to-scale#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML Careers &middot; ML Systems Lab</div>
+    <h1>The Real ML Stack: From Jupyter Notebook to $10B Infrastructure</h1>
+    <p class="excerpt">Stage 0 of the ML stack is a Jupyter notebook, a CSV, and a model.pkl. Don&#39;t laugh. Twitter&#39;s early recommendation system was basically this. The graveyard of failed ML projects is full of teams who tried to deploy Kubernetes-orchestrated, feature-store-backed, model-registry-managed systems before they&#39;d shipped a single prediction to a single user. This is the honest guide to what the stack looks like at every stage — and when to graduate from each one.</p>
+    <p>There is a pattern that kills ML projects at startups so reliably you could set your watch to it. The founding ML engineer joins, sets up a sophisticated infrastructure, spends three months configuring MLflow, Kubeflow, and a feature store. Six months later, they haven't shipped a prediction to a user. They resign, citing "organizational dysfunction." The dysfunction was real but it was downstream of a bad decision: optimising for the stack that Google uses rather than the stack that solves today's actual problem.</p>
+<p>The right ML stack is not the most sophisticated one. It's the one that matches your engineering maturity, your data volume, your team size, and the stage of your ML product lifecycle.</p>
+<h2>Stage 0: Proof of concept (seed stage, 1–3 ML practitioners)</h2>
+<p>Stack: Python, Jupyter, pandas, scikit-learn. Database: Postgres or even CSV. Serving: a Flask API or FastAPI endpoint reading from a pickle file. Experiment tracking: a spreadsheet. Feature store: a function that transforms a database query into a dict.</p>
+<p>This is not embarrassing. This is correct. At Stage 0, the question you're answering is: does ML add value to this product? That question does not require Kubernetes. It requires a model that outperforms a heuristic and a deployment mechanism that puts predictions in front of users.</p>
+<p>The failure mode here is premature abstraction: building generic feature pipelines before you know which features matter, building a retraining scheduler before you know how fast your data drifts, building a model registry before you have more than one model.</p>
+<p>Ship something. Measure it. Then decide what infrastructure the problem actually requires.</p>
+<h2>Stage 1: From notebook to production (Series A, 2–6 ML engineers)</h2>
+<p>The inflection point is when you have 2+ models in production, your data volume exceeds what pandas handles comfortably, and you're manually retraining models because you don't have a pipeline.</p>
+<p>Stack additions: MLflow or Weights & Biases for experiment tracking (you're now running more than 10 experiments per week and need to compare them). Docker for reproducibility. Airflow or Prefect for pipeline orchestration. A proper feature computation layer (even if it's just functions in a shared library — not a full feature store yet). Cloud training: SageMaker, Vertex AI, or spot instances.</p>
+<p>The critical discipline at this stage: don't skip reproducibility. "Works on my laptop" is expensive at this stage because you now have 3–5 engineers reproducing each other's environments. Containerise early.</p>
+<p>Also critical: build a shadow evaluation system. Every model you promote to production should run in shadow mode alongside the incumbent for at least 1–2 weeks. The number of production incidents that shadow mode prevents is enormous. The number of teams that skip it, confident in their offline metrics, is also enormous.</p>
+<h2>Stage 2: Platform thinking (Series B, 5–15 ML engineers)</h2>
+<p>You now have enough models, enough engineers, and enough training runs that the overhead of managing them manually exceeds the cost of building infrastructure. This is when platform investment pays off.</p>
+<p>Stack: Feature store (Feast, Tecton, or Hopsworks — or a homegrown equivalent). Model registry (MLflow Model Registry or custom). CI/CD for models (training pipelines that trigger on data updates, with automated evaluation gates). Monitoring infrastructure (drift detection, prediction distribution tracking). A/B testing framework integrated with your serving layer.</p>
+<p>The common mistake here is building too much custom infrastructure. Every hour your ML engineers spend maintaining a custom feature store is an hour not spent on model quality. Evaluate managed services aggressively. SageMaker Feature Store, Vertex Feature Store, and Databricks Feature Store are not perfect but they're maintained by someone else.</p>
+<p>The meta-principle: your ML platform should be opinionated enough to enforce reproducibility and safe deployment, but not so opinionated that it slows down experimentation. The best ML platforms feel like they enable rather than constrain.</p>
+<h2>Stage 3: Scale infrastructure (Series C to IPO, 15–50+ ML engineers)</h2>
+<p>At this stage, the abstractions that worked at Stage 2 start breaking. MLflow's tracking server becomes a bottleneck. Your feature store's compute layer can't handle the volume. You start having ML-specific reliability incidents (the retraining pipeline fails silently; a feature value distribution shifts and no one notices for two weeks; the model serving layer has a memory leak that only manifests under sustained load).</p>
+<p>Stack investments: Dedicated ML platform team (separate from ML practitioners). Custom training infrastructure on bare metal or reserved instances (spot instances have too much variance for latency-sensitive training jobs). Multi-region serving with failover. Online/offline feature consistency testing (automated regression tests that verify serving features match training features on known inputs). Full lineage tracking (which model version made which prediction for which user — required for debugging and regulatory compliance).</p>
+<p>The companies that do this well (Airbnb, Uber, Lyft, Spotify) all reached the same conclusion: the generic tools weren't good enough for their specific constraints, and they built custom solutions. Uber's Michelangelo, Airbnb's Bighead, Lyft's Flyte, LinkedIn's Pro-ML — all of these exist because the off-the-shelf tools had gaps that became expensive at scale.</p>
+<h2>Stage 4: The hyperscaler stack (FAANG, 100+ ML engineers)</h2>
+<p>At Google, Meta, Amazon, and Microsoft, ML infrastructure is itself a product. Google's TFX (TensorFlow Extended) pipeline framework is used externally but was built internally. Meta's FBLearner Flow handles thousands of model training runs per day. Amazon SageMaker is a productisation of what Amazon's internal ML teams needed.</p>
+<p>The key characteristic of hyperscaler ML stacks is that they optimise for different things than earlier stages: reproducibility at the billion-parameter scale, incremental training on streaming data, hardware utilisation (TPU/GPU allocation is itself a complex scheduling problem), and ML regulatory compliance (model cards, audit trails, explainability tooling).</p>
+<p>Most engineers will never work at this stage. That's fine. The engineering challenges are fascinating but the job is more infrastructure than ML. The people building TFX write very little Python and a lot of C++.</p>
+<h2>The question you should always ask:</h2>
+<p>Before adding any tool to your ML stack, ask: what specific failure mode does this tool prevent? If you can't name the failure mode, you don't need the tool yet. Feature stores prevent training-serving skew — but only if you've observed training-serving skew causing a problem. Model registries prevent "which version of the model is in production?" — but only if you have enough models that this is actually confusing.</p>
+<p>Stack complexity is technical debt that compounds. Build for the problems you have today, with one quarter of headroom for where you'll be in six months. That's it.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=real-ml-stack-seed-to-scale#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

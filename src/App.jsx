@@ -260,84 +260,84 @@ const NAV_SECTIONS = [
     id: 'features',
     label: 'FEATURES',
     items: [
-      { id: 'features', label: 'Feature Engineering' },
+      { id: 'features', label: 'Feature Engineering', desc: 'Production failure modes in feature pipelines — skew, leakage, freshness.' },
     ],
   },
   {
     id: 'evaluation',
     label: 'EVALUATION',
     items: [
-      { id: 'eval',      label: 'Model Evaluation' },
-      { id: 'classical', label: 'Classical ML' },
-      { id: 'causal',    label: 'Causal Inference' },
-      { id: 'ts',        label: 'Time Series' },
+      { id: 'eval',      label: 'Model Evaluation', desc: 'Metric selection scenarios — AUC vs precision@K, calibration, segment slicing.' },
+      { id: 'classical', label: 'Classical ML',     desc: 'Tabular ML judgment — trees, ensembles, regularization, bias-variance.' },
+      { id: 'causal',    label: 'Causal Inference', desc: 'Experiment design, SUTVA, confounding, treatment effects.' },
+      { id: 'ts',        label: 'Time Series',      desc: 'Forecasting under non-stationarity, seasonal effects, walk-forward backtesting.' },
     ],
   },
   {
     id: 'systems',
     label: 'SYSTEMS',
     items: [
-      { id: 'design',       label: 'System Design' },
-      { id: 'dl_serving',   label: 'DL Serving' },
-      { id: 'mlops_deploy', label: 'Deployment' },
-      { id: 'mlops_pipes',  label: 'CI/CD & Infra' },
-      { id: 'monitor',      label: 'Monitoring' },
+      { id: 'design',       label: 'System Design', desc: 'End-to-end ML system design scenarios — the round most senior interviews lose.' },
+      { id: 'dl_serving',   label: 'DL Serving',    desc: 'Deep learning inference — latency, quantization, batching.' },
+      { id: 'mlops_deploy', label: 'Deployment',    desc: 'Production rollout patterns — canary, shadow, A/B, rollback.' },
+      { id: 'mlops_pipes',  label: 'CI/CD & Infra', desc: 'ML pipeline orchestration and infrastructure.' },
+      { id: 'monitor',      label: 'Monitoring',    desc: 'Drift detection, calibration loss, silent model staleness.' },
     ],
   },
   {
     id: 'training',
     label: 'TRAINING',
     items: [
-      { id: 'models',      label: 'Math Foundations' },
-      { id: 'dl',          label: 'Deep Learning' },
-      { id: 'dl_finetune', label: 'Fine-tuning' },
+      { id: 'models',      label: 'Math Foundations', desc: 'Pyodide-powered explorations — probability, linear algebra, PCA, hypothesis tests.' },
+      { id: 'dl',          label: 'Deep Learning',    desc: 'Neural network training failures and architecture decisions.' },
+      { id: 'dl_finetune', label: 'Fine-tuning',      desc: 'Transfer learning, parameter-efficient fine-tuning, when each works.' },
     ],
   },
   {
     id: 'data',
     label: 'DATA',
     items: [
-      { id: 'spark',    label: 'Spark Lab' },
-      { id: 'airflow',  label: 'Airflow' },
-      { id: 'dbt',      label: 'dbt' },
-      { id: 'modeling', label: 'Data Modeling' },
+      { id: 'spark',    label: 'Spark Lab',     desc: 'PySpark optimization scenarios — shuffle, skew, broadcast joins, AQE.' },
+      { id: 'airflow',  label: 'Airflow',       desc: 'Workflow orchestration patterns for ML pipelines.' },
+      { id: 'dbt',      label: 'dbt',           desc: 'Analytics engineering and SQL transformation patterns.' },
+      { id: 'modeling', label: 'Data Modeling', desc: 'Dimensional modelling and schema design for ML.' },
     ],
   },
   {
     id: 'interview',
     label: 'INTERVIEW',
     items: [
-      { id: 'mock_interview', label: 'Mock Interview · JD-to-prompt' },
-      { id: 'interview',   label: 'Q&A Bank' },
-      { id: 'combinator',  label: 'Timed Exam' },
-      { id: 'verbal',      label: 'Verbal Practice' },
-      { id: 'defense',     label: 'Defense Plan' },
-      { id: 'takehome',    label: 'Take-Home' },
-      { id: 'spottheflaw', label: 'Spot the Flaw' },
-      { id: 'stafflayer',  label: 'Staff Layer' },
+      { id: 'mock_interview', label: 'Mock Interview · JD-to-prompt', desc: 'Paste a JD; get a customized AI interviewer system prompt for any LLM.' },
+      { id: 'interview',   label: 'Q&A Bank',         desc: '128 senior MLE interview questions with model answers across system design, ML, behavioural.' },
+      { id: 'combinator',  label: 'Timed Exam',       desc: 'Mixed-domain timed exam simulating the real interview pressure.' },
+      { id: 'verbal',      label: 'Verbal Practice',  desc: 'Speak your answer out loud with Web Speech API transcription.' },
+      { id: 'defense',     label: 'Defense Plan',     desc: 'Project defense round — walk through your past ML projects under interviewer pressure.' },
+      { id: 'takehome',    label: 'Take-Home',        desc: 'Take-home assignment scenarios with rubric-based evaluation.' },
+      { id: 'spottheflaw', label: 'Spot the Flaw',    desc: 'Identify the silent production failure in real ML decisions.' },
+      { id: 'stafflayer',  label: 'Staff Layer',      desc: 'Staff-level interview scenarios — beyond senior, into technical leadership.' },
     ],
   },
   {
     id: 'labs',
     label: 'LABS',
     items: [
-      { id: 'incidentroom',    label: 'Incident Room' },
-      { id: 'mlcoding',        label: 'Code Problems' },
-      { id: 'codebugs',        label: 'Bug Hunt' },
-      { id: 'trainer',         label: 'Trainer' },
-      { id: 'projectlab',      label: 'Project Lab · Telco' },
-      { id: 'loan_default',    label: 'Project Lab · Loans' },
-      { id: 'fraud_detection', label: 'Project Lab · Fraud' },
-      { id: 'casestudies',     label: 'Case Studies' },
+      { id: 'incidentroom',    label: 'Incident Room',         desc: 'Cross-domain production incident diagnosis — read symptoms, find root cause.' },
+      { id: 'mlcoding',        label: 'Code Problems',         desc: 'ML coding patterns — implement, debug, optimise, design (the 4-type framework).' },
+      { id: 'codebugs',        label: 'Bug Hunt',              desc: 'Production ML code with exactly one buried flaw — find it.' },
+      { id: 'trainer',         label: 'Trainer',               desc: 'Spaced-repetition training across all judgment scenarios.' },
+      { id: 'projectlab',      label: 'Project Lab · Telco',   desc: 'Full Pyodide notebook — Telco churn end-to-end with 5 judgment checkpoints.' },
+      { id: 'loan_default',    label: 'Project Lab · Loans',   desc: 'Full Pyodide notebook — loan default with ECOA compliance scenarios.' },
+      { id: 'fraud_detection', label: 'Project Lab · Fraud',   desc: 'Full Pyodide notebook — fraud detection at 1:200 imbalance, precision@K.' },
+      { id: 'casestudies',     label: 'Case Studies',          desc: 'Worked production case studies with timeline + diagnosis + fix.' },
     ],
   },
   {
     id: 'learn',
     label: 'LEARN',
     items: [
-      { id: 'gradient',   label: 'Gradient' },
-      { id: 'cheatsheet', label: 'Cheatsheet' },
-      { id: 'landscape',  label: 'Landscape' },
+      { id: 'gradient',   label: 'Gradient',   desc: 'Long-form essays — 140+ posts on production ML topics, sequenced as The MLE Path.' },
+      { id: 'cheatsheet', label: 'Cheatsheet', desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
+      { id: 'landscape',  label: 'Landscape',  desc: 'ML tools and infrastructure landscape map.' },
     ],
   },
 ]
@@ -603,7 +603,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
     return Math.round((p.attempted / p.total) * 100)
   }
 
-  function NavItem({ id, label, depth = 0 }) {
+  function NavItem({ id, label, desc, depth = 0 }) {
     const [hov, setHov] = useState(false)
     const isActive = activeTabId === id
     const pct = getTabPct(id)
@@ -611,6 +611,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
     return (
       <button
         onClick={() => goTo(id)}
+        title={desc || ''}
         className={isActive ? 'sidebar-item-active' : ''}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
@@ -724,13 +725,13 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
                           letterSpacing: '0.07em', textTransform: 'uppercase',
                         }}>{group.label}</div>
                         {group.items.map(item => (
-                          <NavItem key={item.id} id={item.id} label={item.label} depth={1} />
+                          <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} depth={1} />
                         ))}
                       </div>
                     ))
                   ) : (
                     section.items.map(item => (
-                      <NavItem key={item.id} id={item.id} label={item.label} />
+                      <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} />
                     ))
                   )}
                 </div>

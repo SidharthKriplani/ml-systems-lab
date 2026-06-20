@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means — ML Systems Lab</title>
+  <meta name="description" content="Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the p…" />
+  <meta name="keywords" content="Models &amp; Math, Hypothesis Testing, p-value, t-test, Confidence Intervals, Statistics, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/hypothesis-testing-t-test-p-values-confidence-intervals.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/hypothesis-testing-t-test-p-values-confidence-intervals.html" />
+  <meta property="og:title" content="Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means" />
+  <meta property="og:description" content="Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the p…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means" />
+  <meta name="twitter:description" content="Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the p…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means",
+  "description": "Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the p…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/hypothesis-testing-t-test-p-values-confidence-intervals.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Hypothesis Testing, p-value, t-test, Confidence Intervals, Statistics, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=hypothesis-testing-t-test-p-values-confidence-intervals#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Hypothesis Testing: t-Tests, p-Values, and What a Confidence Interval Actually Means</h1>
+    <p class="excerpt">Hypothesis testing is the most misunderstood topic in all of statistics. The p-value is not the probability that the null hypothesis is true. A confidence interval is not the range that contains the parameter with 95% probability. A statistically significant result is not necessarily a practically meaningful one. This post builds the machinery correctly from scratch.</p>
+    <p>Statistical hypothesis testing is the framework for deciding whether an observed effect in data could plausibly be due to chance. It is the language of A/B testing, clinical trials, and any empirical claim. Almost every practitioner has used it; far fewer can correctly define what a p-value means.</p>
+<h2>The hypothesis testing framework</h2>
+<p>Null hypothesis H₀: the default — no effect, no difference. The hypothesis we are trying to reject. Alternative hypothesis H₁: the claim — there is an effect, there is a difference. The test procedure: (1) Assume H₀ is true. (2) Compute a test statistic T from the data. (3) Compute p = P(seeing a test statistic at least as extreme as T, assuming H₀ is true). (4) If p < α (significance level, typically 0.05), reject H₀. The significance level α = P(Type I error) = P(rejecting H₀ | H₀ is true) — the false positive rate you are willing to accept. This is set before looking at the data.</p>
+<h2>What a p-value actually is</h2>
+<p>P-value: the probability of observing a test statistic at least as extreme as the one computed, if the null hypothesis were true. It is NOT: the probability that H₀ is true. The probability that H₁ is true. The probability that the result was due to chance. The importance of the effect. A small p-value means: "if H₀ were true, results this extreme would be very rare." It does not mean H₀ is false — extreme results still occur, just rarely. With n large enough, any non-zero true effect becomes statistically significant, even if it is practically meaningless (e.g., a 0.0001% click-through improvement).</p>
+<h2>One-sample t-test</h2>
+<p>Setup: you have n observations from a population. You want to test whether the population mean μ equals some value μ₀. Test statistic: t = (x̄ - μ₀) / (s / √n), where x̄ is the sample mean and s is the sample standard deviation. Under H₀: t ~ t_{n-1} (Student's t-distribution with n-1 degrees of freedom). The t-distribution has heavier tails than the Gaussian — accounts for estimating σ from data. As n → ∞, t → Gaussian. Two-tailed p-value: P(|T| ≥ |t_obs|) under H₀. Assumptions: observations are i.i.d., drawn from a distribution with finite variance. With n ≥ 30, the Central Limit Theorem makes the t-test robust to non-normality.</p>
+<h2>Two-sample t-test</h2>
+<p>Test whether two groups have the same mean. Welch's t-test (unequal variances): t = (x̄₁ - x̄₂) / √(s₁²/n₁ + s₂²/n₂). The degrees of freedom are approximated by the Welch-Satterthwaite equation. Pooled t-test (equal variances): pools the variance estimates. Welch's is the default — it handles unequal variances and sample sizes and is slightly less powerful only when variances are truly equal. For A/B tests, the two-sample t-test (or z-test for large n) is the standard tool.</p>
+<h2>Type I and Type II errors</h2>
+<p>Type I error (false positive, α): reject H₀ when it is true. Controlled directly by the significance level. Type II error (false negative, β): fail to reject H₀ when it is false. Power = 1 - β = probability of correctly detecting a true effect. Power depends on: effect size (larger effect → easier to detect), sample size (more data → more power), significance level (more lenient α → more power, more Type I errors), and variance (lower noise → more power). Minimum Detectable Effect (MDE): the smallest effect size your experiment can detect at a given power (typically 80%) and significance level (0.05). Used in pre-experiment sample size calculation.</p>
+<h2>Confidence intervals</h2>
+<p>A 95% confidence interval is: if we repeated this experiment many times and computed the CI each time, 95% of those intervals would contain the true parameter. It is NOT the probability that the true parameter lies in this specific interval. (The true parameter is fixed; there is no probability that it is or is not in any specific interval — frequentist statistics does not put probability on parameters.) Correct: "this interval was constructed by a procedure that captures the true mean 95% of the time." Incorrect: "there is a 95% probability the true mean is in [a, b]." The width of the CI reflects uncertainty about the parameter — wider CI = more uncertainty. A CI that excludes zero for a difference-in-means test implies p < 0.05 (for two-tailed at α = 0.05).</p>
+<h2>Chi-square test for independence</h2>
+<p>For categorical data: test whether two categorical variables are independent. Under H₀ (independence): expected cell count = row_total × col_total / grand_total. Test statistic: χ² = Σ_{cells} (observed - expected)² / expected. Under H₀: χ² ~ χ²_{(r-1)(c-1)} (chi-square distribution with (rows-1)(cols-1) degrees of freedom). Assumption: expected cell count ≥ 5 in all cells. Use Fisher's exact test when cells are small.</p>
+<h2>Effect size</h2>
+<p>Statistical significance ≠ practical significance. Effect size measures the magnitude of the effect, independent of sample size. Cohen's d for two means: d = (μ₁ - μ₂) / σ_pooled. Conventions: d = 0.2 (small), 0.5 (medium), 0.8 (large). A d = 0.1 effect is statistically significant with n = 10,000 but practically negligible. Always report effect size alongside p-value.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Explain p-value to a product manager." — Imagine the null hypothesis is true — there is no real difference between the two variants. The p-value is the probability of seeing a difference as large as we observed just by random sampling variation. If p = 0.03, it means: if there were truly no effect, we'd see a difference this big or bigger only 3% of the time. We consider this unlikely enough to conclude there probably is a real effect.</p>
+<p>"What is the difference between a t-test and a z-test? When do you use each?" — Both test whether a mean differs from a value (or two means differ). z-test: assumes the population variance σ² is known, or n is large (CLT → normal distribution). t-test: estimates σ from the data; uses the t-distribution, which has heavier tails to account for this uncertainty. In A/B testing with large samples (n > 1000 per variant), the difference is negligible — the t-distribution converges to the z. Use t-test by default; z-test for proportions with large n.</p>
+<p>"Your A/B test shows p = 0.03. The treatment increases revenue per user by $0.02 on a $50 average order. Do you ship?" — Statistically significant but practically trivial (0.04% improvement). Consider: cost of implementing and maintaining the change, opportunity cost, confidence interval width, whether the MDE was set correctly ex ante. Statistical significance is not a sufficient criterion for shipping — effect size and business context matter.</p>
+<p>"What is statistical power and how does it affect A/B test design?" — Power = probability of detecting a true effect of size δ. To achieve 80% power at α=0.05 for a given MDE, you need n ≥ 2σ²(z_{α/2} + z_β)²/δ² per group. Under-powered tests have high false negative rates — you miss real effects. Running until significant (peeking) inflates Type I errors; use sequential testing or Bonferroni correction.</p>
+<p><strong>Try on Colab:</strong> run a simulation study of the t-test. Generate 10,000 pairs of samples from the same distribution (H₀ true). Compute p-values for all 10,000 tests. Verify that p-values are uniformly distributed under H₀ and that approximately 5% fall below 0.05 (this is the definition of α). Then repeat with a true effect (shift the mean by 0.5σ) and measure what fraction of tests correctly detect it (= empirical power).</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=hypothesis-testing-t-test-p-values-confidence-intervals#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

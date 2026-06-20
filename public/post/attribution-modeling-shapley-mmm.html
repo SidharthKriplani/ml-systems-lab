@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attribution Modeling: Multi-Touch, Shapley Values, and Media Mix Models — ML Systems Lab</title>
+  <meta name="description" content="A user sees a Facebook ad on Monday, a Google ad on Wednesday, and clicks an email link on Friday. Which channel gets credit for the conversion? Attribution models answer this — and the answer determi…" />
+  <meta name="keywords" content="Data Science, Attribution, Shapley Values, Media Mix Model, Marketing, Causal Inference, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/attribution-modeling-shapley-mmm.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/attribution-modeling-shapley-mmm.html" />
+  <meta property="og:title" content="Attribution Modeling: Multi-Touch, Shapley Values, and Media Mix Models" />
+  <meta property="og:description" content="A user sees a Facebook ad on Monday, a Google ad on Wednesday, and clicks an email link on Friday. Which channel gets credit for the conversion? Attribution models answer this — and the answer determi…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Attribution Modeling: Multi-Touch, Shapley Values, and Media Mix Models" />
+  <meta name="twitter:description" content="A user sees a Facebook ad on Monday, a Google ad on Wednesday, and clicks an email link on Friday. Which channel gets credit for the conversion? Attribution models answer this — and the answer determi…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Attribution Modeling: Multi-Touch, Shapley Values, and Media Mix Models",
+  "description": "A user sees a Facebook ad on Monday, a Google ad on Wednesday, and clicks an email link on Friday. Which channel gets credit for the conversion? Attribution models answer this — and the answer determi…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/attribution-modeling-shapley-mmm.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Attribution, Shapley Values, Media Mix Model, Marketing, Causal Inference"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=attribution-modeling-shapley-mmm#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Attribution Modeling: Multi-Touch, Shapley Values, and Media Mix Models</h1>
+    <p class="excerpt">A user sees a Facebook ad on Monday, a Google ad on Wednesday, and clicks an email link on Friday. Which channel gets credit for the conversion? Attribution models answer this — and the answer determines how hundreds of millions of marketing budget are allocated. Last-click is wrong. First-click is also wrong. Shapley-based attribution is principled. Media mix models handle what user-level data cannot.</p>
+    <p>Attribution is the problem of assigning credit for a conversion (purchase, signup, subscription) to the marketing touchpoints that preceded it. Get attribution wrong and you systematically misallocate marketing budget: over-investing in channels that look good under your model but are actually stealing credit from others.</p>
+<h2>Why single-touch attribution is wrong</h2>
+<p>Last-click attribution: 100% credit to the last touchpoint before conversion. Simple, measurable, completely wrong. It penalises brand awareness channels (TV, social, display) that initiate demand and rewards direct/email channels that capture it. Users who were never prospected by brand channels would not have converted via email — but last-click ignores this dependency.</p>
+<p>First-click attribution: 100% credit to the first touchpoint. Opposite problem — ignores the role of the channels that closed the deal. A user who saw a brand ad six months ago and then responded to a conversion-focused email gets all credit attributed to the brand ad.</p>
+<h2>Linear and time-decay models</h2>
+<p>Linear attribution: divide credit equally across all touchpoints. Better than single-touch but still arbitrary — why should a Facebook impression three weeks ago receive equal credit to the email that triggered the purchase?</p>
+<p>Time-decay attribution: exponential decay with recency. More recent touchpoints get more credit. Captures the intuition that recent interactions are more causally proximate but still relies on a heuristic decay function.</p>
+<h2>Shapley-based attribution: principled credit allocation</h2>
+<p>Shapley values from cooperative game theory provide the unique fair allocation of value among players given a set of axioms (efficiency, symmetry, dummy, additivity). Applied to attribution: each touchpoint is a "player"; the conversion is the "value"; the Shapley value of touchpoint i is its average marginal contribution across all possible orderings of the other touchpoints.</p>
+<p>For touchpoints {Google, Facebook, Email}: Shapley value of Google = average over all orderings of adding Google to a subset and measuring the incremental conversion probability. If Email always converts at 80% without Google, but 85% with Google, Google's Shapley value is 5% of the conversion credit. Data-driven Shapley attribution is now available in Google Analytics 4 and is considered the most defensible attribution model for within-channel credit allocation.</p>
+<h2>The fundamental limit of user-level attribution</h2>
+<p>User-level attribution only captures touchpoints in your data. It cannot attribute conversions to touchpoints with no user-level signal: TV ads, billboards, podcast sponsorships, word-of-mouth. And it conflates correlation with causation — a user who saw a Google ad and converted might have converted anyway. Attribution models tell you which channels touched converters; they do not tell you which channels caused conversions. That requires incrementality testing (see Post 84).</p>
+<h2>Media Mix Models: the aggregate approach</h2>
+<p>Media Mix Modeling (MMM) bypasses the user-level tracking problem by modelling aggregate relationships. Inputs: weekly marketing spend by channel, weekly sales/revenue. Model: revenue_t = f(TV_spend_t, Digital_spend_t, Search_spend_t, ..., controls_t) where controls include seasonality, holidays, economic indicators. MMM estimates the marginal impact of each channel on revenue at the aggregate level.</p>
+<p>Key MMM techniques: adstock transformation (marketing spend has decayed effects over time — a TV ad seen today still influences purchases next week); saturation curves (diminishing returns at high spend levels — each additional dollar of spend yields less incremental revenue); Bayesian MMM (with informative priors from past experiments to regularise channel coefficients, especially important when channels are correlated). Robyn (Meta's open-source MMM) and Meridian (Google's) are the most widely deployed frameworks.</p>
+<h2>The gold standard: geo experiments for channel incrementality</h2>
+<p>Neither user-level attribution nor MMM gives true causal estimates. The gold standard: geo-level randomised experiments. Split geographic markets into treatment and control. Run the channel in treatment markets; hold back in control. Measure the difference in revenue. This is the only way to estimate the true incremental lift of a channel. Geo experiments require months of data collection and are expensive to run, so they are used to calibrate MMM coefficients rather than replace them.</p>
+<p><strong>Try on Colab:</strong> simulate a user-level conversion dataset with 5 touchpoints per user (drawn from a Markov chain model where each touchpoint affects conversion probability). Compare last-click, linear, and Shapley attribution for each channel. Then aggregate the data to weekly totals and fit a simple Bayesian MMM with adstock and saturation. Compare the MMM channel coefficients to the Shapley values — observe which channels are systematically over- or under-attributed by Shapley.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=attribution-modeling-shapley-mmm#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

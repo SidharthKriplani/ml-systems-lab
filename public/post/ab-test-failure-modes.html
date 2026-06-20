@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Two Failure Modes of A/B Tests (And How to Catch Them) — ML Systems Lab</title>
+  <meta name="description" content="Most A/B testing mistakes aren&#39;t statistical errors — they&#39;re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to …" />
+  <meta name="keywords" content="A/B Testing, Statistics, Experimentation, Peeking, SRM, Data Science, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ab-test-failure-modes.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ab-test-failure-modes.html" />
+  <meta property="og:title" content="The Two Failure Modes of A/B Tests (And How to Catch Them)" />
+  <meta property="og:description" content="Most A/B testing mistakes aren&#39;t statistical errors — they&#39;re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Two Failure Modes of A/B Tests (And How to Catch Them)" />
+  <meta name="twitter:description" content="Most A/B testing mistakes aren&#39;t statistical errors — they&#39;re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Two Failure Modes of A/B Tests (And How to Catch Them)",
+  "description": "Most A/B testing mistakes aren't statistical errors — they're procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ab-test-failure-modes.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "A/B Testing, Statistics, Experimentation, Peeking, SRM, Data Science"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>The Two Failure Modes of A/B Tests (And How to Catch Them)</h1>
+    <p class="excerpt">Most A/B testing mistakes aren&#39;t statistical errors — they&#39;re procedural ones. The two most common: peeking at results before the test ends (inflates your false positive rate by 2–5×), and failing to detect a sample ratio mismatch (makes all your metrics untrustworthy). Both are invisible unless you know where to look.</p>
+    <p>A/B testing looks simple: split traffic, measure a metric, compare. It\'s not simple. The statistical machinery underneath has failure modes that are invisible to the untrained eye, and that silently corrupt your product decisions.</p>
+<p>The two failure modes that cause the most damage in practice are peeking and sample ratio mismatch. Here\'s what they are, why they\'re dangerous, and how to catch them.</p>
+<h2>Failure Mode 1: Peeking</h2>
+<p>Peeking is looking at your experiment results before the planned end date, and making a decision based on what you see.</p>
+<p>The problem: p-values are not stable over time. If you run 1000 A/A tests (same experience for both groups) and check them each day until one hits p < 0.05, roughly 30% of tests will cross that threshold at some point during the run — even though there is no real effect. The standard p < 0.05 threshold assumes you check once, at the end.</p>
+<p>Peeking inflates your false positive rate (calling a winner when there isn\'t one) from 5% to 20–30%, depending on how often you check. This means a large fraction of the "winners" you ship are actually noise.</p>
+<p>Why everyone peeks anyway: experiment dashboards are updated in real-time. PMs and executives watch them. Someone sees a metric moving in the right direction and wants to ship. The pressure to stop early is enormous.</p>
+<h2>Fixes for peeking:</h2>
+<p>Sequential testing / always-valid inference: methods that allow continuous monitoring while maintaining the correct false positive rate. Implementations include CUPED (Microsoft), mSPRT (Uber), and mixture sequential probability ratio tests. Statsig and Optimizely both offer always-valid p-values by default.</p>
+<p>Pre-registration: write down your sample size, primary metric, and end date before the experiment starts. Don\'t change them. An experiment log with these parameters committed before launch is sufficient.</p>
+<h2>Failure Mode 2: Sample Ratio Mismatch (SRM)</h2>
+<p>SRM is when the ratio of users assigned to treatment and control doesn\'t match the intended ratio. You randomise 50/50, but the treatment group ends up with 47% of users. The 3% difference seems small. It isn\'t.</p>
+<p>When an SRM occurs, it means something is wrong with your randomisation or traffic routing — and that something has differential selection effects on your treatment and control groups. The users who are "missing" from one group aren\'t random; they have some systematic property (device type, browser version, geographic region, load time). Your control group and treatment group are no longer comparable populations.</p>
+<p>This means all your metric comparisons are invalid. Not noisy — invalid. You cannot trust any metric that shows a difference, positive or negative, when an SRM exists.</p>
+<h2>How to detect SRM:</h2>
+<p>Run a chi-squared test on your assignment counts: expected ratio (50%) vs. actual ratio. If the p-value is below 0.01, you have an SRM. This test costs nothing and should run automatically on every experiment the moment it starts.</p>
+<p>Chi-squared: \`from scipy.stats import chisquare; chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2])\`</p>
+<p>Common SRM causes: bot traffic filtered differently in treatment vs. control, JavaScript errors in the treatment that prevent logging, different caching behavior, geographic load balancing sending disproportionate traffic, or A/B assignment happening after the first meaningful user action.</p>
+<h2>Bonus failure mode: The novelty effect</h2>
+<p>Users in the treatment group interact differently with a new experience simply because it\'s new — not because it\'s better. This shows up as a spike in the treatment metric in week 1 that regresses toward control in weeks 2–3.</p>
+<p>Fix: run experiments for at least 2 full novelty cycles. For consumer products with weekly engagement patterns, that\'s typically 2 weeks minimum. For features with low interaction frequency (monthly), longer.</p>
+<h2>The SRM check is the first check, always</h2>
+<p>Before you look at your treatment effect: run the SRM check. If there\'s an SRM, stop analysis. Fix the randomisation. Re-run the experiment. Reporting results from an experiment with known SRM is worse than no experiment at all.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-failure-modes#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

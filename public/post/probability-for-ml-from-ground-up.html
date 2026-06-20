@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch — ML Systems Lab</title>
+  <meta name="description" content="Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probabilit…" />
+  <meta name="keywords" content="Models &amp; Math, Probability, Bayes Theorem, Distributions, Conditional Independence, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/probability-for-ml-from-ground-up.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/probability-for-ml-from-ground-up.html" />
+  <meta property="og:title" content="Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch" />
+  <meta property="og:description" content="Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probabilit…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch" />
+  <meta name="twitter:description" content="Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probabilit…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch",
+  "description": "Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probabilit…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/probability-for-ml-from-ground-up.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Probability, Bayes Theorem, Distributions, Conditional Independence, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=probability-for-ml-from-ground-up#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Probability for ML: Distributions, Bayes, and Conditional Independence from Scratch</h1>
+    <p class="excerpt">Every model you build is a probabilistic claim. Logistic regression outputs P(Y=1|X). A Gaussian process puts a distribution over functions. A VAE encodes a posterior. If you do not own the probability fundamentals — distributions, Bayes, conditional independence — you are operating machinery you cannot explain. This post builds it from scratch.</p>
+    <p>Probability is the language ML is written in. Most practitioners learn it backwards — they encounter it inside model derivations and patch their understanding reactively. This post builds it forwards: from the axioms up to the tools you need in practice.</p>
+<h2>The three probability axioms (Kolmogorov, 1933)</h2>
+<p>Every probability statement rests on three axioms: P(A) ≥ 0 for all events A. P(Ω) = 1 where Ω is the full sample space. For mutually exclusive events A and B: P(A ∪ B) = P(A) + P(B). Everything else — conditional probability, Bayes' theorem, independence — is derived from these three.</p>
+<h2>Conditional probability and the multiplication rule</h2>
+<p>P(A|B) = P(A ∩ B) / P(B). Read this as: given we know B happened, what fraction of B-worlds also have A? The multiplication rule follows: P(A ∩ B) = P(A|B) P(B) = P(B|A) P(A). This is not a formula to memorise — it is a definition rearranged. Chain rule for n events: P(A₁ ∩ A₂ ∩ ... ∩ Aₙ) = P(A₁) P(A₂|A₁) P(A₃|A₁,A₂) ... P(Aₙ|A₁,...,Aₙ₋₁). This is the foundation of language models: P(sentence) = Π P(word_t | word_1, ..., word_{t-1}).</p>
+<h2>Bayes&#39; theorem</h2>
+<p>Derived directly from conditional probability: P(A|B) = P(B|A) P(A) / P(B). In ML terminology: posterior = likelihood × prior / evidence. The evidence P(B) = Σ_A P(B|A) P(A) is the marginal — sum over all possible values of A. Bayesian thinking: your prior P(A) is your belief before seeing data. The likelihood P(B|A) is how probable the data is under hypothesis A. The posterior P(A|B) is your updated belief after seeing B. This is exactly what Naive Bayes classifiers compute.</p>
+<h2>Independence and conditional independence</h2>
+<p>A and B are independent if P(A ∩ B) = P(A) P(B), equivalently P(A|B) = P(A). Knowing B tells you nothing about A. A and B are conditionally independent given C — written A ⊥ B | C — if P(A ∩ B | C) = P(A|C) P(B|C). This is a strictly weaker statement than marginal independence. The classic example: rain (A) and wet sidewalk (B) are not independent — rain causes wet sidewalks. But given that the sprinkler is on (C), knowing it rained tells you nothing extra about the sidewalk. Conditional independence is the engine of graphical models (Naive Bayes, Bayesian networks, Markov random fields). Naive Bayes assumes all features are conditionally independent given the label — this is wrong for most real datasets, but the model often works anyway.</p>
+<h2>The distributions you must know</h2>
+<p>Bernoulli(p): models a single binary outcome. P(X=1) = p, P(X=0) = 1-p. Mean = p, Variance = p(1-p). This is logistic regression's output distribution — the log-odds log(p/(1-p)) is modelled as linear.</p>
+<p>Binomial(n, p): number of successes in n independent Bernoulli trials. P(X=k) = C(n,k) p^k (1-p)^(n-k). Mean = np, Variance = np(1-p).</p>
+<p>Gaussian (Normal) N(μ, σ²): the central distribution of statistics. PDF: f(x) = (1/√(2πσ²)) exp(-(x-μ)²/(2σ²)). Why it is everywhere: Central Limit Theorem — the sum (or mean) of n independent, identically distributed variables with finite variance converges in distribution to a Gaussian as n→∞, regardless of the original distribution. This is why residuals tend to be approximately Gaussian and why we can test means with t-tests.</p>
+<p>Poisson(λ): count events occurring at a constant rate. P(X=k) = e^(-λ) λ^k / k!. Mean = Variance = λ. Use for: click counts, arrivals per second, requests per minute. If events happen continuously at rate λ per time unit and independently, counts over a fixed window are Poisson.</p>
+<p>Beta(α, β): a distribution over [0,1]. Used as a prior over probabilities (conjugate to Binomial). Mean = α/(α+β), mode = (α-1)/(α+β-2). As α and β grow, it concentrates. Beta(1,1) = Uniform[0,1]. This is exactly the distribution Thompson Sampling maintains over bandit arm success probabilities.</p>
+<p>Dirichlet(α₁, ..., αK): generalization of Beta to K categories. A distribution over probability vectors that sum to 1. Used as a prior over categorical distributions (conjugate to Multinomial). The foundation of Latent Dirichlet Allocation (LDA) for topic modelling.</p>
+<h2>Law of Total Expectation and Total Variance</h2>
+<p>E[X] = E[E[X|Y]]. Compute the conditional expectation of X given Y, then average over Y. This is the tower property and it is used constantly in derivations. Law of total variance: Var(X) = E[Var(X|Y)] + Var(E[X|Y]). Variance decomposes into within-group variance plus between-group variance. This is the decomposition behind ANOVA and mixed-effects models.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why does Naive Bayes work even when the independence assumption is violated?" — Because even if the probability estimates are wrong, the class with the highest posterior is often still correct. The decision boundary can still be good even if the probabilities are miscalibrated.</p>
+<p>"A disease affects 1% of the population. A test is 99% accurate (99% TPR, 99% TNR). You test positive. What is the probability you have the disease?" — Apply Bayes: P(disease|positive) = P(positive|disease) P(disease) / P(positive) = (0.99 × 0.01) / (0.99 × 0.01 + 0.01 × 0.99) = 0.5. This is the base rate fallacy. With rare diseases, even accurate tests have low PPV.</p>
+<p>"What is the difference between independence and conditional independence? Give an ML example." — Marginal: features X₁ and X₂ are independent in the general population. Conditional: X₁ and X₂ are independent given the class label Y. Naive Bayes uses the latter. They can each hold without the other.</p>
+<p>"A/B test: how do you choose between a t-test and a z-test?" — z-test when the population variance is known or n > 30 (CLT gives approximately normal sample mean). t-test when variance is unknown and n is small; uses the t-distribution, which has heavier tails.</p>
+<p><strong>Try on Colab:</strong> sample 1000 points from a Binomial(n=20, p=0.3) and a Poisson(λ=6). Plot their histograms and compare their means and variances. Show that Poisson(λ) approximates Binomial(n,p) when n is large and p is small with np=λ. Then implement Naive Bayes from scratch on the Iris dataset using only scipy.stats distributions — no sklearn.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=probability-for-ml-from-ground-up#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BERT vs GPT: Encoders, Decoders, and When to Use Which — ML Systems Lab</title>
+  <meta name="description" content="BERT and GPT are both Transformers. The difference is the masking. BERT is bidirectional — every token attends to every other token, including future ones. GPT is autoregressive — each token only atte…" />
+  <meta name="keywords" content="Deep Learning, BERT, GPT, Transformer, NLP, Language Models, Pretraining, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/bert-vs-gpt-encoder-decoder-when-to-use.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/bert-vs-gpt-encoder-decoder-when-to-use.html" />
+  <meta property="og:title" content="BERT vs GPT: Encoders, Decoders, and When to Use Which" />
+  <meta property="og:description" content="BERT and GPT are both Transformers. The difference is the masking. BERT is bidirectional — every token attends to every other token, including future ones. GPT is autoregressive — each token only atte…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BERT vs GPT: Encoders, Decoders, and When to Use Which" />
+  <meta name="twitter:description" content="BERT and GPT are both Transformers. The difference is the masking. BERT is bidirectional — every token attends to every other token, including future ones. GPT is autoregressive — each token only atte…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "BERT vs GPT: Encoders, Decoders, and When to Use Which",
+  "description": "BERT and GPT are both Transformers. The difference is the masking. BERT is bidirectional — every token attends to every other token, including future ones. GPT is autoregressive — each token only atte…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/bert-vs-gpt-encoder-decoder-when-to-use.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, BERT, GPT, Transformer, NLP, Language Models, Pretraining"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=bert-vs-gpt-encoder-decoder-when-to-use#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>BERT vs GPT: Encoders, Decoders, and When to Use Which</h1>
+    <p class="excerpt">BERT and GPT are both Transformers. The difference is the masking. BERT is bidirectional — every token attends to every other token, including future ones. GPT is autoregressive — each token only attends to past tokens. This one difference creates two entirely different training objectives, capability profiles, and use cases. The architecture choice is downstream of what you want the model to do.</p>
+    <p>BERT (Bidirectional Encoder Representations from Transformers, Devlin et al., 2018) and GPT (Generative Pretrained Transformer, Radford et al., 2018) are both stacked Transformer layers trained on large text corpora. The fundamental difference is in the attention mask.</p>
+<h2>The attention mask determines the training objective</h2>
+<p>BERT uses full (bidirectional) attention: every token attends to all other tokens in both directions. This means the model always has access to the full context when making a prediction. The training objective exploits this: Masked Language Model (MLM). Randomly mask 15% of tokens; predict them using the surrounding context. Because every position sees all other positions, BERT can use both left and right context to fill in the blank — it is doing cloze task learning.</p>
+<p>GPT uses causal (left-to-right) masking: each token attends only to itself and previous tokens. Future tokens are hidden. The training objective is next-token prediction (autoregressive language modelling): given all previous tokens, predict the next one. This is the natural objective for generation — you generate left to right, one token at a time.</p>
+<h2>BERT: encoder model, understanding tasks</h2>
+<p>Because BERT sees full context, its representations encode deep semantic understanding. The [CLS] token representation at the end of BERT processing captures a summary of the whole sequence — it is used as the input to a classification head for tasks like sentiment classification, entailment, and question answering (where understanding the full passage before extracting an answer is necessary). BERT does not generate text naturally — autoregressive generation would require masking future tokens, at which point you lose the bidirectional advantage.</p>
+<p>BERT-family models (RoBERTa, DeBERTa, ALBERT) are the standard choices for: classification, named entity recognition, sequence labelling, extractive QA, sentence similarity, and dense retrieval (see Post 61).</p>
+<h2>GPT: decoder model, generation tasks</h2>
+<p>Because GPT predicts each token from only left context, it is naturally a generative model. At inference, you feed a prompt and sample the next token; append it to the context; sample again. The model scales remarkably — GPT-3 showed that decoder-only language models trained at scale can do in-context learning (few-shot prompting) without any gradient updates. GPT-4, Claude, Gemini, and all modern chat LLMs are decoder-only.</p>
+<p>GPT-family models (PaLM, LLaMA, Mistral) are the standard choices for: text generation, summarisation, translation, code completion, instruction following, and any task reformulated as text completion.</p>
+<h2>Encoder-decoder models: sequence-to-sequence</h2>
+<p>T5, BART, and the original Transformer (seq2seq for translation) use both an encoder and a decoder. The encoder processes the full input with bidirectional attention; the decoder generates the output autoregressively, attending to the encoder output via cross-attention. This architecture is natural for tasks with distinct input and output sequences: translation, summarisation, question generation, multi-document synthesis.</p>
+<h2>The scaling law implication</h2>
+<p>Decoder-only models (GPT architecture) have become dominant in the era of large models. Why? Pretraining data efficiency: next-token prediction uses every single token as a training signal. MLM uses only 15% of tokens per forward pass. At scale, the autoregressive objective is more data-efficient. In-context learning also emerges naturally from the autoregressive formulation — the model can "condition" on demonstrations by including them in the prompt context.</p>
+<h2>Practical decision guide</h2>
+<p>Use an encoder (BERT-family) when: you have labelled data for a specific task, you need sentence or token-level representations, and generation is not required. Use a decoder (GPT-family) when: you want generation, you want in-context learning without labelled data, or you are building a chat/instruction-following interface. Use encoder-decoder (T5-family) when: the task has distinct input and output sequences and you want the full bidirectional input encoding.</p>
+<p><strong>Try on Colab:</strong> fine-tune BERT-base on SST-2 (binary sentiment). Fine-tune GPT-2 (with a classification head on the last token) on the same dataset. Compare accuracy and training speed. Then try zero-shot GPT-2 prompting ("This movie was [MASK]") — observe the gap between fine-tuned accuracy and zero-shot. The fine-tuned BERT should win; the gap illustrates why task-specific fine-tuning outperforms zero-shot on small, well-defined tasks.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=bert-vs-gpt-encoder-decoder-when-to-use#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

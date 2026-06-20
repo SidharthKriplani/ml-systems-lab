@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantization from First Principles: What FP16 Throws Away and When It Matters — ML Systems Lab</title>
+  <meta name="description" content="Quantization promises 2× throughput and half the memory with &quot;no accuracy loss.&quot; It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-b…" />
+  <meta name="keywords" content="Deep Learning, Quantization, FP16, BF16, INT8, LLM Inference, Serving, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/quantization-fp16-first-principles.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/quantization-fp16-first-principles.html" />
+  <meta property="og:title" content="Quantization from First Principles: What FP16 Throws Away and When It Matters" />
+  <meta property="og:description" content="Quantization promises 2× throughput and half the memory with &quot;no accuracy loss.&quot; It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-b…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Quantization from First Principles: What FP16 Throws Away and When It Matters" />
+  <meta name="twitter:description" content="Quantization promises 2× throughput and half the memory with &quot;no accuracy loss.&quot; It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-b…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Quantization from First Principles: What FP16 Throws Away and When It Matters",
+  "description": "Quantization promises 2× throughput and half the memory with \"no accuracy loss.\" It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-b…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/quantization-fp16-first-principles.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Quantization, FP16, BF16, INT8, LLM Inference, Serving"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=quantization-fp16-first-principles#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Quantization from First Principles: What FP16 Throws Away and When It Matters</h1>
+    <p class="excerpt">Quantization promises 2× throughput and half the memory with &quot;no accuracy loss.&quot; It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-bit mantissa vs FP32&#39;s 23 bits. For most models, this is fine. For LLMs with activation outliers, it&#39;s catastrophic. Here&#39;s the bit-level reasoning that tells you when quantization is safe and when it destroys your model.</p>
+    <p>Quantization trades precision for speed. The marketing says "no accuracy loss." The reality is more nuanced. Whether quantization works depends entirely on how your model\'s activations and weights distribute — something you need to understand at the bit level to predict failure.</p>
+<h2>The floating point bit layout:</h2>
+<p>FP32: 1 sign bit, 8 exponent bits, 23 mantissa bits. FP16: 1 sign bit, 5 exponent bits, 10 mantissa bits. BF16: 1 sign bit, 8 exponent bits, 7 mantissa bits.</p>
+<p>The exponent bits determine range: what\'s the maximum and minimum representable value? The mantissa bits determine precision: how finely values within that range are represented.</p>
+<h2>What FP16 throws away: precision</h2>
+<p>By reducing mantissa bits from 23 to 10, FP16 has roughly 2× the relative error of FP32 for any given value. For neural network inference, this is usually acceptable. Weights after training are typically in [-1, 1] with similar-magnitude activations. The precision loss doesn\'t materially change predictions for most architectures.</p>
+<h2>When FP16 breaks: activation outliers</h2>
+<p>Some models have neurons with activation magnitudes 100–1000× larger than typical. When you quantise to FP16, the representable range doesn\'t shrink (5 exponent bits still covers a wide range), but if activations exceed ~65,504 (FP16 max), they overflow to infinity or NaN.</p>
+<p>Large language models are uniquely vulnerable. Attention heads in LLaMA, GPT, and similar architectures routinely produce outlier activations of 100–500×. Naive FP16 inference on these models produces incoherent outputs — not subtle degradation, but complete failure.</p>
+<h2>The solution: mixed precision and selective dequantisation</h2>
+<p>LLM.int8() (Dettmers et al., 2022) handles this by identifying outlier dimensions and computing them in higher precision while keeping non-outliers in INT8. The result: 2–4× speedup with minimal quality loss.</p>
+<p>The more general pattern: don\'t quantise every layer uniformly. Attention layers and layer normalisation are quantisation-sensitive. Keep them in FP32 or FP16. Linear layers in transformer blocks are robust to INT8.</p>
+<h2>BF16 vs FP16: why exponent bits matter</h2>
+<p>BF16 trades mantissa precision (7 bits) for exponent range (8 bits, same as FP32). It can represent values up to ~3.4 × 10^38. FP16\'s 5 exponent bits limit it to ~65,504.</p>
+<p>For LLMs: BF16 is almost always preferable to FP16. Activation outliers fit in the range without overflow. The reduced mantissa precision (7 vs 23 bits) is acceptable for inference.</p>
+<p>Modern GPUs (A100, H100) support BF16 at the same throughput as FP16. If your hardware supports it, use BF16 for LLM inference.</p>
+<h2>INT8 and INT4: dynamic range compression</h2>
+<p>INT8 represents values as 8-bit integers in [-128, 127]. There\'s no exponent — the numeric range is fixed. Quantisation maps floats to this fixed range via a scale factor.</p>
+<p>Per-tensor quantisation: one scale factor for the entire weight matrix. If the matrix has a few very large values, those dominate the scale and small values lose precision.</p>
+<p>Per-channel quantisation: separate scale factor per output channel. More expensive but much better quality. This is the standard for production INT8 quantisation.</p>
+<p>INT4 halves the memory of INT8. A 7B parameter LLM fits in ~3.5GB. The quality cost is significant but manageable with mixed precision and groupwise quantisation (separate scales per group of weights).</p>
+<h2>The practical decision matrix:</h2>
+<p>Transformer inference on Ampere+ GPU (A100, H100)? Use BF16. No loss, 2× throughput.</p>
+<p>Transformer on older GPU? FP16 with overflow checks.</p>
+<p>LLM inference, memory-constrained? INT8 with outlier decomposition (LLM.int8()).</p>
+<p>LLM, extreme memory constraint (edge device)? INT4 with GPTQ or AWQ.</p>
+<p>CNN inference, production serving? INT8 per-channel, calibrated on representative data.</p>
+<p>Training? BF16 mixed precision with FP32 master weights.</p>
+<h2>Calibration: choosing the right scale factors</h2>
+<p>Static INT8 quantisation requires a calibration dataset: representative inputs run through the model before quantisation. Calibration collects activation distributions at each layer, used to choose optimal scale factors.</p>
+<p>A calibration dataset that doesn\'t match your production distribution produces poor scale factors and quality degradation. 100–1000 representative inputs is typically sufficient.</p>
+<p>TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantisation. Using these correctly requires knowing which layers are quantisation-sensitive (attention, layer norm) and keeping them in higher precision.</p>
+<h2>Practice this in Deep Learning serving to understand when quantization is safe, how to detect failures, and how to optimise inference for your specific model and hardware.</h2>
+<p>\`\`\`python import torch from torch.cuda.amp import autocast, GradScaler</p>
+<p>def train_mixed_precision(model, loader, optimizer, epochs=3): """BF16/FP16 mixed precision: FP16 forward pass, FP32 master weights. ~2× faster, ~50% less GPU memory. GradScaler prevents underflow.""" scaler = GradScaler()   # dynamic loss scaling — handles FP16 underflow</p>
+<p>for epoch in range(epochs): for batch in loader: optimizer.zero_grad()</p>
+<p>with autocast(dtype=torch.float16):  # use bfloat16 on Ampere+ GPUs loss = model(batch).loss          # forward in FP16</p>
+<p>scaler.scale(loss).backward()         # backward scales gradients scaler.unscale_(optimizer) torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) scaler.step(optimizer)                # updates in FP32 master weights scaler.update()</p>
+<p># Production note: bf16 is preferred over fp16 on A100/H100 — larger dynamic range, # no gradient underflow, no GradScaler needed. Use torch.bfloat16 where hardware allows. \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=quantization-fp16-first-principles#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Network Effects in A/B Tests: SUTVA Violations and How to Handle Them — ML Systems Lab</title>
+  <meta name="description" content="Standard A/B testing assumes that a user&#39;s outcome depends only on which treatment they receive — not on what treatment other users receive. In social networks, marketplaces, and ride-hailing, this as…" />
+  <meta name="keywords" content="Data Science, A/B Testing, Network Effects, SUTVA, Experimental Design, Causal Inference, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/network-effects-ab-testing-sutva.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/network-effects-ab-testing-sutva.html" />
+  <meta property="og:title" content="Network Effects in A/B Tests: SUTVA Violations and How to Handle Them" />
+  <meta property="og:description" content="Standard A/B testing assumes that a user&#39;s outcome depends only on which treatment they receive — not on what treatment other users receive. In social networks, marketplaces, and ride-hailing, this as…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Network Effects in A/B Tests: SUTVA Violations and How to Handle Them" />
+  <meta name="twitter:description" content="Standard A/B testing assumes that a user&#39;s outcome depends only on which treatment they receive — not on what treatment other users receive. In social networks, marketplaces, and ride-hailing, this as…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Network Effects in A/B Tests: SUTVA Violations and How to Handle Them",
+  "description": "Standard A/B testing assumes that a user's outcome depends only on which treatment they receive — not on what treatment other users receive. In social networks, marketplaces, and ride-hailing, this as…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/network-effects-ab-testing-sutva.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, A/B Testing, Network Effects, SUTVA, Experimental Design, Causal Inference"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=network-effects-ab-testing-sutva#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Network Effects in A/B Tests: SUTVA Violations and How to Handle Them</h1>
+    <p class="excerpt">Standard A/B testing assumes that a user&#39;s outcome depends only on which treatment they receive — not on what treatment other users receive. In social networks, marketplaces, and ride-hailing, this assumption is violated. A user assigned to control is affected by the behaviour of users assigned to treatment. SUTVA violation is the statistician&#39;s name for this, and it makes standard A/B tests produce severely biased estimates.</p>
+    <p>The Stable Unit Treatment Value Assumption (SUTVA) is the bedrock of causal inference from randomised experiments. It states: the potential outcome for unit i depends only on the treatment assigned to unit i, not on the treatments assigned to other units. In consumer tech, SUTVA is routinely violated.</p>
+<h2>When SUTVA fails</h2>
+<p>Social networks: you assign 50% of users to see a new newsfeed algorithm (treatment) and 50% to the old algorithm (control). Treatment users post more (the new algorithm is more engaging). Control users see posts from treatment users in their feed. Control users' engagement increases because their feed has more content — not because of any change to their own algorithm. Your control group is contaminated by the treatment group's behaviour.</p>
+<p>Ride-hailing: 50% of drivers receive a surge pricing incentive (treatment). Treatment drivers take more rides. Fewer drivers are available for control-group riders — their wait times increase. The control group is harmed by the treatment. Standard A/B estimation shows treatment drivers do better and control riders do worse, but the true effect on the overall market is different from what the individual-level comparison shows.</p>
+<p>Marketplace supply/demand: 50% of buyers receive a discount (treatment). They buy more. Supply is diverted toward treatment buyers — control buyers find fewer items available. Control group outcomes are degraded by the treatment.</p>
+<h2>Quantifying the bias</h2>
+<p>SUTVA violation causes interference between units — the treatment effect estimated by standard A/B analysis is a biased estimate of the global average treatment effect. The direction of bias depends on the sign of the interference: if treatment helps the treated and hurts the control (ride-hailing), the observed treatment effect is an overestimate. If treatment helps everyone in the network (viral content), the control group also benefits and the observed treatment effect is an underestimate.</p>
+<h2>Cluster randomisation: the standard fix</h2>
+<p>Instead of randomising individuals, randomise clusters of individuals who are likely to interact. Geographic clusters: randomly assign cities or DMA regions to treatment and control. Social clusters: randomly assign connected components of the social graph. Each cluster is treated or controlled entirely — interactions within the cluster are allowed; between-cluster interference is minimised.</p>
+<p>Requirements: clusters must be large enough for statistical power, and between-cluster spillover must be negligible. Geographic experiments require dozens of matched city pairs and weeks of data collection. The matching (pairing similar cities) reduces variance.</p>
+<h2>Switchback experiments: time-based randomisation</h2>
+<p>In ride-hailing and supply-demand markets where clustering by user is infeasible (supply is global), switchback experiments randomise treatment assignment over time for an entire market: treatment during odd hours, control during even hours. This ensures all users in the market experience both conditions. Analysis accounts for time-based confounders (rush hour, day of week). Netflix and Lyft use switchbacks for marketplace-level experiments.</p>
+<h2>Network experimental designs: ego-cluster and bipartite</h2>
+<p>Ego-cluster randomisation: assign treatment at the cluster level where each cluster is a user's local network (the user plus all their friends). This captures most social influence effects while maintaining many independent clusters.</p>
+<p>Bipartite randomisation: in two-sided marketplaces (Airbnb, eBay), randomise on one side (hosts or buyers) while measuring outcomes on both sides. This gives unbiased estimates of the treatment effect on the randomised side, with carefully controlled leakage to the other side.</p>
+<h2>Variance estimation under interference</h2>
+<p>When clusters are the unit of randomisation, variance must be estimated at the cluster level, not the individual level. Using individual-level variance gives a severely underestimated standard error and inflated statistical power — you think you have 1000 independent observations (individuals) when you really have 20 independent observations (clusters). Cluster-robust standard errors correct for within-cluster correlation.</p>
+<p><strong>Try on Colab:</strong> simulate a social network (Erdős-Rényi graph, 1000 nodes). Assign treatment to 50% of users. Simulate an outcome where each user's outcome depends on their own treatment plus the fraction of their friends who are treated (network effect). Run standard A/B analysis (ignoring network) and compare to cluster-randomised analysis (randomise by connected component). Observe the bias in the individual-level analysis.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=network-effects-ab-testing-sutva#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

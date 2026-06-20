@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training — ML Systems Lab</title>
+  <meta name="description" content="Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1…" />
+  <meta name="keywords" content="Deep Learning, Initialisation, Xavier, He, Glorot, Variance, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/neural-network-initialisation-he-xavier-glorot.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/neural-network-initialisation-he-xavier-glorot.html" />
+  <meta property="og:title" content="Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training" />
+  <meta property="og:description" content="Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training" />
+  <meta name="twitter:description" content="Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training",
+  "description": "Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/neural-network-initialisation-he-xavier-glorot.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Initialisation, Xavier, He, Glorot, Variance, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=neural-network-initialisation-he-xavier-glorot#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Neural Network Initialisation: He, Xavier, and Why the Wrong Init Kills Training</h1>
+    <p class="excerpt">Why not initialise all weights to zero? Why not initialise them to large random values? The answer is signal variance: if every layer scales activations by more than 1, signals explode; if less than 1, signals vanish. Xavier and He initialisation are exact solutions to keeping variance constant through the network — one for linear activations, one for ReLU. This post derives them.</p>
+    <p>Initialisation seems like a boring implementation detail. It is not. Poor initialisation causes training to fail in the first few steps, before the data has had any effect. The right initialisation keeps the signal well-conditioned through the entire forward and backward pass from step one.</p>
+<h2>Why not all zeros?</h2>
+<p>If all weights are zero, all neurons in each layer compute the same output — they are symmetric. During backpropagation, they receive identical gradient updates and remain symmetric forever. The network behaves like a single neuron regardless of width. This is the symmetry breaking problem: random initialisation breaks symmetry so different neurons can learn different features.</p>
+<h2>Why not large random values?</h2>
+<p>Consider a linear network with L layers, each of width n, with weights initialised from N(0, σ²). The output of layer l is z_l = W_l z_{l-1}. The variance of z_l = n σ² × Var(z_{l-1}). After L layers: Var(z_L) = (nσ²)^L × Var(z_0). If nσ² > 1: variance explodes exponentially with depth. Activations saturate for sigmoid/tanh; gradients vanish. If nσ² < 1: variance shrinks exponentially with depth. Activations all collapse to zero; gradients vanish. We need nσ² ≈ 1, i.e., σ² = 1/n — the key insight.</p>
+<h2>Xavier / Glorot initialisation (linear / tanh activations)</h2>
+<p>Glorot & Bengio (2010) analysed both the forward pass (keep activation variance constant) and the backward pass (keep gradient variance constant). For a layer with n_in inputs and n_out outputs, the two conditions give different σ²: forward only: σ² = 1/n_in. Backward only: σ² = 1/n_out. Xavier/Glorot compromises: σ² = 2/(n_in + n_out). Equivalently, uniform initialisation: Uniform(-√(6/(n_in + n_out)), √(6/(n_in + n_out))). This is optimal for linear activations and approximately correct for tanh (which is approximately linear near zero). In PyTorch: torch.nn.init.xavier_uniform_(layer.weight).</p>
+<h2>He / Kaiming initialisation (ReLU activations)</h2>
+<p>ReLU(z) = max(0, z) kills half of the activations (all z < 0 become 0). This means only half of the neurons are active, halving the effective fan-in. He et al. (2015) derive: σ² = 2/n_in. Uniform version: Uniform(-√(6/n_in), √(6/n_in)). The factor of 2 compensates for ReLU zeroing half the values. For leaky ReLU with slope a: σ² = 2 / ((1+a²) × n_in). In PyTorch: torch.nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu'). He initialisation is the default for any network with ReLU activations (includes ResNets, VGG, most modern architectures).</p>
+<h2>LeCun initialisation (SELU activations)</h2>
+<p>Klambauer et al. (2017) derived the Self-Normalising Neural Network using SELU activations, which maintain mean 0 and variance 1 through layers without batch norm. LeCun initialisation: σ² = 1/n_in (the simplest case). When combined with SELU, this produces a self-normalising property that makes very deep networks trainable without batch norm.</p>
+<h2>Orthogonal initialisation (RNNs)</h2>
+<p>For recurrent networks, the hidden-to-hidden weight matrix W_hh is multiplied at every timestep: h_T = W_hh^T h_0. If the eigenvalues of W_hh are not exactly 1, the signal either explodes or vanishes over T steps. Orthogonal matrices have all eigenvalues on the unit circle — perfect for recurrent weights. Orthogonal initialisation: draw a random matrix, compute its QR decomposition or SVD, use the Q matrix. In PyTorch: torch.nn.init.orthogonal_(layer.weight).</p>
+<h2>Batch normalisation as a substitute</h2>
+<p>Batch normalisation (Post 58) normalises activations to have zero mean and unit variance within each mini-batch. This makes the network approximately insensitive to initialisation — even poor initialisations converge because batch norm continuously reconditions the signal. However, batch norm adds its own complexity (train vs test behaviour, batch size sensitivity) and is not always appropriate (small batch sizes, sequence models prefer layer norm).</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why does He initialisation use 2/n_in while Xavier uses 2/(n_in + n_out)?" — ReLU kills half the input signal (zeros the negative half), so the effective fan-in is halved. Multiplying by 2 compensates. Xavier targets symmetric activations (linear, tanh) where the full fan-in contributes; the factor accounts for both forward and backward pass by averaging n_in and n_out.</p>
+<p>"What happens if you initialise a very deep network with σ = 0.1?" — If σ = 0.1 and n = 1000 (layer width), then nσ² = 10 — signal will explode. If σ = 0.001 and n = 1000, then nσ² = 1 — might be stable. But the exact condition depends on the activation function. Without proper initialisation, gradients will explode or vanish within a few forward passes, and training will stall immediately.</p>
+<p>"Can you train a network without random initialisation?" — Not with all-zero or all-constant initialisation due to symmetry breaking. However, structured initialisations exist: identity matrix initialisation for recurrent nets, pre-trained weights for transfer learning, or very specific deterministic constructions in theory. In practice, random initialisation with the correct variance is always used.</p>
+<p>"What does the condition 'keep variance constant through layers' mathematically require?" — For a linear layer z = Wx with i.i.d. inputs xᵢ and i.i.d. weights W_{ij} ∼ N(0, σ²), Var(z_j) = n_in × σ² × Var(xᵢ). Setting this equal to Var(xᵢ) requires σ² = 1/n_in. This is the forward-pass condition. The backward-pass condition requires σ² = 1/n_out. Xavier/Glorot averages them.</p>
+<p><strong>Try on Colab:</strong> train a 20-layer MLP on MNIST with three initialisations: (1) all zeros, (2) N(0, 1), (3) He initialisation. Plot the distribution of activations at layer 10 for each case after the first forward pass. Show that zeros give all-zero activations (dead network), N(0,1) gives exploding activations, and He gives well-conditioned activations. Then plot training loss over 10 epochs for each — only He trains successfully.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=neural-network-initialisation-he-xavier-glorot#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

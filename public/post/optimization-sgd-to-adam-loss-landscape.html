@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimization: SGD to Adam, and What the Loss Landscape Actually Looks Like — ML Systems Lab</title>
+  <meta name="description" content="The loss landscape of a neural network is not a bowl with one minimum. It is a high-dimensional surface with flat plateaus, narrow valleys, and saddle points everywhere. The optimizer is what navigate…" />
+  <meta name="keywords" content="Deep Learning, Optimization, Adam, SGD, Gradient Descent, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/optimization-sgd-to-adam-loss-landscape.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/optimization-sgd-to-adam-loss-landscape.html" />
+  <meta property="og:title" content="Optimization: SGD to Adam, and What the Loss Landscape Actually Looks Like" />
+  <meta property="og:description" content="The loss landscape of a neural network is not a bowl with one minimum. It is a high-dimensional surface with flat plateaus, narrow valleys, and saddle points everywhere. The optimizer is what navigate…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Optimization: SGD to Adam, and What the Loss Landscape Actually Looks Like" />
+  <meta name="twitter:description" content="The loss landscape of a neural network is not a bowl with one minimum. It is a high-dimensional surface with flat plateaus, narrow valleys, and saddle points everywhere. The optimizer is what navigate…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Optimization: SGD to Adam, and What the Loss Landscape Actually Looks Like",
+  "description": "The loss landscape of a neural network is not a bowl with one minimum. It is a high-dimensional surface with flat plateaus, narrow valleys, and saddle points everywhere. The optimizer is what navigate…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/optimization-sgd-to-adam-loss-landscape.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Optimization, Adam, SGD, Gradient Descent, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=optimization-sgd-to-adam-loss-landscape#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Optimization: SGD to Adam, and What the Loss Landscape Actually Looks Like</h1>
+    <p class="excerpt">The loss landscape of a neural network is not a bowl with one minimum. It is a high-dimensional surface with flat plateaus, narrow valleys, and saddle points everywhere. The optimizer is what navigates this landscape. SGD, momentum, RMSProp, and Adam each solve a different failure mode of gradient descent. Here is the geometry behind each one.</p>
+    <p>Gradient descent is simple: compute the gradient, move opposite to it, repeat. The problem is that simple gradient descent fails in almost every interesting neural network loss landscape. Understanding why it fails — and how each optimizer variant fixes it — is more useful than memorising hyperparameter defaults.</p>
+<h2>What the loss landscape looks like</h2>
+<p>A neural network with millions of parameters has a loss surface in a space with millions of dimensions. You cannot visualise it, but you can characterise it. Two properties dominate the difficulty of training.</p>
+<p>Ill-conditioning: the loss surface has very different curvatures in different directions. In some directions the loss falls rapidly (high curvature), in others it barely changes (low curvature). SGD with a learning rate tuned for the high-curvature directions is too slow in the low-curvature directions. A learning rate tuned for the low-curvature directions causes oscillation in the high-curvature directions.</p>
+<p>Saddle points: in high dimensions, a "local minimum" in the traditional sense is rare. Almost every critical point (gradient ≈ 0) is a saddle point — a minimum in some directions and a maximum in others. Gradient descent slows near saddle points because the gradient is small even though the point is not optimal. Plateau regions have the same effect.</p>
+<h2>SGD: the baseline</h2>
+<p>w ← w - η * ∇L(w). Simple, well-understood, but sensitive to learning rate and slow on ill-conditioned landscapes. With a large learning rate it overshoots; with a small one it makes negligible progress in low-curvature directions.</p>
+<h2>Momentum: accumulate velocity</h2>
+<p>w ← w - v, where v ← β*v + η*∇L(w). Instead of moving in the direction of the current gradient, momentum moves in the direction of the exponentially weighted average of past gradients. In low-curvature directions where gradients are small and consistent, velocity accumulates — the optimizer moves faster. In oscillating dimensions, gradients cancel out — the optimizer moves slower. Momentum implicitly adapts to the local geometry.</p>
+<p>SGD + momentum is still widely used for image classification (ResNets, ViTs). Its generalisation properties can exceed Adam because the flat minima it finds are more robust to distribution shift.</p>
+<h2>RMSProp: per-parameter learning rates</h2>
+<p>s ← β*s + (1-β)*∇L^2; w ← w - η * ∇L / sqrt(s + ε). RMSProp maintains a running average of squared gradients per parameter. Parameters with large historical gradients get scaled down; parameters with small historical gradients get scaled up. This per-parameter adaptation directly addresses ill-conditioning: the learning rate is automatically adjusted for each dimension's curvature.</p>
+<h2>Adam: momentum + RMSProp</h2>
+<p>Adam (Kingma & Ba, 2015) combines both ideas. First moment (like momentum): m ← β1*m + (1-β1)*∇L. Second moment (like RMSProp): v ← β2*v + (1-β2)*∇L^2. Bias-corrected update: w ← w - η * m_hat / (sqrt(v_hat) + ε). The bias correction (dividing by 1-β^t) compensates for the initialisation bias when both moments start at zero.</p>
+<p>Adam is robust to the learning rate, adapts per parameter, and converges quickly. It is the default for training Transformers and most modern deep learning architectures.</p>
+<h2>When SGD beats Adam</h2>
+<p>Adam can converge to sharper minima than SGD. Sharp minima are sensitive to small input perturbations — the model generalises less well. SGD with momentum finds flatter minima that are more robust. For image classification on ImageNet-scale data, fine-tuned SGD + momentum often beats Adam on final test accuracy by 1-2%. For NLP and Transformers, Adam is usually better because the loss landscape is more ill-conditioned.</p>
+<h2>Learning rate schedules: the most important hyperparameter</h2>
+<p>The absolute learning rate matters less than the schedule. Common patterns: cosine annealing (lr decays following a cosine curve, optionally with warm restarts), linear warmup followed by cosine decay (standard for Transformers — warm up for ~4% of training steps, then decay), and one-cycle policy (lr rises to max then falls, often with momentum inversely varying). Warmup is important for Transformers because Adam's second moment estimate is unreliable in the first few steps — a high initial learning rate with an unreliable normaliser causes divergence.</p>
+<p><strong>Try on Colab:</strong> train a small MLP on CIFAR-10 with SGD (no momentum), SGD + momentum, RMSProp, and Adam. Log the loss curve and final accuracy for each. Then visualise the loss landscape around the final solution for SGD and Adam using random direction projection — the flatness of Adam's minimum vs SGD's is often visible.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=optimization-sgd-to-adam-loss-landscape#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

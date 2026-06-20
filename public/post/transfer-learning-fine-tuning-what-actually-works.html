@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transfer Learning: What to Freeze, What to Fine-Tune, and When It Fails — ML Systems Lab</title>
+  <meta name="description" content="Transfer learning works because neural networks learn reusable representations. The question is which representations to reuse and which to replace. The answer depends on three variables: source-targe…" />
+  <meta name="keywords" content="Deep Learning, Transfer Learning, Fine-Tuning, LoRA, Domain Adaptation, Pretrained Models, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/transfer-learning-fine-tuning-what-actually-works.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/transfer-learning-fine-tuning-what-actually-works.html" />
+  <meta property="og:title" content="Transfer Learning: What to Freeze, What to Fine-Tune, and When It Fails" />
+  <meta property="og:description" content="Transfer learning works because neural networks learn reusable representations. The question is which representations to reuse and which to replace. The answer depends on three variables: source-targe…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Transfer Learning: What to Freeze, What to Fine-Tune, and When It Fails" />
+  <meta name="twitter:description" content="Transfer learning works because neural networks learn reusable representations. The question is which representations to reuse and which to replace. The answer depends on three variables: source-targe…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Transfer Learning: What to Freeze, What to Fine-Tune, and When It Fails",
+  "description": "Transfer learning works because neural networks learn reusable representations. The question is which representations to reuse and which to replace. The answer depends on three variables: source-targe…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/transfer-learning-fine-tuning-what-actually-works.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Transfer Learning, Fine-Tuning, LoRA, Domain Adaptation, Pretrained Models"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=transfer-learning-fine-tuning-what-actually-works#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Transfer Learning: What to Freeze, What to Fine-Tune, and When It Fails</h1>
+    <p class="excerpt">Transfer learning works because neural networks learn reusable representations. The question is which representations to reuse and which to replace. The answer depends on three variables: source-target similarity, target dataset size, and where in the network the relevant features live. Get this wrong and fine-tuning makes things worse.</p>
+    <p>Transfer learning is the practice of starting from a model pretrained on a large dataset and adapting it to a new task. It works because early network layers learn general features — edge detectors, colour gradients, texture patterns — that are reusable across tasks. Later layers learn task-specific features that need to be replaced. The question is where to draw the line.</p>
+<h2>Why representations transfer</h2>
+<p>A ResNet trained on ImageNet learns a hierarchy of visual features (see Post 52). The first few layers detect oriented edges and blobs — genuinely universal visual primitives that appear in any image-based task. Middle layers detect textures and object parts. Later layers encode ImageNet-specific concepts (dog breeds, car models). For a new task like medical image classification, the early and middle representations are immediately useful; the late representations need to be replaced.</p>
+<p>The same logic applies in NLP. BERT's early layers learn syntax and morphology; later layers learn task-specific semantics. Fine-tuning BERT for sentiment analysis can adapt the later layers while preserving early syntactic representations.</p>
+<h2>The four scenarios: what to do in each</h2>
+<p>Small dataset, similar domain: freeze all pretrained layers, train only the classification head. The features are directly applicable; retraining with limited data would overwrite them with noise. This is the most common case for industry fine-tuning (e.g., medical imaging on a pretrained ImageNet backbone).</p>
+<p>Small dataset, different domain: this is the hardest case. The pretrained features may not be relevant. Options: fine-tune only the last few layers (highest risk of overwriting useful early features), use stronger regularisation and a very low learning rate, or collect more data. There is no reliable recipe.</p>
+<p>Large dataset, similar domain: fine-tune the whole network with a low learning rate. The pretrained weights are a good initialisation; you have enough data to adapt all layers carefully.</p>
+<p>Large dataset, different domain: fine-tune from scratch, or from pretrained weights with standard learning rates throughout. The pretrained initialisation still helps convergence even if the domain is different.</p>
+<h2>Learning rate schedules for fine-tuning</h2>
+<p>A common mistake: applying a uniform learning rate to all layers. Later layers need larger updates (their features are less transferable); earlier layers need very small updates (overwriting general features causes regression). Discriminative fine-tuning (ULMFiT, Howard & Ruder, 2018) uses different learning rates for different layer groups — typically a 10× reduction per group from the output layer toward the input. The output layer gets η, the next group gets η/10, and so on.</p>
+<h2>Domain adaptation: when the distribution shifts</h2>
+<p>Fine-tuning assumes the target dataset is representative of the deployment distribution. When it is not — different demographics, different imaging equipment, different writing styles — standard fine-tuning overfits to the fine-tuning distribution. Domain adaptation methods (Domain-Adversarial Neural Networks, adversarial fine-tuning) explicitly learn representations that are invariant to domain, forcing the model to capture task-relevant features rather than distribution-specific artifacts.</p>
+<h2>LoRA: efficient fine-tuning of large models</h2>
+<p>Full fine-tuning of a large language model (billions of parameters) requires storing and updating all parameters — computationally expensive and memory-intensive. LoRA (Hu et al., 2022) freezes the pretrained weights and adds low-rank update matrices alongside the original weights: W' = W + ΔW = W + BA, where B ∈ R^{d×r} and A ∈ R^{r×k} with r << min(d,k). Only A and B are trained. With r=8, LoRA reduces trainable parameters by 10,000× for a 7B model while achieving near-full fine-tuning quality. It has become the standard method for adapting LLMs to new tasks or styles.</p>
+<h2>When transfer learning hurts: negative transfer</h2>
+<p>Transfer learning can degrade performance if the source and target tasks are negatively correlated — if the pretrained representations actively mislead the model on the target task. This is rare but documented: models pretrained on sentiment-charged text can hurt performance on emotionally neutral classification tasks. The signal is: fine-tuned model performs worse than training from scratch on the target data alone. If this happens, reduce the number of frozen layers or use a lower learning rate for the transferred portions.</p>
+<p><strong>Try on Colab:</strong> take ResNet-18 pretrained on ImageNet. Fine-tune it on a small medical image dataset (e.g., chest X-ray binary classification, 500 samples). Compare three regimes: (1) train only the final layer, (2) fine-tune the last two blocks + final layer, (3) fine-tune the whole network. Plot validation accuracy vs epoch for all three. Regime 1 should win on small data; regime 3 should overfit.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=transfer-learning-fine-tuning-what-actually-works#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

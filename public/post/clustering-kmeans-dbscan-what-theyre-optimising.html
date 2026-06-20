@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clustering: What k-Means Is Optimising and When DBSCAN Is Better — ML Systems Lab</title>
+  <meta name="description" content="k-means is taught as &quot;group similar points together.&quot; The algorithm is simple. What is less obvious is what objective it is optimising, why the solution depends on initialisation, why it fails on non-…" />
+  <meta name="keywords" content="Models &amp; Math, Clustering, k-Means, DBSCAN, GMM, Unsupervised Learning, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/clustering-kmeans-dbscan-what-theyre-optimising.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/clustering-kmeans-dbscan-what-theyre-optimising.html" />
+  <meta property="og:title" content="Clustering: What k-Means Is Optimising and When DBSCAN Is Better" />
+  <meta property="og:description" content="k-means is taught as &quot;group similar points together.&quot; The algorithm is simple. What is less obvious is what objective it is optimising, why the solution depends on initialisation, why it fails on non-…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Clustering: What k-Means Is Optimising and When DBSCAN Is Better" />
+  <meta name="twitter:description" content="k-means is taught as &quot;group similar points together.&quot; The algorithm is simple. What is less obvious is what objective it is optimising, why the solution depends on initialisation, why it fails on non-…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Clustering: What k-Means Is Optimising and When DBSCAN Is Better",
+  "description": "k-means is taught as \"group similar points together.\" The algorithm is simple. What is less obvious is what objective it is optimising, why the solution depends on initialisation, why it fails on non-…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/clustering-kmeans-dbscan-what-theyre-optimising.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Clustering, k-Means, DBSCAN, GMM, Unsupervised Learning"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=clustering-kmeans-dbscan-what-theyre-optimising#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Clustering: What k-Means Is Optimising and When DBSCAN Is Better</h1>
+    <p class="excerpt">k-means is taught as &quot;group similar points together.&quot; The algorithm is simple. What is less obvious is what objective it is optimising, why the solution depends on initialisation, why it fails on non-convex clusters, and why the number of clusters k is not just a hyperparameter — it is a modelling assumption. DBSCAN solves different problems entirely. Knowing which algorithm fits which data shape is the real skill.</p>
+    <p>Clustering is unsupervised — there is no ground truth to optimise against. This makes algorithm choice consequential: different algorithms impose different assumptions about what a "cluster" is. Using k-means on data with non-spherical clusters gives you an answer that looks confident but is wrong.</p>
+<h2>k-means: the objective function</h2>
+<p>k-means minimises the within-cluster sum of squared distances (WCSS): min_{C_1,...,C_k, μ_1,...,μ_k} Σ_{i=1}^{k} Σ_{x ∈ C_i} ||x - μ_i||^2. Each cluster C_i has centroid μ_i (the mean of its members). The algorithm iterates: assign each point to the nearest centroid, then update centroids to be the mean of their assigned points. This is guaranteed to converge (WCSS decreases monotonically) but to a local minimum, not the global one.</p>
+<p>The objective assumes clusters are spherical (Euclidean distance to centroid), similarly sized (equal variance in all directions), and separated by roughly equal distances between centroids. When data violates these assumptions, k-means will still produce k clusters — they just won't be the meaningful ones.</p>
+<h2>Initialisation: why k-means++ matters</h2>
+<p>Random initialisation of centroids leads to poor local minima frequently. k-means++ chooses initial centroids probabilistically: first centroid is chosen uniformly at random; each subsequent centroid is chosen with probability proportional to its squared distance from the nearest already-chosen centroid. This initialisation spreads centroids across the data space and consistently finds better solutions in fewer iterations. k-means++ is the default in scikit-learn and should always be used.</p>
+<h2>Choosing k: inertia, silhouette, and the elbow</h2>
+<p>WCSS decreases monotonically with k (k=n means every point is its own cluster, WCSS=0). The elbow method plots WCSS vs k and looks for an inflection point where marginal reduction diminishes. The silhouette score measures how similar each point is to its own cluster vs other clusters: s(i) = (b(i) - a(i)) / max(a(i), b(i)), where a(i) is average distance to same-cluster points and b(i) is average distance to nearest-cluster points. s ∈ [-1, 1]; higher is better. Plot silhouette score vs k — the peak often indicates the natural number of clusters.</p>
+<h2>DBSCAN: density-based clustering</h2>
+<p>DBSCAN (Ester et al., 1996) defines clusters as dense regions separated by sparse regions. Parameters: ε (neighbourhood radius), min_samples (minimum points in a neighbourhood for a point to be a core point). Core point: has ≥ min_samples neighbours within distance ε. Cluster: maximal set of mutually density-reachable core points (and their neighbourhood points).</p>
+<p>DBSCAN advantages: discovers clusters of arbitrary shape (not just spherical). Automatically determines the number of clusters. Identifies noise points (points not in any cluster — often interesting outliers). Does not require specifying k.</p>
+<p>When to use DBSCAN over k-means: data has non-convex shapes (crescents, rings, S-curves), you have noise/outliers to identify, you do not know k.</p>
+<h2>Gaussian Mixture Models: soft clustering with full covariance</h2>
+<p>GMM models data as drawn from K Gaussian distributions: P(x) = Σ_{k} π_k N(x; μ_k, Σ_k). Training via EM (Expectation-Maximisation): E-step computes posterior P(cluster k | x); M-step updates μ_k, Σ_k, π_k. Unlike k-means, GMM allows ellipsoidal clusters (full Σ_k) and gives soft assignments (probabilities rather than hard memberships). GMM generalises k-means: when all covariances are spherical and equal, GMM reduces to k-means. The Bayesian Information Criterion (BIC) or AIC provides a principled way to choose K in GMM.</p>
+<h2>Hierarchical clustering: no need to specify k upfront</h2>
+<p>Agglomerative hierarchical clustering starts with each point as its own cluster and iteratively merges the most similar pair. The result is a dendrogram — a tree of merges. Cutting the dendrogram at different heights gives different numbers of clusters. Linkage criteria (how distance between clusters is computed): single linkage (min distance, produces elongated "chaining" clusters), complete linkage (max distance, produces compact spherical clusters), Ward linkage (minimises WCSS increase per merge, similar to k-means).</p>
+<p><strong>Try on Colab:</strong> generate four datasets: (1) spherical clusters, (2) elongated ellipses, (3) concentric rings, (4) crescent shapes. Apply k-means, GMM, and DBSCAN to each. Visualise the cluster assignments. Only DBSCAN handles rings and crescents correctly. GMM handles ellipses correctly. k-means handles only spherical clusters. This exercise makes the assumption-shape-algorithm alignment concrete and memorable.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=clustering-kmeans-dbscan-what-theyre-optimising#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

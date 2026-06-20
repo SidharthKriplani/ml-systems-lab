@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Design a Recommendation System (The MLE Interview Framework) — ML Systems Lab</title>
+  <meta name="description" content="Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monit…" />
+  <meta name="keywords" content="System Design, Recommendations, Two-Tower, Interview Prep, Retrieval, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/rec-system-design-framework.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/rec-system-design-framework.html" />
+  <meta property="og:title" content="How to Design a Recommendation System (The MLE Interview Framework)" />
+  <meta property="og:description" content="Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monit…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="How to Design a Recommendation System (The MLE Interview Framework)" />
+  <meta name="twitter:description" content="Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monit…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Design a Recommendation System (The MLE Interview Framework)",
+  "description": "Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monit…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/rec-system-design-framework.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "System Design, Recommendations, Two-Tower, Interview Prep, Retrieval"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=rec-system-design-framework#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>How to Design a Recommendation System (The MLE Interview Framework)</h1>
+    <p class="excerpt">Every senior MLE interview at Spotify, Netflix, Meta, or Airbnb eventually lands on a recommendation system design question. The surface area is enormous: candidate generation, ranking, serving, monitoring, cold start, exploration. Here&#39;s the framework that works.</p>
+    <p>There are six components to any recommendation system design. Miss one and you\'ll look junior. Cover all six and you look like someone who has shipped this before.</p>
+<h2>1. Problem framing (5 minutes)</h2>
+<p>This is where most candidates lose points immediately. They jump to architecture before establishing what the system is optimising for. Ask:</p>
+<li>What is the target action? (play, purchase, watch, click, follow)</li>
+<li>What is the serving context? (homepage, search results, email, push notification)</li>
+<li>What are the latency constraints? (<100ms for real-time, <1s for near-real-time, minutes for batch)</li>
+<li>What is "good"? (engagement? revenue? diversity? user satisfaction?)</li>
+<p>These answers fundamentally change everything downstream.</p>
+<h2>2. Candidate generation (retrieval)</h2>
+<p>At scale (10M+ items), you cannot rank all items for every user. Retrieval narrows the candidate set to ~100–1000 items that are plausibly relevant.</p>
+<p>Methods: Collaborative filtering (matrix factorisation), content-based (item embeddings), two-tower model (user embedding + item embedding → ANN lookup), popularity + filters.</p>
+<p>Two-tower is the industry standard for large-scale retrieval. User tower: encodes user history, demographics, context. Item tower: encodes item metadata, engagement signals. Train with in-batch negatives. Serve by indexing item embeddings in FAISS or ScaNN.</p>
+<h2>3. Ranking</h2>
+<p>Given ~500 candidates, rank them. This is where you can afford more expensive models.</p>
+<p>Options: GBDT (XGBoost/LightGBM) for tabular features — interpretable, fast, doesn\'t need GPUs. Deep neural networks for feature interaction learning. LTR (Learning to Rank) if you have explicit relevance labels.</p>
+<p>Features for ranking: user-item interaction history, item quality signals (CTR, completion rate, rating), freshness, context (time of day, device, location), social signals (friend interactions).</p>
+<h2>4. Post-processing</h2>
+<p>Raw ranking scores are not what you serve. Apply:</p>
+<li>Business rules (filter out-of-stock, NSFW, legal restrictions)</li>
+<li>Diversity (maximum X% from same creator/category in top-20)</li>
+<li>Freshness boost (promote new items to combat popularity bias)</li>
+<li>Exploration injection (ε-greedy: 10% random items for data collection)</li>
+<h2>5. Serving infrastructure</h2>
+<p>Online serving: user embedding lookup from feature store → ANN retrieval → candidate features from feature store → ranker inference. Total budget: typically <100ms P99.</p>
+<p>Key latency sources: feature lookup (~5ms Redis P50), ANN retrieval (~10ms with FAISS), ranker inference (~20ms GPU batch). Sum to 35ms with headroom.</p>
+<h2>6. Monitoring</h2>
+<p>Engagement metrics (CTR, completion rate, time spent) — leading indicators. Satisfaction metrics (ratings, explicit feedback, return visits) — lagging but reliable. Diversity metrics (ILD, coverage, long-tail ratio) — prevents filter bubbles. Data quality: feature freshness, null rates, embedding staleness. Model performance: prediction score distribution drift, AUC on logged feedback.</p>
+<p>\`\`\`python import numpy as np</p>
+<p>class TwoTowerScorer: """Minimal two-tower scoring at inference time."""</p>
+<p>def __init__(self, user_tower, item_tower): self.user_tower = user_tower   # returns 128-dim embedding self.item_tower = item_tower   # returns 128-dim embedding</p>
+<p>def get_user_embedding(self, user_features: dict) -> np.ndarray: return self.user_tower.predict([user_features])[0]   # (128,)</p>
+<p>def score_candidates(self, user_emb: np.ndarray, item_ids: list) -> list[tuple]: """Dot-product scores for a candidate set. O(k * d).""" item_embs = self.item_tower.predict(item_ids)         # (k, 128) scores    = item_embs @ user_emb                       # (k,) ranked    = sorted(zip(item_ids, scores), key=lambda x: x[1], reverse=True) return ranked  # [(item_id, score), ...]</p>
+<p># Production note: item embeddings are pre-computed and stored in # an ANN index (HNSW/ScaNN). You never score the full catalog — # you retrieve top-1000 candidates, then rerank with a heavier model. \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=rec-system-design-framework#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

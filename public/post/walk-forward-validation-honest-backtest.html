@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest — ML Systems Lab</title>
+  <meta name="description" content="Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on a…" />
+  <meta name="keywords" content="Model Evaluation, Backtesting, Walk-Forward Validation, Time Series, Cross-Validation, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/walk-forward-validation-honest-backtest.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/walk-forward-validation-honest-backtest.html" />
+  <meta property="og:title" content="The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest" />
+  <meta property="og:description" content="Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on a…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest" />
+  <meta name="twitter:description" content="Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on a…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest",
+  "description": "Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on a…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/walk-forward-validation-honest-backtest.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, Backtesting, Walk-Forward Validation, Time Series, Cross-Validation"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=walk-forward-validation-honest-backtest#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>The Walk-Forward Validation Rule: Why Every Other Backtest Is Dishonest</h1>
+    <p class="excerpt">Your backtest shows 0.91 AUC. Your production model underperforms by 20 points. Nobody changed the pipeline. The problem is not the model — it is the backtest itself. A backtest that fits a model on all historical data and then scores it on historical windows is not forecasting. It is memorisation. Walk-forward validation is the only backtest that measures what you actually need to measure: whether a model trained up to time T can predict events after time T.</p>
+    <p>Most backtests are dishonest. Not because the engineer intended deception, but because the evaluation procedure answers a question different from the one that matters.</p>
+<p>The question you care about: "If I train my model on data up to today and deploy it, how well will it perform next month?"</p>
+<p>The question most backtests actually answer: "How well does a model trained on all available history describe patterns that are already in the history?"</p>
+<p>These are different questions. The first is about prediction. The second is about description. A model that scores 0.91 AUC describing historical patterns may score 0.72 AUC predicting future events — and you will not know until you deploy.</p>
+<h2>What the standard backtest gets wrong</h2>
+<p>A typical backtest procedure: (1) gather all historical data, (2) fit the model, (3) generate predictions on held-out rows sampled from across the history, (4) measure AUC.</p>
+<p>The problem: step 2 fits on the same time range that step 3 evaluates. Even with a held-out split, if the model is fit on data from 2022–2024 and evaluated on randomly sampled rows from 2022–2024, the model has already "seen" the periods it is evaluated on in the sense that it trained on surrounding events, the same distribution, and potentially the same users or items.</p>
+<p>For time series and any temporal prediction task, this is a dishonest evaluation. It conflates in-distribution performance (which tells you about model fit) with out-of-distribution prediction (which tells you about deployment risk).</p>
+<h2>Walk-forward validation: the honest backtest</h2>
+<p>Walk-forward validation (also called expanding window or rolling origin cross-validation) works as follows:</p>
+<p>1. Set an initial training end date: T0. 2. Train the model on all data with timestamp <= T0. 3. Generate predictions on events in [T0, T0 + H] where H is your forecast horizon. 4. Record performance. 5. Advance T0 by one period (one week, one month). Repeat from step 2.</p>
+<p>At each step, the model has never seen the evaluation window. The predictions are genuinely out-of-sample. The backtest directly simulates what will happen in production: a model trained up to date T is asked to predict events after T.</p>
+<h2>Why this is harder to implement and why it matters</h2>
+<p>Walk-forward validation is computationally expensive. You retrain the model at each step. For complex models with large datasets, this means 10–20 full training runs instead of one. Most teams skip it.</p>
+<p>The cost of skipping: you deploy with false confidence. You attribute production underperformance to drift when the true cause is that your backtest was measuring the wrong thing. You retrain on more data and get a similar result, because the new backtest is still dishonest.</p>
+<h2>The expanding vs rolling window choice</h2>
+<p>Expanding window: each training fold includes all data up to T0. The training set grows. This is appropriate when you believe the model benefits from more historical data and when older data is still representative.</p>
+<p>Rolling window: each training fold uses only the most recent N periods. Older data is dropped. This is appropriate when you believe recent data is more predictive than old data, or when the data generating process changes over time (structural breaks, seasonal regime changes).</p>
+<p>For most production ML use cases with stable data distributions: expanding window. For forecasting tasks with trend or seasonality changes: rolling window.</p>
+<h2>The performance gap diagnostic</h2>
+<p>Run both the standard backtest and a walk-forward validation on your current model. The gap between them tells you something specific:</p>
+<li>Standard backtest AUC 0.91, walk-forward AUC 0.88: small gap, the model generalises well to new time periods. Deploy with reasonable confidence.</li>
+<li>Standard backtest AUC 0.91, walk-forward AUC 0.74: large gap, the model is fitting to historical patterns that do not generalise. Your features may have temporal leakage, or the model is overfitting to historical signal that does not persist.</li>
+<h2>The rule: if you cannot describe your validation procedure as walk-forward, your backtest metrics are not production estimates. They are training diagnostics.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=walk-forward-validation-honest-backtest#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

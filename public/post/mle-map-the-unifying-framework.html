@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLE and MAP: The Unifying Framework Behind Every Model — ML Systems Lab</title>
+  <meta name="description" content="Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under diffe…" />
+  <meta name="keywords" content="Models &amp; Math, MLE, MAP, Regularisation, Bayesian, Loss Functions, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/mle-map-the-unifying-framework.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/mle-map-the-unifying-framework.html" />
+  <meta property="og:title" content="MLE and MAP: The Unifying Framework Behind Every Model" />
+  <meta property="og:description" content="Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under diffe…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MLE and MAP: The Unifying Framework Behind Every Model" />
+  <meta name="twitter:description" content="Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under diffe…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "MLE and MAP: The Unifying Framework Behind Every Model",
+  "description": "Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under diffe…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/mle-map-the-unifying-framework.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, MLE, MAP, Regularisation, Bayesian, Loss Functions, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=mle-map-the-unifying-framework#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>MLE and MAP: The Unifying Framework Behind Every Model</h1>
+    <p class="excerpt">Linear regression, logistic regression, Naive Bayes, neural networks, and HMMs all look like different algorithms. They are not. They are all special cases of maximum likelihood estimation under different distributional assumptions about the data. MAP estimation adds a prior, which turns out to be exactly equivalent to L1 or L2 regularisation. This post shows the connections.</p>
+    <p>Maximum Likelihood Estimation (MLE) is the single most important idea in classical statistics and machine learning. Understanding it means understanding why we use the loss functions we use — not just as convention but as mathematical necessity given our modelling assumptions.</p>
+<h2>The MLE principle</h2>
+<p>Given: a family of distributions P(data | θ) parameterised by θ, and observed data D = {x₁, ..., xₙ}. MLE finds the parameters that make the observed data most probable: θ_MLE = argmax_θ P(D | θ). Assuming i.i.d. data: P(D | θ) = Πᵢ P(xᵢ | θ). Since log is monotone, maximising the product is equivalent to maximising the sum of log-probabilities: θ_MLE = argmax_θ Σᵢ log P(xᵢ | θ). This is the log-likelihood. Maximising it is equivalent to minimising the negative log-likelihood (NLL), which is the loss function.</p>
+<h2>Linear regression as MLE under Gaussian noise</h2>
+<p>Model: y = wᵀx + ε where ε ~ N(0, σ²). Therefore: P(y | x, w) = N(y; wᵀx, σ²). Log-likelihood: Σᵢ log P(yᵢ | xᵢ, w) = -n/2 log(2πσ²) - (1/2σ²) Σᵢ (yᵢ - wᵀxᵢ)². Maximising this over w is equivalent to minimising Σᵢ (yᵢ - wᵀxᵢ)² — mean squared error. MSE is not an arbitrary loss function. It is the MLE loss under the assumption that noise is Gaussian. Change the noise assumption and you get a different loss.</p>
+<h2>Logistic regression as MLE under Bernoulli</h2>
+<p>Model: P(y=1|x,w) = σ(wᵀx) = 1/(1+e^(-wᵀx)). Therefore: P(y|x,w) = σ(wᵀx)^y (1-σ(wᵀx))^(1-y). Log-likelihood: Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Negated: binary cross-entropy loss. Logistic regression minimises cross-entropy because the label distribution is Bernoulli, not Gaussian. Choosing cross-entropy for binary classification is not a design choice — it is the correct MLE derivation.</p>
+<h2>L2 regression as MLE under Laplace noise</h2>
+<p>If ε ~ Laplace(0, b), then P(y|x,w) = (1/2b) exp(-|y - wᵀx|/b). Log-likelihood: -Σᵢ |yᵢ - wᵀxᵢ|/b - const. Maximising this minimises mean absolute error (MAE). MAE is the MLE loss under Laplace noise. Laplace distribution has heavier tails than Gaussian — it is more robust to outliers. When you choose MAE over MSE, you are implicitly assuming your residuals have heavier tails.</p>
+<h2>MAP estimation: adding a prior</h2>
+<p>MAP (Maximum A Posteriori) finds the mode of the posterior: θ_MAP = argmax_θ P(θ | D) = argmax_θ [log P(D | θ) + log P(θ)]. The log prior log P(θ) acts as a regulariser. Gaussian prior on weights P(w) = N(0, λI): log P(w) = -(λ/2) ||w||². Adding this to the log-likelihood: θ_MAP = argmin_θ [NLL + (λ/2) ||w||²]. This is L2 regularisation (ridge regression). Gaussian prior = L2 regularisation — they are mathematically identical. Laplace prior on weights P(w) = Laplace(0, 1/λ): log P(w) = -λ ||w||₁. Adding this: θ_MAP = argmin_θ [NLL + λ||w||₁]. This is L1 regularisation (Lasso). Laplace prior = L1 regularisation. The sparsity-inducing property of Lasso falls out naturally: the Laplace prior has a spike at zero, placing high prior probability on sparse weights.</p>
+<h2>Naive Bayes as generative MLE</h2>
+<p>Naive Bayes is a generative classifier: model P(X, Y) = P(Y) P(X|Y), then classify using P(Y|X) ∝ P(Y) P(X|Y). Under the conditional independence assumption: P(X|Y) = Πⱼ P(Xⱼ|Y). MLE for each component: P(Y=c) = count(Y=c)/n. P(Xⱼ=v|Y=c) = count(Xⱼ=v, Y=c)/count(Y=c). At test time: ŷ = argmax_c P(Y=c) Πⱼ P(Xⱼ|Y=c). Naive Bayes is MLE of a factored generative model. Adding a Dirichlet prior to the class-conditional distributions gives MAP estimation — this is Laplace smoothing.</p>
+<h2>The bias-variance-noise decomposition via MLE</h2>
+<p>MLE minimises the KL divergence between the empirical data distribution and the model family: KL(P_data || P_θ). Minimising KL(P_data || P_θ) = H(P_data, P_θ) - H(P_data) = H(P_data, P_θ) + const. So MLE = cross-entropy minimisation = NLL minimisation. The expected MSE of a model decomposes as: E[(y-f(x))²] = Bias² + Variance + σ²_noise. MLE is the unique estimator that is consistent (converges to the truth as n→∞) and asymptotically efficient (achieves the Cramér-Rao lower bound on variance). This makes it the theoretically justified default.</p>
+<h2>Interview questions on this topic</h2>
+<p>"What is the difference between MLE and MAP? When would you use each?" — MLE maximises likelihood alone; MAP adds a prior. MAP = MLE with regularisation. Use MLE with large data (the prior is dominated). Use MAP when data is limited and you have reliable prior knowledge. With an uninformative (uniform) prior, MAP = MLE.</p>
+<p>"Linear regression uses MSE. Why not cross-entropy?" — MSE is the correct MLE loss when errors are Gaussian. Cross-entropy is the correct MLE loss for Bernoulli/Categorical outcomes. Using cross-entropy for regression (continuous targets) would be wrong unless you model the output as a categorical distribution over bins.</p>
+<p>"What prior distribution corresponds to L1 regularisation? What does it imply about the solution?" — Laplace prior. The Laplace distribution has a sharp peak at zero, placing large prior probability on zero weights. The resulting MAP solution is sparse — many weights are exactly zero. This is why Lasso does feature selection and Ridge does not.</p>
+<p>"How does Naive Bayes perform text classification? What are its failure modes?" — MLE of P(word|class) from word counts, then Bayes rule to classify. Failure modes: rare words (estimated probability = 0 → need smoothing), strong feature correlations violating the independence assumption, and poor probability calibration (though classification accuracy can still be high).</p>
+<p><strong>Try on Colab:</strong> implement MLE from scratch for a Gaussian mixture model using scipy.optimize.minimize on the negative log-likelihood. Fix the number of components K=3. Fit to 1000 samples from a known 3-component mixture and recover the means, standard deviations, and mixing proportions. Compare with sklearn.mixture.GaussianMixture (which uses EM). Why does scipy.optimize sometimes get stuck?</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=mle-map-the-unifying-framework#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

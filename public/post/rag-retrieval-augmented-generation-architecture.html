@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAG: Retrieval-Augmented Generation from Architecture to Production — ML Systems Lab</title>
+  <meta name="description" content="LLMs hallucinate when they do not know the answer. RAG fixes this by retrieving relevant documents at inference time and conditioning the LLM&#39;s generation on them. The architecture is: encode the quer…" />
+  <meta name="keywords" content="ML System Design, RAG, LLM, Vector Search, Information Retrieval, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/rag-retrieval-augmented-generation-architecture.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/rag-retrieval-augmented-generation-architecture.html" />
+  <meta property="og:title" content="RAG: Retrieval-Augmented Generation from Architecture to Production" />
+  <meta property="og:description" content="LLMs hallucinate when they do not know the answer. RAG fixes this by retrieving relevant documents at inference time and conditioning the LLM&#39;s generation on them. The architecture is: encode the quer…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="RAG: Retrieval-Augmented Generation from Architecture to Production" />
+  <meta name="twitter:description" content="LLMs hallucinate when they do not know the answer. RAG fixes this by retrieving relevant documents at inference time and conditioning the LLM&#39;s generation on them. The architecture is: encode the quer…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "RAG: Retrieval-Augmented Generation from Architecture to Production",
+  "description": "LLMs hallucinate when they do not know the answer. RAG fixes this by retrieving relevant documents at inference time and conditioning the LLM's generation on them. The architecture is: encode the quer…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/rag-retrieval-augmented-generation-architecture.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, RAG, LLM, Vector Search, Information Retrieval, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=rag-retrieval-augmented-generation-architecture#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>RAG: Retrieval-Augmented Generation from Architecture to Production</h1>
+    <p class="excerpt">LLMs hallucinate when they do not know the answer. RAG fixes this by retrieving relevant documents at inference time and conditioning the LLM&#39;s generation on them. The architecture is: encode the query, retrieve from a vector store, prepend retrieved chunks to the prompt, generate. Simple in principle; full of engineering decisions in production. This is the full system: chunking, embedding, retrieval, re-ranking, and generation.</p>
+    <p>Large language models have a fundamental limitation: their knowledge is frozen at training time. They cannot answer questions about events after their training cutoff, cannot access proprietary internal documents, and hallucinate when asked about facts they are uncertain about. Retrieval-Augmented Generation (RAG, Lewis et al., 2020) addresses this by augmenting the LLM with a retrieval system that fetches relevant documents at inference time.</p>
+<h2>The basic RAG pipeline</h2>
+<p>Query → encode query → retrieve top-k chunks → prepend chunks to prompt → LLM generates answer conditioned on chunks. The retrieval component is a semantic search system (see Posts 70 and 79). The generation component is any capable LLM. The simplest RAG implementation is a few hundred lines of code using LangChain or LlamaIndex. Production RAG has a dozen more engineering decisions.</p>
+<h2>Chunking: the overlooked critical step</h2>
+<p>Documents must be split into chunks before embedding. Chunk size determines what the retrieval system can find and what fits in the LLM context. Too small (< 100 words): chunks lack enough context for the LLM to generate coherent answers. Too large (> 1000 words): embedding a long chunk averages its meaning, retrieving less precisely. Standard: 200-500 word chunks with 50-100 word overlap between adjacent chunks (sliding window) so that answers spanning chunk boundaries are not lost.</p>
+<p>Semantic chunking: split on natural semantic boundaries (paragraph breaks, section headers, sentence boundaries) rather than fixed token counts. Hierarchical chunking: embed both small chunks (for precise retrieval) and large parent chunks (for full-context generation); retrieve small, generate from large.</p>
+<h2>Embedding model choice</h2>
+<p>The quality of retrieval depends entirely on the embedding model mapping both queries and document chunks into a shared semantic space. Bi-encoder models (sentence-transformers, OpenAI embeddings, Cohere embeddings) encode queries and documents independently. Quality varies significantly: MTEB benchmark measures retrieval quality across 56 datasets. For domain-specific retrieval (medical, legal, code), fine-tune a general embedding model on in-domain (query, relevant document) pairs.</p>
+<h2>Vector stores: storing and querying embeddings at scale</h2>
+<p>Chunk embeddings are stored in a vector store with ANN (approximate nearest neighbour) indexing. Open-source options: FAISS (Facebook, in-memory, fastest), Chroma (simple, good for development), Weaviate, Qdrant (production-grade with persistence and filtering). Managed options: Pinecone, Weaviate Cloud. Key capabilities: metadata filtering (retrieve only documents from the last 30 days, or only from a specific department), hybrid search (combine dense vector retrieval with keyword BM25 filtering), real-time upsert (update embeddings when source documents change).</p>
+<h2>Re-ranking: the quality multiplier</h2>
+<p>Initial vector retrieval (top-k = 50-100) is fast but imprecise. A re-ranking step scores each retrieved chunk against the query more carefully. Cross-encoder re-rankers (e.g., Cohere Rerank, BGE Reranker) take the concatenated (query, chunk) pair and produce a relevance score — much more accurate than the cosine similarity of independently encoded vectors. Re-rank the top-50 retrieved chunks with a cross-encoder, then pass the top-5 to the LLM.</p>
+<h2>The generation step: prompting the LLM</h2>
+<p>Prompt structure: system message (defines the assistant's role and rules, e.g., "You are a helpful assistant. Answer only based on the provided context. If the answer is not in the context, say 'I don't know.'"), context (retrieved chunks, clearly demarcated), user query. The context injection location matters — LLMs attend more strongly to context at the beginning and end of the prompt than in the middle (the "lost in the middle" problem). Place the most relevant chunks at the beginning or end.</p>
+<h2>Failure modes in production RAG</h2>
+<p>Retrieval failure: the relevant document is not retrieved. Cause: wrong embedding model, wrong chunk size, query not matching document vocabulary. Fix: hybrid retrieval (BM25 + dense), query rewriting. Context overflow: retrieved chunks exceed the LLM context window. Fix: hierarchical summarisation, reduce top-k. Hallucination despite retrieval: the LLM ignores the retrieved context. Fix: stronger system prompt, use an instruction-tuned model, implement citation checking. Stale knowledge: documents updated but embeddings not refreshed. Fix: document change detection pipeline with incremental re-embedding.</p>
+<p><strong>Try on Colab:</strong> build a RAG system over a set of Wikipedia articles (50 articles on a consistent topic). Use sentence-transformers for embeddings, FAISS for the vector store, and GPT-3.5 or Claude Haiku for generation. Ask factoid questions. Compare: (1) LLM without retrieval (baseline, observe hallucination), (2) LLM with top-3 chunk retrieval, (3) LLM with top-50 retrieval + cross-encoder re-ranking. Measure answer accuracy. Add citation (require the LLM to cite the specific chunk) and measure citation accuracy.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=rag-retrieval-augmented-generation-architecture#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work — ML Systems Lab</title>
+  <meta name="description" content="Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of…" />
+  <meta name="keywords" content="Models &amp; Math, Generalisation, VC Dimension, Double Descent, PAC Learning, Bias-Variance, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/generalisation-theory-vc-dimension-double-descent.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/generalisation-theory-vc-dimension-double-descent.html" />
+  <meta property="og:title" content="Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work" />
+  <meta property="og:description" content="Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work" />
+  <meta name="twitter:description" content="Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work",
+  "description": "Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/generalisation-theory-vc-dimension-double-descent.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Generalisation, VC Dimension, Double Descent, PAC Learning, Bias-Variance, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=generalisation-theory-vc-dimension-double-descent#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Generalisation Theory: VC Dimension, Double Descent, and Why Overparameterised Models Work</h1>
+    <p class="excerpt">Classical learning theory says that models should not be too complex relative to the dataset size — the more parameters, the more overfitting. Modern deep learning violates this: GPT-4 has hundreds of billions of parameters trained on trillions of tokens and generalises remarkably. The double descent phenomenon and implicit regularisation of SGD explain why the classical theory is incomplete.</p>
+    <p>Classical learning theory, developed from the 1960s through 1990s, gave us tools to reason about when a model will generalise from training data to new data. These tools are essential for understanding the foundations. But they fail to explain deep learning. The double descent phenomenon (2019) provided the missing piece, and the story is still being written.</p>
+<h2>Empirical risk vs population risk</h2>
+<p>The training loss (empirical risk) measures how well the model fits the training data: R̂(f) = (1/n) Σᵢ L(f(xᵢ), yᵢ). The test loss (population risk) measures how well the model generalises: R(f) = E_{(x,y)~P}[L(f(x), y)]. Generalisation gap = R(f) - R̂(f). We want this to be small. Empirical risk minimisation (ERM): pick the function in your hypothesis class H that minimises R̂. If H is too large (too expressive), ERM can find a function with R̂ = 0 (perfect training fit) but large R (poor generalisation). If H is too small, ERM cannot fit the training data well — high bias.</p>
+<h2>VC dimension: measuring hypothesis class complexity</h2>
+<p>The VC (Vapnik-Chervonenkis) dimension of a hypothesis class H is the largest number of points that H can shatter — label in all 2^n possible ways. Binary linear classifiers in ℝᵈ: VC dimension = d + 1. You can always find d+1 points that can be labelled in all ways by a hyperplane, but never d+2. VC dimension of a single neuron with step activation: d + 1. VC dimension of a neural network with W weights: O(W log W). The fundamental theorem of statistical learning (PAC learning): with probability 1-δ, the generalisation gap satisfies: R(f) - R̂(f) ≤ O(√((VC(H) log n + log(1/δ)) / n)). This bound says: generalisation improves with more data (1/n), worse with more complex models (VC(H)). The bound is pessimistic for deep learning — it predicts catastrophic overfitting for networks with millions of parameters but this does not happen in practice.</p>
+<h2>The classical bias-variance-noise decomposition</h2>
+<p>For squared loss: E[(y - f(x))²] = Bias(f)² + Var(f) + σ²_noise. Bias²: how far the average prediction is from the true function. Variance: how much the prediction changes across different training sets. Noise: irreducible error from the data generation process. Classical picture: as model complexity increases, bias decreases and variance increases. The optimal complexity balances them — the U-shaped test error curve. This picture is correct for classical models (polynomial regression, k-NN). It fails for overparameterised models.</p>
+<h2>Double descent</h2>
+<p>Belkin et al. (2019) and Nakkiran et al. (2019) demonstrated double descent: as model complexity or training time increases, the test error follows a double-U shape: (1) Classical U: bias dominates at low complexity, variance dominates at high complexity, optimal point in the middle. (2) At the interpolation threshold (model can exactly fit the training data, zero training loss), test error peaks. (3) For overparameterised models (beyond the interpolation threshold), test error decreases again as you add more parameters and often reaches lower than the classical optimum. Why? Among all interpolating solutions (zero training loss), gradient descent finds the minimum-norm solution — effectively implicit L2 regularisation. With more parameters, the interpolating function can be smoother — it generalises better even at zero training loss.</p>
+<h2>Implicit regularisation of gradient descent</h2>
+<p>Gradient descent on overparameterised linear models converges to the minimum-norm interpolating solution (the pseudoinverse solution). For neural networks, SGD implicitly biases toward solutions that generalise well — flat minima, low-norm weight matrices, sparse solutions. This implicit regularisation is not fully understood but is the reason that modern deep learning can interpolate training data and still generalise.</p>
+<h2>Early stopping as L2 regularisation</h2>
+<p>In gradient flow (continuous-time gradient descent) on a quadratic loss, the solution after t steps satisfies: w(t) = w* - (w* - w₀) exp(-H t), where H is the Hessian and w* is the global minimum. For the direction of eigenvalue λ: w_λ(t) = w*_λ (1 - exp(-λt)). Large eigenvalue (well-conditioned direction): converges fast. Small eigenvalue (ill-conditioned direction): converges slowly. Early stopping at time T suppresses directions with λ ≪ 1/T — exactly what L2 regularisation with λ ∝ 1/T does. Early stopping = L2 regularisation from the lens of gradient flow.</p>
+<h2>Occam&#39;s razor and MDL</h2>
+<p>Minimum Description Length (MDL) principle: the best model is the one that most compresses the data. A model that memorises all training points requires describing all training labels; a model that captures the true pattern only requires describing the pattern parameters. This connects to Bayesian model selection: a simpler model with a tighter prior assigns higher marginal likelihood to data that matches the pattern, even if the more complex model fits equally well. Both MDL and Bayesian model selection prefer simpler generalisations.</p>
+<h2>Interview questions on this topic</h2>
+<p>"What is the VC dimension of a linear classifier in 2D? What does it mean?" — VC dimension = 3 (d+1 = 2+1). This means 3 points can always be shattered (labelled in all 2³ = 8 ways by a line) but no set of 4 points can be. It bounds the generalisation gap: with n training points, the gap shrinks as roughly √(3 log n / n). A more complex classifier (larger VC dimension) has a larger gap bound for the same n.</p>
+<p>"Explain the double descent phenomenon. Why does adding more parameters sometimes improve generalisation?" — Classical wisdom says more parameters = more overfitting. But past the interpolation threshold, there are many solutions with zero training loss. Gradient descent finds the minimum-norm one. With more parameters, the minimum-norm interpolating solution can be smoother and better generalises. Essentially, overparameterisation enables implicit regularisation.</p>
+<p>"Why does early stopping prevent overfitting? Is it equivalent to regularisation?" — Early stopping halts training before the model has time to fit the noise in the training data. In gradient flow, the equivalent L2 regularisation parameter is λ ≈ 1/(α T). Directions in the parameter space corresponding to small Hessian eigenvalues (noise directions) converge slowly and are effectively suppressed. So yes, early stopping is approximately L2 regularisation with an implicit λ.</p>
+<p>"What does it mean for a model to 'generalise'? Is low test loss sufficient?" — Generalisation means the model's performance on new, unseen data from the same distribution matches its training performance. Low test loss on an IID test set is the standard measure. But distribution shift (train and test come from different distributions) breaks this — a model can have low IID test loss and poor real-world generalisation. Robustness to distribution shift, calibration, and worst-case group performance are additional generalisation criteria beyond average test loss.</p>
+<p><strong>Try on Colab:</strong> demonstrate double descent on the MNIST dataset. Train a two-layer neural network with increasing hidden layer width (10, 50, 100, 500, 1000, 5000 neurons). Plot training loss and test loss vs the number of parameters. Identify the interpolation threshold. Show that test loss first rises (classical regime) and then falls again (overparameterised regime) as width increases.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=generalisation-theory-vc-dimension-double-descent#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

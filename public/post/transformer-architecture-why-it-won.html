@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Transformer Architecture: Why It Beat Everything — ML Systems Lab</title>
+  <meta name="description" content="&quot;Attention is All You Need&quot; replaced recurrent networks with a parallelizable architecture that scales. But the paper&#39;s real contribution is not attention — it is the combination of multi-head attenti…" />
+  <meta name="keywords" content="Deep Learning, Transformer, Architecture, NLP, Attention, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/transformer-architecture-why-it-won.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/transformer-architecture-why-it-won.html" />
+  <meta property="og:title" content="The Transformer Architecture: Why It Beat Everything" />
+  <meta property="og:description" content="&quot;Attention is All You Need&quot; replaced recurrent networks with a parallelizable architecture that scales. But the paper&#39;s real contribution is not attention — it is the combination of multi-head attenti…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Transformer Architecture: Why It Beat Everything" />
+  <meta name="twitter:description" content="&quot;Attention is All You Need&quot; replaced recurrent networks with a parallelizable architecture that scales. But the paper&#39;s real contribution is not attention — it is the combination of multi-head attenti…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Transformer Architecture: Why It Beat Everything",
+  "description": "\"Attention is All You Need\" replaced recurrent networks with a parallelizable architecture that scales. But the paper's real contribution is not attention — it is the combination of multi-head attenti…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/transformer-architecture-why-it-won.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Transformer, Architecture, NLP, Attention, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=transformer-architecture-why-it-won#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>The Transformer Architecture: Why It Beat Everything</h1>
+    <p class="excerpt">&quot;Attention is All You Need&quot; replaced recurrent networks with a parallelizable architecture that scales. But the paper&#39;s real contribution is not attention — it is the combination of multi-head attention, residual connections, layer normalisation, and feedforward networks into a block that stacks reliably to any depth. This is what each component contributes and why removing any one breaks the whole.</p>
+    <p>The Transformer paper (Vaswani et al., 2017) introduced an architecture with no recurrence, no convolution, and no sequential computation dependencies. It processes entire sequences in parallel and scales with compute in a way RNNs could not. Understanding why requires understanding what each component contributes.</p>
+<h2>The encoder block: four components, each load-bearing</h2>
+<p>A single Transformer encoder block has four components in sequence: multi-head self-attention, a residual connection with layer normalisation, a position-wise feedforward network, and another residual connection with layer normalisation.</p>
+<p>Multi-head self-attention (see Post 54) allows every position to aggregate information from all other positions. It handles the relationship modeling. The feedforward network (two linear layers with a ReLU or GELU between them) applies the same transformation to each position independently. It handles the representation transformation — taking the attended-to information and projecting it into a richer feature space. Removing either one degrades the model. The attention layers alone are good at routing information; the FFN layers are good at transforming it. Both are necessary.</p>
+<h2>Residual connections: why depth is possible</h2>
+<p>Every sub-layer output is added to its input: output = LayerNorm(x + Sublayer(x)). This is the same residual connection from ResNet (see Post 52), applied to sequences. The gradient flows directly back through the addition, bypassing the sub-layer. A 12-layer Transformer is stable to train precisely because each layer can contribute incrementally rather than needing to carry the full representational burden.</p>
+<h2>Layer Normalisation: why not Batch Norm?</h2>
+<p>Batch Normalisation normalises over the batch dimension. For language models, sequences have variable length, batch sizes are small at inference time (often 1), and the token-level statistics are not as stable as spatial statistics in images. Layer Normalisation normalises over the feature dimension instead — it is computed independently for each token, independently for each example. It works for any batch size and any sequence length, which is why it became the standard for sequence models.</p>
+<h2>Positional encoding: injecting order without recurrence</h2>
+<p>Self-attention is permutation-equivariant: shuffling the input tokens shuffles the output in the same way. The model has no inherent sense of position. Positional encodings fix this by adding a position-dependent signal to each token embedding before attention. The original Transformer used sine and cosine functions at different frequencies: PE(pos, 2i) = sin(pos / 10000^(2i/d)), PE(pos, 2i+1) = cos(pos / 10000^(2i/d)). These functions produce unique encodings for every position, vary smoothly, and allow the model to attend to relative positions via linear combinations. Later models replaced fixed sinusoidal encodings with learned positional embeddings (BERT, GPT) or relative position encodings (RoPE, ALiBi).</p>
+<h2>The decoder: masked attention and cross-attention</h2>
+<p>In sequence-to-sequence tasks (translation, summarisation), the decoder generates tokens one at a time but is trained with teacher forcing — the correct output sequence is fed in, and the decoder learns to predict the next token. Masked self-attention prevents position i from attending to positions j > i, enforcing causality during training. Cross-attention lets each decoder position attend to all encoder positions, enabling the decoder to extract relevant source information for each target token it generates.</p>
+<h2>Why it beat RNNs</h2>
+<p>RNNs process sequences step by step. The hidden state at step t depends on step t-1, which depends on t-2, and so on. This serialises computation — you cannot parallelise across time steps. Training a 1000-step sequence requires 1000 sequential matrix multiplications before gradients flow back to step 1. Long-range dependencies degrade because gradients must survive this long chain (LSTMs help but do not eliminate the problem).</p>
+<p>Transformers process all positions simultaneously. The maximum path length between any two positions is 1 (direct attention). Long-range dependencies are as easy to learn as short-range ones. The full sequence computation is a matrix multiply — parallelisable on GPU. Training a 1000-token sequence takes the same number of sequential steps as training a 10-token sequence.</p>
+<p>The trade-off: O(n^2) memory for the attention matrix vs O(n) for RNN hidden states. For the sequence lengths common in NLP (up to a few thousand tokens), the parallelism benefit far outweighs the quadratic memory cost.</p>
+<p><strong>Try on Colab:</strong> implement a minimal Transformer encoder from scratch — multi-head attention, feedforward, residual + layer norm — and train it on a character-level language modelling task (tiny Shakespeare). Compare training curves and final loss against a vanilla RNN on the same task.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=transformer-architecture-why-it-won#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

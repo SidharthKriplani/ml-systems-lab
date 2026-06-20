@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swiggy Senior Data Scientist / ML Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Swiggy&#39;s senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge,…" />
+  <meta name="keywords" content="Interview Prep, Swiggy, Senior Data Scientist, A/B Testing, Logistics ML, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/swiggy-senior-data-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/swiggy-senior-data-scientist-interview-guide.html" />
+  <meta property="og:title" content="Swiggy Senior Data Scientist / ML Interview Guide" />
+  <meta property="og:description" content="Swiggy&#39;s senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge,…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Swiggy Senior Data Scientist / ML Interview Guide" />
+  <meta name="twitter:description" content="Swiggy&#39;s senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge,…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Swiggy Senior Data Scientist / ML Interview Guide",
+  "description": "Swiggy's senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge,…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/swiggy-senior-data-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Swiggy, Senior Data Scientist, A/B Testing, Logistics ML, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=swiggy-senior-data-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Swiggy Senior Data Scientist / ML Interview Guide</h1>
+    <p class="excerpt">Swiggy&#39;s senior DS / ML interviews cluster around three problem domains: logistics ML (delivery time prediction, route optimisation), recommendation (homepage, restaurant ranking), and pricing (surge, promotions). The loop is shorter than Flipkart and more case-heavy than Razorpay. This guide unpacks the structure and the MLE Path mapping.</p>
+    <p>Swiggy's senior DS / ML interview is calibrated around three distinct problem domains: logistics ML (delivery time estimation, dispatch optimisation, courier supply forecasting), recommendation (restaurant ranking, homepage personalisation), and pricing (surge pricing, promotion targeting). Candidates are often pre-routed to a specific team, and the loop adapts to the team's domain.</p>
+<p>The loop is shorter than Flipkart's (4-5 rounds vs 5-6) and more case-heavy than Razorpay's (live problem-solving in 2 of the 4-5 rounds).</p>
+<h2>The loop structure (Senior DS / ML, L5)</h2>
+<p>Standard loop: recruiter call → ML + statistics fundamentals → ML system design + case → A/B testing + experimentation case → behavioural + hiring manager.</p>
+<p>Swiggy distinguishes itself with the A/B testing round. Most ML candidates underestimate this round; it's specifically calibrated to test experimentation judgment which is core to Swiggy's product culture.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter call.</strong> Standard.</p>
+<p><strong>Round 2 — ML + statistics fundamentals.</strong> 60 minutes. Bias-variance, regularisation, evaluation, A/B testing basics, common statistical tests. Swiggy probes statistical rigor more heavily than other unicorns — expect questions on power analysis, sample size calculation, confidence intervals.</p>
+<p><strong>Round 3 — ML system design + case.</strong> 75 minutes. Two parts. First 30 min: design a delivery time estimation model end-to-end. Second 45 min: a case study around the design — "your delivery ETA model is off by 4 minutes on average. Walk through your diagnosis." The case round specifically tests production diagnostic judgment.</p>
+<p><strong>Round 4 — A/B testing + experimentation case.</strong> 60 minutes. "We launched a new ranking model. It shows +2% CTR but -1.5% order completion rate. Do we ship?" Followed by deep probing on: how do you decompose the metric movement, when is the result statistically significant, what guard-rail metrics matter, what causes a metric change without a treatment effect, what are SUTVA violations, how do you handle ranking experiments with marketplace effects.</p>
+<p><strong>Round 5 — Behavioural + hiring manager.</strong> 45 minutes. Team fit, project ownership, leadership stories.</p>
+<h2>What Swiggy weights distinctively</h2>
+<p>Three things:</p>
+<p>1. <strong>Statistical rigor.</strong> Swiggy interviewers grade more heavily on power analysis, confidence interval interpretation, and multiple-testing corrections than most Indian unicorn loops. The product culture is experimentation-first. 2. <strong>Marketplace dynamics.</strong> Swiggy is a two-sided marketplace (customers + restaurants + delivery partners). Senior candidates are expected to articulate how ML decisions on one side affect the others. Recommending restaurants affects supply-side ordering; surge pricing affects partner availability. 3. <strong>Logistics ML specifically.</strong> Time-series forecasting, real-time dispatch, supply-demand prediction. The MLE Path Tier 6 (Sequence & Specialised) maps directly to this.</p>
+<h2>Top 10 questions Swiggy senior DS / ML candidates face</h2>
+<p>1. "Design Swiggy's delivery ETA model. What features, what target, what loss function?" 2. "Your ETA model is off by 4 minutes on average. Three hypotheses in order." 3. "A new ranking model shows +2% CTR but -1.5% order completion. Do we ship?" 4. "How do you A/B test a ranking model when one user can see different rankings within a session?" 5. "Design surge pricing for the dinner rush. What signals drive the multiplier, what guards against gaming?" 6. "Walk me through the most impactful experiment you've designed and run." 7. "How do you handle the marketplace-spillover effect when running an experiment on a recommendation model?" 8. "Sample size calculation for an A/B test where the expected lift is 1%. Walk through it." 9. "Your model predicts 8 minutes; the actual is 16 minutes. The customer cancels. What do you fix — model, threshold, or product surface?" 10. "Eleven types of leakage. Which apply to delivery time estimation specifically?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a Swiggy senior DS / ML loop:</p>
+<li>Tier 1 (Statistics & Estimation) — all 4 posts, particularly Post 113 (Hypothesis Testing). Swiggy probes this deeper than other unicorns.</li>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 42 (Offline ≠ Online) and Post 131 (Error Analysis).</li>
+<li>Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) is the core of the ETA design round.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design).</li>
+<li>For experimentation depth, cross-link to PAL (the Product Analytics Lab) — Swiggy's experimentation rounds map closely to PAL's curriculum.</li>
+<p>For practice: CausalInferenceTab (experiment design + SUTVA), MLCodingTab, Mock Interview with a Swiggy JD pasted.</p>
+<h2>Common failure modes</h2>
+<li>Underestimating the A/B testing round. Candidates who treat it as fundamentals get downgraded.</li>
+<li>Treating delivery ETA as a generic regression problem (it's time-ordered, marketplace-affected, and has segment-specific failure modes).</li>
+<li>Inability to articulate marketplace spillover when discussing experiments.</li>
+<li>Pitching deep learning for problems where simpler statistical models are the production standard (Swiggy's ETA model is gradient-boosted).</li>
+<h2>Compensation</h2>
+<p>Swiggy Senior DS / ML in 2026 ranges roughly ₹40 lakh – ₹70 lakh for 5-7 YOE. Staff scales to ₹85 lakh+. AmbitionBox and Glassdoor have public ranges.</p>
+<h2>Final note</h2>
+<p>Swiggy's loop tests for statistical rigor + marketplace judgment + logistics ML. The MSL Path Tiers 1, 5, 6, plus a cross-link to PAL, is the prep map.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=swiggy-senior-data-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ads CTR Prediction: The Full System Behind Every Ad You See — ML Systems Lab</title>
+  <meta name="description" content="Ads CTR prediction is one of the highest-impact ML systems ever built — it generates the majority of revenue for Google, Meta, and ByteDance. The model must score billions of (ad, user, context) tripl…" />
+  <meta name="keywords" content="ML System Design, Ads, CTR Prediction, Wide &amp; Deep, DeepFM, FTRL, Auction, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ads-ctr-prediction-the-full-system.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ads-ctr-prediction-the-full-system.html" />
+  <meta property="og:title" content="Ads CTR Prediction: The Full System Behind Every Ad You See" />
+  <meta property="og:description" content="Ads CTR prediction is one of the highest-impact ML systems ever built — it generates the majority of revenue for Google, Meta, and ByteDance. The model must score billions of (ad, user, context) tripl…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ads CTR Prediction: The Full System Behind Every Ad You See" />
+  <meta name="twitter:description" content="Ads CTR prediction is one of the highest-impact ML systems ever built — it generates the majority of revenue for Google, Meta, and ByteDance. The model must score billions of (ad, user, context) tripl…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ads CTR Prediction: The Full System Behind Every Ad You See",
+  "description": "Ads CTR prediction is one of the highest-impact ML systems ever built — it generates the majority of revenue for Google, Meta, and ByteDance. The model must score billions of (ad, user, context) tripl…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ads-ctr-prediction-the-full-system.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Ads, CTR Prediction, Wide & Deep, DeepFM, FTRL, Auction"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ads-ctr-prediction-the-full-system#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Ads CTR Prediction: The Full System Behind Every Ad You See</h1>
+    <p class="excerpt">Ads CTR prediction is one of the highest-impact ML systems ever built — it generates the majority of revenue for Google, Meta, and ByteDance. The model must score billions of (ad, user, context) triples per day in milliseconds, stay calibrated as user behaviour shifts, and handle an extreme class imbalance (1 click per 100 impressions is high CTR). This is the full system: features, model architecture, training, calibration, and auction.</p>
+    <p>Click-Through Rate prediction is the core ML problem of the ads industry. The model answers: given this user, this ad, and this context, what is the probability that the user clicks? The answer feeds the ad auction — which ad wins, at what price. A 0.1% improvement in CTR prediction accuracy translates to tens of millions of dollars in annual revenue at scale.</p>
+<h2>Why CTR prediction is hard</h2>
+<p>Scale: Google processes 8.5 billion searches per day. Each produces an auction with multiple candidate ads. Each auction requires CTR predictions for all candidates. The model must run in < 10ms per auction at billion-query-per-day scale. Class imbalance: a 2% CTR is excellent. The model trains on data that is 98% negative (no click). Rare positive signals are swamped by negatives. Sparse features: user IDs, ad IDs, and keyword IDs are one-hot encoded over vocabularies of hundreds of millions. Feature interactions matter enormously: "user who recently searched for hiking boots" × "ad for outdoor gear" → high CTR, but neither feature alone predicts much.</p>
+<h2>Feature engineering</h2>
+<p>User features: historical CTR for this user, recent search queries (as embeddings), demographic signals (age, gender, location — where available and permitted), device type, time since last click. Ad features: ad ID embedding, advertiser category, ad text embedding, historical CTR (overall and by segment), bid amount. Context features: query text embedding, page type, position (above-the-fold vs below), time of day. Interaction features: cosine similarity between user query embedding and ad text embedding, user's historical CTR for this advertiser category.</p>
+<h2>The FTRL-Proximal algorithm: online learning for ads</h2>
+<p>Ads models cannot be trained once and deployed — user behaviour, advertiser bids, and trending topics shift daily. Follow-The-Regularised-Leader with Proximal gradient (FTRL-Proximal, McMahan et al. 2013) is the industry standard for online learning at ads scale. It is an online gradient descent algorithm with per-coordinate learning rates (like Adam, but adaptive across millions of sparse features) and L1 regularisation to maintain sparsity. FTRL processes each impression immediately after the click outcome is known (typically with a delay of minutes to hours) and updates the model continuously. This allows the model to adapt to distribution shift without full retraining.</p>
+<h2>Deep learning for CTR: Wide &amp; Deep and DeepFM</h2>
+<p>Wide & Deep (Cheng et al., Google Play, 2016): a wide linear model handles memorisation (learning specific feature interactions observed in training data, e.g., "user installed this game before is correlated with installing similar games"), while a deep neural network handles generalisation (learning abstract features from raw inputs). The outputs are summed and passed through a sigmoid. This architecture dominated app store recommendation from 2016-2020.</p>
+<p>DeepFM (Guo et al., 2017): replaces the wide component with a Factorisation Machine (FM), which explicitly models pairwise feature interactions via inner products of embedding vectors. FM captures cross-feature interactions without engineering them manually. DeepFM jointly trains FM and a deep network end-to-end. DCN (Deep & Cross Network, Wang et al., 2017) adds an explicit cross network for high-order feature interactions. These architectures are the current backbone of ads CTR at Alibaba, Tencent, and Bytedance.</p>
+<h2>The Vickrey auction: pricing the click</h2>
+<p>Ads are sold in a Vickrey (second-price) auction: the winner pays the minimum bid needed to win (the second-highest bid), not their own bid. The winning ad is not the highest bidder — it is the highest effective bid: eCPM = bid × predicted_CTR. A lower-bidding but more relevant ad can beat a higher-bidding but irrelevant one. This aligns advertiser incentives (bid your true value) with user experience (serve relevant ads).</p>
+<h2>Calibration is critical for auction integrity</h2>
+<p>The auction relies on P(click) being a true probability, not just a ranking score. If the model's P(click) = 0.05 but the true CTR is 0.02, the auction systematically overcharges advertisers, under-delivers on campaign objectives, and misranks ads relative to their true value. Calibration (see Post 76) must be continuously monitored. Both Platt scaling and temperature scaling are used to keep the model outputs calibrated as data distribution shifts.</p>
+<p><strong>Try on Colab:</strong> use the Criteo Display Advertising dataset (45M impressions, 13 numerical + 26 categorical features). Train a logistic regression baseline with FTRL (implement with per-coordinate learning rates). Then train a DeepFM using PyTorch. Compare AUC and log-loss. Apply temperature scaling and compare ECE before and after. Plot the reliability diagram.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ads-ctr-prediction-the-full-system#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

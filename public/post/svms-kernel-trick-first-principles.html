@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVMs: The Kernel Trick, Maximum Margin, and When They Still Win — ML Systems Lab</title>
+  <meta name="description" content="SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an int…" />
+  <meta name="keywords" content="Models &amp; Math, SVM, Kernel Trick, Classification, Maximum Margin, RBF, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/svms-kernel-trick-first-principles.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/svms-kernel-trick-first-principles.html" />
+  <meta property="og:title" content="SVMs: The Kernel Trick, Maximum Margin, and When They Still Win" />
+  <meta property="og:description" content="SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an int…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SVMs: The Kernel Trick, Maximum Margin, and When They Still Win" />
+  <meta name="twitter:description" content="SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an int…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SVMs: The Kernel Trick, Maximum Margin, and When They Still Win",
+  "description": "SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an int…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/svms-kernel-trick-first-principles.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, SVM, Kernel Trick, Classification, Maximum Margin, RBF"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=svms-kernel-trick-first-principles#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>SVMs: The Kernel Trick, Maximum Margin, and When They Still Win</h1>
+    <p class="excerpt">SVMs fell out of fashion when deep learning arrived, but they remain the right answer in several important regimes: small tabular datasets, high-dimensional text, and any setting where you need an interpretable margin guarantee. More importantly, the kernel trick is one of the most intellectually beautiful ideas in all of machine learning — every practitioner should understand it.</p>
+    <p>Support Vector Machines are linear classifiers that find the maximum-margin separating hyperplane. The margin is the distance between the hyperplane and the nearest training points from each class (the support vectors). Maximising the margin is a geometric intuition for why SVMs generalise: larger margin means less sensitivity to small perturbations in the data.</p>
+<h2>The primal formulation</h2>
+<p>Binary classification: find w, b such that y_i(w^T x_i + b) ≥ 1 for all i, minimising ||w||². The constraint says all points must be on the correct side of the hyperplane with at least unit margin. The decision boundary is w^T x + b = 0; the margin is 2/||w||, so minimising ||w||² maximises the margin.</p>
+<p>Hard-margin SVM: only works when data is linearly separable. Soft-margin SVM (Cortes & Vapnik, 1995): allow some misclassification via slack variables ξ_i ≥ 0. Minimise ||w||² + C Σ ξ_i subject to y_i(w^T x_i + b) ≥ 1 - ξ_i. C is the regularisation parameter: large C = low tolerance for violations = tighter fit, small C = high tolerance = smoother boundary. This is the bias-variance trade-off in geometric form.</p>
+<h2>The dual formulation and why it matters</h2>
+<p>The SVM primal has d+1 parameters (w and b, where d is the feature dimension). The Lagrangian dual transforms this into an n-dimensional problem with one dual variable α_i per training point: maximise Σ α_i - (1/2) Σ_{i,j} α_i α_j y_i y_j x_i^T x_j. The critical insight: the optimisation only depends on dot products x_i^T x_j between training examples, not on the raw features themselves. This is the door through which the kernel trick walks.</p>
+<h2>The kernel trick</h2>
+<p>A kernel function k(x_i, x_j) = φ(x_i)^T φ(x_j) computes the dot product in a high-dimensional (possibly infinite-dimensional) feature space φ(·) without ever computing φ explicitly. Substitute k(x_i, x_j) for x_i^T x_j in the dual: the SVM now learns a decision boundary in an infinite-dimensional space, tractably. Common kernels: Polynomial k(x,z) = (x^T z + c)^d — captures degree-d feature interactions. RBF (Radial Basis Function / Gaussian): k(x,z) = exp(-γ ||x-z||²) — infinite-dimensional feature space, captures arbitrary smooth decision boundaries. The γ hyperparameter controls the reach of each training point. Sigmoid: k(x,z) = tanh(γ x^T z + r) — equivalent to a two-layer neural network in some parameter regimes.</p>
+<p><strong>Mercer's theorem:</strong> a function k is a valid kernel if and only if the kernel matrix K_{ij} = k(x_i, x_j) is positive semi-definite for any set of points. This is the mathematical guarantee that k corresponds to a valid dot product in some feature space.</p>
+<h2>Prediction and the support vectors</h2>
+<p>At test time, the prediction for a new point x is: f(x) = sign(Σ_i α_i y_i k(x_i, x) + b). The sum runs over all training points, but α_i > 0 only for support vectors — points on or inside the margin boundary. For well-separated data, most α_i = 0, making prediction sparse and fast. The number of support vectors relative to the training set size is an informal measure of problem difficulty.</p>
+<h2>Multi-class SVMs</h2>
+<p>SVMs are inherently binary. Extensions: One-vs-One (OvO): train C(C-1)/2 classifiers, each distinguishing one class pair; predict by majority vote. One-vs-Rest (OvR): train C classifiers, each distinguishing one class vs. all others; predict the class with highest margin score. OvO is slower to train but often more accurate; OvR is faster.</p>
+<h2>When SVMs still win</h2>
+<p>Text classification with TF-IDF features: the feature space is already sparse and high-dimensional; RBF kernels work well. Small datasets (n < 10k): XGBoost and neural nets need more data to outperform SVMs. Tabular data with clear geometric structure: the maximum margin guarantee is still meaningful. Anomaly detection (One-Class SVM): see Post 95. When SVMs lose: large n (O(n²) kernel matrix), image/audio data (deep learning dominates), when features need to be learned end-to-end.</p>
+<h2>SVM vs logistic regression</h2>
+<p>Both are linear classifiers. SVM maximises the geometric margin (loss is 0 outside the margin, grows linearly inside). Logistic regression maximises the log-likelihood (loss is smooth everywhere, all points contribute to the gradient). SVMs are sparser (only support vectors matter). Logistic regression gives calibrated probabilities. In practice, with proper regularisation, the two converge to similar performance on most problems.</p>
+<p><strong>Try on Colab:</strong> use the UCI Breast Cancer dataset. Train an SVM with RBF kernel, tuning C and γ via GridSearchCV with 5-fold cross-validation. Visualise the decision boundary in PCA-2D space and highlight the support vectors. Compare test accuracy, training time, and number of support vectors across C values from 0.01 to 100. Then repeat with a polynomial kernel of degree 2 and 3.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=svms-kernel-trick-first-principles#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MakeMyTrip Senior Data Scientist / ML Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="MakeMyTrip&#39;s senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal d…" />
+  <meta name="keywords" content="Interview Prep, MakeMyTrip, Travel, Senior Data Scientist, Dynamic Pricing, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/makemytrip-senior-data-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/makemytrip-senior-data-scientist-interview-guide.html" />
+  <meta property="og:title" content="MakeMyTrip Senior Data Scientist / ML Interview Guide" />
+  <meta property="og:description" content="MakeMyTrip&#39;s senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal d…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MakeMyTrip Senior Data Scientist / ML Interview Guide" />
+  <meta name="twitter:description" content="MakeMyTrip&#39;s senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal d…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "MakeMyTrip Senior Data Scientist / ML Interview Guide",
+  "description": "MakeMyTrip's senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal d…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/makemytrip-senior-data-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, MakeMyTrip, Travel, Senior Data Scientist, Dynamic Pricing, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=makemytrip-senior-data-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>MakeMyTrip Senior Data Scientist / ML Interview Guide</h1>
+    <p class="excerpt">MakeMyTrip&#39;s senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal demand swings, and a multi-product (flights/hotels/packages) recommendation problem. This guide walks through the prep.</p>
+    <p>MakeMyTrip's ML organisation runs ML across travel — flights, hotels, packages, bus, ground transport. The interview reflects domain-specific challenges: travel pricing is volatile, demand is highly seasonal, the recommendation problem spans heterogeneous products, and the consequences of wrong predictions (over-priced flights, under-supplied hotels) are direct revenue impact.</p>
+<h2>The loop structure (Senior DS / ML, L5)</h2>
+<p>Standard loop: recruiter screen → ML fundamentals + coding → ML system design + case → A/B testing + experimentation → behavioural + hiring manager.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> Standard.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 60 minutes. Standard fundamentals with emphasis on time-series forecasting (demand prediction is core), pricing optimisation (revenue management), and recommendation evaluation metrics (multi-product NDCG, business outcome metrics like booking value).</p>
+<p><strong>Round 3 — ML system design + case.</strong> 75 minutes. Common prompts: design hotel ranking, design dynamic pricing for flights, design package recommendation across flight+hotel combinations. The case half asks: "your hotel ranking model improved CTR by 3% but booking value dropped by 1.5%. Diagnose."</p>
+<p><strong>Round 4 — A/B testing + experimentation.</strong> 60 minutes. Travel A/B testing has specific challenges: seasonal effects dominate noise, conversion is multi-step (search → click → book → travel → return), and one user's booking removes inventory affecting other users (marketplace SUTVA). Tests sophistication on these.</p>
+<p><strong>Round 5 — Behavioural + hiring manager.</strong> 45 minutes.</p>
+<h2>What MakeMyTrip weights distinctively</h2>
+<p>1. <strong>Time-series + pricing depth.</strong> Demand forecasting and dynamic pricing are core. Senior candidates need real depth here, not just classification basics. 2. <strong>Multi-product recommendation.</strong> Flights and hotels are different products with different metrics; cross-product packaging adds another dimension. Expect questions on how to unify recommendation across these. 3. <strong>Seasonal noise in A/B testing.</strong> Travel demand is highly seasonal. Senior candidates are expected to articulate how to test reliably in this environment.</p>
+<h2>Top 10 questions MakeMyTrip senior DS / ML candidates face</h2>
+<p>1. "Design hotel ranking for MakeMyTrip. What's your business objective and your model objective?" 2. "Design dynamic pricing for flights. What signals drive the price, and how do you avoid revenue cannibalisation?" 3. "Your hotel ranking improved CTR but booking value dropped. Three hypotheses." 4. "Demand forecasting for the IPL season. How do you handle the spike?" 5. "Walk through the most impactful experiment you've designed and run in a seasonal-noise environment." 6. "Design package recommendation that combines flight + hotel. What's your objective?" 7. "How do you A/B test pricing when one user's purchase affects available inventory?" 8. "Calibration matters more than ranking for pricing models. Defend that statement." 9. "Cold start for a new hotel with zero reviews. How does your ranking system handle it?" 10. "Eleven types of leakage. Which apply specifically to dynamic pricing models?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a MakeMyTrip senior DS / ML loop:</p>
+<li>Tier 1 (Statistics & Estimation) — all 4 posts.</li>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) for the cohort and seasonal analysis.</li>
+<li>Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) is central for demand modelling.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design).</li>
+<li>Cross-link to PAL — MakeMyTrip's DS roles overlap significantly with product analytics.</li>
+<h2>Compensation</h2>
+<p>MakeMyTrip Senior DS / ML in 2026 ranges roughly ₹32 lakh – ₹60 lakh for 5-7 YOE. Staff reaches ₹75 lakh+. Pay is on the lower end of Indian unicorns; the work is interesting if travel is your domain.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=makemytrip-senior-data-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

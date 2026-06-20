@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets — ML Systems Lab</title>
+  <meta name="description" content="Your feature pipeline runs nightly and reprocesses yesterday&#39;s data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model trainin…" />
+  <meta name="keywords" content="Feature Engineering, Late-Arriving Data, Data Pipeline, Training Data Integrity, Feature Store, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/late-arriving-data-retroactive-corruption.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/late-arriving-data-retroactive-corruption.html" />
+  <meta property="og:title" content="Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets" />
+  <meta property="og:description" content="Your feature pipeline runs nightly and reprocesses yesterday&#39;s data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model trainin…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Feature Engineering" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets" />
+  <meta name="twitter:description" content="Your feature pipeline runs nightly and reprocesses yesterday&#39;s data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model trainin…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets",
+  "description": "Your feature pipeline runs nightly and reprocesses yesterday's data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model trainin…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/late-arriving-data-retroactive-corruption.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Feature Engineering, Late-Arriving Data, Data Pipeline, Training Data Integrity, Feature Store"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=late-arriving-data-retroactive-corruption#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
+    <h1>Late-Arriving Data and the Retroactive Feature Trap: How Pipeline Corrections Corrupt Training Sets</h1>
+    <p class="excerpt">Your feature pipeline runs nightly and reprocesses yesterday&#39;s data to catch late-arriving events. This is good operational practice for data completeness. It is a silent catastrophe for model training. Every reprocessing run retroactively alters the features your historical training rows will see — and the model you train on Monday&#39;s data is systematically different from the model you train on Friday&#39;s reprocessed data.</p>
+    <p>Late-arriving data is a normal operational reality in data engineering. Transactions settle over 24–72 hours. User activity logs arrive with delay. External data sources batch-deliver with variable latency. The standard response: run a late-data correction job that reprocesses recent windows and backfills updated values.</p>
+<p>This response is correct for data completeness. It is a training data integrity problem that most teams do not notice until a model retrain produces unexpectedly different results.</p>
+<h2>The retroactive corruption mechanism</h2>
+<p>You have a feature \`transactions_last_7d\` for each user, computed by a nightly batch job. On 2024-01-15 at 02:00 UTC, the job runs and computes features for 2024-01-14. It writes feature rows with timestamp 2024-01-14.</p>
+<p>Some transactions from 2024-01-13 and 2024-01-14 arrive late — they were delayed in transit from a payment processor. On 2024-01-16, your late-data correction job reprocesses the 2024-01-14 window and rewrites the feature rows, now including the late transactions.</p>
+<p>The feature row in your store for timestamp 2024-01-14 now reflects reality as of 2024-01-16 — not reality as of 2024-01-14 at 02:00 UTC when it was first computed.</p>
+<h2>Why training is inconsistent</h2>
+<p>When you train a model on Monday, you generate your training dataset by reading the feature store. You get features reflecting the state as of Monday — including all retroactive corrections up to Monday.</p>
+<p>When you retrain the same model on Friday with "the same training window," you generate a new training dataset. The feature store now reflects corrections up to Friday. Some rows have different feature values than they did on Monday. The model trains on different data. Its weights are different. Its decision boundary is different.</p>
+<p>You cannot reproduce Monday's model on Friday. The training data has been altered underneath you. This is not drift — the production distribution has not changed. The training data is literally different.</p>
+<h2>The compounding effect</h2>
+<p>Over a 12-month training window, late-data corrections may affect 15–30% of training rows. The corrections are not random — they disproportionately affect high-activity users (more transactions to late-arrive) and recent time windows (more recent corrections have had less time to finalise). Your model learns a systematically biased picture of those user segments.</p>
+<p>In a credit scoring context: users with many transactions are high-activity customers. If their features are consistently overestimated (because late transactions always add to their totals), your model learns that high transaction volume is predictive of creditworthiness by a larger margin than it actually is. The bias is invisible in offline metrics because your validation set has the same correction bias as your training set.</p>
+<h2>The two patterns that prevent this</h2>
+<h2>Pattern 1: Immutable feature rows with a write timestamp.</h2>
+<p>Never overwrite a feature row. Instead, append a new row with the corrected value and a new \`availability_timestamp\`. Your point-in-time join retrieves the row that was available at training time — the original, uncorrected value. Training is reproducible because it always reads the as-of-training-time snapshot, not the current snapshot.</p>
+<h2>Pattern 2: Correction awareness in feature computation.</h2>
+<p>Accept that features will be incomplete at first computation. Compute features with an explicit \`completeness_timestamp\`: the earliest time at which this feature value is considered final. Your training pipeline only uses rows where \`event_timestamp + correction_window <= training_run_timestamp\`. You exclude the most recent data from training until it is final.</p>
+<h2>How to detect retroactive corruption</h2>
+<p>Run your training pipeline twice with a 7-day gap between runs, using identical training window bounds. Compute the feature-level correlation between the two datasets for matching entity-timestamp pairs. If feature values differ for more than 2% of rows, your pipeline has retroactive corrections altering the training data.</p>
+<p>Also: if retrained models show unexpected performance divergence from their predecessors with no apparent distribution shift in production, retroactive feature corruption is a primary suspect.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=late-arriving-data-retroactive-corruption#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

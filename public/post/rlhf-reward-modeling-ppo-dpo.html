@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It — ML Systems Lab</title>
+  <meta name="description" content="RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and …" />
+  <meta name="keywords" content="Deep Learning, RLHF, DPO, PPO, Reward Modeling, LLM Alignment, InstructGPT, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/rlhf-reward-modeling-ppo-dpo.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/rlhf-reward-modeling-ppo-dpo.html" />
+  <meta property="og:title" content="RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It" />
+  <meta property="og:description" content="RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It" />
+  <meta name="twitter:description" content="RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It",
+  "description": "RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/rlhf-reward-modeling-ppo-dpo.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, RLHF, DPO, PPO, Reward Modeling, LLM Alignment, InstructGPT"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=rlhf-reward-modeling-ppo-dpo#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>RLHF: Reward Modeling, PPO, and Why DPO Is Replacing It</h1>
+    <p class="excerpt">RLHF is the technique that turned GPT-3 into ChatGPT — aligning a language model to human preferences rather than just next-token prediction. It is one of the most influential ideas in modern AI, and also one of the most unstable pipelines to train. DPO (Direct Preference Optimisation) emerged in 2023 as a simpler alternative that achieves comparable results without RL at all.</p>
+    <p>Language model pretraining on next-token prediction creates a model that is a good statistical approximation of its training corpus. It is not aligned with human intentions: it will complete harmful prompts, give verbose unhelpful answers, and confidently confabulate. RLHF addresses this by fine-tuning the model on human preferences.</p>
+<h2>The three-stage RLHF pipeline (InstructGPT, 2022)</h2>
+<p>Stage 1 — Supervised Fine-Tuning (SFT): start with the pretrained model and fine-tune it on a dataset of high-quality (prompt, response) pairs written by humans. This teaches the model the desired response format and basic instruction-following. The SFT model is the foundation for the next stages.</p>
+<p>Stage 2 — Reward Model Training: sample multiple responses from the SFT model for each prompt. Human raters compare responses and mark which is better. These preference pairs (prompt, response_A, response_B, label: A > B) train a reward model R_θ that outputs a scalar reward for any (prompt, response) pair. The reward model is typically the same architecture as the LLM with the final token prediction head replaced by a regression head. Training objective: Bradley-Terry model — maximise the log probability that the preferred response has higher reward than the rejected response: log σ(R_θ(x, y_w) - R_θ(x, y_l)), where y_w is the preferred response and y_l is the rejected one.</p>
+<p>Stage 3 — RL Fine-Tuning with PPO: use the reward model as the reward signal in a reinforcement learning loop. The policy is the LLM; the action is generating tokens; the reward comes from the reward model at the end of the generated sequence. PPO (Proximal Policy Optimisation) is used because it is stable and efficient for large models. The PPO objective includes a KL penalty: reward = R_θ(x, y) - β * KL(π_RL || π_SFT), where π_SFT is the SFT model and β controls how far the RL policy can deviate. Without the KL penalty, the RL model learns to exploit the reward model — generating text that gets high reward scores but is incoherent or degenerate (reward hacking).</p>
+<h2>Why PPO is hard</h2>
+<p>PPO requires four models loaded simultaneously: the policy (LLM being trained), the SFT reference model (for KL penalty), the reward model (for rewards), and the value model (PPO critic). For a 7B parameter model, this is 4 × 7B × 4 bytes = ~112GB GPU memory just for model weights, before activations. Training instability is common: reward hacking, mode collapse, and sensitivity to hyperparameters. The PPO objective is non-stationary because the policy changes the distribution over which the reward model is evaluated.</p>
+<h2>DPO: Direct Preference Optimisation (Rafailov et al., 2023)</h2>
+<p>DPO's key insight: the optimal RL policy under KL-constrained reward maximisation can be expressed in closed form. This allows the RL objective to be rewritten directly in terms of the policy model, eliminating the need for a separate reward model and RL training. DPO loss: -log σ(β log(π_θ(y_w|x)/π_SFT(y_w|x)) - β log(π_θ(y_l|x)/π_SFT(y_l|x))). This is a supervised loss on preference pairs that implicitly trains the policy to increase the relative probability of preferred responses over rejected ones, without an explicit reward model. DPO requires only: the SFT model (reference) and the policy model being trained. No reward model, no value model, no RL loop. 2 models instead of 4.</p>
+<h2>DPO vs PPO: practical trade-offs</h2>
+<p>DPO advantages: simpler implementation, less memory, more stable training, no reward hacking. DPO disadvantages: less flexible (cannot incorporate non-preference feedback signals), no explicit reward model for analysis, less explored for very long-context alignment. In practice, DPO has matched or exceeded RLHF on many benchmarks (TruthfulQA, AlpacaEval) with significantly less engineering overhead. Most open-source fine-tuning pipelines (Axolotl, LLaMA Factory) now default to DPO.</p>
+<h2>Constitutional AI (CAI) and RLAIF</h2>
+<p>Anthropic's Constitutional AI (2022) replaces human raters with an AI critic. A set of principles (the "constitution") guides the AI critic to evaluate responses. RLAIF: Reinforcement Learning from AI Feedback — use a stronger model to generate preference labels, then run standard RLHF. Scales better than human annotation for large datasets.</p>
+<h2>Reward hacking: the core problem</h2>
+<p>The reward model is a proxy, not the true human preference. Optimising it too hard produces reward hacking: generating responses that are verbose (longer = rated higher by some raters), sycophantic (agreeing with the user), or formulaic (specific phrases that get high ratings). The KL penalty in PPO and the reference model in DPO both guard against this, but the problem is fundamental to any proxy optimisation.</p>
+<p><strong>Try on Colab:</strong> use the TRL library (Hugging Face) with a small GPT-2 or OPT model. Train a reward model on a subset of the Anthropic HH-RLHF dataset. Compare DPO training (DPOTrainer in TRL) vs PPO training (PPOTrainer) on the same preference data. Measure: training time, memory usage, and win rate of each fine-tuned model against the SFT baseline using the reward model as a judge.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=rlhf-reward-modeling-ppo-dpo#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

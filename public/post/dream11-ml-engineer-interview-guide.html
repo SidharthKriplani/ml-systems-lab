@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dream11 ML Engineer Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Dream11&#39;s ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The …" />
+  <meta name="keywords" content="Interview Prep, Dream11, ML Engineer, Real-time ML, Burst Load, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/dream11-ml-engineer-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/dream11-ml-engineer-interview-guide.html" />
+  <meta property="og:title" content="Dream11 ML Engineer Interview Guide" />
+  <meta property="og:description" content="Dream11&#39;s ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Dream11 ML Engineer Interview Guide" />
+  <meta name="twitter:description" content="Dream11&#39;s ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Dream11 ML Engineer Interview Guide",
+  "description": "Dream11's ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/dream11-ml-engineer-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Dream11, ML Engineer, Real-time ML, Burst Load, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=dream11-ml-engineer-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Dream11 ML Engineer Interview Guide</h1>
+    <p class="excerpt">Dream11&#39;s ML engineering interview is unique among Indian companies: it tests heavy real-time ML, low-latency inference, sports prediction, and recommendation under bursty load (IPL surges 100×). The bar is high and the production constraints are unusually sharp. This guide walks through what to expect.</p>
+    <p>Dream11 runs ML at an unusual operating point. The product (fantasy sports gameplay) means traffic is wildly bursty — normal day traffic vs IPL match traffic differs by 100×. Every ML decision has to work under those load curves. Latency budgets are tight (sub-50ms for in-game recommendations). The interview reflects this.</p>
+<h2>The loop structure (Senior ML Engineer)</h2>
+<p>Dream11 typically runs 5 rounds: recruiter screen → ML fundamentals + coding → real-time ML system design → production scaling case → hiring manager.</p>
+<p>The real-time ML focus is the differentiator. Most Indian unicorn loops emphasise offline / batch ML; Dream11's loops emphasise online inference and streaming features.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> Standard.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 60 minutes. Standard ML fundamentals plus coding rounds with an emphasis on data structures + streaming algorithms (sliding window statistics, top-K maintenance, reservoir sampling). The streaming flavour is intentional — these patterns show up in production at Dream11.</p>
+<p><strong>Round 3 — Real-time ML system design.</strong> 60 minutes. Common prompts: design a real-time team recommendation system for fantasy sports, design fraud detection for in-app transactions, design real-time player performance prediction. The design has to handle burst load explicitly. Candidates who don't discuss caching strategy, fallback policies, and graceful degradation get downgraded.</p>
+<p><strong>Round 4 — Production scaling case.</strong> 60 minutes. Real scenario: "your recommendation system serves 10K QPS normally but spikes to 1M QPS during an IPL match. Current p99 latency is 80ms but spikes to 800ms during burst. Diagnose and fix." Tests the discipline of production engineering: caching, pre-computation, traffic shaping, graceful degradation, capacity planning.</p>
+<p><strong>Round 5 — Hiring manager.</strong> 45 minutes. Team fit.</p>
+<h2>What Dream11 weights distinctively</h2>
+<p>1. <strong>Real-time inference at burst scale.</strong> No other Indian company tests this as deeply. 2. <strong>Sports prediction context.</strong> Sports ML has unique characteristics — strong signal vs noise (player performance is partly random), high dimensionality (many players, matches, conditions), and time-series structure. Sports domain knowledge helps. 3. <strong>Operational resilience.</strong> Dream11 hires senior MLEs who can keep ML systems running during 50× traffic spikes. The production case round tests for this directly.</p>
+<h2>Top 10 questions Dream11 ML Engineer candidates face</h2>
+<p>1. "Design a real-time team recommendation system for fantasy sports. Sub-50ms p99 budget, 1M QPS at peak." 2. "Your model serves 10K QPS, spikes to 1M during IPL. Latency degrades. Walk through the fix." 3. "Design fraud detection for in-app transactions. What's your inference architecture?" 4. "How do you serve a 100MB embedding model at low latency? Quantisation? Distillation? Caching?" 5. "Walk through your most impactful project. What was the production load that broke first?" 6. "Streaming aggregations vs batch aggregations for player statistics. When each?" 7. "How do you handle cold start for a new fantasy game variant?" 8. "Sports prediction has noisy signal — how do you A/B test reliably?" 9. "Design a real-time pricing system for entry fees. What signals, what update frequency?" 10. "Eleven types of leakage. Which apply to sports prediction specifically?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a Dream11 ML Engineer loop:</p>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts. Real-time inference is the core.</li>
+<li>Tier 8 (Monitoring & MLOps) — all 5 posts. Burst-load monitoring is harder than steady-state.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 71 (Two-Tower).</li>
+<li>For practice: MLCoding mlc8 (Welford streaming statistics — exactly the kind of streaming pattern Dream11 probes), MockInterview with a Dream11 JD pasted.</li>
+<h2>Common failure modes</h2>
+<li>Treating system design as steady-state without acknowledging burst load.</li>
+<li>Pitching architectures that work at 10K QPS but break at 1M QPS.</li>
+<li>Inability to discuss caching strategy explicitly.</li>
+<li>Ignoring graceful degradation patterns.</li>
+<li>Pitching deep learning architectures without latency justification.</li>
+<h2>Compensation</h2>
+<p>Dream11 ML Engineer in 2026 ranges roughly ₹35 lakh – ₹70 lakh for 4-7 YOE. Senior MLE reaches ₹90 lakh+. AmbitionBox has public ranges; Dream11 typically pays competitively for the role family.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=dream11-ml-engineer-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Leakage: The Eleven Types and How to Detect Each — ML Systems Lab</title>
+  <meta name="description" content="Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise …" />
+  <meta name="keywords" content="Model Evaluation, Data Leakage, Point-in-Time, Feature Stores, Validation, Production, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/data-leakage-eleven-types-detection.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/data-leakage-eleven-types-detection.html" />
+  <meta property="og:title" content="Data Leakage: The Eleven Types and How to Detect Each" />
+  <meta property="og:description" content="Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Data Leakage: The Eleven Types and How to Detect Each" />
+  <meta name="twitter:description" content="Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Data Leakage: The Eleven Types and How to Detect Each",
+  "description": "Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/data-leakage-eleven-types-detection.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, Data Leakage, Point-in-Time, Feature Stores, Validation, Production"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=data-leakage-eleven-types-detection#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Data Leakage: The Eleven Types and How to Detect Each</h1>
+    <p class="excerpt">Data leakage is the single most common reason an offline 0.95 AUC becomes a production 0.65. Most people know two or three kinds of leakage. There are at least eleven. A senior MLE needs to recognise each on sight — because if you do not catch them before deployment, you will see them in production, and they will be much harder to diagnose then.</p>
+    <p>Data leakage is when information that would not be available at production prediction time bleeds into the training or validation data, making the model look better offline than it can possibly be online. The naive definition — "the target is in the features" — covers maybe one tenth of the cases. The actual taxonomy is broader and the production failures are more varied.</p>
+<h2>1. Target leakage</h2>
+<p>The classical case. A feature contains information about the target. For a fraud model, a feature like "is_disputed" is a target leak — disputes are filed only after fraud is confirmed. The model achieves near-perfect offline metrics by reading the dispute outcome. In production, at scoring time, no dispute has been filed, the feature is missing or default, and the model collapses. Detection: audit every top-importance feature for "was this value generated before or after the label was observed?" If you cannot answer with certainty, you cannot ship.</p>
+<h2>2. Temporal leakage</h2>
+<p>You have time-ordered data and you use random k-fold cross-validation. Now your training folds contain examples from after your validation fold. The model has effectively seen the future. Feature values that depend on aggregates ("user's average purchase amount over the last 30 days") now include data from beyond the validation timestamp. Detection: walk-forward cross-validation should give roughly the same number as your random k-fold; if walk-forward is much worse, you have temporal leakage.</p>
+<h2>3. Train-test contamination</h2>
+<p>You ran preprocessing on the entire dataset before splitting into train and test. Now the test set's distribution influenced the training pipeline (through scaling parameters, imputation values, target encoding, etc.). The model has implicitly seen the test set. Detection: re-fit all preprocessing inside the train fold only; if test metrics drop significantly, you had contamination.</p>
+<h2>4. Group / entity leakage</h2>
+<p>The same logical unit (a user, a customer, a household) appears in both train and validation, even though no individual row is duplicated. The model learns user-specific patterns from training rows of that user and applies them to validation rows from the same user. It looks like generalisation; it is memorisation of known users. Detection: group-aware cross-validation (group-k-fold by user_id, household_id, etc.); if group-aware metrics are much worse than random k-fold, you had entity leakage.</p>
+<h2>5. Aggregation leakage</h2>
+<p>You compute an aggregate feature (mean target by category, time-since-event by user) using the full dataset. The aggregate then leaks information from all rows into each row. Even after train-test split, every row's aggregate feature was computed using both halves. Detection: compute aggregates inside the training fold only, then use the training-fold aggregate to score validation/test rows; or use a leave-one-out aggregation that excludes the row itself.</p>
+<h2>6. Feature availability leakage</h2>
+<p>A feature is in your training data because someone backfilled it. At production prediction time, that feature is computed by an asynchronous pipeline that lags by hours. The model is trained on values it will never see in time at inference. Detection: trace each feature's serving-time availability; for time-sensitive predictions, audit whether the feature will exist at the prediction timestamp.</p>
+<h2>7. Preprocessing leakage (the fit-before-split bug)</h2>
+<p>You fit a StandardScaler, OneHotEncoder, or any other transformer on the full data, then split. The transformer's parameters were learned from data that includes the test set. The fix is sklearn's Pipeline with fit applied only inside the training fold of each cross-validation split. This is the bug that ships every junior ML engineer's first production model.</p>
+<h2>8. Label-window leakage</h2>
+<p>You define the positive class as "user churned within 30 days." For training, you take a user, look at the next 30 days, and label. For features, you also accidentally use data from those 30 days (the period during which churn was being measured). The model now has information from inside the label window. Detection: visually map the timeline — features must come from strictly before the prediction timestamp; the label must come from strictly after; the prediction timestamp must be in the middle.</p>
+<h2>9. Feature store leakage</h2>
+<p>The most modern leakage type. Your feature store has a single row per entity (user) that gets updated whenever the entity's underlying data changes. At training time, you fetch features "as they exist now." But the feature values reflect post-event updates — the user purchased something, the feature got updated to reflect the purchase, then you trained on that updated value to predict whether the user would purchase. Detection: point-in-time correct joins. Your feature store needs versioning by timestamp, not "current value." The training data must be assembled by asking "what was this feature's value at the prediction timestamp" — never "what is it now."</p>
+<h2>10. RAG / evaluation set leakage</h2>
+<p>In LLM applications, your retrieval index was built using the same documents that appear in your evaluation set. When the model is evaluated, it retrieves the exact answer document and rephrases it. The metric (BLEU, ROUGE, accuracy) is sky-high; the model has merely learned to use the index lookup. Detection: hold out a fully separate document corpus from the index and test only on questions whose answers are in that held-out corpus.</p>
+<h2>11. Selection-bias leakage (the survivorship trap)</h2>
+<p>The training data was filtered by a process that depends on the label. Customers who made a successful purchase enter the training set; customers who churned before purchasing do not. The model learns patterns specific to surviving customers, who are not the population it will be applied to. Detection: enumerate the data-collection steps; for each step, ask "does this step depend on the outcome we are trying to predict?" If yes, you have selection bias; the training distribution does not match the deployment distribution.</p>
+<blockquote>WARNING — <strong>Production tell: "Champion model from last month is still better."</strong> If your offline metric says the new model is significantly better, but the A/B test in production shows no improvement or worse, 80% of the time it is leakage. The leakage gave you the offline lift; production strips it away. The diagnostic sequence: (1) compute walk-forward CV — if much worse, you have temporal leakage. (2) Compute group-k-fold CV — if much worse, you have entity leakage. (3) Run a leak-check: audit every top feature for whether it could plausibly depend on the label. (4) Audit preprocessing — was anything fit on the full dataset? (5) Trace serving-time availability — is every feature actually present at prediction time? If all five pass, the lift is probably real and the A/B is detecting noise or a serving bug.</blockquote>
+<h2>The single most useful discipline</h2>
+<p>Point-in-time correctness. For every feature in your training data, you must be able to state: this feature's value was computed using only information available before the prediction timestamp. If you cannot state this for every feature, you have leakage of some kind. Most large companies have moved to feature stores precisely because point-in-time correctness is too hard to enforce manually at scale.</p>
+<h2>Interview questions on this topic</h2>
+<p>"You discover that your top feature in a churn model is 'days_since_last_login.' Is this safe?" — Possibly not. It depends on when the feature is computed relative to the churn label. If churn is defined as "no login for 30 days" and the feature is "days since last login as of label time," then the feature has trivially perfect predictive power because it definitionally equals 30 for every churned user. You have label-window leakage. The fix is to compute the feature at a fixed lookback before the prediction window (e.g., "days since last login as of T-30, predicting churn in [T-30, T]"), not at T itself.</p>
+<p>"Walk through point-in-time correct join semantics for a feature store." — At training time, for each training example, you fetch features as they existed at the prediction timestamp of that example. The feature store stores versioned values: for each entity (user), each feature has a series of (timestamp, value) tuples representing every update. The training join becomes an asof join: for entity X at time T, return the latest feature value with timestamp <= T. This is computationally expensive, which is why feature stores are non-trivial infrastructure. It is also the only correct way to assemble training data from a live feature store.</p>
+<p>"You find evidence of leakage in a model in production. What is the right escalation?" — Pause the model. Compute the leak-free metrics on the existing validation set (fit preprocessing inside folds, compute aggregates inside folds, use walk-forward CV, audit point-in-time correctness). Report the corrected metrics to stakeholders. Decide whether the model is still net positive at the corrected metrics — sometimes leaked models are still better than the previous champion at the leak-free metric. If so, ship with disclosure. If not, roll back and revisit the feature design.</p>
+<p>"Is cross-validation enough to prevent leakage?" — No. Cross-validation prevents the model from being fit on the test set, but it does not prevent target leakage (a feature that contains the answer), feature-availability leakage (a feature that will not exist at production scoring time), or feature-store leakage (a feature computed using post-event data). Cross-validation is necessary but not sufficient. Feature audit is the complement.</p>
+<p><strong>Try on Colab:</strong> download a public dataset with timestamps (e.g. the Brazilian e-commerce Olist dataset). Build a churn model. Deliberately introduce three of the eleven leakage types listed above — target leakage (add a feature that depends on the post-churn outcome), temporal leakage (random k-fold instead of walk-forward), aggregation leakage (compute user-level aggregates over the full dataset). Show how each type inflates offline AUC and how the diagnostic sequence above catches each one. This is the practical equivalent of memorising the taxonomy.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=data-leakage-eleven-types-detection#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

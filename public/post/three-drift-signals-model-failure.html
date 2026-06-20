@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three Drift Signals That Predict Model Failure Before It Happens — ML Systems Lab</title>
+  <meta name="description" content="By the time a model failure shows up in your business metrics, it&#39;s been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your resi…" />
+  <meta name="keywords" content="Monitoring, Drift Detection, PSI, KS Test, Production ML, Calibration, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/three-drift-signals-model-failure.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/three-drift-signals-model-failure.html" />
+  <meta property="og:title" content="Three Drift Signals That Predict Model Failure Before It Happens" />
+  <meta property="og:description" content="By the time a model failure shows up in your business metrics, it&#39;s been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your resi…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Monitoring" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Three Drift Signals That Predict Model Failure Before It Happens" />
+  <meta name="twitter:description" content="By the time a model failure shows up in your business metrics, it&#39;s been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your resi…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Three Drift Signals That Predict Model Failure Before It Happens",
+  "description": "By the time a model failure shows up in your business metrics, it's been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your resi…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/three-drift-signals-model-failure.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Monitoring, Drift Detection, PSI, KS Test, Production ML, Calibration"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=three-drift-signals-model-failure#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Monitoring &middot; ML Systems Lab</div>
+    <h1>Three Drift Signals That Predict Model Failure Before It Happens</h1>
+    <p class="excerpt">By the time a model failure shows up in your business metrics, it&#39;s been degrading for weeks. The signals were there earlier — in your input distributions, your prediction distributions, and your residuals — but nobody was watching. Here&#39;s what to monitor, what thresholds matter, and what each signal actually tells you.</p>
+    <p>Model failures don\'t announce themselves. They compound quietly across days or weeks until a stakeholder notices conversion is down 18% and you spend a week reverse-engineering what happened. The information was available the whole time — just not in the right place, with the right alert.</p>
+<p>There are three layers of drift to monitor. They detect different failure modes at different points in the degradation timeline.</p>
+<h2>Layer 1: Input drift — the earliest signal</h2>
+<p>Input drift means your features are moving away from the training distribution. This doesn\'t guarantee model performance has degraded yet, but it\'s a leading indicator — the model is now operating in territory it didn\'t train on.</p>
+<p>The standard metric is PSI (Population Stability Index). For each feature:</p>
+<li>PSI < 0.1: stable, no action needed</li>
+<li>PSI 0.1–0.2: moderate drift, flag for review</li>
+<li>PSI > 0.2: significant drift, investigate</li>
+<p>PSI is computed by binning the reference distribution (training) and current distribution, then summing: \`Σ (Actual% - Expected%) × ln(Actual% / Expected%)\`.</p>
+<p>For categorical features, track each category\'s share separately. The most common trigger: a new categorical value appears in production that was never seen during training. Your model\'s embedding for that value is random or zero — it will mispredict for every row with that category.</p>
+<p>Monitor input drift daily for high-cardinality features, weekly for stable ones. Alert on PSI > 0.15 for the top 10 features by importance.</p>
+<h2>Layer 2: Prediction drift — the performance proxy</h2>
+<p>You can\'t always get ground truth labels in real time (it takes 30 days to know if a loan defaulted). But you can watch how the model\'s predictions are distributed.</p>
+<p>Prediction drift compares the distribution of P(Y=1) today vs at the time of deployment. Use the KS (Kolmogorov-Smirnov) statistic: the maximum absolute difference between the two CDFs.</p>
+<p>A healthy model: KS < 0.05. Its predictions today look like its predictions at launch.</p>
+<p>A drifting model: the mean prediction drops from 0.23 to 0.18 over two weeks, and the KS grows to 0.14. The model is becoming more conservative — possibly due to feature drift, or due to a real shift in the population.</p>
+<p>Critical distinction: prediction drift can be a false alarm. If the underlying base rate genuinely changed (fewer people are actually likely to default this month), you want the predictions to shift. The signal is "investigate," not "rollback." Compare prediction drift against any known base rate changes.</p>
+<h2>Layer 3: Residual drift — the ground truth signal</h2>
+<p>When labels are available (even with delay), compute model residuals for a rolling cohort: residual = y_true - y_pred (for regression) or look at calibration curves (for classification).</p>
+<p>Systematic residual drift — where the model consistently over- or under-predicts a specific segment — indicates concept drift: the relationship between features and labels has changed. This is the hardest drift to catch early but the most actionable.</p>
+<p>For binary classification: run calibration checks by cohort. If your model predicts 0.3 probability but the actual rate for that score bucket is now 0.45, the model is miscalibrated and needs either a calibration update or a full retrain.</p>
+<h2>The monitoring architecture that works</h2>
+<p>You don\'t need an expensive MLOps platform for this. You need:</p>
+<p>1. Log serving features alongside predictions (not just predictions alone) 2. Compute PSI daily vs training baseline — a 30-line SQL query 3. Compute prediction KS weekly vs launch week distribution 4. When labels arrive: compute residuals by score decile, alert if calibration error > 0.05</p>
+<p>The teams that catch model failures early aren\'t the ones with the most sophisticated tooling. They\'re the ones who consistently run these three checks and act on the alerts rather than explaining them away.</p>
+<p>\`\`\`python import numpy as np import pandas as pd from scipy.stats import ks_2samp</p>
+<p>def compute_psi(expected, actual, buckets=10): """Population Stability Index — PSI > 0.2 means retrain.""" breakpoints = np.percentile(expected, np.linspace(0, 100, buckets + 1)) breakpoints[0] = -np.inf breakpoints[-1] = np.inf</p>
+<p>exp_counts = np.histogram(expected, bins=breakpoints)[0] / len(expected) act_counts = np.histogram(actual,   bins=breakpoints)[0] / len(actual)</p>
+<p># Clip to avoid log(0) exp_counts = np.clip(exp_counts, 1e-6, None) act_counts = np.clip(act_counts, 1e-6, None)</p>
+<p>psi = np.sum((act_counts - exp_counts) * np.log(act_counts / exp_counts)) return psi</p>
+<p># Usage: compare training distribution vs last 7 days of production psi = compute_psi(train_feature_values, prod_feature_values_last_7d) print(f"PSI: {psi:.3f} — {'STABLE' if psi < 0.1 else 'MONITOR' if psi < 0.2 else 'RETRAIN'}")</p>
+<p># KS test for distribution shift ks_stat, p_value = ks_2samp(train_feature_values, prod_feature_values_last_7d) print(f"KS p-value: {p_value:.4f} — {'SHIFT DETECTED' if p_value < 0.05 else 'stable'}") \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=three-drift-signals-model-failure#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

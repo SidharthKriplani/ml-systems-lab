@@ -8,6 +8,7 @@ import {
   recommendNext, readOnboarding, readHomeOverride, writeHomeOverride, deriveHomeMode,
 } from '../data/recommendationEngine.js'
 import { track } from '../analytics.js'
+import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 import QuizCard from '../components/QuizCard.jsx'
 import Next30Card from '../components/Next30Card.jsx'
 
@@ -328,6 +329,39 @@ export default function HomeTab({ onNavigate }) {
         )}
       </div>
 
+      {/* ── Interview readiness % (shown once user has any progress) ─────── */}
+      {(totalAttempted > 0 || foundationsProg.read > 0) && (() => {
+        const r = computeReadiness()
+        return (
+          <div style={{ marginBottom: '28px', padding: '18px 20px', borderRadius: '12px', background: 'var(--depth)', border: '1px solid var(--rim)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '220px' }}>
+                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px', fontWeight: 700 }}>Interview readiness</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '40px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level) }}>
+                    {r.score}%
+                  </span>
+                  <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
+                    {readinessLabel(r.level)}
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: '12px' }}>
+                  <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
+                  <span title="The MLE Path — 50% of readiness">Path {r.breakdown.path}%</span>
+                  <span title="Practice scenarios attempted (target: 80) — 30% of readiness">Practice {r.breakdown.practice}%</span>
+                  <span title="Active days in last 28 — 20% of readiness">Activity {r.breakdown.activity}%</span>
+                  {r.breakdown.accuracy > 0 && (
+                    <span title="Accuracy across practice scenarios">Accuracy {r.breakdown.accuracy}%</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── First-session directive (new users only) ─────────────────────── */}
       {totalAttempted === 0 && (
         <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderLeft: '3px solid var(--prime)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
@@ -459,24 +493,24 @@ export default function HomeTab({ onNavigate }) {
         </div>
       </div>
 
-      {/* ── Activity heatmap ─────────────────────────────────────────────── */}
-      {Object.keys(activity).length > 0 && (
+      {/* ── Activity heatmap — progressively surfaced after 3+ active days ── */}
+      {Object.keys(activity).length >= 3 && (
         <div style={{ marginBottom: '28px' }}>
           <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>91-day activity</div>
           <ActivityHeatmap activity={activity} />
         </div>
       )}
 
-      {/* ── Challenge log ─────────────────────────────────────────────────── */}
-      {totalAttempted > 0 && (
+      {/* ── Challenge log — progressively surfaced after 5+ attempts ────── */}
+      {totalAttempted >= 5 && (
         <div style={{ marginBottom: '28px' }}>
           <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Challenge log</div>
           <ChallengeLog stats={challengeStats} onNavigate={onNavigate} />
         </div>
       )}
 
-      {/* ── Interview Sim export ──────────────────────────────────────────── */}
-      {totalAttempted > 0 && (
+      {/* ── Interview Sim export — progressively surfaced after 10+ attempts */}
+      {totalAttempted >= 10 && (
         <div style={{ marginBottom: '28px' }}>
           <InterviewSimExport sectionProgress={sectionProgress} />
         </div>

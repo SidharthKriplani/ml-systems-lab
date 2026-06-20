@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores — ML Systems Lab</title>
+  <meta name="description" content="Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. I…" />
+  <meta name="keywords" content="Model Evaluation, A/B Testing, Feedback Loops, Online vs Offline, Position Bias, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/offline-eval-vs-online-performance.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/offline-eval-vs-online-performance.html" />
+  <meta property="og:title" content="Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores" />
+  <meta property="og:description" content="Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. I…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores" />
+  <meta name="twitter:description" content="Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. I…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores",
+  "description": "Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. I…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/offline-eval-vs-online-performance.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, A/B Testing, Feedback Loops, Online vs Offline, Position Bias, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=offline-eval-vs-online-performance#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Offline Evaluation ≠ Online Performance: The Gap Every ML Engineer Ignores</h1>
+    <p class="excerpt">Your model hits 0.89 AUC on the holdout set. You ship it. Click-through drops 12%. This story repeats across the industry — and the gap between offline metrics and online performance is not a fluke. It is structural.</p>
+    <h2>Why Offline Metrics Lie to You</h2>
+<p>Offline evaluation measures how well your model ranks or classifies on a static, historical dataset. Online performance measures what users actually do in a live system. These are not the same thing — and the reasons they diverge are not random noise. They are systematic.</p>
+<h2>Failure Mode 1: Feedback Loops in Click-Through Rate Models</h2>
+<p>CTR models are trained on historical clicks. But historical clicks are already the output of a previous ranking model — users only see (and can click) items that were shown to them. Items that were never ranked highly never collected clicks. Your training data is not a random sample of the item space; it is a biased sample shaped by whatever model was running before.</p>
+<p>When you train on this data and deploy a new model, you are not evaluating on i.i.d. data. You are evaluating on a snapshot of the world as filtered by your predecessor. Offline AUC on this dataset tells you how well your model recovers the previous model's decisions — not how well it would serve users given full information.</p>
+<h2>Failure Mode 2: Novelty Effects and Position Bias</h2>
+<p>Users behave differently when something is new. A freshly deployed model may generate clicks just because the recommendations look different. Offline metrics cannot capture this. Conversely, users often click the first result regardless of quality — position bias inflates the apparent quality of top-ranked items in your training data. Models trained on this data learn to predict position, not relevance.</p>
+<h2>Failure Mode 3: Surrogate Label Problems</h2>
+<p>Clicks, watch time, and likes are surrogate labels for user satisfaction. They are measurable; satisfaction is not. A model that maximizes watch time may surface rage-bait. A model that maximizes clicks may optimize for misleading thumbnails. Offline AUC on surrogate labels can be high while the downstream outcome you actually care about (user satisfaction, retention, revenue) moves in the wrong direction.</p>
+<h2>Failure Mode 4: The A/B Test That Overrides the Offline Winner</h2>
+<p>This is the most important and most humbling failure mode. You run an offline experiment, pick the model with the best AUC, ship it behind a feature flag, run a proper A/B test with randomized traffic split — and the offline winner loses. Sometimes it loses badly. This is not rare. Studies from industrial recommendation systems suggest offline and online rankings agree on a winner less than 60% of the time when the offline improvement is small.</p>
+<p>The reason: offline evaluation does not account for how users respond to the model's actual outputs at serving time. The interaction between model decisions, user behavior, and system feedback is invisible to any static dataset.</p>
+<h2>The Only Ground Truth: Shadow Mode and Online A/B</h2>
+<p>Shadow mode (running the new model in parallel, logging its outputs without serving them) is an intermediate step that lets you validate prediction distributions and catch obvious failures before exposure. But it still cannot tell you about user response.</p>
+<p>Online A/B testing with proper randomization, holdout contamination control, and sufficient statistical power is the only way to measure what a model actually does in the world. Offline metrics are filters, not verdicts. Use them to eliminate bad candidates. Use online experiments to choose between good ones.</p>
+<h2>A Practical Framework</h2>
+<p>Treat offline evaluation as a necessary gate, not a sufficient one. Gate on: AUC above floor, no data leakage, calibration within tolerance, no obvious distribution mismatch between train and serving population. Then A/B test. Never skip the A/B test because the offline numbers look good.</p>
+<h2>Practice this in Model Evaluation to develop intuition for when offline metrics predict online performance and when they systematically mislead you.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=offline-eval-vs-online-performance#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

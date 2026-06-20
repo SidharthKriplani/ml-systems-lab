@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The MLE Interview Framework: What Top Companies Actually Ask — ML Systems Lab</title>
+  <meta name="description" content="After 200+ MLE interviews (as both candidate and interviewer), here&#39;s what I&#39;ve learned about what separates strong candidates from weak ones in the ML system design round. It&#39;s not about knowing more…" />
+  <meta name="keywords" content="Interview Prep, System Design, MLE, Career, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/mle-interview-system-design-prep.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/mle-interview-system-design-prep.html" />
+  <meta property="og:title" content="The MLE Interview Framework: What Top Companies Actually Ask" />
+  <meta property="og:description" content="After 200+ MLE interviews (as both candidate and interviewer), here&#39;s what I&#39;ve learned about what separates strong candidates from weak ones in the ML system design round. It&#39;s not about knowing more…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The MLE Interview Framework: What Top Companies Actually Ask" />
+  <meta name="twitter:description" content="After 200+ MLE interviews (as both candidate and interviewer), here&#39;s what I&#39;ve learned about what separates strong candidates from weak ones in the ML system design round. It&#39;s not about knowing more…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The MLE Interview Framework: What Top Companies Actually Ask",
+  "description": "After 200+ MLE interviews (as both candidate and interviewer), here's what I've learned about what separates strong candidates from weak ones in the ML system design round. It's not about knowing more…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/mle-interview-system-design-prep.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, System Design, MLE, Career"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=mle-interview-system-design-prep#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>The MLE Interview Framework: What Top Companies Actually Ask</h1>
+    <p class="excerpt">After 200+ MLE interviews (as both candidate and interviewer), here&#39;s what I&#39;ve learned about what separates strong candidates from weak ones in the ML system design round. It&#39;s not about knowing more frameworks. It&#39;s about a specific sequence of reasoning that signals production ML experience.</p>
+    <p>The ML system design round is 45 minutes. Most candidates spend 35 minutes on architecture and 10 minutes on everything else. Strong candidates invert this.</p>
+<h2>The sequence that works:</h2>
+<p>Minutes 0–8: Problem framing. What is the target action? What are the latency constraints? What is "good"? What are the scale requirements? Don\'t touch architecture until you have answers to these. Interviewers are testing whether you ask the right questions.</p>
+<p>Minutes 8–15: Data and labels. Where does training data come from? What are the label sources (explicit: ratings; implicit: clicks, plays, purchases)? What are the biases? (position bias, selection bias, survivor bias). What is the label delay?</p>
+<p>Minutes 15–28: Model architecture. Now you earn the right to talk about two-tower models and GBDTs. But always justify why for the specific constraints you established. "I\'d use a two-tower retrieval model because we need sub-50ms P99 and have 10M+ items" is good. "I\'d use a two-tower model" without justification is not.</p>
+<p>Minutes 28–38: Serving infrastructure. Feature store, inference service, caching, latency budget. Work through the latency budget explicitly.</p>
+<p>Minutes 38–45: Monitoring. What metrics? What thresholds? What do you do when drift is detected? This is where most candidates run out of time. Budget for it.</p>
+<h2>The signals that separate candidates:</h2>
+<p>Strong: Mentions position bias before the interviewer does. Brings up cold start unprompted. Discusses evaluation offline vs online. Talks about feature freshness SLAs. Mentions what happens when the model is wrong (graceful degradation).</p>
+<p>Weak: Jumps to neural network architecture before understanding the problem. Uses "just use transformer" as a default answer. Can\'t explain what happens at P99 latency. Doesn\'t know what PSI is.</p>
+<h2>The calibration question (often asked):</h2>
+<p>"If you deploy this model and it\'s getting worse, how do you detect it?" Expected: feature drift monitoring (PSI/KS), prediction distribution monitoring, proxy metric monitoring (predicted CTR vs observed CTR), label delay handling. Not expected: "I\'d check the logs."</p>
+<p>\`\`\`python # The monitoring answer interviewers want to hear — show this, don't just describe it import numpy as np from scipy import stats</p>
+<p>def production_health_check(ref_features, prod_features, ref_scores, prod_scores): """Three-signal check: feature drift, score drift, proxy metric.""" report = {}</p>
+<p># 1. Feature drift (PSI on most important feature) bins = np.percentile(ref_features, np.linspace(0, 100, 11)) bins[0], bins[-1] = -np.inf, np.inf exp = np.histogram(ref_features,  bins=bins)[0] / len(ref_features) act = np.histogram(prod_features, bins=bins)[0] / len(prod_features) exp, act = np.where(exp==0, 0.001, exp), np.where(act==0, 0.001, act) psi = float(np.sum((act - exp) * np.log(act / exp))) report['feature_psi'] = round(psi, 3) report['feature_status'] = 'ALERT' if psi > 0.2 else 'WARN' if psi > 0.1 else 'OK'</p>
+<p># 2. Prediction score drift (KS test) ks_stat, ks_p = stats.ks_2samp(ref_scores, prod_scores) report['score_ks_p']   = round(ks_p, 4) report['score_status'] = 'ALERT' if ks_p < 0.01 else 'WARN' if ks_p < 0.05 else 'OK'</p>
+<p>return report</p>
+<p># In the interview: walk through each signal, name thresholds, explain the label delay problem \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=mle-interview-system-design-prep#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

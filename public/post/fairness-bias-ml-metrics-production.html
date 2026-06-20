@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production — ML Systems Lab</title>
+  <meta name="description" content="Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates diff…" />
+  <meta name="keywords" content="Models &amp; Math, Fairness, Bias, Algorithmic Accountability, Equalized Odds, Disparate Impact, COMPAS, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/fairness-bias-ml-metrics-production.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/fairness-bias-ml-metrics-production.html" />
+  <meta property="og:title" content="Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production" />
+  <meta property="og:description" content="Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates diff…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production" />
+  <meta name="twitter:description" content="Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates diff…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production",
+  "description": "Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates diff…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/fairness-bias-ml-metrics-production.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Fairness, Bias, Algorithmic Accountability, Equalized Odds, Disparate Impact, COMPAS"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=fairness-bias-ml-metrics-production#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Fairness in ML: Disparate Impact, Equalized Odds, and What You Actually Measure in Production</h1>
+    <p class="excerpt">Fairness is not one thing. Demographic parity, equalized odds, calibration, and individual fairness are mathematically incompatible — you cannot satisfy all of them simultaneously when base rates differ across groups. Understanding which definition to use and why is one of the hardest judgment calls in applied ML, and interviewers at FAANG companies ask about it constantly.</p>
+    <p>Fairness in machine learning is contested not because practitioners are careless, but because the word "fair" means different things to different people — and those differences are irreconcilable under certain data conditions. Every practitioner needs to know the main definitions, their relationships, and when each is appropriate.</p>
+<h2>Why fairness is hard: differing base rates</h2>
+<p>If the true positive rate (prevalence of the outcome) differs across demographic groups, many fairness definitions become mathematically incompatible. Chouldechova (2017) proved that when base rates differ: a classifier cannot simultaneously achieve equal false positive rates, equal false negative rates, AND be perfectly calibrated across groups. This is not a limitation of current algorithms — it is a mathematical impossibility. You must choose which fairness criterion to prioritise based on the domain and the costs of different error types.</p>
+<h2>Demographic parity (Statistical parity)</h2>
+<p>P(ŷ = 1 | A = 0) = P(ŷ = 1 | A = 1). The probability of a positive prediction is equal across groups A = 0 and A = 1. The 80% rule (EEOC in the US): if the selection rate for any group is less than 80% of the highest group's rate, disparate impact is presumed. Problem: demographic parity ignores whether the groups actually have different base rates for the outcome. If 30% of Group A and 10% of Group B qualify for a loan based on creditworthiness, demographic parity forces equal approval rates, which means approving unqualified Group B applicants or rejecting qualified Group A applicants.</p>
+<h2>Equalized odds</h2>
+<p>P(ŷ = 1 | Y = y, A = a) is equal across groups for both y = 0 and y = 1. The true positive rate AND the false positive rate must be equal across groups. This is a stronger condition: not just equal outcomes, but equal accuracy across groups. Weaker version — Equal Opportunity (Hardt et al., 2016): only require equal true positive rates (don't penalise equal false positives). The intuition: if you receive a positive prediction, your true label distribution should be the same regardless of group membership.</p>
+<h2>Calibration across groups</h2>
+<p>P(Y = 1 | ŷ = p, A = a) = p for all groups a. Among individuals assigned score p, approximately fraction p should be positive outcomes, in every subgroup. COMPAS (the recidivism prediction tool criticised in ProPublica's 2016 investigation) was well-calibrated — among defendants scored 7/10 for recidivism risk, approximately 70% did re-offend in both Black and white defendants. But the false positive rate was much higher for Black defendants. Both can be true simultaneously when base rates differ.</p>
+<h2>Individual fairness</h2>
+<p>Similar individuals should be treated similarly: if d(x_i, x_j) is small (individual-level distance), then |f(x_i) - f(x_j)| should be small. This avoids group-level aggregation but requires defining a meaningful similarity metric, which is non-trivial and domain-dependent.</p>
+<h2>Counterfactual fairness</h2>
+<p>A decision is counterfactually fair if, in a world where the protected attribute were different (holding everything else fixed causally), the outcome would be the same. This requires a causal model (DAG) of the data-generating process. Computationally expensive but captures the intuition that protected attributes should not causally influence decisions.</p>
+<h2>Proxy variables: the main practical problem</h2>
+<p>Removing protected attributes from the model does not achieve fairness. Other features (ZIP code, name, credit history, school) may be highly correlated with protected attributes and serve as proxies. Removing all proxies may destroy model performance. The right approach: measure disparate impact on outcomes, not just on inputs.</p>
+<h2>What to do in practice</h2>
+<p>Step 1: define the harm. Who can be harmed, in what direction, and at what cost? A false negative in loan approval (rejecting a creditworthy applicant) has different costs from a false positive in recidivism prediction (incarcerating an innocent person). Step 2: pick the fairness criterion that minimises the most serious harm. Step 3: measure. Use a fairness auditing library (Fairlearn, AI Fairness 360) to compute all criteria across demographic slices. Step 4: intervene at the right level. Pre-processing: reweight training data. In-processing: add fairness constraints to the loss function (Lagrangian relaxation). Post-processing: threshold adjustment per group (Hardt et al. equalised odds post-processor).</p>
+<h2>Intersectionality</h2>
+<p>Single-attribute fairness analysis misses intersectional groups. A model may be fair for women and fair for people over 40 separately, but unfair for women over 40. Test on intersections, especially for high-stakes decisions.</p>
+<h2>The interview angle</h2>
+<p>Interviewers at FAANG companies ask about fairness to test whether you understand that it is a value choice, not a technical optimisation problem. Good answers: name the competing definitions, explain the impossibility result, and describe how you would structure the trade-off given the specific domain's cost structure. Bad answers: "we use demographic parity" or "we just remove the sensitive feature."</p>
+<p><strong>Try on Colab:</strong> use the Adult Income dataset (UCI). Train a logistic regression model predicting income. Compute demographic parity difference, equalized odds difference, and false positive rate disparity across gender and race using Fairlearn. Apply Fairlearn's ThresholdOptimizer with equalized odds constraint. Report the trade-off between demographic parity and overall accuracy.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=fairness-bias-ml-metrics-production#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning — ML Systems Lab</title>
+  <meta name="description" content="Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and li…" />
+  <meta name="keywords" content="Models &amp; Math, Class Imbalance, SMOTE, Threshold Moving, Cost-Sensitive Learning, Fraud, Production, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/class-imbalance-base-rate-threshold-cost-sensitive.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/class-imbalance-base-rate-threshold-cost-sensitive.html" />
+  <meta property="og:title" content="Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning" />
+  <meta property="og:description" content="Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and li…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning" />
+  <meta name="twitter:description" content="Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and li…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning",
+  "description": "Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and li…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/class-imbalance-base-rate-threshold-cost-sensitive.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Class Imbalance, SMOTE, Threshold Moving, Cost-Sensitive Learning, Fraud, Production"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=class-imbalance-base-rate-threshold-cost-sensitive#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Class Imbalance: Base Rate, Threshold Moving, Cost-Sensitive Learning</h1>
+    <p class="excerpt">Fraud, default, churn, conversion, click-through, anomaly — every interesting business problem in classification has a rare positive class. The default ML toolkit was designed for balanced data and lies confidently on imbalanced data. Handling imbalance correctly is what separates a model that ships from a model that looks great on the leaderboard and dies in production.</p>
+    <p>Most interesting classification problems are imbalanced. Fraud at PhonePe runs at 0.1%. Default at a lender sits at 2%. Conversion in display ads is below 5%. Churn in subscription services is single-digit percent. In each case the positive class is rare and the metrics that work on balanced data become misleading or actively wrong. The handling of class imbalance is not a side topic — it is a fundamental skill for production ML.</p>
+<h2>Why accuracy fails first</h2>
+<p>A fraud model with 99% accuracy is almost certainly worthless. If the base rate is 1% fraud, then predicting "not fraud" on every transaction achieves 99% accuracy. The number looks fantastic and the model is doing nothing. Accuracy is only meaningful when classes are roughly balanced and the cost of each kind of mistake is roughly equal. Both assumptions fail in fraud, default, churn, and anomaly detection — which is to say, in most real classification work.</p>
+<p>The first move with any imbalanced problem is to throw out accuracy as the headline metric. You will look at precision and recall, the precision-recall trade-off curve, PR-AUC, and the realised metrics at the operating threshold the business will actually use. ROC-AUC is fine for ranking but it can hide problems in the high-precision region where you actually operate.</p>
+<h2>The base rate and what it does to your metrics</h2>
+<p>The base rate — the prevalence of the positive class in the population you are scoring — has a direct effect on precision but not on recall. As base rate drops, the same model achieves lower precision at every recall threshold. This is geometry, not weakness — there are fewer positives in the haystack, so the model's positive predictions are necessarily more likely to be false positives. When you compare two models, both trained on different prevalence assumptions, you cannot read the metrics directly; you have to renormalise.</p>
+<p>This also means that when prevalence shifts in production (seasonal effects on fraud, marketing pushes that change conversion rates), your model's apparent precision will shift even if the model is unchanged. The dashboard moves; the model is fine. Many "the model degraded" alerts at the operations level trace to unstated changes in base rate.</p>
+<h2>Class weights and resampling</h2>
+<p>The first technique most people reach for is class weighting: telling the loss function to penalise mistakes on the minority class more heavily. In sklearn, this is class_weight='balanced'. In gradient boosting, this is scale_pos_weight. The intuition is that the loss should give equal influence to each class regardless of how many examples there are.</p>
+<p>The second is resampling. Undersample the majority class by randomly dropping examples. Oversample the minority class by duplicating examples or by generating synthetic ones. SMOTE (Synthetic Minority Oversampling Technique) is the most famous synthetic approach — it generates new positive examples by linearly interpolating between existing positive examples and their nearest neighbours. SMOTE works on tabular data with smoothly distributed features and breaks on categorical features and on data where the minority class has multimodal structure.</p>
+<p>The third option is to leave the data alone and adjust the decision threshold. The model still trains on the original distribution but at scoring time you pick a threshold below 0.5 to convert the predicted probabilities into class decisions. This is often the best technique because it does not warp the model's probability estimates and it gives you a single tuning knob (the threshold) that maps directly to the operational trade-off between false positives and false negatives.</p>
+<h2>Cost-sensitive learning</h2>
+<p>The most principled framing of imbalanced classification is cost-sensitive learning. You assign a cost to each kind of mistake — false positive costs C_fp, false negative costs C_fn — and the optimal decision rule predicts positive whenever P(positive | x) > C_fp / (C_fp + C_fn). The threshold is now derived from the business cost ratio, not picked arbitrarily.</p>
+<p>This reframes the whole problem. You no longer ask "what is the right precision-recall trade-off"; you ask "what is the expected cost per prediction under this policy" and you optimise that directly. The advantage is that you can compare models on a single numerical scale that the business actually cares about. The disadvantage is that you have to extract real cost estimates from the business, which is often the hardest part.</p>
+<h2>Alert capacity and precision@K</h2>
+<p>Many imbalanced problems have a hard capacity constraint downstream. A fraud review team can process 200 cases a day. A content moderation queue can review 5000 posts a day. A bank can call 100 high-risk customers a day. The relevant metric is precision@K — what fraction of the top K predictions are actually positive — and the threshold is determined by the capacity, not by any statistical test.</p>
+<p>Optimising for precision@K is the right discipline for any system where action is gated by human or downstream capacity. You measure your model's value as "additional true positives caught per day, at the same capacity" against the baseline model. This is a far more useful metric than AUC for these problems.</p>
+<blockquote>WARNING — <strong>Production tell: AUC looks great, precision@K is terrible, and nobody notices for a quarter.</strong> A common failure mode in imbalanced fraud, default, and churn models. AUC is 0.92 on the validation set. Precision@100 (the actual production operating point) is 0.18. The model is in fact ranking some positives near the top but the ranking is mostly noise in the high-confidence region — which is exactly where you act. AUC is not sensitive to this; PR-AUC is somewhat sensitive; precision@K is the only metric that tells you the truth. Every production imbalanced classifier needs precision@K monitored, and the K has to match the actual operational capacity.</blockquote>
+<h2>Threshold moving in practice</h2>
+<p>The technique that gets the least respect for how effective it is. Train the model on the original imbalanced distribution. Compute the precision-recall curve on a held-out validation set. Pick the threshold that gives you the operating point your business needs (precision >= X, or recall >= Y, or precision@K). Deploy with that threshold.</p>
+<p>The advantages: no data manipulation, no synthetic examples, no probability distortion. The calibration of the original model is preserved. Re-tuning when business needs change is a one-line config update, not a retrain. The threshold is a knob the operations team can hold, not a model artifact you have to redeploy.</p>
+<h2>Interview questions on this topic</h2>
+<p>"A fraud model achieves 0.95 AUC on the validation set. Should you ship it?" — Not without checking precision@K at the actual operational capacity. AUC measures ranking across the full score distribution; production fraud teams only act on the top few hundred cases. A model with 0.95 AUC and 0.4 precision@100 will overwhelm the review team with false positives and they will (correctly) stop trusting the alerts. Always evaluate at the operating point.</p>
+<p>"You apply SMOTE to balance the training data and the model's calibration breaks. What happened?" — SMOTE oversamples the minority class. The model now sees a different base rate at training time than at production time. Its predicted probabilities reflect the synthetic distribution, not reality. The fix is either to recalibrate after training (Platt scaling on un-resampled data) or to use class weighting instead, which preserves the relative probabilities while compensating for the imbalance in the loss.</p>
+<p>"A pipeline is consuming 100,000 fraud alerts per day and the review team can only process 200. What's the operational lever you would change first?" — Move the threshold up. Train your model as is, but only flag the top 200 by score. Then measure realised precision at that cutoff and use that as the metric for any future improvement. The pipeline producing 100k alerts is wasted compute and noise — fix the operational point before fixing the model.</p>
+<p>"What is the relationship between class weighting and threshold moving — are they redundant?" — They are not redundant but they often partially substitute. Class weighting changes the model's decision boundary by penalising minority class errors more heavily during training. Threshold moving changes the decision rule applied to a model's probabilities at inference time. Both lower the effective threshold for predicting positive. The cleaner approach in most production work is to train without class weighting (preserving calibration) and adjust the threshold at serving time. Class weighting is necessary when the imbalance is so extreme (e.g. 1:1000) that the optimiser cannot learn the positive class signal at all without it.</p>
+<p><strong>Try on Colab:</strong> load the credit card fraud dataset from Kaggle (highly imbalanced, base rate ~0.17%). Train logistic regression and XGBoost. Compare four strategies: (1) class_weight='balanced', (2) SMOTE oversampling, (3) random undersampling, (4) no rebalancing + threshold moving. For each strategy, compute precision@500, recall at fixed precision=0.7, and calibration error. Show that threshold moving gives the best calibration while still hitting useful operating points. Plot the precision-recall curves overlaid for each strategy to make the trade-offs visual.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=class-imbalance-base-rate-threshold-cost-sensitive#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -379,4 +379,54 @@ export const QUIZ = {
     { q: "MAP estimation differs from MLE because:", opts: ["It uses more data","MAP adds a prior term, finding the parameter that maximises P(θ|D) = P(D|θ) × P(θ) — equivalent to MLE with regularisation","It's faster","Different output format"], ans: 1 },
     { q: "A weakly-informative prior is preferred over a flat prior because:", opts: ["Tradition","Flat priors can lead to unreasonably extreme posteriors with small data; weakly-informative priors gently regularise toward sensible values without being dogmatic","Easier computation","Better with deep learning"], ans: 1 },
   ],
+  76: [
+    { q: "A well-calibrated classifier means:", opts: ["High AUC","When the model predicts 70% confidence, the event actually occurs 70% of the time across many predictions","Low log-loss","Top-1 accuracy"], ans: 1 },
+    { q: "Modern neural networks are usually:", opts: ["Well-calibrated by default","Systematically overconfident due to capacity and the cross-entropy loss — calibration is much worse than for older models like logistic regression","Underconfident","Calibrated only after dropout"], ans: 1 },
+    { q: "Temperature scaling fixes calibration by:", opts: ["Re-training","Dividing logits by a single scalar T learned on a held-out calibration set; T > 1 softens overconfident predictions; argmax (and accuracy) unchanged","Adding noise","Removing classes"], ans: 1 },
+  ],
+  77: [
+    { q: "Knowledge distillation transfers learning from:", opts: ["Two students","A large teacher model to a smaller student model by training the student to match the teacher's output distribution (soft labels), capturing more information than hard labels","Datasets","Hardware"], ans: 1 },
+    { q: "Distillation often produces small models that:", opts: ["Always lose accuracy","Significantly outperform a same-size model trained directly on hard labels — the soft labels carry information about the teacher's uncertainty across classes","Cannot deploy","Use no parameters"], ans: 1 },
+    { q: "Temperature in distillation softmax serves to:", opts: ["Speed training","Soften the teacher distribution so the student has more information to learn from across all classes, not just the top-1","Reduce memory","Make the model deterministic"], ans: 1 },
+  ],
+  78: [
+    { q: "BM25 differs from TF-IDF by adding:", opts: ["Embedding similarity","Term frequency saturation (so 10 occurrences of a term don't count 10× more than 1) and document length normalisation","Learned features","Negative sampling"], ans: 1 },
+    { q: "BM25 still beats dense retrieval when:", opts: ["Compute is cheap","The query contains rare or exact-match terms (technical jargon, product IDs, code snippets) — sparse retrieval excels at exact matching that semantic embeddings smooth over","User base is small","Vocabulary is large"], ans: 1 },
+    { q: "Hybrid retrieval combines BM25 and dense embeddings because:", opts: ["Industry convention","Each captures different relevance signals — BM25 for exact match, embeddings for semantic similarity — and reciprocal rank fusion or learned combination outperforms either alone","Same recall","Easier to debug"], ans: 1 },
+  ],
+  79: [
+    { q: "Semantic search uses:", opts: ["Only keywords","Dense embeddings of query and documents in a shared vector space, retrieved by approximate nearest neighbour search — captures meaning, not just exact-match terms","Pure rules","Random sampling"], ans: 1 },
+    { q: "Cross-encoder rerankers are slower but more accurate because:", opts: ["More parameters","They process the (query, document) pair jointly through attention, modeling interactions that bi-encoder embeddings cannot capture in their separate computations","Faster inference","Better data"], ans: 1 },
+    { q: "Index freshness matters in production semantic search because:", opts: ["Disk space","New documents must reach the index quickly for time-sensitive queries; stale indexes systematically miss recent content even when relevant","SEO requirements","Vector size"], ans: 1 },
+  ],
+  80: [
+    { q: "Price elasticity measures:", opts: ["Cost of goods","The percentage change in demand divided by the percentage change in price — quantifies how price-sensitive demand is for a given product","Profit margins","Inventory levels"], ans: 1 },
+    { q: "Elastic demand (|elasticity| > 1) means:", opts: ["Prices are stable","A price increase causes demand to drop more than proportionally, so total revenue decreases — raising prices loses money","Demand is constant","Costs are flexible"], ans: 1 },
+    { q: "Estimating elasticity from observational data is hard because:", opts: ["Math is complex","Endogeneity: prices and demand both respond to other unobserved factors (competition, seasonality), so naive regression confounds elasticity with these factors — instrumental variables or experiments needed","Data is small","Models overfit"], ans: 1 },
+  ],
+  81: [
+    { q: "LTV (Lifetime Value) is the:", opts: ["Initial deposit","Total expected revenue a customer generates across their relationship, accounting for retention, expansion, and discount rate","Cost of acquisition","Average order"], ans: 1 },
+    { q: "Survivorship bias inflates historical LTV because:", opts: ["No effect","Training data only contains customers who survived long enough to generate revenue; early-tenure churners are missing or under-represented, so the model systematically over-estimates LTV","Random noise","Better customers signed up"], ans: 1 },
+    { q: "Churn modelling as survival analysis is preferred over classification because:", opts: ["Less code","It handles censoring (customers still active at observation end) and predicts time-to-event, not just binary outcome — richer information for retention planning","Faster training","Same output"], ans: 1 },
+  ],
+  82: [
+    { q: "Multi-touch attribution attempts to:", opts: ["Reduce ad spend","Distribute credit for a conversion across multiple marketing touchpoints (display ad, email, search) based on the relative contribution of each","Improve creative","Lower CAC"], ans: 1 },
+    { q: "Position-based attribution gives more weight to:", opts: ["Cheapest channel","First and last touch (e.g. 40-40-20 split with middle touches sharing the remainder) — rewards demand creation and demand capture more than middle nurture","Most expensive","Smallest impression"], ans: 1 },
+    { q: "Shapley value attribution from game theory:", opts: ["Is approximate only","Assigns each touchpoint credit equal to its marginal contribution averaged over all possible orderings — theoretically clean but expensive to compute and requires many sequences","Always equals last-touch","Ignores order"], ans: 1 },
+  ],
+  83: [
+    { q: "Uplift modelling targets:", opts: ["Engagement","The treatment effect (the change in outcome caused by an intervention) per individual, distinguishing 'persuadables' (positive uplift) from 'sure things' and 'lost causes' (zero or negative uplift)","Revenue","Cost"], ans: 1 },
+    { q: "Uplift is different from response modelling because:", opts: ["Same output","Response modelling predicts who will convert; uplift predicts who will convert BECAUSE of the intervention — targeting only positive-uplift customers maximises causal impact, not just correlation","Faster training","Less data"], ans: 1 },
+    { q: "Estimating uplift from observational data is challenging because:", opts: ["Memory cost","You can't observe the same person both treated and untreated; uplift requires counterfactual reasoning, often via two-model or transformed-outcome approaches","Bad libraries","Wrong loss"], ans: 1 },
+  ],
+  84: [
+    { q: "Multiple testing inflates false positive rate because:", opts: ["Math error","Each test has α=0.05 false positive rate; running 20 independent tests gives roughly 1 - (1-0.05)^20 ≈ 64% chance of at least one false positive — without correction you'll find spurious effects","Better data","Tradition"], ans: 1 },
+    { q: "Bonferroni correction divides α by:", opts: ["The sample size","The number of tests — preserves family-wise error rate but is conservative for correlated tests and reduces power","The variance","The standard deviation"], ans: 1 },
+    { q: "FDR (Benjamini-Hochberg) is preferred over Bonferroni when:", opts: ["Sample is small","You want to control the proportion of false discoveries among rejections, not the chance of any false discovery — gives higher power for exploratory analyses with many tests","Tests are correlated","p-values are small"], ans: 1 },
+  ],
+  85: [
+    { q: "PCA finds:", opts: ["Random axes","Orthogonal directions of maximum variance — the first PC captures the most variance, the second PC the most variance orthogonal to the first, and so on","Class labels","Mean vector"], ans: 1 },
+    { q: "PCA assumes:", opts: ["Categorical data","That high variance directions are informative and that linear projections capture the relevant structure — fails for non-linear manifolds and class-discriminative-but-low-variance directions","Standard normal data","Gaussian noise only"], ans: 1 },
+    { q: "PCA on un-scaled data is misleading because:", opts: ["No effect","Variables with larger numerical ranges dominate the variance and the principal components — always standardise (zero mean, unit variance) before PCA unless features are on the same scale by construction","It's faster","Computing changes"], ans: 1 },
+  ],
 }

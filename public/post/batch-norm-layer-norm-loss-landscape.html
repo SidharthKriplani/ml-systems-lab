@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch Norm and Layer Norm: What They Are Actually Doing to the Loss Landscape — ML Systems Lab</title>
+  <meta name="description" content="Batch Normalisation is described as fixing &quot;internal covariate shift.&quot; The explanation sounds plausible but is not the full story — and later research showed that the covariate shift explanation is mo…" />
+  <meta name="keywords" content="Deep Learning, Batch Normalization, Layer Normalization, Training Stability, Optimization, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/batch-norm-layer-norm-loss-landscape.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/batch-norm-layer-norm-loss-landscape.html" />
+  <meta property="og:title" content="Batch Norm and Layer Norm: What They Are Actually Doing to the Loss Landscape" />
+  <meta property="og:description" content="Batch Normalisation is described as fixing &quot;internal covariate shift.&quot; The explanation sounds plausible but is not the full story — and later research showed that the covariate shift explanation is mo…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Batch Norm and Layer Norm: What They Are Actually Doing to the Loss Landscape" />
+  <meta name="twitter:description" content="Batch Normalisation is described as fixing &quot;internal covariate shift.&quot; The explanation sounds plausible but is not the full story — and later research showed that the covariate shift explanation is mo…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Batch Norm and Layer Norm: What They Are Actually Doing to the Loss Landscape",
+  "description": "Batch Normalisation is described as fixing \"internal covariate shift.\" The explanation sounds plausible but is not the full story — and later research showed that the covariate shift explanation is mo…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/batch-norm-layer-norm-loss-landscape.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Batch Normalization, Layer Normalization, Training Stability, Optimization, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=batch-norm-layer-norm-loss-landscape#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Batch Norm and Layer Norm: What They Are Actually Doing to the Loss Landscape</h1>
+    <p class="excerpt">Batch Normalisation is described as fixing &quot;internal covariate shift.&quot; The explanation sounds plausible but is not the full story — and later research showed that the covariate shift explanation is mostly wrong. What Batch Norm actually does is smooth the loss landscape. Layer Norm does the same thing differently. Here is the geometry that both are exploiting.</p>
+    <p>Normalisation layers are universally used in deep networks, but the explanation for why they work has evolved significantly since Batch Norm was introduced. The covariate shift framing is familiar but empirically weak. The loss landscape explanation is more accurate and more useful for intuition.</p>
+<h2>The problem: deep networks are sensitive to scale</h2>
+<p>Without normalisation, a weight in an early layer that grows slightly too large causes the activations in subsequent layers to grow, which causes gradients to explode or saturate. The chain of transformations amplifies small perturbations. Training is brittle: it requires careful learning rate tuning, careful initialisation, and is prone to collapse for deep networks.</p>
+<h2>Batch Normalisation: normalise over the batch</h2>
+<p>For a layer producing activations x of shape (batch_size, features), Batch Norm computes: μ = mean over batch dimension, σ^2 = variance over batch dimension, x_norm = (x - μ) / sqrt(σ^2 + ε), output = γ * x_norm + β.</p>
+<p>γ and β are learnable per-feature scale and shift parameters. They are necessary: without them, normalisation would constrain every layer to produce zero-mean unit-variance activations, removing the expressive capacity that the layer is supposed to have. γ and β allow the network to learn any mean and variance — they just make it explicit and trainable rather than implicit.</p>
+<p>The effect on training: mean and variance are controlled at every layer boundary. Learning rate can be much higher (less risk of activation explosion). Gradients are better conditioned. Training is faster and more stable.</p>
+<h2>What Batch Norm actually does to the loss landscape</h2>
+<p>Santurkar et al. (2018) showed experimentally that Batch Norm does not primarily reduce internal covariate shift (the activations still shift; the paper showed that networks with Batch Norm and injected covariate shift train fine). What it does do is smooth the loss landscape — the loss function becomes more Lipschitz, meaning its gradient does not change rapidly from step to step. A smoother landscape allows larger learning rates and more predictable gradient updates.</p>
+<h2>The problems with Batch Norm</h2>
+<p>Batch statistics: the normalisation statistics (μ, σ^2) are computed over the batch. With large batches this is stable. With small batches (batch size 1 or 2) the statistics are noisy and training is unstable. At inference with batch size 1, the batch statistics are meaningless — Batch Norm maintains running estimates of μ and σ during training to use at inference, but these estimates drift and can cause train/inference discrepancies.</p>
+<p>Recurrent networks: computing batch statistics across time steps is problematic because statistics vary with sequence position.</p>
+<h2>Layer Normalisation: normalise over the features</h2>
+<p>For the same activation tensor of shape (batch_size, features), Layer Norm computes: μ = mean over feature dimension (per example), σ^2 = variance over feature dimension (per example), x_norm = (x - μ) / sqrt(σ^2 + ε), output = γ * x_norm + β.</p>
+<p>Each example is normalised independently of other examples in the batch. This means Layer Norm works for batch size 1, works across variable-length sequences, and produces the same result at training and inference (no running statistics needed). These properties make it ideal for Transformers.</p>
+<h2>Why Transformers use Layer Norm</h2>
+<p>Transformers process variable-length sequences with arbitrary batch sizes. Batch Norm would require tracking separate statistics for each sequence position, and inference behaviour would depend on batch composition. Layer Norm avoids both problems. Every token embedding is normalised over its feature dimension independently. The γ and β parameters are shared across sequence positions (same feature dimension), keeping the parameter count manageable.</p>
+<p>The placement matters too: Pre-LN (layer norm applied before the sub-layer, as in the original Transformer) vs Post-LN (after the sub-layer, as in GPT-2). Pre-LN makes training more stable for very deep models because the residual pathway is unscaled — gradients flow back through the residual connection without passing through a layer norm.</p>
+<p><strong>Try on Colab:</strong> train a 10-layer MLP on MNIST without any normalisation, then with Batch Norm, then with Layer Norm. Plot the distribution of activations at each layer across training epochs. The activation explosion in the unnormalised case and the stability introduced by either normalisation variant will be visible in the histograms.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=batch-norm-layer-norm-loss-landscape#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

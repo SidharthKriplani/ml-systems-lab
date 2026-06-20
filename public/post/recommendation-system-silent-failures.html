@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Six Ways a Recommendation System Silently Stops Recommending — ML Systems Lab</title>
+  <meta name="description" content="Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard…" />
+  <meta name="keywords" content="Recommendations, ML System Design, Observability, Embedding Drift, Position Bias, Catalog Coverage, Silent Failures, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-silent-failures.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-silent-failures.html" />
+  <meta property="og:title" content="The Six Ways a Recommendation System Silently Stops Recommending" />
+  <meta property="og:description" content="Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Six Ways a Recommendation System Silently Stops Recommending" />
+  <meta name="twitter:description" content="Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Six Ways a Recommendation System Silently Stops Recommending",
+  "description": "Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/recommendation-system-silent-failures.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Recommendations, ML System Design, Observability, Embedding Drift, Position Bias, Catalog Coverage, Silent Failures"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-silent-failures#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>The Six Ways a Recommendation System Silently Stops Recommending</h1>
+    <p class="excerpt">Your recommendation system has 99.9% uptime. Latency is fine. CTR is flat. Nobody notices for three months. Recommendation systems fail silently in six specific patterns that are invisible to standard infrastructure monitoring and require ML-specific observability to detect.</p>
+    <h2>Why Recommendation Systems Fail Without Anyone Noticing</h2>
+<p>Infrastructure monitoring — uptime, latency, error rate — tells you the serving system is healthy. It tells you nothing about whether the recommendations are any good. A recommendation system can be perfectly operational as a software system while being completely broken as a product. These two failure modes live in different monitoring planes, and most teams only instrument the first one.</p>
+<p>The six failure modes below are all silent: they degrade recommendation quality without triggering infrastructure alerts. Each has a specific signal that catches it — but only if you are looking.</p>
+<h2>Failure Mode 1: Index Staleness</h2>
+<p>Item embeddings are not refreshed when new inventory is added. The recommendation index contains embeddings for the catalog as it existed at last refresh. New items have no embedding and are never surfaced. The system is not broken — it is simply recommending from a stale slice of the catalog.</p>
+<p>Signal: compare CTR on items that are 0–1 days old versus items that are 7+ days old. On a healthy system, new items should surface in recommendations and accumulate CTR. If new-item CTR is more than 90% lower than week-old-item CTR, the embedding pipeline is not keeping pace with catalog additions. Set a freshness SLA: no item embedding older than 26 hours in the serving index.</p>
+<h2>Failure Mode 2: Popularity Collapse</h2>
+<p>The recommendation model is trained on clicks. Clicks are biased toward already-popular items because those items are recommended more. More recommendations mean more clicks, which means the model learns that those items are good, which means more recommendations. After enough retraining cycles, the long tail of the catalog disappears entirely. The system degrades from personalized recommendations to a popularity ranking with a personalization veneer.</p>
+<p>Signal: track inter-list similarity (ILS) — the average pairwise distance between items recommended to the same user across a session. A high ILS means diverse recommendations. If ILS drops more than 40% over 30 days without a product change, popularity collapse is occurring. Also track catalog coverage: what percentage of items are recommended at least once per week. Healthy systems cover 15–30% of catalog. Below 5% is collapse.</p>
+<h2>Failure Mode 3: Embedding Drift</h2>
+<p>User embeddings are produced by a model trained on historical behavior. As user behavior evolves — new content categories launch, seasonal patterns shift, platform usage patterns change — the embedding model falls out of step. Cold-start users get profiles that reflect the population from 6 months ago, not today. Warm users get embeddings that no longer accurately represent their current interests.</p>
+<p>Signal: for a cohort of users, compute the cosine similarity between their embedding at week 1 and their embedding at week 8. On a healthy system, this should be moderate — users change, but gradually. If the similarity drops below 0.4 for a large fraction of users, the embedding model is not capturing behavioral evolution. Retrain the embedding model, not just the ranking model.</p>
+<h2>Failure Mode 4: Position Bias Entrenchment</h2>
+<p>The model is trained on clicks. Position 1 gets the most clicks regardless of relevance because users click what they see first. If the training pipeline does not correct for position bias, the model learns a spurious correlation: position 1 items are good. Over time, the ranking degrades toward a system that always puts the same popular items first, not because they are most relevant but because they are trained to look most relevant by their position.</p>
+<p>Signal: compute CTR stratified by position. A healthy system has CTR@1 higher than CTR@3, but CTR@3–5 should still be meaningfully non-zero. If CTR@1 is high but CTR@3–5 is near zero, users are not engaging with anything below the first slot. This is the footprint of position bias entrenchment. Fix: inverse propensity weighting in training, or a separate position bias model.</p>
+<h2>Failure Mode 5: Coverage Collapse</h2>
+<p>The catalog has one million items. The recommendation system has only ever recommended ten thousand of them. The remaining 990,000 items are stranded — they have no interaction history, accumulate no training signal, and are never recommended. The system has silently reduced itself to a 10K-item system while the product team believes they have a 1M-item system.</p>
+<p>Signal: catalog coverage — the percentage of catalog items recommended at least once per week. Track this as an explicit health metric. Below 5% is a coverage crisis. Below 1% means the system has effectively abandoned discovery. Remediation: forced exploration budget (reserve 10–15% of recommendation slots for items outside the top-recommended set), constrained diversity in the retrieval layer, or explicit long-tail boosting.</p>
+<h2>Failure Mode 6: Seasonality Blindness</h2>
+<p>The model was trained on data from the last 90 days. If those 90 days were summer, the model has never seen winter behavior: different content preferences, different device usage patterns, different session lengths. As the season changes, the model serves recommendations calibrated for a world that no longer exists.</p>
+<p>Signal: compare the category distribution of recommendations to the category distribution of current browse behavior. If users are browsing 40% holiday content but recommendations are still serving 20% holiday content (the summer training distribution), the model is seasonally misaligned. Fix: weight recent training data more heavily, use rolling windows that overlap season transitions, or maintain separate seasonal model variants with explicit routing.</p>
+<h2>Building a Recommendation Health Dashboard</h2>
+<p>A production recommendation system needs six health signals, one per failure mode above, monitored continuously:</p>
+<p>1. Embedding freshness SLA — max age of any item embedding in the serving index 2. New-item CTR ratio — CTR on items <24h old vs items >7d old 3. ILS (inter-list similarity) — weekly trend, alert on >40% drop 4. Catalog coverage — % of catalog recommended at least once per week 5. CTR by position — stratified by slot, alert if CTR@3–5 collapses 6. Recommendation vs browse category alignment — divergence by category</p>
+<p>None of these metrics come from your infrastructure monitoring stack. They all require logging what the recommendation system served, joining against item metadata, and computing these statistics in an offline batch job or a streaming pipeline. The effort to build this dashboard is one sprint. The cost of not having it is months of silent degradation.</p>
+<h2>Practice this in System Design to work through how to architect a two-tower recommendation system with freshness constraints, diversity mechanisms, and position bias correction built in from the start.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=recommendation-system-silent-failures#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

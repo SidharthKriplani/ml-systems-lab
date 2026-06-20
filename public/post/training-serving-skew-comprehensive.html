@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training-Serving Skew: The Complete Taxonomy and Detection Framework — ML Systems Lab</title>
+  <meta name="description" content="Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference…" />
+  <meta name="keywords" content="Training-Serving Skew, Feature Engineering, Feature Store, Production ML, System Design, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew-comprehensive.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew-comprehensive.html" />
+  <meta property="og:title" content="Training-Serving Skew: The Complete Taxonomy and Detection Framework" />
+  <meta property="og:description" content="Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Training-Serving Skew: The Complete Taxonomy and Detection Framework" />
+  <meta name="twitter:description" content="Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Training-Serving Skew: The Complete Taxonomy and Detection Framework",
+  "description": "Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew-comprehensive.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Training-Serving Skew, Feature Engineering, Feature Store, Production ML, System Design"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew-comprehensive#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Training-Serving Skew: The Complete Taxonomy and Detection Framework</h1>
+    <p class="excerpt">Your model has 0.91 AUC in the notebook. Two weeks in production, it degrades to baseline. Nobody changed the model. Nobody changed the data. The gap is training-serving skew — a systematic difference between how features are computed at training time and how they&#39;re computed at serving time. It&#39;s the single most common source of production ML failure, and it hides in four distinct forms that each require different prevention strategies.</p>
+    <p>Training-serving skew is the gap between model quality in an offline evaluation environment and model quality in a production serving environment. The model is the same. The code that computes features at training time and serving time is different — and that difference is what breaks the model.</p>
+<h2>Why this happens systematically:</h2>
+<p>Training happens once. An engineer (or a team) writes a feature computation pipeline. It runs on historical data, generates training examples, the model trains and validates offline, and metrics look good.</p>
+<p>Serving happens continuously. A different engineer (or a different team, or the same engineer months later without context) writes serving code that computes features at prediction time. They have incomplete information about the training pipeline. They make different assumptions. The two code paths diverge.</p>
+<p>The model has learned from training features. Production features look different. Predictions degrade.</p>
+<h2>The four canonical forms of training-serving skew:</h2>
+<h2>1. Timestamp boundary bugs</h2>
+<p>Training computes a 7-day rolling window with \`WHERE timestamp <= event_ts\`. Serving computes a 7-day rolling window with \`WHERE timestamp <= NOW() - INTERVAL 7 DAYS\`. Both are "7 days" — they should be identical.</p>
+<p>They're not. At midnight UTC, they diverge by up to 24 hours. A training event at 08:00 UTC gets a 7-day window from [T-7d 08:00, T 08:00]. A serving request at 08:05 UTC gets a window from [NOW-7d 00:00, NOW 00:00]. Boundary mismatch → feature value difference.</p>
+<p>Production signal: features shift noticeably at midnight UTC. Your model's prediction for the same user differs by a few percentage points depending on when the request arrives relative to UTC midnight.</p>
+<h2>2. Different null handling</h2>
+<p>Training imputes missing \`customer_age\` with the column mean (34 years). Serving code uses 0 for missing values "for simplicity." A user with missing age gets 34 in training (looks like an adult) and 0 in serving (looks like invalid/new user). The model has learned separate patterns for age 0 and age 34 — they are different in its decision boundary.</p>
+<p>Production signal: new users and edge cases (null demographic fields) perform worse than average. A slice analysis shows precision drops 15% for users where a demographic field is missing.</p>
+<h2>3. Scaler fitted on wrong data</h2>
+<p>Training: \`scaler.fit(X_train)\` then \`scaler.transform(X_train)\` and \`scaler.transform(X_val)\`. All features are standardised to zero mean and unit variance across the training distribution.</p>
+<p>Serving: \`scaler.fit_transform([single_row])\` every request. A single row has mean = itself and std ≈ 0. Every scaled feature becomes near-zero or NaN. The model receives a feature vector that it has never seen: all zeros.</p>
+<p>Production signal: scaled features disappear (become NaN or 0). Model performance is random. This is the most catastrophic form.</p>
+<h2>4. Aggregation window timezone or calendar mismatch</h2>
+<p>Training: "daily active users" computed as users active between [calendar_day_start_UTC, calendar_day_end_UTC]. A user active on Dec 31 at 23:55 UTC and Jan 1 at 00:05 UTC is counted as 2 calendar days.</p>
+<p>Serving: "daily active users" computed as a rolling 24-hour window from wall-clock time. Same user is counted in a single 24-hour window.</p>
+<p>Small difference per user. Consistent bias across aggregate features. The model learns patterns from calendar-day aggregation; production receives rolling-window aggregation.</p>
+<h2>Detection framework:</h2>
+<p><strong>Step 1: Log serving features.</strong> Alongside every prediction, log the feature vector. Use the same precision and serialisation as training. Send to a central store.</p>
+<p><strong>Step 2: Compute daily PSI.</strong> For each feature: compute PSI(training_distribution, serving_distribution_from_logs). PSI > 0.1: investigate.</p>
+<p><strong>Step 3: Identify features with unexplained drift.</strong> Features where PSI is high but you haven't deployed changes. Compare the feature computation code between training and serving. Document differences.</p>
+<p><strong>Step 4: Implement a feature parity test.</strong> Take 100 historical events. Compute features for each event using the training pipeline AND the serving pipeline (retroactively, with the same data the serving pipeline would have received at that time). Compare. Any feature with mean difference > 0.05 on a normalised scale is suspect.</p>
+<p><strong>Step 5: Establish a feature store baseline.</strong> Use a feature store (Feast, Tecton, Hopsworks) that enforces identical code paths for training and serving. Invest the time upfront; it pays for itself in prevented incidents.</p>
+<p>\`\`\`python import pandas as pd import numpy as np</p>
+<p>def detect_training_serving_skew(train_features: pd.DataFrame, serving_log: pd.DataFrame, threshold: float = 0.1) -> dict: """ Compare training feature distributions vs logged serving features. Returns per-feature PSI. PSI > 0.1 = investigate. PSI > 0.2 = incident. """ results = {} common_cols = set(train_features.columns) & set(serving_log.columns)</p>
+<p>for col in common_cols: train_vals = train_features[col].dropna().values serve_vals = serving_log[col].dropna().values</p>
+<p>if len(serve_vals) < 100: results[col] = {'psi': None, 'status': 'INSUFFICIENT_DATA'} continue</p>
+<p># Compute PSI using training distribution as reference breakpoints = np.percentile(train_vals, np.linspace(0, 100, 11)) breakpoints[0], breakpoints[-1] = -np.inf, np.inf</p>
+<p>exp = np.clip(np.histogram(train_vals, bins=breakpoints)[0] / len(train_vals), 1e-6, None) act = np.clip(np.histogram(serve_vals, bins=breakpoints)[0] / len(serve_vals), 1e-6, None) psi = float(np.sum((act - exp) * np.log(act / exp)))</p>
+<p>status = 'STABLE' if psi < 0.1 else 'INVESTIGATE' if psi < 0.2 else 'INCIDENT' results[col] = {'psi': round(psi, 4), 'status': status}</p>
+<p>return results \`\`\`</p>
+<h2>Prevention through feature stores:</h2>
+<p>A proper feature store provides a single Python function that:</p>
+<li>Runs during training to generate training data</li>
+<li>Runs during serving to compute features at prediction time</li>
+<li>Logs its outputs so you can audit alignment</li>
+<p>The code path is identical. Bugs are caught once. Deployment is safer. The engineering cost is front-loaded (weeks of setup). The cost of not having one compounds indefinitely (months of debugging).</p>
+<h2>The production checkpoint:</h2>
+<p>Before you ship a model: 1. Log the serving feature vector for 100 predictions 2. Recompute those features using the training pipeline on the same data 3. Compare: if any feature differs by > 5% in normalised space, fix the serving code 4. Ship feature logging infrastructure alongside the model 5. Set up daily PSI monitoring on the top-10 features by importance</p>
+<h2>Practice this in System Design to understand production-grade feature pipelines and how to architect them for safety.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=training-serving-skew-comprehensive#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

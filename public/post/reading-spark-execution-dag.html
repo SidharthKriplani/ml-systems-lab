@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches — ML Systems Lab</title>
+  <meta name="description" content="Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see &quot;completed.&quot; Senior engineers open the stages tab, find the task dura…" />
+  <meta name="keywords" content="Spark, PySpark, Performance, Debugging, Data Engineering, Skew, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/reading-spark-execution-dag.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/reading-spark-execution-dag.html" />
+  <meta property="og:title" content="Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches" />
+  <meta property="og:description" content="Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see &quot;completed.&quot; Senior engineers open the stages tab, find the task dura…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="PySpark" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches" />
+  <meta name="twitter:description" content="Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see &quot;completed.&quot; Senior engineers open the stages tab, find the task dura…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches",
+  "description": "Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see \"completed.\" Senior engineers open the stages tab, find the task dura…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/reading-spark-execution-dag.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Spark, PySpark, Performance, Debugging, Data Engineering, Skew"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=reading-spark-execution-dag#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">PySpark &middot; ML Systems Lab</div>
+    <h1>Reading the Spark Execution DAG: The Diagnostic Skill Nobody Teaches</h1>
+    <p class="excerpt">Every Spark performance problem is visible in the UI — if you know what to look for. Most engineers glance at the job page and see &quot;completed.&quot; Senior engineers open the stages tab, find the task duration histogram, and know within 60 seconds whether the problem is skew, shuffle, or serialization. Here&#39;s the complete reading guide.</p>
+    <p>The Spark UI at port 4040 (or the History Server) tells you everything you need to debug a slow job. Most people only check if it completed. Here\'s how to actually read it.</p>
+<h2>The Jobs tab: your entry point</h2>
+<p>Each action (collect, write, count) triggers a job. Jobs are composed of stages, and stages are composed of tasks. The jobs tab shows you duration and whether any stages were skipped (cached). Start here — find the job that took longest.</p>
+<h2>The Stages tab: where the real diagnostic begins</h2>
+<p>Click into the slow job. You see its stages, each corresponding to a shuffle boundary (any wide transformation: groupBy, join, repartition, distinct). The stage table shows:</p>
+<li><strong>Duration</strong>: wall-clock time for the stage</li>
+<li><strong>Input/Output/Shuffle Read/Shuffle Write</strong>: data volume at each phase</li>
+<li><strong>Tasks</strong>: how many tasks ran, how many failed</li>
+<p>The ratio that matters most: if Shuffle Read is 10x the Input size, you have a skewed join or explosion in cardinality. If Shuffle Write is large but Shuffle Read is small in the next stage, data is being generated and discarded — look for unnecessary explode() calls.</p>
+<p>\`\`\`python # Read key Spark UI metrics programmatically from pyspark.sql import SparkSession</p>
+<p>spark = SparkSession.builder.getOrCreate() sc = spark.sparkContext</p>
+<p># After a job completes, check stage metrics status = sc.statusTracker() for job_id in status.getActiveJobIds() or status.getJobIdsForGroup(None): info = status.getJobInfo(job_id) for stage_id in info.stageIds: stage = status.getStageInfo(stage_id) if stage: print(f"Stage {stage_id}: tasks={stage.numActiveTasks}, " f"shuffle_read={stage.inputBytes}, " f"shuffle_write={stage.shuffleWriteBytes}")</p>
+<p># The two metrics that tell you the most: # 1. shuffleWriteBytes >> shuffleReadBytes → skewed partition # 2. max(taskDuration) / median(taskDuration) > 5 → data skew \`\`\`</p>
+<h2>The Task Duration Histogram: skew detector</h2>
+<p>Click into a stage and scroll to the task metrics. The task duration histogram is the single most useful chart in Spark debugging. It shows the distribution of time spent across all tasks.</p>
+<p>A healthy histogram: roughly normal or uniform distribution. All tasks finish within 2x of each other.</p>
+<p>A skew signature: most tasks finish in 0.2s, one task takes 120s. The job\'s total duration is dominated by that single slow task. This is data skew — one partition has far more data than the others. The fix: salting the join key or using skew hints (\`spark.sql.autoBroadcastJoinThreshold\`, \`skewJoin\` hint in Spark 3.x).</p>
+<p>A stragglers signature: a long right tail with 3–5 tasks taking 3x the median. This is usually resource contention (noisy neighbour on the executor) or GC pressure. Look at the GC time column — if GC time > 10% of task duration, you have memory pressure.</p>
+<h2>The SQL tab: for DataFrame and SQL queries</h2>
+<p>The SQL tab shows the physical plan for each query. Here you can see:</p>
+<li><strong>BroadcastHashJoin vs SortMergeJoin</strong>: broadcast joins are fast (table fits in memory and is copied to each executor). SortMergeJoin requires shuffle on both sides — much more expensive. If you see SortMergeJoin on a small table, force a broadcast with \`broadcast()\` hint.</li>
+<li><strong>Exchange (shuffle)</strong>: every Exchange node in the plan is a shuffle. Count them. Three joins between large tables = potentially 6 shuffles. Can any of them be avoided by co-partitioning? By denormalization?</li>
+<li><strong>Filter pushdown</strong>: good plans show filters pushed below joins. If your filter appears above the join in the plan, Spark is shuffling unneeded rows before filtering them.</li>
+<h2>The Storage tab: cache debugging</h2>
+<p>If you call .cache() or .persist(), the stored RDD/DataFrame appears here with memory and disk usage. Key checks: is the cached dataset fully materialized (fraction cached = 100%)? If it\'s 40% cached, the rest spills to disk — and your "cached" job is doing partial re-computation on every access.</p>
+<h2>The Environment tab: configuration audit</h2>
+<p>Check spark.executor.memory, spark.executor.cores, spark.sql.shuffle.partitions (default 200 — almost always wrong), spark.default.parallelism. If shuffle.partitions = 200 and your dataset has 10TB, each partition is 50GB and you\'ll OOM. Rule of thumb: target 100–200MB per partition, set shuffle.partitions accordingly.</p>
+<h2>The two-minute diagnostic</h2>
+<p>1. Jobs tab → find the slow job 2. Stages tab → find the stage with the highest duration, check Shuffle Read/Write ratio 3. Stage detail → task duration histogram → skewed? stragglers? uniform? 4. SQL tab → count Exchange nodes, check join types, verify filter pushdown 5. Storage tab → are your caches fully materialised?</p>
+<p>After running this five times, you\'ll start catching Spark performance bugs in code review before they ever hit production.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=reading-spark-execution-dag#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

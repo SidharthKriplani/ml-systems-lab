@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uplift Modeling: Did Your Intervention Actually Cause the Outcome? — ML Systems Lab</title>
+  <meta name="description" content="Standard predictive models answer &quot;who will convert?&quot; Uplift models answer &quot;who will convert because of our intervention?&quot; The difference is enormous. Targeting your highest-conversion-probability use…" />
+  <meta name="keywords" content="Data Science, Uplift Modeling, Causal Inference, Propensity Score, Incrementality, Marketing, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/uplift-modeling-incrementality-propensity.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/uplift-modeling-incrementality-propensity.html" />
+  <meta property="og:title" content="Uplift Modeling: Did Your Intervention Actually Cause the Outcome?" />
+  <meta property="og:description" content="Standard predictive models answer &quot;who will convert?&quot; Uplift models answer &quot;who will convert because of our intervention?&quot; The difference is enormous. Targeting your highest-conversion-probability use…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Uplift Modeling: Did Your Intervention Actually Cause the Outcome?" />
+  <meta name="twitter:description" content="Standard predictive models answer &quot;who will convert?&quot; Uplift models answer &quot;who will convert because of our intervention?&quot; The difference is enormous. Targeting your highest-conversion-probability use…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Uplift Modeling: Did Your Intervention Actually Cause the Outcome?",
+  "description": "Standard predictive models answer \"who will convert?\" Uplift models answer \"who will convert because of our intervention?\" The difference is enormous. Targeting your highest-conversion-probability use…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/uplift-modeling-incrementality-propensity.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Uplift Modeling, Causal Inference, Propensity Score, Incrementality, Marketing"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=uplift-modeling-incrementality-propensity#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Uplift Modeling: Did Your Intervention Actually Cause the Outcome?</h1>
+    <p class="excerpt">Standard predictive models answer &quot;who will convert?&quot; Uplift models answer &quot;who will convert because of our intervention?&quot; The difference is enormous. Targeting your highest-conversion-probability users with a discount might mean you are paying people to do something they were going to do anyway. Uplift modeling identifies the incremental impact — the customers who would not have converted without the treatment.</p>
+    <p>Every retention campaign, promotion, and marketing intervention has a hidden inefficiency: some portion of the people you target would have converted anyway. Targeting these "sure things" wastes budget and can damage relationships (a loyal customer who receives a discount every time they're about to churn learns to delay purchases until a discount arrives). Uplift modeling targets the people for whom the intervention actually matters.</p>
+<h2>The four customer segments</h2>
+<p>The Rubin potential outcomes framework defines four segments for any binary treatment (offer, email, intervention): Persuadables — would convert with treatment, would not without. Sleeping dogs — would convert without treatment, less likely to convert with (your email annoyed them). Lost causes — would not convert with or without. Sure things — would convert with or without. Standard ML models predict total conversion probability, which conflates all four groups. You want to identify and target only persuadables.</p>
+<h2>Individual Treatment Effect and the Fundamental Problem of Causal Inference</h2>
+<p>The Individual Treatment Effect (ITE) for person i is: ITE_i = Y_i(1) - Y_i(0) — the difference in outcome under treatment vs no treatment. The fundamental problem: you can only ever observe one of these potential outcomes. The same person cannot be both treated and untreated simultaneously.</p>
+<p>Uplift modeling estimates ITE from observational or experimental data by modelling P(Y=1 | T=1, X) - P(Y=1 | T=0, X) — the difference in conversion probability between treated and untreated groups, conditional on features X.</p>
+<h2>Two-model uplift (T-learner)</h2>
+<p>Fit two separate models: one on the treated group (model_1: P(Y=1 | X, T=1)) and one on the control group (model_0: P(Y=1 | X, T=0)). Uplift score for each individual = model_1(X) - model_0(X). Simple to implement; estimates are biased when the treated and control groups are unbalanced (which they always are in observational data).</p>
+<h2>Meta-learners: S-learner, X-learner</h2>
+<p>S-learner: include the treatment indicator T as a feature in a single model. Uplift = f(X, T=1) - f(X, T=0). Can be biased when T is correlated with confounders. X-learner (Künzel et al., 2019): stage 1, fit outcome models on each group. Stage 2, compute imputed treatment effects D̃_i = Y_i - μ̂_0(X_i) for treated units and D̃_i = μ̂_1(X_i) - Y_i for control units. Stage 3, regress D̃_i on X to get a single uplift model. X-learner is more efficient with unbalanced treatment assignment.</p>
+<h2>Propensity score matching: controlling for selection bias</h2>
+<p>In observational data (no randomised experiment), treatment assignment is not random — it correlates with outcomes. Propensity score e(X) = P(T=1 | X) — the probability of receiving treatment given observed covariates. Matching: for each treated unit, find the control unit with the most similar propensity score. Compare their outcomes. The matched comparison approximates what you would observe if treatment had been randomly assigned. Inverse propensity weighting (IPW): weight each observation by 1/e(X_i) for treated, 1/(1-e(X_i)) for controls. This reweights the sample to look like a randomised experiment.</p>
+<p>Both methods rely on the unconfoundedness assumption: all confounders are observed and included in X. If there are unobserved confounders, neither propensity matching nor IPW is valid.</p>
+<h2>Evaluating uplift models</h2>
+<p>Standard accuracy metrics (AUC, precision) do not apply — you never observe both Y(1) and Y(0). The Qini curve: sort users by predicted uplift descending, incrementally compute the actual uplift in each decile (comparing treatment and control outcomes within each decile). A good uplift model concentrates the true persuadables in the top deciles. Qini coefficient = area under the Qini curve, similar to AUC. An uninformative model has Qini = 0; a perfect model has Qini = 1.</p>
+<p><strong>Try on Colab:</strong> use the Criteo Uplift dataset (25M users, binary treatment/control, binary conversion). Train a T-learner uplift model (XGBoost for each arm). Compute per-user uplift scores. Plot the Qini curve — compare against a random targeting baseline and a naive conversion-probability baseline. Observe that the naive model (targeting high converters) has lower Qini than the uplift model.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=uplift-modeling-incrementality-propensity#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

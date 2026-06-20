@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph Neural Networks: From Message Passing to PinSage — ML Systems Lab</title>
+  <meta name="description" content="Images are grids. Text is sequences. Recommendation systems are graphs — users, items, and interactions forming a web of relationships that no grid or sequence model can capture. Graph Neural Networks…" />
+  <meta name="keywords" content="Deep Learning, Graph Neural Networks, GNN, PinSage, Recommendation Systems, GraphSAGE, Message Passing, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/graph-neural-networks-message-passing-pinsage.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/graph-neural-networks-message-passing-pinsage.html" />
+  <meta property="og:title" content="Graph Neural Networks: From Message Passing to PinSage" />
+  <meta property="og:description" content="Images are grids. Text is sequences. Recommendation systems are graphs — users, items, and interactions forming a web of relationships that no grid or sequence model can capture. Graph Neural Networks…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Graph Neural Networks: From Message Passing to PinSage" />
+  <meta name="twitter:description" content="Images are grids. Text is sequences. Recommendation systems are graphs — users, items, and interactions forming a web of relationships that no grid or sequence model can capture. Graph Neural Networks…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Graph Neural Networks: From Message Passing to PinSage",
+  "description": "Images are grids. Text is sequences. Recommendation systems are graphs — users, items, and interactions forming a web of relationships that no grid or sequence model can capture. Graph Neural Networks…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/graph-neural-networks-message-passing-pinsage.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Graph Neural Networks, GNN, PinSage, Recommendation Systems, GraphSAGE, Message Passing"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=graph-neural-networks-message-passing-pinsage#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Graph Neural Networks: From Message Passing to PinSage</h1>
+    <p class="excerpt">Images are grids. Text is sequences. Recommendation systems are graphs — users, items, and interactions forming a web of relationships that no grid or sequence model can capture. Graph Neural Networks process this structure directly. PinSage took the core idea to 3 billion nodes and 18 billion edges at Pinterest. This is how message passing works and why it scales.</p>
+    <p>Convolutional networks work because images are regular grids: every pixel has the same number of neighbours in the same spatial arrangement. The same filter, applied uniformly, extracts the same pattern at every position. This regularity is the precondition for convolution.</p>
+<p>Real-world data is often not a grid. A social network has users with varying numbers of friends. A knowledge graph has entities with different numbers of relationships. A recommendation system has users connected to items they interacted with, items connected to users who bought them. The structure is irregular, and the structure carries information. Graph Neural Networks learn by passing messages along edges — aggregating information from neighbours, iteratively, to produce embeddings that encode both node features and graph topology.</p>
+<h2>The message passing framework</h2>
+<p>A GNN operates in rounds. In each round, every node collects representations from its neighbours, aggregates them (by summing, averaging, or learned combination), and uses the result to update its own representation. After k rounds, a node's representation encodes information from all nodes within k hops.</p>
+<p>Formally, for node v at round t: h_v^(t+1) = UPDATE(h_v^(t), AGGREGATE({ h_u^(t) : u in N(v) })). The choice of AGGREGATE and UPDATE defines the GNN variant. Mean aggregation plus a linear transform plus ReLU is Graph Convolutional Network (GCN). Max aggregation with a learned aggregator is GraphSAGE. Attention-weighted aggregation is Graph Attention Network (GAT).</p>
+<h2>Graph Convolutional Network: the spectral view</h2>
+<p>GCN (Kipf & Welling, 2017) derives from spectral graph theory. The core operation is: H^(l+1) = σ(D^(-1/2) A_hat D^(-1/2) H^(l) W^(l)), where A_hat is the adjacency matrix plus self-loops, D is the degree matrix, H is the node feature matrix, and W is the learned weight. The degree normalisation ensures that high-degree nodes do not dominate — without it, a node with 1000 neighbours aggregates 1000 raw vectors; after normalisation it aggregates their mean.</p>
+<p>The limitation: GCN requires the full graph adjacency matrix in memory. For a million-node graph, the adjacency matrix alone is terabytes. GCN does not scale directly.</p>
+<h2>GraphSAGE: mini-batch training by neighbourhood sampling</h2>
+<p>GraphSAGE (Hamilton et al., 2017) solves scalability with a simple idea: instead of aggregating over all neighbours, sample a fixed-size subset. For a node with 500 neighbours, sample 25. The aggregation runs on those 25. This makes mini-batch training possible. To compute the embedding of a node, you need its sampled neighbourhood at hop 1, and for each of those their sampled neighbourhood at hop 2. The full computation tree for a k-hop embedding has at most S^k nodes where S is the sample size — independently computable for each training example.</p>
+<p>GraphSAGE also introduced the inductive setting: the aggregation function is learned on a training graph and applied to unseen nodes at inference time. This is a requirement for any production recommendation system where new users and items arrive daily.</p>
+<h2>PinSage: GraphSAGE at Pinterest scale</h2>
+<p>Pinterest deployed GraphSAGE as PinSage (Ying et al., 2018) on a graph of 3 billion pins, 18 billion edges (user–pin interactions), and 2 billion users. Three problems had to be solved that do not arise at research scale.</p>
+<p>Random walk-based neighbourhood sampling. Instead of uniform random sampling, PinSage used random walks to define importance-weighted neighbourhoods. The importance of node u to node v is the visiting frequency of random walks starting at v that land on u. High-importance neighbours contribute more to the aggregation. This produces more informative embeddings than uniform sampling, especially for high-degree nodes where most connections are weak.</p>
+<p>On-the-fly feature computation. Pinterest pins have rich visual and text features — image embeddings from a CNN, text embeddings from title and description. Storing full feature matrices for 3B nodes is infeasible. PinSage computed node features on the fly during mini-batch construction, caching only recently used embeddings.</p>
+<p>Curriculum training with hard negatives. Easy negatives — items completely unrelated to the query — give the model almost no signal once it has learned the basics. PinSage used curriculum learning: start with random negatives, then gradually increase difficulty by selecting items the model currently ranks highly but the user did not interact with. Hard negatives force fine-grained distinction rather than coarse separation.</p>
+<p>The result: 150% lift in engagement on downstream recommendation tasks compared to the prior collaborative filtering baseline, at a graph scale no prior GNN method had approached.</p>
+<h2>Why graph structure matters for recommendations</h2>
+<p>A user-item interaction graph encodes collaborative filtering signal directly. Items that many users co-interact with should have similar embeddings; users with similar interaction patterns should be embedded nearby. GNNs learn this from topology, without hand-engineering similarity metrics.</p>
+<p>Beyond first-order connections, graph structure encodes higher-order relationships. If user A interacts with items X and Y, and user B interacts with items Y and Z, then X and Z are second-order related — they share a user neighbourhood. A 2-hop GNN embeds this relationship. Factorisation methods cannot represent it without explicit feature engineering.</p>
+<p><strong>Try on Colab:</strong> implement a 2-layer GCN in PyTorch Geometric on the Cora citation dataset (2708 nodes, 5429 edges, 7 classes). Measure test accuracy at 1 hop vs 2 hops vs 3 hops — watch it peak then degrade (over-smoothing). Then swap the mean aggregator for a max aggregator. The difference in accuracy is small on Cora but the exercise makes aggregation choices concrete and reproducible.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=graph-neural-networks-message-passing-pinsage#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

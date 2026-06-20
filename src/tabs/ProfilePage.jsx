@@ -4,6 +4,7 @@ import { pushProgressToSupabase, pullProgressFromSupabase } from '../utils/syncP
 import { authEnabled } from '../utils/supabase.js'
 import { downloadProgressJSON } from '../utils/export.js'
 import { readFoundationsRead, overallCompletion } from '../data/foundationsPath.js'
+import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 
 // ── ProfilePage — 5 cards (PAL pattern) ──────────────────────────────────────
 
@@ -173,6 +174,35 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
           Sign out
         </button>
       </Card>
+
+      {/* Card 1.5 — Interview readiness */}
+      {(() => {
+        const r = computeReadiness()
+        return (
+          <Card>
+            <CardLabel>Interview readiness</CardLabel>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '10px' }}>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '36px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level) }}>
+                {r.score}%
+              </span>
+              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
+                {readinessLabel(r.level)}
+              </span>
+            </div>
+            <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: '10px' }}>
+              <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
+              <span title="The MLE Path — 50% of readiness">Path {r.breakdown.path}%</span>
+              <span title="Practice scenarios (target: 80) — 30% of readiness">Practice {r.breakdown.practice}%</span>
+              <span title="Active days in last 28 — 20% of readiness">Activity {r.breakdown.activity}%</span>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: '10px', fontStyle: 'italic' }}>
+              Aggregate of MLE Path progress + practice scenarios attempted + recent activity. Calibrated against senior MLE interview bar.
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Card 2 — The MLE Path progress + badge + cert/share on completion */}
       {foundationsProg.read > 0 && (

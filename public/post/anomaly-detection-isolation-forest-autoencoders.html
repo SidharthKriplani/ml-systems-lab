@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anomaly Detection: Isolation Forest, Autoencoders, and Statistical Baselines — ML Systems Lab</title>
+  <meta name="description" content="Anomaly detection is the umbrella problem: fraud, network intrusion, industrial equipment failure, rare disease, data pipeline errors. The right algorithm depends on the data type (tabular, time serie…" />
+  <meta name="keywords" content="Models &amp; Math, Anomaly Detection, Isolation Forest, Autoencoder, Fraud Detection, Unsupervised Learning, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/anomaly-detection-isolation-forest-autoencoders.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/anomaly-detection-isolation-forest-autoencoders.html" />
+  <meta property="og:title" content="Anomaly Detection: Isolation Forest, Autoencoders, and Statistical Baselines" />
+  <meta property="og:description" content="Anomaly detection is the umbrella problem: fraud, network intrusion, industrial equipment failure, rare disease, data pipeline errors. The right algorithm depends on the data type (tabular, time serie…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Anomaly Detection: Isolation Forest, Autoencoders, and Statistical Baselines" />
+  <meta name="twitter:description" content="Anomaly detection is the umbrella problem: fraud, network intrusion, industrial equipment failure, rare disease, data pipeline errors. The right algorithm depends on the data type (tabular, time serie…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Anomaly Detection: Isolation Forest, Autoencoders, and Statistical Baselines",
+  "description": "Anomaly detection is the umbrella problem: fraud, network intrusion, industrial equipment failure, rare disease, data pipeline errors. The right algorithm depends on the data type (tabular, time serie…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/anomaly-detection-isolation-forest-autoencoders.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Anomaly Detection, Isolation Forest, Autoencoder, Fraud Detection, Unsupervised Learning"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=anomaly-detection-isolation-forest-autoencoders#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Anomaly Detection: Isolation Forest, Autoencoders, and Statistical Baselines</h1>
+    <p class="excerpt">Anomaly detection is the umbrella problem: fraud, network intrusion, industrial equipment failure, rare disease, data pipeline errors. The right algorithm depends on the data type (tabular, time series, image), the anomaly definition (global outlier, local outlier, contextual outlier), and the label availability. Isolation Forest works when you have no labels. Autoencoders work when structure is complex. Statistical baselines work when interpretability matters.</p>
+    <p>Anomaly detection is inherently asymmetric: anomalies are rare by definition, often have no examples to learn from, and may be structurally novel — different from anything in the training set. This rules out standard supervised classification and motivates unsupervised and semi-supervised approaches.</p>
+<h2>The three types of anomalies</h2>
+<p>Global outlier: a point that is extreme relative to the entire dataset. A transaction of $100,000 when typical transactions are $50-200. Point anomaly in multivariate space. Local outlier: a point that is anomalous relative to its neighbourhood but not globally. A temperature of 40°C is normal in July but anomalous in January. Contextual anomaly. Collective anomaly: a sequence of points that is anomalous only together. Individual steps of a complex fraud that are each normal individually but the combination is suspicious.</p>
+<h2>Statistical baselines: where to start</h2>
+<p>Z-score: flag points more than k standard deviations from the mean. Assumes Gaussian distribution. Fast, interpretable, fails for skewed distributions. IQR method: flag points below Q1 - 1.5*IQR or above Q3 + 1.5*IQR. Robust to outliers (IQR itself is resistant to extreme values). For multivariate data: Mahalanobis distance generalises the z-score to multiple dimensions using the covariance structure: d(x) = sqrt((x - μ)^T Σ^-1 (x - μ)). Points with large Mahalanobis distance are multivariate outliers. Assumes elliptical distribution; computed from SVD or LU decomposition.</p>
+<h2>Isolation Forest</h2>
+<p>Isolation Forest (Liu et al., 2008) exploits the observation that anomalies are isolated: they require fewer random binary splits to separate from the rest of the data than normal points. Algorithm: build an ensemble of random isolation trees. Each tree recursively partitions the data by randomly choosing a feature and a random split value. The anomaly score for a point is the average path length across all trees to isolate it — shorter path = more anomalous.</p>
+<p>Advantages: works on raw tabular features with no distributional assumptions, scales to large datasets (each tree is O(n log n)), requires no labels. Hyperparameters: n_estimators (more = more stable), contamination (expected anomaly fraction, used to set the threshold). Weakness: fails on high-dimensional data where random splits lose their discriminative power, and struggles with local outliers (anomalies that are only unusual in a small region of the space).</p>
+<h2>Local Outlier Factor (LOF)</h2>
+<p>LOF (Breunig et al., 2000) computes the local density of each point relative to its k-nearest neighbours. Points in lower-density regions than their neighbours receive high LOF scores. LOF captures local anomalies that Isolation Forest misses. Disadvantage: O(n^2) for naive implementation; expensive on large datasets.</p>
+<h2>Autoencoder-based anomaly detection</h2>
+<p>Train an autoencoder (see Post 62) to reconstruct normal data. Anomalies reconstruct poorly — high reconstruction error. This approach works well for: high-dimensional data (images, time series, logs) where statistical distances are meaningless, detecting novelty rather than statistical outliers, and settings with semi-supervised labels (train on clean normal data, detect deviations).</p>
+<p>Reconstruction error threshold is set on a validation set of normal data (e.g., flag the top 1% highest reconstruction error at validation time). The autoencoder approach extends naturally to VAEs (reconstruction error + KL divergence as the anomaly score) and to time series (LSTM autoencoders reconstruct sequences; anomalous windows have high error).</p>
+<h2>One-Class SVM</h2>
+<p>Trains a boundary around the normal data in feature space. Points outside the boundary are anomalies. Kernel trick allows nonlinear boundaries. Scales poorly with dataset size (O(n^2) kernel matrix). Generally dominated by Isolation Forest for tabular data but useful when a tight, nonlinear boundary is needed.</p>
+<h2>Evaluation without ground truth</h2>
+<p>Anomaly detection without labels requires indirect evaluation: inject synthetic anomalies into held-out data and measure detection rate; use domain expert review of flagged cases (precision); measure coverage of known anomalies from historical incident reports. When labels are available for a test set: AUC-ROC (class-imbalanced), precision-recall AUC (more informative for rare anomalies), and AUCPR (area under precision-recall curve).</p>
+<p><strong>Try on Colab:</strong> use the KDD Cup 1999 network intrusion dataset. Train Isolation Forest and LOF on the normal traffic subset. Evaluate AUC-ROC on the test set including both normal and attack traffic. Then train an autoencoder on normal traffic, compute reconstruction error, and set the threshold at the 99th percentile of validation error. Compare all three methods' precision and recall at the same operating point.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=anomaly-detection-isolation-forest-autoencoders#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks — ML Systems Lab</title>
+  <meta name="description" content="Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geome…" />
+  <meta name="keywords" content="Models &amp; Math, Linear Regression, OLS, Normal Equations, Gauss-Markov, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ols-linear-regression-normal-equations-gauss-markov.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ols-linear-regression-normal-equations-gauss-markov.html" />
+  <meta property="og:title" content="OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks" />
+  <meta property="og:description" content="Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geome…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks" />
+  <meta name="twitter:description" content="Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geome…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks",
+  "description": "Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geome…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ols-linear-regression-normal-equations-gauss-markov.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Linear Regression, OLS, Normal Equations, Gauss-Markov, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ols-linear-regression-normal-equations-gauss-markov#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>OLS and Linear Regression: Normal Equations, Gauss-Markov, and When It Breaks</h1>
+    <p class="excerpt">Linear regression is the most-used model in all of statistics. It is also the most misunderstood — practitioners use it without knowing what OLS actually minimises, why the normal equations work geometrically, or what the Gauss-Markov theorem guarantees. This post derives it from scratch and maps exactly where each assumption can break in real data.</p>
+    <p>Ordinary Least Squares (OLS) linear regression is the baseline against which every other model is judged. If your problem is not substantially non-linear, OLS with proper feature engineering often matches or beats complex models while remaining fully interpretable. Understanding it deeply means understanding projection geometry, the normal equations, and the five Gauss-Markov assumptions.</p>
+<h2>The setup</h2>
+<p>Given n observations and d features: design matrix X ∈ ℝⁿˣᵈ (each row is one sample), target vector y ∈ ℝⁿ. We want to find weights w ∈ ℝᵈ such that ŷ = Xw ≈ y. OLS minimises the residual sum of squares: RSS(w) = ||y - Xw||² = (y - Xw)ᵀ(y - Xw) = yᵀy - 2wᵀXᵀy + wᵀXᵀXw.</p>
+<h2>Deriving the normal equations</h2>
+<p>Take the gradient of RSS with respect to w and set to zero: ∂RSS/∂w = -2Xᵀy + 2XᵀXw = 0. Therefore: XᵀXw = Xᵀy. This is the normal equations. If XᵀX is invertible (X has full column rank): w_OLS = (XᵀX)⁻¹Xᵀy. The matrix (XᵀX)⁻¹Xᵀ is called the Moore-Penrose pseudoinverse of X, often written X⁺.</p>
+<h2>Geometric interpretation: projection onto the column space</h2>
+<p>The columns of X span a d-dimensional subspace of ℝⁿ — the column space col(X). The vector Xw is a linear combination of X's columns. OLS finds the w such that Xw is the orthogonal projection of y onto col(X). Why orthogonal? Because the residual e = y - Xw must be perpendicular to every column of X: Xᵀe = Xᵀ(y - Xw) = 0 — exactly the normal equations. Geometrically, OLS drops a perpendicular from y to the nearest point in the subspace col(X). This is the minimum-distance (minimum RSS) solution.</p>
+<h2>The Gauss-Markov theorem: when OLS is optimal</h2>
+<p>Under five assumptions, OLS is the Best Linear Unbiased Estimator (BLUE) — no other linear unbiased estimator has lower variance: (1) Linearity: y = Xw + ε (the relationship is truly linear). (2) Strict exogeneity: E[ε|X] = 0 (errors are mean-zero given the features; no omitted variable bias). (3) No perfect multicollinearity: X has full column rank (XᵀX is invertible). (4) Homoscedasticity: Var(εᵢ|X) = σ² for all i (constant error variance). (5) No autocorrelation: Cov(εᵢ, εⱼ|X) = 0 for i ≠ j (errors are uncorrelated across observations). Under (1)-(5), the OLS estimator is unbiased: E[w_OLS] = w*, and has variance Var(w_OLS) = σ²(XᵀX)⁻¹ — the smallest possible for any linear unbiased estimator.</p>
+<h2>R² and adjusted R²</h2>
+<p>Total Sum of Squares: TSS = Σᵢ(yᵢ - ȳ)² (total variance in y). Residual Sum of Squares: RSS = Σᵢ(yᵢ - ŷᵢ)². R² = 1 - RSS/TSS. Proportion of variance explained. R² always increases when you add features, even noise features — it cannot decrease. Adjusted R² penalises for the number of features: R²_adj = 1 - (RSS/(n-d-1)) / (TSS/(n-1)). Can decrease when you add useless features. R² = 0 for a model that predicts the mean everywhere; R² = 1 for a perfect fit. R² < 0 is possible if the model is worse than just predicting the mean.</p>
+<h2>When OLS breaks and what to do</h2>
+<p>Multicollinearity (assumption 3 violated): XᵀX becomes near-singular. OLS weights are numerically unstable with huge variance — small changes in data cause wild changes in weights. Detection: Variance Inflation Factor VIF_j = 1/(1-R²_j) where R²_j is the R² from regressing feature j on all other features. VIF > 10 is problematic. Fix: Ridge regression (adds λI to XᵀX → w_Ridge = (XᵀX + λI)⁻¹Xᵀy, always invertible) or drop correlated features. Heteroscedasticity (assumption 4 violated): error variance depends on features (common in financial data, count data). OLS is still unbiased but no longer BLUE — standard errors are wrong, inference is invalid. Fix: Weighted Least Squares (WLS) where each observation is weighted by 1/σᵢ², or robust standard errors (HC3 sandwich estimator). Autocorrelation (assumption 5 violated): common in time series (residuals at t are correlated with residuals at t-1). OLS is still unbiased but standard errors are wrong. Fix: add lagged features, use GLS (Generalized Least Squares), or switch to a time series model. Non-linearity (assumption 1 violated): add polynomial features, interaction terms, or use a non-linear model.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Derive the OLS estimator. What does it mean geometrically?" — Take ∂RSS/∂w = 0 → XᵀXw = Xᵀy → w = (XᵀX)⁻¹Xᵀy. Geometrically: ŷ = Xw is the orthogonal projection of y onto the column space of X. The residual y - ŷ is perpendicular to all columns of X.</p>
+<p>"What is R² and why can it be misleading?" — Proportion of variance explained, 1 - RSS/TSS. Misleading because: (1) always increases with more features even if they are noise, (2) high R² does not imply the model is correct — a misspecified model can have high R², (3) R² says nothing about predictive accuracy on new data.</p>
+<p>"What happens to OLS when two features are perfectly correlated?" — XᵀX is singular (non-invertible); the normal equations have infinitely many solutions. Any combination of the two correlated weights that produces the same fitted values has identical RSS. In practice near-collinearity makes the inverse ill-conditioned — weights have huge variance. Ridge regression fixes this by adding λI.</p>
+<p>"When would you use WLS instead of OLS?" — When the error variance is not constant (heteroscedasticity). For example: modelling average income by region (larger regions have lower variance in averages due to averaging over more people); fitting log-transformed data back on original scale; any setting where you know the precision of each observation varies. WLS weights each observation by 1/σᵢ² to give more influence to precise observations.</p>
+<p><strong>Try on Colab:</strong> fit OLS on the California Housing dataset. Plot residuals vs fitted values — if the plot shows a funnel shape, you have heteroscedasticity. Compute VIF for all features. Introduce artificial collinearity by adding a feature = 2×feature_1 + noise(0, 0.001). Show the VIF spike and the variance explosion in the OLS coefficient. Apply Ridge regression and show the coefficient stabilises.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ols-linear-regression-normal-equations-gauss-markov#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

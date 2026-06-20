@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gradient Boosted Trees: What XGBoost Is Actually Doing — ML Systems Lab</title>
+  <meta name="description" content="XGBoost wins Kaggle competitions not by magic but by iteratively fitting residuals with regularised trees. Each tree corrects the errors of the previous ensemble. The second-order Taylor expansion of …" />
+  <meta name="keywords" content="Models &amp; Math, XGBoost, Gradient Boosting, Decision Trees, Ensemble Methods, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/gradient-boosted-trees-xgboost-internals.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/gradient-boosted-trees-xgboost-internals.html" />
+  <meta property="og:title" content="Gradient Boosted Trees: What XGBoost Is Actually Doing" />
+  <meta property="og:description" content="XGBoost wins Kaggle competitions not by magic but by iteratively fitting residuals with regularised trees. Each tree corrects the errors of the previous ensemble. The second-order Taylor expansion of …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gradient Boosted Trees: What XGBoost Is Actually Doing" />
+  <meta name="twitter:description" content="XGBoost wins Kaggle competitions not by magic but by iteratively fitting residuals with regularised trees. Each tree corrects the errors of the previous ensemble. The second-order Taylor expansion of …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Gradient Boosted Trees: What XGBoost Is Actually Doing",
+  "description": "XGBoost wins Kaggle competitions not by magic but by iteratively fitting residuals with regularised trees. Each tree corrects the errors of the previous ensemble. The second-order Taylor expansion of …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/gradient-boosted-trees-xgboost-internals.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, XGBoost, Gradient Boosting, Decision Trees, Ensemble Methods, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=gradient-boosted-trees-xgboost-internals#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Gradient Boosted Trees: What XGBoost Is Actually Doing</h1>
+    <p class="excerpt">XGBoost wins Kaggle competitions not by magic but by iteratively fitting residuals with regularised trees. Each tree corrects the errors of the previous ensemble. The second-order Taylor expansion of the loss is the key ingredient that makes tree-finding efficient. Understanding this makes XGBoost&#39;s hyperparameters principled rather than arbitrary knobs.</p>
+    <p>Gradient boosting is an ensemble method that builds trees sequentially: each new tree corrects the errors of the current ensemble. XGBoost (Chen & Guestrin, 2016) is the most widely used implementation, with LightGBM and CatBoost as close competitors. All three use the same core idea with different engineering optimisations.</p>
+<h2>Additive tree ensembles</h2>
+<p>A boosted model is a sum of T trees: F(x) = Σ_{t=1}^{T} f_t(x), where each f_t is a regression tree. Training is additive: at step t, the model is F_{t-1}(x) + f_t(x). The question is: what should f_t(x) look like?</p>
+<h2>Gradient boosting: fit the residuals</h2>
+<p>In ordinary gradient descent, you update parameters to minimise the loss by moving in the negative gradient direction. Gradient boosting does the same thing, but the "parameters" are the predictions F(x), and "moving in the negative gradient direction" means fitting a tree to the negative gradient of the loss at the current predictions.</p>
+<p>For MSE loss L = (y - F(x))^2, the negative gradient is y - F(x) — the residual. So fitting a tree to the residual and adding it to the ensemble is exactly gradient descent in function space. For other losses (log-loss, Huber), the negative gradient is different, and gradient boosting handles all of them uniformly by fitting trees to the pseudo-residuals.</p>
+<h2>XGBoost&#39;s key innovation: second-order Taylor expansion</h2>
+<p>Vanilla gradient boosting uses only the first-order gradient (the pseudo-residual). XGBoost uses a second-order Taylor expansion of the loss: L ≈ L(F_{t-1}) + g_i * f_t(x_i) + (1/2) * h_i * f_t(x_i)^2, where g_i = ∂L/∂F(x_i) is the gradient and h_i = ∂^2L/∂F(x_i)^2 is the Hessian. For each leaf in tree t, the optimal leaf weight (given the tree structure) is: w* = -Σ_i g_i / (Σ_i h_i + λ), where λ is L2 regularisation on leaf weights. This closed-form optimal leaf value means XGBoost can evaluate candidate tree structures more accurately and efficiently than first-order methods.</p>
+<h2>Regularisation in trees</h2>
+<p>XGBoost adds regularisation terms to the objective: Ω(f_t) = γT + (λ/2) Σ_j w_j^2, where T is the number of leaves and w_j are leaf weights. γ penalises the number of leaves (minimum gain per split), λ penalises large leaf weights (L2 regularisation). These terms are tunable hyperparameters. Larger γ = fewer splits = simpler trees. Larger λ = smaller leaf weights = more conservative predictions.</p>
+<h2>Tree construction: exact and approximate splits</h2>
+<p>For each candidate split (feature, threshold), XGBoost computes the gain: Gain = (1/2)[G_L^2/(H_L+λ) + G_R^2/(H_R+λ) - (G_L+G_R)^2/(H_L+H_R+λ)] - γ. The split is made if gain > 0. Exact algorithm: evaluate all possible splits over all features. Approximate algorithm: bucket continuous features into quantiles, evaluate only split points at quantile boundaries. LightGBM uses gradient-based one-side sampling (GOSS) — only sample the data points with large gradients for split finding — which makes it faster than XGBoost on large datasets.</p>
+<h2>Key hyperparameters and their effects</h2>
+<p>n_estimators: number of trees. More trees → lower training loss; potential overfitting without regularisation. learning_rate (η): shrinks each tree's contribution. Lower η + more trees typically beats higher η + fewer trees. max_depth: maximum depth per tree. Shallow trees (3-6) are faster and regularise well; deep trees capture more interactions. subsample: fraction of training data used per tree. Reduces variance, speeds training. colsample_bytree: fraction of features considered per tree. Reduces correlation between trees.</p>
+<h2>When to use gradient boosting vs neural networks</h2>
+<p>Gradient boosted trees win on: tabular data with mixed feature types, small-to-medium datasets (< 10M examples), when training time matters, when interpretability via feature importance is needed. Neural networks win on: images, text, audio, sequences, large datasets where representation learning is the bottleneck, multi-task settings.</p>
+<h2>Production tells — how XGBoost actually fails</h2>
+<p>The four most common production failures look identical in dashboards but trace to different causes. (1) <strong>Gain-based feature importance lies on high-cardinality columns.</strong> "user_id" or "session_id" as a top feature is almost never real signal — it is the tree exploiting any residual variance the regularisation did not squeeze out. Drop it, retrain, see if anything changes; usually nothing does. (2) <strong>The quantile binning in the approximate algorithm assumes train-serve feature distributions match.</strong> When they do not (e.g., feature scaling drift, currency change, schema migration), the same numeric value falls into a different bin and the tree routes it down a wrong branch. Silent. (3) <strong>Categorical encoding inconsistency.</strong> XGBoost does not handle raw categoricals natively (unlike CatBoost). If your training pipeline uses pandas categorical codes and your serving pipeline uses a different encoder (one-hot, target encoding, hashing), the model receives a feature value that has nothing to do with the training-time meaning. Test this before every deploy. (4) <strong>Number-of-trees mismatch between training (with early stopping) and serving (default predict uses all trees).</strong> If you train with early_stopping_rounds and never call predict with ntree_limit set to best_iteration, you serve the overfit late trees. Half the production XGBoost regressions traced to this one line.</p>
+<p><strong>Try on Colab:</strong> train XGBoost on the Adult Income dataset. Plot the training loss vs validation loss as a function of n_estimators — identify the early stopping point. Then vary max_depth (2, 4, 6, 8) and learning_rate (0.01, 0.1, 0.3) independently. Visualise feature importances. Compare against a random forest baseline and a logistic regression baseline — the gradient boosting gain over random forests is typically 2-5% accuracy.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=gradient-boosted-trees-xgboost-internals#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

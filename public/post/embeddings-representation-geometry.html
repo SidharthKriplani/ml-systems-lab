@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embeddings: What It Means to Represent Meaning as Geometry — ML Systems Lab</title>
+  <meta name="description" content="Word2Vec discovered that word meaning has geometric structure: King - Man + Woman ≈ Queen. This is not a coincidence or a trick — it is a direct consequence of how the embedding was trained. The distr…" />
+  <meta name="keywords" content="Deep Learning, Embeddings, Word2Vec, BERT, NLP, Representation Learning, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/embeddings-representation-geometry.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/embeddings-representation-geometry.html" />
+  <meta property="og:title" content="Embeddings: What It Means to Represent Meaning as Geometry" />
+  <meta property="og:description" content="Word2Vec discovered that word meaning has geometric structure: King - Man + Woman ≈ Queen. This is not a coincidence or a trick — it is a direct consequence of how the embedding was trained. The distr…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Embeddings: What It Means to Represent Meaning as Geometry" />
+  <meta name="twitter:description" content="Word2Vec discovered that word meaning has geometric structure: King - Man + Woman ≈ Queen. This is not a coincidence or a trick — it is a direct consequence of how the embedding was trained. The distr…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Embeddings: What It Means to Represent Meaning as Geometry",
+  "description": "Word2Vec discovered that word meaning has geometric structure: King - Man + Woman ≈ Queen. This is not a coincidence or a trick — it is a direct consequence of how the embedding was trained. The distr…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/embeddings-representation-geometry.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Embeddings, Word2Vec, BERT, NLP, Representation Learning, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=embeddings-representation-geometry#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Embeddings: What It Means to Represent Meaning as Geometry</h1>
+    <p class="excerpt">Word2Vec discovered that word meaning has geometric structure: King - Man + Woman ≈ Queen. This is not a coincidence or a trick — it is a direct consequence of how the embedding was trained. The distributional hypothesis predicts it; the training objective enforces it. Understanding this makes the jump to contextual embeddings (BERT, GPT) and to dense retrieval natural.</p>
+    <p>An embedding is a mapping from a discrete object (a word, a user, a product) to a point in a continuous vector space. The power of embeddings comes from the geometry that emerges in that space: objects with similar properties occupy similar regions. This geometry is not imposed — it is learned from patterns in data. Understanding how and why it emerges makes it easier to use embeddings correctly and to debug failures.</p>
+<h2>The distributional hypothesis</h2>
+<p>You shall know a word by the company it keeps. Words that appear in similar contexts have similar meanings. "Dog" and "cat" both appear near "pet," "fur," "veterinarian," "home." "Bank" appears near "money" and "loan" in some contexts, and near "river" and "shore" in others. The distributional hypothesis says that the patterns of co-occurrence in a large corpus capture semantic relationships.</p>
+<p>Word2Vec operationalises this hypothesis as a prediction task. Skip-gram: given a word, predict the surrounding context words. CBOW: given context words, predict the centre word. In both cases, the embeddings are trained as the weight matrix of a shallow neural network. Words with similar contexts receive similar gradient updates and converge to similar embedding vectors.</p>
+<h2>Why linear arithmetic works: King - Man + Woman = Queen</h2>
+<p>After training on a large corpus, word vectors have a property that seems magical: vector arithmetic on word embeddings captures semantic relationships. king - man + woman ≈ queen. paris - france + italy ≈ rome. Why?</p>
+<p>If "man" and "king" appear in similar contexts except for gender-related words, their embeddings will be similar in most dimensions and differ in a gender-direction. "woman" and "queen" have the same relationship. The gender difference is a consistent direction in the embedding space because gendered words consistently co-occur with gender-related context words. The arithmetic works because the gender direction is approximately the same for (man, king) as for (woman, queen) — the distributional structure enforces parallel geometry.</p>
+<p>This is not a special property of Word2Vec — it is a property of any representation learned from distributional patterns at sufficient scale.</p>
+<h2>The limitation: one embedding per word</h2>
+<p>Word2Vec assigns a single vector to each word. "Bank" (financial) and "bank" (river) share the same embedding — a compromise between the two senses that represents neither well. For downstream tasks requiring contextual understanding, this is a significant limitation.</p>
+<h2>Contextual embeddings: different contexts, different vectors</h2>
+<p>ELMo (2018), BERT (2018), and GPT (2018) replaced static word embeddings with contextual embeddings: the same word receives a different embedding depending on the sentence it appears in. The embedding of "bank" in "the river bank" and in "the bank account" are different vectors produced by running the sentence through a deep model (bidirectional LSTM or Transformer) and reading the hidden state at the word's position.</p>
+<p>Contextual embeddings capture polysemy by construction. They are also richer: they encode not just word identity but syntactic role, discourse position, and local context. Transfer learning with contextual embeddings (fine-tune a pretrained BERT for a downstream task) became the dominant paradigm in NLP from 2018 onward.</p>
+<h2>Dense retrieval: embeddings for search</h2>
+<p>Once you have sentence embeddings, you can do semantic search: embed a query, embed all candidate documents, find the nearest neighbours. This is dense retrieval, as opposed to sparse retrieval (BM25, TF-IDF). Dense retrieval finds semantically similar documents even with no lexical overlap — "cardiac arrest" and "heart attack" are near neighbours in a good embedding space even though they share no words.</p>
+<p>The key engineering challenge: approximate nearest-neighbour search at scale. Libraries like FAISS index millions of embeddings and return approximate nearest neighbours in milliseconds. The accuracy/speed tradeoff in ANN is controlled by the index type (HNSW for high accuracy, IVF for speed) and the number of probe cells.</p>
+<p><strong>Try on Colab:</strong> train Word2Vec (gensim) on a text corpus. Visualise the top 200 most frequent words in 2D using UMAP or t-SNE. Semantic clusters (countries, professions, emotions) should be visible as spatial clusters. Then test vector arithmetic: find the 5 nearest neighbours to king - man + woman. Compare the result with a contextual model: embed the same words from a BERT sentence and see if the arithmetic still holds.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=embeddings-representation-geometry#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

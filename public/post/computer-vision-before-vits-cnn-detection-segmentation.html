@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation — ML Systems Lab</title>
+  <meta name="description" content="Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, obje…" />
+  <meta name="keywords" content="Deep Learning, Computer Vision, CNN, YOLO, Object Detection, Segmentation, U-Net, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/computer-vision-before-vits-cnn-detection-segmentation.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/computer-vision-before-vits-cnn-detection-segmentation.html" />
+  <meta property="og:title" content="Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation" />
+  <meta property="og:description" content="Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, obje…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation" />
+  <meta name="twitter:description" content="Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, obje…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation",
+  "description": "Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, obje…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/computer-vision-before-vits-cnn-detection-segmentation.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Computer Vision, CNN, YOLO, Object Detection, Segmentation, U-Net, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=computer-vision-before-vits-cnn-detection-segmentation#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Computer Vision Before ViTs: Convolution, Object Detection (YOLO/RCNN), and Segmentation</h1>
+    <p class="excerpt">Vision Transformers (ViTs) now dominate computer vision benchmarks. But you cannot understand why ViTs work — or why they took so long to beat CNNs — without understanding convolutional networks, object detection pipelines, and segmentation architectures. This post builds from convolution as template matching up through YOLO, RCNN, and U-Net.</p>
+    <p>Computer vision went through three architectural revolutions: hand-crafted features (HOG, SIFT, 2000s), convolutional neural networks (AlexNet 2012 → ResNet 2015), and transformers (ViT 2020 → DINO, SAM 2023). Each revolution obsoleted the previous one — but understanding the logic of each layer is essential for understanding the whole arc.</p>
+<h2>Convolution: what it actually computes</h2>
+<p>A 2D convolution slides a small filter (kernel) K ∈ ℝᵏˣᵏ over an image I and computes: (I * K)[i,j] = Σ_{m,n} I[i+m, j+n] K[m,n]. This is a dot product between the kernel and each local patch of the image. A 3×3 edge detector kernel produces large responses where edges exist and small responses elsewhere. In a CNN, the kernels are not hand-designed — they are learned from data. The learned filters in the first layer of AlexNet look like Gabor filters and edge detectors. Deeper layers compute increasingly abstract features (textures, object parts, objects).</p>
+<h2>Key architectural ideas in CNNs</h2>
+<p>Weight sharing: the same kernel is applied at every position in the image. This gives translation equivariance (the response shifts when the image shifts) and dramatically reduces parameters compared to a fully connected layer. Pooling: max-pooling takes the maximum over a local region, downsampling the feature map. This gives approximate translation invariance (small shifts don't change the output) and reduces spatial resolution. Receptive field: the region of the original image that influences a given neuron. Grows with depth — deeper neurons "see" more of the image. With stride-2 convolutions, receptive field grows faster.</p>
+<h2>ResNet: why residual connections were necessary</h2>
+<p>Before ResNets (He et al., 2015), adding more layers hurt accuracy — the vanishing gradient problem made very deep networks harder to train than shallow ones. The residual connection: output = F(x) + x. The identity skip connection ensures gradients can flow directly to early layers. Without residuals, depth bottomed out at ~20 layers in practice. With residuals, networks of 50, 101, 152 layers trained stably and set new benchmarks. The 1×1 convolution is used for channel-wise dimensionality change (bottleneck architecture).</p>
+<h2>Object detection: from classification to localisation</h2>
+<p>Image classification: one label per image. Object detection: bounding boxes (x, y, w, h) + class labels for all objects in the image. The difficulty: variable number of objects, objects at different scales, overlapping objects. Two-stage detectors: Selective Search (RCNN, 2014) generates ~2000 region proposals; a CNN classifies each. Slow. Fast RCNN: share the CNN backbone across proposals using RoI Pooling. Faster RCNN: replace Selective Search with a Region Proposal Network (RPN) sharing the backbone — fully end-to-end, real-time capable. One-stage detectors (YOLO, SSD): divide the image into a grid; each cell predicts bounding boxes and classes directly without a separate proposal stage. Faster but less accurate on small objects.</p>
+<h2>YOLO: the canonical one-stage detector</h2>
+<p>YOLO (You Only Look Once, Redmon et al. 2015): divide image into S×S grid. Each cell predicts B bounding boxes (x,y,w,h,confidence) and C class probabilities. Total output: S×S×(5B + C) tensor. At once. No proposals. At inference: run the tensor through the network, apply Non-Maximum Suppression (NMS) to remove duplicate detections (keep the box with highest confidence score; suppress boxes with IoU > threshold). YOLO family has iterated through v2→v8, improving accuracy at high speed through anchor-free prediction, multi-scale feature pyramids (FPN), and attention-based necks.</p>
+<h2>Feature Pyramid Networks (FPN)</h2>
+<p>Objects appear at different scales. A single feature map loses either spatial detail (from deep layers) or semantic information (from early layers). FPN (Lin et al., 2017) builds a top-down feature pyramid: high-resolution low-semantic features from early layers are merged with low-resolution high-semantic features from deep layers. Each level of the pyramid detects objects at a different scale. FPN became the standard neck in detection architectures.</p>
+<h2>Segmentation: pixel-level classification</h2>
+<p>Semantic segmentation: assign a class label to every pixel. Instance segmentation: detect individual object instances and predict a pixel mask per instance. Panoptic segmentation: semantic + instance (every pixel gets a class, instances get IDs). U-Net (Ronneberger et al., 2015): contracting path (encoder) extracts features; expanding path (decoder) recovers spatial resolution with skip connections from corresponding encoder layers. Skip connections address the vanishing gradient problem in the encoder-decoder gap and preserve spatial detail lost during downsampling. U-Net became the dominant architecture for medical image segmentation.</p>
+<h2>Why ViTs eventually won</h2>
+<p>CNNs have inductive biases built in: translation equivariance (from weight sharing) and locality (from small kernels). These biases help with limited data but constrain the model. ViTs (Dosovitskiy et al., 2020) have no such biases — they split the image into patches and apply self-attention globally. With large enough data, ViTs learn better representations. With smaller data, ViTs need pre-training. The key insight of DINOv2, SAM, and EVA: very large self-supervised pre-training enables ViTs to outperform CNNs even on tasks where spatial locality matters. The CNN priors are not needed if you have enough data to learn locality from scratch.</p>
+<h2>Interview questions on this topic</h2>
+<p>"What is the difference between semantic segmentation and instance segmentation?" — Semantic segmentation labels every pixel with a class (all cars are the same label). Instance segmentation labels every pixel AND distinguishes individual instances (car 1, car 2). Panoptic segmentation does both: each pixel has a semantic class and a unique instance ID where applicable.</p>
+<p>"Explain IoU and NMS. Why is NMS necessary in object detection?" — IoU (Intersection over Union) = area(A ∩ B) / area(A ∪ B). NMS: after detection, many overlapping boxes may predict the same object. NMS keeps the box with the highest confidence, suppresses all boxes with IoU > threshold with it, and repeats. Without NMS, each object would be detected multiple times.</p>
+<p>"What is the receptive field of a 5-layer 3×3 convolutional network with no downsampling?" — Each 3×3 conv adds 1 to the radius: receptive field grows by 2 per layer. After 5 layers: 1 + 2×5 = 11×11. With stride-2 downsampling, the effective receptive field grows faster because each pooled position corresponds to a larger input region.</p>
+<p>"Why did ViTs need much more data than CNNs before they outperformed them?" — CNNs have inductive biases (locality, translation equivariance) baked in. ViTs have no such biases and must learn spatial relationships from data. With limited data, CNNs' priors give them an advantage. With large-scale pre-training (JFT-300M, ImageNet-21K), ViTs learn these patterns and surpass CNNs. Data is the substitute for inductive bias.</p>
+<p><strong>Try on Colab:</strong> use torchvision with a pretrained ResNet-50 feature extractor. Visualise the learned filter kernels in layer 1 — how many look like edge detectors? Use Faster RCNN (pretrained on COCO) to run object detection on 3-5 images from your local machine. Visualise the bounding boxes and confidence scores. Then change the NMS IoU threshold from 0.5 to 0.1 and 0.9 — observe how many duplicate boxes appear at low threshold.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=computer-vision-before-vits-cnn-detection-segmentation#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

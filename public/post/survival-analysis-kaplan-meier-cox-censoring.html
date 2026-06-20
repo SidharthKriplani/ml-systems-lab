@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters — ML Systems Lab</title>
+  <meta name="description" content="Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never expe…" />
+  <meta name="keywords" content="Models &amp; Math, Survival Analysis, Kaplan-Meier, Cox, Censoring, Churn, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/survival-analysis-kaplan-meier-cox-censoring.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/survival-analysis-kaplan-meier-cox-censoring.html" />
+  <meta property="og:title" content="Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters" />
+  <meta property="og:description" content="Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never expe…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters" />
+  <meta name="twitter:description" content="Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never expe…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters",
+  "description": "Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never expe…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/survival-analysis-kaplan-meier-cox-censoring.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Survival Analysis, Kaplan-Meier, Cox, Censoring, Churn, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=survival-analysis-kaplan-meier-cox-censoring#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Survival Analysis: Kaplan-Meier, Cox Proportional Hazards, and Why Censoring Matters</h1>
+    <p class="excerpt">Churn modelling, LTV prediction, clinical trial analysis, and time-to-failure modelling all share a common structure: you are modelling the time until an event occurs, and some observations never experience the event during the observation window. Standard regression ignores this censoring and produces biased estimates. Survival analysis handles it correctly.</p>
+    <p>Survival analysis is the statistical framework for modelling time-to-event data where some observations are censored — the event has not occurred by the end of the observation period. Using standard regression in these settings produces systematically biased estimates. Every DS team working on subscription products, healthcare, or reliability engineering needs this toolkit.</p>
+<h2>The censoring problem</h2>
+<p>Consider modelling customer churn (time until a customer cancels). Some customers cancel during your observation window — you observe their exact churn time. Others are still active at the end of your observation window — you do not know when (or if) they will churn. These are right-censored observations. If you simply exclude censored customers, you introduce survivorship bias — the model only learns from churned customers, ignoring the information that uncensored customers survived at least until the observation end. If you treat the observation end date as the churn date, you underestimate survival times. Survival analysis uses all observations correctly: censored customers contribute information up to their censoring time.</p>
+<h2>Key functions</h2>
+<p>Survival function S(t) = P(T > t): the probability that the event occurs after time t. S(0) = 1, S(∞) = 0, S is monotone non-increasing. For a churn model, S(t) is the probability a customer is still active at time t. Hazard function h(t) = lim_{Δt→0} P(t ≤ T < t+Δt | T ≥ t) / Δt: the instantaneous rate of the event occurring at time t, given survival until t. Not a probability — it is a rate (can exceed 1). Cumulative hazard H(t) = ∫₀ᵗ h(s) ds. Relationship: S(t) = exp(-H(t)). Given the survival function, you can compute the hazard and vice versa.</p>
+<h2>Kaplan-Meier estimator</h2>
+<p>Kaplan-Meier is a non-parametric estimator of S(t). At each observed event time tⱼ: S(tⱼ) = S(tⱼ₋₁) × (1 - dⱼ/nⱼ), where dⱼ is the number of events at tⱼ and nⱼ is the number at risk (still alive and not censored) just before tⱼ. Between event times, S(t) is constant (step function). The KM estimator is the maximum likelihood estimator of S(t) for censored data with no parametric assumptions. Censored observations "leave" the risk set at their censoring time but are included in all earlier risk sets — this is how they contribute information. KM produces a survival curve, not a model with covariates.</p>
+<h2>Log-rank test: comparing survival curves</h2>
+<p>To test whether two groups (e.g., treatment vs control in a clinical trial) have the same survival distribution, the log-rank test computes: χ² = (Σⱼ (O₁ⱼ - E₁ⱼ))² / Σⱼ V_{1j}, where O₁ⱼ is the observed events in group 1 at time tⱼ and E₁ⱼ is the expected events under H₀ (no group difference). The log-rank test is most powerful when the hazard ratio is constant over time (proportional hazards assumption). For non-proportional hazards, use the weighted log-rank test or compare restricted mean survival time.</p>
+<h2>Cox proportional hazards model</h2>
+<p>Cox (1972): a semi-parametric regression model for survival data. The hazard for individual i with covariates xᵢ: h(t|xᵢ) = h₀(t) exp(βᵀxᵢ). h₀(t) is the baseline hazard — a non-parametric function of time shared by all individuals. exp(βᵀxᵢ) is the covariate effect, which is time-constant (the proportional hazards assumption). "Semi-parametric" because h₀(t) is left completely unspecified. Cox fits β without ever estimating h₀(t), using the partial likelihood: L(β) = Πⱼ exp(βᵀxⱼ) / [Σ_{i∈R(tⱼ)} exp(βᵀxᵢ)], where R(tⱼ) is the risk set at event time tⱼ. The denominator sums over everyone still at risk — censored observations contribute to the denominator of every event time before their censoring.</p>
+<h2>Interpreting Cox coefficients</h2>
+<p>exp(β_j) is the hazard ratio: the multiplicative change in hazard for a one-unit increase in feature xⱼ, holding all others constant. exp(β_j) > 1: feature increases the hazard (risk factor). exp(β_j) < 1: feature decreases the hazard (protective factor). Example in churn: if β_tenure = -0.3, then exp(-0.3) ≈ 0.74 — each additional month of tenure reduces the hazard of churn by 26%.</p>
+<h2>Proportional hazards assumption</h2>
+<p>The Cox model assumes that the hazard ratio between any two individuals is constant over time. To test: plot log(-log(S(t))) vs log(t) for different groups — parallel lines indicate proportional hazards. Or compute Schoenfeld residuals and test their correlation with time. When violated: use time-varying covariates, stratified Cox (separate h₀(t) per stratum), or flexible parametric models (piecewise exponential, flexible splines).</p>
+<h2>ML approaches to survival</h2>
+<p>Gradient boosted survival models: XGBoost and LightGBM support survival objectives (accelerated failure time or Cox partial likelihood). Random survival forests (Ishwaran et al., 2008): ensemble of survival trees that output cumulative hazard functions. DeepSurv (Katzman et al., 2018): neural network that outputs β parameters for a Cox model. All preserve the censoring mechanism while using ML's flexibility.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why can't you just use linear regression to model time-to-churn?" — Censored observations: customers still active at the observation end don't have a true churn time — you'd have to either exclude them (bias) or use the end date as churn time (underestimates survival). Survival analysis correctly uses all observations, including censored ones, through the likelihood formulation.</p>
+<p>"Interpret a Cox coefficient of β = 0.5 on a binary feature 'is_high_usage'." — exp(0.5) ≈ 1.65. High-usage customers have a 65% higher hazard rate at any given time than low-usage customers. Put differently: at any point in time, high-usage customers are 1.65× more likely to experience the event (churn, death, failure) in the next instant, conditional on having survived until that point.</p>
+<p>"What is the difference between KM and Cox? When would you use each?" — KM is non-parametric: it estimates the survival curve for the full population or pre-defined subgroups. No covariate modelling. Use KM for: descriptive analysis, comparing two groups, clinical reporting. Cox adds covariate regression: it models how individual features affect the hazard. Use Cox for: understanding which features predict the event, adjusting for confounders, predicting individual risk.</p>
+<p>"What does the proportional hazards assumption mean and how do you test it?" — The ratio of hazards between any two individuals is constant over time: h(t|xᵢ)/h(t|xⱼ) = exp(β(xᵢ - xⱼ)) for all t. Test: Schoenfeld residual test (significant correlation of residuals with time indicates violation). Graphically: log-log survival curves should be parallel. Common violation: treatment effect diminishes over time (common in clinical trials).</p>
+<p><strong>Try on Colab:</strong> use the lifelines library with the Telco customer churn dataset (augment with synthetic survival times). Fit a Kaplan-Meier curve for churned vs non-churned. Run a log-rank test comparing high vs low tenure groups. Fit a Cox model with 5 covariates (tenure, monthly charges, contract type, payment method, internet service). Interpret the hazard ratios. Check the proportional hazards assumption using Schoenfeld residuals.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=survival-analysis-kaplan-meier-cox-censoring#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

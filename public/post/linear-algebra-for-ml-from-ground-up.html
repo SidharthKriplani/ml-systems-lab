@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere — ML Systems Lab</title>
+  <meta name="description" content="PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot produ…" />
+  <meta name="keywords" content="Models &amp; Math, Linear Algebra, SVD, Eigenvalues, PCA, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/linear-algebra-for-ml-from-ground-up.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/linear-algebra-for-ml-from-ground-up.html" />
+  <meta property="og:title" content="Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere" />
+  <meta property="og:description" content="PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot produ…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere" />
+  <meta name="twitter:description" content="PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot produ…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere",
+  "description": "PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot produ…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/linear-algebra-for-ml-from-ground-up.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Linear Algebra, SVD, Eigenvalues, PCA, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=linear-algebra-for-ml-from-ground-up#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Linear Algebra for ML: Eigenvalues, SVD, and Why They Are Everywhere</h1>
+    <p class="excerpt">PCA, attention, word2vec, recommendation systems, and neural network weight initialisation all depend on the same 4 linear algebra ideas: linear transformations, eigendecomposition, SVD, and dot products as similarity. This post builds those four from scratch, in order, in the 90 minutes it would have taken your university course if it started with applications.</p>
+    <p>Linear algebra is the operating system of machine learning. Matrix multiplication is the operation every neural network layer performs. Eigendecomposition is what PCA computes. SVD is what collaborative filtering and LSA are built on. Dot products are the similarity measure in attention and in nearest-neighbour search. You cannot deeply understand any of these without the linear algebra underneath.</p>
+<h2>Vectors: what they actually are</h2>
+<p>A vector is a list of numbers that represents a point or a direction in some space. In ML, a row in your dataset is a vector in feature space — a point in ℝᵈ where d is the number of features. The dot product u · v = Σᵢ uᵢvᵢ = ||u|| ||v|| cos(θ) where θ is the angle between u and v. This geometric interpretation is the reason dot products measure similarity: if two vectors point in the same direction, cos(θ) = 1 (maximum similarity); if orthogonal, cos(θ) = 0 (no similarity); if opposite, cos(θ) = -1. Every attention mechanism and every embedding similarity search uses this fact.</p>
+<h2>Matrices as linear transformations</h2>
+<p>A matrix A ∈ ℝᵐˣⁿ is a function that maps vectors from ℝⁿ to ℝᵐ. The transformation is linear: A(u + v) = Au + Av. What does this mean geometrically? Every matrix transformation does some combination of rotation, scaling, shearing, and projection. No curving allowed — that is what "linear" means. A neural network layer with no activation function is a linear transformation. Stacking multiple linear layers gives another linear layer — which is why we need nonlinear activations to make deep networks more expressive than a single layer.</p>
+<h2>Eigenvalues and eigenvectors</h2>
+<p>For a square matrix A, vector v is an eigenvector with eigenvalue λ if Av = λv. The matrix transforms v by pure scaling (by λ) rather than rotating it. Geometrically: eigenvectors are the "axes" of the transformation — the special directions that don't get rotated, only stretched or flipped. Positive λ: stretching. Negative λ: flipping. |λ| > 1: expanding. |λ| < 1: contracting. |λ| = 0: collapsing to zero (the matrix is rank-deficient). For a symmetric matrix A = Aᵀ (like a covariance matrix), all eigenvalues are real and eigenvectors are orthogonal. This is the spectral theorem. Covariance matrices are always symmetric — which is why PCA's eigenvectors (principal components) are orthogonal.</p>
+<h2>PCA as eigendecomposition of the covariance matrix</h2>
+<p>Given data matrix X ∈ ℝⁿˣᵈ (n samples, d features), the covariance matrix C = (1/n) XᵀX ∈ ℝᵈˣᵈ. PCA finds the directions of maximum variance, which are the eigenvectors of C with the largest eigenvalues. Eigendecomposition: C = VΛVᵀ where V is the matrix of eigenvectors (columns) and Λ = diag(λ₁, ..., λᵈ) with λ₁ ≥ λ₂ ≥ ... ≥ λᵈ. Project data onto the top-k eigenvectors: X_reduced = X V_k. Explained variance ratio of component i: λᵢ / Σⱼ λⱼ. Plot the cumulative explained variance (scree plot) to choose k.</p>
+<h2>Singular Value Decomposition (SVD)</h2>
+<p>SVD generalises eigendecomposition to rectangular matrices: A = UΣVᵀ, where U ∈ ℝᵐˣᵐ (left singular vectors), Σ ∈ ℝᵐˣⁿ (diagonal, singular values σ₁ ≥ σ₂ ≥ ... ≥ 0), Vᵀ ∈ ℝⁿˣⁿ (right singular vectors). The singular values measure how much of the "signal" lives in each dimension. Low-rank approximation: A ≈ U_k Σ_k V_k ᵀ (keep only the top k singular vectors/values) is the best rank-k approximation in the Frobenius norm (Eckart-Young theorem). Where SVD appears in ML: PCA — SVD of the data matrix X gives the same result as eigendecomposition of XᵀX (faster and numerically more stable). Collaborative filtering — the user-item rating matrix R ≈ UΣVᵀ; the product gives reconstructed ratings and reveals latent factors. Latent Semantic Analysis (LSA) — SVD of the term-document matrix reveals latent topic structure. Word2vec training is closely related to SVD of the PMI matrix (Levy & Goldberg, 2014). Neural network weight matrices have their largest singular values regulated by spectral normalisation in GANs.</p>
+<h2>The rank of a matrix</h2>
+<p>Rank = number of linearly independent columns (= number of linearly independent rows = number of non-zero singular values). A matrix is full-rank if rank = min(m, n). A rank-deficient matrix cannot be inverted — this is the multicollinearity problem in regression. When your feature matrix X has rank less than d (more features than independent information), OLS is undefined and you need regularisation (ridge, lasso) or dimensionality reduction.</p>
+<h2>Matrix norms</h2>
+<p>Frobenius norm: ||A||_F = √(Σᵢⱼ Aᵢⱼ²) = √(Σᵢ σᵢ²). The sum of squared entries. Used in L2 regularisation on weight matrices. Spectral norm: ||A||₂ = σ₁ (largest singular value). Controls how much a layer can amplify a signal. Used in spectral normalisation for GANs. Nuclear norm: ||A||_* = Σᵢ σᵢ. Promotes low-rank solutions when used as a regulariser (matrix completion).</p>
+<h2>Interview questions on this topic</h2>
+<p>"What does it mean for two vectors to be orthogonal? Why does this matter in PCA?" — Their dot product is zero, cos(θ) = 0, they share no similarity. PCA components are orthogonal because the covariance matrix is symmetric (spectral theorem) — each component captures variance that no other component captures.</p>
+<p>"You have a user-item rating matrix with 10M users and 1M items and 0.01% fill rate. How would you use SVD?" — Truncated SVD on the sparse matrix (using scipy.sparse.linalg.svds) to get rank-k factorization. The left singular vectors are user embeddings, right singular vectors are item embeddings. Predict missing ratings as the dot product. This is exactly matrix factorisation collaborative filtering.</p>
+<p>"What is the relationship between PCA and SVD?" — SVD of the centred data matrix X = UΣVᵀ gives principal components as columns of V and principal component scores as columns of UΣ. Eigendecomposition of XᵀX = V(Σ²)Vᵀ gives the same V. SVD is preferred numerically.</p>
+<p>"Why does vanishing gradient happen in terms of linear algebra? How does it connect to singular values?" — During backprop, gradients are multiplied by Jacobians. If the Jacobians have small singular values (nearly rank-deficient), gradient magnitudes shrink exponentially with depth. Large singular values cause exploding gradients. Proper initialisation (He, Xavier) sets the singular value distribution of the initial weight matrices so gradients stay in a stable range.</p>
+<p><strong>Try on Colab:</strong> take the MovieLens 100K dataset. Build the user-item rating matrix (sparse). Apply truncated SVD with k=10, 50, 100 components. Measure reconstruction error on observed ratings. Plot the singular value spectrum. Compare the top singular vector as a "latent genre" — which movies load most heavily on component 1?</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=linear-algebra-for-ml-from-ground-up#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

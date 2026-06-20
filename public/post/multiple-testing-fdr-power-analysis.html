@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multiple Testing, FDR, and Power Analysis: The Stats Every DS Gets Wrong — ML Systems Lab</title>
+  <meta name="description" content="If you run 20 A/B tests and one comes back significant at p &lt; 0.05, the expected number of false positives under the null is 1. You found nothing. Multiple testing correction is the discipline of not …" />
+  <meta name="keywords" content="Data Science, Statistics, Multiple Testing, FDR, Power Analysis, A/B Testing, Experimental Design, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/multiple-testing-fdr-power-analysis.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/multiple-testing-fdr-power-analysis.html" />
+  <meta property="og:title" content="Multiple Testing, FDR, and Power Analysis: The Stats Every DS Gets Wrong" />
+  <meta property="og:description" content="If you run 20 A/B tests and one comes back significant at p &lt; 0.05, the expected number of false positives under the null is 1. You found nothing. Multiple testing correction is the discipline of not …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Multiple Testing, FDR, and Power Analysis: The Stats Every DS Gets Wrong" />
+  <meta name="twitter:description" content="If you run 20 A/B tests and one comes back significant at p &lt; 0.05, the expected number of false positives under the null is 1. You found nothing. Multiple testing correction is the discipline of not …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Multiple Testing, FDR, and Power Analysis: The Stats Every DS Gets Wrong",
+  "description": "If you run 20 A/B tests and one comes back significant at p < 0.05, the expected number of false positives under the null is 1. You found nothing. Multiple testing correction is the discipline of not …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/multiple-testing-fdr-power-analysis.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Statistics, Multiple Testing, FDR, Power Analysis, A/B Testing, Experimental Design"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=multiple-testing-fdr-power-analysis#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Multiple Testing, FDR, and Power Analysis: The Stats Every DS Gets Wrong</h1>
+    <p class="excerpt">If you run 20 A/B tests and one comes back significant at p &lt; 0.05, the expected number of false positives under the null is 1. You found nothing. Multiple testing correction is the discipline of not fooling yourself when running many tests. FDR control is the right tool when you want to discover true effects, not just avoid false ones. And power analysis is what you do before the test, not after.</p>
+    <p>Multiple testing and power analysis are the two most commonly skipped steps in experimental DS work — and the source of more false conclusions than any other statistical mistake.</p>
+<h2>The multiple testing problem</h2>
+<p>Every hypothesis test has a Type I error rate α = 0.05: you will reject a true null hypothesis 5% of the time by chance. If you run 20 independent tests, the probability of at least one false positive is 1 - (1-0.05)^20 = 0.64. Running many tests and reporting the significant ones is p-hacking, whether or not it is intentional.</p>
+<p>In practice, multiple testing arises constantly: testing one feature on 20 different user segments, testing 5 metrics for one experiment (click rate, conversion, revenue, session length, return visit), running 10 variants of an email subject line simultaneously. Each additional test increases your false positive rate.</p>
+<h2>Bonferroni correction: too conservative</h2>
+<p>Bonferroni divides the significance threshold by the number of tests: α_adjusted = α / m. For m=20 tests, each must have p < 0.0025 to be significant. This controls the Family-Wise Error Rate (FWER) — the probability of even one false positive across all tests. Bonferroni is appropriate when even one false positive is catastrophic (clinical drug trials). In industry settings where you are looking for effects worth investigating further, it is excessively conservative and kills statistical power.</p>
+<h2>Benjamini-Hochberg: FDR control for exploration</h2>
+<p>False Discovery Rate (FDR) = expected proportion of significant results that are false positives. Benjamini-Hochberg (BH, 1995) procedure controls FDR at level q: sort p-values p_(1) ≤ p_(2) ≤ ... ≤ p_(m). Find the largest k such that p_(k) ≤ k*q/m. Reject all tests up to k. At FDR q=0.1, you expect 10% of your declared discoveries to be false positives.</p>
+<p>BH is the right tool when: you are running many tests, false positives are costly but not catastrophic, and you want to prioritise findings for follow-up investigation. In feature importance analysis, variant selection, or gene expression studies, BH is the standard.</p>
+<h2>Power analysis: determining sample size before the experiment</h2>
+<p>Statistical power = P(correctly rejecting H0 when H1 is true) = 1 - β. Standard practice: power = 0.80 (80% chance of detecting a true effect). The required sample size depends on: effect size (MDE — minimum detectable effect), significance level α, power 1-β, and the metric's variance.</p>
+<p>For a two-sample proportion test: n = 2 * (z_{α/2} + z_β)^2 * p̄(1-p̄) / δ^2, where p̄ is the average conversion rate, δ is the MDE, z_{α/2} = 1.96 (for α=0.05), z_β = 0.84 (for power=0.8). For a baseline conversion rate of 5% and MDE of 1 percentage point (detecting a 5% → 6% lift), this requires ~5,000 users per arm.</p>
+<h2>Common mistakes in power analysis</h2>
+<p>Underestimating the variance: metrics with high variance (revenue per user, session length) require much larger samples than binary metrics (clicked/not). Ignoring multiple metrics: if you are testing 5 metrics, each at α=0.05 and power=0.8, your effective power for detecting any one specific metric may be much higher — but you need to correct for the multiplicity.</p>
+<p>Running tests until significant (optional stopping): repeatedly peeking at results and stopping when p < 0.05 inflates the Type I error rate. Bayesian sequential testing or SPRT (Sequential Probability Ratio Test) provide valid stopping rules. Many experimentation platforms now implement these.</p>
+<h2>Peeking and early stopping in industry</h2>
+<p>The standard error at peak sample size assumes the test ran to completion. Looking at results midway through and stopping early (if significant) or late (if trending) changes the effective α. Proper sequential testing designs account for this: O'Brien-Fleming spending functions, Pocock corrections, or Bayesian adaptive designs allow early stopping with controlled error rates.</p>
+<p><strong>Try on Colab:</strong> simulate running 100 A/B tests where H0 is true (no effect) for all of them. At α=0.05, count false positives. Apply Bonferroni correction — count false positives. Apply BH at q=0.1 — count false positives. Now repeat where 30 of 100 tests have a true effect. Compare the power (true positives recovered) of Bonferroni vs BH. The power difference will be stark — BH recovers significantly more true effects at similar FDR.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=multiple-testing-fdr-power-analysis#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

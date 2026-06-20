@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Stores: Why They Exist and What Point-in-Time Correctness Means — ML Systems Lab</title>
+  <meta name="description" content="Feature stores solve two problems that do not exist in academic ML: (1) features computed in batch for training must be computed in real time for serving, consistently; (2) historical features used to…" />
+  <meta name="keywords" content="Feature Engineering, Feature Stores, MLOps, Point-in-Time, Training-Serving Skew, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/feature-stores-online-offline-point-in-time.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/feature-stores-online-offline-point-in-time.html" />
+  <meta property="og:title" content="Feature Stores: Why They Exist and What Point-in-Time Correctness Means" />
+  <meta property="og:description" content="Feature stores solve two problems that do not exist in academic ML: (1) features computed in batch for training must be computed in real time for serving, consistently; (2) historical features used to…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Feature Engineering" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Feature Stores: Why They Exist and What Point-in-Time Correctness Means" />
+  <meta name="twitter:description" content="Feature stores solve two problems that do not exist in academic ML: (1) features computed in batch for training must be computed in real time for serving, consistently; (2) historical features used to…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Feature Stores: Why They Exist and What Point-in-Time Correctness Means",
+  "description": "Feature stores solve two problems that do not exist in academic ML: (1) features computed in batch for training must be computed in real time for serving, consistently; (2) historical features used to…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-stores-online-offline-point-in-time.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Feature Engineering, Feature Stores, MLOps, Point-in-Time, Training-Serving Skew, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=feature-stores-online-offline-point-in-time#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
+    <h1>Feature Stores: Why They Exist and What Point-in-Time Correctness Means</h1>
+    <p class="excerpt">Feature stores solve two problems that do not exist in academic ML: (1) features computed in batch for training must be computed in real time for serving, consistently; (2) historical features used to train a model must not &quot;leak&quot; future information. Point-in-time correctness is the second problem. It is subtle, it is widespread, and when violated, your model looks better in offline evaluation than it performs in production.</p>
+    <p>Feature engineering in production involves two distinct challenges. The first is operational: the same feature (user's average purchase value over the last 30 days) must be computed in batch for training and in milliseconds at serving time. The second is statistical: when training on historical data, the features used to predict an outcome at time T must reflect what was known at time T, not what was known later. Feature stores are the infrastructure that solves both.</p>
+<h2>The training-serving skew problem</h2>
+<p>Training data is computed by a data engineer in SQL running over the full historical dataset. Serving features are computed in real-time by a feature computation service. If these two systems use different code, different data sources, or different aggregation windows, the features at serving time will not match what the model was trained on. The model has learned from features it will never see in production.</p>
+<p>Common causes: SQL uses a different timezone than the real-time system; batch aggregations use slightly different window boundaries; NULL handling differs between Pandas and the serving library; category encoding was fit on training data and not persisted to serving. Any of these causes silent model degradation — you only discover it by comparing feature distributions between training and serving.</p>
+<h2>The point-in-time correctness problem</h2>
+<p>When training on historical data, you construct (features, label) pairs for past events. The label at time T might be "did the user churn in the 30 days after T?" The features should reflect what was known at time T — not at T+30 or at T+60. If your feature pipeline accidentally pulls in data from after the label window, the model has access to information it could not have had in production. This is a form of data leakage that produces overoptimistic offline metrics.</p>
+<p>Example: a user-level feature "total purchases in the user's history" is queried at the time of training (say, 2024-01-01). But the event you are labelling happened on 2022-06-01. The feature value at training time includes purchases made between June 2022 and January 2024. At serving time, you can only use purchases up to June 2022. The model trained with future information performs worse in production than offline evaluation predicted.</p>
+<h2>Point-in-time joins: the solution</h2>
+<p>A point-in-time join retrieves feature values as they existed at the time of each training event, not at the time of training generation. For a training event (user_id, event_timestamp), the join retrieves the feature value from the most recent feature snapshot before event_timestamp. This requires: storing historical feature values with timestamps, not just the current value; implementing an efficient as-of join that retrieves the correct historical value for each event.</p>
+<p>Feature stores (Feast, Hopsworks, Tecton, Databricks Feature Store) implement point-in-time joins as a core primitive. Without a feature store, implementing correct historical lookups requires careful custom SQL and is a frequent source of training-serving skew.</p>
+<h2>Online vs offline stores</h2>
+<p>Offline store: a columnar data warehouse (Parquet on S3, Delta Lake, BigQuery) holding historical feature values indexed by entity_id and timestamp. Used for training data generation. Query latency: seconds to minutes. Example: historical feature snapshots written every hour.</p>
+<p>Online store: a low-latency key-value store (Redis, DynamoDB, Bigtable) holding only the current feature values indexed by entity_id. Used for real-time serving. Query latency: < 5ms. Example: "user_123: {avg_purchase_30d: 42.5, session_count_7d: 3}".</p>
+<p>The offline store enables point-in-time training. The online store enables real-time serving. The feature store ensures both stores are populated from the same computation logic.</p>
+<h2>The fresh feature problem</h2>
+<p>Some features are highly time-sensitive: user's last action, current cart contents, real-time search query. These cannot be precomputed — they must be computed on-the-fly at serving time and passed directly to the model. Feature stores handle precomputed features; real-time features are passed as request context. The model input at serving time is: precomputed offline-computed features from the online store + fresh request-context features. Managing this boundary correctly is a common engineering challenge.</p>
+<p><strong>Try on Colab:</strong> use Feast (open-source feature store) with a small synthetic dataset. Define a feature view for user purchase statistics (avg_30d, count_7d). Materialize historical features to an offline store (Parquet). Use get_historical_features with point-in-time joins to generate training data for events at different timestamps. Compare the resulting features to a naive join that ignores time — observe the data leakage.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=feature-stores-online-offline-point-in-time#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

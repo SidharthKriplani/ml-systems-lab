@@ -46,6 +46,37 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.115 — Onboarding complete + pre-rendering for SEO + 4 onboarding fixes + 30 MCQs + 3 SEO guides (2026-06-20)
+
+**Major session shipping the four deferred onboarding fixes + SEO pre-rendering infrastructure + a content batch.**
+
+**Onboarding feedback (4 of 4 remaining items now done):**
+- **Tier time estimates** added to FoundationsPathView. Each tier header now shows a `~Nh Xm` chip on the right (computed from ready post count × 11 min avg read time + 15 min practice). New `tierEstimatedMinutes()` and `formatMinutes()` exports in `foundationsPath.js`.
+- **Interview readiness %** computed in new `src/utils/readiness.js` as weighted blend (50% path progress + 30% practice scenarios attempted / target of 80 + 20% active days in last 28 / target 14). Rendered prominently on HomeTab dashboard (under hero) and as a new Card on ProfilePage. Five readiness levels: novice / building / competent / strong / interview-ready. Breakdown chips show path %, practice %, activity %, accuracy %.
+- **Nav tooltips** — added `desc` field to every item in NAV_SECTIONS (38 tooltips total covering features / evaluation / systems / training / data / interview / labs / learn nav). NavItem renders via `title` attribute, native browser tooltip on hover. Closes a real "what is this tab?" gap for first-time visitors.
+- **Progressive widget surfacing** on dashboard. Activity heatmap now gated at ≥3 active days (was 1). Challenge log gated at ≥5 attempts (was 1). Interview Sim export gated at ≥10 attempts (was 1). Beginners see only Recently Added + Hero + readiness; heavier widgets appear as user shows readiness.
+
+**Pre-rendering for SEO (the "sitemap thing").**
+- `scripts/build-prerendered-posts.mjs` — Node script that extracts every Gradient post from GradientTab.jsx and generates a static SEO-indexable HTML file at `public/post/<slug>.html`. Each file has:
+  - Title, meta description, keywords, canonical URL
+  - Open Graph + Twitter Card tags
+  - JSON-LD structured data (Article schema)
+  - The post body rendered as plain HTML (paragraphs, headings, blockquotes, lists)
+  - "Continue interactively" CTA linking to the SPA URL
+  - Inline `<script>` that redirects human users (non-bots) to the SPA after 200ms
+- Generated **138 static HTML files** (one per Gradient post).
+- Sitemap (`scripts/build-sitemap.mjs`) updated to point to `/post/<slug>.html` URLs instead of fragment-only `?post=<slug>#gradient`. Now 151 URLs total (8 top-level + 143 posts).
+- Strategy: bots see static content with rich metadata; users get the full interactive SPA experience after 200ms redirect. This should dramatically improve indexing vs SPA-only.
+
+**Content batch:**
+- **30 more Quiz Me MCQs** (posts 76-85). Quiz Me coverage now **1-85** (was 1-75). Total MCQs: **255** (was 225). Remaining: posts 86-126 (41 × 3 = 123 MCQs).
+- **3 more SEO interview guides** (posts 143-145): Paytm Senior MLE, MakeMyTrip Senior DS, CRED Senior MLE/DS. SEO guide count now **13** (target 50; 37 to go).
+- (10 more Simplify versions deferred to next session for budget reasons — explicit queue item.)
+
+State additions: none. All new functionality reuses existing patterns and storage keys.
+
+Brace diff 0 across all 7 touched files. Apostrophe + backtick scans clean. Sitemap + pre-rendering scripts generate without errors.
+
 ### v4.114 — Sitemap + GSC + tab empty-states + 5 more SEO guides + 10 more Simplify (2026-06-20)
 
 **Shipped this session:** sitemap.xml regenerated with proper post URLs, GSC verification meta tag, empty-state polish on 4 high-traffic tabs, 5 more SEO interview guides (posts 138-142), 10 more Simplify versions for non-path posts.

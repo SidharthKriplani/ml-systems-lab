@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Junglee Games / MPL ML Engineer Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines re…" />
+  <meta name="keywords" content="Interview Prep, Junglee, MPL, Real-money Gaming, Fraud, Matchmaking, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/junglee-games-mpl-ml-engineer-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/junglee-games-mpl-ml-engineer-interview-guide.html" />
+  <meta property="og:title" content="Junglee Games / MPL ML Engineer Interview Guide" />
+  <meta property="og:description" content="Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines re…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Junglee Games / MPL ML Engineer Interview Guide" />
+  <meta name="twitter:description" content="Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines re…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Junglee Games / MPL ML Engineer Interview Guide",
+  "description": "Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines re…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/junglee-games-mpl-ml-engineer-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Junglee, MPL, Real-money Gaming, Fraud, Matchmaking, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=junglee-games-mpl-ml-engineer-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Junglee Games / MPL ML Engineer Interview Guide</h1>
+    <p class="excerpt">Junglee Games (Rummy Circle, Howzat) and Mobile Premier League (MPL) hire ML engineers for fraud detection at gaming scale, matchmaking, fair-play enforcement, and recommendation. The loop combines real-time ML constraints with regulatory awareness (gaming is regulated in India). This guide walks through the prep.</p>
+    <p>Junglee Games and MPL operate in the regulated real-money gaming space in India. ML systems matter especially for fraud detection (multiple-account exploitation, collusion in card games), matchmaking (balanced opponents drive retention), and player segmentation (regulatory KYC + business segmentation). The interview reflects this.</p>
+<h2>The loop structure (Senior ML Engineer)</h2>
+<p>Standard loop: recruiter screen → ML fundamentals + coding → fraud / matchmaking system design → production case → hiring manager.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> Standard.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 60 minutes. Conceptual probing with emphasis on imbalanced classification (fraud at 0.01%), graph ML (collusion detection requires graph analysis), and matching algorithms.</p>
+<p><strong>Round 3 — Fraud / matchmaking system design.</strong> 60 minutes. Common prompts: design fraud detection for online rummy (where collusion between players is a key fraud mode), design matchmaking for fair gameplay, design player skill rating. The design has to address regulatory constraints (KYC compliance, age verification, payment trail).</p>
+<p><strong>Round 4 — Production case.</strong> 60 minutes. Real scenario: "your fraud model started flagging a specific demographic group at 3× the base rate. Investigate." Tests the discipline of bias detection, segment-level analysis, and the trade-off between fraud catch rate and false positive impact on legitimate users.</p>
+<p><strong>Round 5 — Hiring manager.</strong> 45 minutes.</p>
+<h2>What Junglee / MPL weights distinctively</h2>
+<p>1. <strong>Graph ML for collusion detection.</strong> Multi-player gaming creates network structure where players collude. Senior candidates are expected to discuss graph neural networks or graph-based features. 2. <strong>Regulatory awareness.</strong> Real-money gaming in India has compliance requirements. ML decisions interact with KYC, age verification, anti-money-laundering rules. 3. <strong>Bias-vs-fraud trade-off.</strong> Aggressive fraud detection that disproportionately affects demographic groups creates regulatory and reputational risk. Senior candidates are expected to discuss this.</p>
+<h2>Top 10 questions Junglee / MPL candidates face</h2>
+<p>1. "Design fraud detection for online rummy. Base rate of fraud is 0.01%." 2. "Detect collusion between players in card games. What's your architecture?" 3. "Design matchmaking for skill-based games. What's your skill rating system?" 4. "Your fraud model flags one demographic at 3× the base rate. Investigate." 5. "How do you handle the trade-off between fraud catch and false positive impact?" 6. "Walk through your most impactful project on fraud or matching." 7. "Graph features vs tabular features for collusion detection." 8. "How do you A/B test a matchmaking algorithm when matches affect both players?" 9. "Cold start for new players in matchmaking." 10. "Eleven types of leakage. Which apply to fraud detection in gaming specifically?"</p>
+<h2>The prep path through MSL</h2>
+<p>For Junglee / MPL:</p>
+<li>Tier 3 (Classical Algorithms) — Post 129 (Class Imbalance), Post 76 (Calibration).</li>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) is central for the segment-bias round.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 71 (Two-Tower).</li>
+<h2>Compensation</h2>
+<p>Junglee Games / MPL Senior ML Engineer in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Higher tier roles reach ₹85 lakh+. The space is growing fast in India; compensation has been climbing.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=junglee-games-mpl-ml-engineer-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

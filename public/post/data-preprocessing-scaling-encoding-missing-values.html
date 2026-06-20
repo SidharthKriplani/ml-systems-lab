@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy — ML Systems Lab</title>
+  <meta name="description" content="Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data …" />
+  <meta name="keywords" content="Models &amp; Math, Preprocessing, Missing Data, MCAR, Feature Scaling, Categorical Encoding, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/data-preprocessing-scaling-encoding-missing-values.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/data-preprocessing-scaling-encoding-missing-values.html" />
+  <meta property="og:title" content="Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy" />
+  <meta property="og:description" content="Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy" />
+  <meta name="twitter:description" content="Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy",
+  "description": "Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/data-preprocessing-scaling-encoding-missing-values.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Preprocessing, Missing Data, MCAR, Feature Scaling, Categorical Encoding, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=data-preprocessing-scaling-encoding-missing-values#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Data Preprocessing: Scaling, Categorical Encoding, and the MCAR/MAR/MNAR Taxonomy</h1>
+    <p class="excerpt">Preprocessing is where most production ML bugs live. Using the wrong scaler can neuter regularisation. Using target encoding without proper cross-fitting leaks labels into features. Imputing MAR data as if it is MCAR produces biased estimates. This post covers every major preprocessing decision with the underlying reason — not just what to do, but why.</p>
+    <p>Data preprocessing is treated as boilerplate in most ML courses. It is not. The wrong preprocessing choices introduce subtle biases, destroy the meaning of regularisation, and silently degrade model quality. Each decision has a principled reason.</p>
+<h2>The MCAR / MAR / MNAR taxonomy for missing data</h2>
+<p>Missing data is not all the same. The type of missingness determines what you can do about it without introducing bias. Missing Completely At Random (MCAR): whether a value is missing is independent of the value itself and all other variables. Example: a lab technician drops a blood sample randomly. Any missing-data strategy is valid — even complete-case analysis (delete rows with missing values) gives unbiased estimates. Missing At Random (MAR): missingness depends on observed variables but not on the missing value itself, given those observed variables. Example: younger patients are less likely to have blood pressure recorded, but conditional on age, whether BP is recorded doesn't depend on BP value. Imputation using observed covariates (regression imputation, MICE) is valid. Complete-case analysis is biased. Missing Not At Random (MNAR): missingness depends on the unobserved value itself. Example: patients with very high blood pressure are less likely to have it recorded (they avoid the doctor). No standard imputation is unbiased without additional assumptions or external data. Must model the missingness mechanism explicitly. MNAR is the hardest case and often ignored in practice — leading to biased models.</p>
+<h2>Imputation strategies</h2>
+<p>Mean/median imputation: replace missing values with the column mean or median. Valid only under MCAR — creates artificial concentration at the mean, reduces variance, distorts correlations. Always add a binary indicator feature is_missing_j alongside the imputed value so the model can learn that missingness itself is informative. Regression imputation: predict the missing value from other features using a regression model. Valid under MAR. Preserves correlations between features. MICE (Multiple Imputation by Chained Equations): iteratively fit a regression model for each feature with missingness, using all other features as predictors. Repeat for many cycles until convergence. Produces multiple completed datasets; average predictions across them to get correct uncertainty estimates. Gold standard for MAR data. KNN imputation: fill missing values with the weighted average of the k nearest non-missing neighbours in feature space. Simple, often competitive with MICE for tabular data.</p>
+<h2>Feature scaling: when it matters and when it doesn&#39;t</h2>
+<p>StandardScaler: z = (x - μ) / σ. Each feature has zero mean and unit variance. Appropriate for: gradient descent-based models (neural nets, logistic regression, linear SVM) where features on different scales create elongated loss surfaces and slow convergence. L2/L1 regularisation — without scaling, the regularisation penalty is much larger for small-scale features than large-scale ones, biasing feature selection toward large-scale features. Distance-based models (KNN, kernel SVM, k-Means) where Euclidean distance is meaningless across different scales. MinMaxScaler: x_scaled = (x - x_min) / (x_max - x_min). Scales to [0,1]. Sensitive to outliers (one extreme value compresses all other values). Use when you need a bounded range (image pixel values, neural network output bounded to [0,1]) and outliers are not present. RobustScaler: x_scaled = (x - median) / IQR. Uses median and interquartile range instead of mean and std. Robust to outliers. Best when data has significant outliers that you cannot remove. When scaling doesn't matter: tree-based models (Random Forests, XGBoost, LightGBM) are invariant to monotone feature transformations — the split threshold adapts to the scale. Naive Bayes with Gaussian likelihoods — the likelihood computation normalises by the variance anyway. Rule: scale for gradient-based and distance-based models; skip for tree-based models.</p>
+<h2>Categorical encoding</h2>
+<p>One-hot encoding: create a binary indicator column for each category value. Correct for models that treat features as numeric (linear models, neural nets). Problem: high-cardinality features (e.g., ZIP code with 40,000 values) create 40,000 new columns — curse of dimensionality. Ordinal encoding: map categories to integers 0, 1, 2, .... Only valid when the categories have a true ordinal relationship (cold < warm < hot). Imposing fake ordinality on nominal categories misleads gradient-based models. Target encoding: replace each category with the mean of the target variable for that category. Computationally efficient, handles high cardinality. Critical risk: if computed on the same data used for training, this leaks the target into features — the model sees the answer before the question. Fix: use cross-fitting (compute target encoding from a held-out fold for each training sample). Always use sklearn's TargetEncoder with cv parameter. Frequency encoding: replace each category with its count or frequency in the training set. A simpler high-cardinality solution with no leakage risk. Weight of Evidence (WOE): used in credit risk — log(P(good|category) / P(bad|category)). Naturally handles binary targets and missing values; often the best encoding for logistic regression in financial applications.</p>
+<h2>Pipelines and the train/test split rule</h2>
+<p>The cardinal rule: all preprocessing statistics (mean, std, quantiles, target encoding statistics, imputation models) must be fit on the training set only and then applied to the test set. Fitting on the combined dataset leaks test information. In sklearn: always use Pipeline objects so that fit_transform is called only on training data and transform is called on test data. Cross-validation: sklearn's cross_validate with a Pipeline correctly re-fits the preprocessor on each fold's training data. Manual splits within a CV loop are error-prone.</p>
+<h2>Interview questions on this topic</h2>
+<p>"You have a feature 'city' with 5,000 unique values. What encoding strategies would you consider and what are the trade-offs?" — One-hot: 5,000 columns, sparse, correct but creates curse of dimensionality. Target encoding: single column, captures city-level signal, but requires careful cross-fitting to avoid leakage. Frequency encoding: no leakage risk, captures popularity signal but loses class-conditioned information. Embedding layer (if neural net): learns a dense representation end-to-end. Choice depends on model type and city cardinality relative to dataset size.</p>
+<p>"What is the difference between MCAR and MAR? Does the distinction matter for imputation?" — MCAR: missingness is independent of everything. MAR: missingness depends on other observed variables but not the missing value itself. For MCAR, simple mean imputation is unbiased. For MAR, you must condition on the observed covariates to get unbiased estimates — regression imputation or MICE is required. For MNAR, no standard method is unbiased. Yes, the distinction matters enormously for inference validity.</p>
+<p>"You fit a StandardScaler on your full dataset (train+test) and then do cross-validation. What went wrong?" — Test set statistics contaminate the scaler's mean and std estimates. The model implicitly has access to test set information during training. In practice this inflates cross-validation scores, sometimes significantly on small datasets. Always fit the scaler inside the cross-validation loop on the training fold only.</p>
+<p>"Why doesn't tree-based models need feature scaling?" — Decision trees split features at threshold values. Whether a feature is in dollars or thousands of dollars doesn't change the optimal split threshold — the tree just picks a different number. The model is invariant to monotone transformations of features. Scaling would change the specific threshold chosen but not the information content of the split.</p>
+<p><strong>Try on Colab:</strong> take a dataset with mixed feature types (use the Titanic dataset). Introduce 20% missing values in the 'Age' column as MAR (probability of missingness depends on 'Pclass'). Compare four imputation strategies (mean, median, KNN, MICE) by measuring the bias in the estimated mean age per class. Show that mean imputation is biased for MAR missingness; MICE recovers the true conditional mean.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=data-preprocessing-scaling-encoding-missing-values#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

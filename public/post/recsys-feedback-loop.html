@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Recsys Feedback Loop You Can&#39;t Escape — ML Systems Lab</title>
+  <meta name="description" content="Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. With…" />
+  <meta name="keywords" content="Recommendations, ML System Design, Feedback Loop, Exploration, Bias, Diversity, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/recsys-feedback-loop.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/recsys-feedback-loop.html" />
+  <meta property="og:title" content="The Recsys Feedback Loop You Can&#39;t Escape" />
+  <meta property="og:description" content="Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. With…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Recsys Feedback Loop You Can&#39;t Escape" />
+  <meta name="twitter:description" content="Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. With…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Recsys Feedback Loop You Can't Escape",
+  "description": "Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. With…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/recsys-feedback-loop.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Recommendations, ML System Design, Feedback Loop, Exploration, Bias, Diversity"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=recsys-feedback-loop#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>The Recsys Feedback Loop You Can&#39;t Escape</h1>
+    <p class="excerpt">Every recommendation system creates its own training data. The users who see item A click on it; item A gets more impressions; it gets more clicks; it ranks higher; it gets even more impressions. Within months, your model has learned to recommend what it already recommended — not what users actually want.</p>
+    <h2>What the Feedback Loop Is</h2>
+<p>A recommendation system decides what users see. Users click on what they see. Those clicks become the next training batch. The model learns from its own outputs.</p>
+<p>This is not a design flaw — it is the fundamental architecture of every production recommendation system. But it creates a compounding dynamic that, without explicit intervention, systematically degrades catalog coverage, user experience, and long-run relevance. Items the model never shows get zero clicks and never improve their position. Items it shows frequently accumulate clicks and rank higher in every subsequent training cycle.</p>
+<p>The loop is self-reinforcing by construction.</p>
+<h2>Failure Mode 1: Popularity Spiral</h2>
+<p>Top-10 items capture 60%+ of traffic within 90 days of deployment. Catalog coverage collapses. Long-tail items — which may have high latent interest among specific user segments — never surface because they never accumulate the click signal that would make the model show them.</p>
+<p>The distribution of item impressions follows a power law that steepens over time. At launch, the top 10% of items may capture 40% of impressions. After six months of feedback-loop training, the same 10% capture 70%. The rest of the catalog effectively does not exist for the model.</p>
+<p>The business cost: catalog that was expensive to acquire, produce, or license generates zero engagement not because users don't want it, but because it was never shown.</p>
+<h2>Failure Mode 2: Exploration Starvation</h2>
+<p>Without explicit exploration, the model converges on a local optimum. New items released after training cutoff never break through because they have no historical signal. A model trained on six months of data assigns near-zero probability to items launched in month seven.</p>
+<p>This creates a structural disadvantage for new content. It also means that shifts in user preference — new trends, seasonal changes, emerging interests — are absorbed slowly or not at all. The model's prior on item quality is dominated by historical click rates, which are themselves a product of historical exposure, not historical preference.</p>
+<h2>Failure Mode 3: Demographic Homogenisation</h2>
+<p>If one demographic clicks more than others, the model skews toward their preferences. Other segments see progressively less relevant content. They churn. The surviving audience becomes more homogeneous. The model optimises harder for the dominant demographic's signal.</p>
+<p>This is a feedback loop operating on user population composition, not just item distribution. The outcome is a system that serves a narrowing segment extremely well and a growing segment not at all — and whose offline metrics look fine throughout the process because they are measured on the surviving, homogeneous user population.</p>
+<h2>Why Offline Evaluation Hides This</h2>
+<p>Your offline AUC or NDCG looks fine because you evaluate on historical clicks — which were themselves generated by the feedback loop. The held-out test set reflects the distribution of items the model already showed, not the distribution of items users would have clicked if they'd been shown different content.</p>
+<p>Offline metrics don't capture what users would have clicked if they'd been shown items outside the model's historical top-K. This is the exposure bias problem in recommendation system evaluation. A model that perfectly predicts historically shown items is not necessarily a good recommender — it may be an excellent memorizer of its own previous decisions.</p>
+<h2>Four Interventions</h2>
+<p>*Forced exploration budget:* Reserve 5–10% of recommendation slots for items outside the model's top-K. Log results. Feed them back into training. Implementation: ε-greedy assigns a fixed fraction of slots to random-in-catalog items. Thompson sampling estimates per-item uncertainty and allocates exploration budget proportional to uncertainty. The exploration budget is not a concession to users — it is an investment in training signal diversity.</p>
+<p>*Inverse propensity scoring (IPS):* Reweight training examples by the inverse probability of them being shown. Items shown more frequently are downweighted. Items shown rarely are upweighted. If item A was shown with probability 0.8 and was clicked, its contribution to the training gradient is scaled by 1/0.8 = 1.25. If item B was shown with probability 0.05 and was clicked, its contribution is scaled by 1/0.05 = 20. IPS corrects for the exposure bias in the training signal and gives the model a less distorted view of item quality.</p>
+<p>*Popularity debiasing:* Subtract a popularity prior from item scores at inference time. Score_debiased = Score_model - α × log(impression_count). The α hyperparameter controls the strength of debiasing. A high α strongly suppresses popular items; a low α leaves the model's ranking largely intact. The correct α is empirical — tune it on a held-out diversity metric, not on offline AUC.</p>
+<p>*Diversity constraints:* At serving time, enforce minimum category or genre diversity in the top-K results. Maximal marginal relevance reranks items by a combination of relevance and novelty relative to already-selected items. Determinantal point processes provide a probabilistic framework for diverse subset selection. Both prevent the top-K from collapsing to a single content type while maintaining relevance.</p>
+<h2>The Production Checkpoint</h2>
+<p>Before any recsys model ships, audit three things:</p>
+<p>Catalog coverage over the last 30 days: if fewer than 10% of catalog items appeared in recommendations, the feedback loop is already dominating the system before you've even added this model.</p>
+<p>Top-10 item share: if more than 50% of clicks go to 10 items, diversity is broken. The model is serving a popularity leaderboard with extra steps.</p>
+<p>New-item CTR vs average CTR: if items launched in the last 30 days have less than 30% of average CTR, exploration is broken. New content cannot break through the historical signal barrier.</p>
+<p>These three checks take 20 minutes to run. They will tell you more about the health of your recommendation system than any offline evaluation metric.</p>
+<h2>Practice this in System Design → Two-Tower Explorer</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=recsys-feedback-loop#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

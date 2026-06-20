@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learning to Rank: What NDCG Is Measuring and How LambdaRank Optimises It — ML Systems Lab</title>
+  <meta name="description" content="Ranking is not classification. You are not predicting whether a user will click — you are ordering a list so that the most relevant items appear at the top. The metrics that measure ranking quality (N…" />
+  <meta name="keywords" content="ML System Design, Learning to Rank, NDCG, LambdaRank, Search, Recommendation Systems, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/learning-to-rank-ndcg-lambdarank.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/learning-to-rank-ndcg-lambdarank.html" />
+  <meta property="og:title" content="Learning to Rank: What NDCG Is Measuring and How LambdaRank Optimises It" />
+  <meta property="og:description" content="Ranking is not classification. You are not predicting whether a user will click — you are ordering a list so that the most relevant items appear at the top. The metrics that measure ranking quality (N…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Learning to Rank: What NDCG Is Measuring and How LambdaRank Optimises It" />
+  <meta name="twitter:description" content="Ranking is not classification. You are not predicting whether a user will click — you are ordering a list so that the most relevant items appear at the top. The metrics that measure ranking quality (N…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Learning to Rank: What NDCG Is Measuring and How LambdaRank Optimises It",
+  "description": "Ranking is not classification. You are not predicting whether a user will click — you are ordering a list so that the most relevant items appear at the top. The metrics that measure ranking quality (N…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/learning-to-rank-ndcg-lambdarank.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Learning to Rank, NDCG, LambdaRank, Search, Recommendation Systems"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=learning-to-rank-ndcg-lambdarank#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Learning to Rank: What NDCG Is Measuring and How LambdaRank Optimises It</h1>
+    <p class="excerpt">Ranking is not classification. You are not predicting whether a user will click — you are ordering a list so that the most relevant items appear at the top. The metrics that measure ranking quality (NDCG, MAP, MRR) are non-differentiable. LambdaRank is the engineering solution that makes it possible to optimise these metrics directly. This is how web search ranking, recommendation ranking, and ad ranking work at FAANG.</p>
+    <p>A ranking model takes a query (user + context) and a list of candidates and produces an ordering. The goal is to put the most relevant items at the top. This sounds like classification, but the evaluation metric depends on position — a relevant item at rank 1 is far more valuable than one at rank 10. Standard classification losses do not capture this.</p>
+<h2>NDCG: the standard ranking metric</h2>
+<p>Normalised Discounted Cumulative Gain (NDCG) measures ranking quality with position-aware discounting. For a ranked list of items with relevance labels r_1, r_2, ..., r_k:</p>
+<p>DCG@k = Σ_{i=1}^{k} (2^{r_i} - 1) / log_2(i + 1)</p>
+<p>Items at lower positions are discounted logarithmically. An item with relevance 3 at position 1 contributes 7/1 = 7; the same item at position 5 contributes 7/2.585 = 2.71. NDCG normalises by the ideal DCG (IDCG) — the DCG of the perfect ranking: NDCG@k = DCG@k / IDCG@k, giving a value in [0, 1].</p>
+<p>NDCG handles graded relevance (not just binary relevant/not): a 4-star relevance item is worth more than a 3-star item. This is important for search where relevance is not binary — some documents are perfect answers, some are tangentially related.</p>
+<h2>MAP: for binary relevance</h2>
+<p>Mean Average Precision (MAP) is the mean over queries of the Average Precision per query. Average Precision: compute precision at each position where a relevant item appears, then average. MAP is appropriate when relevance is binary. It rewards finding all relevant items, not just the top ones, and rewards finding them early.</p>
+<h2>The non-differentiability problem</h2>
+<p>NDCG is non-differentiable. It depends on the rank position of each item, which is a discrete quantity that changes discontinuously as scores change. You cannot compute ∂NDCG/∂score and use gradient descent directly.</p>
+<h2>Three approaches to learning-to-rank</h2>
+<p>Pointwise: treat each (query, document) pair independently as a regression or classification problem. Predict a relevance score; rank by scores. Loss is MSE or cross-entropy. Simple but ignores the list structure — optimising individual relevance scores does not guarantee the ranking is good.</p>
+<p>Pairwise: for each pair of documents (i, j) where i is more relevant than j, train the model so score(i) > score(j). RankNet (Burges et al., 2005) uses a pairwise cross-entropy loss. Pairwise training considers relative order but still does not account for position: it is equally costly to invert positions 1 and 2 as to invert positions 50 and 51.</p>
+<p>Listwise: optimise the full list simultaneously. LambdaMART directly optimises NDCG. SoftRank and ListNet use differentiable approximations. These are the highest-performing approaches.</p>
+<h2>LambdaRank: the practical solution</h2>
+<p>LambdaRank (Burges et al., 2006) trains a neural network ranking model by defining "lambda gradients" — gradient magnitudes that are heuristically motivated to correlate with NDCG improvement. For a pair (i, j) with i more relevant: λ_ij = |ΔNDCG_ij| * σ(-s_ij). The |ΔNDCG_ij| term is the change in NDCG if you swap items i and j's positions — it weights pairs by how much swapping them would hurt the ranking. The σ(-s_ij) term is the standard pairwise gradient. These λ gradients are not derived from any loss function, but training with them directly improves NDCG. LambdaMART applies these gradients within a gradient boosted tree framework and is still competitive with neural approaches on many benchmarks.</p>
+<h2>Feature engineering for ranking</h2>
+<p>A ranking model typically has three types of features: query features (query text embedding, query frequency, query category), document features (document text embedding, historical CTR, recency, quality score), and interaction features (query-document similarity, user-document co-engagement, dwell time on previous encounters). The interaction features are the most powerful — they encode how specifically this user and this document have interacted before.</p>
+<h2>Calibration and business rules</h2>
+<p>A ranking model's raw scores are not probabilities and do not have a natural scale. In production, re-ranking layers apply business rules on top of the model score: boost content from premium partners, penalise repetitive content, apply diversity constraints (no more than two items from the same creator in the top 10). The model provides relevance signal; business logic shapes the final list.</p>
+<p><strong>Try on Colab:</strong> use the LETOR dataset (Microsoft Learning to Rank benchmark). Train three models: a pointwise regression, a pairwise RankNet, and a LambdaMART (use LightGBM's rank objective). Evaluate all three on NDCG@5 and NDCG@10. Plot the performance difference. The listwise model should outperform pointwise by 2-5 NDCG points.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=learning-to-rank-ndcg-lambdarank#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

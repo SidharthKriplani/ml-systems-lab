@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Series Forecasting: ARIMA, Prophet, and When Neural Models Win — ML Systems Lab</title>
+  <meta name="description" content="Time series forecasting is not regression with a date column. Serial correlation, seasonality, non-stationarity, and distribution shift over time require specific modelling decisions. ARIMA handles au…" />
+  <meta name="keywords" content="Data Science, Time Series, ARIMA, Prophet, Forecasting, Temporal Fusion Transformer, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/time-series-forecasting-arima-prophet-neural.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/time-series-forecasting-arima-prophet-neural.html" />
+  <meta property="og:title" content="Time Series Forecasting: ARIMA, Prophet, and When Neural Models Win" />
+  <meta property="og:description" content="Time series forecasting is not regression with a date column. Serial correlation, seasonality, non-stationarity, and distribution shift over time require specific modelling decisions. ARIMA handles au…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Time Series Forecasting: ARIMA, Prophet, and When Neural Models Win" />
+  <meta name="twitter:description" content="Time series forecasting is not regression with a date column. Serial correlation, seasonality, non-stationarity, and distribution shift over time require specific modelling decisions. ARIMA handles au…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Time Series Forecasting: ARIMA, Prophet, and When Neural Models Win",
+  "description": "Time series forecasting is not regression with a date column. Serial correlation, seasonality, non-stationarity, and distribution shift over time require specific modelling decisions. ARIMA handles au…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/time-series-forecasting-arima-prophet-neural.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Time Series, ARIMA, Prophet, Forecasting, Temporal Fusion Transformer"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=time-series-forecasting-arima-prophet-neural#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Time Series Forecasting: ARIMA, Prophet, and When Neural Models Win</h1>
+    <p class="excerpt">Time series forecasting is not regression with a date column. Serial correlation, seasonality, non-stationarity, and distribution shift over time require specific modelling decisions. ARIMA handles autocorrelation. Prophet handles seasonality and holidays. Neural models (N-BEATS, Temporal Fusion Transformer) win when you have many related series and enough data. The wrong model for the wrong data produces confident wrong answers.</p>
+    <p>Time series forecasting appears in almost every company: demand forecasting for inventory, revenue forecasting for planning, metric forecasting for anomaly detection, user growth projections. The standard ML instinct — "throw gradient boosting at it" — works poorly when temporal structure is ignored.</p>
+<h2>The core structure: trend, seasonality, noise</h2>
+<p>Most time series decompose into: trend (long-term direction — growing, shrinking, flat), seasonality (periodic patterns — daily, weekly, yearly), and noise (random variation). STL decomposition (Seasonal and Trend decomposition using Loess) splits a series into these three components non-parametrically. Plotting the decomposition is the first diagnostic step: it tells you how strong each component is and whether your model needs to capture them.</p>
+<h2>ARIMA: modelling autocorrelation</h2>
+<p>ARIMA(p, d, q) is the classical approach for univariate time series. d is the differencing order — applying d differences to make the series stationary (constant mean and variance). A series is integrated of order d if d-differencing makes it stationary. p is the autoregressive order — include the last p values as predictors. AR(p): y_t = c + Σ_{i=1}^{p} φ_i y_{t-i} + ε_t. q is the moving average order — include the last q error terms. MA(q): y_t = c + ε_t + Σ_{i=1}^{q} θ_i ε_{t-i}.</p>
+<p>ARIMA combines these. The autocorrelation function (ACF) and partial autocorrelation function (PACF) diagnose appropriate p and q: ACF plots correlation of y_t with y_{t-k}; PACF plots correlation after removing the effect of intermediate lags. For AR(p) processes, PACF cuts off at lag p; for MA(q) processes, ACF cuts off at lag q. SARIMA adds seasonal terms.</p>
+<h2>Prophet: designed for business time series</h2>
+<p>Prophet (Taylor & Letham, Facebook, 2018) is designed for the time series characteristics most common in business settings: strong weekly and yearly seasonality, holiday effects, trend changepoints. It decomposes: y(t) = g(t) + s(t) + h(t) + ε(t), where g(t) is trend (linear or logistic), s(t) is seasonality (Fourier series), h(t) is holiday effects (dummy variables). Changepoints — where the trend slope changes — are detected automatically using a sparse prior on changepoint magnitudes.</p>
+<p>Prophet is fast to fit, interpretable, handles missing data gracefully, and produces uncertainty intervals. It outperforms ARIMA on many business metrics because it explicitly models seasonality structure that ARIMA captures only through seasonal differencing.</p>
+<h2>Cross-validation for time series: no data leakage</h2>
+<p>Standard k-fold cross-validation shuffles examples randomly — invalid for time series because future values cannot predict past values. Time series cross-validation uses expanding windows: train on [1,t], validate on t+1,...,t+h. Repeat for many values of t. This simulates the actual forecasting setting. scikit-learn's TimeSeriesSplit implements this. Common mistake: using a random train/test split on a time series. This creates data leakage (test examples are in the middle of training examples) and produces optimistic estimates.</p>
+<h2>Feature engineering for tabular time series models</h2>
+<p>Tree-based models (XGBoost, LightGBM) outperform ARIMA on many time series when features are engineered correctly: lag features (y_{t-1}, y_{t-7}, y_{t-365}), rolling statistics (rolling mean and std over 7d, 30d windows), date features (hour, day of week, month, is_holiday, is_month_end), and external regressors (weather, promotions, competitor prices). The critical rule: only use lag features that would be available at the time of prediction to avoid leakage.</p>
+<h2>Neural models: when they win</h2>
+<p>N-BEATS (Oreshkin et al., 2020) and Temporal Fusion Transformer (Lim et al., 2021) win over classical methods when: you have many related time series with shared structure (e.g., thousands of product sales series), long-range dependencies beyond ARIMA's typical p=1-3, or multivariate dependencies across many input series. TFT uses self-attention across time steps, gating to select relevant features, and quantile regression for uncertainty. On M4 and M5 competitions (business forecasting benchmarks), TFT-based models achieve state-of-the-art.</p>
+<h2>Anomaly detection in time series</h2>
+<p>Identify time points where y_t deviates from what the model expected. Residuals e_t = y_t - ŷ_t. Points where |e_t| > k * σ_e are flagged (sigma-clipping). More sophisticated: fit a distribution to the residuals (normal, t-distribution for heavy tails), compute the probability of each observation, flag low-probability events. ARIMA residuals should be white noise — plotting their ACF diagnoses whether residual structure remains unexplained.</p>
+<p><strong>Try on Colab:</strong> download the M5 competition dataset (Walmart store-level daily sales, 30,490 series). Forecast 28 days ahead for 100 series using: (1) ARIMA with auto-selection, (2) Prophet, (3) XGBoost with lag features. Evaluate with WRMSSE (competition metric). Build the cross-validation setup correctly — ensure no leakage. Compare the three approaches on accuracy and training time.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=time-series-forecasting-arima-prophet-neural#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

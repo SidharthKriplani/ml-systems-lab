@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10 ML Interview Mistakes Even Senior Engineers Make — ML Systems Lab</title>
+  <meta name="description" content="These aren&#39;t mistakes made by junior candidates who don&#39;t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they&#39;re talking about — but don&#39;t kno…" />
+  <meta name="keywords" content="Interview Prep, MLE, Senior Engineer, Career, System Design, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ml-interview-mistakes.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ml-interview-mistakes.html" />
+  <meta property="og:title" content="10 ML Interview Mistakes Even Senior Engineers Make" />
+  <meta property="og:description" content="These aren&#39;t mistakes made by junior candidates who don&#39;t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they&#39;re talking about — but don&#39;t kno…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="10 ML Interview Mistakes Even Senior Engineers Make" />
+  <meta name="twitter:description" content="These aren&#39;t mistakes made by junior candidates who don&#39;t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they&#39;re talking about — but don&#39;t kno…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "10 ML Interview Mistakes Even Senior Engineers Make",
+  "description": "These aren't mistakes made by junior candidates who don't know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they're talking about — but don't kno…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ml-interview-mistakes.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, MLE, Senior Engineer, Career, System Design"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ml-interview-mistakes#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>10 ML Interview Mistakes Even Senior Engineers Make</h1>
+    <p class="excerpt">These aren&#39;t mistakes made by junior candidates who don&#39;t know the material. These are the subtle, frustrating errors that sink engineers who absolutely know what they&#39;re talking about — but don&#39;t know how to show it in 45 minutes.</p>
+    <h2>1. Starting architecture before framing the problem.</h2>
+<p>The single most common mistake at Staff level. An interviewer says "design a recommendation system for Spotify." The candidate immediately starts drawing boxes: two-tower model, HNSW index, Redis feature store. The interviewer asks: "what latency constraint are you designing for?" Silence.</p>
+<p>Fix: spend the first 8 minutes on problem framing. Users and their goals. Latency. Scale. Constraints. The architecture flows from the constraints.</p>
+<h2>2. Treating AUC as the only metric.</h2>
+<p>Recommending AUC when asked "how would you evaluate this model" signals shallow evaluation knowledge. Real answer: what does success mean for the business? CTR? Session length? Revenue? Then: what offline proxy best predicts online success? Then: how do you validate that the offline metric actually predicts the online metric?</p>
+<h2>3. Not knowing what P99 latency means for your system.</h2>
+<p>If you can't give a rough latency budget for your design (e.g., "10ms feature fetch + 45ms retrieval + 8ms ranking = 63ms total, P99 should be under 100ms"), you don't have a production ML system — you have a notebook experiment.</p>
+<h2>4. Saying &quot;I&#39;d use a transformer&quot; without justification.</h2>
+<p>Transformers are powerful. They're also slow, expensive, and overkill for tabular data, sparse feature models, and many production ranking systems. "I'd use a transformer" without latency/scale analysis signals that you're applying learned patterns, not reasoning.</p>
+<h2>5. Confusing offline and online evaluation.</h2>
+<p>"Our model has AUC 0.96" — offline metric. "Our CTR increased 3%" — online metric. The gap between them is where production ML fails. Interviewers at senior levels will probe: how do you know your offline metrics predict online improvement? What have you seen break this correlation?</p>
+<h2>6. Ignoring data quality and label noise.</h2>
+<p>Strong candidates mention: what are the label sources? What biases do they have? Position bias, selection bias, label delay. "Implicit feedback (clicks) is biased toward popular items" demonstrates practical knowledge. Ignoring it signals academic exposure only.</p>
+<h2>7. Not knowing when NOT to use ML.</h2>
+<p>A question like "how would you personalise the home feed for a platform with 100 users?" should be answered with "I wouldn't use ML yet — build good heuristics, instrument them, collect data, then train a model once you have 10,000+ users and a defined success metric." Applying ML to every problem signals poor engineering judgment.</p>
+<h2>8. Describing monitoring as an afterthought.</h2>
+<p>Saying "and then we'd monitor it" at minute 42 of a 45-minute interview. Strong candidates allocate time for monitoring because they've been paged at 2am. What specific metrics would you alert on? What's the threshold? What do you do when an alert fires?</p>
+<h2>9. Not discussing failure modes.</h2>
+<p>"What happens if the model is down? What happens if the feature store returns stale data? What happens if a new item has no embedding?" These aren't trick questions — they're the most important questions. Production ML engineers have been burned by these.</p>
+<h2>10. Not asking clarifying questions when uncertain.</h2>
+<p>Spending 20 minutes designing a batch inference system when the interviewer had real-time in mind. Or vice versa. Clarifying questions aren't a sign of weakness — they're a sign you understand that requirements matter. Ask once, confirm your understanding, then proceed.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ml-interview-mistakes#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

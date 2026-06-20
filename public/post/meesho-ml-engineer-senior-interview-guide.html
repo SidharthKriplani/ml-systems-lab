@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meesho ML Engineer / Senior MLE Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Meesho&#39;s ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-awar…" />
+  <meta name="keywords" content="Interview Prep, Meesho, Senior MLE, Marketplace, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/meesho-ml-engineer-senior-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/meesho-ml-engineer-senior-interview-guide.html" />
+  <meta property="og:title" content="Meesho ML Engineer / Senior MLE Interview Guide" />
+  <meta property="og:description" content="Meesho&#39;s ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-awar…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Meesho ML Engineer / Senior MLE Interview Guide" />
+  <meta name="twitter:description" content="Meesho&#39;s ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-awar…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Meesho ML Engineer / Senior MLE Interview Guide",
+  "description": "Meesho's ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-awar…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/meesho-ml-engineer-senior-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Meesho, Senior MLE, Marketplace, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=meesho-ml-engineer-senior-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Meesho ML Engineer / Senior MLE Interview Guide</h1>
+    <p class="excerpt">Meesho&#39;s ML interviews are calibrated around recommendation, search, fraud, and seller-side ML. The bar is slightly lower than Flipkart but the loop has its own pattern — heavier emphasis on cost-aware ML and scale-vs-accuracy trade-offs because Meesho operates at thin unit economics. This guide unpacks the structure.</p>
+    <p>Meesho's senior ML loop is calibrated to a specific business reality: Meesho operates in tier-2 and tier-3 India with thin unit economics. Every ML decision has a cost-vs-accuracy trade-off that's more visible than at Flipkart or Amazon India. Senior MLE candidates are graded on whether they can articulate these trade-offs.</p>
+<p>The loop is shorter and tighter than Flipkart's — typically 4-5 rounds — but the cost-awareness probe shows up in every technical round.</p>
+<h2>The loop structure (ML Engineer / Senior ML Engineer, L4-L5)</h2>
+<p>Standard loop: recruiter call → ML fundamentals + coding → ML system design → production case → hiring manager.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter call.</strong> Standard.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 60 minutes. Conceptual probing on classical ML, evaluation metrics, calibration. Coding is typically a LeetCode medium plus a domain problem (implement a similarity score, optimise a recommendation lookup).</p>
+<p><strong>Round 3 — ML system design.</strong> 60 minutes. Common prompts: design Meesho's product recommendation system, design seller-side ranking for the marketplace, design fraud detection for low-ticket transactions. Meesho specifically probes cost-aware trade-offs — "your recommendation system uses two-tower with embedding lookups. Compute cost is 10 paise per query. Order value is ₹500. Is this profitable? What do you change?"</p>
+<p><strong>Round 4 — Production case.</strong> 60 minutes. A real production scenario — "your seller ranking model improved offline NDCG by 3% but order completion rate dropped by 0.5%. Walk through your diagnosis." Meesho's production case round tests the same observation-before-naming discipline as Razorpay's, with an added cost-awareness dimension.</p>
+<p><strong>Round 5 — Hiring manager.</strong> 45 minutes. Team fit, project ownership.</p>
+<h2>What Meesho weights distinctively</h2>
+<p>1. <strong>Cost-vs-accuracy trade-offs.</strong> Senior candidates are expected to think in terms of compute cost per query, training cost per cycle, and the marginal lift required to justify each. A candidate who proposes a deep learning ranker without justifying the compute cost gets downgraded. 2. <strong>Tier-2/3 India context.</strong> Meesho's user base is predominantly tier-2 and tier-3 India. Senior candidates are expected to articulate how this changes the ML problem — different transaction patterns, different fraud vectors, different recommendation success criteria, different latency tolerances (mobile data quality). 3. <strong>Marketplace fairness.</strong> Meesho sellers depend on the platform. Recommendation and ranking models that produce winner-takes-all dynamics hurt the marketplace long-term. Senior candidates are expected to discuss fairness and exploration alongside accuracy.</p>
+<h2>Top 10 questions Meesho senior MLE candidates face</h2>
+<p>1. "Design Meesho's product recommendation system. Compute budget is 5 paise per query." 2. "Your seller ranking improved NDCG +3% but order completion dropped 0.5%. Diagnose." 3. "Fraud at 0.05% base rate, average order value ₹400. What's your alert capacity, what's your precision target?" 4. "How does the tier-2 India user behaviour change your recommendation problem?" 5. "Design real-time seller ranking. Latency budget 30ms. Cost budget 3 paise per query." 6. "Your model recommends only the top 10 sellers. The other 5000 sellers leave the platform. What's your fix?" 7. "Walk through your most impactful project. What was the cost-accuracy trade-off you made?" 8. "How do you A/B test a recommendation model where sellers are part of the population?" 9. "Cold-start for a new seller with zero transactions. How does your ranking system handle them?" 10. "Eleven types of leakage. Which apply specifically to marketplace ML?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a Meesho senior MLE loop:</p>
+<li>Tier 3 (Classical Algorithms) — Post 129 (Class Imbalance) and Post 76 (Calibration). Fraud-team rounds probe both.</li>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 131 (Error Analysis) for segment-level analysis.</li>
+<li>Tier 7 (Production Engineering) — Posts 1, 7, 38. Cost-aware feature stores are a Meesho-specific concern.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 72 (Recsys Stack), Post 71 (Two-Tower).</li>
+<li>For practice: SystemDesignTab, IncidentRoom incidents 7-12, Mock Interview with a Meesho JD pasted.</li>
+<h2>Common failure modes</h2>
+<li>Designing systems without articulating compute or training cost. Meesho specifically tests this.</li>
+<li>Treating the marketplace as user-facing only (ignoring seller-side impact of ML decisions).</li>
+<li>Pitching deep learning architectures without cost justification.</li>
+<li>Ignoring the tier-2/3 India context when discussing recommendation or fraud problems.</li>
+<li>Inability to articulate fairness-vs-accuracy trade-offs in ranking.</li>
+<h2>Compensation</h2>
+<p>Meesho Senior ML Engineer total compensation in 2026 ranges roughly ₹35 lakh – ₹65 lakh for 5-7 YOE. Staff scales to ₹80 lakh+. Numbers are public-sourced from AmbitionBox and Levels.fyi.</p>
+<h2>Final note</h2>
+<p>Meesho's loop tests for cost-aware ML judgment in a marketplace context. The MSL Path Tier 9 plus the cost-awareness lens is the prep map.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=meesho-ml-engineer-senior-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

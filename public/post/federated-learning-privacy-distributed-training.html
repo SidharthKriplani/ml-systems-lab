@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Federated Learning: Privacy-Preserving Training Without Centralising Data — ML Systems Lab</title>
+  <meta name="description" content="Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for …" />
+  <meta name="keywords" content="Deep Learning, Federated Learning, Privacy, FedAvg, Differential Privacy, Distributed Training, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/federated-learning-privacy-distributed-training.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/federated-learning-privacy-distributed-training.html" />
+  <meta property="og:title" content="Federated Learning: Privacy-Preserving Training Without Centralising Data" />
+  <meta property="og:description" content="Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Federated Learning: Privacy-Preserving Training Without Centralising Data" />
+  <meta name="twitter:description" content="Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Federated Learning: Privacy-Preserving Training Without Centralising Data",
+  "description": "Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/federated-learning-privacy-distributed-training.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Federated Learning, Privacy, FedAvg, Differential Privacy, Distributed Training"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=federated-learning-privacy-distributed-training#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Federated Learning: Privacy-Preserving Training Without Centralising Data</h1>
+    <p class="excerpt">Federated learning trains a global model across many decentralised devices or silos without ever moving raw data to a central server. Google uses it for Gboard next-word prediction. Apple uses it for keyboard personalisation and Siri. Healthcare researchers use it to train on data that legally cannot leave hospitals. Understanding FL is increasingly expected of staff ML engineers.</p>
+    <p>Federated learning (McMahan et al., Google Brain, 2017) was motivated by a concrete problem: training a better keyboard model on data that is private, sensitive, and legally constrained to remain on users' devices. The insight: gradient updates contain far less private information than raw data. Send the gradients, not the data.</p>
+<h2>The FedAvg algorithm</h2>
+<p>FedAvg (Federated Averaging) is the canonical FL algorithm: (1) Server initialises global model weights w_0. (2) Server selects a random subset of K clients. (3) Each selected client downloads w, runs E epochs of SGD on its local data, and computes the updated weights w_k. (4) Clients send their updated weights (or the weight delta) to the server. (5) Server aggregates: w_new = Σ_k (n_k / n) * w_k, where n_k is the number of examples on client k and n = Σ n_k. (6) Repeat for T communication rounds. FedAvg is communication-efficient: clients run multiple local steps before communicating, reducing the number of rounds needed.</p>
+<h2>Why FL is hard: the heterogeneity problem</h2>
+<p>IID assumption violated: in standard distributed training, data is shuffled across nodes. In FL, each client has a non-IID local distribution (your keyboard data reflects your language, jargon, communication patterns). This causes client drift: local updates push the model toward each client's local optimum, and averaging pulls in incompatible directions. Methods to address client drift: FedProx (Li et al., 2020) adds a proximal term to each client's loss: min L_k(w) + (μ/2)||w - w_global||², penalising deviation from the global model during local training. SCAFFOLD (Karimireddy et al., 2020) uses control variates to correct for client drift more directly.</p>
+<h2>Communication efficiency</h2>
+<p>Communication is the bottleneck in FL — especially for cross-device scenarios (millions of mobile devices on intermittent connections). Techniques to reduce communication cost: Gradient compression: top-k sparsification (only send the k largest gradient components), random sparsification, quantisation (1-bit SGD). Model distillation: clients share soft labels rather than gradients (avoids transmitting the full gradient vector). Asynchronous FL: the server updates the global model as updates arrive, without waiting for all clients. Faster but introduces staleness bias.</p>
+<h2>Privacy: gradients are not safe</h2>
+<p>The naive assumption "gradients don't reveal data" is false. Deep Leakage from Gradients (Zhu et al., 2019) showed that raw training data can be reconstructed from gradients with high fidelity, especially for small batches. Defences: Differential Privacy (DP): clip each client's gradient update to a maximum norm, then add calibrated Gaussian noise before aggregation. The formal guarantee is (ε, δ)-DP: the server cannot distinguish whether any individual data point was in the training set. DP-FedAvg adds O(σ²) variance to each gradient; this reduces model quality and requires more communication rounds for convergence. Secure aggregation (SecAgg): cryptographic protocol where the server can compute the sum of client updates but cannot see individual updates. Protects against a curious-but-honest server. More expensive computationally but stronger privacy guarantee than DP alone.</p>
+<h2>Cross-device vs cross-silo FL</h2>
+<p>Cross-device FL: millions of edge devices (phones, IoT sensors). Clients are unreliable (drop out mid-round), have limited compute, and communicate over narrow pipes. Used by Google (Gboard), Apple (QuickType, Siri), Android on-device models. Cross-silo FL: a small number of institutions (hospitals, banks, government agencies). Clients are reliable, have significant compute, and data heterogeneity between silos is large. Used in healthcare (training on patient data across hospitals), financial fraud detection (banks training on transaction data they cannot share).</p>
+<h2>Personalisation</h2>
+<p>The global FL model may perform worse than a local model for any individual client, because it must generalise across all clients. Personalisation strategies: Fine-tuning: distribute the global model, let each client fine-tune on local data. Per-FedAvg (Finn et al., 2019): meta-learning approach — train a global model that is easy to personalise with one gradient step (MAML applied to FL). Federated multi-task learning: each client learns a personalised model with a shared representation but client-specific head.</p>
+<h2>When to use FL vs centralised training</h2>
+<p>Use FL when: data cannot legally or practically be centralised (healthcare, finance, mobile), privacy is a customer expectation (consumer products), or data silos exist across organisations with aligned incentives (research consortia). Use centralised training when: you control the data, latency constraints require single-machine training, or the communication overhead of FL exceeds the privacy benefit. In practice, most production FL deployments are cross-device (Apple, Google) or healthcare-adjacent (federated survival analysis, federated pathology).</p>
+<p><strong>Try on Colab:</strong> simulate FedAvg on MNIST with non-IID data distribution (assign each client only 2 digit classes). Train a CNN with FedAvg (K=10 clients, 5 local epochs, 50 rounds) and compare test accuracy vs centralised training and vs local-only training. Implement FedProx and compare convergence speed. Measure how much accuracy drops as you increase the number of local epochs (more drift).</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=federated-learning-privacy-distributed-training#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

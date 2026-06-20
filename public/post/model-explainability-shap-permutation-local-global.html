@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Explainability: SHAP, Permutation Importance, Local vs Global — ML Systems Lab</title>
+  <meta name="description" content="Stakeholders ask &quot;why did the model predict this?&quot; Regulators demand &quot;what features influenced this decision?&quot; Engineers debug &quot;why is this feature suddenly the top one?&quot; These are three different exp…" />
+  <meta name="keywords" content="Model Evaluation, Explainability, SHAP, Permutation Importance, Feature Importance, Production, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/model-explainability-shap-permutation-local-global.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/model-explainability-shap-permutation-local-global.html" />
+  <meta property="og:title" content="Model Explainability: SHAP, Permutation Importance, Local vs Global" />
+  <meta property="og:description" content="Stakeholders ask &quot;why did the model predict this?&quot; Regulators demand &quot;what features influenced this decision?&quot; Engineers debug &quot;why is this feature suddenly the top one?&quot; These are three different exp…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Model Explainability: SHAP, Permutation Importance, Local vs Global" />
+  <meta name="twitter:description" content="Stakeholders ask &quot;why did the model predict this?&quot; Regulators demand &quot;what features influenced this decision?&quot; Engineers debug &quot;why is this feature suddenly the top one?&quot; These are three different exp…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Model Explainability: SHAP, Permutation Importance, Local vs Global",
+  "description": "Stakeholders ask \"why did the model predict this?\" Regulators demand \"what features influenced this decision?\" Engineers debug \"why is this feature suddenly the top one?\" These are three different exp…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/model-explainability-shap-permutation-local-global.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, Explainability, SHAP, Permutation Importance, Feature Importance, Production"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=model-explainability-shap-permutation-local-global#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Model Explainability: SHAP, Permutation Importance, Local vs Global</h1>
+    <p class="excerpt">Stakeholders ask &quot;why did the model predict this?&quot; Regulators demand &quot;what features influenced this decision?&quot; Engineers debug &quot;why is this feature suddenly the top one?&quot; These are three different explainability questions with three different right tools. Getting them confused is one of the most common failures in production ML.</p>
+    <p>Model explainability is a layered subject. There is no single "explain the model" tool — there are several techniques that answer different questions, and using the wrong one leads to wrong conclusions. The senior practitioner knows which tool answers which question and which traps each tool has.</p>
+<h2>Local vs global explanations</h2>
+<p>The first distinction. Global explanation tells you what the model has learned overall: which features matter on average, across all predictions. Local explanation tells you what drove a specific individual prediction: which features mattered for this user, this transaction, this query.</p>
+<p>Stakeholders and regulators usually want global ("which features does this credit model rely on?"). Operations and customer support usually want local ("why was this specific customer denied a loan?"). The two are not interchangeable. A feature can have high global importance and low importance for any specific prediction (when the feature interacts strongly with others). A feature can have high local importance for an individual case and low global importance (when it is rarely informative but very informative when it is).</p>
+<h2>Coefficient inspection (linear models)</h2>
+<p>For linear regression and logistic regression, the model's weights are the explanation. The magnitude (after standardising features) tells you global importance. The sign tells you direction. The actual prediction for any input is a linear combination, fully transparent.</p>
+<p>This is why linear models remain the workhorse of regulated ML. A credit model where every weight can be inspected and explained to a regulator is fundamentally easier to ship into a regulated industry than a neural network with sixty million parameters, even if the neural network is more accurate.</p>
+<h2>Tree-based feature importance</h2>
+<p>For decision trees, Random Forests, and gradient boosted models, the standard feature importance is "gain" — how much each feature reduced the loss on average across all the splits where it was used. This is fast to compute, always available, and biased.</p>
+<p>The bias: gain-based importance favours high-cardinality features (features with many possible split points). user_id, session_id, timestamp — these often appear as top features even when they're not genuinely informative, because they have many possible splits and any residual variance the regularisation didn't squeeze out gets attributed to them. Acting on gain-based importance ("we should focus on user_id as a feature") is how teams waste sprints on the wrong signal.</p>
+<h2>Permutation importance</h2>
+<p>The honest alternative. For each feature, randomly shuffle its values and measure how much the model's performance drops on a held-out set. Big drop means the feature was important; small drop means it was not. The advantage over gain: not biased by cardinality. The cost: slow to compute (one model evaluation per shuffle per feature) and sensitive to feature correlations (when two features are correlated, shuffling one doesn't hurt accuracy because the model uses the other; both features end up looking unimportant).</p>
+<p>The standard fix for the correlation problem is grouped permutation importance: shuffle correlated features together as a block. This costs more analysis upfront but gives a more honest measure.</p>
+<h2>SHAP (Shapley Additive exPlanations)</h2>
+<p>The most principled local explanation method. For each prediction, SHAP assigns a value to each feature representing its marginal contribution to the prediction, averaged over all possible orderings of features. SHAP values sum to the difference between the prediction and a baseline (the model's expected output).</p>
+<p>The advantages: SHAP values are theoretically grounded (Shapley values from game theory), they satisfy desirable properties (efficiency, symmetry, dummy, linearity), and they give per-prediction explanations. SHAP can also be aggregated across many predictions to get a global view (mean absolute SHAP per feature), which gives a more honest global importance than gain or permutation on the same data.</p>
+<p>The cost: SHAP is computationally expensive. For tree models, TreeSHAP computes exact SHAP values efficiently. For neural networks, you need DeepSHAP or sampling-based approaches and the quality of the explanation degrades. For LLM outputs, SHAP is essentially intractable; you have to use other techniques (attention maps, perturbation-based interpretability).</p>
+<h2>The interpretation traps</h2>
+<p>SHAP explains the model's behaviour, not the real world. A feature with high SHAP value is one the model is using, which is not the same as a feature that has a causal effect on the outcome. If the model learned to use a proxy for the true cause, SHAP will tell you the proxy is important — which is true about the model but not about the world.</p>
+<p>Permutation importance assumes feature independence. With correlated features, individual permutation importance under-states each feature's true importance (because the model fills in from the correlated partner). Grouped permutation or conditional permutation are the fixes.</p>
+<p>Gain-based importance assumes the model's training-time information is the truth. When features are highly leakage-prone (computed from post-event aggregates, for example), gain might be high simply because the leakage was useful at training time. The feature is not "important" in any production-meaningful sense.</p>
+<blockquote>WARNING — <strong>Production tell: SHAP says this feature is the top driver; removing it doesn't change the model's predictions much. What happened?</strong> Almost always: correlated features. The "top driver" feature has high SHAP because the model used it heavily in training; but a near-duplicate feature is also available and absorbs the signal when the top one is removed. The model is robust to losing any single feature in a correlated group while looking like it depends heavily on each one. The senior move: cluster features by correlation first, then assess importance at the cluster level, not the feature level. This is also why SHAP-based feature engineering ("drop low-SHAP features") can fail badly — you might drop a feature that was the only reliable carrier of an important signal.</blockquote>
+<h2>When explainability matters</h2>
+<p>Three production scenarios where this is non-negotiable. (1) Regulated industries — credit scoring, medical diagnosis, insurance underwriting — where the model's decisions must be explainable to a regulator or a customer. (2) Debugging — when the model produces a surprising prediction and you need to know why before you can decide whether to trust it. (3) Trust and adoption — when stakeholders need to understand the model to incorporate its outputs into their decisions. In each case, the choice of explanation method has to match the question being asked.</p>
+<h2>Interview questions on this topic</h2>
+<p>"A regulator asks you to explain why the credit model denied this customer. What do you give them?" — A local explanation. SHAP values for the individual prediction, showing which features pushed the model toward "deny" and by how much. Plus a brief sentence per top feature describing what it represents. Not a global importance chart — the regulator asked about a specific customer, not the model in general. Not the model coefficients alone — modern tree models do not have a single coefficient per feature. The right answer is per-prediction SHAP rendered as a force plot or a waterfall chart, with English descriptions.</p>
+<p>"What is the difference between 'this feature is important' and 'this feature is causally important'?" — The former is a statement about the model; the latter is a statement about the world. A model can learn to use a proxy (e.g., zip code) that correlates with the true causal driver (e.g., neighbourhood quality, income). The feature is important to the model but not causally important — interventions on the feature would not change the outcome. Explainability methods (SHAP, permutation) tell you about the model's behaviour, not about causal effects. For causal claims, you need causal inference methods (post 47, 84, 85 in Gradient).</p>
+<p>"Permutation importance says all of your top 5 features are equally important. Is this useful?" — Only if you check for feature correlations. If the top 5 features are highly correlated, each one has low permutation importance individually because the model can substitute. The conclusion "they are equally important" is misleading — they might all be redundant carriers of the same underlying signal. Grouped permutation importance, or correlation-aware methods, give a more honest picture. Equal individual permutation importance with high inter-correlation is a sign that the model has heavy feature redundancy.</p>
+<p>"You see a feature with high gain-based importance but low SHAP-based importance. What's likely happening?" — Gain over-weights features that get used in many splits — typically high-cardinality features like user_id or timestamps. SHAP gives a more honest picture of marginal contribution. The feature is probably being used as a high-cardinality regulariser (the model splits on it to memorise specific examples) rather than as a genuinely informative feature. Drop it, retrain, see if anything changes — usually nothing does. This is one of the most reliable smoke tests for feature usefulness.</p>
+<p><strong>Try on Colab:</strong> train an XGBoost model on a tabular dataset (Adult Income, German Credit, any reasonable choice). Compute (1) gain-based feature importance, (2) permutation importance on a held-out set, (3) mean absolute SHAP values using TreeSHAP, (4) for a specific individual prediction, the per-feature SHAP values. Compare the three global importance rankings — they will disagree. Investigate the disagreements: which features have high gain but low SHAP, which have high permutation but low SHAP, what does that tell you about how the model is using them. This is the practical experience of explainability in production.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=model-explainability-shap-permutation-local-global#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

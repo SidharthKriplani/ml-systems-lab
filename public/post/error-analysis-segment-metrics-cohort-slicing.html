@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group — ML Systems Lab</title>
+  <meta name="description" content="Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. …" />
+  <meta name="keywords" content="Model Evaluation, Error Analysis, Segmentation, Cohort Analysis, Calibration, Production, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/error-analysis-segment-metrics-cohort-slicing.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/error-analysis-segment-metrics-cohort-slicing.html" />
+  <meta property="og:title" content="Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group" />
+  <meta property="og:description" content="Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group" />
+  <meta name="twitter:description" content="Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group",
+  "description": "Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/error-analysis-segment-metrics-cohort-slicing.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, Error Analysis, Segmentation, Cohort Analysis, Calibration, Production"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=error-analysis-segment-metrics-cohort-slicing#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Error Analysis: Segment Metrics, Cohort Slicing, Calibration by Group</h1>
+    <p class="excerpt">Aggregate metrics lie. Your model can have an excellent overall AUC and still fail completely on new users, on users in Tier 2 cities, on users with low session counts, on certain product categories. Error analysis is the systematic discipline of breaking the aggregate apart to find where the model is failing, and it is the single highest-leverage debugging skill in applied ML.</p>
+    <p>When your model fails in production, the symptoms almost never present as "the overall metric is bad." They present as "the model is bad for this kind of user," or "the model is bad on this segment of products," or "the model has lost accuracy on weekends." Error analysis is the discipline of systematically slicing the model's behaviour by feature, by cohort, by time, by segment — to find where the failure actually lives. It is one of the most useful skills in production ML and one of the least taught in textbooks.</p>
+<h2>The aggregate metric lie</h2>
+<p>Suppose your fraud model has 0.92 AUC on the validation set. Excellent. Now slice by user tenure: new users (< 7 days) get AUC 0.74; established users (> 90 days) get AUC 0.96. The aggregate AUC was a weighted average dominated by the established users. The model is failing exactly on the cohort that matters most — new users where the business is investing the most onboarding effort — and the aggregate hid it completely.</p>
+<p>This is the rule, not the exception. Every production model has segments where it performs much worse than the aggregate suggests. If you have not done segment-level analysis, you have not actually understood your model's behaviour.</p>
+<h2>The basic segmentation slices</h2>
+<p>The first slices to try for any tabular classifier: by sub-population (user tenure, geography, device type, traffic source, business tier), by time (weekday vs weekend, hour of day, by month, around holidays), by prediction confidence (top decile of model scores, bottom decile, the middle), by feature value (slice each top feature into 4-5 bins and compute metrics per bin). For each slice, compute: precision, recall, F1, calibration, predicted positive rate, actual positive rate, base rate within the slice.</p>
+<p>The patterns you are looking for: cohorts where precision drops below the operating threshold; cohorts where the model is mis-calibrated (predicted probability does not match observed frequency); cohorts where the base rate is so different from training that any aggregate metric is meaningless; cohorts where the volume is too small to draw conclusions and you need to flag uncertainty rather than report a point estimate.</p>
+<h2>Confusion matrix by segment</h2>
+<p>The single most useful artifact in error analysis is a segmented confusion matrix. For each segment of interest, compute (true positives, false positives, true negatives, false negatives) at the operating threshold. You will see immediately which segments are dominated by false positives (the model is over-flagging) versus false negatives (the model is missing positives) versus genuinely calibrated.</p>
+<p>This breaks down the aggregate metric into actionable components. "Recall dropped 5% overall" is a symptom; "recall dropped 5% overall but it dropped 28% specifically on the segment of users who logged in from new devices" is a diagnosis.</p>
+<h2>Calibration by segment</h2>
+<p>Calibration is most often computed as a single aggregate Expected Calibration Error (ECE). This hides segment-level miscalibration that can be catastrophic. The pattern: aggregate ECE is 1.5% which looks great. But the model is overconfident on segment A (predicts 0.9, true rate 0.6) and underconfident on segment B (predicts 0.3, true rate 0.5). The two cancel in the aggregate. Decisions made on segment A's probabilities are systematically over-aggressive; on segment B, systematically under-aggressive. Both are wrong, and the dashboard cannot see it.</p>
+<p>The fix is to compute per-segment calibration plots. Group predictions into bins, plot predicted vs observed within each segment, and look for segments where the curve deviates from the diagonal more than the aggregate does. Re-calibrate per segment if needed (Platt scaling fitted per group, or isotonic regression per group).</p>
+<h2>Threshold by segment</h2>
+<p>When error costs differ by segment, the optimal threshold should also differ by segment. A fraud model with one threshold across all geographies will be too aggressive in geographies with low base rate and too permissive in geographies with high base rate. Segment-specific thresholds — computed by group from the calibration data — are the cleaner solution.</p>
+<p>In practice this trades model simplicity for fairness and operational accuracy. The right call depends on whether the segment differences are large enough to matter and whether you can compute the segment thresholds reliably from your validation data.</p>
+<h2>Cohort analysis over time</h2>
+<p>A cohort is a group of users defined by when they entered the system: "users acquired in March 2026." Cohort analysis tracks the same group over time and looks for behaviour patterns that aggregate analysis hides. Most "drift" alerts in production trace to cohort effects — older cohorts have different behaviour than newer ones, and the active cohort mix shifts over time.</p>
+<p>The diagnostic question: when conversion drops, is it because each cohort's conversion has dropped, or because the cohort mix has shifted toward lower-converting cohorts? These have completely different root causes and require completely different fixes. Aggregate metrics cannot distinguish them.</p>
+<h2>Root-cause analysis from segments</h2>
+<p>Once you find a failing segment, the next move is to find what makes that segment different. Compare the feature distributions of failing examples versus successful ones within the segment. Look at the top features the model used. Look at the label noise rate in the segment. Look at the data quality (missing values, default values, error rates from upstream pipelines) within the segment.</p>
+<p>The pattern you are usually looking for: a specific feature pipeline is broken for this segment, a specific label collection mechanism is misfiring for this segment, the training data systematically under-represents this segment, or the data distribution for this segment has shifted in a specific way the model cannot generalise to.</p>
+<blockquote>WARNING — <strong>Production tell: overall AUC improved 2 points; the model is shipped; new-user churn rises 8% over the next month.</strong> Classic aggregate-metric trap. The new model is better on average but worse on the cohort that the business invests most heavily in. Onboarding personalisation breaks. The signal was sitting in segment-level recall the whole time. Always check whether the cohort that drives most of the business value is the one the model is improving on — not just the average. Most fights between data science and product teams trace back to this kind of mismatch.</blockquote>
+<h2>Interview questions on this topic</h2>
+<p>"Your aggregate AUC improved 0.02 in the new model. Product is asking whether to ship. What do you check first?" — Segment performance. Slice by the top 3-4 business segments (user tier, geography, device, tenure). For each segment, compute precision, recall, and calibration. The aggregate improvement might mask a regression on a critical segment. Ship only if there is no critical segment where the new model is significantly worse, even if the aggregate is better.</p>
+<p>"You have a fraud model with overall ECE of 1.5%. Should you trust it for setting risk thresholds?" — Not without segment-level calibration plots. ECE is an average across confidence bins. The model might be well-calibrated overall but systematically overconfident on high-risk cohorts (where calibration matters most) and underconfident on low-risk cohorts. Risk thresholds set on average probabilities will be wrong in both segments, with errors compounding in the segments you care about most. Per-cohort calibration before deploying any threshold-based decision.</p>
+<p>"A senior product manager says 'I just ran a slice analysis and our model is 5% worse on users from Tier 2 cities.' What questions do you ask?" — How many Tier 2 users in the slice? (Sample size — is the difference statistically meaningful or noise?) What is the base rate in Tier 2? (Different base rate can produce different aggregate metrics without any model failure.) Is the label-generation process the same in Tier 2? (Different label noise leads to different metrics.) Is the slice defined by a feature the model uses, or by a metadata column? (Slicing on a model feature can produce circular results.) The slice analysis is the start of the conversation, not the end.</p>
+<p>"How would you implement segment-aware monitoring for a deployed model?" — Define the critical segments upfront (cohorts the business cares about). For each, log predictions and outcomes separately. Compute per-segment metrics (precision, recall, calibration, base rate) on a regular cadence. Alert when any segment's metric deviates more than a threshold from its historical baseline, even if the aggregate is stable. The aggregate-only monitoring everyone defaults to misses exactly the failures you most need to catch.</p>
+<p><strong>Try on Colab:</strong> take a publicly available classification dataset with rich segmentation columns (Adult Income with demographics, or any credit dataset). Train a model. Compute aggregate AUC, precision, recall. Then slice by every demographic column and recompute the metrics within each segment. Find the segment with the largest performance gap from the aggregate. For that segment, compute a calibration plot (predicted probability bins vs observed rate). Compare to the aggregate calibration plot. This is the practical equivalent of error analysis in production.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=error-analysis-segment-metrics-cohort-slicing#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

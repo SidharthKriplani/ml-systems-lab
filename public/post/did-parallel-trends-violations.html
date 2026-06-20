@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>When Difference-in-Differences Breaks: Parallel Trends Violations in Practice — ML Systems Lab</title>
+  <meta name="description" content="DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajecto…" />
+  <meta name="keywords" content="Causal Inference, DiD, Parallel Trends, Experiment Design, Confounding, Econometrics, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/did-parallel-trends-violations.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/did-parallel-trends-violations.html" />
+  <meta property="og:title" content="When Difference-in-Differences Breaks: Parallel Trends Violations in Practice" />
+  <meta property="og:description" content="DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajecto…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Causal Inference" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="When Difference-in-Differences Breaks: Parallel Trends Violations in Practice" />
+  <meta name="twitter:description" content="DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajecto…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When Difference-in-Differences Breaks: Parallel Trends Violations in Practice",
+  "description": "DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajecto…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/did-parallel-trends-violations.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Causal Inference, DiD, Parallel Trends, Experiment Design, Confounding, Econometrics"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=did-parallel-trends-violations#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Causal Inference &middot; ML Systems Lab</div>
+    <h1>When Difference-in-Differences Breaks: Parallel Trends Violations in Practice</h1>
+    <p class="excerpt">DiD is the workhorse of causal inference in industry. It is also routinely applied incorrectly. The parallel trends assumption — that treatment and control groups would have followed the same trajectory absent the treatment — is untestable by definition. Here are the four ways it breaks in practice and what to do about it.</p>
+    <h2>What the Parallel Trends Assumption Actually Means</h2>
+<p>Difference-in-differences estimates the causal effect of a treatment by comparing the change in outcomes for a treated group against the change in outcomes for a control group over the same time period. The identifying assumption — parallel trends — states that absent the treatment, the treated group would have followed the same trajectory as the control group.</p>
+<p>This is not the same as "the two groups had similar trends before the treatment." That is a testable claim about pre-treatment data. Parallel trends is a claim about the counterfactual: what would have happened to the treated group if it had not been treated. That is, by definition, unobservable.</p>
+<p>The pre-treatment trend test is evidence consistent with parallel trends, not proof of it. The parallel trends assumption can hold even when pre-trends differ (if the difference is predictable and adjustable) and can fail even when pre-trends look identical (if a confounding event was about to affect only the treatment group).</p>
+<p>With that framing, here are the four ways the assumption breaks in practice.</p>
+<h2>Failure Mode 1: Compositional Shift</h2>
+<p>The treatment changes who is in the treatment group. A pricing change, a feature launch, or a policy change can attract a different type of user or customer to the treatment condition in the weeks around the treatment date. These new entrants have different baseline trends than the original treatment group members. The measured post-treatment trajectory is a mix of the original group's response and the new group's baseline behavior.</p>
+<p>Sign to look for: track the demographic or behavioral composition of your treatment group in the 2–4 weeks before and after treatment. If age distribution, geographic distribution, acquisition channel mix, or engagement tier shifts meaningfully, compositional confounding is present. The DiD estimate conflates the treatment effect with the composition change.</p>
+<p>Fix: restrict the analysis to users who were present in both pre- and post-treatment periods. This is a cohort-locked DiD — it eliminates compositional confounding at the cost of generalizability to newly acquired users.</p>
+<h2>Failure Mode 2: Anticipation Effects</h2>
+<p>Users or customers change behavior before the treatment takes effect because they know it is coming. A subscription price increase announced two weeks before it takes effect will cause early cancellations in the pre-treatment period. A new feature announced in a blog post will cause increased sign-ups before launch. These behavioral changes corrupt the pre-treatment baseline, making the pre-treatment trend for the treatment group look different from what it would have been without the announcement.</p>
+<p>Sign to look for: pre-period trends diverge between treatment and control in the days or weeks immediately preceding the treatment date. This is distinct from a structural trend difference — it is a sudden divergence that begins at the announcement date.</p>
+<p>Fix: extend the pre-period window far enough back to predate the announcement. Use a placebo test on an earlier period with no treatment and no announcement to verify that the groups were on parallel trajectories. If anticipation is unavoidable (e.g., regulatory changes require advance notice), adjust by modeling the announcement effect as a separate treatment.</p>
+<h2>Failure Mode 3: Concurrent Events</h2>
+<p>Something else happened to the treatment group around the treatment date that did not happen to the control group. A marketing campaign targeted the same user segment as the treatment. A competitor's outage drove traffic to a product used predominantly by the treatment group. A supplier disruption affected a geographic region that overlaps with the treatment condition.</p>
+<p>This is the most common reason DiD estimates are wrong in industry settings. Experiments are never conducted in a vacuum. The treatment group is a real segment of a real business, and real businesses experience confounding events continuously.</p>
+<p>Sign to look for: audit the event log for the treatment group in the ±4 week window around treatment. Marketing spend changes, sales campaigns, support incidents, product changes affecting the same segment — any of these can invalidate the parallel trends assumption.</p>
+<p>Fix: there is no statistical fix for an unobserved concurrent event. The fix is operational: run a pre-analysis plan that requires an event audit before interpreting DiD results, and flag any correlated intervention as a confound. In post-hoc analyses, attempt to estimate the magnitude of the concurrent event separately.</p>
+<h2>Failure Mode 4: Different Cyclicality</h2>
+<p>Treatment and control groups have different weekly or monthly cycles. A B2B product used Monday through Friday by enterprise customers will have a very different day-of-week pattern than a B2C product used heavily on weekends. If treatment assignment correlates with product type or usage pattern, a DiD measured from Monday to Friday will have different seasonality baked in for the two groups. Averaging over these cycles without alignment introduces bias.</p>
+<p>Sign to look for: plot the day-of-week profile for outcomes separately for treatment and control groups in the pre-period. If the shapes are different — one peaks on weekdays, one peaks on weekends — standard DiD will confound cyclicality differences with treatment effects.</p>
+<p>Fix: align cohorts by day-of-week. Compute the DiD separately for each day of the week and aggregate. Or, aggregate both groups to weekly totals before taking differences, which averages out within-week cycles. Do not compare Tuesday-heavy treatment windows to Friday-heavy control windows.</p>
+<h2>How to Assess Parallel Trends Plausibility</h2>
+<p>Three practices make the parallel trends assumption more assessable:</p>
+<p>Pre-trend test: regress the outcome on a time-trend variable, a group indicator, and their interaction, using only pre-treatment data. The coefficient on the interaction term should be statistically indistinguishable from zero. If it is not, there is a measurable pre-trend difference that the DiD assumption requires to extrapolate.</p>
+<p>Placebo outcome test: apply the same DiD to an outcome that the treatment should not affect. If you are estimating the effect of a pricing change on revenue, also run the DiD on customer support ticket volume (which pricing should not change). A significant placebo effect suggests a confound is driving the result.</p>
+<p>Event study plot: rather than a single pre/post comparison, estimate the treatment effect at each time period separately. Plot the coefficients. The pre-treatment coefficients should cluster around zero. A clean event study shows a flat pre-period and a step change at the treatment date. Divergence in the pre-period is a red flag.</p>
+<h2>Practice this in Causal Inference to work through experiment design under violation conditions, placebo test construction, and the event study diagnostic.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=did-parallel-trends-violations#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

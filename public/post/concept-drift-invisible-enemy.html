@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept Drift: The Invisible Enemy That Stalks Every Production Model — ML Systems Lab</title>
+  <meta name="description" content="PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone…" />
+  <meta name="keywords" content="Concept Drift, Monitoring, PSI, Covariate Shift, Model Degradation, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-invisible-enemy.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-invisible-enemy.html" />
+  <meta property="og:title" content="Concept Drift: The Invisible Enemy That Stalks Every Production Model" />
+  <meta property="og:description" content="PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Monitoring" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Concept Drift: The Invisible Enemy That Stalks Every Production Model" />
+  <meta name="twitter:description" content="PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Concept Drift: The Invisible Enemy That Stalks Every Production Model",
+  "description": "PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-invisible-enemy.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Concept Drift, Monitoring, PSI, Covariate Shift, Model Degradation, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-invisible-enemy#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Monitoring &middot; ML Systems Lab</div>
+    <h1>Concept Drift: The Invisible Enemy That Stalks Every Production Model</h1>
+    <p class="excerpt">PSI looks clean. Feature distributions look stable. Your model is quietly wrong. Concept drift — where the relationship between inputs and outputs changes — is undetectable by feature monitoring alone and is the leading cause of silent model degradation.</p>
+    <h2>Three Types of Drift — and Why Only One Is Fatal</h2>
+<p>Drift is overloaded. When engineers say "drift," they usually mean input distribution shift: the features your model receives in production look different from features it was trained on. This is measurable, monitorable, and often recoverable. But it is not the dangerous kind.</p>
+<p><strong>Input distribution drift</strong> (covariate shift): P(X) changes. Your age distribution shifts. A new market segment appears. A feature pipeline changes encoding. PSI detects this. Retraining on recent data fixes it.</p>
+<p><strong>Label distribution drift</strong>: P(Y) changes. Your fraud rate doubles due to a new attack vector. Class imbalance in production diverges from training. This is detectable by monitoring outcome rates, but only if you have outcomes — which requires label delay tolerance.</p>
+<p><strong>Concept drift</strong>: P(Y|X) changes. The relationship between features and labels changes, even though the features themselves look the same. This is the dangerous kind. PSI cannot detect it. Feature histograms look fine. Your model was trained correctly on historical data — the problem is that the world has changed in a way that makes that history misleading.</p>
+<h2>The Credit Model Trained Pre-Pandemic</h2>
+<p>A credit risk model trained in 2019 on pre-pandemic consumer behavior was deployed into 2020. Income features looked similar. Employment features looked similar. Debt-to-income ratios were in-distribution. But the relationship between these features and default probability had fundamentally changed. Consumers who would have defaulted given their feature profile in 2019 were being kept afloat by stimulus payments. Consumers who looked safe by historical standards were being hit by sector-specific unemployment. PSI on individual features showed nothing alarming. The model's predictions were quietly wrong.</p>
+<p>This is concept drift. The inputs are stable. The world has changed. The mapping from inputs to outcomes no longer matches what the model learned.</p>
+<h2>Why PSI Cannot Help You Here</h2>
+<p>PSI (Population Stability Index) compares the distribution of a feature or score between two time windows. It tells you when P(X) has shifted. It tells you nothing about P(Y|X). You can have PSI=0 on every feature and still have severe concept drift if the world has changed in ways that leave your feature distributions intact while invalidating the relationships between them.</p>
+<p>The engineers who rely on PSI alone as their drift monitor are flying blind for the most important type of drift.</p>
+<h2>Detection: What Actually Works</h2>
+<p>Prediction distribution monitoring: track the distribution of your model's output scores over time. If the score distribution changes, something has changed — either in inputs or in the model's behavior on them.</p>
+<p>Outcome rate tracking: compare your model's predicted positive rate to the actual observed positive rate (with appropriate label delay). If your model predicts 8% fraud rate but you are observing 15%, your model is underestimating risk — either due to concept drift or label distribution shift.</p>
+<p>Residual drift: for regression models, track the distribution of residuals (predicted minus actual) over time. If residual mean drifts from zero, your model has become systematically biased in a specific direction.</p>
+<h2>Retrain vs Recalibrate vs Rollback</h2>
+<p>If prediction distribution has drifted but outcomes are stable: recalibrate. The model's rankings may still be correct; only its probability estimates have shifted.</p>
+<p>If outcome rate has diverged from model scores significantly: retrain on recent labeled data. The mapping P(Y|X) has changed and the model needs to relearn it.</p>
+<p>If performance has degraded catastrophically in a short window (days, not months): investigate before retraining. A sudden collapse suggests a data pipeline bug, not drift. Retraining on corrupted data will propagate the corruption.</p>
+<p>Rollback is the right call when: (1) a recent deployment is the suspected cause, (2) the performance regression is acute, and (3) you have a known-good prior model to fall back to. Rollback buys time for root-cause analysis — it is not a fix.</p>
+<h2>Practice this in Monitoring to build intuition for which drift signals fire for which types of model degradation, and how to triage drift alerts correctly.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-invisible-enemy#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

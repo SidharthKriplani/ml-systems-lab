@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen — ML Systems Lab</title>
+  <meta name="description" content="Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since…" />
+  <meta name="keywords" content="Deep Learning, Word2Vec, Embeddings, NLP, Negative Sampling, Representation Learning, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/word2vec-embedding-geometry-negative-sampling.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/word2vec-embedding-geometry-negative-sampling.html" />
+  <meta property="og:title" content="Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen" />
+  <meta property="og:description" content="Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen" />
+  <meta name="twitter:description" content="Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen",
+  "description": "Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/word2vec-embedding-geometry-negative-sampling.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Word2Vec, Embeddings, NLP, Negative Sampling, Representation Learning, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=word2vec-embedding-geometry-negative-sampling#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Word2Vec: Negative Sampling, Embedding Geometry, and Why King − Man + Woman = Queen</h1>
+    <p class="excerpt">Word2Vec (2013) was the moment NLP became geometry. Before it, words were discrete tokens. After it, words were points in a space where direction and distance had meaning. Every embedding system since — GloVe, BERT, GPT, CLIP — is a successor to this idea. Understanding word2vec means understanding why the geometry works, not just that it does.</p>
+    <p>Word2Vec (Mikolov et al., Google, 2013) is the paper that created the modern notion of a word embedding — a dense vector representation of a word that captures semantic and syntactic relationships through geometric proximity. It is the ancestor of every embedding system in use today.</p>
+<h2>Before word2vec: one-hot encodings</h2>
+<p>Before 2013, NLP typically represented words as one-hot vectors: a vector of length |vocabulary| with a 1 in the position of the word and 0 elsewhere. These are orthogonal — every pair of words has zero cosine similarity regardless of semantic relationship. "Cat" and "kitten" are no more similar than "cat" and "airplane." You cannot generalise from training examples about cats to test examples about kittens.</p>
+<h2>The distributional hypothesis</h2>
+<p>"You shall know a word by the company it keeps" — Firth, 1957. Words that appear in similar contexts tend to have similar meanings. "Bank" appears near "money," "loan," "finance" in financial contexts and near "river," "fish," "shore" in geographic contexts. This polysemy is a problem for static embeddings but the core insight — context defines meaning — is correct and powerful.</p>
+<h2>Skip-gram: the word2vec training objective</h2>
+<p>Skip-gram model: given a target word w_t, predict the context words within a window of size k. For each target word, we define the positive context words (those that appear within the window) and learn embeddings that maximise the probability of context words given the target. The probability: P(w_c | w_t) = exp(v_{w_c}ᵀ u_{w_t}) / Σ_{w'} exp(v_{w'}ᵀ u_{w_t}), where u_{w_t} is the target embedding and v_{w_c} is the context embedding. The denominator sums over the entire vocabulary — O(|V|) per gradient step, which is too expensive for vocabulary sizes of millions.</p>
+<h2>Negative sampling: the computational trick</h2>
+<p>Instead of computing the full softmax, negative sampling trains a binary classifier: does this (target, context) pair come from real co-occurrence or from random sampling? Objective: for each positive pair (w_t, w_c), maximise log σ(v_{w_c}ᵀ u_{w_t}) + Σ_{k=1}^{K} E_{w_neg~P_n}[log σ(-v_{w_neg}ᵀ u_{w_t})]. The first term pushes the positive context word's embedding to be similar to the target. The K negative terms push K randomly sampled words (from the unigram^{3/4} distribution) to be dissimilar. This is O(K) per step instead of O(|V|). Typical K = 5-20. The unigram^{3/4} distribution downweights frequent words (reducing their dominance as negatives) and upweights rare words.</p>
+<h2>CBOW vs Skip-gram</h2>
+<p>CBOW (Continuous Bag of Words): predict the target word from the average of context embeddings. Faster training, slightly worse for rare words (averaging loses the individual context structure). Skip-gram: predict context words from the target. Slower to train but better on rare words. Skip-gram is generally preferred.</p>
+<h2>Why the geometry works</h2>
+<p>After training, the learned embeddings capture semantic analogies through vector arithmetic: king - man + woman ≈ queen. This works because the embedding space has learned consistent directions for semantic relationships. The direction man→king is approximately the same as woman→queen because co-occurrence patterns around "man" vs "woman" modify "king" vs "queen" in consistent ways. These are not directions we engineered — they emerged from the training objective. The phenomenon is more surprising than it sounds and is not fully theoretically understood.</p>
+<h2>Word2Vec as implicit matrix factorisation</h2>
+<p>Levy & Goldberg (2014) showed that skip-gram with negative sampling is implicitly factorising the matrix M_{ij} = PMI(wᵢ, wⱼ) - log k, where PMI is pointwise mutual information and k is the number of negatives. GloVe (Pennington et al., 2014) makes this explicit: it directly fits word vectors to the log co-occurrence matrix, using weighted least squares. GloVe is faster to train and produces similar quality embeddings.</p>
+<h2>From word2vec to modern embeddings</h2>
+<p>Word2Vec produces static embeddings: each word has one vector regardless of context. "Bank" has one embedding that tries to average over financial and geographic usages. BERT (Post 67) produces contextual embeddings: the embedding for "bank" depends on the sentence it appears in. The attention mechanism computes context-aware representations. CLIP (Post 69) extends the co-occurrence idea to image-text pairs: images and captions that co-occur should have similar embeddings.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Explain the king - man + woman = queen analogy. Why does this work geometrically?" — The embedding space learns a consistent direction for 'royalty' and a consistent direction for 'gender.' The vector (king - man) captures the royalty direction for males; adding woman's embedding yields a point near queen because the royalty-female neighbourhood is near queen. The analogy works when the relationship is consistent and well-represented in the training corpus.</p>
+<p>"What is the difference between word2vec and TF-IDF? When would you use each?" — TF-IDF is a sparse, high-dimensional, count-based representation. It captures word importance per document but not semantic similarity. Word2Vec is dense, low-dimensional, distributed. Two words with identical TF-IDF fingerprints could be semantically unrelated; two words with nearby word2vec embeddings are semantically similar. Use TF-IDF for exact keyword matching and search; word2vec/embeddings for semantic similarity and as features for downstream models.</p>
+<p>"Why does negative sampling use a 3/4 power of the unigram distribution?" — It empirically outperforms the raw unigram and uniform distributions. The 3/4 power reduces the dominance of very frequent words (which would otherwise be sampled too often as negatives and provide low-information training signal) and increases the relative sampling rate of rare words.</p>
+<p>"What are the failure modes of static word embeddings like Word2Vec?" — Polysemy (one vector per word regardless of sense). Poor handling of rare words (few co-occurrences → noisy vectors). No subword information (misspellings or morphological variants are unknown). Cultural and corpus biases are encoded and amplified. BERT and fastText (subword) address the last two.</p>
+<p><strong>Try on Colab:</strong> train word2vec using gensim on the text8 corpus (Wikipedia subset). Extract embeddings for 'man', 'woman', 'king', 'queen', 'paris', 'france', 'london', 'england'. Verify king-man+woman≈queen and paris-france+england≈london using cosine similarity. Visualise 50 words using TSNE — observe that semantically related words cluster together.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=word2vec-embedding-geometry-negative-sampling#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

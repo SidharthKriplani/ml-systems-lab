@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reinforcement Learning: Policy, Value, and the Credit Assignment Problem — ML Systems Lab</title>
+  <meta name="description" content="RL is the framework where an agent learns by interacting with an environment — no labels, just rewards. The central difficulty is credit assignment: which of the 200 actions in a chess game caused the…" />
+  <meta name="keywords" content="Reinforcement Learning, Deep Learning, Policy Gradient, Q-Learning, DQN, RLHF, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/reinforcement-learning-policy-value-credit-assignment.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/reinforcement-learning-policy-value-credit-assignment.html" />
+  <meta property="og:title" content="Reinforcement Learning: Policy, Value, and the Credit Assignment Problem" />
+  <meta property="og:description" content="RL is the framework where an agent learns by interacting with an environment — no labels, just rewards. The central difficulty is credit assignment: which of the 200 actions in a chess game caused the…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Reinforcement Learning: Policy, Value, and the Credit Assignment Problem" />
+  <meta name="twitter:description" content="RL is the framework where an agent learns by interacting with an environment — no labels, just rewards. The central difficulty is credit assignment: which of the 200 actions in a chess game caused the…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Reinforcement Learning: Policy, Value, and the Credit Assignment Problem",
+  "description": "RL is the framework where an agent learns by interacting with an environment — no labels, just rewards. The central difficulty is credit assignment: which of the 200 actions in a chess game caused the…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/reinforcement-learning-policy-value-credit-assignment.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Reinforcement Learning, Deep Learning, Policy Gradient, Q-Learning, DQN, RLHF, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=reinforcement-learning-policy-value-credit-assignment#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Reinforcement Learning: Policy, Value, and the Credit Assignment Problem</h1>
+    <p class="excerpt">RL is the framework where an agent learns by interacting with an environment — no labels, just rewards. The central difficulty is credit assignment: which of the 200 actions in a chess game caused the win? Policy gradient methods and Q-learning solve this differently. Deep Q-Networks applied it to Atari. RLHF applied it to language models. This is the core loop.</p>
+    <p>Supervised learning requires labelled data. You have inputs and correct outputs; the loss function tells the model how wrong it was. Reinforcement learning replaces labels with rewards: the agent takes actions, the environment returns a reward signal, and the agent learns to act so as to maximise cumulative reward. No one tells the agent which action was correct — it must discover this through interaction.</p>
+<h2>The RL setup</h2>
+<p>At each timestep, the agent observes a state s, selects an action a, receives a reward r, and transitions to a new state s'. The environment determines the transition dynamics and reward function. The agent's goal: maximise the expected sum of discounted rewards: E[Σ γ^t * r_t], where γ < 1 is the discount factor, down-weighting future rewards (a reward now is worth more than the same reward later, and uncertainty grows with time).</p>
+<h2>The credit assignment problem</h2>
+<p>If a chess game lasts 200 moves and the agent wins, which of the 200 actions were good? The reward (win/lose) arrives at the end; most of the game received reward = 0. Assigning credit to the actions that caused the win — and blame to the ones that caused mistakes — is the central challenge of RL. All RL algorithms are, in some sense, solutions to this problem.</p>
+<h2>Value functions: predicting future reward</h2>
+<p>The value function V(s) is the expected cumulative discounted reward starting from state s and following policy π. V(s) = E_π[Σ γ^t * r_t | s_0 = s]. If V(s) is known, credit assignment becomes tractable: an action was good if the state it led to has higher value than expected. The Bellman equation decomposes the value recursively: V(s) = E[r + γ * V(s')]. This recursive structure is the key to learning value functions without waiting for the episode to end.</p>
+<p>The Q-function (action-value function) extends this to state-action pairs: Q(s, a) = E[r + γ * max_a' Q(s', a')]. Q(s,a) gives the expected return from taking action a in state s, then acting optimally. The optimal policy is greedy with respect to Q: always take the action with the highest Q value.</p>
+<h2>Q-learning: learning value functions directly</h2>
+<p>Q-learning (Watkins, 1989) learns Q(s,a) by iterating the Bellman equation: Q(s,a) ← Q(s,a) + α * (r + γ * max_a' Q(s',a') - Q(s,a)). The term in parentheses is the TD (temporal difference) error — how much the current Q estimate is wrong. This update is applied after every step, propagating reward signals backward through the Q estimates over many episodes.</p>
+<p>Deep Q-Networks (DQN, Mnih et al., 2015) replaced the tabular Q function with a neural network — the same network takes the state as input and outputs Q values for all actions. Two crucial stabilisation tricks: experience replay (store transitions (s,a,r,s') in a buffer, sample random mini-batches for training — breaks correlation between consecutive updates) and target network (use a slower-updating copy of the network to compute the TD targets — prevents the chasing-a-moving-target instability). DQN achieved human-level performance on 49 Atari games from raw pixels.</p>
+<h2>Policy gradient methods: directly optimising the policy</h2>
+<p>Instead of learning a value function and deriving a policy, policy gradient methods directly parameterise the policy π_θ(a|s) and optimise expected reward. The REINFORCE algorithm: collect a full episode, compute the return G_t = Σ γ^k * r_{t+k} for each step, update: θ ← θ + α * G_t * ∇_θ log π_θ(a_t|s_t). This is the policy gradient theorem — the gradient of expected reward is the expected product of the policy gradient and the return.</p>
+<p>The problem: high variance. G_t is a noisy estimate because it depends on the full episode's randomness. Actor-critic methods reduce variance by replacing G_t with the advantage A(s,a) = Q(s,a) - V(s) — how much better is this action than average? The critic (a value function estimator) provides this baseline.</p>
+<h2>PPO: the practical standard</h2>
+<p>Proximal Policy Optimisation (Schulman et al., 2017) is the workhorse algorithm for modern RL. It clips the policy update to prevent the new policy from deviating too far from the old one: L = E[min(ratio * A, clip(ratio, 1-ε, 1+ε) * A)]. This clipping provides stability without the complexity of trust region methods. PPO is the algorithm behind most DeepMind and OpenAI game-playing agents.</p>
+<h2>RLHF: applying RL to language models</h2>
+<p>Reinforcement Learning from Human Feedback (RLHF) is the training method behind InstructGPT, Claude, and GPT-4. A language model generates responses; human raters rank them; a reward model is trained on these rankings; PPO fine-tunes the language model to maximise the reward model's score, with a KL penalty against the original model to prevent reward hacking. The KL term is exactly the credit assignment constraint: the language model should improve while not drifting too far from learned language structure.</p>
+<p><strong>Try on Colab:</strong> implement a DQN on OpenAI Gym's CartPole-v1 from scratch — a neural network Q function, experience replay buffer, ε-greedy exploration, and target network. CartPole is solvable in under 1000 episodes. Then remove experience replay and observe training instability. Remove the target network and observe divergence. Each ablation reveals why these tricks were necessary.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=reinforcement-learning-policy-value-credit-assignment#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not — ML Systems Lab</title>
+  <meta name="description" content="Most explanations of regularisation say &quot;L1 produces sparsity, L2 does not.&quot; Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the const…" />
+  <meta name="keywords" content="Models &amp; Math, Regularisation, L1, L2, Lasso, Ridge, Dropout, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/regularization-geometric-picture-l1-l2-dropout.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/regularization-geometric-picture-l1-l2-dropout.html" />
+  <meta property="og:title" content="Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not" />
+  <meta property="og:description" content="Most explanations of regularisation say &quot;L1 produces sparsity, L2 does not.&quot; Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the const…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not" />
+  <meta name="twitter:description" content="Most explanations of regularisation say &quot;L1 produces sparsity, L2 does not.&quot; Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the const…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not",
+  "description": "Most explanations of regularisation say \"L1 produces sparsity, L2 does not.\" Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the const…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/regularization-geometric-picture-l1-l2-dropout.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Regularisation, L1, L2, Lasso, Ridge, Dropout, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=regularization-geometric-picture-l1-l2-dropout#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Regularisation: The Geometric Picture of Why L1 Is Sparse and L2 Is Not</h1>
+    <p class="excerpt">Most explanations of regularisation say &quot;L1 produces sparsity, L2 does not.&quot; Almost none explain why. The answer is geometric: the L1 ball has corners that sit exactly on coordinate axes, so the constrained optimum tends to land on a corner — zeroing a weight. The L2 ball is a smooth sphere with no corners. This post makes the geometry rigorous and then covers every other form of regularisation you will encounter in practice.</p>
+    <p>Regularisation is the collection of techniques that prevent a model from fitting the training data too precisely — from memorising noise rather than learning signal. It is the primary tool for controlling variance in the bias-variance trade-off. Understanding it geometrically explains every form at once.</p>
+<h2>The constraint form vs the penalty form</h2>
+<p>The penalty form adds a regularisation term to the loss: min_w L(w) + λ Ω(w). The constraint form enforces a budget on the weights: min_w L(w) subject to Ω(w) ≤ t. These are mathematically equivalent by the KKT conditions of constrained optimisation — for every λ there exists a t that gives the same solution and vice versa. The constraint form has a cleaner geometric interpretation.</p>
+<h2>The geometry of L2 (Ridge)</h2>
+<p>The constraint Ω(w) = ||w||² ≤ t defines an L2 ball — a sphere in weight space centred at the origin. The unconstrained optimum w* (minimum of L(w) alone) is somewhere outside this ball if t is small. The constrained OLS optimum is where the loss contour ellipse first touches the L2 ball. Because the L2 ball is a smooth sphere, the touching point can be anywhere on the sphere's surface — including points with all weights non-zero. L2 regularisation shrinks all weights toward zero but does not zero any of them exactly. Ridge solution (for OLS): w_Ridge = (XᵀX + λI)⁻¹Xᵀy. The λI term makes the matrix invertible (solves multicollinearity) and shrinks eigenvalues of XᵀX uniformly.</p>
+<h2>The geometry of L1 (Lasso)</h2>
+<p>The constraint Ω(w) = ||w||₁ ≤ t defines an L1 ball — a diamond (in 2D) or cross-polytope (in higher dimensions). Critically: the L1 ball has corners, and those corners sit exactly on the coordinate axes (where one weight is non-zero and all others are zero). The loss contour ellipse, when it expands from the unconstrained optimum toward the origin, is geometrically most likely to first touch a corner of the L1 ball — because corners stick out. At a corner, all but one weight is exactly zero. This is the sparsity-inducing mechanism. It is a geometric inevitability, not a numerical quirk. Lasso has no closed form (the L1 norm is not differentiable at zero); it is solved with coordinate descent or ISTA/FISTA (proximal gradient methods).</p>
+<h2>Elastic Net: combining both</h2>
+<p>Elastic Net: min_w L(w) + λ₁||w||₁ + λ₂||w||². Combines the sparsity of L1 with the stability of L2 (Ridge handles correlated features; Lasso arbitrarily picks one). Useful when: you want feature selection but your features are correlated (Lasso picks one arbitrarily; Elastic Net keeps groups together).</p>
+<h2>Other forms of regularisation</h2>
+<p>Dropout (Srivastava et al., 2014): randomly set each neuron's activation to zero with probability p during training. At test time, multiply all activations by (1-p) to maintain expected values. Interpretation 1: prevents co-adaptation — neurons cannot rely on specific other neurons always being present. Interpretation 2: approximates Bayesian inference over an exponential number of thinned networks. Interpretation 3: ensemble view — different dropout masks produce different architectures; inference averages them. Early stopping: halt training when validation loss stops decreasing. Mathematically equivalent to L2 regularisation under certain conditions (Goodfellow et al.): a model trained for T gradient steps behaves similarly to a model with weight decay λ ≈ 1/(α T) where α is the learning rate. Weight decay: explicitly added to the gradient update: w ← w(1 - αλ) - α ∇L. For SGD, weight decay = L2 regularisation. For Adam, they diverge — weight decay applies to the parameter directly, not to the adaptive gradient, which is why AdamW (weight decay) is preferred over Adam+L2 for transformers. Data augmentation: artificially expand the training set with label-preserving transformations (flips, crops, colour jitter for images; back-translation for text). Reduces overfitting by increasing effective training set size. Label smoothing: replace hard one-hot targets with soft targets (1-ε for the true class, ε/(K-1) for others). Prevents the model from becoming overconfident. Equivalent to adding a KL divergence penalty between the model's output distribution and a uniform distribution.</p>
+<h2>Choosing the regularisation coefficient</h2>
+<p>λ is a hyperparameter. Too small: no regularisation, overfitting. Too large: underfitting (weights driven to zero). Select via cross-validation on the validation loss. For Lasso, the regularisation path (how the solution changes as λ varies from 0 to ∞) can be computed efficiently — features enter the model one by one as λ decreases, giving a feature ranking.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why does L1 regularisation produce sparsity but L2 doesn't? Explain geometrically." — The L1 ball (constraint region) is a diamond with corners on the coordinate axes. The loss function's contours tend to touch those corners first when they expand toward the origin, placing the solution at a corner where all but one weight is zero. The L2 ball is a sphere with no corners — the touching point can be anywhere, so no weight is forced to exactly zero.</p>
+<p>"What is the difference between L2 regularisation and weight decay in the context of Adam?" — For SGD they are equivalent: L2 penalty adds λw to the gradient, weight decay multiplies parameters by (1-λ). For Adam, they are not equivalent: L2 adds λw to the gradient before the adaptive scaling, which means the effective penalty varies per-parameter. Weight decay (AdamW) applies the decay directly to parameters after the adaptive update, giving a consistent and better-calibrated penalty. AdamW trains better for large language models.</p>
+<p>"How is dropout related to ensemble methods?" — Each dropout mask defines a different 'thinned' subnetwork. Training with dropout approximates averaging over all 2^H possible subnetworks (H = number of units). At test time, using the full network with scaled weights approximates the geometric mean of all these subnetworks' predictions — an implicit ensemble. This is why dropout improves generalisation.</p>
+<p>"When would you prefer Elastic Net over Lasso?" — When features are correlated. Lasso tends to select one feature from a correlated group arbitrarily and zeroes the others. Elastic Net uses the L2 penalty to group correlated features together (they shrink together rather than one being selected). Also when p > n (more features than samples) — Lasso selects at most n features; Elastic Net can select more.</p>
+<p><strong>Try on Colab:</strong> fit Lasso, Ridge, and Elastic Net on the Diabetes dataset using LassoCV/RidgeCV/ElasticNetCV. Plot the coefficient paths as λ varies (regularisation path plot). Observe which features go to zero first in Lasso vs Ridge. Plot the number of non-zero coefficients vs λ. Verify that Elastic Net keeps more features than Lasso at the same regularisation strength when features are correlated.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=regularization-geometric-picture-l1-l2-dropout#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

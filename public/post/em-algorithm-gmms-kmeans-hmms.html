@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models — ML Systems Lab</title>
+  <meta name="description" content="The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling i…" />
+  <meta name="keywords" content="Models &amp; Math, EM Algorithm, GMM, Clustering, HMM, Latent Variables, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/em-algorithm-gmms-kmeans-hmms.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/em-algorithm-gmms-kmeans-hmms.html" />
+  <meta property="og:title" content="The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models" />
+  <meta property="og:description" content="The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling i…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models" />
+  <meta name="twitter:description" content="The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling i…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models",
+  "description": "The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling i…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/em-algorithm-gmms-kmeans-hmms.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, EM Algorithm, GMM, Clustering, HMM, Latent Variables, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=em-algorithm-gmms-kmeans-hmms#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>The EM Algorithm: GMMs, the k-Means Connection, and Why You Can Train Hidden Variable Models</h1>
+    <p class="excerpt">The EM algorithm answers a question that seems impossible: how do you do MLE when you have missing data or unobserved latent variables? It turns out the answer is elegant — alternate between filling in the missing variables (E-step) and maximising the likelihood (M-step) — and it is why we can train Gaussian Mixture Models, HMMs, and topic models at all.</p>
+    <p>Maximum likelihood estimation is straightforward when all variables are observed: write down the log-likelihood, take the gradient, set it to zero. But many powerful models have latent variables — variables that are never observed. Gaussian Mixture Models have cluster assignments. Hidden Markov Models have hidden state sequences. Topic models (LDA) have topic assignments per word. You cannot take the gradient of the log-likelihood directly because summing over all possible latent configurations is intractable. The EM algorithm solves this.</p>
+<h2>The core idea: complete data vs incomplete data</h2>
+<p>Define complete data as (x, z) where x is observed and z is the latent variable. If we knew z, the log-likelihood log P(x, z | θ) — the complete-data log-likelihood — might be easy to maximise. We do not know z. The EM algorithm iterates: E-step: compute Q(θ | θ_old) = E_{z|x,θ_old}[log P(x, z | θ)] — the expected complete-data log-likelihood, where the expectation is over the posterior of z given current parameters. M-step: θ_new = argmax_θ Q(θ | θ_old) — maximise the expected complete-data log-likelihood. Repeat until convergence.</p>
+<h2>Why EM is guaranteed to converge</h2>
+<p>EM converges because each iteration non-decreasingly improves the observed-data log-likelihood log P(x | θ). The proof uses Jensen's inequality applied to the log-concavity of the expectation: log P(x|θ) ≥ Q(θ|θ_old) + H(posterior). The M-step increases Q, which means the bound increases, which means log P(x|θ) cannot decrease. Convergence is to a local maximum or saddle point — EM does not guarantee the global MLE. Initialisation matters enormously.</p>
+<h2>Gaussian Mixture Models (GMMs)</h2>
+<p>Model: a mixture of K Gaussians. The generative process: (1) sample cluster assignment z ~ Categorical(π₁, ..., πK). (2) Sample x ~ N(μ_z, Σ_z). Observed: x. Latent: z. E-step: compute soft cluster assignments (responsibilities): r_{nk} = P(z_n = k | x_n, θ) = π_k N(x_n; μ_k, Σ_k) / Σ_j π_j N(x_n; μ_j, Σ_j). Each point x_n gets a soft assignment to each cluster — the r_{nk} sum to 1 over k. M-step: update parameters using the weighted data. N_k = Σ_n r_{nk} (effective number of points in cluster k). π_k = N_k / n. μ_k = Σ_n r_{nk} x_n / N_k (weighted mean). Σ_k = Σ_n r_{nk} (x_n - μ_k)(x_n - μ_k)ᵀ / N_k (weighted covariance). These updates are closed-form — this is the M-step maximisation in action.</p>
+<h2>k-Means as hard-assignment EM</h2>
+<p>k-Means is EM on a GMM with hard assignment (no soft probabilities) and spherical, equal-variance, equal-weight Gaussians. E-step → assignment step: each point is assigned to its nearest centroid (argmax_k r_{nk} = 1, all others 0). M-step → update step: centroids are updated as the mean of assigned points. k-Means minimises Σ_n min_k ||x_n - μ_k||² — the total within-cluster sum of squares. This is not the log-likelihood of any natural generative model; it is a hard approximation that works well empirically when clusters are roughly spherical and equal-sized.</p>
+<h2>Hidden Markov Models (HMMs)</h2>
+<p>A sequence model: hidden states z₁, z₂, ..., zT with Markov transitions P(zₜ|zₜ₋₁ = A (transition matrix), observations xₜ ~ P(xₜ|zₜ) = B (emission model). We observe x₁:T; we do not observe z₁:T. E-step — forward-backward algorithm: efficiently computes the posterior over hidden states γₜ(k) = P(zₜ = k | x₁:T, θ) and state transition posteriors ξₜ(j,k) = P(zₜ₋₁=j, zₜ=k | x₁:T, θ). The forward-backward algorithm exploits the Markov structure to do this in O(TK²) instead of O(KT). M-step — Baum-Welch: update A, B, π using the posterior counts, exactly as in GMMs. The Baum-Welch algorithm IS EM for HMMs.</p>
+<h2>Latent Dirichlet Allocation (LDA)</h2>
+<p>LDA is a topic model: documents are mixtures of topics, topics are distributions over words. Latent variable: topic assignments for each word. Because the Dirichlet-Multinomial conjugacy makes the full posterior tractable, LDA can be trained with variational EM (approximate E-step using a variational distribution) or collapsed Gibbs sampling. The core structure — latent variables, E-step to compute posteriors, M-step to update parameters — is still EM.</p>
+<h2>Practical considerations</h2>
+<p>Initialisation: k-Means++ initialisation (choose initial centroids with probability proportional to distance from existing centroids) dramatically improves convergence. For GMMs, initialise with k-Means output. Multiple restarts: run EM from many random starting points and pick the highest likelihood solution. Convergence criterion: stop when log-likelihood improvement drops below a threshold (e.g., 1e-6). Degenerate solutions: a Gaussian can collapse on a single data point with σ → 0 and likelihood → ∞. Fix by adding a minimum covariance floor.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Explain the EM algorithm in one minute." — We have observed data x and latent variables z. Direct MLE is hard because we'd need to marginalise over all z. EM alternates: E-step computes the expected log-likelihood under the current posterior over z; M-step maximises that expectation. Each iteration is guaranteed not to decrease the observed log-likelihood. Converges to a local maximum.</p>
+<p>"How is k-Means a special case of EM for GMMs?" — k-Means uses hard cluster assignments (each point belongs to exactly one cluster) and assumes equal, spherical Gaussians. GMMs use soft assignments (each point belongs partially to each cluster) and learn cluster shapes. In the limit of zero variance, the soft GMM assignments approach hard k-Means assignments.</p>
+<p>"Why does EM not always find the global maximum? What do you do about it?" — EM climbs the likelihood from its starting point and converges to a local max or saddle. With multiple modes, different initialisations converge to different solutions. In practice: multiple restarts, choosing the solution with the highest final likelihood. For k-Means specifically, k-Means++ gives a better-than-random initialisation with provable 8 ln k approximation guarantee.</p>
+<p>"When would you use GMMs vs k-Means in practice?" — GMMs: when you need soft cluster assignments (uncertainty about which cluster a point belongs to), when clusters are not spherical (full covariance GMM), when you want a proper generative model (can sample from it, compute likelihoods). k-Means: faster, when hard assignments suffice, when clusters are roughly spherical and balanced in size.</p>
+<p><strong>Try on Colab:</strong> implement GMM from scratch using the EM algorithm on the Old Faithful eruption dataset (2D). Initialise with k=2 components. Plot the decision boundaries and ellipses at each EM step to visualise convergence. Compare log-likelihood trajectories for 10 random starts. Show that k-Means initialisation (warm start) converges faster and more reliably than random initialisation.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=em-algorithm-gmms-kmeans-hmms#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

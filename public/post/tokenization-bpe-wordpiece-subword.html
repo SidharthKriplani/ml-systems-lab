@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tokenization: Why Subword Methods and What BPE Is Actually Doing — ML Systems Lab</title>
+  <meta name="description" content="The way you split text into tokens is not a preprocessing detail — it determines the vocabulary size, how the model handles rare words and morphology, and how many tokens a sequence consumes (which di…" />
+  <meta name="keywords" content="NLP, Deep Learning, Tokenization, BPE, WordPiece, Language Models, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/tokenization-bpe-wordpiece-subword.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/tokenization-bpe-wordpiece-subword.html" />
+  <meta property="og:title" content="Tokenization: Why Subword Methods and What BPE Is Actually Doing" />
+  <meta property="og:description" content="The way you split text into tokens is not a preprocessing detail — it determines the vocabulary size, how the model handles rare words and morphology, and how many tokens a sequence consumes (which di…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tokenization: Why Subword Methods and What BPE Is Actually Doing" />
+  <meta name="twitter:description" content="The way you split text into tokens is not a preprocessing detail — it determines the vocabulary size, how the model handles rare words and morphology, and how many tokens a sequence consumes (which di…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Tokenization: Why Subword Methods and What BPE Is Actually Doing",
+  "description": "The way you split text into tokens is not a preprocessing detail — it determines the vocabulary size, how the model handles rare words and morphology, and how many tokens a sequence consumes (which di…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/tokenization-bpe-wordpiece-subword.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "NLP, Deep Learning, Tokenization, BPE, WordPiece, Language Models"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=tokenization-bpe-wordpiece-subword#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Tokenization: Why Subword Methods and What BPE Is Actually Doing</h1>
+    <p class="excerpt">The way you split text into tokens is not a preprocessing detail — it determines the vocabulary size, how the model handles rare words and morphology, and how many tokens a sequence consumes (which directly affects cost and context length). BPE, WordPiece, and SentencePiece make different trade-offs. Understanding them explains why GPT-4 charges per token and why &quot;tokenization bugs&quot; are a real production failure mode.</p>
+    <p>Every language model operates on tokens, not raw text. The tokenizer converts a string of characters into a sequence of integers that the model can process. The choice of tokenization algorithm determines the vocabulary, the average sequence length, and the model's handling of rare words, numbers, and non-English text. It is not a detail — it is a design decision with cascading effects.</p>
+<h2>Character, word, and subword tokenization</h2>
+<p>Character tokenization: split every character into a separate token. Vocabulary is tiny (~256 for ASCII). Sequences are very long, which makes Transformer attention expensive. The model must learn morphology and spelling from scratch. Almost never used for large language models.</p>
+<p>Word tokenization: split on whitespace and punctuation. Sequences are short. But the vocabulary is huge (every inflection of every word is a separate token), rare words (misspellings, proper nouns, scientific terms) become out-of-vocabulary tokens mapped to [UNK], and the model cannot share representations between related words ("run", "running", "runs").</p>
+<p>Subword tokenization: the practical middle ground. Common words are single tokens; rare words are split into recognisable subword pieces. "tokenization" → ["token", "ization"]. The model can combine pieces it has seen in other contexts. Vocabulary is 32,000–100,000 tokens. This is what all modern LLMs use.</p>
+<h2>Byte-Pair Encoding: the algorithm</h2>
+<p>BPE (Sennrich et al., 2016) starts with a character-level vocabulary and iteratively merges the most frequent adjacent pair. Start: vocabulary = all individual characters. Count: find the most frequent pair (e.g., "t" + "h" appears 50,000 times). Merge: add "th" to vocabulary, replace all occurrences. Repeat until vocabulary reaches the target size (e.g., 50,000 merges for GPT-2).</p>
+<p>The result: frequent subwords and whole words are single tokens; rare sequences are represented by their character-level components. The merge order is the vocabulary — tokenisation of new text replays the merges in order, greedily combining the longest matches.</p>
+<p>GPT-2, GPT-3, GPT-4, and LLaMA use BPE. GPT-4's tokenizer (cl100k) has 100,256 tokens and was trained on a much larger and more multilingual corpus than GPT-2's, explaining better performance on non-English text.</p>
+<h2>WordPiece: BERT&#39;s variant</h2>
+<p>WordPiece (Schuster & Nakamura, 2012) is similar to BPE but uses a likelihood-based merge criterion instead of frequency: merge the pair that maximises the likelihood of the training corpus under the language model. Subword pieces beyond the first in a word are prefixed with "##" to mark continuation: "tokenization" → ["token", "##ization"]. BERT uses WordPiece with a 30,522-token vocabulary.</p>
+<h2>SentencePiece: language-agnostic tokenization</h2>
+<p>BPE and WordPiece assume whitespace separates words — a reasonable assumption for English but wrong for Chinese, Japanese, Thai, and other languages. SentencePiece (Kudo & Richardson, 2018) treats the input as a raw character stream with no whitespace pre-segmentation. It uses BPE or unigram language model to learn subword segmentation directly. T5, ALBERT, and XLM-R use SentencePiece. It is the standard for multilingual models.</p>
+<h2>Why tokenization is a production failure mode</h2>
+<p>Token counting determines cost (API pricing), context length (will the prompt fit?), and model behaviour. Real failure modes: a number like "1,000,000" tokenizes to 6 tokens in some vocabularies and 2 in others — arithmetic over numbers is harder when each digit is a separate token. Code with unusual indentation or symbols may consume far more tokens than expected. Non-English text tokenizes into more pieces per word than English — Russian or Chinese content is 2-4× more expensive per character. Prompt injection exploits can use unusual tokenization to bypass content filters. Knowing your tokenizer is operational hygiene for production LLM applications.</p>
+<p><strong>Try on Colab:</strong> use the tiktoken library (OpenAI) to tokenize a few edge cases: a number (1000000), a URL, a code snippet with indentation, and the same sentence in English, Spanish, and Chinese. Count tokens for each. Visualise the tokenization with tiktoken's visualiser. See how different languages encode with dramatically different efficiency — this is the root cause of multilingual LLM performance gaps.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=tokenization-bpe-wordpiece-subword#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off — ML Systems Lab</title>
+  <meta name="description" content="A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product en…" />
+  <meta name="keywords" content="Models &amp; Math, Bandits, Thompson Sampling, UCB, Explore-Exploit, Online Learning, Experimentation, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/multi-armed-bandits-thompson-sampling-ucb.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/multi-armed-bandits-thompson-sampling-ucb.html" />
+  <meta property="og:title" content="Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off" />
+  <meta property="og:description" content="A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product en…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off" />
+  <meta name="twitter:description" content="A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product en…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off",
+  "description": "A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product en…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/multi-armed-bandits-thompson-sampling-ucb.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Bandits, Thompson Sampling, UCB, Explore-Exploit, Online Learning, Experimentation"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=multi-armed-bandits-thompson-sampling-ucb#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Multi-Armed Bandits: Thompson Sampling, UCB, and the Explore-Exploit Trade-off</h1>
+    <p class="excerpt">A/B testing is batch experimentation: you wait, collect, decide. Bandits are online experimentation: you learn and adapt as traffic flows. The distinction matters enormously in high-traffic product environments where weeks of suboptimal routing is unacceptable. Thompson sampling and UCB are the two workhorses — each has a different failure mode.</p>
+    <p>The multi-armed bandit problem formalises the explore-exploit trade-off: you have K arms (treatments, variants, ads, recommendations), each with an unknown reward distribution. At each timestep you choose an arm, observe a reward, and update your beliefs. The objective is to maximise cumulative reward over T timesteps — which means minimising regret relative to always having chosen the best arm.</p>
+<h2>Why not just A/B test?</h2>
+<p>A/B testing assigns equal traffic to all variants for the entire experiment, then picks the winner. This is safe and statistically valid, but every impression on a losing variant during the experiment is wasted. For a website with 1M daily users running a 2-week test, a bad variant receiving 50% of traffic is a large cost. Bandits trade some statistical rigour for lower regret: they shift traffic toward better-performing arms as evidence accumulates.</p>
+<h2>Regret</h2>
+<p>Cumulative regret: R(T) = T * μ* − Σ_{t=1}^{T} μ(a_t), where μ* is the mean reward of the best arm. The Lai-Robbins lower bound (1985) shows that for any consistent algorithm, R(T) ≥ Ω(log T). This means some exploration is unavoidable — you cannot learn without occasionally pulling suboptimal arms. Good algorithms achieve O(log T) regret; bad ones achieve O(T) (linear regret = never converging on the best arm).</p>
+<h2>ε-Greedy (baseline)</h2>
+<p>With probability ε, explore (pull a random arm); with probability 1-ε, exploit (pull the current best arm by empirical mean). Simple, robust, but constant exploration regardless of uncertainty. ε should decay over time but the decay rate is a hyperparameter with no obvious setting.</p>
+<h2>Upper Confidence Bound (UCB1)</h2>
+<p>UCB1 (Auer et al., 2002): at each step, choose the arm that maximises μ̂_a + √(2 ln t / n_a), where μ̂_a is the empirical mean of arm a, t is the total steps, and n_a is the number of times arm a has been pulled. The second term is an uncertainty bonus — arms pulled less often get larger bonuses, driving exploration. UCB1 is deterministic, interpretable, and achieves O(log T) regret with tight constants. Failure mode: the optimism assumption can be violated when reward distributions are heavy-tailed or non-stationary.</p>
+<h2>Thompson Sampling</h2>
+<p>Thompson Sampling (Thompson 1933, rediscovered widely post-2010): maintain a Beta(α, β) prior over each arm's success probability (for Bernoulli rewards). After each observation, update the posterior: success → α += 1, failure → β += 1. At each decision point, sample a value from each arm's posterior and pull the arm with the highest sample. This is Bayesian: the randomness is in the posterior sampling, not in an ε parameter. Thompson Sampling achieves O(log T) regret empirically and often outperforms UCB in practice. It generalises to Gaussian, Poisson, and non-conjugate reward models (using Gaussian process or neural network priors for the latter).</p>
+<h2>Contextual bandits</h2>
+<p>Pure bandits ignore context. Contextual bandits — the framework behind almost every real recommendation and personalisation system — take a feature vector x_t (user features, item features, context) and choose an arm conditioned on x_t. LinUCB (Li et al., 2010) fits a linear reward model per arm with UCB-style exploration: reward_a(x) = x^T θ_a + α √(x^T A_a^{-1} x). Neural bandits replace the linear model with a neural network; the uncertainty estimate comes from the network's output layer or ensemble spread.</p>
+<h2>Non-stationarity</h2>
+<p>When reward distributions shift over time (product changes, seasonality, user drift), fixed posteriors become stale. Solutions: sliding window Thompson Sampling (forget old observations), discounted UCB (weight recent observations more heavily), or change-point detection triggering a posterior reset.</p>
+<h2>Bandit vs A/B test: when to use which</h2>
+<p>Use A/B testing when: you need strong statistical guarantees, experiments run for a bounded time, the cost of premature convergence is high (e.g., pharmaceutical trials). Use bandits when: traffic is high, experiment runtime is long, variants are many (multi-armed), and you care more about cumulative reward than causal inference validity. Hybrid: run a short A/B test for 10-15% of traffic to establish priors, then switch to Thompson Sampling for the remaining 85%.</p>
+<p><strong>Try on Colab:</strong> implement Thompson Sampling and UCB1 on the Bernoulli bandit problem with K=5 arms and true probabilities [0.1, 0.3, 0.5, 0.7, 0.9]. Plot cumulative regret over 10,000 steps for both algorithms plus ε-greedy with ε=0.1. Add a non-stationarity test: at t=5000, swap the rewards of arms 1 and 5. Observe how each algorithm adapts.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=multi-armed-bandits-thompson-sampling-ucb#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

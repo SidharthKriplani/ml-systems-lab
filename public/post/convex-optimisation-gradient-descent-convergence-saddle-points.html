@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It — ML Systems Lab</title>
+  <meta name="description" content="Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? …" />
+  <meta name="keywords" content="Models &amp; Math, Convex Optimisation, Gradient Descent, Saddle Points, Loss Surface, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/convex-optimisation-gradient-descent-convergence-saddle-points.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/convex-optimisation-gradient-descent-convergence-saddle-points.html" />
+  <meta property="og:title" content="Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It" />
+  <meta property="og:description" content="Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It" />
+  <meta name="twitter:description" content="Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It",
+  "description": "Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/convex-optimisation-gradient-descent-convergence-saddle-points.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Convex Optimisation, Gradient Descent, Saddle Points, Loss Surface, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=convex-optimisation-gradient-descent-convergence-saddle-points#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Convex Optimisation: Why Convexity Guarantees a Global Minimum and Why Neural Nets Work Without It</h1>
+    <p class="excerpt">Logistic regression has a convex loss — gradient descent is guaranteed to find the global minimum. Neural networks have a wildly non-convex loss — yet gradient descent finds excellent solutions. Why? The answer involves saddle points, loss surface geometry, flat minima, and the implicit regularisation of SGD. This is the &quot;why does any of this work?&quot; post.</p>
+    <p>Convex optimisation is the branch of mathematics with the strongest guarantees: if your objective is convex, gradient descent will find the global minimum. Machine learning relies heavily on convex problems (linear regression, logistic regression, SVMs, Lasso) but its most powerful models (neural networks) are deeply non-convex. Understanding both is essential.</p>
+<h2>Convex sets and functions</h2>
+<p>A set C is convex if for any two points x, y ∈ C and any t ∈ [0,1], the point tx + (1-t)y is also in C — the line segment between any two points stays in the set. Examples: ℝⁿ (trivially convex), the positive orthant, any ball or ellipsoid. A function f: C → ℝ is convex if for any x, y ∈ C and t ∈ [0,1]: f(tx + (1-t)y) ≤ tf(x) + (1-t)f(y). The function lies below or on the line segment connecting any two points. Geometrically: the "cup shape" property. Equivalently (for differentiable f): f(y) ≥ f(x) + ∇f(x)ᵀ(y-x) — the function lies above all its tangent hyperplanes. Strictly convex: the inequality is strict for x ≠ y. Strongly convex with parameter μ > 0: f(y) ≥ f(x) + ∇f(x)ᵀ(y-x) + (μ/2)||y-x||² — the function curves up at least as fast as a quadratic.</p>
+<h2>Why convexity guarantees a global minimum</h2>
+<p>For a convex function, every local minimum is a global minimum. Proof sketch: suppose x* is a local minimum and y is a point with f(y) < f(x*). By convexity: f(tx* + (1-t)y) ≤ tf(x*) + (1-t)f(y) < f(x*) for all t ∈ (0,1). But points tx* + (1-t)y are arbitrarily close to x* for t near 1 — this contradicts x* being a local minimum. Therefore no such y exists. This theorem is why convex ML problems are "solved" — any gradient descent converging to a stationary point has found the global optimum.</p>
+<h2>Gradient descent convergence</h2>
+<p>For a convex function f with L-Lipschitz gradient (||∇f(x) - ∇f(y)|| ≤ L||x-y||): gradient descent with step size α ≤ 1/L satisfies f(x_T) - f(x*) ≤ ||x₀ - x*||² / (2αT). Convergence rate: O(1/T) in the objective (sublinear). For strongly convex functions (with parameter μ): gradient descent converges geometrically (exponentially fast) at rate O((1 - μ/L)^T). The condition number κ = L/μ determines convergence speed: poorly conditioned problems (large κ) converge slowly. This is why preconditioning (second-order methods, normalisation) helps.</p>
+<h2>Is logistic regression convex?</h2>
+<p>Yes. The logistic regression loss L(w) = -Σᵢ[yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1 - σ(wᵀxᵢ))] is convex in w. The Hessian H = Xᵀ W X where W = diag(σ(wᵀxᵢ)(1-σ(wᵀxᵢ))) is positive semi-definite (it is a gram matrix). With L2 regularisation: H + λI is positive definite → strongly convex → unique global minimum. This is why logistic regression always converges to the same solution regardless of initialisation.</p>
+<h2>Neural network loss surfaces</h2>
+<p>Neural network losses are deeply non-convex: many local minima, saddle points, and flat regions. The key empirical observation: in high dimensions, local minima are rare and good. The loss at local minima found by gradient descent is approximately equal across different random initialisations. Most problematic are saddle points — where the gradient is zero but the Hessian has both positive and negative eigenvalues (it is indefinite). In low dimensions, saddle points are rare. In high dimensions (d = millions of parameters), almost every critical point is a saddle point rather than a local minimum (Dauphin et al., 2014). SGD's noise helps escape saddle points: the gradient estimate is noisy, providing perturbations that can push the optimiser off the saddle.</p>
+<h2>Flat minima and generalisation</h2>
+<p>Not all minima are equal. Sharp minima: the loss surface has high curvature around the minimum (large Hessian eigenvalues). The model is sensitive to parameter perturbations — small changes in weights cause large changes in loss. Sharp minima often correspond to overfit solutions. Flat minima: the loss surface is flat around the minimum. The model is robust to parameter perturbations — a wide valley. Flat minima tend to generalise better (Hochreiter & Schmidhuber, 1997). SGD with larger batch size tends to find sharper minima; SGD with smaller batch sizes finds flatter minima. This is one reason why large-batch training sometimes generalises worse — even if training loss converges to the same value, the flat-vs-sharp nature of the minimum differs.</p>
+<h2>Implicit regularisation of SGD</h2>
+<p>SGD does not just minimise the training loss — it implicitly regularises the solution. SGD with weight decay finds solutions with lower norm. Adam finds solutions with lower L∞ norm on gradients. The specific optimiser's geometry shapes which solution is found when there are many global minima. This is why the choice of optimiser matters for generalisation, not just convergence speed.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Is the SVM objective convex? How do you know?" — The SVM primal objective (||w||²/2 + C Σ ξᵢ) is a quadratic with linear constraints. Quadratics with positive semi-definite Hessian are convex. The slack variables and constraints define a convex feasible set. Therefore the SVM is a convex quadratic program with a unique global minimum.</p>
+<p>"Why does gradient descent find good solutions for neural networks even though the loss is non-convex?" — (1) In high dimensions, critical points are almost all saddle points rather than bad local minima. (2) Most local minima found in practice have similar test loss (Choromanska et al.). (3) SGD's noise helps escape saddle points and find flat minima that generalise well. (4) Over-parameterisation may create a connected manifold of global minima, making convergence easier.</p>
+<p>"What is the difference between a local minimum, a global minimum, and a saddle point?" — Local minimum: ∇f = 0 and Hessian is positive definite (all eigenvalues positive). f is larger in all directions. Global minimum: the lowest local minimum. Saddle point: ∇f = 0 but Hessian is indefinite (some positive, some negative eigenvalues). The function decreases in some directions and increases in others. In high dimensions, saddle points are exponentially more common than local minima.</p>
+<p>"What is the condition number and why does it affect gradient descent convergence?" — κ = L/μ (max eigenvalue / min eigenvalue of the Hessian). A high condition number means the loss surface is a very elongated ellipse — gradient descent zig-zags slowly. Condition number of the problem determines how many gradient steps are needed: O(κ log(1/ε)) for strongly convex. Normalisation (batch norm, layer norm) and second-order methods (Adam, K-FAC) reduce the effective condition number.</p>
+<p><strong>Try on Colab:</strong> visualise the loss surface of a 2-parameter logistic regression model on a 2D dataset. Plot the loss as a heat map and overlay gradient descent trajectories from 10 random starting points — all converge to the same minimum (convexity). Then compare: train a 2-layer neural network with random initialisation 10 times and plot final test loss vs training time — show that different runs find solutions with similar test loss despite different parameter values.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=convex-optimisation-gradient-descent-convergence-saddle-points#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

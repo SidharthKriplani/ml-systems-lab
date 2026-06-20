@@ -61,10 +61,11 @@ for (const u of topLevel) {
   lines.push('  </url>')
 }
 
-// Every Gradient post by slug
+// Every Gradient post by slug — point Google at the pre-rendered static HTML
+// at /post/<slug>.html (which has SEO content + redirects users to the SPA).
 for (const slug of [...slugs].sort()) {
   lines.push('  <url>')
-  lines.push(`    <loc>${DOMAIN}/?post=${slug}#gradient</loc>`)
+  lines.push(`    <loc>${DOMAIN}/post/${slug}.html</loc>`)
   lines.push(`    <lastmod>${today}</lastmod>`)
   lines.push('    <changefreq>monthly</changefreq>')
   lines.push('    <priority>0.7</priority>')

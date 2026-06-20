@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Group-Level Contamination: The Leakage Nobody Catches Until Production — ML Systems Lab</title>
+  <meta name="description" content="Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per produ…" />
+  <meta name="keywords" content="Data Leakage, Group Splits, Cross-Validation, Evaluation, Recommender Systems, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/group-level-leakage.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/group-level-leakage.html" />
+  <meta property="og:title" content="Group-Level Contamination: The Leakage Nobody Catches Until Production" />
+  <meta property="og:description" content="Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per produ…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Group-Level Contamination: The Leakage Nobody Catches Until Production" />
+  <meta name="twitter:description" content="Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per produ…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Group-Level Contamination: The Leakage Nobody Catches Until Production",
+  "description": "Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per produ…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/group-level-leakage.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Leakage, Group Splits, Cross-Validation, Evaluation, Recommender Systems"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=group-level-leakage#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Group-Level Contamination: The Leakage Nobody Catches Until Production</h1>
+    <p class="excerpt">Your train/test split is random. Your features are computed correctly. Your evaluation still lies. The reason: you split rows, but your data is grouped — multiple rows per user, per patient, per product. When the same entity appears in both train and test, the model memorises entity-level patterns and your validation AUC reflects that memory, not generalisation.</p>
+    <p>Group-level contamination is the leakage form that survives all the standard preprocessing hygiene checks. You split before engineering. You fit scalers on train only. You avoid target encoding on the full dataset. You still have leakage — because the split itself is wrong.</p>
+<h2>The mechanism</h2>
+<p>Your dataset has 50,000 rows from 8,000 users. Each user appears an average of 6 times. A random 80/20 split puts roughly 5 rows from user_id=12345 in training and 1 row in validation.</p>
+<p>The model learns user-level patterns — average spend, historical churn signals, engagement velocity. On the validation row for user_id=12345, it essentially recognises the user. It does not generalise to new users; it memorises existing ones.</p>
+<p>Your validation AUC is 0.89. In production, the model sees user_id=99999, a user it has never encountered. The AUC drops to 0.74. The gap is not model complexity or hyperparameters. It is the split.</p>
+<h2>Where this appears in recommender systems</h2>
+<p>In recommender systems, this is the standard failure mode of item-based collaborative filtering evaluation. A random split across user-item interactions means both train and test contain interactions from the same users and the same items. The model learns user embeddings and item embeddings that perfectly predict held-out interactions — because it has seen every user and every item before.</p>
+<p>The correct evaluation: a leave-one-user-out or leave-one-item-out split. Users in validation are a disjoint set from users in training. Or: time-split, where validation contains interactions after a cutoff date for all users.</p>
+<h2>The correct fix: GroupShuffleSplit</h2>
+<p>sklearn provides \`GroupShuffleSplit\`, which accepts a \`groups\` parameter (your entity ID array) and guarantees that all rows from a given entity are in the same split. Usage:</p>
+<p>\`\`\`python from sklearn.model_selection import GroupShuffleSplit gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42) train_idx, val_idx = next(gss.split(X, y, groups=df['user_id'])) \`\`\`</p>
+<p>After this split, every user in validation is a user the model has never seen during training. This is the honest evaluation.</p>
+<h2>When group leakage is acceptable</h2>
+<p>Sometimes you want the model to leverage known-entity signals. A fraud model that flags known bad actors is legitimate if your production use case also covers those same actors. In this case, group leakage in validation is intentional and your metric is: "how well does the model perform on entities it has seen before?"</p>
+<p>But you still need a second evaluation: "how well does the model perform on new entities?" Both evaluations should be reported separately. Conflating them gives a metric that means neither thing precisely.</p>
+<h2>Cross-validation with groups</h2>
+<p>For cross-validation, use \`GroupKFold\`. Each fold assigns complete groups to train or test — no entity spans two folds.</p>
+<p>\`\`\`python from sklearn.model_selection import GroupKFold gkf = GroupKFold(n_splits=5) for train_idx, val_idx in gkf.split(X, y, groups=df['user_id']): # train and val share no user_ids \`\`\`</p>
+<p>The model's cross-validated AUC now reflects generalisation to unseen entities — which is what production performance actually is.</p>
+<p><strong>The diagnostic question to ask of any dataset before splitting:</strong> Does this dataset have repeated observations from the same entity? If yes, which evaluation matters more — performance on known entities or performance on new entities? That answer determines your split strategy.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=group-level-leakage#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHAP Values: Feature Importance That Actually Makes Sense — ML Systems Lab</title>
+  <meta name="description" content="Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first corr…" />
+  <meta name="keywords" content="SHAP, Feature Importance, Explainability, Model Interpretability, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/shap-feature-importance.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/shap-feature-importance.html" />
+  <meta property="og:title" content="SHAP Values: Feature Importance That Actually Makes Sense" />
+  <meta property="og:description" content="Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first corr…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SHAP Values: Feature Importance That Actually Makes Sense" />
+  <meta name="twitter:description" content="Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first corr…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SHAP Values: Feature Importance That Actually Makes Sense",
+  "description": "Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first corr…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/shap-feature-importance.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "SHAP, Feature Importance, Explainability, Model Interpretability"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=shap-feature-importance#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>SHAP Values: Feature Importance That Actually Makes Sense</h1>
+    <p class="excerpt">Feature importance from a random forest is not the same as feature contribution to a specific prediction. And feature contribution is not the same as causal effect. SHAP values give you the first correctly — and they&#39;re game-theoretic, not heuristic. Here&#39;s what that actually means.</p>
+    <p>There are four common ways to compute feature importance, and they measure four different things.</p>
+<p><strong>1. Impurity-based importance (default in sklearn forests):</strong> How much did this feature reduce impurity (Gini/entropy) on average across all splits? Problem: biased toward high-cardinality features. A random UUID feature will have high importance by this measure. Don't use this for anything serious.</p>
+<p><strong>2. Permutation importance:</strong> Randomly shuffle one feature's values, measure the drop in model performance. Measures how much the model relies on this feature. Not biased by cardinality. Slow for many features. Can be misleading when features are correlated — shuffling one correlated feature still leaves signal in the others.</p>
+<p><strong>3. LIME (Local Interpretable Model-agnostic Explanations):</strong> Fit a simple linear model around a specific prediction in the local neighbourhood. Fast, intuitive, model-agnostic. Problem: the neighbourhood is defined heuristically, explanations are unstable, and they don't guarantee consistency between local explanations.</p>
+<p><strong>4. SHAP (SHapley Additive exPlanations):</strong> Based on Shapley values from cooperative game theory. The Shapley value of player i is the average marginal contribution of i across all possible orderings of players.</p>
+<p>In ML terms: the SHAP value for feature j on prediction x is the expected change in model output when we add feature j to a coalition, averaged over all possible feature coalitions. It satisfies three axioms: efficiency (SHAP values sum to prediction minus baseline), symmetry (features with equal contributions get equal values), dummy (features with no effect get zero SHAP value).</p>
+<p><strong>TreeSHAP:</strong> For tree-based models (XGBoost, LightGBM, sklearn forests), SHAP can be computed exactly in O(TLD²) where T=trees, L=leaves, D=depth. This is fast enough for production feature attribution.</p>
+<h2>What SHAP tells you — and what it doesn&#39;t:</h2>
+<p>SHAP measures model-based contribution — not causal effect. A feature can have high SHAP values because it's correlated with a causal feature that isn't in the model. Don't use SHAP to make causal claims.</p>
+<p>Useful applications: explaining individual predictions to fraud analysts, auditing model behaviour for protected attributes, debugging why a model makes unexpected predictions, prioritising feature development.</p>
+<h2>Common misuses:</h2>
+<p>Using global SHAP importance (mean |SHAP|) as the only ranking — misses local heterogeneity. Showing SHAP plots without a baseline — the "expected output" interpretation only makes sense with a reference distribution. Using SHAP to justify removing features — high SHAP value can come from a feature correlated with many others; removing it may or may not hurt performance.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=shap-feature-importance#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

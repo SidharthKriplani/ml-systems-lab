@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PySpark Shuffle: The Complete Mental Model — ML Systems Lab</title>
+  <meta name="description" content="Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the so…" />
+  <meta name="keywords" content="PySpark, Performance, Internals, Spark UI, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/spark-shuffle-mental-model.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/spark-shuffle-mental-model.html" />
+  <meta property="og:title" content="PySpark Shuffle: The Complete Mental Model" />
+  <meta property="og:description" content="Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the so…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="PySpark" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PySpark Shuffle: The Complete Mental Model" />
+  <meta name="twitter:description" content="Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the so…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PySpark Shuffle: The Complete Mental Model",
+  "description": "Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the so…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/spark-shuffle-mental-model.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "PySpark, Performance, Internals, Spark UI"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=spark-shuffle-mental-model#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">PySpark &middot; ML Systems Lab</div>
+    <h1>PySpark Shuffle: The Complete Mental Model</h1>
+    <p class="excerpt">Every wide transformation triggers a shuffle. Most engineers know this. Few have a clear mental model of what actually happens — the partition lifecycle, the disk writes, the network transfers, the sort. Without that model, you&#39;re guessing when you tune. With it, you can look at a Spark UI and immediately know what&#39;s wrong.</p>
+    <p>A shuffle happens in three phases: map, shuffle write, shuffle read.</p>
+<p><strong>The map phase:</strong> Each executor runs its tasks on its input partitions. At the end of a map task, the output is partitioned by the shuffle key (hash of the join/group-by key). Each map task writes one output file per downstream reducer.</p>
+<p><strong>Shuffle write:</strong> The map output is spilled to local disk. If executor memory is exceeded before the map phase completes, Spark spills partial output to disk and merges later. This is the first place skew kills you: a task with a hot key writes 10× the data of others.</p>
+<p><strong>Shuffle read:</strong> Each reduce task reads its designated partition from every mapper. If you have 200 mappers and 200 reducers, that's 40,000 small file reads. The network transfer is proportional to data volume, not task count — but the connection overhead scales with task count.</p>
+<h2>The key metrics in Spark UI:</h2>
+<li>Shuffle Write: bytes written by map tasks. High = expensive downstream reads.</li>
+<li>Shuffle Read: bytes read by reduce tasks. Should approximately equal shuffle write.</li>
+<li>Task Duration (max vs median): ratio > 5× = data skew.</li>
+<li>GC Time: high GC = executor heap pressure = likely spill incoming.</li>
+<li>Spill (memory): amount spilled from RAM to disk. Non-zero = your partitions are too large for executor heap.</li>
+<h2>The key dials:</h2>
+<li>\`spark.sql.shuffle.partitions\` (default: 200): target 128–256 MB per partition after shuffle. For 100GB of shuffled data: 100*1024 / 200 = 512 MB per partition — too large. Try 800.</li>
+<li>\`spark.sql.autoBroadcastJoinThreshold\` (default: 10MB): raise to 500MB if one join side fits.</li>
+<li>\`spark.sql.adaptive.enabled=true\`: AQE dynamically coalesces small partitions and splits large ones at runtime. Enable by default in Spark 3.</li>
+<p><strong>AQE is not magic.</strong> It can't save a job with a 5000:1 key skew if you haven't enabled AQE skew join (\`spark.sql.adaptive.skewJoin.enabled=true\`). And even with skew join enabled, extremely hot keys (> 20× median) may require explicit salting.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=spark-shuffle-mental-model#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Defining Metrics: North Star, Guardrails, and Why Your Metric Is Probably Wrong — ML Systems Lab</title>
+  <meta name="description" content="The hardest part of ML in industry is not the model — it is deciding what to optimise. The north star metric encodes your theory of user value. Proxy metrics are what you actually measure. Guardrail m…" />
+  <meta name="keywords" content="Data Science, Product Analytics, Metrics, North Star, Guardrails, Experimentation, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/defining-ml-metrics-north-star-guardrails.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/defining-ml-metrics-north-star-guardrails.html" />
+  <meta property="og:title" content="Defining Metrics: North Star, Guardrails, and Why Your Metric Is Probably Wrong" />
+  <meta property="og:description" content="The hardest part of ML in industry is not the model — it is deciding what to optimise. The north star metric encodes your theory of user value. Proxy metrics are what you actually measure. Guardrail m…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Defining Metrics: North Star, Guardrails, and Why Your Metric Is Probably Wrong" />
+  <meta name="twitter:description" content="The hardest part of ML in industry is not the model — it is deciding what to optimise. The north star metric encodes your theory of user value. Proxy metrics are what you actually measure. Guardrail m…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Defining Metrics: North Star, Guardrails, and Why Your Metric Is Probably Wrong",
+  "description": "The hardest part of ML in industry is not the model — it is deciding what to optimise. The north star metric encodes your theory of user value. Proxy metrics are what you actually measure. Guardrail m…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/defining-ml-metrics-north-star-guardrails.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Product Analytics, Metrics, North Star, Guardrails, Experimentation"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=defining-ml-metrics-north-star-guardrails#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Defining Metrics: North Star, Guardrails, and Why Your Metric Is Probably Wrong</h1>
+    <p class="excerpt">The hardest part of ML in industry is not the model — it is deciding what to optimise. The north star metric encodes your theory of user value. Proxy metrics are what you actually measure. Guardrail metrics prevent your optimisation from breaking things you care about. Getting this framework wrong means building the right model for the wrong problem — shipping something that looks successful and actually degrades the product.</p>
+    <p>Every ML project starts with a metric — the quantity the model is trained to optimise and the quantity by which success is measured. In many teams, this metric is chosen quickly, rarely questioned, and silently drives thousands of engineering hours in the wrong direction. The framework for choosing metrics correctly is one of the most impactful things a staff DS brings to a team.</p>
+<h2>The north star metric: what you ultimately care about</h2>
+<p>The north star is the single metric that best captures the product's value creation. For a social network: Daily Active Users. For a subscription: annual revenue retention. For a marketplace: gross merchandise volume. The north star is not what you directly optimise — it is too slow to move and too aggregate to guide individual decisions. But it is the ultimate arbiter of whether a change was good.</p>
+<p>North stars that break: maximising the wrong proxy is Goodhart's Law in action. If a social network optimises for daily active users, they may inflate DAU by sending push notifications that bring users to the app but damage engagement quality. If a video platform optimises for watch time (YouTube's 2012-2016 approach), recommendation algorithms may serve longer but lower-quality or more extreme content. The north star must be validated against a theory of sustainable user value, not just engagement.</p>
+<h2>Proxy metrics: what you actually measure in experiments</h2>
+<p>Because the north star is too slow-moving for experiments (you would need weeks to detect a change in retention), experiments use faster-moving proxy metrics: session engagement rate, feature adoption, pages per session, user satisfaction scores (thumbs up/down). The proxy metric is what you optimise in the model objective and what you measure in A/B tests.</p>
+<p>Proxy validity: does improvement in the proxy reliably predict improvement in the north star? This should be validated empirically across past experiments: do experiments that moved the proxy also move the north star? If the correlation is weak, the proxy is not valid. Proxy-north-star misalignment is the root cause of most "we shipped, metrics looked great, nothing changed in the business" failures.</p>
+<h2>Guardrail metrics: what you will not sacrifice</h2>
+<p>Guardrail metrics are metrics that must not decrease, regardless of improvements to the primary metric. Examples: page load time (optimising recommendation quality must not slow the page), ad revenue (adding features must not decrease monetisation), customer support contacts (improvements must not create confusion that spikes support volume). A feature that increases session engagement by 10% but decreases ad revenue by 5% is a net loss at most companies, even if the primary metric moved in the right direction.</p>
+<h2>The HEART framework (Google)</h2>
+<p>Happiness (user satisfaction scores, NPS), Engagement (depth and frequency of feature usage), Adoption (new users using the feature), Retention (returning users), Task Success (completion rate, error rate). HEART provides a structured way to think about which dimensions of user experience an experiment might affect. For each experiment, choose 1-2 primary metrics and 3-5 guardrails across the HEART dimensions most relevant to the change.</p>
+<h2>Metric decomposition: where did the number come from?</h2>
+<p>When a metric moves, knowing why it moved requires decomposition. Revenue = DAU × sessions per user × events per session × revenue per event. If revenue drops, decompose each factor: is DAU down (acquisition/retention problem)? Is revenue per event down (monetisation problem)? Decomposition prevents premature conclusions and directs investigation to the right part of the funnel. Standardise this decomposition before experiments run so that post-hoc analysis does not require data archaeology.</p>
+<h2>Sensitivity and minimum detectable effect</h2>
+<p>A good experiment metric is sensitive enough to detect meaningful effects in a reasonable experiment duration. To evaluate: compute the metric's standard deviation across users, estimate the sample size needed to detect a 1% lift (your expected effect size) at 80% power. If the required sample size is 3 months of traffic, the metric is too noisy and you need a surrogate with lower variance. Session-level metrics have lower variance than user-level metrics; short-window metrics are more sensitive than long-window metrics.</p>
+<p><strong>Try on Colab:</strong> simulate a product change that increases click rate but decreases click-to-purchase conversion (users are enticed by clickbait but disappointed by the content). Model three metrics: CTR, conversion rate, and revenue per user. Show that optimising for CTR produces a model with higher CTR, lower conversion, and ambiguous revenue. Then formalise the correct combined metric (revenue per impression) and show it correctly penalises clickbait.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=defining-ml-metrics-north-star-guardrails#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

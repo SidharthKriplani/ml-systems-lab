@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dropout and Regularization: The Ensemble View — ML Systems Lab</title>
+  <meta name="description" content="Dropout is described as &quot;preventing overfitting by randomly turning off neurons.&quot; That is technically correct but misses the deeper picture. Dropout trains an exponential ensemble of architectures sim…" />
+  <meta name="keywords" content="Deep Learning, Regularization, Dropout, L2, Overfitting, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/dropout-regularization-ensemble-view.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/dropout-regularization-ensemble-view.html" />
+  <meta property="og:title" content="Dropout and Regularization: The Ensemble View" />
+  <meta property="og:description" content="Dropout is described as &quot;preventing overfitting by randomly turning off neurons.&quot; That is technically correct but misses the deeper picture. Dropout trains an exponential ensemble of architectures sim…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Dropout and Regularization: The Ensemble View" />
+  <meta name="twitter:description" content="Dropout is described as &quot;preventing overfitting by randomly turning off neurons.&quot; That is technically correct but misses the deeper picture. Dropout trains an exponential ensemble of architectures sim…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Dropout and Regularization: The Ensemble View",
+  "description": "Dropout is described as \"preventing overfitting by randomly turning off neurons.\" That is technically correct but misses the deeper picture. Dropout trains an exponential ensemble of architectures sim…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/dropout-regularization-ensemble-view.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Regularization, Dropout, L2, Overfitting, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=dropout-regularization-ensemble-view#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Dropout and Regularization: The Ensemble View</h1>
+    <p class="excerpt">Dropout is described as &quot;preventing overfitting by randomly turning off neurons.&quot; That is technically correct but misses the deeper picture. Dropout trains an exponential ensemble of architectures simultaneously and approximates their average at inference. Understanding this view explains why dropout works, when it does not, and what the alternatives accomplish.</p>
+    <p>Overfitting is the failure mode where a model memorises the training data rather than learning its structure. The solution is regularisation: constraining the model's capacity or the complexity of solutions it can find. L2 regularisation, L1 regularisation, and dropout are three different inductive biases, each with a geometric interpretation that reveals when to use which.</p>
+<h2>L2 regularisation: Gaussian prior on weights</h2>
+<p>L2 adds λ * ||w||^2 to the loss. The update becomes: w ← w - η * (∇L + 2λw) = w * (1 - 2ηλ) - η * ∇L. Each weight is decayed toward zero at every step, which is why L2 is also called weight decay. In Bayesian terms, L2 is equivalent to placing a Gaussian prior on the weights: it expresses the belief that weights should be small unless the data strongly justifies otherwise. Large weights are penalised quadratically, so a few very large weights are penalised more than many moderate ones. L2 encourages small, distributed weights.</p>
+<h2>L1 regularisation: Laplace prior and sparsity</h2>
+<p>L1 adds λ * ||w|| to the loss. The gradient is λ * sign(w) — a constant push toward zero regardless of weight magnitude. This drives small weights exactly to zero, producing sparse solutions. In Bayesian terms, L1 is a Laplace prior. It is used when you expect many features to be irrelevant and want the model to select a sparse subset. In deep learning L1 is less common than in linear models because neural network weights are harder to interpret as feature selectors.</p>
+<h2>Dropout: the ensemble interpretation</h2>
+<p>Dropout (Srivastava et al., 2014) randomly sets each neuron's activation to zero during training with probability p (typically 0.1–0.5). At each forward pass, a different random subset of neurons is active. With n neurons, there are 2^n possible architectures, each trained on a random subset of training examples. Dropout trains all of them simultaneously sharing weights.</p>
+<p>At inference, all neurons are active and activations are multiplied by (1-p) — the expected fraction active during training. This approximates averaging the predictions of all 2^n sub-networks (geometric mean approximation). Ensemble methods consistently outperform single models; dropout makes this computationally free.</p>
+<h2>Why dropout prevents co-adaptation</h2>
+<p>Without dropout, neurons can co-adapt: neuron A learns to fix the errors of neuron B, and neither can function independently. A co-adapted group of neurons jointly memorises training patterns. With dropout, each neuron must learn features that are useful even when its co-adaptors are absent. This forces the network to learn more distributed, redundant representations — which generalise better.</p>
+<h2>Inverted dropout: keeping inference efficient</h2>
+<p>A subtle implementation detail. With standard dropout (scale at inference), you multiply all activations by (1-p) at test time — an extra operation at every inference call. Inverted dropout instead divides by (1-p) during training, scaling up active neurons to compensate for the ones dropped. Inference requires no scaling. All deep learning frameworks use inverted dropout by default.</p>
+<h2>When dropout underperforms</h2>
+<p>Dropout works best in large, overparameterised networks where co-adaptation is a real risk. It is less effective on: very small networks (not enough neurons to form co-adapted groups); convolutional layers (spatial correlation means dropping individual activations still leaves correlated neighbours active — SpatialDropout, which drops entire channels, works better); and Transformers, where attention already provides a form of regularisation and dropout is often set very low (p=0.1) or omitted in later layers.</p>
+<p>For small datasets, the dominant regularisation tools are data augmentation (the most effective for vision), weight decay, and early stopping — not dropout.</p>
+<h2>Early stopping as regularisation</h2>
+<p>Stopping training before full convergence is a regularisation strategy. As a model trains past the point of minimum validation loss, it begins to memorise training noise. The optimal stopping point trades off training loss (lower = more memorised) against validation loss (lower = better generalised). Combined with a validation set and a patience parameter (stop if no improvement for k epochs), early stopping is often the most practical regularisation for limited-data regimes.</p>
+<p><strong>Try on Colab:</strong> train an overparameterised MLP on a small dataset (500 training examples of CIFAR-10). Train four variants: no regularisation, L2 weight decay, dropout (p=0.3), and both combined. Plot training loss and validation loss curves for all four. The gap between training and validation loss is the overfit signal — watch how each regulariser closes it.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=dropout-regularization-ensemble-view#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -353,6 +353,23 @@ export function tierCompletion(tier, readSet) {
   return { read: readCount, total: readyPosts.length, pending: tier.posts.length - readyPosts.length }
 }
 
+// Average read time across MLE Path posts is ~11 minutes; estimate per-tier time
+// by counting ready posts × avg read minutes + 10 min per practice tab interaction.
+export function tierEstimatedMinutes(tier) {
+  const readyPosts = tier.posts.filter(p => p.status === 'ready' && p.postId)
+  const readMinutes = readyPosts.length * 11
+  const practiceMinutes = 15 // typical practice tab interaction after a tier
+  return readMinutes + practiceMinutes
+}
+
+export function formatMinutes(min) {
+  if (min < 60) return `~${min} min`
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  if (m === 0) return `~${h} hr`
+  return `~${h}h ${m}m`
+}
+
 export function overallCompletion(readSet) {
   const allReady = PATH_SEQUENCE.filter(p => p.status === 'ready' && p.postId)
   const readCount = allReady.filter(p => readSet.has(p.postId)).length

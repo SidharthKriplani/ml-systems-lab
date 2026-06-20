@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bayesian Inference: Prior, Likelihood, Posterior, and When to Use It — ML Systems Lab</title>
+  <meta name="description" content="Frequentist statistics treats parameters as fixed unknowns. Bayesian statistics treats them as random variables with probability distributions. The posterior — your updated belief after seeing data — …" />
+  <meta name="keywords" content="Models &amp; Math, Bayesian Inference, Statistics, Prior, Posterior, MCMC, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/bayesian-inference-prior-posterior-mcmc.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/bayesian-inference-prior-posterior-mcmc.html" />
+  <meta property="og:title" content="Bayesian Inference: Prior, Likelihood, Posterior, and When to Use It" />
+  <meta property="og:description" content="Frequentist statistics treats parameters as fixed unknowns. Bayesian statistics treats them as random variables with probability distributions. The posterior — your updated belief after seeing data — …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bayesian Inference: Prior, Likelihood, Posterior, and When to Use It" />
+  <meta name="twitter:description" content="Frequentist statistics treats parameters as fixed unknowns. Bayesian statistics treats them as random variables with probability distributions. The posterior — your updated belief after seeing data — …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Bayesian Inference: Prior, Likelihood, Posterior, and When to Use It",
+  "description": "Frequentist statistics treats parameters as fixed unknowns. Bayesian statistics treats them as random variables with probability distributions. The posterior — your updated belief after seeing data — …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/bayesian-inference-prior-posterior-mcmc.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Bayesian Inference, Statistics, Prior, Posterior, MCMC, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=bayesian-inference-prior-posterior-mcmc#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Bayesian Inference: Prior, Likelihood, Posterior, and When to Use It</h1>
+    <p class="excerpt">Frequentist statistics treats parameters as fixed unknowns. Bayesian statistics treats them as random variables with probability distributions. The posterior — your updated belief after seeing data — is derived from the prior (what you believed before) and the likelihood (how probable the data is under each parameter value). This framework quantifies uncertainty, incorporates prior knowledge, and naturally handles small data regimes.</p>
+    <p>Bayesian inference is a framework for updating beliefs in light of evidence. Instead of asking "what is the parameter?" it asks "what is the probability distribution over possible parameter values, given what I have observed?" This distinction has significant practical implications for how you quantify uncertainty and make decisions.</p>
+<h2>Bayes&#39; theorem</h2>
+<p>P(θ | D) = P(D | θ) * P(θ) / P(D)</p>
+<p>Posterior ∝ Likelihood × Prior. In words: your belief about the parameter θ after seeing data D is proportional to how probable the data is under θ (likelihood) times your prior belief about θ (prior). P(D) is a normalisation constant.</p>
+<h2>The prior: encoding domain knowledge</h2>
+<p>The prior P(θ) represents your beliefs about θ before seeing data. It can encode domain knowledge ("I know this coefficient is probably positive"), regularisation ("weights should be small — use a Gaussian prior," which is equivalent to L2 regularisation in MAP estimation), or ignorance ("I have no idea — use a flat or weakly informative prior"). Priors matter most when data is scarce. With large data, the likelihood dominates and the prior washes out — frequentist and Bayesian estimates converge.</p>
+<h2>The likelihood: how the data informs the parameter</h2>
+<p>P(D | θ) is the probability of observing the data given the parameter value. For a coin with bias θ, if you observe 7 heads in 10 flips, the likelihood is θ^7 * (1-θ)^3. The likelihood is maximised at θ=0.7 (maximum likelihood estimate). Bayesian inference does not stop at the maximum — it computes the full posterior distribution, which accounts for uncertainty when the sample is small.</p>
+<h2>Conjugate priors: tractable closed-form posteriors</h2>
+<p>In general, computing the posterior requires integrating P(D | θ) * P(θ) over all θ — an integral that is often intractable. Conjugate priors are chosen so that the prior and posterior have the same distributional form, making the posterior analytically computable. Examples: Beta prior with Binomial likelihood → Beta posterior. Normal prior with Normal likelihood → Normal posterior (with updated mean and variance). Dirichlet prior with Multinomial likelihood → Dirichlet posterior. Conjugate pairs are the analytical workhorses of Bayesian inference and appear in bandit algorithms, naive Bayes classifiers, and topic models (LDA).</p>
+<h2>MAP estimation: the connection to regularisation</h2>
+<p>Maximum a posteriori (MAP) estimation finds the mode of the posterior: θ_MAP = argmax_θ log P(D | θ) + log P(θ). This is regularised maximum likelihood: the log prior acts as a regularisation term. Gaussian prior (P(θ) ∝ exp(-λ||θ||^2)) → L2 regularisation. Laplace prior → L1 regularisation. MAP gives a point estimate; full Bayesian inference retains the entire posterior distribution.</p>
+<h2>MCMC: sampling when posteriors are intractable</h2>
+<p>For complex models, the posterior has no closed form. Markov Chain Monte Carlo (MCMC) approximates the posterior by constructing a Markov chain that converges to the posterior distribution. Metropolis-Hastings: propose a new θ' from a proposal distribution; accept with probability min(1, P(θ'|D)/P(θ|D)). Running this chain produces samples from the posterior after the chain mixes.</p>
+<p>Modern probabilistic programming languages (PyMC, Stan, Pyro) implement MCMC and variational inference, making Bayesian modelling accessible without deriving samplers by hand.</p>
+<h2>Bayesian credible intervals vs frequentist confidence intervals</h2>
+<p>A Bayesian 95% credible interval [a, b] means: given the data, P(a ≤ θ ≤ b | D) = 0.95. This is what most people intuitively mean when they say "95% confidence interval." A frequentist 95% confidence interval means: if you repeated the experiment many times and computed the interval each time, 95% of those intervals would contain the true parameter. These are not the same statement, and the Bayesian interpretation is often more natural for decision-making.</p>
+<h2>When to use Bayesian methods in production</h2>
+<p>Bayesian approaches shine in: small data regimes where the prior provides meaningful regularisation, uncertainty quantification (prediction intervals rather than point estimates), online/sequential updating (Thompson sampling for bandits), and hierarchical models (partial pooling across groups — e.g., estimating conversion rates for 1000 products with varying sample sizes). They are more expensive computationally than frequentist methods and harder to communicate to stakeholders. For large datasets where uncertainty quantification is less critical, frequentist maximum likelihood is simpler and sufficient.</p>
+<p><strong>Try on Colab:</strong> use PyMC to infer the conversion rate of two web page variants (A/B test) from observed clicks/impressions. Use a Beta(1,1) (uniform) prior. Plot the posterior distributions for both variants. Compute P(variant B > variant A) by sampling from both posteriors. Compare the Bayesian result to a frequentist chi-squared test — they should agree when n is large but give different uncertainty estimates for n=20.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=bayesian-inference-prior-posterior-mcmc#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

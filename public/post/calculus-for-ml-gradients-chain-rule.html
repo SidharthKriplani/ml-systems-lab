@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets — ML Systems Lab</title>
+  <meta name="description" content="Backpropagation is just the chain rule applied to a computational graph. Every other &quot;magic&quot; in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calc…" />
+  <meta name="keywords" content="Models &amp; Math, Calculus, Gradients, Chain Rule, Backpropagation, Optimisation, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/calculus-for-ml-gradients-chain-rule.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/calculus-for-ml-gradients-chain-rule.html" />
+  <meta property="og:title" content="Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets" />
+  <meta property="og:description" content="Backpropagation is just the chain rule applied to a computational graph. Every other &quot;magic&quot; in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calc…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets" />
+  <meta name="twitter:description" content="Backpropagation is just the chain rule applied to a computational graph. Every other &quot;magic&quot; in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calc…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets",
+  "description": "Backpropagation is just the chain rule applied to a computational graph. Every other \"magic\" in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calc…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/calculus-for-ml-gradients-chain-rule.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Calculus, Gradients, Chain Rule, Backpropagation, Optimisation, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=calculus-for-ml-gradients-chain-rule#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Calculus for ML: Gradients, the Chain Rule, and Why We Can Differentiate Through Neural Nets</h1>
+    <p class="excerpt">Backpropagation is just the chain rule applied to a computational graph. Every other &quot;magic&quot; in deep learning optimisation — gradient flow, vanishing gradients, why residual connections work — is calculus. This post builds the calculus from scratch: derivatives, partial derivatives, gradients, the Jacobian, and the chain rule, each with a direct ML payoff.</p>
+    <p>Calculus in ML has exactly one job: given a loss function L(θ) that maps model parameters θ to a scalar loss, compute ∂L/∂θ — the direction in parameter space that increases L. Gradient descent then moves in the opposite direction. Everything else is book-keeping.</p>
+<h2>Derivatives: the local linearisation view</h2>
+<p>The derivative f'(x) = df/dx = lim_{h→0} (f(x+h) - f(x)) / h is not just "the slope of the tangent" — it is the best linear approximation to f at x. Locally, f(x+h) ≈ f(x) + f'(x)h. This is the first-order Taylor expansion and it is the mathematical foundation of gradient descent: we approximate the loss surface locally as a plane and step in the direction that decreases it.</p>
+<h2>Partial derivatives and gradients</h2>
+<p>For a function f(x₁, x₂, ..., xd) of multiple inputs, the partial derivative ∂f/∂xᵢ measures the rate of change holding all other inputs constant. The gradient ∇f = (∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xd)ᵀ is the vector of all partial derivatives. Geometric meaning: ∇f points in the direction of steepest ascent of f, and ||∇f|| is the rate of steepest ascent. Gradient descent update: θ ← θ - α ∇L(θ). We subtract because we want to descend.</p>
+<h2>The chain rule</h2>
+<p>If y = f(g(x)), then dy/dx = df/dg · dg/dx. The derivative of a composition is the product of derivatives at each step. For neural networks: L = loss(ŷ), ŷ = output(z), z = w·x + b. dL/dw = (dL/dŷ)(dŷ/dz)(dz/dw). Each factor is a local derivative computed at the current values. The chain rule telescopes through the graph.</p>
+<h2>The Jacobian</h2>
+<p>When f maps vectors to vectors — f: ℝⁿ → ℝᵐ — the derivative is the Jacobian matrix J ∈ ℝᵐˣⁿ where J_{ij} = ∂fᵢ/∂xⱼ. Each row is the gradient of one output dimension. The chain rule for vector functions: if y = f(g(x)) where f: ℝᵐ → ℝᵏ and g: ℝⁿ → ℝᵐ, then J_y/x = J_y/g · J_g/x (Jacobian product). This is backpropagation: the backward pass computes this Jacobian chain multiplication efficiently using the structure of the forward computation graph.</p>
+<h2>Computational graphs and automatic differentiation</h2>
+<p>A neural network is a directed acyclic graph where each node is an operation (add, multiply, sigmoid, softmax) and each edge is a tensor flowing through. Forward pass: evaluate the graph from inputs to loss. Backward pass: apply the chain rule at each node, propagating gradients from the loss back to the parameters. Autograd engines (PyTorch, JAX, TensorFlow) build this graph dynamically and compute exact gradients automatically. The key insight: each operation needs only to know its own local derivative — it does not need to know the full computation graph.</p>
+<h2>Useful derivatives to know cold</h2>
+<p>Sigmoid σ(x) = 1/(1+e^(-x)): σ'(x) = σ(x)(1 - σ(x)). This clean form is why sigmoid appears in logistic regression and LSTM gates. ReLU: f'(x) = 1 if x > 0, 0 if x < 0 (undefined but set to 0 at x=0 in practice). Softmax: ∂softmax_i/∂z_j = softmax_i(δ_{ij} - softmax_j). The Jacobian is not diagonal — the ith output depends on all inputs. Cross-entropy with softmax: ∂L/∂z_i = ŷ_i - y_i (the prediction minus the one-hot label). This is the beautifully simple gradient that makes training classification networks practical.</p>
+<h2>Why residual connections fix vanishing gradients</h2>
+<p>Without residuals: x → f₁(x) → f₂(f₁(x)) → ... The gradient of the loss w.r.t. the input to layer k is a product of Jacobians: Π_{l=k}^{L} J_l. If ||J_l|| < 1 for all layers, this product shrinks exponentially with depth. With residuals: output = x + f(x). Gradient: d(output)/d(input) = I + df/d(input). The identity term I ensures the gradient has a direct path that bypasses the layers — no matter how bad the other Jacobians are, the gradient is at least I. Gradient flow is guaranteed through the skip connection.</p>
+<h2>Second-order methods: what the Hessian tells you</h2>
+<p>The Hessian H = ∇²L ∈ ℝᵈˣᵈ is the matrix of second derivatives: H_{ij} = ∂²L/∂θᵢ∂θⱼ. It captures the curvature of the loss surface. Eigenvalues of H: positive definite (all λ > 0) → local minimum. Indefinite (mixed signs) → saddle point. Newton's method uses the Hessian: θ ← θ - H⁻¹ ∇L. It accounts for curvature and converges in fewer steps than gradient descent. Problem: for a neural network with d parameters, H is d×d. For GPT-3, d ≈ 175B — H is completely intractable. Approximate second-order methods (Adam, K-FAC, Shampoo) use low-rank or diagonal approximations to the Hessian.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Derive the gradient of cross-entropy loss with softmax output." — L = -Σ_i y_i log(ŷ_i), ŷ = softmax(z). Using the softmax Jacobian and chain rule: ∂L/∂z_i = ŷ_i - y_i. Walk through the derivation step by step.</p>
+<p>"Why does the sigmoid activation cause vanishing gradients?" — σ'(x) = σ(x)(1-σ(x)) ≤ 0.25 for all x (maximum at x=0). After many layers, chained products of ≤0.25 shrink exponentially. ReLU gradient is 1 for positive inputs, so it doesn't shrink in the forward-active region.</p>
+<p>"What is the difference between gradient descent, SGD, and mini-batch SGD?" — Full GD computes the gradient over all n training examples per step: exact but O(n) per step. SGD uses 1 example: O(1) per step but very noisy. Mini-batch SGD uses batch size B: noise-variance trade-off, the practical default. With batch size B, gradient variance is σ²/B.</p>
+<p>"How does Adam differ from plain SGD? What does it actually do?" — Adam maintains exponential moving averages of the gradient (m_t = β₁ m_{t-1} + (1-β₁) g_t) and of the squared gradient (v_t = β₂ v_{t-1} + (1-β₂) g_t²). The update is θ -= α m̂_t / (√v̂_t + ε). This is adaptive per-parameter learning rates: parameters with consistently large gradients get smaller updates; parameters with small gradients get larger updates. Bias correction (m̂, v̂) accounts for the cold start.</p>
+<p><strong>Try on Colab:</strong> implement gradient descent from scratch to minimise the Rosenbrock function f(x,y) = (1-x)² + 100(y-x²)² (a classic ill-conditioned test case). Implement vanilla GD, GD with momentum, and Adam. Plot the loss trajectories and the paths through the (x,y) parameter space. Observe how Adam escapes the banana-shaped valley faster.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=calculus-for-ml-gradients-chain-rule#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

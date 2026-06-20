@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCA from Scratch: What the Eigenvectors Are Actually Capturing — ML Systems Lab</title>
+  <meta name="description" content="PCA is described as &quot;finding directions of maximum variance.&quot; That is correct but incomplete. The eigenvectors of the covariance matrix are orthogonal directions that capture as much of the data&#39;s var…" />
+  <meta name="keywords" content="Models &amp; Math, PCA, Dimensionality Reduction, Eigendecomposition, Statistics, Anomaly Detection, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/pca-from-scratch-dimensionality-reduction.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/pca-from-scratch-dimensionality-reduction.html" />
+  <meta property="og:title" content="PCA from Scratch: What the Eigenvectors Are Actually Capturing" />
+  <meta property="og:description" content="PCA is described as &quot;finding directions of maximum variance.&quot; That is correct but incomplete. The eigenvectors of the covariance matrix are orthogonal directions that capture as much of the data&#39;s var…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PCA from Scratch: What the Eigenvectors Are Actually Capturing" />
+  <meta name="twitter:description" content="PCA is described as &quot;finding directions of maximum variance.&quot; That is correct but incomplete. The eigenvectors of the covariance matrix are orthogonal directions that capture as much of the data&#39;s var…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PCA from Scratch: What the Eigenvectors Are Actually Capturing",
+  "description": "PCA is described as \"finding directions of maximum variance.\" That is correct but incomplete. The eigenvectors of the covariance matrix are orthogonal directions that capture as much of the data's var…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/pca-from-scratch-dimensionality-reduction.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, PCA, Dimensionality Reduction, Eigendecomposition, Statistics, Anomaly Detection"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=pca-from-scratch-dimensionality-reduction#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>PCA from Scratch: What the Eigenvectors Are Actually Capturing</h1>
+    <p class="excerpt">PCA is described as &quot;finding directions of maximum variance.&quot; That is correct but incomplete. The eigenvectors of the covariance matrix are orthogonal directions that capture as much of the data&#39;s variability as possible in order. The first principal component is the line closest to all data points. The eigenvalue tells you exactly how much variance each direction captures. This makes PCA&#39;s limitations as clear as its strengths.</p>
+    <p>Principal Component Analysis is one of the most universally used tools in data science — feature reduction, visualization, noise removal, anomaly detection — and one of the most commonly misunderstood. The mechanics are clear; the geometry is what makes it powerful.</p>
+<h2>The setup: what PCA is finding</h2>
+<p>You have n data points in d-dimensional space (d features, possibly correlated). PCA finds a new coordinate system where the axes are ordered by the amount of variance they explain. The first axis (PC1) is the direction in which the data varies most. The second axis (PC2) is perpendicular to PC1 and explains the most remaining variance. And so on.</p>
+<p>Formally: find orthonormal vectors v_1, v_2, ..., v_k that maximise the variance of the projected data Var(X * v_i), subject to v_i ⊥ v_j for i ≠ j.</p>
+<h2>The covariance matrix and eigendecomposition</h2>
+<p>Center the data: X_c = X - mean(X). Compute the d×d covariance matrix: Σ = (1/n) X_c^T X_c. The principal components are the eigenvectors of Σ. The corresponding eigenvalues λ_i give the variance explained by each component: proportion of total variance = λ_i / Σ λ_j. The eigenvector with the largest eigenvalue is PC1; the second-largest gives PC2; and so on.</p>
+<p>Why eigenvectors? Because the eigenvector equation Σv = λv says: the covariance matrix applied to v just scales it by λ. That means v is a direction in which the covariance matrix acts as a pure scalar — the most "natural" directions for the data's spread.</p>
+<h2>Computing PCA: eigendecomposition vs SVD</h2>
+<p>For d features, eigendecompose the d×d covariance matrix. For n < d (more features than samples), it is more efficient to use SVD: X_c = U Σ V^T, where V's columns are the principal components and Σ's diagonal entries are the square roots of the eigenvalues. SVD directly gives the PCA without forming the covariance matrix explicitly, avoiding the O(d^2) memory requirement.</p>
+<h2>The geometric interpretation</h2>
+<p>PC1 is the line (or direction) that minimises the sum of squared perpendicular distances from all data points to the line — equivalently, it maximises the variance of projections onto the line. PCA finds the best-fitting subspace, the subspace that captures as much variability as possible.</p>
+<p>This is why PCA is a lossy compression: projecting to k < d dimensions loses the variance in the d-k remaining directions. If those directions have small eigenvalues (small variance), the loss is negligible. If they have large eigenvalues, the projection discards important variation.</p>
+<h2>Choosing k: the scree plot and explained variance</h2>
+<p>Plot the eigenvalues in decreasing order. Look for an elbow — a point where adding more components gives diminishing returns. The cumulative explained variance plot shows what fraction of total variance is captured by the top-k components. Common thresholds: keep k components that explain 90% or 95% of variance.</p>
+<h2>When PCA fails</h2>
+<p>PCA finds linear structure. If the meaningful variation in your data is nonlinear (a Swiss roll, a circle, a manifold), PCA will not find it. Kernel PCA, UMAP, and t-SNE handle nonlinear dimensionality reduction. PCA also fails when the features with highest variance are not the most predictive — variance and relevance are not the same thing. In supervised settings, use PLS (Partial Least Squares) or supervised dimensionality reduction.</p>
+<p>PCA is sensitive to scale: features measured in different units have different variances, and PCA will be dominated by the high-variance feature. Always standardise (zero mean, unit variance) before applying PCA unless the features are naturally commensurate.</p>
+<h2>Anomaly detection with PCA</h2>
+<p>Reconstruct each data point through the k-component PCA approximation. The reconstruction error = ||x - X_pca||^2. Points with high reconstruction error lie outside the subspace captured by the principal components — they are outliers in the "unusual" dimensions. This is used for network intrusion detection, industrial sensor anomaly detection, and credit card fraud.</p>
+<p><strong>Try on Colab:</strong> load the MNIST dataset (784 features per image). Apply PCA and reduce to 2 dimensions. Visualise with a scatter plot, coloured by digit class — observe the clusters. Then plot cumulative explained variance vs k. Find the k needed for 90% variance. Compare reconstruction quality at k=2, k=50, k=200. Finally, use reconstruction error to detect the 1% most anomalous images — inspect them.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=pca-from-scratch-dimensionality-reduction#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

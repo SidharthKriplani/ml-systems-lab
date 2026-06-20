@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zomato Senior Data Scientist / ML Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Zomato&#39;s senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weig…" />
+  <meta name="keywords" content="Interview Prep, Zomato, Senior Data Scientist, Marketplace, A/B Testing, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/zomato-senior-data-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/zomato-senior-data-scientist-interview-guide.html" />
+  <meta property="og:title" content="Zomato Senior Data Scientist / ML Interview Guide" />
+  <meta property="og:description" content="Zomato&#39;s senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weig…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Zomato Senior Data Scientist / ML Interview Guide" />
+  <meta name="twitter:description" content="Zomato&#39;s senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weig…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Zomato Senior Data Scientist / ML Interview Guide",
+  "description": "Zomato's senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weig…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/zomato-senior-data-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Zomato, Senior Data Scientist, Marketplace, A/B Testing, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=zomato-senior-data-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Zomato Senior Data Scientist / ML Interview Guide</h1>
+    <p class="excerpt">Zomato&#39;s senior DS / ML loop emphasises three areas: logistics ML (delivery time, courier dispatch), restaurant recommendation, and experimentation. Different from Swiggy in subtle ways — heavier weight on demand-side modelling and growth analytics. This guide walks through the loop structure and prep path.</p>
+    <p>Zomato's senior DS / ML interview shares structural similarities with Swiggy's but emphasises different problem domains. Zomato's ML org weights demand-side modelling (predicting what customers will order, when, and at what price point) and growth analytics (cohort retention, marketplace dynamics) more heavily than Swiggy, which leans more into supply-side dispatch optimisation.</p>
+<h2>The loop structure (Senior DS / ML, L5)</h2>
+<p>Zomato typically runs 4-5 rounds: recruiter call → ML + statistics fundamentals → ML system design + case → experimentation + product analytics case → hiring manager.</p>
+<p>The experimentation round is the highest-weight, similar to Swiggy but more product-analytics-flavoured. Candidates who treat it as a basic A/B testing round get downgraded.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter call.</strong> Standard behavioural + role context.</p>
+<p><strong>Round 2 — ML + statistics fundamentals.</strong> 60 minutes. Conceptual probing on classical ML, evaluation, A/B testing fundamentals. Zomato probes regression analysis and causal inference more than other Indian unicorns — expect questions on confounding, propensity score matching, difference-in-differences for marketplace experiments.</p>
+<p><strong>Round 3 — ML system design + case.</strong> 75 minutes. Common prompts: design Zomato's restaurant recommendation system, design demand forecasting for restaurant suppliers, design delivery time estimation. The case half typically asks: "your recommendation model improved CTR by 2% but order completion dropped 1%. Three hypotheses." Tests production-judgment under noisy metric signals.</p>
+<p><strong>Round 4 — Experimentation + product analytics case.</strong> 60 minutes. Real production scenario: "we launched a new restaurant ranking. Restaurant order volume is flat, but restaurant retention dropped 4%. What's happening and what would you do?" The round probes marketplace thinking, two-sided incentive alignment, and the trade-off between short-term and long-term metrics. Candidates who optimise only for the user-facing metric without considering supplier-side effects get downgraded.</p>
+<p><strong>Round 5 — Hiring manager.</strong> 45 minutes. Team fit, project ownership.</p>
+<h2>What Zomato weights distinctively</h2>
+<p>1. <strong>Two-sided marketplace judgment.</strong> Zomato is restaurants + customers + delivery partners. Decisions on one side ripple to the others. Senior candidates are expected to articulate these effects explicitly. 2. <strong>Growth analytics depth.</strong> Zomato's ML org has heavy overlap with product analytics. Cohort retention, LTV modelling, funnel analysis — expect deep probing on these. 3. <strong>Cost-vs-revenue trade-offs.</strong> Zomato operates on thin margins. Cost-aware ML decisions (recommendations that drive high-margin orders, demand forecasting that doesn't over-promise capacity) matter more than pure accuracy.</p>
+<h2>Top 10 questions Zomato senior DS / ML candidates face</h2>
+<p>1. "Design Zomato's restaurant recommendation system. Your goal is order completion, not click-through." 2. "Your new ranking improved CTR but dropped order completion. Three hypotheses." 3. "Design demand forecasting for restaurant partners. What's your loss function — and what's the cost asymmetry between under-prediction and over-prediction?" 4. "Restaurant retention dropped 4% after a ranking change. What do you investigate?" 5. "How would you A/B test a ranking model in a two-sided marketplace where the algorithm affects supplier behaviour?" 6. "Walk through the most impactful experiment you've designed and run." 7. "Cohort retention shows month-2 churn rising. How would you decompose to find the cause?" 8. "Design pricing personalisation. What are the fairness considerations?" 9. "How do you handle delayed labels in restaurant recommendation (the 'real' label is repeat orders 30 days later)?" 10. "Eleven types of leakage. Which apply to restaurant recommendation specifically?"</p>
+<h2>The prep path through MSL</h2>
+<p>For a Zomato senior DS / ML loop:</p>
+<li>Tier 1 (Statistics & Estimation) — all 4 posts, particularly Post 113 (Hypothesis Testing).</li>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) is especially relevant for cohort analysis.</li>
+<li>Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) for demand modelling.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design), Post 72 (Recsys Stack).</li>
+<li>Cross-link to PAL for deeper experimentation and product analytics depth (Zomato weights this heavier than pure ML).</li>
+<p>For practice: CausalInferenceTab (experiment design + SUTVA), Mock Interview with a Zomato JD pasted.</p>
+<h2>Common failure modes</h2>
+<li>Treating Zomato problems as user-facing only — ignoring restaurant-supplier side effects.</li>
+<li>Underestimating the experimentation round.</li>
+<li>Optimising for proxy metrics (CTR) without articulating second-order effects on the marketplace.</li>
+<li>Inability to discuss cohort analysis in detail.</li>
+<h2>Compensation</h2>
+<p>Zomato Senior DS / ML in 2026 ranges roughly ₹38 lakh – ₹68 lakh for 5-7 YOE. Staff levels reach ₹85 lakh+. AmbitionBox is the public reference.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=zomato-senior-data-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

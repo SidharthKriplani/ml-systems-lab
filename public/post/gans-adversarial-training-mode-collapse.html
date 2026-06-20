@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GANs: The Min-Max Game, Mode Collapse, and Why Training Is Hard — ML Systems Lab</title>
+  <meta name="description" content="A GAN pits a generator against a discriminator in a minimax game. In theory, the Nash equilibrium is a perfect generative model. In practice, training GANs collapses, oscillates, and diverges in ways …" />
+  <meta name="keywords" content="Deep Learning, GAN, Generative Models, Mode Collapse, WGAN, StyleGAN, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/gans-adversarial-training-mode-collapse.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/gans-adversarial-training-mode-collapse.html" />
+  <meta property="og:title" content="GANs: The Min-Max Game, Mode Collapse, and Why Training Is Hard" />
+  <meta property="og:description" content="A GAN pits a generator against a discriminator in a minimax game. In theory, the Nash equilibrium is a perfect generative model. In practice, training GANs collapses, oscillates, and diverges in ways …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GANs: The Min-Max Game, Mode Collapse, and Why Training Is Hard" />
+  <meta name="twitter:description" content="A GAN pits a generator against a discriminator in a minimax game. In theory, the Nash equilibrium is a perfect generative model. In practice, training GANs collapses, oscillates, and diverges in ways …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "GANs: The Min-Max Game, Mode Collapse, and Why Training Is Hard",
+  "description": "A GAN pits a generator against a discriminator in a minimax game. In theory, the Nash equilibrium is a perfect generative model. In practice, training GANs collapses, oscillates, and diverges in ways …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/gans-adversarial-training-mode-collapse.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, GAN, Generative Models, Mode Collapse, WGAN, StyleGAN"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=gans-adversarial-training-mode-collapse#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>GANs: The Min-Max Game, Mode Collapse, and Why Training Is Hard</h1>
+    <p class="excerpt">A GAN pits a generator against a discriminator in a minimax game. In theory, the Nash equilibrium is a perfect generative model. In practice, training GANs collapses, oscillates, and diverges in ways that took years of engineering tricks to tame. Understanding why mode collapse happens and what Wasserstein distance fixes makes GAN training legible.</p>
+    <p>Generative Adversarial Networks (Goodfellow et al., 2014) train a generator G and a discriminator D simultaneously. G maps random noise to data; D tries to distinguish real data from G's output. G tries to fool D. The training objective: min_G max_D E[log D(x)] + E[log(1 - D(G(z)))].</p>
+<h2>What the Nash equilibrium looks like</h2>
+<p>At the theoretical optimum, D cannot distinguish real from generated data (D(x) = 0.5 everywhere), and G produces samples from the true data distribution. The discriminator is maximally confused; the generator has perfectly learned the distribution. This is the Nash equilibrium: neither player can improve unilaterally.</p>
+<h2>Why training is hard: the vanishing gradient problem</h2>
+<p>When the discriminator is too good early in training, it assigns near-zero probability to generated samples. log(1 - D(G(z))) ≈ log(1) = 0. The generator receives a near-zero gradient — it cannot learn. The practical fix: train the generator to maximise log D(G(z)) rather than minimise log(1 - D(G(z))). These have the same fixed point but the latter has larger gradients early in training.</p>
+<h2>Mode collapse: the pathological failure mode</h2>
+<p>Mode collapse occurs when the generator learns to produce only a few high-quality samples rather than covering the full data distribution. Example: when training on a dataset of diverse faces, the generator collapses to producing one or two photorealistic faces repeatedly. Why? G discovers that a narrow set of outputs consistently fools D. Once G commits to these outputs, D adapts to recognise them. G then shifts to a different narrow set. The two networks chase each other through the mode space without converging.</p>
+<h2>Wasserstein GAN: fixing the loss function</h2>
+<p>The original GAN loss is equivalent to minimising Jensen-Shannon divergence between the real and generated distributions. JS divergence is 0 when distributions overlap and log 2 when they are disjoint — giving no useful gradient when G is far from the real distribution. Wasserstein GAN (Arjovsky et al., 2017) replaces JS divergence with the Earth Mover distance (Wasserstein-1), which measures the minimum "cost" of transporting one distribution to match the other. It is smooth and provides a useful gradient even when distributions do not overlap. The training objective becomes: min_G max_{||D||_L ≤ 1} E[D(x)] - E[D(G(z))]. The discriminator (now called a critic) must be Lipschitz-constrained (clipping weights or gradient penalty). WGAN training is dramatically more stable.</p>
+<h2>Progressive growing and StyleGAN</h2>
+<p>ProGAN (Karras et al., 2018) trains GANs progressively: start at 4×4 resolution, gradually add layers as training stabilises, ending at 1024×1024. Both G and D grow together. Lower resolution is easier to match; early stable training on coarse structure guides later fine-detail learning. StyleGAN (2019) adds style injection at each resolution scale: a mapping network transforms the noise z into a style vector w, which modulates each layer's activations via adaptive instance normalisation. This separates high-level attributes (pose, identity) from fine-grained details (texture, colour), enabling controlled generation and interpolation.</p>
+<h2>Evaluation: FID and the diversity-quality tradeoff</h2>
+<p>Fréchet Inception Distance (FID) measures the distance between the distribution of real and generated images in a pretrained Inception network's feature space. Lower FID = better. FID captures both quality (generated samples look realistic) and diversity (generated samples cover the data distribution). A GAN that memorises the training set has low FID. A GAN with mode collapse has high FID despite high per-sample quality. FID is the standard metric but does not fully capture human judgment of generation quality.</p>
+<p><strong>Try on Colab:</strong> train a DCGAN on CelebA (64×64). After 10 epochs, visualise the discriminator's output distribution for real vs generated images. If the discriminator is too powerful, you should see the generator gradient shrink. Implement gradient penalty (WGAN-GP) and retrain — compare the training loss curves. The Wasserstein loss should be monotonically decreasing rather than oscillating.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=gans-adversarial-training-mode-collapse#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

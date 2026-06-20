@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters — ML Systems Lab</title>
+  <meta name="description" content="Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right los…" />
+  <meta name="keywords" content="Models &amp; Math, Logistic Regression, MLE, GLM, Classification, Sigmoid, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/logistic-regression-from-scratch-mle-glm.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/logistic-regression-from-scratch-mle-glm.html" />
+  <meta property="og:title" content="Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters" />
+  <meta property="og:description" content="Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right los…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters" />
+  <meta name="twitter:description" content="Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right los…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters",
+  "description": "Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right los…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/logistic-regression-from-scratch-mle-glm.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Logistic Regression, MLE, GLM, Classification, Sigmoid, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=logistic-regression-from-scratch-mle-glm#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Logistic Regression From Scratch: MLE, the GLM Connection, and Why It Still Matters</h1>
+    <p class="excerpt">Logistic regression is the model every ML interview assumes you know cold — not sklearn.LogisticRegression() but the actual mathematics. Where does the sigmoid come from? Why is log-loss the right loss? What does the weight on a feature actually mean? This post derives it all from first principles and covers the GLM framework it sits inside.</p>
+    <p>Logistic regression is the canonical binary classification model. It is used in production at every major tech company for click-through rate prediction, churn modelling, and credit risk scoring. Its simplicity makes it interpretable; its calibration properties make it reliable. But most ML practitioners cannot derive it from first principles. This post fixes that.</p>
+<h2>The modelling choice: sigmoid</h2>
+<p>For binary classification (y ∈ {0, 1}), we want to model P(y=1|x). This probability must lie in [0,1], but a linear model wᵀx can output any real number. We need a link function that squashes ℝ to (0,1). The sigmoid: σ(z) = 1/(1+e^(-z)) = e^z/(1+e^z). It is S-shaped, differentiable everywhere, σ(0)=0.5, σ(z)→1 as z→∞, σ(z)→0 as z→-∞. The logistic regression model: P(y=1|x,w) = σ(wᵀx + b). But why sigmoid specifically, and not tanh or any other S-shaped function?</p>
+<h2>The GLM derivation: sigmoid falls out of the exponential family</h2>
+<p>Generalised Linear Models (GLMs) answer "which link function is correct for which distribution." A GLM has three components: random component (the distribution of y), systematic component (the linear predictor wᵀx), and link function connecting them. The Bernoulli distribution is in the exponential family: P(y|η) = exp(ηy - log(1+e^η)) where η is the natural parameter. If we set η = wᵀx (the linear predictor equals the natural parameter — the canonical link), then: P(y=1|x,w) = e^(wᵀx) / (1 + e^(wᵀx)) = σ(wᵀx). The sigmoid falls out of the Bernoulli exponential family with the canonical link. It is not an arbitrary choice — it is the mathematically natural choice.</p>
+<h2>Log-odds interpretation</h2>
+<p>log(P(y=1)/P(y=0)) = log(σ(wᵀx)/(1-σ(wᵀx))) = wᵀx. The log-odds (logit) is linear in the features. This is where "logistic" comes from (logit = log-odds). Each weight wⱼ is the change in log-odds per unit change in feature xⱼ, holding all other features constant. Exponentiating: e^wⱼ is the odds ratio for feature j. If wⱼ = 0.7, then e^0.7 ≈ 2 — a one-unit increase in xⱼ approximately doubles the odds of y=1.</p>
+<h2>Deriving the loss function from MLE</h2>
+<p>Label model: P(y|x,w) = σ(wᵀx)^y (1-σ(wᵀx))^(1-y). Log-likelihood: ℓ(w) = Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Negate to get the loss (binary cross-entropy): L(w) = -Σᵢ [yᵢ log σ(wᵀxᵢ) + (1-yᵢ) log(1-σ(wᵀxᵢ))]. Gradient: ∂L/∂w = Σᵢ (σ(wᵀxᵢ) - yᵢ) xᵢ = Xᵀ(ŷ - y). This is the residual (prediction minus label) times the feature vector — exactly the same form as the linear regression gradient. This is not coincidence: GLMs all have the same gradient structure.</p>
+<h2>Training: gradient descent and its variants</h2>
+<p>There is no closed-form solution for logistic regression weights (unlike linear regression). We use iterative optimisation. Full gradient descent: w ← w - α Xᵀ(ŷ - y). Mini-batch SGD: sample a batch, compute gradient on batch, update. Newton's method converges in fewer iterations: w ← w - H⁻¹ ∇L where H = Xᵀ W X (W = diag(σ(1-σ)) is the weight matrix). Newton is expensive (O(d²) per step) but used in the IRLS (Iteratively Reweighted Least Squares) implementation.</p>
+<h2>Regularisation</h2>
+<p>L2 (Ridge): L_reg = L + (λ/2)||w||². Gradient adds λw. Shrinks all weights toward zero, never to exactly zero. Equivalent to Gaussian prior on weights. L1 (Lasso): L_reg = L + λ||w||₁. Produces sparse solutions — some weights exactly zero (feature selection). Equivalent to Laplace prior. Elastic Net: L + λ₁||w||₁ + λ₂||w||². Combines sparsity and shrinkage.</p>
+<h2>Multiclass: Softmax regression</h2>
+<p>For K > 2 classes, logistic regression generalises to softmax regression (also called multinomial logistic regression): P(y=k|x,W) = exp(wₖᵀx) / Σⱼ exp(wⱼᵀx). One weight vector per class. The loss is categorical cross-entropy: -Σᵢ Σₖ y_{ik} log P(y=k|xᵢ,W). Softmax regression is the output layer of every neural network classification head.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Why does logistic regression output probabilities rather than just 0/1 labels?" — Because the model is P(y=1|x) under the Bernoulli distribution. The sigmoid maps the real-valued linear score to a valid probability. This allows uncertainty quantification and calibration.</p>
+<p>"What is the decision boundary of logistic regression? What shape is it?" — The decision boundary is where P(y=1|x) = 0.5, i.e., σ(wᵀx) = 0.5, i.e., wᵀx = 0. This is a hyperplane — logistic regression is a linear classifier. It can separate linearly separable data only. For non-linear boundaries, use feature engineering (polynomial features) or a nonlinear model.</p>
+<p>"Why does logistic regression with L2 regularisation never have exactly zero weights, but L1 does?" — L2 penalty λw_j²: gradient is λw_j, which is smooth and approaches zero as w_j→0 but never becomes exactly zero. L1 penalty λ|w_j|: the subgradient at w_j=0 is the interval [-λ,λ], which includes zero — if the loss gradient is small enough, the optimizer can stay at w_j=0.</p>
+<p>"You have a 1:100 positive-to-negative class imbalance. How does this affect logistic regression training and inference?" — The model is pushed toward predicting the majority class. Solutions: reweight the loss by class frequency (positive class weight = 100x), oversample positives (SMOTE), undersample negatives, or lower the classification threshold below 0.5 at inference time. The log-likelihood gradient is dominated by the majority class without reweighting.</p>
+<p><strong>Try on Colab:</strong> implement logistic regression from scratch using only NumPy. Use gradient descent with learning rate schedule and L2 regularisation. Train on the Breast Cancer Wisconsin dataset. Plot the training loss curve and verify it matches sklearn.LogisticRegression with the same regularisation. Then implement Newton's method (IRLS) and compare convergence speed (iterations to reach 1e-6 gradient norm).</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=logistic-regression-from-scratch-mle-glm#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

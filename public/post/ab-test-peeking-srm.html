@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Two Silent Killers of A/B Tests: Peeking and SRM — ML Systems Lab</title>
+  <meta name="description" content="Most A/B testing failures aren&#39;t statistical errors — they&#39;re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of …" />
+  <meta name="keywords" content="A/B Testing, Experimentation, SRM, Peeking, Statistical Validity, Data Science, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ab-test-peeking-srm.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ab-test-peeking-srm.html" />
+  <meta property="og:title" content="The Two Silent Killers of A/B Tests: Peeking and SRM" />
+  <meta property="og:description" content="Most A/B testing failures aren&#39;t statistical errors — they&#39;re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Two Silent Killers of A/B Tests: Peeking and SRM" />
+  <meta name="twitter:description" content="Most A/B testing failures aren&#39;t statistical errors — they&#39;re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The Two Silent Killers of A/B Tests: Peeking and SRM",
+  "description": "Most A/B testing failures aren't statistical errors — they're procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ab-test-peeking-srm.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "A/B Testing, Experimentation, SRM, Peeking, Statistical Validity, Data Science"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-peeking-srm#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>The Two Silent Killers of A/B Tests: Peeking and SRM</h1>
+    <p class="excerpt">Most A/B testing failures aren&#39;t statistical errors — they&#39;re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of 50/50, making all your metrics untrustworthy. Both are invisible in dashboards. Both corrupt your decision-making. Both are preventable.</p>
+    <p>A/B tests are the gold standard for validating product decisions. They\'re also fragile. Two failure modes account for the majority of false positives and invalid experiments: peeking and Sample Ratio Mismatch (SRM). Both produce convincing-looking results that are actually noise.</p>
+<h2>Failure mode 1: Peeking</h2>
+<p>Peeking is checking your experiment results before the planned end date, and potentially stopping early if the p-value crosses 0.05.</p>
+<p>The statistical problem: p-values are not stable over time. If you run 1,000 A/A tests (identical treatment and control) and check them daily for 14 days, roughly 30% will cross p < 0.05 at some point — even with no real effect. The standard p < 0.05 threshold assumes you test once, at the planned end date.</p>
+<p>Each additional peek is an independent hypothesis test. Your false positive rate inflates from 5% to 20–30% depending on how often you check and how long you run the experiment.</p>
+<p>Production signal: you ship a "winner" that seemed significant at day 8. By day 21 (if you hadn't stopped early), the effect would have regressed toward zero and been non-significant. The "winner" was noise.</p>
+<p>Why everyone peeks anyway: experiment dashboards update in real-time. PMs refresh them daily. Someone sees a metric moving in the right direction and the pressure to ship becomes intense.</p>
+<h2>Fixes for peeking:</h2>
+<p>Sequential testing (always-valid inference): methods like mSPRT (Uber), CUPED (Microsoft), or mixture sequential probability ratio tests allow continuous monitoring while maintaining the correct false positive rate. Statsig and Optimizely both offer always-valid p-values by default.</p>
+<p>Pre-registration: write down your sample size, primary metric, and end date before the experiment starts. Lock the dashboard for interim results. P-value visible only after the pre-registered duration. This is less sophisticated than sequential testing but surprisingly effective.</p>
+<p>Bonferroni correction as a blunt tool: if you peek N times, set your p-value threshold to 0.05/N. This overcorrects but prevents false positives. For 14 daily peeks, set your threshold to 0.05/14 ≈ 0.004.</p>
+<h2>Failure mode 2: Sample Ratio Mismatch (SRM)</h2>
+<p>SRM is when the ratio of users assigned to treatment and control doesn't match the intended ratio. You randomise 50/50, but the treatment group ends up with 47% of traffic. The 3% difference seems small. It isn't.</p>
+<p>An SRM means something is wrong with your randomisation or traffic routing. And that something has differential effects on treatment and control groups. The users missing from one group have systematic properties — they're from a specific device type, browser version, geographic region, or time window where an error occurred. Your control and treatment groups are no longer comparable populations.</p>
+<p>When an SRM exists, all your metric comparisons are invalid. Not noisy — invalid. You cannot trust any metric showing a difference.</p>
+<p>Production signal: you find a 3% SRM in post-analysis. You ship the experiment anyway, thinking "3% is small." Six months later, in a meta-analysis of similar experiments, you notice that every experiment with SRM showed inflated lift — false positives at roughly 50% rate.</p>
+<h2>How to detect SRM:</h2>
+<p>Chi-squared test on assignment counts: \`\`\` from scipy.stats import chisquare chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2]) \`\`\`</p>
+<p>If p-value < 0.01, you have an SRM. Run this check automatically the moment your experiment starts, not after it ends.</p>
+<p>Common SRM causes: bot traffic filtered differently in treatment vs control, JavaScript errors preventing logging in one variant, different caching behaviour, geographic load balancing sending disproportionate traffic, or randomisation happening after the first meaningful user action (so some users are bucketed differently than intended).</p>
+<h2>Bonus failure mode: the novelty effect</h2>
+<p>A variant that's new generates engagement purely because it's novel, not because it's better. This shows up as a spike in week 1 that regresses toward control in weeks 2–3.</p>
+<p>Fix: run experiments for at least 2 full novelty cycles. For products with weekly engagement patterns, that's 2 weeks minimum. For features used infrequently (monthly), 6–8 weeks.</p>
+<h2>The mandatory check sequence:</h2>
+<p>1. Before you look at anything: run the SRM check. If p < 0.01, stop analysis. Fix the randomisation and rerun.</p>
+<p>2. Next: verify your experiment ran for the full pre-registered duration. If it didn't, and someone wants to stop early, use sequential testing results — not naive p-values.</p>
+<p>3. Then: look at your primary metric. It's only trustworthy if the SRM check passed and you ran for the full duration.</p>
+<h2>Practice this in Experimentation frameworks to understand how to design bulletproof A/B tests and catch these failure modes before they corrupt your decisions.</h2>
+<p>\`\`\`python from scipy.stats import chi2_contingency, norm import numpy as np</p>
+<p>def pre_analysis_checklist(control_n, treatment_n, target_split=0.5, observed_metric=None, alpha=0.05): """Run this BEFORE looking at your primary metric. Always.""" results = {}</p>
+<p># 1. SRM check — chi-squared on traffic split total = control_n + treatment_n expected_c = total * target_split expected_t = total * (1 - target_split) chi2, srm_p, *_ = chi2_contingency([[control_n, treatment_n], [expected_c, expected_t]]) results['srm_p']     = round(srm_p, 4) results['srm_pass']  = srm_p >= 0.01   # fail → stop, do not analyse primary metric</p>
+<p># 2. Minimum detectable effect check if observed_metric is not None: se  = np.sqrt(observed_metric * (1 - observed_metric) * (1/control_n + 1/treatment_n)) mde = norm.ppf(1 - alpha/2) * se * 2 results['mde_pct'] = round(mde * 100, 2)</p>
+<p>return results</p>
+<p># Never peek at conversion rate before running this first \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ab-test-peeking-srm#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

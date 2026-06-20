@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles — ML Systems Lab</title>
+  <meta name="description" content="Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures…" />
+  <meta name="keywords" content="Models &amp; Math, Evaluation Metrics, Precision, Recall, AUC-ROC, AUC-PR, F1, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/evaluation-metrics-precision-recall-auc-roc-pr.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/evaluation-metrics-precision-recall-auc-roc-pr.html" />
+  <meta property="og:title" content="Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles" />
+  <meta property="og:description" content="Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles" />
+  <meta name="twitter:description" content="Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles",
+  "description": "Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/evaluation-metrics-precision-recall-auc-roc-pr.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Evaluation Metrics, Precision, Recall, AUC-ROC, AUC-PR, F1, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=evaluation-metrics-precision-recall-auc-roc-pr#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Evaluation Metrics: Precision, Recall, AUC-ROC, and AUC-PR From First Principles</h1>
+    <p class="excerpt">Accuracy is almost never the right metric. Understanding which metric to use — and why — requires understanding the confusion matrix, the precision-recall trade-off, and what AUC-ROC actually measures geometrically (a probability, not just an area). This post builds every classification metric from the confusion matrix up.</p>
+    <p>Choosing the wrong evaluation metric is one of the most common production ML mistakes. A fraud detection model with 99.9% accuracy that predicts "not fraud" for every transaction is useless — but optimising accuracy would rate it highly. The right metric depends on the cost structure of your specific problem.</p>
+<h2>The confusion matrix</h2>
+<p>Binary classification with a threshold τ: predict positive if P(y=1|x) ≥ τ. For each test sample, one of four outcomes: True Positive (TP): predicted positive, actually positive. False Positive (FP): predicted positive, actually negative. Type I error. False Negative (FN): predicted negative, actually positive. Type II error. True Negative (TN): predicted negative, actually negative. The confusion matrix arranges these as a 2×2 grid. From these four numbers, every classification metric is derived.</p>
+<h2>The basic metrics</h2>
+<p>Accuracy = (TP + TN) / (TP + FP + FN + TN). Fraction correctly classified. Fails catastrophically with class imbalance. Precision = TP / (TP + FP). Of all predicted positives, what fraction are truly positive? Also called Positive Predictive Value (PPV). Measures: when the model raises an alarm, how often is it right? Recall = TP / (TP + FN). Of all true positives, what fraction did the model catch? Also called Sensitivity or True Positive Rate (TPR). Measures: what fraction of the real positives did we find? Specificity = TN / (TN + FP). Of all true negatives, what fraction did the model correctly label? = 1 - FPR. False Positive Rate = FP / (FP + TN). Fraction of negatives incorrectly labeled as positives.</p>
+<h2>The precision-recall trade-off</h2>
+<p>Precision and recall trade off against each other as you change the classification threshold τ. Raise τ: model predicts positive only when very confident → fewer false positives → higher precision, lower recall. Lower τ: model predicts positive more aggressively → catches more true positives → higher recall, more false positives → lower precision. There is no universally correct threshold — it depends on the costs. For fraud detection: false negatives (missed fraud) are expensive → lower threshold, higher recall. For medical screening follow-up (expensive test): false positives (unnecessary procedures) are costly → higher threshold, higher precision.</p>
+<h2>F1 score: the harmonic mean of precision and recall</h2>
+<p>F1 = 2 × (Precision × Recall) / (Precision + Recall) = 2TP / (2TP + FP + FN). Why harmonic mean, not arithmetic? The harmonic mean is dominated by whichever term is smaller. A model with precision=1.0 and recall=0.01 has arithmetic mean = 0.505 (looks decent) but harmonic mean = 0.02 (correctly reflects that the model misses 99% of positives). F1 penalises extreme imbalances between precision and recall. Fβ generalises F1: Fβ = (1+β²) × P × R / (β²P + R). β > 1 weights recall more (catching cases matters more); β < 1 weights precision more.</p>
+<h2>ROC curve and AUC-ROC</h2>
+<p>The ROC (Receiver Operating Characteristic) curve plots TPR (recall) vs FPR as the threshold τ varies from 1 to 0. Every point on the curve corresponds to one threshold value. AUC-ROC is the area under this curve, ranging from 0.5 (random classifier, diagonal line) to 1.0 (perfect classifier). Probabilistic interpretation: AUC-ROC = P(score(positive) > score(negative)) for a randomly drawn positive-negative pair. A model with AUC = 0.85 ranks a random positive above a random negative 85% of the time. This interpretation is threshold-free — AUC measures the quality of the ranking, not a specific threshold decision. AUC-ROC is insensitive to class imbalance: because FPR divides by total negatives and TPR divides by total positives, a large number of negatives doesn't inflate either axis. Failure case: when the positive class is very rare, FPR stays tiny even with many false positives — the curve looks optimistic.</p>
+<h2>Precision-Recall curve and AUC-PR</h2>
+<p>The PR curve plots precision vs recall as τ varies. AUC-PR (area under the PR curve) is more informative than AUC-ROC when the positive class is rare (< 5% prevalence). At low recall (high threshold): precision ≈ 1 (only very confident positives predicted). As recall increases, more true positives are caught but precision generally falls. A random classifier on a 1:99 imbalanced dataset has AUC-ROC ≈ 0.5 but AUC-PR ≈ 0.01 (only 1% of random predictions would be correct). This starkly shows PR's sensitivity to imbalance. Use AUC-PR for: fraud detection, rare disease detection, spam filtering — any case where the positive class is rare and false positives and false negatives both matter.</p>
+<h2>Multi-class metrics</h2>
+<p>Macro average: compute the metric for each class, then average equally across classes. Treats all classes equally regardless of support. Micro average: aggregate TP, FP, FN across all classes first, then compute. Gives larger classes more influence. Weighted average: weight each class's metric by its support (number of true instances). Appropriate when you want accuracy-weighted performance. For imbalanced multi-class problems: use macro F1 to equally weight minority classes.</p>
+<h2>Interview questions on this topic</h2>
+<p>"When would you prefer AUC-PR over AUC-ROC?" — When the positive class is rare (< 5%). AUC-ROC can be high (0.9+) even for models that perform poorly on the positive class, because the denominator of FPR (total negatives) is large — a large number of false positives is still a small fraction. AUC-PR directly measures how well the model performs on the positive class.</p>
+<p>"Your model has high recall but low precision. What does this mean and when is it acceptable?" — The model catches most true positives but also raises many false alarms. Acceptable when the cost of a false negative (missing a true positive) greatly exceeds the cost of a false positive. Example: cancer screening — missing a cancer is far worse than a follow-up test. Not acceptable when false positives are costly: spam filtering (too many legitimate emails marked as spam damages trust).</p>
+<p>"Explain AUC-ROC as a probability." — AUC-ROC = P(model scores a randomly drawn positive sample higher than a randomly drawn negative sample). A model with AUC = 0.75 correctly orders 75% of positive-negative pairs. This interpretation comes from the equivalence between the ROC AUC and the Wilcoxon-Mann-Whitney statistic.</p>
+<p>"You have 95% negatives and 5% positives. Your model has 98% accuracy. Is this good?" — No. A model that always predicts negative achieves 95% accuracy. The 98% accuracy model may only be marginally better. Check recall on the positive class — if it is near zero, the model is useless for the minority class. Use AUC-PR or F1 on the positive class as the primary metric.</p>
+<p><strong>Try on Colab:</strong> use the Credit Card Fraud dataset (Kaggle) — 0.17% positive rate. Train a logistic regression. Compute AUC-ROC and AUC-PR. Plot both curves. Then plot the precision-recall curve for threshold values from 0.01 to 0.99 and identify the threshold that maximises F1. Compare: does AUC-ROC overstate model quality relative to AUC-PR?</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=evaluation-metrics-precision-recall-auc-roc-pr#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

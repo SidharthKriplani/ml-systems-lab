@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Price Elasticity and Demand Modeling: What Every DS Needs to Know — ML Systems Lab</title>
+  <meta name="description" content="Price elasticity of demand measures how much quantity demanded changes when price changes. It is one of the most economically important quantities a data scientist can estimate — and one of the most d…" />
+  <meta name="keywords" content="Data Science, Pricing, Demand Modeling, Price Elasticity, Causal Inference, Revenue, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/price-elasticity-demand-modeling-dynamic-pricing.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/price-elasticity-demand-modeling-dynamic-pricing.html" />
+  <meta property="og:title" content="Price Elasticity and Demand Modeling: What Every DS Needs to Know" />
+  <meta property="og:description" content="Price elasticity of demand measures how much quantity demanded changes when price changes. It is one of the most economically important quantities a data scientist can estimate — and one of the most d…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Price Elasticity and Demand Modeling: What Every DS Needs to Know" />
+  <meta name="twitter:description" content="Price elasticity of demand measures how much quantity demanded changes when price changes. It is one of the most economically important quantities a data scientist can estimate — and one of the most d…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Price Elasticity and Demand Modeling: What Every DS Needs to Know",
+  "description": "Price elasticity of demand measures how much quantity demanded changes when price changes. It is one of the most economically important quantities a data scientist can estimate — and one of the most d…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/price-elasticity-demand-modeling-dynamic-pricing.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Data Science, Pricing, Demand Modeling, Price Elasticity, Causal Inference, Revenue"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=price-elasticity-demand-modeling-dynamic-pricing#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Price Elasticity and Demand Modeling: What Every DS Needs to Know</h1>
+    <p class="excerpt">Price elasticity of demand measures how much quantity demanded changes when price changes. It is one of the most economically important quantities a data scientist can estimate — and one of the most dangerous to estimate naively. Endogeneity, selection bias, and confounding make the observational estimate unreliable. This is how pricing teams at Uber, Airbnb, and Amazon actually model demand.</p>
+    <p>Pricing decisions at scale require knowing the demand curve: how does the quantity sold change as a function of price? A model of this relationship lets you optimise revenue (price * quantity), find price-sensitive customer segments, and predict the impact of a price change before rolling it out. The challenge: estimating this curve from observational data is statistically harder than it looks.</p>
+<h2>Price elasticity of demand</h2>
+<p>Price elasticity (ε) = (% change in quantity) / (% change in price) = (dQ/Q) / (dP/P) = (dQ/dP) * (P/Q). For normal goods, ε < 0 — higher prices reduce demand. Elastic demand: |ε| > 1 — a 1% price increase causes more than 1% reduction in quantity. Inelastic demand: |ε| < 1 — demand barely responds to price. Revenue-optimal pricing: R = P * Q(P), dR/dP = Q + P * dQ/dP = Q(1 + 1/ε) = 0 → ε = -1. Revenue is maximised where elasticity equals -1.</p>
+<h2>The endogeneity problem: why naïve OLS fails</h2>
+<p>You have historical data on prices and quantities. You run log(Q) ~ log(P) and get a coefficient. Is this the elasticity? Almost certainly not. Prices are not set randomly — they respond to demand. When demand is high (summer, events, holidays), prices rise. When demand is low, prices fall. This positive correlation between price and demand in the data makes the estimated price coefficient less negative than the true elasticity. Your model says demand is inelastic (ε = -0.3) when it might actually be elastic (ε = -1.5). Acting on the naïve estimate leads to mispriced products.</p>
+<p>The problem is endogeneity: the explanatory variable (price) is correlated with the error term (unmeasured demand shocks). OLS is biased and inconsistent.</p>
+<h2>Instrumental variables: the standard fix</h2>
+<p>An instrument Z is a variable that: (1) is correlated with price (relevance), (2) affects demand only through price, not directly (exclusion restriction). Valid instruments for price: input cost shocks (fuel prices for airlines, wheat prices for bread), competitor prices in other markets, algorithmic price changes from a rule-based system. Two-stage least squares (2SLS): stage 1, regress price on the instrument (P ~ Z); stage 2, regress quantity on predicted prices (Q ~ P_hat). The predicted prices are uncorrelated with demand shocks, giving an unbiased elasticity estimate.</p>
+<h2>Demand modeling with ML</h2>
+<p>Beyond elasticity, you want a full demand model Q = f(P, X) where X includes product features, customer segment, time-of-day, day-of-week, competitor prices, and weather. Gradient boosted trees or neural networks can capture complex interactions. The endogeneity problem persists — include as many confounders in X as possible to reduce omitted variable bias. Price experiments (randomised price tests) are the gold standard: randomly assign prices and measure outcomes. The A/B test directly identifies the causal price effect.</p>
+<h2>Dynamic pricing: optimising revenue in real time</h2>
+<p>Dynamic pricing sets prices adaptively based on current demand signals. Airlines: prices rise as the departure date approaches and seats fill. Ride-hailing (Uber, Lyft): surge pricing when supply (drivers) is low relative to demand (riders). Retail (Amazon): prices change multiple times per day based on competitor prices and inventory levels.</p>
+<p>The optimisation: given a demand model Q(P, X_t) and current context X_t, find P* = argmax P * Q(P, X_t) subject to constraints (price floors, competitor parity, fairness considerations). For linear demand: Q = a - b*P → P* = (a + b*cost) / (2b), the midpoint between the maximum willingness to pay and marginal cost.</p>
+<h2>Psychological price points and discrete demand</h2>
+<p>Demand is not a smooth function of price. Demand often drops sharply at certain price thresholds ($9.99 → $10.00 dramatically different). Bundle pricing, tiered pricing, and freemium structures create discontinuities that linear demand models miss. Modelling these requires: segmented demand curves by price tier, discrete choice models (logistic regression over {buy, not buy} as a function of price relative to the customer's reference price), and willingness-to-pay distributions estimated from conjoint analysis.</p>
+<p><strong>Try on Colab:</strong> generate synthetic demand data with known elasticity ε = -1.2, but where prices are set higher during high-demand periods (introducing endogeneity). Estimate elasticity naïvely with OLS — observe the upward bias (ε closer to 0 than -1.2). Then generate an instrument (random cost shock), run 2SLS, and recover the true elasticity. This is the core causal identification exercise for pricing teams.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=price-elasticity-demand-modeling-dynamic-pricing#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide — ML Systems Lab</title>
+  <meta name="description" content="The most common time series mistake isn&#39;t using the wrong model — it&#39;s using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover th…" />
+  <meta name="keywords" content="Time Series, ARIMA, Prophet, LSTM, Forecasting, Model Selection, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/time-series-model-selection.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/time-series-model-selection.html" />
+  <meta property="og:title" content="When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide" />
+  <meta property="og:description" content="The most common time series mistake isn&#39;t using the wrong model — it&#39;s using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover th…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Time Series" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide" />
+  <meta name="twitter:description" content="The most common time series mistake isn&#39;t using the wrong model — it&#39;s using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover th…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide",
+  "description": "The most common time series mistake isn't using the wrong model — it's using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover th…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/time-series-model-selection.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Time Series, ARIMA, Prophet, LSTM, Forecasting, Model Selection"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=time-series-model-selection#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Time Series &middot; ML Systems Lab</div>
+    <h1>When ARIMA Fails, When Prophet Fails, When LSTMs Fail: A Time Series Model Selection Guide</h1>
+    <p class="excerpt">The most common time series mistake isn&#39;t using the wrong model — it&#39;s using any model before understanding the data. ARIMA, Prophet, and LSTMs each have specific failure modes. Most teams discover these failure modes in production, after the model is deployed, when a forecast catastrophically misses. Here&#39;s the framework that prevents that.</p>
+    <p>Time series model selection is backwards in most teams: pick the model first, tune it, evaluate it, deploy it. The correct order is the reverse: understand the data properties first, then select the model that fits those properties.</p>
+<p>ARIMA, Prophet, and LSTMs are not interchangeable tools. Each assumes a different data generating process. When the data violates those assumptions, the model fails — often silently.</p>
+<h2>When ARIMA fails</h2>
+<p>ARIMA (AutoRegressive Integrated Moving Average) assumes: 1. The series is stationary after d differences 2. The autocorrelation structure is well-approximated by p AR terms and q MA terms 3. The errors are normally distributed</p>
+<p>ARIMA fails when: the series has multiple seasonal periods (daily + weekly + yearly), when the relationship between lags is nonlinear, when there are structural breaks (a permanent level shift), or when you have too few data points to reliably estimate p, d, and q.</p>
+<p>The diagnostic: if your ACF/PACF plots don\'t show clear cutoffs, ARIMA is misspecified. If your Ljung-Box test rejects (residuals are not white noise), you have unexplained structure.</p>
+<p>ARIMA is still the right choice for: short univariate series (< 500 observations) with clear linear autocorrelation structure, no strong seasonality, and stable variance. It\'s interpretable, fast to train, and has well-understood uncertainty quantification.</p>
+<h2>When Prophet fails</h2>
+<p>Prophet (Facebook/Meta) decomposes the series into trend + seasonality + holidays. It uses a piecewise linear (or logistic) trend with automatic changepoint detection, and Fourier series for seasonality.</p>
+<p>Prophet fails when: the series has complex interacting seasonality that isn\'t additive, when the trend is non-monotonic in a way that doesn\'t fit piecewise linear assumptions, when the series has long-range dependencies beyond the seasonality components, or when you need well-calibrated prediction intervals (Prophet\'s uncertainty intervals are often too wide or too narrow in practice).</p>
+<p>The common mistake: using Prophet because it\'s easy to use. The default parameters (25 changepoints, additive seasonality) are not universally appropriate. A series with strong multiplicative seasonality (where seasonal amplitude scales with the trend level) needs \`seasonality_mode='multiplicative'\`. A series with few changepoints needs \`n_changepoints=5\`.</p>
+<p>Prophet is the right choice for: business time series with strong weekly and annual seasonality, known holidays, and a monotonic trend. Retail, web traffic, and appointment volumes are good fits. Sub-daily series are not.</p>
+<h2>When LSTMs fail</h2>
+<p>LSTMs are the choice when you want the model to learn complex nonlinear temporal dependencies from the data, without specifying a functional form. They can theoretically model anything.</p>
+<p>In practice, LSTMs fail on time series for specific reasons:</p>
+<p>1. <strong>Data volume:</strong> An LSTM needs thousands of complete seasonality cycles to learn seasonal patterns. If you have 2 years of daily data (730 observations), an LSTM will overfit to noise rather than learn the annual cycle.</p>
+<p>2. <strong>Stationarity:</strong> LSTMs learn from sequences. If the series has trend or non-stationarity, the training and test distributions are different by construction. You must detrend and difference before training, then un-transform predictions.</p>
+<p>3. <strong>Uncertainty quantification:</strong> A standard LSTM produces a point forecast. Prediction intervals require Monte Carlo Dropout, deep ensembles, or conformal prediction wrapping — none of which are trivial to implement correctly.</p>
+<p>4. <strong>Hyperparameter sensitivity:</strong> LSTM performance is highly sensitive to sequence length, hidden units, learning rate schedule, and dropout rate. Random search over this space with a small dataset produces misleading results.</p>
+<p>LSTMs are the right choice when: you have thousands of related time series (demand forecasting across 10,000 SKUs — train one model across all), your series have complex nonlinear dependencies that domain knowledge suggests exist, and you have the data volume to support the model complexity.</p>
+<h2>The framework: data-first model selection</h2>
+<p>Before touching any model:</p>
+<p>1. <strong>Plot the series.</strong> Trend? Seasonality? Structural breaks? Outliers? This takes 5 minutes and eliminates half your candidate models. 2. <strong>Test stationarity.</strong> ADF test. If non-stationary, difference until it is. The number of differences required is the d in ARIMA. 3. <strong>Count observations.</strong> < 200 → ARIMA or exponential smoothing. 200–2000 → Prophet or SARIMA. > 2000 with multiple series → consider neural methods. 4. <strong>Characterise seasonality.</strong> Single period, regular → Prophet. Multiple overlapping periods → Fourier terms. No clear pattern → ARIMA with no seasonal component, then test. 5. <strong>Check for structural breaks.</strong> Chow test or visual inspection. If breaks exist, either exclude pre-break data or add a regressor at the break point.</p>
+<p>Then — and only then — select the model. Fit it. Check residuals for white noise (Ljung-Box). If residuals have structure, your model hasn\'t captured all the signal.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=time-series-model-selection#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

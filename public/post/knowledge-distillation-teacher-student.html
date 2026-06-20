@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Distillation: Why a Small Model Can Learn More from a Big Model Than from Data — ML Systems Lab</title>
+  <meta name="description" content="A small model trained on soft teacher probabilities learns more than the same model trained on hard labels. This is counterintuitive — the teacher is not giving the student new information it could no…" />
+  <meta name="keywords" content="Deep Learning, Knowledge Distillation, Model Compression, Teacher-Student, Soft Labels, LLM, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/knowledge-distillation-teacher-student.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/knowledge-distillation-teacher-student.html" />
+  <meta property="og:title" content="Knowledge Distillation: Why a Small Model Can Learn More from a Big Model Than from Data" />
+  <meta property="og:description" content="A small model trained on soft teacher probabilities learns more than the same model trained on hard labels. This is counterintuitive — the teacher is not giving the student new information it could no…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Knowledge Distillation: Why a Small Model Can Learn More from a Big Model Than from Data" />
+  <meta name="twitter:description" content="A small model trained on soft teacher probabilities learns more than the same model trained on hard labels. This is counterintuitive — the teacher is not giving the student new information it could no…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Knowledge Distillation: Why a Small Model Can Learn More from a Big Model Than from Data",
+  "description": "A small model trained on soft teacher probabilities learns more than the same model trained on hard labels. This is counterintuitive — the teacher is not giving the student new information it could no…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/knowledge-distillation-teacher-student.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Knowledge Distillation, Model Compression, Teacher-Student, Soft Labels, LLM"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=knowledge-distillation-teacher-student#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Knowledge Distillation: Why a Small Model Can Learn More from a Big Model Than from Data</h1>
+    <p class="excerpt">A small model trained on soft teacher probabilities learns more than the same model trained on hard labels. This is counterintuitive — the teacher is not giving the student new information it could not access from the original data. But soft probabilities carry a richer signal: they encode the teacher&#39;s uncertainty and the relationships between classes. Hinton&#39;s 2015 paper made this precise and spawned an entire subfield of model compression.</p>
+    <p>A large neural network trained to high accuracy encodes more than the final class predictions. Its output probabilities — even for wrong classes — carry information about how similar the classes are. A cat image might get 0.75 probability for "cat," 0.20 for "tiger," 0.04 for "leopard," and 0.001 for "truck." The distribution over wrong classes reveals that the model has learned that cats are more similar to tigers than to trucks. A small student model trained on these soft labels learns this relational structure — information that is simply absent from the hard label "cat=1, everything else=0."</p>
+<h2>The knowledge distillation objective</h2>
+<p>Hinton et al. (2015) proposed training a student model on a combination of the hard labels and the teacher's soft predictions: L = α * L_hard(y, σ(z_s)) + (1-α) * L_soft(σ(z_t/T), σ(z_s/T)). σ is softmax, z_s and z_t are student and teacher logits, T is temperature, and α balances the two terms. The soft loss uses a higher temperature T to soften both the teacher and student distributions — making the small probabilities on wrong classes more meaningful. At inference, temperature is set back to 1.</p>
+<h2>Why soft targets help: the dark knowledge explanation</h2>
+<p>The teacher's soft predictions encode what Hinton called "dark knowledge" — information about the similarity structure between classes that is not present in hard labels. Consider two student models: one trained on 60,000 MNIST hard labels, one trained on those same labels plus the teacher's soft probabilities. The soft-label model typically outperforms the hard-label model even though both have access to the same images and ground-truth labels. The difference is the dark knowledge: the teacher has learned that 4s look like 9s, that 1s can look like 7s, that 3s sometimes look like 8s. This learned similarity structure speeds up the student's learning.</p>
+<h2>Intermediate layer matching: deeper distillation</h2>
+<p>Beyond output probabilities, the student can learn from the teacher's internal representations. FitNets (Romero et al., 2015) trains the student to match the intermediate feature maps of the teacher, not just the final outputs. Attention transfer (Zagoruyko & Komodakis, 2017) matches attention maps — where in the image the teacher focuses. These methods transfer more of the teacher's learned representation and typically outperform output-only distillation.</p>
+<h2>Data-free distillation</h2>
+<p>Standard distillation requires the training data to query the teacher. For proprietary models or when training data is unavailable, data-free distillation generates synthetic inputs that maximise the teacher's response diversity (similar to Deep Inversion / dream training). The student trains on these generated examples with the teacher's soft labels. Performance is lower than data-based distillation but enables compression without data access.</p>
+<h2>Self-distillation and born-again networks</h2>
+<p>You can distil a model into a copy of itself. Born-again networks (BAN) train a student with the same architecture as the teacher, using the teacher's soft outputs. Surprisingly, the student matches or exceeds the teacher. This is explained by the soft targets reducing overfitting: the student sees a smoother loss surface than the hard-label teacher and finds a better generalising minimum. Repeating this process (BAN1 → BAN2 → BAN3) continues to improve performance for several generations.</p>
+<h2>Distillation in practice: LLMs</h2>
+<p>Most deployed LLMs are distilled from larger models. OpenAI distilled GPT-3.5 (text-davinci-003) into smaller, faster models. Google's PaLM 2 variants (Gecko, Otter, Bison) are distilled from the full model. Alpaca fine-tuned LLaMA-7B on outputs from GPT-3.5 (text-davinci-003), achieving instruction-following comparable to the much larger teacher. This SOTA-distillation-from-API approach is now standard in the open-source LLM community: generate diverse (prompt, response) pairs from a capable teacher, fine-tune a smaller student on them. The student learns the teacher's style and instruction-following behaviour without the teacher's parameter count.</p>
+<p><strong>Try on Colab:</strong> train ResNet-110 (teacher) on CIFAR-10 to ~93% accuracy. Distil it into ResNet-20 (student) using: (a) hard labels only, (b) soft teacher labels (T=4, α=0.1). Compare final test accuracy for both student variants. The distilled student should outperform the non-distilled student by 0.5-1.5% despite seeing the same training data.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=knowledge-distillation-teacher-student#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

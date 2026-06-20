@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test — ML Systems Lab</title>
+  <meta name="description" content="CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces…" />
+  <meta name="keywords" content="Causal Inference, A/B Testing, CUPED, Variance Reduction, Experimentation, Statistics, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/cuped-variance-reduction-failures.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/cuped-variance-reduction-failures.html" />
+  <meta property="og:title" content="When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test" />
+  <meta property="og:description" content="CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Causal Inference" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test" />
+  <meta name="twitter:description" content="CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test",
+  "description": "CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/cuped-variance-reduction-failures.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Causal Inference, A/B Testing, CUPED, Variance Reduction, Experimentation, Statistics"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-failures#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Causal Inference &middot; ML Systems Lab</div>
+    <h1>When CUPED Goes Wrong: The Three Ways Variance Reduction Breaks Your A/B Test</h1>
+    <p class="excerpt">CUPED (Controlled-experiment Using Pre-Experiment Data) is the most widely deployed variance reduction technique in tech A/B testing — used by Booking.com, Microsoft, Netflix, and LinkedIn. It reduces required sample size by 50–80%. It also silently breaks your test in three specific ways that look like valid results.</p>
+    <h2>What CUPED Actually Does</h2>
+<p>CUPED removes variance in your outcome metric that is explained by pre-experiment user behavior. If you know a user was highly active before the experiment started, that baseline activity predicts a lot of their experiment-period activity — regardless of treatment. By controlling for that predictable variance, you reduce the noise in your treatment effect estimate, which reduces the sample size required to reach a given power level.</p>
+<p>The adjustment is: Y_adj = Y - θ(X - E[X]), where Y is the experiment-period metric, X is the pre-experiment covariate (e.g. user activity in the two weeks before the experiment), and θ = Cov(Y, X) / Var(X). This is OLS partial-out. CUPED is not a novel estimator — it is a specific application of covariate adjustment that has well-understood statistical properties and equally well-understood failure modes.</p>
+<p>The variance reduction equals 1 - Corr(Y, X)². If X explains 70% of variance in Y, CUPED reduces your required sample size by 70%. That is a real and significant benefit. It is also why failures are so costly — the technique is used precisely on high-stakes tests where sample size constraints are binding.</p>
+<h2>Failure Mode 1: Covariate Contaminated by Treatment Anticipation</h2>
+<p>If users know a treatment is coming before the experiment starts, their pre-experiment behavior shifts. A price increase announced two weeks before the experiment begins causes users to stockpile or defer purchases during the announcement window. That window is now in your pre-experiment covariate period. X is contaminated — it is correlated with treatment not because of baseline differences, but because of the announcement.</p>
+<p>CUPED amplifies this contamination rather than removing it. The θ parameter absorbs the announcement effect. The adjusted metric overcorrects for users who changed behavior in anticipation of the treatment, biasing the treatment effect estimate in the direction opposite to the announcement effect.</p>
+<p>Diagnostic: the covariate regression coefficient θ is unusually high (above 0.7), and its value changes substantially depending on which pre-experiment window you use. A stable CUPED adjustment should produce stable θ across window lengths of 1 week, 2 weeks, and 4 weeks. Volatile θ means X is capturing something that changed over the pre-experiment period — a red flag that contamination may be present.</p>
+<h2>Failure Mode 2: Non-Stationarity in the Covariate Relationship</h2>
+<p>CUPED assumes θ — the relationship between the pre-experiment covariate and the experiment-period outcome — is stable across time. If user behavior changed structurally between the pre-experiment window and the experiment period, this assumption is violated.</p>
+<p>A product redesign, a major marketing campaign, a seasonality shift, or a platform algorithm change can all break the stationarity assumption. If users who were active in the pre-experiment period are no longer active during the experiment period (because the redesign changed what the product rewards), then X is a poor predictor of Y. CUPED overcorrects — it subtracts too much from active pre-experiment users and too little from inactive ones, introducing systematic bias in the direction of the covariate shift.</p>
+<p>Diagnostic: compare the correlation between X and Y in the pre-experiment period with the correlation in the experiment period. For a clean CUPED application, these should be similar. A large divergence (e.g. Corr = 0.65 pre-experiment, Corr = 0.30 during experiment) is a sign that the covariate relationship has broken down and the adjustment is invalid.</p>
+<h2>Failure Mode 3: Covariate Computed on the Wrong Population</h2>
+<p>The covariate must be computed on the same users as the experiment, measured strictly before randomisation. Both conditions matter, and both are violated surprisingly often in data pipelines.</p>
+<p>Wrong population: if you compute X on all users rather than experiment-eligible users, you may include users with systematically different behavior patterns. The CUPED adjustment calibrated on the broader population is miscalibrated for the experiment population.</p>
+<p>Post-randomisation data: if your pipeline accidentally includes any data from after randomisation in the pre-experiment window — due to a timezone error, an off-by-one in the date boundary, or a data backfill — the covariate is contaminated with treatment effects. The adjustment will absorb part of the treatment effect into the "baseline" correction and underestimate the true effect.</p>
+<p>This failure mode is a data pipeline error, not a statistical error. It happens silently. The numbers look reasonable. The only reliable detection is: verify that the covariate mean is equal between treatment and control groups before adjustment. By randomisation, they should be equal. If they are not, the covariate was computed on data that was not cleanly pre-experiment for both groups.</p>
+<h2>How to Diagnose CUPED Failures in Practice</h2>
+<p>Three checks that take under an hour and should be standard before reporting any CUPED-adjusted result:</p>
+<p>Plot θ as a function of pre-experiment window length (1 week, 2 weeks, 4 weeks). Stable θ across window lengths is necessary (though not sufficient) for a valid CUPED adjustment. Volatile θ is a red flag.</p>
+<p>Verify covariate balance: compute the mean of X separately for treatment and control. They should be equal within sampling error. A systematic difference means the covariate was not cleanly pre-experiment.</p>
+<p>Always report both the unadjusted and CUPED-adjusted p-value. If they disagree substantially — for example, p_raw = 0.08 and p_cuped = 0.03 — investigate before concluding significance. A CUPED adjustment that moves a result from non-significant to significant should be scrutinised, not celebrated.</p>
+<h2>When Not to Use CUPED</h2>
+<p>CUPED requires a stable, clean pre-experiment period. It should not be used when the pre-experiment window is shorter than seven days (insufficient signal to estimate a reliable θ), when the product has had major structural changes between the pre-period and the experiment period, or when users are in their first week on the platform. New users have no stable baseline — their pre-experiment activity is zero or near-zero, and θ estimated on this population is unreliable.</p>
+<p>The technique is powerful precisely because it exploits user-level baseline differences. When those baselines are absent, contaminated, or non-stationary, the power gain disappears and you are left with a biased estimator that looks like a valid one.</p>
+<h2>Practice this in Causal Inference → Experiment Design Failures</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=cuped-variance-reduction-failures#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Variational Autoencoders: Why the Latent Space Has to Be a Distribution — ML Systems Lab</title>
+  <meta name="description" content="A plain autoencoder can learn to compress and reconstruct — but its latent space has holes, and interpolating between two points produces noise. The VAE fixes this by encoding distributions rather tha…" />
+  <meta name="keywords" content="Deep Learning, VAE, Generative Models, Latent Space, ELBO, Variational Inference, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/variational-autoencoders-latent-space.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/variational-autoencoders-latent-space.html" />
+  <meta property="og:title" content="Variational Autoencoders: Why the Latent Space Has to Be a Distribution" />
+  <meta property="og:description" content="A plain autoencoder can learn to compress and reconstruct — but its latent space has holes, and interpolating between two points produces noise. The VAE fixes this by encoding distributions rather tha…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Variational Autoencoders: Why the Latent Space Has to Be a Distribution" />
+  <meta name="twitter:description" content="A plain autoencoder can learn to compress and reconstruct — but its latent space has holes, and interpolating between two points produces noise. The VAE fixes this by encoding distributions rather tha…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Variational Autoencoders: Why the Latent Space Has to Be a Distribution",
+  "description": "A plain autoencoder can learn to compress and reconstruct — but its latent space has holes, and interpolating between two points produces noise. The VAE fixes this by encoding distributions rather tha…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/variational-autoencoders-latent-space.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, VAE, Generative Models, Latent Space, ELBO, Variational Inference, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=variational-autoencoders-latent-space#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Variational Autoencoders: Why the Latent Space Has to Be a Distribution</h1>
+    <p class="excerpt">A plain autoencoder can learn to compress and reconstruct — but its latent space has holes, and interpolating between two points produces noise. The VAE fixes this by encoding distributions rather than points, regularising the latent space to be smooth and continuous. The math behind this is the ELBO — Evidence Lower Bound — and understanding it makes the design choices obvious.</p>
+    <p>An autoencoder is simple: an encoder compresses input x to a latent vector z, a decoder reconstructs x from z, and training minimises reconstruction loss. The encoder and decoder are neural networks; the bottleneck forces the representation to be compact. Autoencoders work well for compression, anomaly detection, and representation learning.</p>
+<p>The problem: the latent space is not smooth. Each training example maps to a specific point z. Points between training examples in the latent space correspond to nothing the decoder has been trained on — they decode to garbage. You cannot generate new samples by sampling random points from the latent space. The space has no meaningful geometry for anything it has not memorised.</p>
+<h2>The VAE insight: encode distributions, not points</h2>
+<p>The Variational Autoencoder (Kingma & Welling, 2013) replaces the encoder's single point output with two outputs: a mean vector μ(x) and a log-variance vector log σ^2(x). These parameterise a Gaussian distribution: z ~ N(μ(x), σ^2(x)). During training, z is sampled from this distribution and decoded. The reconstruction is evaluated against the original input.</p>
+<p>This forces adjacent regions of the latent space to decode similarly. If the encoder maps a single input to a distribution rather than a point, the decoder must learn to produce good reconstructions from any sample in that distribution — which means nearby z values must produce similar outputs.</p>
+<h2>The reparameterisation trick</h2>
+<p>Sampling is not differentiable — you cannot backpropagate through a random sampling operation. The reparameterisation trick rewrites z = μ + σ * ε where ε ~ N(0, 1). ε is sampled independently; the randomness is removed from the computation graph. Gradients can now flow through μ and σ normally.</p>
+<h2>The ELBO: reconstruction + regularisation</h2>
+<p>Training a VAE maximises the Evidence Lower Bound (ELBO): ELBO = E[log p(x|z)] - KL(q(z|x) || p(z)). The first term is the reconstruction quality — how well does the decoder reproduce the input from the sampled z? The second term is the KL divergence between the encoder's distribution and the prior p(z) = N(0, 1).</p>
+<p>The KL term regularises the latent space: it penalises the encoder for learning a distribution that deviates from N(0, 1). This prevents the encoder from collapsing to very narrow distributions (equivalent to a plain autoencoder) or spreading to arbitrary shapes. The pressure toward N(0, 1) ensures the latent space is filled and continuous — random samples from N(0, 1) decode to meaningful outputs.</p>
+<h2>The tension: reconstruction vs regularisation</h2>
+<p>The two terms in the ELBO are in tension. A perfect reconstruction requires precise encoding — map each input to a tight distribution, reducing uncertainty. This pushes toward narrow distributions that violate N(0, 1). Perfect regularisation requires the encoder to map every input to exactly N(0, 1), making the encoding non-informative. Training finds the trade-off: distributions wide enough to regularise, tight enough to reconstruct.</p>
+<p>A hyperparameter β (β-VAE) scales the KL term: ELBO = E[log p(x|z)] - β * KL(q(z|x) || p(z)). Larger β enforces more disentanglement — different dimensions of z capture independent generative factors. β-VAE representations are more interpretable (one dimension controls face rotation, another controls smile) at the cost of reconstruction quality.</p>
+<h2>Generation and interpolation</h2>
+<p>Once trained, generation is simple: sample z ~ N(0, 1), pass through the decoder. Because the KL term regularises the latent space toward N(0, 1), most samples decode to plausible outputs. Interpolation between two data points x1 and x2: encode both to μ1 and μ2, interpolate z = α*μ1 + (1-α)*μ2, decode for each α. Because the latent space is smooth, interpolated points decode to smooth transitions (e.g., between two faces) rather than noise.</p>
+<h2>VAEs vs GANs vs Diffusion Models</h2>
+<p>VAEs produce blurry generations because the reconstruction loss (typically MSE or BCE) averages over possible outputs. GANs produce sharper images by training a discriminator to detect fakes, but training is unstable (mode collapse, GAN training tricks). Diffusion models produce the highest-quality images by learning to denoise across many steps, at the cost of slow sampling. VAEs are valuable less for generation quality and more for structured, interpretable latent spaces useful in downstream tasks.</p>
+<p><strong>Try on Colab:</strong> train a VAE on MNIST or CelebA. After training, take a 2D slice of the latent space (fix all dimensions except two) and decode a grid of points across that plane — you should see smooth transitions between digit shapes or facial features. Then sample 100 random points from N(0,1) and decode them — compare the output quality to a plain autoencoder trained on the same data.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=variational-autoencoders-latent-space#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

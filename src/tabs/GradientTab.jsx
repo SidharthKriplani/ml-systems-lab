@@ -8,7 +8,7 @@ import {
   FOUNDATIONS_TIERS, PATH_SEQUENCE, TOTAL_POSTS, PAL_URL,
   tierForPostId, sequenceIndexForPostId, prevPostInPath, nextPostInPath,
   readFoundationsRead, markFoundationsRead, unmarkFoundationsRead,
-  readActiveTier, writeActiveTier, tierCompletion, overallCompletion,
+  readActiveTier, writeActiveTier, tierCompletion, tierEstimatedMinutes, formatMinutes, overallCompletion,
   PATH_RELATIONS, prereqsFor, successorsFor, titleForPostId,
 } from '../data/foundationsPath.js'
 import { FOUNDATIONS_SIMPLIFY } from '../data/foundationsSimplify.js'
@@ -9428,6 +9428,205 @@ Junglee Games / MPL Senior ML Engineer in 2026 ranges roughly ₹35 lakh – ₹
     domain: 'interview',
     youtube: [],
   },
+  {
+    id: 143,
+    slug: 'paytm-senior-mle-interview-guide',
+    title: 'Paytm Senior ML Engineer Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 9,
+    featured: false,
+    excerpt: 'Paytm runs ML at UPI / wallet / lending scale — fraud detection, transaction risk, lending underwriting, and recommendation across a complex super-app. The interview emphasises production reliability and credit-decision judgment. This guide walks through the loop and prep.',
+    body: `Paytm operates one of India's largest fintech super-apps. ML systems matter across multiple business lines — fraud detection on UPI/wallet, credit underwriting for lending products, merchant recommendation, and personalisation. The interview reflects this breadth.
+
+**The loop structure (Senior ML Engineer)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design → production case → behavioural + hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Standard fundamentals with emphasis on imbalanced classification (fraud, default — both very low base rate), credit scoring metrics (KS statistic, Gini, calibration), and feature engineering for transactional data.
+
+**Round 3 — ML system design.** 60 minutes. Common prompts: design real-time fraud detection for UPI transactions, design credit underwriting for short-term lending, design a recommendation system for the super-app homepage. Paytm's super-app context means design rounds often involve "this system has to coexist with 5 other ML systems serving the same user" trade-offs.
+
+**Round 4 — Production case.** 60 minutes. Real scenario: "your fraud model started flagging legitimate elderly customers at 4× the base rate after a feature pipeline migration. Investigate." Tests bias awareness, segment-level diagnosis, and the regulatory implications (Paytm's fraud decisions interact with RBI compliance).
+
+**Round 5 — Behavioural + hiring manager.** 45 minutes.
+
+**What Paytm weights distinctively**
+
+1. **Regulatory awareness.** Paytm operates in a heavily regulated space. Senior candidates are expected to articulate how RBI compliance affects ML decisions (fair lending, explainability for credit denials, KYC validation).
+2. **Multi-LOB coordination.** Paytm has UPI, wallet, lending, merchant services. Senior MLE roles often touch multiple lines of business. Expect questions on how ML systems coexist and share signals.
+3. **Cold-start at marketplace scale.** New merchant onboarding, new users without prior transaction history, new lending products — Paytm probes cold-start handling more than most fintechs.
+
+**Top 10 questions Paytm senior MLE candidates face**
+
+1. "Design real-time fraud detection for UPI transactions at Paytm scale."
+2. "Design credit underwriting for short-term consumer lending. RBI requires you to explain every denial."
+3. "Your fraud model flags elderly users at 4× base rate after a pipeline migration. Diagnose."
+4. "How do you handle calibration for credit risk models where labels arrive 30+ days delayed?"
+5. "Walk through your most impactful fraud or lending project."
+6. "Class imbalance at 0.05% fraud base rate. Class weights vs SMOTE vs threshold moving."
+7. "Design recommendation for Paytm's homepage. What's your objective function across UPI, wallet, lending, recharge?"
+8. "How do you A/B test a credit underwriting model when the action (approve/deny) changes the population?"
+9. "Eleven types of leakage. Which apply specifically to credit underwriting?"
+10. "Explain a credit denial in regulatory-compliant terms. SHAP values are not sufficient — what do you provide?"
+
+**The prep path through MSL**
+
+For a Paytm senior MLE loop:
+
+- Tier 3 (Classical Algorithms) — Post 76 (Calibration) and Post 129 (Class Imbalance) are central.
+- Tier 5 (Evaluation & Diagnostics) — Post 130 (Leakage Taxonomy), Post 131 (Error Analysis), Post 132 (Explainability) for the regulatory denial round.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring & MLOps) — all 5 posts. Post 40 (Calibration Loss) for the production case round.
+- Tier 9 (System Design) — Post 24 (6-Step Framework).
+
+**Compensation**
+
+Paytm Senior ML Engineer in 2026 ranges roughly ₹40 lakh – ₹75 lakh for 5-7 YOE. Staff reaches ₹95 lakh+. Paytm pays competitively for fintech ML roles, though variable comp depends on business unit performance.`,
+    tags: ['Interview Prep', 'Paytm', 'Senior MLE', 'Fintech', 'UPI', 'Lending', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 144,
+    slug: 'makemytrip-senior-data-scientist-interview-guide',
+    title: 'MakeMyTrip Senior Data Scientist / ML Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'MakeMyTrip\'s senior DS / ML loop covers price prediction, demand forecasting, hotel ranking, and personalised packages. The travel domain creates unique ML challenges — high-stakes pricing, seasonal demand swings, and a multi-product (flights/hotels/packages) recommendation problem. This guide walks through the prep.',
+    body: `MakeMyTrip's ML organisation runs ML across travel — flights, hotels, packages, bus, ground transport. The interview reflects domain-specific challenges: travel pricing is volatile, demand is highly seasonal, the recommendation problem spans heterogeneous products, and the consequences of wrong predictions (over-priced flights, under-supplied hotels) are direct revenue impact.
+
+**The loop structure (Senior DS / ML, L5)**
+
+Standard loop: recruiter screen → ML fundamentals + coding → ML system design + case → A/B testing + experimentation → behavioural + hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard.
+
+**Round 2 — ML fundamentals + coding.** 60 minutes. Standard fundamentals with emphasis on time-series forecasting (demand prediction is core), pricing optimisation (revenue management), and recommendation evaluation metrics (multi-product NDCG, business outcome metrics like booking value).
+
+**Round 3 — ML system design + case.** 75 minutes. Common prompts: design hotel ranking, design dynamic pricing for flights, design package recommendation across flight+hotel combinations. The case half asks: "your hotel ranking model improved CTR by 3% but booking value dropped by 1.5%. Diagnose."
+
+**Round 4 — A/B testing + experimentation.** 60 minutes. Travel A/B testing has specific challenges: seasonal effects dominate noise, conversion is multi-step (search → click → book → travel → return), and one user's booking removes inventory affecting other users (marketplace SUTVA). Tests sophistication on these.
+
+**Round 5 — Behavioural + hiring manager.** 45 minutes.
+
+**What MakeMyTrip weights distinctively**
+
+1. **Time-series + pricing depth.** Demand forecasting and dynamic pricing are core. Senior candidates need real depth here, not just classification basics.
+2. **Multi-product recommendation.** Flights and hotels are different products with different metrics; cross-product packaging adds another dimension. Expect questions on how to unify recommendation across these.
+3. **Seasonal noise in A/B testing.** Travel demand is highly seasonal. Senior candidates are expected to articulate how to test reliably in this environment.
+
+**Top 10 questions MakeMyTrip senior DS / ML candidates face**
+
+1. "Design hotel ranking for MakeMyTrip. What's your business objective and your model objective?"
+2. "Design dynamic pricing for flights. What signals drive the price, and how do you avoid revenue cannibalisation?"
+3. "Your hotel ranking improved CTR but booking value dropped. Three hypotheses."
+4. "Demand forecasting for the IPL season. How do you handle the spike?"
+5. "Walk through the most impactful experiment you've designed and run in a seasonal-noise environment."
+6. "Design package recommendation that combines flight + hotel. What's your objective?"
+7. "How do you A/B test pricing when one user's purchase affects available inventory?"
+8. "Calibration matters more than ranking for pricing models. Defend that statement."
+9. "Cold start for a new hotel with zero reviews. How does your ranking system handle it?"
+10. "Eleven types of leakage. Which apply specifically to dynamic pricing models?"
+
+**The prep path through MSL**
+
+For a MakeMyTrip senior DS / ML loop:
+
+- Tier 1 (Statistics & Estimation) — all 4 posts.
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. Post 131 (Error Analysis) for the cohort and seasonal analysis.
+- Tier 6 (Sequence & Specialised) — Post 88 (Time Series Forecasting) is central for demand modelling.
+- Tier 9 (System Design) — Post 24 (6-Step Framework), Post 4 (Recsys Design).
+- Cross-link to PAL — MakeMyTrip's DS roles overlap significantly with product analytics.
+
+**Compensation**
+
+MakeMyTrip Senior DS / ML in 2026 ranges roughly ₹32 lakh – ₹60 lakh for 5-7 YOE. Staff reaches ₹75 lakh+. Pay is on the lower end of Indian unicorns; the work is interesting if travel is your domain.`,
+    tags: ['Interview Prep', 'MakeMyTrip', 'Travel', 'Senior Data Scientist', 'Dynamic Pricing', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
+  {
+    id: 145,
+    slug: 'cred-senior-mle-data-scientist-interview-guide',
+    title: 'CRED Senior MLE / Data Scientist Interview Guide',
+    category: 'Interview Prep',
+    catColor: { bg: 'rgba(240,165,0,0.1)', text: 'var(--prime)', border: 'rgba(240,165,0,0.2)' },
+    readMin: 8,
+    featured: false,
+    excerpt: 'CRED hires ML for credit risk, fraud, recommendation in the loyalty/rewards space, and lending. The interview emphasises depth — CRED is known for high technical bar — and specifically tests for the discipline of production-quality ML work. This guide unpacks what to expect.',
+    body: `CRED operates at the higher-end consumer space and pays attention to engineering quality in a way most Indian fintechs don't. The interview reflects this: questions are tighter, answers are graded more strictly, and "good enough" answers that pass elsewhere will fail at CRED.
+
+**The loop structure (Senior MLE / DS)**
+
+Standard loop: recruiter screen → ML fundamentals + coding (harder than most) → ML system design → production case → behavioural + hiring manager.
+
+**Round-by-round breakdown**
+
+**Round 1 — Recruiter screen.** Standard, though CRED filters more aggressively at this stage than most.
+
+**Round 2 — ML fundamentals + coding.** 75 minutes. Probably the deepest fundamentals round of any Indian unicorn. Expect: derivation of L1 vs L2 from first principles (the diamond vs sphere geometry), proper bias-variance decomposition with the math, model evaluation under specific cost asymmetries. Coding is LeetCode medium-hard with an ML-flavoured problem (efficient implementation of a recommendation similarity computation, debugging a memory-bound pipeline).
+
+**Round 3 — ML system design.** 60 minutes. Standard prompts (recommendation, fraud, credit), but probed deeper than other companies. Candidates who can articulate "why this architecture vs alternatives" tend to pass; surface-level answers fail.
+
+**Round 4 — Production case.** 60 minutes. Specific scenarios. CRED tests for systematic diagnosis discipline — observe before naming, evidence before assumption.
+
+**Round 5 — Behavioural + hiring manager.** 45 minutes. CRED culture-fit interviews are demanding; they hire for both technical depth and engineering taste.
+
+**What CRED weights distinctively**
+
+1. **Engineering quality.** CRED interviewers grade engineering taste — code readability, system design simplicity, observability. Sloppy answers fail even if technically correct.
+2. **Depth over breadth.** CRED prefers candidates with deep specialty (deep recsys experience, deep risk experience) over generalist breadth.
+3. **First-principles thinking.** Expect questions probing whether you understand WHY a technique works, not just that it does.
+
+**Top 10 questions CRED senior MLE / DS candidates face**
+
+1. "Derive the geometric intuition for why L1 produces sparsity and L2 does not. Use the constraint surface picture."
+2. "Design CRED's reward recommendation. The business goal is repeat engagement, not click."
+3. "Bias-variance decomposition formally. Now connect each term to what breaks in production."
+4. "Your fraud model's precision dropped from 0.85 to 0.62 over a week. Walk me through diagnosis."
+5. "Walk through your most impactful production ML project. What was the engineering trade-off you owned?"
+6. "Calibration vs ranking — when does each matter more, and how do you measure each correctly?"
+7. "Eleven types of leakage. Pick three that are most subtle for our specific products."
+8. "How do you measure recommendation quality beyond CTR? What about long-term outcomes?"
+9. "Design A/B testing infrastructure that survives marketplace SUTVA violations."
+10. "What's the hardest production ML debugging you've done? Walk through your reasoning, not just the answer."
+
+**The prep path through MSL**
+
+For a CRED senior loop:
+
+- Tier 0 (Observation Discipline) — Post 128. CRED specifically tests for this.
+- Tier 2 (Linear Models) — Post 112 (Regularisation Geometry). CRED asks for the derivation.
+- Tier 3 (Classical Algorithms) — Post 74 (Bias-Variance) and Post 76 (Calibration), deeply.
+- Tier 5 (Evaluation & Diagnostics) — all 7 posts. CRED probes deeper than most.
+- Tier 7 (Production Engineering) — all 5 posts.
+- Tier 8 (Monitoring & MLOps) — all 5 posts.
+
+For practice: IncidentRoom inc7-12, MLCoding mlc13-15 (Debug, Optimise, Design rounds), MockInterview with a CRED JD pasted.
+
+**Common failure modes**
+
+- Surface-level answers that pass at less-rigorous companies.
+- Recommending the trendy architecture (LLM-based recommendation, deep learning for everything) without depth justification.
+- Inability to derive standard ML results from first principles.
+- Inability to walk through a real production debugging story in detail.
+
+**Compensation**
+
+CRED Senior MLE / DS in 2026 ranges roughly ₹50 lakh – ₹85 lakh for 5-7 YOE. Staff reaches ₹1.1 crore+. CRED pays at the upper end of Indian unicorns for senior IC roles — the bar is correspondingly high.`,
+    tags: ['Interview Prep', 'CRED', 'Senior MLE', 'High-bar', 'Engineering Quality', 'Indian Tech', 'Company Guide'],
+    domain: 'interview',
+    youtube: [],
+  },
 ]
 
 const CATEGORIES = ['All', 'Feature Engineering', 'PySpark', 'Model Evaluation', 'ML System Design', 'Monitoring', 'Models & Math', 'Interview Prep', 'ML Careers', 'Data Science', 'Time Series', 'Deep Learning']
@@ -10637,6 +10836,7 @@ function FoundationsPathView({ onOpenPost, onExit, posts }) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }} title="Estimated time to complete this tier (reads + practice)">{formatMinutes(tierEstimatedMinutes(tier))}</span>
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: tierComplete ? 'var(--mint)' : 'var(--ink-low)' }}>{completion.read}/{completion.total}</span>
                   <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>

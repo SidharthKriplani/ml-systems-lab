@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calibration Loss in Production: When 95% AUC Predicts 60% Precision — ML Systems Lab</title>
+  <meta name="description" content="Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn&#39;t predict absolute precision because AUC only measures rank ordering — it doesn&#39;t care about calibrat…" />
+  <meta name="keywords" content="Calibration, Model Evaluation, Probability, AUC vs Calibration, Production ML, Reliability Diagrams, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/calibration-loss-production-auc-mismatch.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/calibration-loss-production-auc-mismatch.html" />
+  <meta property="og:title" content="Calibration Loss in Production: When 95% AUC Predicts 60% Precision" />
+  <meta property="og:description" content="Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn&#39;t predict absolute precision because AUC only measures rank ordering — it doesn&#39;t care about calibrat…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Calibration Loss in Production: When 95% AUC Predicts 60% Precision" />
+  <meta name="twitter:description" content="Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn&#39;t predict absolute precision because AUC only measures rank ordering — it doesn&#39;t care about calibrat…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Calibration Loss in Production: When 95% AUC Predicts 60% Precision",
+  "description": "Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn't predict absolute precision because AUC only measures rank ordering — it doesn't care about calibrat…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/calibration-loss-production-auc-mismatch.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Calibration, Model Evaluation, Probability, AUC vs Calibration, Production ML, Reliability Diagrams"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=calibration-loss-production-auc-mismatch#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Calibration Loss in Production: When 95% AUC Predicts 60% Precision</h1>
+    <p class="excerpt">Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn&#39;t predict absolute precision because AUC only measures rank ordering — it doesn&#39;t care about calibration. A model can have perfect AUC and completely miscalibrated probabilities. Here&#39;s what calibration actually means, why production systems need it, and how to detect and fix calibration loss before it breaks your downstream decisions.</p>
+    <p>Calibration is a property that nearly every ML engineer misunderstands. Here\'s the correct definition: a model is calibrated if, when it predicts probability p, the actual frequency of the positive outcome among those predictions is approximately p.</p>
+<p>Example: if a model predicts P(fraud) = 0.8 for 1000 transactions, and 800 of them are actually fraudulent, the model is well-calibrated. If only 200 are fraudulent, the model is vastly overconfident.</p>
+<p>AUC measures rank ordering, not calibration. A perfectly ranked model with AUC 0.99 can be completely miscalibrated — assigning probabilities 100× too high or 100× too low while maintaining perfect rank order.</p>
+<h2>Why calibration matters in production:</h2>
+<p>A fraud model with miscalibrated scores produces downstream effects:</p>
+<li>If scores are 10× too high, fraud ops spends time reviewing obviously legitimate transactions</li>
+<li>If scores are 10× too low, the model misses actual frauds because its score threshold is too conservative</li>
+<li>If scores are sometimes too high and sometimes too low (systemic miscalibration), decision rules downstream break</li>
+<h2>How calibration loss happens:</h2>
+<p>1. <strong>Class imbalance without calibration:</strong> A model trained on 1% fraud learns to output probabilities in [0.001, 0.05] — matching the base rate. If you deploy it to a segment with 10% fraud (different population), the same scores now calibrate to [0.01, 0.5]. The model has shifted segments without recalibration.</p>
+<p>2. <strong>Probability scaling mismatch:</strong> A neural network trained with sigmoid activation outputs probabilities. A tree-based model using LightGBM outputs raw scores. If you mix them in an ensemble without recalibration, the ensemble probabilities are nonsense.</p>
+<p>3. <strong>Train-test distribution shift without adjustment:</strong> A model trained on data with P(Y=1) = 0.02 learns to scale its outputs toward that base rate. Deployed to a segment with P(Y=1) = 0.15, the same scores now underestimate probability.</p>
+<p>4. <strong>Threshold calibration without probability calibration:</strong> You choose a threshold (e.g., 0.5) to maximise F1. That threshold is optimal for your training data's base rate. Deployed to a different base rate, the same threshold is suboptimal — and worse, your probability estimates are still miscalibrated.</p>
+<h2>Detection: reliability diagrams</h2>
+<p>A reliability diagram plots predicted probability vs observed frequency:</p>
+<li>Divide predictions into 10 bins by predicted probability (0–0.1, 0.1–0.2, ... 0.9–1.0)</li>
+<li>For each bin, compute the mean predicted probability and the actual positive rate</li>
+<li>Plot the two against each other</li>
+<li>A perfectly calibrated model produces a diagonal line from (0,0) to (1,1)</li>
+<li>A miscalibrated model deviates</li>
+<p>Production signal: your reliability diagram shows that predictions in the 0.8–0.9 bin actually have 0.4–0.5 positive rate. The model is massively overconfident in this range.</p>
+<h2>Three forms of miscalibration and their fixes:</h2>
+<h2>1. Confidence miscalibration (model too confident)</h2>
+<p>The model's high-confidence predictions occur less frequently than predicted. Scores of 0.9 correspond to actual rates of 0.5.</p>
+<p>Fix: Platt scaling. Train a logistic regression: targets = true labels, features = model scores. The fitted logistic curve rescales the model's scores to match reality.</p>
+<p>\`\`\`python from sklearn.calibration import CalibratedClassifierCV calibrated_model = CalibratedClassifierCV(model, cv='precomputed', method='sigmoid') calibrated_model.fit(X_val, y_val) \`\`\`</p>
+<p>Cost: minimal. One additional logistic regression fit on a validation set.</p>
+<h2>2. Systematic base-rate shift (deployed to different segment)</h2>
+<p>Model trained on 2% base rate, deployed to 20% base rate. Same scores, very different calibration.</p>
+<p>Fix: re-fit a calibration curve on data from the target segment (if available). If labels are delayed, retrain the entire model on segment-representative data.</p>
+<h2>3. Probability output type mismatch (mixing different model families)</h2>
+<p>An ensemble mixes a neural network (sigmoid outputs) with LightGBM (raw scores). The ensemble aggregates them naively without scaling.</p>
+<p>Fix: calibrate each model separately to [0, 1] before ensembling. Use isotonic regression (more flexible than Platt scaling) if you have enough calibration data (500+ examples).</p>
+<p>\`\`\`python from sklearn.calibration import IsotonicRegression iso_reg = IsotonicRegression(out_of_bounds='clip') iso_reg.fit(lgbm_scores, y_val) lgbm_probs = iso_reg.transform(lgbm_scores) \`\`\`</p>
+<h2>The production checkpoint:</h2>
+<p>Before shipping a model: 1. Generate a reliability diagram on a validation set 2. For each decile of predicted probability, verify that actual positive rate ≈ predicted probability 3. If any decile has actual rate that diverges > 0.1 from predicted, apply Platt scaling or isotonic regression 4. Recompute the reliability diagram after calibration — all deciles should align with the diagonal 5. Ship the calibrated model</p>
+<h2>In production:</h2>
+<p>1. Log predictions and outcomes (with label delay) 2. Monthly: recompute reliability diagram on recent data with available labels 3. If calibration has drifted (decile actual rates diverge from predicted), retrain the calibration curve or retrain the full model</p>
+<h2>Why this is critical downstream:</h2>
+<p>If your fraud model outputs uncalibrated probabilities (0.8 when true probability is 0.3), downstream systems break:</p>
+<li>An alert rule "flag if score > 0.7" flags 30% legitimate — ops burnout</li>
+<li>A revenue impact model "revenue_impact = transaction_value × P(fraud)" vastly overestimates risk</li>
+<li>An ensemble that uses these scores as features learns from noise</li>
+<p>Calibration is invisible to AUC. It's visible to precision, to downstream decision rules, and to any system that uses probabilities rather than rankings.</p>
+<h2>Practice this in Model Evaluation to understand the difference between rank-ordering metrics (AUC) and probability metrics (calibration), and how to detect and fix calibration loss before production.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=calibration-loss-production-auc-mismatch#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept Drift: How to Detect It Before It Destroys Your Model — ML Systems Lab</title>
+  <meta name="description" content="PSI &gt; 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It&#39;s also frequently wrong for your specific use case. Here&#39;s a framework for actually understanding drift, choosing the …" />
+  <meta name="keywords" content="Monitoring, Drift, PSI, KS Test, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-detection.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-detection.html" />
+  <meta property="og:title" content="Concept Drift: How to Detect It Before It Destroys Your Model" />
+  <meta property="og:description" content="PSI &gt; 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It&#39;s also frequently wrong for your specific use case. Here&#39;s a framework for actually understanding drift, choosing the …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Monitoring" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Concept Drift: How to Detect It Before It Destroys Your Model" />
+  <meta name="twitter:description" content="PSI &gt; 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It&#39;s also frequently wrong for your specific use case. Here&#39;s a framework for actually understanding drift, choosing the …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Concept Drift: How to Detect It Before It Destroys Your Model",
+  "description": "PSI > 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It's also frequently wrong for your specific use case. Here's a framework for actually understanding drift, choosing the …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/concept-drift-detection.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Monitoring, Drift, PSI, KS Test, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-detection#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Monitoring &middot; ML Systems Lab</div>
+    <h1>Concept Drift: How to Detect It Before It Destroys Your Model</h1>
+    <p class="excerpt">PSI &gt; 0.2 — trigger alert. This is the rule every ML monitoring guide teaches. It&#39;s also frequently wrong for your specific use case. Here&#39;s a framework for actually understanding drift, choosing the right test, and setting thresholds that don&#39;t page you at 3am for seasonal fluctuations.</p>
+    <p>Drift comes in two flavors and you need to monitor for both differently.</p>
+<p><strong>Data drift (covariate shift)</strong>: The distribution of input features X changes. P(X) ≠ P_ref(X). The model\'s learned mapping from X → y may no longer apply because it was learned on a different X distribution. Example: a model trained on desktop users now receives 40% mobile traffic.</p>
+<p><strong>Concept drift</strong>: The relationship between X and y changes. P(y|X) ≠ P_ref(y|X). Even if features look the same, the world has changed. Example: a price sensitivity model trained pre-inflation now misprices customers because the same income bracket has different purchasing behaviour.</p>
+<h2>Detection methods:</h2>
+<p>PSI (Population Stability Index): Bins the distribution, computes Σ (actual% - expected%) × ln(actual%/expected%). Good for univariate feature monitoring. Standard thresholds: < 0.1 stable, 0.1–0.2 monitor, > 0.2 significant. But: binning strategy matters enormously. Equal-width bins will miss tail drift. Use quantile-based bins for heavy-tailed distributions.</p>
+<p>KS test: Kolmogorov-Smirnov measures the maximum absolute difference between CDFs. Doesn\'t require binning. More sensitive to tail shifts than PSI. Use for continuous features where tail behaviour matters (revenue, session duration).</p>
+<p>Model-based drift: Train a classifier to distinguish reference vs current data. If it achieves AUC > 0.7, drift is detectable. This catches multivariate drift that univariate tests miss.</p>
+<h2>Setting thresholds that work:</h2>
+<p>The 0.2 PSI threshold assumes your reference distribution is stable. If your data has weekly seasonality (as most consumer data does), Monday PSI vs Saturday will always be > 0.2 without any drift. Options: (1) Use same-weekday comparison as reference. (2) Apply seasonal decomposition before computing PSI. (3) Use rolling window comparison (last 7 days vs prior 7 days) instead of fixed reference.</p>
+<h2>Distinguishing data drift from concept drift in production:</h2>
+<p>You can observe data drift immediately (compare feature distributions). Concept drift requires labels, which often come with a lag. Bridge: use proxy metrics. For a revenue model, track predicted vs actual revenue. For a ranking model, track predicted CTR vs observed CTR on the same items. Divergence = concept drift signal, no labels required.</p>
+<p>\`\`\`python import numpy as np</p>
+<p>def compute_psi(expected, actual, n_bins=10): """PSI with quantile-based bins — avoids the equal-width trap on skewed data.""" bins = np.percentile(expected, np.linspace(0, 100, n_bins + 1)) bins[0], bins[-1] = -np.inf, np.inf  # open-ended edges</p>
+<p>exp_cnt = np.histogram(expected, bins=bins)[0] act_cnt = np.histogram(actual,   bins=bins)[0]</p>
+<p>exp_pct = np.where(exp_cnt == 0, 0.001, exp_cnt / len(expected)) act_pct = np.where(act_cnt == 0, 0.001, act_cnt / len(actual))</p>
+<p>psi = np.sum((act_pct - exp_pct) * np.log(act_pct / exp_pct)) return psi</p>
+<p># Production usage psi = compute_psi(reference_scores, production_scores) label = ("Stable"               if psi < 0.1 else "Monitor closely" if psi < 0.2 else "Significant drift — page on-call") print(f"PSI={psi:.3f}  →  {label}")</p>
+<p># Tip: use same-weekday reference to avoid false positives on seasonal data \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=concept-drift-detection#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

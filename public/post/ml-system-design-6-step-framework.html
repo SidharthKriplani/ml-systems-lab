@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The 6-Step Framework That Answers Any ML System Design Question — ML Systems Lab</title>
+  <meta name="description" content="Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it&#39;s even an M…" />
+  <meta name="keywords" content="Interview, System Design, ML Interview, Framework, Recommendation, Evaluation, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/ml-system-design-6-step-framework.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/ml-system-design-6-step-framework.html" />
+  <meta property="og:title" content="The 6-Step Framework That Answers Any ML System Design Question" />
+  <meta property="og:description" content="Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it&#39;s even an M…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The 6-Step Framework That Answers Any ML System Design Question" />
+  <meta name="twitter:description" content="Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it&#39;s even an M…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The 6-Step Framework That Answers Any ML System Design Question",
+  "description": "Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it's even an M…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ml-system-design-6-step-framework.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview, System Design, ML Interview, Framework, Recommendation, Evaluation"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=ml-system-design-6-step-framework#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>The 6-Step Framework That Answers Any ML System Design Question</h1>
+    <p class="excerpt">Most ML system design interviews fail at step zero: the candidate jumps to model architecture before clarifying what success looks like, what latency the system can tolerate, or whether it&#39;s even an ML problem worth solving. The 6-step framework exists to prevent exactly this. Here&#39;s how it works, with a full worked example.</p>
+    <p>An ML system design interview tests whether you think like a senior engineer — someone who understands that model selection is step 5, not step 1. The framework below is a checklist that forces the right order of reasoning.</p>
+<h2>Step 1: Clarify the objective</h2>
+<p>Before anything else: what is the system trying to optimise for? And is that the same as the business metric?</p>
+<p>The classic trap: "optimise click-through rate." CTR is easy to maximise — show clickbait. The real objective is something like "increase long-term user satisfaction and retention." These require different models, different labels, different evaluation metrics. State this explicitly.</p>
+<p>Questions to ask: What is the north star metric? What does failure look like? What is the traffic volume? What is the acceptable latency? What is the cost of a false positive vs a false negative?</p>
+<h2>Step 2: Define the ML task</h2>
+<p>Given the objective, what type of ML problem is this? This sounds obvious but gets surprisingly complex:</p>
+<li>Recommendation: retrieval (ANN search over candidates) + ranking (point-wise vs pair-wise vs list-wise scoring)</li>
+<li>Fraud detection: binary classification, but with extreme class imbalance and adversarial dynamics</li>
+<li>Search ranking: learning-to-rank with query-document pairs</li>
+<li>ETA prediction: regression with right-skewed distribution and temporal features</li>
+<li>Content moderation: multi-class classification with a "human review" third class</li>
+<p>State the task type, the output type, and whether you need a single model or a pipeline of models.</p>
+<h2>Step 3: Define labels</h2>
+<p>How do you know what "correct" looks like? This is where most designs fail.</p>
+<p>For recommendation: explicit (5-star rating) vs implicit (click, dwell time, share). Implicit labels are noisier but available at scale. Define your positive/negative events carefully — a 2-second dwell is not a positive signal.</p>
+<p>For fraud: the label is available (fraud confirmed / not), but delayed (chargebacks arrive 30 days after the transaction). Your training data is 30 days stale by definition. State this.</p>
+<p>For content moderation: you need human annotators. What is your labelling agreement threshold? How do you handle ambiguous cases? What is your label latency (time from content publication to label availability)?</p>
+<h2>Step 4: Feature design</h2>
+<p>Now you can talk about features. By this point you know the task, the labels, and the constraints — so feature design is guided by actual requirements, not intuition.</p>
+<p>Structure your feature discussion around: user features (demographics, historical behaviour, preferences), item features (content embeddings, metadata, popularity signals), context features (time of day, device, session context), and interaction features (user-item affinity, historical clicks on similar items).</p>
+<p>For each feature, state: availability at serving time? Point-in-time correct? Any leakage risk? This is where many candidates reveal whether they\'ve actually worked with ML data pipelines.</p>
+<h2>Step 5: Model choice</h2>
+<p>Only now do you choose a model. Given everything above: the task type, the latency requirement, the label quality, the feature space, and the training data volume.</p>
+<p>Common mapping:</p>
+<li>Low latency + tabular features: GBM (LightGBM, XGBoost) — fast inference, interpretable</li>
+<li>Retrieval stage: two-tower neural network — handles dense embedding spaces</li>
+<li>Ranking stage: transformer over user-item sequence — captures sequential patterns</li>
+<li>Small data + interpretability needed: logistic regression with handcrafted features</li>
+<li>Large-scale NLP: fine-tuned BERT or task-specific instruction-tuned LLM</li>
+<p>State your training infrastructure assumptions: how often does the model retrain? Online learning or batch? What is the training compute requirement?</p>
+<h2>Step 6: Evaluation and serving</h2>
+<p>Offline evaluation: what is your test set? Is it a time-ordered hold-out? What metric? Why that metric and not the alternatives?</p>
+<p>Online evaluation: shadow mode first, then canary (5–10% traffic), then champion-challenger framework for promotion. What are your rollback triggers?</p>
+<p>Serving: latency budget, caching strategy (can you pre-compute scores for a subset of users?), failover behaviour (what does the system serve if the model is unavailable?), monitoring.</p>
+<h2>Worked example: news feed ranking</h2>
+<p>Step 1: Objective — maximise long-term user engagement, not pure CTR. North star: weekly active days. Step 2: Task — list-wise ranking over candidate posts for a user. Retrieval (ANN) + ranking (transformer). Step 3: Labels — implicit: 10s+ dwell = positive, scroll past = weak negative, share = strong positive. Labels available in realtime. Step 4: Features — user embedding (historical engagement), post embedding (BERT on text), user-post affinity, recency decay, source reliability signal. Step 5: Model — two-tower for retrieval, 6-layer transformer ranker for top-100 candidates. Retrain daily. Step 6: Evaluation — NDCG@10 offline; A/B on weekly active days online with 2-week exposure minimum.</p>
+<p>The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?</p>
+<p>\`\`\`python from dataclasses import dataclass from typing import Literal</p>
+<p>@dataclass class Feature: name: str available_at_serving: bool    # exists at inference time (not post-hoc)? point_in_time_correct: bool   # no future data bleeds into training rows? source: Literal['realtime', 'batch_precomputed', 'derived']</p>
+<p>def step4_audit(features: list) -> None: """Call this before training, not after debugging a production incident.""" for f in features: flags = [] if not f.available_at_serving: flags.append("SERVING SKEW — not available at inference") if not f.point_in_time_correct: flags.append("LEAKAGE — future data contaminates training rows") print(f"{'✓' if not flags else '✗'} {f.name}: {flags or 'OK'}")</p>
+<p># News feed ranking — step 4 audit step4_audit([ Feature('user_click_history_7d',   True,  True,  'batch_precomputed'), Feature('post_engagement_rate',    True,  False, 'derived'),          # leakage! Feature('avg_session_duration',    False, True,  'batch_precomputed'), # serving skew Feature('realtime_trending_score', True,  True,  'realtime'), ]) \`\`\`</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=ml-system-design-6-step-framework#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

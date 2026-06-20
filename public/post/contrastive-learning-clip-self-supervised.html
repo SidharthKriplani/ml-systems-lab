@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contrastive Learning: How CLIP Aligns Images and Text Without Labels — ML Systems Lab</title>
+  <meta name="description" content="Self-supervised learning eliminates the need for labels by defining the training objective from the data structure itself. Contrastive methods do this by pulling together representations of similar pa…" />
+  <meta name="keywords" content="Deep Learning, Contrastive Learning, CLIP, Self-Supervised Learning, SimCLR, Multimodal, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/contrastive-learning-clip-self-supervised.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/contrastive-learning-clip-self-supervised.html" />
+  <meta property="og:title" content="Contrastive Learning: How CLIP Aligns Images and Text Without Labels" />
+  <meta property="og:description" content="Self-supervised learning eliminates the need for labels by defining the training objective from the data structure itself. Contrastive methods do this by pulling together representations of similar pa…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Contrastive Learning: How CLIP Aligns Images and Text Without Labels" />
+  <meta name="twitter:description" content="Self-supervised learning eliminates the need for labels by defining the training objective from the data structure itself. Contrastive methods do this by pulling together representations of similar pa…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Contrastive Learning: How CLIP Aligns Images and Text Without Labels",
+  "description": "Self-supervised learning eliminates the need for labels by defining the training objective from the data structure itself. Contrastive methods do this by pulling together representations of similar pa…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/contrastive-learning-clip-self-supervised.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Contrastive Learning, CLIP, Self-Supervised Learning, SimCLR, Multimodal"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=contrastive-learning-clip-self-supervised#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Contrastive Learning: How CLIP Aligns Images and Text Without Labels</h1>
+    <p class="excerpt">Self-supervised learning eliminates the need for labels by defining the training objective from the data structure itself. Contrastive methods do this by pulling together representations of similar pairs and pushing apart dissimilar ones. CLIP applies this to 400 million image-text pairs from the internet, producing multimodal embeddings that enable zero-shot classification, image search, and generation guidance.</p>
+    <p>The bottleneck in supervised learning has always been labels. Collecting ImageNet-scale labelled data required years and millions of dollars. Self-supervised learning removes this bottleneck by defining the training signal from unlabelled data itself — the task is chosen so that solving it requires learning useful representations.</p>
+<h2>SimCLR: contrastive learning for vision</h2>
+<p>SimCLR (Chen et al., 2020) is the clearest expression of the contrastive idea for images. Given an image, apply two random augmentations (crop, colour jitter, blur) to produce two views of the same image. These two views form a positive pair — they should have similar representations. All other images in the batch form negative pairs — they should have dissimilar representations.</p>
+<p>The contrastive loss (NT-Xent): for a positive pair (i, j), maximise the cosine similarity of their representations relative to all other pairs in the batch. L = -log[exp(sim(z_i, z_j)/τ) / Σ_{k≠i} exp(sim(z_i, z_k)/τ)]. Temperature τ controls how sharply the distribution peaks. The model learns representations where augmented views of the same image are nearby and different images are far apart.</p>
+<p>This works because augmentations remove information that should not matter (exact crop position, colour temperature) while preserving information that should (object identity, shape). The model is forced to be invariant to augmentations — which means it must capture the invariant content.</p>
+<h2>The representation quality</h2>
+<p>After pretraining with contrastive loss on ImageNet without labels, SimCLR representations (extracted with a linear probe) achieve within 7% of supervised ResNet accuracy on ImageNet classification. With fine-tuning, the gap closes further. This was a landmark result: competitive visual representations learned without any manual labels.</p>
+<h2>CLIP: contrastive pretraining across modalities</h2>
+<p>CLIP (Radford et al., 2021) applies contrastive learning across modalities: the positive pairs are (image, caption) pairs from the internet. The model jointly trains an image encoder (ViT or ResNet) and a text encoder (Transformer). For a batch of N image-text pairs, the N correct pairings are positive; the N^2 - N incorrect pairings are negative. The loss maximises similarity of matched pairs relative to mismatched ones.</p>
+<p>Trained on 400 million image-text pairs from the web, CLIP learns a shared embedding space where images and their descriptions are nearby. Zero-shot classification becomes prompt engineering: to classify an image into k categories, encode all category names as text ("a photo of a dog"), encode the image, take the nearest text embedding — no fine-tuning needed.</p>
+<h2>Why CLIP generalises</h2>
+<p>CLIP's representations generalise to tasks never seen in training because the internet descriptions provide semantic supervision for a vast range of visual concepts. Unlike ImageNet-trained models that learn 1000 specific classes, CLIP learns continuous associations between visual content and language. On the ObjectNet benchmark (specifically designed to test out-of-distribution generalisation), CLIP significantly outperforms ImageNet-supervised models.</p>
+<h2>CLIP in production</h2>
+<p>CLIP embeddings are widely used in: semantic image search (embed the query text, find nearest-neighbour image embeddings), content moderation (detect NSFW or policy-violating images by measuring similarity to risk-describing text), recommendation (align user query embeddings with item image embeddings), and Stable Diffusion (CLIP text encoder drives the conditioning in latent diffusion models — the text prompt is processed by CLIP's text encoder to guide the denoising process).</p>
+<h2>DINO and MAE: self-supervised without negatives</h2>
+<p>Subsequent work showed negatives are not required. DINO (Caron et al., 2021) uses a teacher-student setup where the student matches the teacher's representations under different augmentations. MAE (He et al., 2022) masks 75% of image patches and trains a ViT to reconstruct them — no negatives, no contrastive loss, just reconstruction from partial context. Both produce representations competitive with CLIP's for vision tasks. The common thread: a pretext task that requires understanding global image structure.</p>
+<p><strong>Try on Colab:</strong> use the openai/clip-python package. Load CLIP ViT-B/32. Embed 100 images from CIFAR-100. Embed the class name strings ("a photo of a {class_name}"). For each image, compute cosine similarity to all 100 class text embeddings and pick the top-1. Report zero-shot accuracy. Then compare to a fine-tuned ResNet-18 on 500 labelled CIFAR-100 examples — observe the zero-shot vs. few-shot trade-off.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=contrastive-learning-clip-self-supervised#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

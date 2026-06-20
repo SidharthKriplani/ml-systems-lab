@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semantic Search: The Full Architecture from Query to Results — ML Systems Lab</title>
+  <meta name="description" content="Search is not a single model. It is a pipeline: query understanding, candidate retrieval, ranking, and result presentation. Each stage has its own failure modes and ML decisions. A query for &quot;cheap fl…" />
+  <meta name="keywords" content="ML System Design, Search, Information Retrieval, Query Understanding, Semantic Search, Cross-Encoder, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/semantic-search-architecture-query-to-results.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/semantic-search-architecture-query-to-results.html" />
+  <meta property="og:title" content="Semantic Search: The Full Architecture from Query to Results" />
+  <meta property="og:description" content="Search is not a single model. It is a pipeline: query understanding, candidate retrieval, ranking, and result presentation. Each stage has its own failure modes and ML decisions. A query for &quot;cheap fl…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Semantic Search: The Full Architecture from Query to Results" />
+  <meta name="twitter:description" content="Search is not a single model. It is a pipeline: query understanding, candidate retrieval, ranking, and result presentation. Each stage has its own failure modes and ML decisions. A query for &quot;cheap fl…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Semantic Search: The Full Architecture from Query to Results",
+  "description": "Search is not a single model. It is a pipeline: query understanding, candidate retrieval, ranking, and result presentation. Each stage has its own failure modes and ML decisions. A query for \"cheap fl…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/semantic-search-architecture-query-to-results.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Search, Information Retrieval, Query Understanding, Semantic Search, Cross-Encoder"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=semantic-search-architecture-query-to-results#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Semantic Search: The Full Architecture from Query to Results</h1>
+    <p class="excerpt">Search is not a single model. It is a pipeline: query understanding, candidate retrieval, ranking, and result presentation. Each stage has its own failure modes and ML decisions. A query for &quot;cheap flights nyc&quot; must be understood (intent: price-sensitive travel), expanded (&quot;NYC&quot; → New York City airports), retrieved (fast), re-ranked (personalised), and deduplicated. This is how Google, LinkedIn, and Amazon search actually work.</p>
+    <p>Production search is a multi-stage pipeline where each stage produces a smaller, higher-quality candidate set. The overall goal is to take a user query — messy, ambiguous, often incomplete — and return the most relevant documents from a billion-scale corpus in under 100ms. No single model can do this. Each stage makes a different trade-off between recall, precision, and latency.</p>
+<h2>Stage 1: Query understanding</h2>
+<p>Before retrieval, the query must be understood. This involves multiple sub-tasks that typically run in parallel.</p>
+<p>Intent classification: what type of query is this? Navigational (user wants a specific page), informational (user wants to learn something), transactional (user wants to buy something). Intent changes how results are ranked — a navigational query should surface the exact URL; a transactional query should surface product pages.</p>
+<p>Entity recognition and linking: "Taylor Swift Eras Tour" contains an entity (Taylor Swift), a sub-entity (Eras Tour), and an implicit intent (concert tickets, tour dates). Entity linking maps surface forms to canonical entities in a knowledge graph.</p>
+<p>Query rewriting and expansion: "cheap flights nyc" → "affordable flights New York City JFK LGA EWR". Expansion enriches the query with synonyms and related terms to improve recall. Spelling correction: "macbook probook" → "macbook pro". These are often small fine-tuned models (BERT-based sequence classifiers or seq2seq models) running in under 10ms.</p>
+<h2>Stage 2: Candidate retrieval</h2>
+<p>Given the processed query, retrieve hundreds to thousands of candidates from the full corpus. For modern semantic search this is typically hybrid: BM25 for exact matching + dense retrieval for semantic matching (see Posts 70 and 79). Multiple retrieval paths run in parallel and are merged: keyword-based retrieval, semantic retrieval, personalised retrieval (items the user has engaged with previously), trending content retrieval.</p>
+<h2>Stage 3: Ranking</h2>
+<p>Score the retrieved candidates with a feature-rich model. Features include: query-document text similarity (dense embedding cosine similarity), BM25 score, user engagement history with the document, document quality signals (click-through rate, dwell time, freshness, authoritative source signals), personalisation features (user interests, location, language). The ranker is a LambdaRank model or a transformer cross-encoder (slower but more accurate — it processes the query and document together in one forward pass, enabling full attention between them).</p>
+<p>Cross-encoders: unlike bi-encoders (two-tower) that encode query and document separately, cross-encoders encode the concatenated (query, document) pair. This allows full attention between query and document terms — much more expressive but cannot precompute document embeddings. Used only in the final ranking stage over hundreds of candidates, not retrieval over millions.</p>
+<h2>Stage 4: Diversity and deduplication</h2>
+<p>Top-ranked results often cluster around the same content: 5 news articles about the same event, 3 product listings for the same item. Maximal Marginal Relevance (MMR) re-ranks to maximise both relevance and diversity: score_mmr(d) = λ * rel(d) - (1-λ) * max_{d' in selected} sim(d, d'). Near-duplicate detection removes documents with > 70% content overlap.</p>
+<h2>Stage 5: Result presentation</h2>
+<p>Which format? Blue links (web search), product cards (e-commerce), inline answer boxes (knowledge panel for "what is the capital of France"), rich snippets (star ratings, price, availability). The format choice itself is a model decision — does this query have a direct answer (show a snippet) or does it require exploration (show diverse blue links)?</p>
+<h2>Query performance prediction: knowing when you&#39;ll fail</h2>
+<p>Query Performance Prediction (QPP) estimates retrieval quality before retrieving. Low-resource queries (rare entities, new product launches, misspellings) are predicted to have low retrieval quality — the system can fall back to safer defaults or trigger additional retrieval paths. QPP is done with statistical features of the query (IDF of query terms, query clarity score).</p>
+<p><strong>Try on Colab:</strong> use Haystack (open-source search framework) to build a two-stage semantic search pipeline on a Wikipedia subset. Stage 1: BM25 retrieval (top-100). Stage 2: cross-encoder reranking (top-10). Query a set of factoid questions. Compare MRR@10 for: BM25 only, dense retrieval only, BM25 + cross-encoder reranking. The two-stage pipeline should outperform either single-stage approach by 5-10 MRR points.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=semantic-search-architecture-query-to-results#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

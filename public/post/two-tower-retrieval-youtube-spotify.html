@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two-Tower Models: How YouTube and Spotify Do Candidate Retrieval — ML Systems Lab</title>
+  <meta name="description" content="A recommendation system cannot score all 100 million items for every user request. Retrieval narrows the candidate set from millions to hundreds. The two-tower model is the standard architecture for t…" />
+  <meta name="keywords" content="ML System Design, Recommendation Systems, Two-Tower Model, Retrieval, Embeddings, YouTube, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/two-tower-retrieval-youtube-spotify.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/two-tower-retrieval-youtube-spotify.html" />
+  <meta property="og:title" content="Two-Tower Models: How YouTube and Spotify Do Candidate Retrieval" />
+  <meta property="og:description" content="A recommendation system cannot score all 100 million items for every user request. Retrieval narrows the candidate set from millions to hundreds. The two-tower model is the standard architecture for t…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Two-Tower Models: How YouTube and Spotify Do Candidate Retrieval" />
+  <meta name="twitter:description" content="A recommendation system cannot score all 100 million items for every user request. Retrieval narrows the candidate set from millions to hundreds. The two-tower model is the standard architecture for t…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Two-Tower Models: How YouTube and Spotify Do Candidate Retrieval",
+  "description": "A recommendation system cannot score all 100 million items for every user request. Retrieval narrows the candidate set from millions to hundreds. The two-tower model is the standard architecture for t…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/two-tower-retrieval-youtube-spotify.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Recommendation Systems, Two-Tower Model, Retrieval, Embeddings, YouTube"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=two-tower-retrieval-youtube-spotify#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Two-Tower Models: How YouTube and Spotify Do Candidate Retrieval</h1>
+    <p class="excerpt">A recommendation system cannot score all 100 million items for every user request. Retrieval narrows the candidate set from millions to hundreds. The two-tower model is the standard architecture for this step: one tower encodes the user, one encodes the item, and the dot product of their embeddings is the retrieval score. This is what YouTube&#39;s deep retrieval network, Spotify&#39;s Discover Weekly, and Pinterest&#39;s PinSage all build on.</p>
+    <p>A production recommendation system has two stages: retrieval (find hundreds of candidates from a corpus of millions) and ranking (score each candidate precisely, using expensive features). The two-tower model is the standard retrieval architecture. Understanding it from first principles reveals why it is designed this way and where it breaks down.</p>
+<h2>The retrieval problem</h2>
+<p>At request time, you need to find the k most relevant items for a user from a corpus of N items. For YouTube with 800 million videos and 200 million daily active users, you cannot run a full neural network scorer over all 800 million videos per user per request — even at 1ms per video, this is 220 hours per user. You need an architecture where item embeddings are precomputed and user queries can be matched against them in milliseconds.</p>
+<h2>The two-tower architecture</h2>
+<p>The solution: decouple the user representation and the item representation into two separate networks (towers) that produce fixed-dimensional embeddings. User tower: f(user features) → u ∈ R^d. Item tower: g(item features) → v ∈ R^d. Retrieval score: u · v (dot product, or cosine similarity).</p>
+<p>The key property: item embeddings can be precomputed offline and indexed. At request time, only the user tower runs (the user embedding changes with context). The retrieval problem reduces to approximate nearest-neighbour search: find the k items in the index whose embeddings are most similar to the user embedding. With FAISS or ScaNN, this runs in ~10ms even for 100M items.</p>
+<h2>Training: what makes a positive pair?</h2>
+<p>Training requires positive (user, item) pairs and negative pairs. Positives are typically engagements: watches, clicks, listens, purchases. Negatives are harder. Random negatives (any item the user did not engage with) are easy but uninformative — the model trivially separates engaged content from random content. Hard negatives — items the model currently ranks highly but the user did not engage with — provide stronger learning signal and are essential for production quality. Pinterest PinSage and Google's Dual Encoder both use hard negative mining.</p>
+<h2>In-batch negatives: a practical trick</h2>
+<p>In a batch of B (user, item) positive pairs, each item in the batch serves as a negative for all other users. For a batch size of 4096, each user has 4095 negatives with no extra computation. Sampling bias correction is necessary: popular items appear more frequently in batches and are over-represented as negatives, causing the model to push their embeddings away too aggressively. A frequency-based correction weight is applied to each negative.</p>
+<h2>Feature engineering for each tower</h2>
+<p>User tower features: user ID embedding, watch/listen history embeddings (average of recently engaged item embeddings), demographic features, contextual features (time of day, device, country). Item tower features: item ID embedding, content features (text description embedding, thumbnail embedding, category), popularity statistics, content age. The towers share no parameters — they are fully separate networks.</p>
+<h2>Serving architecture</h2>
+<p>Offline: run the item tower on all items in the corpus, store (item_id, embedding) pairs in an ANN index (FAISS, ScaNN, Weaviate). Online: given a user request, run the user tower to produce u; query the ANN index for the k nearest item embeddings; return the corresponding item IDs as retrieval candidates.</p>
+<p>The retrieved candidates (typically k=500-2000) are passed to the ranking model, which can use features unavailable to the retrieval model (e.g., user-item interaction features, expensive content analysis) because it only scores hundreds rather than millions of items.</p>
+<h2>YouTube&#39;s DNN for candidate generation (Covington et al., 2016)</h2>
+<p>YouTube's original two-tower retrieval paper uses: user tower = DNN over user history (average of video embeddings for watched videos) + demographic features; item tower = video embedding (a lookup table). Training objective: predict the next video in a watching session from the user's history. Negatives are sampled from the video corpus. The paper reports that serving with approximate nearest-neighbour search adds only 1ms latency compared to exact search.</p>
+<p><strong>Try on Colab:</strong> build a minimal two-tower retrieval model on the MovieLens dataset. User tower: embed user_id + average of watched movie embeddings. Item tower: embed movie_id + genre one-hot. Train with in-batch negatives. After training, index all movie embeddings with FAISS. Query: given a user who watched [movie A, B, C], retrieve the top-20 candidates. Evaluate recall@20 (how many relevant movies are retrieved).</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=two-tower-retrieval-youtube-spotify#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

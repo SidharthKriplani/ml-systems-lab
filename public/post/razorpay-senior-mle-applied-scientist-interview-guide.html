@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Razorpay Senior MLE / Applied Scientist Interview Guide — ML Systems Lab</title>
+  <meta name="description" content="Razorpay&#39;s ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask &quot;how do you train XGBoost&quot; now asks &quot;your model&#39;s calibration drifted overnight, walk m…" />
+  <meta name="keywords" content="Interview Prep, Razorpay, Senior MLE, Applied Scientist, Fraud, Indian Tech, Company Guide, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/razorpay-senior-mle-applied-scientist-interview-guide.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/razorpay-senior-mle-applied-scientist-interview-guide.html" />
+  <meta property="og:title" content="Razorpay Senior MLE / Applied Scientist Interview Guide" />
+  <meta property="og:description" content="Razorpay&#39;s ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask &quot;how do you train XGBoost&quot; now asks &quot;your model&#39;s calibration drifted overnight, walk m…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Interview Prep" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Razorpay Senior MLE / Applied Scientist Interview Guide" />
+  <meta name="twitter:description" content="Razorpay&#39;s ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask &quot;how do you train XGBoost&quot; now asks &quot;your model&#39;s calibration drifted overnight, walk m…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Razorpay Senior MLE / Applied Scientist Interview Guide",
+  "description": "Razorpay's ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask \"how do you train XGBoost\" now asks \"your model's calibration drifted overnight, walk m…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/razorpay-senior-mle-applied-scientist-interview-guide.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Interview Prep, Razorpay, Senior MLE, Applied Scientist, Fraud, Indian Tech, Company Guide"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=razorpay-senior-mle-applied-scientist-interview-guide#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Interview Prep &middot; ML Systems Lab</div>
+    <h1>Razorpay Senior MLE / Applied Scientist Interview Guide</h1>
+    <p class="excerpt">Razorpay&#39;s ML org has shifted hard toward production judgment over the last 18 months. The loop that used to ask &quot;how do you train XGBoost&quot; now asks &quot;your model&#39;s calibration drifted overnight, walk me through the diagnosis.&quot; This guide breaks down the new shape, what each round tests, and the exact MLE Path tiers that map to it.</p>
+    <p>Razorpay's ML interview loop has changed shape faster than any other major Indian fintech. Two years ago, the bar was calibrated to "do you know ML" — formulas, derivations, classical algorithms. Today, the bar is "have you debugged production ML." Candidates who prep using two-year-old guides routinely fail rounds they would have passed in 2024.</p>
+<p>This guide reflects the loop as run in 2026.</p>
+<h2>The loop structure (Senior MLE / Applied Scientist, L5–L6)</h2>
+<p>Razorpay runs 5–7 rounds depending on level. The standard senior loop: recruiter screen → ML fundamentals + coding (combined) → ML system design → production case → behavioural + project deep-dive → hiring manager → bar-raiser (for L6 only).</p>
+<p>Razorpay's calling card is the <strong>production case round in Round 4</strong>. It's typically the round that decides the offer. Most candidates who fail Razorpay fail this round.</p>
+<h2>Round-by-round breakdown</h2>
+<p><strong>Round 1 — Recruiter screen.</strong> Behavioural + role fit. Filter-grade.</p>
+<p><strong>Round 2 — ML fundamentals + coding.</strong> 60 minutes. ~25 min of conceptual probing (bias-variance, regularisation, evaluation metrics, calibration), ~25 min coding (LeetCode medium plus one ML-flavoured problem — implement gradient descent, debug a CV leakage bug, optimise pandas operations). The conceptual probing is calibrated to senior bar: an answer like "L2 keeps weights small, L1 produces sparsity" passes mid bar; senior needs the geometric intuition of why the L1 diamond produces sparsity.</p>
+<p><strong>Round 3 — ML system design.</strong> 60 minutes. Razorpay prompts vary by team but the structural expectation is the same: clarify requirements first, define metrics second, design the data and feature layer third, then architecture, then serving + monitoring. Candidates who jump to "I'd use two-tower retrieval" before clarifying QPS, latency, and the action budget get downgraded. The common prompts: design a payment fraud detection system, design a recommendation system for Razorpay's onboarding flow, design a UPI risk scoring system.</p>
+<p><strong>Round 4 — Production case (the round that decides the loop).</strong> 60 minutes. A real production scenario — "your fraud model's precision dropped 30% over 2 weeks, no deployment, debug." The interviewer is grading whether you have the discipline to observe before naming concepts, ask "what changed" before reaching for a memorised explanation, and distinguish evidence from assumption.</p>
+<p><strong>Round 5 — Behavioural + project deep-dive.</strong> 60 minutes. Walk through your most impactful ML project end-to-end. Razorpay grades for: what failure mode did you catch in production, what trade-off did you own, what would you do differently. Project stories that sound polished (no failure mode named) get downgraded.</p>
+<p><strong>Round 6 — Hiring manager.</strong> 45 minutes. Team fit, leadership in technical decisions, ownership stories. Standard FAANG-style behavioural.</p>
+<p><strong>Round 7 — Bar-raiser (L6 only).</strong> 60 minutes. A staff-level technical conversation with someone outside your hiring team. Tests cross-team technical leadership.</p>
+<h2>What&#39;s different about Razorpay vs PhonePe vs Flipkart</h2>
+<p>Razorpay's loop weights the production case round more heavily than PhonePe (where system design is the highest-variance round) and more than Flipkart (where the project deep-dive is the highest-variance). If you have only 1 round of prep time, it goes to production case scenarios.</p>
+<p>Razorpay also emphasises payment-domain context. A candidate who can articulate why a UPI fraud model is different from a credit card fraud model (latency budget, settlement window, dispute mechanism, attack vectors) signals senior-level domain awareness.</p>
+<h2>Top 10 questions Razorpay seniors face</h2>
+<p>1. "Your fraud model's calibration drifted overnight. Walk through the diagnosis, in order." 2. "Design a payment risk scoring system for 100K TPS at 30ms p99." 3. "Champion model from last quarter still beats your new model in production. New offline AUC is +2 points. What's likely happening?" 4. "How do you handle delayed-label fraud detection — labels arrive 14-30 days after the prediction?" 5. "Walk through the production failure you handled in your last role. What signals did you read first?" 6. "Class imbalance at 0.05% — class weights vs SMOTE vs threshold moving. What and why?" 7. "Your model says 'block this payment.' The customer is real, escalates to support. What do you fix?" 8. "Design feature store for real-time risk scoring. What goes online, what stays offline." 9. "How do you A/B test a fraud model when the action (blocking) changes the population being measured?" 10. "Eleven types of leakage. Which apply to payment fraud specifically?"</p>
+<h2>The prep path through MSL</h2>
+<p>The MSL Path tier mapping for a Razorpay senior loop:</p>
+<li>Tier 5 (Evaluation & Diagnostics) — all 7 posts. Particularly Post 130 (Leakage Taxonomy) and Post 131 (Error Analysis). The production case round draws heavily from these.</li>
+<li>Tier 7 (Production Engineering) — all 5 posts. Training-serving skew + feature stores are the system design backbone.</li>
+<li>Tier 8 (Monitoring & MLOps) — all 5 posts. Particularly Post 40 (Calibration Loss in Production) — Razorpay specifically tests this.</li>
+<li>Tier 9 (System Design) — Post 24 (6-Step Framework) is the prerequisite for the design round. Then Post 72 (Recsys Stack) for context.</li>
+<li>Tier 10 (Interview Bridge) — all 3 posts. Particularly Post 13 (10 Interview Mistakes).</li>
+<p>For practice: IncidentRoom incidents 7-12, SpotTheFlaw scenarios 9-12 (production-judgment scenarios), and the Mock Interview tab with a real Razorpay JD pasted.</p>
+<h2>Common failure modes</h2>
+<li>"It's drift" as the first response to any production case scenario. Razorpay specifically rejects this pattern.</li>
+<li>Inability to walk through a production failure from your past experience in specific terms (no observation→hypothesis→action chain).</li>
+<li>Defaulting to deep learning architectures for tabular fraud. Razorpay's production stack is gradient boosting; senior candidates know this and defend it.</li>
+<li>Treating the project deep-dive round as a presentation rather than a discussion. Razorpay interviewers probe; if your project sounds rehearsed, you get downgraded.</li>
+<li>Pitching novel research methods over battle-tested production patterns. Razorpay values reliability over novelty in senior hires.</li>
+<h2>Compensation</h2>
+<p>Razorpay Senior ML Engineer total compensation for 5-7 YOE in 2026 ranges roughly ₹45 lakh – ₹75 lakh. Staff (L6) scales to ₹85 lakh – ₹1.3 crore. Numbers shift each cycle and depend on team (the fraud and platform teams generally pay higher than the analytics teams).</p>
+<h2>Final note</h2>
+<p>Razorpay's loop in 2026 is calibrated to candidates who have shipped, debugged, and owned ML systems in production. The MSL Path tiers 5, 7, 8 are specifically designed to give academic-track candidates the production judgment they're being interviewed on.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=razorpay-senior-mle-applied-scientist-interview-guide#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

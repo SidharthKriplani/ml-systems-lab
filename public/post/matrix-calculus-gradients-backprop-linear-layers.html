@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand — ML Systems Lab</title>
+  <meta name="description" content="You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a for…" />
+  <meta name="keywords" content="Models &amp; Math, Matrix Calculus, Gradients, Backpropagation, Normal Equations, Linear Algebra, Ground Up, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/matrix-calculus-gradients-backprop-linear-layers.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/matrix-calculus-gradients-backprop-linear-layers.html" />
+  <meta property="og:title" content="Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand" />
+  <meta property="og:description" content="You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a for…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Models &amp; Math" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand" />
+  <meta name="twitter:description" content="You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a for…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand",
+  "description": "You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a for…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/matrix-calculus-gradients-backprop-linear-layers.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Models & Math, Matrix Calculus, Gradients, Backpropagation, Normal Equations, Linear Algebra, Ground Up"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=matrix-calculus-gradients-backprop-linear-layers#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Models &amp; Math &middot; ML Systems Lab</div>
+    <h1>Matrix Calculus: Deriving the OLS Normal Equations and Backprop Through a Linear Layer by Hand</h1>
+    <p class="excerpt">You cannot derive the OLS normal equations, the backpropagation update for a linear layer, or the gradient of the attention score without matrix calculus. Most practitioners learn it piecemeal — a formula here, a trick there. This post builds the full system: scalar-by-vector, vector-by-vector (Jacobian), and scalar-by-matrix, with four complete worked derivations.</p>
+    <p>Matrix calculus extends scalar calculus to functions involving vectors and matrices. It is the language in which ML derivations are written, and the gap between "I know what a gradient is" and "I can derive it for any layer" is almost entirely matrix calculus.</p>
+<h2>Notation conventions</h2>
+<p>We use numerator layout (also called Jacobian layout): if y ∈ ℝᵐ and x ∈ ℝⁿ, then ∂y/∂x ∈ ℝᵐˣⁿ — the derivative has the same shape as the output in the numerator, stacked over the input in the denominator. For a scalar f and a vector x ∈ ℝⁿ: ∂f/∂x ∈ ℝ¹ˣⁿ (a row vector, but often treated as a column vector ∇f for gradient descent). For a scalar f and a matrix X ∈ ℝᵐˣⁿ: ∂f/∂X ∈ ℝᵐˣⁿ — the gradient has the same shape as the matrix.</p>
+<h2>Scalar by vector: the gradient</h2>
+<p>∂f/∂x = [∂f/∂x₁, ..., ∂f/∂xₙ]. Key identities: ∂(aᵀx)/∂x = a. ∂(xᵀx)/∂x = 2x. ∂(xᵀAx)/∂x = (A + Aᵀ)x = 2Ax if A is symmetric. ∂(aᵀXb)/∂X = abᵀ. Example: f = ||y - Xw||² = (y-Xw)ᵀ(y-Xw). Expand: f = yᵀy - 2wᵀXᵀy + wᵀXᵀXw. ∂f/∂w = -2Xᵀy + 2XᵀXw. Setting to zero: XᵀXw = Xᵀy — the normal equations. Derivation complete.</p>
+<h2>The trace trick</h2>
+<p>For a scalar f expressed as a trace: f = tr(AᵀB). Then ∂f/∂A = B. Since a scalar equals its own trace (tr(a) = a), we can write any scalar as a trace and use this identity. Useful when the scalar is expressed as a product of matrices: tr(AᵀBCD) can be differentiated by cycling the trace and applying the identity.</p>
+<h2>Vector by vector: the Jacobian</h2>
+<p>For y = f(x) with y ∈ ℝᵐ and x ∈ ℝⁿ, the Jacobian J ∈ ℝᵐˣⁿ has J_{ij} = ∂yᵢ/∂xⱼ. Key Jacobians: ∂(Ax)/∂x = A (linear map y=Ax: Jacobian is just A). ∂(xᵀA)/∂x = Aᵀ. ∂σ(x)/∂x = diag(σ(x) ⊙ (1-σ(x))) for element-wise sigmoid. ∂ReLU(x)/∂x = diag(𝟙[x > 0]) (diagonal of indicators). ∂softmax(x)/∂x = diag(s) - ssᵀ where s = softmax(x). The softmax Jacobian is not diagonal — each output depends on all inputs.</p>
+<h2>Backprop through a linear layer: full derivation</h2>
+<p>Forward pass: z = Wx + b, a = σ(z), where W ∈ ℝᵐˣⁿ, x ∈ ℝⁿ, b ∈ ℝᵐ. Suppose upstream gradient ∂L/∂a ∈ ℝᵐ is known. We need: ∂L/∂W, ∂L/∂b, ∂L/∂x (to pass backward). Step 1: ∂L/∂z = ∂L/∂a ⊙ σ'(z) (element-wise multiply by activation derivative). Let δ = ∂L/∂z ∈ ℝᵐ. Step 2 (gradient w.r.t. weights): ∂L/∂W_{ij} = Σₖ (∂L/∂zₖ)(∂zₖ/∂W_{ij}) = δᵢ xⱼ. Therefore: ∂L/∂W = δ xᵀ ∈ ℝᵐˣⁿ. The weight gradient is the outer product of the upstream gradient and the input. Step 3 (gradient w.r.t. bias): ∂L/∂b = δ. Step 4 (gradient w.r.t. input — to pass to previous layer): ∂L/∂x = Wᵀ δ ∈ ℝⁿ. Summary: δ_prev = Wᵀ δ (backprop through W is multiplication by Wᵀ). ∂L/∂W = δ xᵀ (outer product). This is the complete backprop update for a linear layer. Every framework implements exactly this.</p>
+<h2>Deriving the attention gradient (sketch)</h2>
+<p>Attention: Attention(Q, K, V) = softmax(QKᵀ/√d) V. Let S = QKᵀ/√d, A = softmax(S), output = AV. For scalar loss L and upstream gradient ∂L/∂(AV): ∂L/∂A = (∂L/∂(AV)) Vᵀ. ∂L/∂V = Aᵀ (∂L/∂(AV)). ∂L/∂S uses the softmax Jacobian (full matrix). ∂L/∂Q = (∂L/∂S) K / √d. ∂L/∂K = (∂L/∂S)ᵀ Q / √d. This is what PyTorch's autograd computes — the same chain of matrix products.</p>
+<h2>The Frobenius inner product</h2>
+<p>For matrix-valued functions, the gradient can be derived using the Frobenius inner product: ⟨A, B⟩_F = tr(AᵀB). The directional derivative of f(X) in direction dX is df = ⟨∇_X f, dX⟩_F = tr((∇_X f)ᵀ dX). To find ∇_X f: compute df, express it as tr(AᵀdX), then ∇_X f = A. Example: f = tr(AXB), df = tr(A dX B) = tr(BAᵀ ... ) ... = tr((AᵀB)ᵀ dX). So ∇_X f = (AᵀB)ᵀ = BᵀA.</p>
+<h2>Interview questions on this topic</h2>
+<p>"Derive ∂L/∂W for a linear layer given upstream gradient δ." — z = Wx + b, upstream δ = ∂L/∂z. ∂L/∂W_{ij} = Σₖ δₖ ∂zₖ/∂W_{ij} = δᵢ xⱼ. In matrix form: ∂L/∂W = δxᵀ. This is the outer product of the upstream gradient and the layer input.</p>
+<p>"Why is the backward pass through a linear layer multiplication by Wᵀ?" — Forward: z = Wx (y = f(x) = Wx, Jacobian = W). Chain rule: ∂L/∂x = Wᵀ ∂L/∂z. The transpose appears because in numerator layout, the Jacobian of Wx w.r.t. x is W, and the chain rule for ∂L/∂x requires multiplying by the transpose Jacobian: ∂L/∂x = (∂z/∂x)ᵀ ∂L/∂z = Wᵀ δ.</p>
+<p>"What is the gradient of the cross-entropy loss with softmax output?" — Let z be the logits, s = softmax(z), L = -Σ_k y_k log s_k. Using the softmax Jacobian: ∂L/∂z_i = s_i - y_i. The gradient is simply prediction minus label. This is one of the cleanest gradients in all of deep learning and is the reason softmax + cross-entropy is so well-behaved numerically.</p>
+<p>"What shape is ∂L/∂W for a linear layer W ∈ ℝᵐˣⁿ and why?" — ∂L/∂W ∈ ℝᵐˣⁿ — the same shape as W. The gradient of a scalar with respect to a matrix has the same shape as the matrix. Element-wise: (∂L/∂W)_{ij} = ∂L/∂W_{ij} — the partial derivative of L with respect to each parameter.</p>
+<p><strong>Try on Colab:</strong> implement a single linear layer with manual forward and backward passes (no autograd). For an input x ∈ ℝ^{10}, W ∈ ℝ^{5×10}, and MSE loss on a target y ∈ ℝ^5, compute: (1) the forward pass z = Wx, (2) the loss L = ||z - y||², (3) δ = ∂L/∂z = 2(z-y), (4) ∂L/∂W = δxᵀ, (5) ∂L/∂x = Wᵀδ. Verify each gradient against PyTorch autograd using torch.autograd.gradcheck or finite differences.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=matrix-calculus-gradients-backprop-linear-layers#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

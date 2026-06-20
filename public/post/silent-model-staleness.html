@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality — ML Systems Lab</title>
+  <meta name="description" content="Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. Th…" />
+  <meta name="keywords" content="Model Staleness, Monitoring, Retraining, Production ML, Prediction Drift, Model Health, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/silent-model-staleness.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/silent-model-staleness.html" />
+  <meta property="og:title" content="Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality" />
+  <meta property="og:description" content="Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. Th…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Monitoring" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality" />
+  <meta name="twitter:description" content="Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. Th…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality",
+  "description": "Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. Th…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/silent-model-staleness.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Staleness, Monitoring, Retraining, Production ML, Prediction Drift, Model Health"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=silent-model-staleness#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Monitoring &middot; ML Systems Lab</div>
+    <h1>Silent Model Staleness: How to Know When Your Model Has Stopped Learning from Reality</h1>
+    <p class="excerpt">Your model was trained in December. It is now June. The retraining pipeline has not fired. No alert has gone off. The model is quietly serving stale predictions on a world it no longer understands. This is silent model staleness — and most teams discover it too late.</p>
+    <h2>What Silent Staleness Actually Means</h2>
+<p>A stale model is not a broken model. It passes your unit tests. It passes your integration tests. It serves predictions without errors. It is simply a model whose training data predates the world it is now being asked to describe, and that gap has grown large enough to matter.</p>
+<p>Silent staleness is dangerous precisely because nothing fails loudly. Errors accumulate in the output space (wrong predictions) rather than the system space (errors, latency spikes, availability issues). Without active monitoring of prediction quality, you will not see it in your dashboards until a business metric surfaces the damage.</p>
+<h2>Why Staleness Is Invisible Without Active Monitoring</h2>
+<p>Infrastructure monitoring — latency, error rate, memory, CPU — tells you about system health, not model health. A model can be perfectly healthy as a serving system while being completely wrong as a predictor. These are different things and require different monitoring strategies.</p>
+<p>The absence of staleness alerts does not mean the model is fresh. It means staleness monitoring is not implemented. Most teams conflate these two situations until a post-mortem forces the distinction.</p>
+<h2>Three Signals That Detect Staleness</h2>
+<p>Prediction distribution drift: track the distribution of your model's output scores week over week. Plot the 10th, 50th, and 90th percentiles. If the score distribution shifts without a corresponding model update, the model is seeing inputs that look different from training — a precursor to prediction quality degradation. This is not definitive, but it is an early warning.</p>
+<p>Feature importance shift over time: for tree-based models, log feature importance at training time and compute feature importance on recent serving traffic. If the rank ordering of important features has changed significantly, the model is operating in a regime where its learned relationships may no longer hold. This requires periodic offline analysis, not real-time monitoring.</p>
+<p>Outcome rate divergence from model score: if your labels arrive with any timeliness (even with delay), compare your model's predicted positive rate to the observed positive rate in cohorts where labels have matured. Divergence that grows monotonically over time is the clearest signal that the model has fallen out of step with reality.</p>
+<h2>The Recommendation Model Trained in December</h2>
+<p>A content recommendation model trained on December user behavior and deployed in January is already aging. By June, it has never seen summer behavioral patterns: longer evening sessions, different device usage, genre preferences that shift with season and school calendar. The feature distributions it receives in June are not dramatically different from December — users still have age, location, and watch history features. But the relationships between those features and what users want to watch have shifted. The model serves predictions that were calibrated for a December world. CTR metrics decline slowly, attributed to seasonality, until someone builds a June model and the improvement is unmistakable.</p>
+<h2>Scheduled vs Triggered Retraining</h2>
+<p>Scheduled retraining (retrain every N days regardless of performance) is simple, auditable, and safe. It ensures maximum staleness is bounded. The cost is retraining when unnecessary — wasted compute on stable patterns.</p>
+<p>Triggered retraining (retrain when a monitoring signal crosses a threshold) is more efficient but more complex. It requires you to trust your monitoring enough to act on it automatically. False triggers cause unnecessary retraining; missed triggers allow staleness to accumulate.</p>
+<h2>The Failure Modes of Each</h2>
+<p>Retraining too aggressively (daily or with a low trigger threshold): your model never stabilizes. Each new model is trained on slightly different data and produces slightly different scores. Downstream systems that depend on score distributions see instability. A/B tests are invalidated by model churn. The cure is worse than the disease.</p>
+<p>Retraining too rarely (quarterly scheduled or with a high trigger threshold): staleness accumulates silently between retraining cycles. Seasonal patterns, macro shifts, and behavioral drift go unaddressed for weeks or months.</p>
+<p>The right answer is almost always a scheduled cadence with monitoring-based early triggers: retrain on schedule, but also trigger retraining if outcome divergence exceeds a threshold before the next scheduled date.</p>
+<h2>Practice this in Monitoring to work through how staleness manifests in model score distributions, how to set up outcome divergence tracking with label delay, and how to design a retraining trigger that fires at the right time.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=silent-model-staleness#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Importance Drift: When Your Top Features Become Noise — ML Systems Lab</title>
+  <meta name="description" content="Your model&#39;s top 3 features — the ones that dominate predictions and deliver 60% of the model&#39;s lift — silently stopped working in production. They&#39;re still in the model. They&#39;re still computing. But …" />
+  <meta name="keywords" content="Feature Importance, Concept Drift, Monitoring, SHAP, Calibration, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/feature-importance-drift-production.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/feature-importance-drift-production.html" />
+  <meta property="og:title" content="Feature Importance Drift: When Your Top Features Become Noise" />
+  <meta property="og:description" content="Your model&#39;s top 3 features — the ones that dominate predictions and deliver 60% of the model&#39;s lift — silently stopped working in production. They&#39;re still in the model. They&#39;re still computing. But …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Feature Engineering" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Feature Importance Drift: When Your Top Features Become Noise" />
+  <meta name="twitter:description" content="Your model&#39;s top 3 features — the ones that dominate predictions and deliver 60% of the model&#39;s lift — silently stopped working in production. They&#39;re still in the model. They&#39;re still computing. But …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Feature Importance Drift: When Your Top Features Become Noise",
+  "description": "Your model's top 3 features — the ones that dominate predictions and deliver 60% of the model's lift — silently stopped working in production. They're still in the model. They're still computing. But …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-importance-drift-production.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Feature Importance, Concept Drift, Monitoring, SHAP, Calibration, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=feature-importance-drift-production#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
+    <h1>Feature Importance Drift: When Your Top Features Become Noise</h1>
+    <p class="excerpt">Your model&#39;s top 3 features — the ones that dominate predictions and deliver 60% of the model&#39;s lift — silently stopped working in production. They&#39;re still in the model. They&#39;re still computing. But their relationship with the target has decayed. This is feature importance drift, and it&#39;s invisible to PSI monitoring because the feature distributions haven&#39;t changed — only their predictive power has.</p>
+    <p>Feature importance drift is different from covariate shift. Covariate shift means your input features X are moving away from the training distribution. Feature importance drift means the features are stable in distribution, but their predictive relationship with the target has shifted. P(X) is unchanged. P(Y|X) is not.</p>
+<h2>The concrete scenario:</h2>
+<p>Your model predicts loan default. The top feature by SHAP importance is \`debt_to_income_ratio\`. During training, users with debt-to-income > 0.5 had a 42% default rate. Users with ratio < 0.3 had a 2% default rate. The feature is powerful.</p>
+<p>Six months post-launch, the feature's SHAP importance has fallen 30%. The distribution of \`debt_to_income_ratio\` is identical to training (PSI = 0.08, well below the alert threshold). But the predictive relationship has decayed: users with ratio > 0.5 now have a 15% default rate. The ratio still matters — but half as much.</p>
+<p>Why? A regulatory change, a macro event, or a shift in the user population (new marketing channel attracting a different segment) has altered the causal relationship between the feature and the outcome. The feature didn't go stale — it went uncorrelated.</p>
+<h2>Why this is invisible to standard monitoring:</h2>
+<p>PSI (Population Stability Index) checks if P(feature_value_today) matches P(feature_value_at_training). It does. Your alert doesn't fire.</p>
+<p>KS (Kolmogorov-Smirnov) test checks if the distributions differ. They don't. No alert.</p>
+<p>Prediction distribution monitoring checks if P(score_today) differs from P(score_at_training). It does slightly, but you attribute this to base rate changes.</p>
+<p>The signal that matters — P(Y|X) drift — requires labeled data. And labels arrive with delay (30 days for loan default, weeks for churn, days for fraud).</p>
+<h2>The three detection patterns:</h2>
+<p>1. SHAP importance divergence: compute SHAP values on recent data and compare to training-era SHAP values. If your top features have dropped > 20% in importance while maintaining stable distribution, concept drift has likely occurred.</p>
+<p>2. Calibration loss: train a calibration curve (reliability diagram) on training data. Apply it to recent predictions. If the actual event rate for a given score bucket diverges from the calibration curve, the model's P(Y|X) mapping has shifted.</p>
+<p>3. Residual analysis by feature segment: stratify recent data (with available labels) by your top 5 features. For each segment, compute mean residual (actual - predicted). If residuals diverge across segments in a way that differs from training, P(Y|X) has shifted.</p>
+<h2>The production failure mode:</h2>
+<p>A model with decayed feature importance keeps shipping predictions, keeps making decisions, keeps affecting customers — but with reduced signal. A default model that should catch 85% of defaults now catches 60%. A churn model that should identify 70% of churners now identifies 40%. The degradation is silent because the model's plumbing is intact.</p>
+<h2>How to prevent it:</h2>
+<p>1. Log feature values alongside predictions. Ship a feature importance sidecar that recomputes SHAP importance weekly on logged data.</p>
+<p>2. Implement a feature importance regression test: if any of your top-10 features drops more than 15% in importance, trigger a retraining review (not automatic retrain — review).</p>
+<p>3. Implement calibration monitoring: for high-confidence predictions (score > 0.9), track the actual positive rate. If it's < 0.7, your model is overconfident — recalibration or retraining needed.</p>
+<p>4. Use a holdout set with labels: label a sample of recent predictions (even if labels are delayed) and compare residuals against training baseline. This is the only direct way to detect P(Y|X) drift.</p>
+<h2>The business signal:</h2>
+<p>The earliest indication of feature importance drift is often a business metric diverging from the model's own metrics. Model precision looks stable. Fraud ops reports that the flagged transactions are increasingly hard to review. The signal-to-noise ratio on the model's output has degraded. This is feature importance drift.</p>
+<h2>Practice this in Feature Engineering to understand how to monitor and detect shifts in feature predictive power, not just shifts in distribution.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=feature-importance-drift-production#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

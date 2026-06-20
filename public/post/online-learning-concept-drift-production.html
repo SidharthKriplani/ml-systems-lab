@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Learning and Concept Drift: When the World Changes Faster Than Your Model — ML Systems Lab</title>
+  <meta name="description" content="Every production ML model degrades over time. User behaviour shifts, world events happen, seasonality cycles, and competitor actions change the distribution your model was trained on. Concept drift is…" />
+  <meta name="keywords" content="ML System Design, Concept Drift, Online Learning, Production ML, Monitoring, MLOps, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/online-learning-concept-drift-production.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/online-learning-concept-drift-production.html" />
+  <meta property="og:title" content="Online Learning and Concept Drift: When the World Changes Faster Than Your Model" />
+  <meta property="og:description" content="Every production ML model degrades over time. User behaviour shifts, world events happen, seasonality cycles, and competitor actions change the distribution your model was trained on. Concept drift is…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Online Learning and Concept Drift: When the World Changes Faster Than Your Model" />
+  <meta name="twitter:description" content="Every production ML model degrades over time. User behaviour shifts, world events happen, seasonality cycles, and competitor actions change the distribution your model was trained on. Concept drift is…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Online Learning and Concept Drift: When the World Changes Faster Than Your Model",
+  "description": "Every production ML model degrades over time. User behaviour shifts, world events happen, seasonality cycles, and competitor actions change the distribution your model was trained on. Concept drift is…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/online-learning-concept-drift-production.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "ML System Design, Concept Drift, Online Learning, Production ML, Monitoring, MLOps"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=online-learning-concept-drift-production#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Online Learning and Concept Drift: When the World Changes Faster Than Your Model</h1>
+    <p class="excerpt">Every production ML model degrades over time. User behaviour shifts, world events happen, seasonality cycles, and competitor actions change the distribution your model was trained on. Concept drift is the name for this. The question is not whether drift will happen but how fast you detect it, how you respond, and whether your system can learn continuously rather than in batches.</p>
+    <p>A model trained in January will not perform the same in December. User behaviour evolves. Product changes alter feature distributions. External events (pandemic, economic shock, viral trend) shift the entire world. Monitoring for and responding to this distribution shift is one of the core responsibilities of a production ML team.</p>
+<h2>Types of drift</h2>
+<p>Data drift (covariate shift): P(X) changes but P(Y|X) stays the same. The input distribution shifts — for example, a new user cohort has different demographic and behavioural patterns — but the relationship between features and outcomes is unchanged. A model trained on old data may underperform because it has not learned patterns relevant to the new distribution, but the model's learned function is still "correct."</p>
+<p>Concept drift: P(Y|X) changes — the relationship between features and labels shifts. A fraud detection model trained on 2022 fraud patterns may miss entirely new fraud techniques in 2024. A sentiment model trained on pre-pandemic text may misclassify pandemic-era language. The model's learned function is now wrong, not just mis-calibrated.</p>
+<p>Label drift: P(Y) changes. The overall class distribution shifts — for example, conversion rate drops from 5% to 2% without any feature change. Thresholds, decision rules, and calibration all need updating.</p>
+<h2>Detecting drift: statistical tests and monitoring</h2>
+<p>Population Stability Index (PSI): measures distributional shift in a single feature. PSI = Σ_{bins} (P_new - P_old) * ln(P_new / P_old). PSI < 0.1: negligible shift. 0.1–0.25: moderate shift, investigate. > 0.25: major shift, model retraining likely needed. Compute PSI for all input features and for model output scores.</p>
+<p>Kolmogorov-Smirnov test: tests whether two samples come from the same distribution. Apply to each feature distribution separately. Chi-squared test for categorical features. These detect covariate shift. Detecting concept drift requires label data — comparing model predictions to ground truth labels over time. If the model's error rate increases and/or calibration degrades, concept drift is likely.</p>
+<h2>Monitoring architecture</h2>
+<p>Shadow mode: run the new model alongside the old model in production, serving the old model's decisions but logging the new model's predictions. Compare performance metrics before switching traffic. Canary deployment: route 1-5% of traffic to the new model, monitor key metrics, roll forward if stable, roll back if degraded. Champion-challenger: the current deployed model (champion) is continuously compared to candidate models (challengers) trained on more recent data. The challenger replaces the champion when its rolling performance exceeds the champion's for a sustained period.</p>
+<h2>Retraining strategies</h2>
+<p>Periodic retraining: retrain on a sliding window of recent data (e.g., last 90 days) on a fixed schedule (weekly, monthly). Simple to implement; does not respond to sudden drift. Event-triggered retraining: retrain when monitoring metrics drop below a threshold. Faster response; requires robust monitoring. Online learning: update model parameters continuously as new labelled data arrives (see FTRL for ads, Post 89). Fastest response but requires careful regularisation to prevent catastrophic forgetting.</p>
+<h2>Catastrophic forgetting: the online learning pitfall</h2>
+<p>When a model is updated continuously on new data, it may "forget" patterns from older data — a phenomenon called catastrophic forgetting. A fraud model updated on recent transactions may lose its ability to detect fraud patterns from six months ago that occasionally resurface. Mitigations: include a replay buffer of historical examples alongside recent data in each update; use elastic weight consolidation (EWC) to penalise large parameter changes from the previous model; monitor performance on a held-out historical test set.</p>
+<h2>Data quality monitoring: upstream of model monitoring</h2>
+<p>Models degrade when features degrade before the model sees them. Feature importance monitoring: track which features contribute most to model predictions. If a critical feature suddenly has 90% null rate (upstream pipeline failure), model performance may degrade without any change in the model itself. Schema validation: assert expected feature types, ranges, null rates, and cardinalities. Any deviation triggers an alert before the bad data reaches the model.</p>
+<p><strong>Try on Colab:</strong> simulate a classification dataset with concept drift. Train a model on the first 10,000 examples. Evaluate on examples 10,001-20,000 where the relationship P(Y|X) has shifted. Implement a sliding-window retraining: retrain monthly on the most recent 5,000 examples. Compare the static model vs sliding-window model AUC over time. Plot PSI for input features to detect the drift onset.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=online-learning-concept-drift-production#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

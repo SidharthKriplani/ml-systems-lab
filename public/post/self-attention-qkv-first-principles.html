@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Attention: What Q, K, and V Are Actually Doing — ML Systems Lab</title>
+  <meta name="description" content="Attention is described as &quot;letting every token look at every other token.&quot; That is true but incomplete. The mechanism is a soft database lookup — and once you see it that way, the roles of Q, K, and V…" />
+  <meta name="keywords" content="Deep Learning, Attention, Transformer, Self-Attention, NLP, Foundations, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/self-attention-qkv-first-principles.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/self-attention-qkv-first-principles.html" />
+  <meta property="og:title" content="Self-Attention: What Q, K, and V Are Actually Doing" />
+  <meta property="og:description" content="Attention is described as &quot;letting every token look at every other token.&quot; That is true but incomplete. The mechanism is a soft database lookup — and once you see it that way, the roles of Q, K, and V…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Deep Learning" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Self-Attention: What Q, K, and V Are Actually Doing" />
+  <meta name="twitter:description" content="Attention is described as &quot;letting every token look at every other token.&quot; That is true but incomplete. The mechanism is a soft database lookup — and once you see it that way, the roles of Q, K, and V…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Self-Attention: What Q, K, and V Are Actually Doing",
+  "description": "Attention is described as \"letting every token look at every other token.\" That is true but incomplete. The mechanism is a soft database lookup — and once you see it that way, the roles of Q, K, and V…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/self-attention-qkv-first-principles.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Deep Learning, Attention, Transformer, Self-Attention, NLP, Foundations"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=self-attention-qkv-first-principles#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Deep Learning &middot; ML Systems Lab</div>
+    <h1>Self-Attention: What Q, K, and V Are Actually Doing</h1>
+    <p class="excerpt">Attention is described as &quot;letting every token look at every other token.&quot; That is true but incomplete. The mechanism is a soft database lookup — and once you see it that way, the roles of Q, K, and V, the scaled dot product, and the reason multi-head attention works all become concrete rather than mysterious.</p>
+    <p>Imagine a database: you send a query, the database matches it against keys, and returns weighted values. Attention is this operation made differentiable and applied to sequence positions. That is the whole idea. Everything else is implementation detail.</p>
+<h2>The three projections: Q, K, V</h2>
+<p>Given an input sequence of token embeddings, self-attention projects each embedding three ways. The query (Q) projection asks: what information am I looking for? The key (K) projection asks: what information do I contain? The value (V) projection asks: what should I actually return if someone attends to me?</p>
+<p>These three projections are separate learned weight matrices applied to the same input. A token at position i produces Q_i, K_i, V_i. The query of position i is compared against the keys of all positions j to produce attention scores: score(i,j) = Q_i · K_j.</p>
+<h2>Why the dot product measures relevance</h2>
+<p>A dot product is large when two vectors are aligned — when they point in similar directions in the embedding space. Training pushes the query projections and key projections into a space where semantically relevant pairs align and irrelevant pairs do not. The dot product is the cheapest function that captures this alignment.</p>
+<h2>The scaling factor: why divide by sqrt(d_k)</h2>
+<p>With high-dimensional query and key vectors, dot products grow in magnitude proportionally to the dimension d_k. Large dot products push the softmax into very sharp distributions — near one-hot, with near-zero gradients almost everywhere. Dividing by sqrt(d_k) keeps the dot products in a range where softmax produces useful gradients.</p>
+<h2>Softmax turns scores into weights</h2>
+<p>After scaling, softmax converts scores into a probability distribution over positions: attention_weights(i,j) = softmax(Q_i · K_j / sqrt(d_k)). The output for position i is the weighted sum of all value vectors: output_i = Σ_j attention_weights(i,j) * V_j.</p>
+<p>This is where "every token attends to every other token" comes from. But the attention is soft — even if position i mostly attends to position k, it still gets a small contribution from all other positions. The model learns which positions to weight highly through training.</p>
+<h2>Multi-head attention: running the lookup h times</h2>
+<p>Single-head attention uses one Q/K/V projection. Multi-head attention uses h separate sets of projections, runs attention independently on each, and concatenates the results. Why? Because a single attention head can only capture one type of relationship at a time. One head might learn syntactic relationships (subject-verb agreement); another might learn coreference (pronouns pointing back to nouns); another might learn positional proximity. Running h heads in parallel and concatenating gives the model the capacity to capture multiple relationship types simultaneously.</p>
+<p>The computational cost is managed by projecting to d_k = d_model / h rather than d_model. The total parameter count and FLOPs are similar to a single full-dimensional head.</p>
+<h2>What the model learns in the attention weights</h2>
+<p>Probing trained attention patterns reveals structure: heads in early layers often attend locally (nearby tokens), while heads in later layers attend to semantically related tokens regardless of distance. This is not explicitly programmed — it emerges from the training objective. The model discovers that capturing both local syntax and long-range semantics is useful for predicting the next token.</p>
+<h2>The quadratic complexity problem</h2>
+<p>Computing Q · K^T for a sequence of length n produces an n×n attention matrix. Memory and compute scale as O(n^2). For n = 512 this is fine. For n = 100,000 (long documents, whole codebases) it becomes the primary bottleneck. Efficient attention variants (Longformer, FlashAttention, sliding window attention) are all solutions to this quadratic bottleneck while preserving the expressiveness of the attention mechanism.</p>
+<p><strong>Try on Colab:</strong> implement scaled dot-product attention in PyTorch from scratch — three linear projections, dot product, scale, softmax, weighted sum. Then compare your output against torch.nn.MultiheadAttention on the same input. Extract and visualise the attention weight matrix for a short sentence. See which token pairs get high weights.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=self-attention-qkv-first-principles#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

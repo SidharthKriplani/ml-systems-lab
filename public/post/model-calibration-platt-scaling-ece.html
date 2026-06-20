@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Calibration: Why Neural Networks Are Overconfident and How to Fix It — ML Systems Lab</title>
+  <meta name="description" content="A model that predicts 90% confidence should be right 90% of the time. Most neural networks are not. Modern deep networks are systematically overconfident — their predicted probabilities are higher tha…" />
+  <meta name="keywords" content="Model Evaluation, Calibration, Temperature Scaling, Platt Scaling, ECE, Uncertainty, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/model-calibration-platt-scaling-ece.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/model-calibration-platt-scaling-ece.html" />
+  <meta property="og:title" content="Model Calibration: Why Neural Networks Are Overconfident and How to Fix It" />
+  <meta property="og:description" content="A model that predicts 90% confidence should be right 90% of the time. Most neural networks are not. Modern deep networks are systematically overconfident — their predicted probabilities are higher tha…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Model Calibration: Why Neural Networks Are Overconfident and How to Fix It" />
+  <meta name="twitter:description" content="A model that predicts 90% confidence should be right 90% of the time. Most neural networks are not. Modern deep networks are systematically overconfident — their predicted probabilities are higher tha…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Model Calibration: Why Neural Networks Are Overconfident and How to Fix It",
+  "description": "A model that predicts 90% confidence should be right 90% of the time. Most neural networks are not. Modern deep networks are systematically overconfident — their predicted probabilities are higher tha…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/model-calibration-platt-scaling-ece.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Model Evaluation, Calibration, Temperature Scaling, Platt Scaling, ECE, Uncertainty"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=model-calibration-platt-scaling-ece#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Model Calibration: Why Neural Networks Are Overconfident and How to Fix It</h1>
+    <p class="excerpt">A model that predicts 90% confidence should be right 90% of the time. Most neural networks are not. Modern deep networks are systematically overconfident — their predicted probabilities are higher than their actual accuracy. This matters for any downstream decision that uses probabilities: risk scoring, medical diagnosis, fraud thresholds. Calibration diagnosis, Platt scaling, and temperature scaling are the tools.</p>
+    <p>A well-calibrated model means exactly what it says: when it assigns probability 0.7 to an event, the event occurs 70% of the time. Calibration is distinct from accuracy — a model can be accurate on average but badly miscalibrated, assigning 0.99 confidence to predictions where it is wrong 20% of the time. For applications that use model outputs as probabilities (fraud scores, medical risk, credit scoring), calibration is as important as accuracy.</p>
+<h2>The calibration problem with modern deep networks</h2>
+<p>Guo et al. (2017) showed that modern neural networks are systematically miscalibrated despite high accuracy. Models trained before ~2010 (SVM, logistic regression, shallow networks) were reasonably well-calibrated. Modern deep networks with batch norm, weight decay, and deeper architectures are overconfident: they assign probabilities close to 0 or 1 more often than their actual accuracy warrants. The paper attributed this to the combination of model capacity (deep networks memorise training data, driving probabilities toward 1) and the cross-entropy loss (which rewards confidence even beyond what accuracy justifies).</p>
+<h2>Reliability diagrams and Expected Calibration Error</h2>
+<p>A reliability diagram plots model confidence (x-axis) against empirical accuracy (y-axis) by grouping predictions into confidence bins. A perfectly calibrated model lies on the diagonal. Overconfident models lie below the diagonal (confidence > accuracy); underconfident models lie above it.</p>
+<p>Expected Calibration Error (ECE) = Σ_{b} (|B_b|/n) * |acc(B_b) - conf(B_b)|, summing over confidence bins weighted by bin size. Lower ECE = better calibrated. Modern deep networks have ECE of 10-15% on ImageNet; a well-calibrated model should have ECE below 2-3%.</p>
+<h2>Platt scaling: post-hoc calibration with logistic regression</h2>
+<p>Platt scaling trains a logistic regression on the model's raw scores (pre-softmax logits) using a small held-out calibration set. The two parameters (w and b) of logistic regression adjust the scale and shift of the score distribution to match the true label frequencies. Simple, fast, and effective for binary classification. The calibration set must be separate from the training set (to avoid overconfidence on training data leaking into the calibration).</p>
+<h2>Temperature scaling: single-parameter calibration</h2>
+<p>Temperature scaling (Guo et al., 2017) is the simplest calibration method for multi-class neural networks. The softmax is computed over logits / T, where T is a single temperature parameter. T > 1 softens the distribution (reduces confidence); T < 1 sharpens it (increases confidence). For overconfident networks, T > 1 is appropriate. T is found by minimising the NLL on the calibration set. Temperature scaling does not change the argmax prediction — it only changes the confidence — so it cannot hurt accuracy while improving calibration.</p>
+<h2>Isotonic regression: non-parametric calibration</h2>
+<p>Isotonic regression is a non-parametric monotone calibrator: it learns a step-function mapping from uncalibrated to calibrated probabilities, constrained to be monotonically increasing. More flexible than Platt scaling but requires more calibration data to avoid overfitting. Effective when the miscalibration pattern is complex and non-linear.</p>
+<h2>When calibration is critical in production</h2>
+<p>Credit scoring: a score of 0.7 feeds a decision tree with a specific threshold. If the model is overconfident (true default rate at 0.7 confidence is 0.4), the risk model sets incorrect thresholds and the business takes on more risk than modelled. Medical diagnosis: a 0.9 probability of disease feeds treatment decisions. Miscalibration can cause over- or under-treatment. Ensemble models: if you combine predictions from multiple models, each model's confidence should be a meaningful probability. Uncalibrated ensemble members degrade the combination.</p>
+<h2>Production tells — calibration failures that don&#39;t show up in your ECE dashboard</h2>
+<p>Four patterns. (1) <strong>Recalibration drift.</strong> The calibration parameters (Platt's a, b or temperature T) are fit at training time, then stored. Next retrain reuses them. The underlying score distribution shifted between retrains, so the cached calibration parameters are now wrong. ECE on the new training set will not catch this — you have to refit calibration on every retrain. (2) <strong>Threshold decisions set on uncalibrated scores.</strong> Ops set "block at score > 0.7" based on tuning at v3 of the model. v4 ships with the same accuracy but a tighter score distribution; the same threshold now blocks 3× the volume. The model "didn't change" from any accuracy metric's point of view; downstream is broken. Set thresholds on calibrated probabilities, not on raw scores. (3) <strong>Aggregate ECE hides per-segment miscalibration.</strong> Overall ECE of 1.5% looks great. But the model is overconfident in low-confidence predictions (where the 1.5% calibration error compounds) and underconfident in high-confidence ones, and the two cancel out in the aggregate. Per-bin reliability plots and per-class ECE will surface this. (4) <strong>Calibration measured on the wrong distribution.</strong> ECE computed on a uniform sample of the calibration set looks fine. The model is deployed to a slice (new market, new device, weekend traffic) where calibration is much worse. Cohort-stratified ECE is the fix.</p>
+<p><strong>Try on Colab:</strong> train ResNet-20 on CIFAR-10. Plot its reliability diagram and compute ECE before calibration. Apply temperature scaling: minimise NLL on a held-out calibration set (5% of training data) over T in [0.5, 2.0]. Plot the reliability diagram after temperature scaling. ECE should drop from ~8% to ~1-2%.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=model-calibration-platt-scaling-ece#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

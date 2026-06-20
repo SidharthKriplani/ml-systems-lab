@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers — ML Systems Lab</title>
+  <meta name="description" content="A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are dat…" />
+  <meta name="keywords" content="Time Series, Forecasting, Evaluation, Leakage, Stationarity, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/why-forecasts-fail.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/why-forecasts-fail.html" />
+  <meta property="og:title" content="Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers" />
+  <meta property="og:description" content="A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are dat…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Model Evaluation" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers" />
+  <meta name="twitter:description" content="A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are dat…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers",
+  "description": "A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are dat…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-06-20",
+  "dateModified": "2026-06-20",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/why-forecasts-fail.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Time Series, Forecasting, Evaluation, Leakage, Stationarity, Production ML"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=why-forecasts-fail#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>Why Your Forecast Was Wrong Before It Ran: The 8 Silent Killers</h1>
+    <p class="excerpt">A time series model that looks excellent in backtesting routinely fails in production. The backtest metric was real — the error was introduced before the model ever ran. Most forecast failures are data and evaluation failures, not model failures. Here are the 8 patterns that kill forecasts before deployment.</p>
+    <p>Forecasting failures are mostly diagnosed wrong. When a forecast misses badly, the instinct is to try a different model: ARIMA instead of Prophet, LSTM instead of ARIMA. Usually that\'s the wrong fix. The model wasn\'t the problem.</p>
+<p>Here are the 8 patterns that corrupt forecasting pipelines before the model gets involved.</p>
+<h2>1. Target leakage in temporal features</h2>
+<p>You\'re predicting sales tomorrow. One of your features is "average sales over the past 7 days" — computed using the 7 days before the prediction date. In training, you compute this lazily using the full history. In production, the pipeline that materialises this feature runs at 06:00 UTC, including transactions that came in at 23:55 the previous night.</p>
+<p>Result: training features are computed with a slightly different time boundary than production features. The model learns patterns that don\'t exist in the production data. Your MAPE looks fine in backtest; it degrades 15% in production.</p>
+<p>\`\`\`python import pandas as pd from sklearn.linear_model import Ridge</p>
+<p>def make_temporal_features(df, target_col, lag_days=[7, 14, 28]): """Safe temporal feature engineering — no future leakage.""" df = df.sort_values('date').copy() for lag in lag_days: # shift(lag) ensures we only use data from lag days ago df[f'target_lag_{lag}d'] = df[target_col].shift(lag) # Rolling mean must be shifted by 1 to avoid using today's value df['rolling_mean_7d'] = df[target_col].shift(1).rolling(7).mean() return df</p>
+<p># Common mistake — leaks the target into features: # df['rolling_mean'] = df[target_col].rolling(7).mean()  # BUG: uses today # df['lag_1'] = df[target_col].shift(0)                  # BUG: is today</p>
+<p># Safe train/test split for time series — never shuffle cutoff = pd.Timestamp('2024-01-01') train = df[df['date'] < cutoff] test  = df[df['date'] >= cutoff]  # strictly after — no overlap \`\`\`</p>
+<h2>2. Non-stationarity ignored at training time</h2>
+<p>Most classical forecasting methods assume stationarity: the statistical properties of the series (mean, variance, autocorrelation) don\'t change over time. Most real-world series aren\'t stationary. Retail sales trend upward. Energy consumption has decade-long cycles. Advertising spend has quarterly budget patterns.</p>
+<p>If you fit an ARIMA to a non-stationary series without differencing, the model is fitting to the trend rather than the patterns. It will forecast the trend to continue — and mean-revert when it doesn\'t.</p>
+<p>Always test stationarity with ADF or KPSS before model selection. Always apply the differencing order that makes the series stationary before passing it to a classical model.</p>
+<h2>3. Structural breaks treated as noise</h2>
+<p>A structural break is a permanent shift in the level or trend of a series — a new market entrant, a product line change, a regulation, a macro event. Models trained before the break will forecast as if the old regime continues. Models trained after the break may not have enough data to characterise the new regime.</p>
+<p>Prophet has built-in changepoint detection. For other models: detect breaks with the Chow test or Bai-Perron algorithm. Segment your training data at the break point — data before the break is either excluded or given lower weight.</p>
+<h2>4. Evaluation metric mismatch</h2>
+<p>RMSE penalises large errors heavily. MAPE breaks when the actual is near zero. MAE treats all errors equally regardless of scale. Symmetric MAPE (SMAPE) has its own pathologies.</p>
+<p>The right metric depends on your use case: if an underforecast and overforecast have equal cost, MAE. If large errors are catastrophically costly (safety-critical applications), RMSE. If you care about percentage errors and your series never goes to zero, MAPE.</p>
+<p>The mistake: optimising RMSE in training when operations cares about MAPE, or reporting MAPE on a series with near-zero values where the denominator explodes.</p>
+<h2>5. Look-ahead bias in the evaluation window</h2>
+<p>Your backtest generates forecasts for each week using a model fit on all prior data. But did you re-fit the model at each step of the walk-forward validation, or did you fit it once on the full history and generate "forecasts" with the model that already saw the future?</p>
+<p>A model fit once on full history then evaluated over historical windows has already seen the "future" of those windows during training. Your backtest numbers are not honest. Always use expanding window or rolling window cross-validation where the model is genuinely blind to future data.</p>
+<h2>6. Cold start on sparse series</h2>
+<p>Your inventory model works well for your top-100 SKUs. It fails for the 4,000 long-tail SKUs with 2–3 transactions per month. Classical time series models need at least 2–3 seasonal cycles of history to characterise seasonality. For sparse series, fitting a model per series is both computationally wasteful and statistically unsound.</p>
+<p>Solutions: hierarchical forecasting (borrow statistical strength from similar series), global models (one neural network trained on all series simultaneously), or default-to-category-average for series below a sparsity threshold.</p>
+<h2>7. Feature pipeline drift after deployment</h2>
+<p>Your forecast model uses 6 external features (weather, economic indicators, competitor prices). These features are fetched from third-party APIs. One API changes its response schema in month 3. Your feature pipeline silently fills that feature with NULL, which gets imputed to the mean. The model continues running and producing numbers — slightly wrong ones, for the next 8 months, until a quarterly review catches it.</p>
+<p>Validation: apply schema checks and null-rate monitoring to every external feature, not just the model\'s predictions. Alert if null rate for any feature exceeds 2x its training baseline.</p>
+<h2>8. Not accounting for intermittency</h2>
+<p>A series that is zero 70% of the time (a product that doesn\'t sell most days) should not be forecast with a model designed for continuous data. Standard RMSE will be dominated by the zero periods. Standard models will forecast small positive values for the zero periods (systematic positive bias).</p>
+<p>Correct approach: Croston\'s method (separate demand interval and demand size models), or zero-inflated distributions, or — for very sparse series — just forecast the probability of a non-zero period and the expected size conditional on non-zero.</p>
+<h2>The meta-pattern</h2>
+<p>Six of these eight failures are detectable before you train any model: by auditing the feature computation logic, checking stationarity, verifying your evaluation methodology, and profiling your series for sparsity and structural breaks. Spend 30% of your forecasting project on this audit before touching model selection. You\'ll find problems that no model architecture can fix.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=why-forecasts-fail#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>
