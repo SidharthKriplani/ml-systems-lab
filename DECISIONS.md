@@ -5,6 +5,33 @@ This is the "why this works this way" file — not build history (that's LINEAGE
 
 ---
 
+## v4.119 STRATEGIC DECISIONS (2026-06-21) — read these first
+
+These override most "default" Cowork or build instincts. They are dated and tied to the antagonistic strategy critique in `docs/STRATEGY_CRITIQUE_2026-06-21.md`.
+
+**DEC-2026-06-21-A — Content freeze on MSL.**
+Until MSL has 100 verified email subscribers OR sustained 100 weekly returning visitors (PostHog measurable), the project is in content freeze. No new Quiz MCQs, Simplify versions, SEO interview guides, tabs, labs, or scenarios. Only acceptable build work: distribution surfaces (email capture, GSC submission, sitemap, UTM tags), bug fixes on indexed surfaces, perf fixes on first-load, removing "free forever" copy from README. Rationale: v4.116-v4.118 shipped 123 MCQs + 57 Simplify + 50 SEO guides across three sessions and reached zero new humans. The pattern is "building feels like progress because it's measurable" — the bottleneck is distribution, not content.
+
+**DEC-2026-06-21-B — "Free forever" is banned in MSL copy.**
+Decision originated in the LinkedIn project (`/Users/ASUS/Documents/Professional/LinkedIn/docs/DECISIONS.md`, same date), applied cross-lab. The README, AccessGate copy, footer, Plans page, and any other surface that uses "free forever" must drop the phrase. Acceptable substitutes: "free to start," "no signup wall," or no badge at all. Rationale: "free forever" anchors the brand to zero and poisons any future paid offer. This is the single most expensive monetization commitment a project can make implicitly.
+
+**DEC-2026-06-21-C — Linkback policy with LinkedIn project.**
+LinkedIn posts may link back to MSL only when (a) the post has a direct interactive counterpart in MSL (e.g., Bug Hunt scenario, Spot the Flaw exercise, Staff Layer case study) AND (b) it's a proven winner or a weekly Kit (high intent), capped at 1-2 linkbacks per week. Placement: first comment only, never post body (60% reach penalty in 2026). Framing: lead with the experience ("I built an interactive version — you configure the system and watch it break"), aim at identity capture (newsletter), not price. The phrase "free forever" is banned in linkback copy.
+
+**DEC-2026-06-21-D — Newsletter is the funnel target, not the lab directly.**
+Best funnel: LinkedIn post → newsletter → MSL. The newsletter (LinkedIn Newsletter or Beehiiv) does not yet exist. Until it ships, every linkback dumps the visitor into the ghost-collector that is MSL (localStorage-only, no email capture, no return path). The newsletter is the LinkedIn project's Week 2-3 deliverable; MSL's role is to wire email capture into Home so visitors who do arrive can be captured.
+
+**DEC-2026-06-21-E — Ecosystem chat consolidation.**
+Previous setup: 3 parallel chats (MSL build, LinkedIn strategy, cross-lab coordination). This reproduced the antagonist critique's failure mode (#5: "stay solo across six properties") at the conversation layer. Decision: collapse to ONE coordination chat owning the ecosystem state. Per-lab build chats spawn only for focused deep work (e.g., "wire email capture component," 1-2 hours), pull context from the ledger/spine, write back, die. The next chat that opens should be the unified coordination chat, NOT another parallel build chat.
+
+**DEC-2026-06-21-F — No PSL (Programming Systems Lab) for the next 30 days.**
+Per the strategy critique #1: adding a fourth lab when the first three have zero identified users is the textbook avoidance behavior. PSL scaffolding, spine, or build work is explicitly forbidden until distribution proves out. Python LinkedIn posts stay link-free (no destination yet, by design).
+
+**DEC-2026-06-21-G — Cross-lab ledger (proposed, not yet built).**
+A shared `ECOSYSTEM_LEDGER.md` at the parent folder (`/Users/ASUS/Documents/Professional/`) is the proposed mechanism for cross-lab decisions, state, and messages. Format: STATE BOARD (top, ~50 lines, dashboard) + DECISION LEDGER (indexed: DEC-NNN, append-only) + MESSAGE THREAD (dated, addressed: LNK→MSL, CTL→ALL). Lab sessions read STATE BOARD + new entries + messages addressed to them; skip the rest. Not yet built — to be created by the next coordination chat.
+
+---
+
 ## Stack
 
 **React 18 + Vite, no backend, no database — current architecture, not a permanent constraint.**  

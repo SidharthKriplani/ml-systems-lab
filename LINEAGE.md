@@ -46,6 +46,54 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.120 — Final spine port + LinkedIn cross-lab integration + chat consolidation (2026-06-21)
+
+**No code changes. Final statefulness port before this chat closes.**
+
+Same-day continuation after the LinkedIn project was mounted and reviewed. The user's instruction: "ensure statefulness for MSL, update all md files as best as you can — you will be deleted after it." This entry captures the final cross-lab state so the NEXT MSL session (likely a unified coordination chat per DEC-2026-06-21-E) has full context.
+
+**What was learned during this chat that the spine now reflects:**
+
+1. **LinkedIn project exists and is the active distribution engine.** Mounted at \`/Users/ASUS/Documents/Professional/LinkedIn/\`. Full review captured here. 20 posts pre-drafted Mon Jun 22 – Fri Jul 17. Content Style Bible locked (1,300-1,800 chars, 7 engines, golden hour, India 8am IST). 4-year archive audit drove the format-over-topic conclusion. Style Bible §3b is the linkback policy. The 51 LinkedIn Cards are tagged. The Master Tracker xlsx is built. The first post ships Mon Jun 22.
+
+2. **Strategic critique from outside chat (2026-06-21) inverted the build pattern.** Logged as \`docs/STRATEGY_CRITIQUE_2026-06-21.md\`. Central thesis: "You keep building because building is safe, and you avoid the one thing that's scary — putting a name and an email next to a single real user." Confirmed in MSL session that v4.116-v4.118 (123 MCQs + 57 Simplify + 50 SEO guides) reached zero new humans. Content freeze rule adopted.
+
+3. **"Free forever" banned across the ecosystem (cross-lab).** Originally caught in the LinkedIn linkback framing as a contradiction with VC critique. Banned in copy. MSL README still carries badges with this phrase — flagged in IDEAS Tier 1 #5 for removal.
+
+4. **Chat consolidation decision (DEC-2026-06-21-E).** Three parallel chats (MSL build, LinkedIn strategy, cross-lab coordination) reproduce the antagonist critique's failure mode #5 (stay solo across six properties) at the conversation layer. Collapse to ONE coordination chat. Per-lab build chats spawn for focused work, die when done.
+
+5. **Cross-lab ledger proposed but not built (DEC-2026-06-21-G).** Format: STATE BOARD + DECISION LEDGER + MESSAGE THREAD with skip-rules. To be created by next coordination chat at \`/Users/ASUS/Documents/Professional/ECOSYSTEM_LEDGER.md\`. Plain English, no DSL, lab prefixes (MSL/PAL/GSL/LNK/JSS/CTL), status symbols.
+
+6. **The MSL ← LinkedIn dependency is one-directional but critical.** LinkedIn project's Week 3+ linkbacks expect MSL to have email capture (DEC-2026-06-21-D). Without it, every linkback dumps a visitor into the ghost-collector. MSL's #1 Tier 1 item is now email capture, not content.
+
+**Files touched (spine only, no code):**
+
+- \`CLAUDE.md\` — added "READ BEFORE ANY BUILD WORK" section + "Cross-lab context" section pointing at LinkedIn folder. Three mandatory reads at session open now: STRATEGY_CRITIQUE → BRAIN_TRANSFER → NEXT.
+- \`BRAIN_TRANSFER.md\` — replaced stale "Context for Next Agent" (was v4.111) with full v4.119 state, content freeze rule, LinkedIn cross-lab context, allowed/forbidden work, version history for v4.116-v4.119.
+- \`DECISIONS.md\` — added new top section "v4.119 STRATEGIC DECISIONS" with DEC-2026-06-21-A through DEC-2026-06-21-G.
+- \`IDEAS.md\` — added "ACTIVE GATE" section. Reordered to put 5 distribution Tier 1 items at top. Explicit "rejected until distribution proves out" list.
+- \`NEXT.md\` — already updated in v4.119 with content freeze + LinkedIn 4-week schedule. Verified current.
+- \`LINEAGE.md\` — this entry.
+
+**Audits passed.**
+- No code changes → no brace/apostrophe/backtick checks needed.
+- Spine cross-references verified: CLAUDE.md → DECISIONS.md → BRAIN_TRANSFER.md → IDEAS.md → NEXT.md all reference the same v4.119 content freeze rule, the same DEC codes, and the same LinkedIn folder path.
+
+**The handoff contract for the next session:**
+
+1. Open this chat or a new one
+2. Read CLAUDE.md (now has the gate at the top)
+3. Read \`docs/STRATEGY_CRITIQUE_2026-06-21.md\` in full
+4. Read BRAIN_TRANSFER.md (now current to v4.119)
+5. Read NEXT.md for the active queue
+6. If cross-lab context matters: read LinkedIn project's \`docs/STATUS.md\` (~50 lines)
+7. Pick from IDEAS Tier 1 (only 5 distribution items allowed)
+8. Build OR delegate to a sub-chat
+9. Update LINEAGE + relevant spine files
+10. Commit + push
+
+The next session may NOT write new MCQs, Simplify versions, SEO guides, tabs, labs, or scenarios. The next session MAY write email capture, fix bugs on indexed surfaces, submit GSC, add UTM tagging, or remove "free forever" copy.
+
 ### v4.119 — Strategy critique logged + content freeze + LinkedIn-first 30-day plan (2026-06-21)
 
 **No code changes. Strategic pivot logged in spine.**

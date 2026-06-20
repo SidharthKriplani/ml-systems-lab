@@ -16,11 +16,42 @@ Until MSL has **either** 100 verified email subscribers **or** sustained 100 wee
 
 If a session asks "should I write content X?" the answer is "what does that move toward the 100-email or 100-return-visit goal?" If it doesn't, it doesn't ship.
 
-## User decision (2026-06-21)
+## User decisions (2026-06-21)
 
 > "log all of this for now / I am going to do exposure through linkedin first"
+> "ensure statefulness for MSL, update all md files as best as you can — you will be deleted after it"
 
-LinkedIn exposure is the priority. Build sessions are paused.
+LinkedIn exposure is the priority. Build sessions are paused. v4.120 finalized the spine port.
+
+---
+
+## The 5 allowed Tier 1 items (do in this order — distribution work only)
+
+These are pulled from IDEAS.md. ANY other build work is rejected at session-open until distribution proves out.
+
+1. **Email capture component on Home** (highest leverage). New `msl_email_captured` localStorage key + Resend/LinkedIn Newsletter API integration. Single CTA, single input. Update METRICS.md. Estimated 2-4 hours.
+2. **GSC verification + sitemap submission.** Replace `REPLACE_WITH_YOUR_GSC_CODE` in `index.html`. Submit `public/sitemap.xml` in Search Console. Manual + 30 min.
+3. **UTM-tag linkback URLs for LinkedIn Week 3+.** Add helper to MSL routing. 1 hour.
+4. **Set `VITE_POSTHOG_KEY` in Vercel env vars.** Without it, no analytics. Manual.
+5. **Remove "free forever" copy from README badges** per DEC-2026-06-21-B. Plans page too. 30 min.
+
+---
+
+## The handoff contract for the next session
+
+This chat will close after the spine port. The next session (likely a unified coordination chat per DEC-2026-06-21-E) should:
+
+1. Read `CLAUDE.md` (now has the gate at the top)
+2. Read `docs/STRATEGY_CRITIQUE_2026-06-21.md` in full — mandatory
+3. Read `BRAIN_TRANSFER.md` (now current to v4.119)
+4. Read this `NEXT.md` for the active queue
+5. If LinkedIn cross-lab context is relevant: read `/Users/ASUS/Documents/Professional/LinkedIn/docs/STATUS.md` (~50 lines)
+6. Pick from the 5 allowed Tier 1 items above
+7. Build OR delegate to a focused sub-chat
+8. Update LINEAGE + relevant spine files at end
+9. Commit + push
+
+**Forbidden until the 100-email or 100-return-visit gate clears:** new MCQs, new Simplify, new SEO guides, new tabs, new labs, PSL scaffolding, new spine docs without user approval.
 
 ---
 

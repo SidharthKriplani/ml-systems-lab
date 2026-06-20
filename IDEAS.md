@@ -1,9 +1,35 @@
 # IDEAS.md — Build Backlog
 
 Future-facing. Prioritized. Feeds from AUDITS.md findings and creative sessions.  
-Last updated: 2026-06-03
+Last updated: 2026-06-21
 
 **Rule:** AUDITS.md feeds this file, not the reverse. Audit findings that are buildable features go into Tier 1 here. Features you want to build don't go into AUDITS.md.
+
+---
+
+## ⚠️ ACTIVE GATE (v4.119): CONTENT FREEZE
+
+Everything below this section is gated by the content freeze rule (see CLAUDE.md + DECISIONS.md DEC-2026-06-21-A). Only Tier 1 items that move toward email capture / GSC submission / LinkedIn linkback infrastructure are allowed to be built. Everything else stays in the backlog until distribution proves out.
+
+**The 5 active Tier 1 items (do these in order, all are distribution work):**
+
+1. **Email capture component on Home** (HIGHEST LEVERAGE). Single CTA, single input, Resend or LinkedIn Newsletter wiring. Stops being a ghost-collector. Closes the gap that the LinkedIn linkback policy depends on. Estimated 2-4 hours. New `msl_email_captured` localStorage key + Resend/LinkedIn API integration. Update METRICS.md.
+
+2. **GSC verification + sitemap submission.** Replace `REPLACE_WITH_YOUR_GSC_CODE` in `index.html` with the real GSC code. Submit `public/sitemap.xml` (188 URLs) in Search Console. Without this, the 174 prerendered HTML files are wasted infrastructure. Manual + 30 minutes.
+
+3. **UTM-tag any linkback URLs the LinkedIn project uses.** When LinkedIn Week 3+ starts linking back to MSL, every URL needs `?utm_source=linkedin&utm_campaign=<post-slug>` so PostHog can attribute. Add UTM helper to MSL routing. 1 hour.
+
+4. **Set `VITE_POSTHOG_KEY` in Vercel env vars.** Without this, no analytics collection at all. PostHog autocapture is OFF (PII risk on free-text) but explicit events fire. Currently dark.
+
+5. **Remove "free forever" from README badges per DEC-2026-06-21-B.** Replace with "free to start" or remove entirely. Update Plans page copy too. 30 minutes.
+
+**Tier 1 ITEMS REJECTED until distribution proves out (do NOT pull from here):**
+- More Quiz MCQs (378 is enough)
+- More Simplify versions (132 covers all conceptual posts)
+- More SEO interview guides (50 hits STRATEGY target)
+- More path posts (54 ready, 3 deferred is right)
+- New tabs, new labs, PSL scaffolding
+- Polish work on existing tabs that doesn't move toward email capture or LinkedIn linkbacks
 
 ---
 

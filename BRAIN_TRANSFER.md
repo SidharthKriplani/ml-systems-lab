@@ -1,6 +1,11 @@
 # BRAIN_TRANSFER.md — Session Handoff for ML Systems Lab
 
-**For the next agent/session:** Read this first. Then read CLAUDE.md, NEXT.md, DECISIONS.md, LINEAGE.md, IDEAS.md, AUDITS.md, METRICS.md in that order.
+**For the next agent/session:** Read this first. Then read:
+1. **`docs/STRATEGY_CRITIQUE_2026-06-21.md`** — the gate doc, mandatory before any new build work.
+2. **`CLAUDE.md`** — session rules.
+3. **`NEXT.md`** — the active queue (currently LinkedIn-first, content-frozen).
+4. **`/Users/ASUS/Documents/Professional/LinkedIn/docs/STATUS.md`** — cross-lab context. The LinkedIn project drives MSL's next 30 days.
+5. **DECISIONS.md, LINEAGE.md (grep latest), IDEAS.md, AUDITS.md (grep open), METRICS.md** in that order, on demand.
 
 ---
 
@@ -158,7 +163,80 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**Current state (v4.111 complete — 2026-06-19):**
+**⚠️ READ FIRST: MSL is in CONTENT FREEZE as of v4.119 (2026-06-21).**
+
+Before doing anything: read `docs/STRATEGY_CRITIQUE_2026-06-21.md` in full. It captures the strategic pivot that gates this entire project. The next agent does NOT have permission to write new MCQs, Simplify versions, SEO guides, tabs, labs, or spine files. Only acceptable work is distribution (email capture, GSC submission, sitemap, UTM tags, LinkedIn-driven bug fixes). See "HARD RULE" in NEXT.md.
+
+Also read the LinkedIn project mounted at `/Users/ASUS/Documents/Professional/LinkedIn/` — specifically `docs/README.md` and `docs/STATUS.md`. The LinkedIn project is the active driver for MSL right now. MSL is downstream.
+
+---
+
+**Current state (v4.119 complete — 2026-06-21):**
+
+### What's true RIGHT NOW (top of the stack)
+
+- **MSL has 182 Gradient posts, 378 Quiz MCQs, 132 Simplify versions, 50 SEO interview guides, 174 prerendered static HTML files, 188 sitemap URLs.** Content backlog is closed. No more content batches.
+- **The LinkedIn project (separate folder, mounted) is the active distribution engine.** 20 posts pre-drafted Mon Jun 22–Fri Jul 17. Style Bible locked. MSL acts as the destination lab for "MSL" engine posts (Bug Hunt, Spot the Flaw, Staff Layer) per the linkback policy.
+- **A strategic critique was logged on 2026-06-21** (`docs/STRATEGY_CRITIQUE_2026-06-21.md`) identifying that the last three MSL sessions (v4.116-v4.118) shipped massive content with zero distribution. The pivot: stop building, start identity-capturing.
+- **Cross-lab decision: "free forever" is BANNED in MSL copy.** Lab README badges still carry the literal phrase — flagged for removal. Linkback framing leads with experience and aims at identity capture (newsletter), never price.
+- **Chat consolidation decision (2026-06-21):** previously running 3 parallel chats (MSL build, LinkedIn strategy, MSL/LinkedIn coordination). Decision: collapse to ONE coordination chat owning the ecosystem. Per-lab build chats spun up only for focused deep work, die when done. This file is part of the porting mechanism.
+
+### What MSL session is ALLOWED to do (next 30 days)
+
+Until MSL has either 100 verified email subscribers OR 100 weekly returning visitors:
+1. Build email capture component on Home (Resend or LinkedIn Newsletter wiring)
+2. Submit GSC verification + sitemap (replace `REPLACE_WITH_YOUR_GSC_CODE` in `index.html`)
+3. UTM-tag any linkback URLs that LinkedIn project starts using
+4. Set `VITE_POSTHOG_KEY` in Vercel env vars
+5. Bug fixes / perf fixes on indexed surfaces (PostReader, OG card render)
+6. Remove "free forever" badges/copy from README (decision DEC-2026-06-21-A)
+
+### What MSL session is FORBIDDEN from doing
+
+- Writing new MCQs, Simplify versions, SEO guides, scenarios
+- Adding new tabs, labs, or zones
+- Scaffolding PSL (Programming Systems Lab) or any 4th lab
+- Adding new spine docs without explicit user approval
+- Touching content the LinkedIn project depends on (the 50 SEO guides, the path posts) — they're now the soak content
+- Reading LINEAGE.md, GradientTab.jsx, AUDITS.md, IDEAS.md in full (grep-first only)
+
+### Version history (v4.116-v4.119, the content sessions)
+
+- **v4.116** — 123 Quiz MCQs (posts 86-126) + 30 Simplify versions + 10 SEO interview guides (PhonePe-style format expanded to Razorpay/Flipkart/Swiggy/Meesho/Zomato/Dream11/InMobi/Razorpay-DS/Junglee-MPL/Paytm/MakeMyTrip/CRED — wait, those were earlier; v4.116 added HDFC/ICICI/Ola/Nykaa/ShareChat/PharmEasy/BYJU's/Groww/Zerodha/Tata Digital). Sitemap → 161 URLs.
+- **v4.117** — 27 more Simplify versions covering remaining non-path posts with conceptual ML content (6, 28-29, 31-32, 34-37, 44-45, 49, 78-79, 83-85, 94, 109-110, 116, 121-126) + 10 more SEO guides (BharatPe/Slice/Practo/Urban Company/Navi/Acko/Cleartax/Lenskart/Apna/Mamaearth). Sitemap → 171 URLs.
+- **v4.118** — 17 more SEO interview guides hitting STRATEGY target of 50 (Uber/Amazon/Microsoft/Google/Adobe/Walmart/Salesforce/Oracle/IBM/BookMyShow/boAt/AJIO/PolicyBazaar/Meesho-DS/BigBasket/Tata-1mg/Zepto). Total: 50 SEO guides ✓. Total Gradient posts: 182. Sitemap → 188 URLs. 174 prerendered HTML files.
+- **v4.119** — STRATEGY_CRITIQUE_2026-06-21.md created. Content freeze rule added to NEXT.md. LINEAGE entry. **NO CODE CHANGES.** Spine-only pivot.
+
+### Key files for v4.116-v4.119 (DO NOT regenerate — read state from them)
+
+- `src/data/quizData.js` — 378 MCQs total (1-126)
+- `src/data/foundationsSimplify.js` — 132 Simplify entries
+- `src/tabs/GradientTab.jsx` — 182 posts (1-182). DO NOT add posts 183+. Don't edit existing posts unless fixing bug.
+- `public/post/*.html` — 174 prerendered files. Regenerate ONLY if existing posts change.
+- `public/sitemap.xml` — 188 URLs. Regenerate via `node scripts/build-sitemap.mjs` only if existing posts change.
+- `docs/STRATEGY_CRITIQUE_2026-06-21.md` — **the gate doc.** Any session deciding to build new content reads this first.
+
+### LinkedIn project (mounted folder, READ-ONLY from MSL's perspective)
+
+Location: `/Users/ASUS/Documents/Professional/LinkedIn/`
+
+What's there:
+- `Content Style Bible.md` — voice + structure + 1,300-1,800 char rule
+- `LinkedIn Growth Playbook 2026.md` — cited research on algo/formats/cadence
+- `Launch Pack - Weeks 1-2.md` and `Launch Pack - Weeks 3-4.md` — 20 posts pre-drafted (Jun 22 - Jul 17), char-count-verified
+- `docs/` — STATUS, NEXT, PROCESS, PATTERNS, INSIGHTS, DECISIONS, AUDITS, IDEAS, LINEAGE, README
+- `LinkedIn Cards/` — 51 pre-made visual cards
+- `Content Master Tracker.xlsx` — calendar + performance log
+
+What MSL needs to know:
+- LinkedIn project's first post ships Mon Jun 22 8:00 AM IST
+- Linkback policy: 1-2 lab links per week, FIRST COMMENT (never body, kills reach by ~60%), only when post has a direct interactive counterpart in a lab. Weeks 1-2 are link-free.
+- Best funnel = post → newsletter → lab. Newsletter isn't built yet. CRITICAL: until newsletter ships, every linkback dumps a visitor into the ghost-collector that is current MSL.
+- The 50 SEO interview guides are the soak content for any visitor MSL receives.
+
+### Earlier baseline (kept for reference, v4.115 and prior)
+
+[Existing path/Simplify/glossary/SEO infrastructure remains — see v4.105-v4.115 entries in LINEAGE.md. Nothing in those subsystems changes in v4.116-v4.119. They are now "frozen content," not active build areas.]
 
 ### The MLE Path is the major shipped subsystem of June 19, 2026
 A complete senior-MLE preparation curriculum built across v4.105–v4.111 in a single working day. Originally launched as "Foundations Path" in v4.105; renamed to "The MLE Path" in v4.111 when the scope expanded from pure first-principles to full senior-MLE-interview coverage (production engineering, MLOps, system design, interview bridge).

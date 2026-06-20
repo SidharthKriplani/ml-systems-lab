@@ -4,6 +4,45 @@ Read this first, every session.
 
 ---
 
+## ⚠️ READ BEFORE ANY BUILD WORK (added 2026-06-21, v4.119)
+
+MSL is in **CONTENT FREEZE** as of v4.119. Three required reads at session open, in order:
+
+1. **`docs/STRATEGY_CRITIQUE_2026-06-21.md`** — the gate doc. Captures why MSL stopped adding content, what's allowed, what's forbidden, and the 30-day distribution-first plan.
+2. **`BRAIN_TRANSFER.md`** — current state and version history (v4.116-v4.119).
+3. **`NEXT.md`** — the active LinkedIn-first execution schedule.
+
+**The hard rule:** until MSL has 100 verified email subscribers OR sustained 100 weekly returning visitors, the only allowed session work is:
+- Distribution (email capture, GSC, sitemap submission, UTM tagging)
+- Bug fixes on indexed surfaces
+- Performance fixes on first-load
+- Removing "free forever" copy from README per cross-lab decision
+
+**Forbidden:** new Quiz MCQs, new Simplify versions, new SEO interview guides, new tabs, new labs, new spine docs without user approval, new content of any kind.
+
+If a session asks "should I write X?" the answer must be "what does X move toward the 100-email or 100-return-visit goal?" If no answer, reject.
+
+---
+
+## Cross-lab context (LinkedIn project)
+
+A separate but coupled project at **`/Users/ASUS/Documents/Professional/LinkedIn/`** drives MSL's distribution for the next 30 days.
+
+What MSL sessions need to know:
+- LinkedIn project ships Mon Jun 22, 2026, 8:00 AM IST. 20 posts pre-drafted through Jul 17.
+- Linkback policy (locked): links in first comment only, never post body (60% reach penalty in 2026). 1-2 per week max. Only when post has a direct interactive MSL counterpart (Bug Hunt, Spot the Flaw, Staff Layer scenarios).
+- Best funnel = LinkedIn post → newsletter → MSL. Newsletter not yet built. Until it ships, MSL receives anonymous ghost visitors — this is the gap MSL is allowed to fix (email capture component).
+- **"Free forever" is BANNED in MSL copy** per cross-lab decision 2026-06-21. README badges still carry the phrase — flagged for removal.
+
+LinkedIn folder read order (only when relevant):
+1. `/Users/ASUS/Documents/Professional/LinkedIn/docs/STATUS.md` (~50 lines)
+2. `/Users/ASUS/Documents/Professional/LinkedIn/Content Style Bible.md` §3b (linkback policy)
+3. `/Users/ASUS/Documents/Professional/LinkedIn/docs/DECISIONS.md`
+
+Skip the Launch Packs and Growth Playbook unless directly relevant to the active task.
+
+---
+
 ## What this project is
 
 ML Systems Lab is a browser-only study tool for production ML judgment. It has 300+ interactive scenarios across 6 engineering domains (ML Engineering, Data Engineering, Deep Learning, Data Science, MLOps, Interview Tools) plus a 9-tool Interview simulation zone. Public lab: localStorage only, no backend. Private study room (Shift+Ctrl+K): Supabase-backed SR loop for personal Anki decks — auth-gated, content never in bundle. Deployed on Vercel.
