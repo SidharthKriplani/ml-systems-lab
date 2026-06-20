@@ -51,7 +51,12 @@ The progress system is nice, but it could feel more motivating with milestones l
 
 ## Actions taken
 
-*Empty. Add when feedback drove a shipped change, with version reference.*
+### v4.112 (2026-06-19) — Theme: Onboarding overwhelm → Cold Home + 2-question quiz
+- Closes items 1 + 2 of the 7 proposed actions.
+- Items 3-7 remain ⚠️ Open per the gating decision (revisit after 2 weeks of PostHog data from real visitors).
+- Shipped: new `recommendationEngine.js` + `QuizCard.jsx` + `Next30Card.jsx` + HomeTab three-mode rendering.
+- State: 4 new localStorage keys, 10 new PostHog events.
+- Success metrics review scheduled for 2 weeks post-launch (once `VITE_POSTHOG_KEY` is set in Vercel and LinkedIn campaign begins driving real traffic).
 
 <!-- Example template:
 ### v4.X — Theme: [name] → Action: [what changed]
@@ -65,7 +70,8 @@ The progress system is nice, but it could feel more motivating with milestones l
 
 ## Open / triage
 
-*Empty. Add feedback received but not yet acted on or dismissed.*
+### 2026-06-19 — ✅ Resolved (v4.112b): `recommendation_completed` event wired
+Next30Card now writes `msl_last_recommendation = { postId, shownAt }` on render. GradientTab's `markRead()` reads it, checks for a match, fires `recommendation_completed` with the postId + `timeFromRecommendationMs` delta, then clears the storage. Activation success metric is now measurable.
 
 <!-- Example template:
 ### YYYY-MM-DD — [Source] — [Brief description]

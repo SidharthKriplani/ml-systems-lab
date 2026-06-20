@@ -37,6 +37,16 @@ All events are fired via `track()` in `src/analytics.js`. Events only fire when 
 | `tab_switch` | `App.jsx` — every zone/tab change | `tab: string` | Navigation patterns, most-visited tabs |
 | `module_start` | `SparkLabTab.jsx` — on first interaction | `module, tab` | Engagement start signal |
 | `module_complete` | `SparkLabTab.jsx`, `TrainerTab.jsx`, `CombinatorTab.jsx`, `StaffLayerTab.jsx` | `module, tab, score` | Completion rate, score distribution |
+| `onboarding_quiz_shown` | `QuizCard` mount | — | Funnel top — how many fresh users reach the quiz |
+| `onboarding_quiz_q1_answered` | User picks a level | `level` | Drop-off after Q1 |
+| `onboarding_quiz_q2_answered` | User picks an urgency | `urgency` | Drop-off after Q2 |
+| `onboarding_quiz_submitted` | User clicks "See my next 30 min" | `level, urgency` | Completion of the personalised path |
+| `onboarding_quiz_skipped` | User clicks Skip | — | Friction signal — should stay < 40% |
+| `next30_card_shown` | Next30Card mount | `recommendedPostId, recommendedPracticeTab` | What recommendation each user got |
+| `next30_start_clicked` | User clicks Start | `recommendedPostId` | Primary success metric — should be > 50% of `next30_card_shown` |
+| `next30_see_everything_clicked` | User clicks the escape hatch | — | Should be < 70% — if higher, the focused mode is failing |
+| `dashboard_back_to_focused_clicked` | User returns to focused via pill | — | Signal that focused mode has perceived value once tried |
+| `recommendation_completed` | Recommended post marked read | `recommendedPostId, timeFromRecommendationMs` | Activation — > 30% means recommendations are useful |
 
 ### `module_complete` score conventions
 
@@ -121,6 +131,11 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_score:mlcoding` | `JSON array of problem IDs` | `MLCodingTab` | Array of solved problem IDs e.g. `['mlc1','mlc2']`. Appended when user clicks "Mark solved". 3 problems total (v4.58). |
 | `msl_foundations_read` | `JSON array of post IDs` | `GradientTab` — `FoundationsPathView` + `PostReader` path strip | Per-post "read in The MLE Path" state. Independent of `msl_read` (the global Gradient read state) so a user can mark posts in the path without polluting general reading progress. Reads via `readFoundationsRead()` in `src/data/foundationsPath.js`. Powers tier completion bars + overall path progress. Added v4.105. **Key name preserved across the v4.111 rename ("Foundations Path" → "The MLE Path") so existing user progress survives the upgrade.** Now covers 54 ready path posts across 11 tiers (was 31 across 7 tiers in v4.105). |
 | `msl_foundations_tier` | `string ('t0'\|'t1'\|…'t10')` | `GradientTab` — `FoundationsPathView` | Currently-active tier id, written when user expands a tier. Used to default the open tier on next mount so "resume where you left off" works. Added v4.105. Range extended to `t10` in v4.111 (was `t0…t6`); old values continue to resolve to their original tier since tier IDs were not renumbered. |
+| `msl_onboarding_level` | `string ('beginner'\|'mid'\|'senior')` | `HomeTab` — `QuizCard` | Quiz Q1 answer. Drives recommendation in `recommendNext()`. Written on quiz submit; null when user skipped. Added v4.112. |
+| `msl_onboarding_urgency` | `string ('week'\|'month'\|'learning')` | `HomeTab` — `QuizCard` | Quiz Q2 answer. Drives recommendation in `recommendNext()`. Written on quiz submit; null when user skipped. Added v4.112. |
+| `msl_onboarding_completed` | `'1'` | `HomeTab` — `QuizCard` (submit OR skip) | Flag preventing quiz from re-showing. Set on both quiz submission and explicit skip. Cold-Home mode derivation checks this; once true, brand-new mode is permanently exited. Added v4.112. |
+| `msl_home_mode_override` | `'dashboard'` (optional) | `HomeTab` — `Next30Card` ("show me everything") + clear via "back to focused" pill | When set, Home renders the full dashboard even when the user would otherwise be in early/next30 mode. Persists user's preference across sessions. Cleared when user clicks "back to focused mode" pill. Added v4.112. |
+| `msl_last_recommendation` | `JSON { postId: number, shownAt: number }` | `Next30Card` (write) + `GradientTab` `markRead` (read + clear) | Activation tracking. Next30Card writes the postId + Unix ms when the recommendation card mounts. When the same post is marked read in GradientTab, the activation event fires with `timeFromRecommendationMs` delta and the key is cleared. Single-shot per recommendation. Added v4.112b. |
 
 ---
 

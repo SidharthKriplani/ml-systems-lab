@@ -46,6 +46,81 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.112b — Activation event wired + OG card shipped + meta tag refresh (2026-06-19)
+
+Closes the v4.112 known gap and ships the next launch-readiness item from `MSL_EXPOSURE_PLAN.md`.
+
+**`recommendation_completed` event wired.** `Next30Card` now writes `msl_last_recommendation = { postId, shownAt }` to localStorage on render. `GradientTab.markRead()` reads it, checks for a match, fires `recommendation_completed` with `postId` + `timeFromRecommendationMs`, then clears the storage. Single-shot per recommendation. Activation success metric is now measurable end-to-end.
+
+**Open Graph card.** Created `public/og-image.svg` — polished 1200×630 design with The MLE Path branding: amber-gradient title "The complete senior MLE preparation curriculum," 57/11/Free stat strip, 11-tier ladder visualisation, MSL badge, URL footer. Created `scripts/build-og-image.sh` — multi-tool conversion script (tries `rsvg-convert`, `magick`, `convert`, `inkscape` in order) for converting SVG → PNG since LinkedIn / Twitter / Facebook / Slack all require PNG/JPG for `og:image`. Final manual step before launch: run `bash scripts/build-og-image.sh` once on any machine with one of those tools installed; commit the resulting `public/og-image.png`.
+
+**`index.html` meta tag refresh.** Replaced stale PySpark-era copy with The MLE Path positioning across `<meta name="description">`, `<title>`, `og:title`, `og:description`, `twitter:title`, `twitter:description`. Updated `og:url` and `canonical` from `ml-systems-lab.vercel.app` to the real deployment URL `ml-systems-lab-v9xe.vercel.app`. Added `og:site_name`, `og:image:width` (1200), `og:image:height` (630), `og:image:alt`, `twitter:image:alt`. Closes a long-standing AUDITS.md finding (#004.1 — OG image referenced in index.html but did not exist in public/).
+
+New state model (METRICS.md updated):
+- `msl_last_recommendation` — JSON `{ postId, shownAt }` written by Next30Card, read+cleared by GradientTab.markRead. Single-shot per recommendation. Activation tracker.
+
+Brace diff 0 on GradientTab.jsx, Next30Card.jsx. Apostrophe + backtick audits OK. `public/og-image.svg` parses as valid XML.
+
+Final launch-readiness checklist:
+- ✅ Cold Home + onboarding quiz (v4.112)
+- ✅ `recommendation_completed` event (v4.112b)
+- ✅ OG card SVG + conversion script (v4.112b)
+- ⚠️ `bash scripts/build-og-image.sh` → commit `public/og-image.png` (manual, ~30 sec)
+- ⚠️ `VITE_POSTHOG_KEY` set in Vercel env (manual, ~5 min)
+- ✅ LinkedIn batch_02 drafts ready
+- → Launch.
+
+### v4.112 — Cold Home: "Your Next 30 Minutes" — single recommendation for new users (2026-06-19)
+
+**Closes the onboarding-overwhelm feedback theme logged 2026-06-19. Replaces current Home for brand-new and early users with a single focused card. Returning users see the dashboard unchanged.**
+
+User feedback: a beginner lands on Home and cannot find a single starting point. Eight nav sections, three guided paths, twelve dashboard widgets — all visible simultaneously — creates "where do I actually start?" → bounce. PM cut: default to "one thing to do," not "everything visible." Soft lock by visibility, not gating.
+
+Three Home render modes derived from behaviour:
+- **`quiz`** — brand-new user (`totalAttempted === 0`, no foundations read, no onboarding completed). Shows the 2-question Welcome card only.
+- **`next30`** — early user (< 5 attempted, < 3 foundations read). Shows "Your Next 30 Minutes" card only, with escape hatch.
+- **`dashboard`** — returning user OR explicit override. Full historical Home renders as before.
+
+Built this session:
+- **`src/data/recommendationEngine.js`** — pure module with the (level × urgency) → recommendation table (10 entries + default). Hardcoded post slugs/titles/read-times for the recommended posts. Fall-through: if user has any path posts read, recommend the next unread in path order rather than the static table. Exports `recommendNext()`, `readOnboarding()`, `writeOnboarding()`, `readHomeOverride()`, `writeHomeOverride()`, `deriveHomeMode()` — the last is the pure mode-derivation function.
+- **`src/components/QuizCard.jsx`** — 2-question inline card. Six radios total, "See my next 30 min" requires both answered (disabled otherwise), one-click Skip. Writes the three new localStorage keys and fires four PostHog events (shown, q1 answered, q2 answered, submitted OR skipped).
+- **`src/components/Next30Card.jsx`** — recommendation card. Read line, optional practice line, italic "why" callout, Start button, muted "show me everything" escape hatch. Start opens the post via `?post=<slug>#gradient` deep link and calls `onNavigate('gradient')`. "Show me everything" sets `msl_home_mode_override = 'dashboard'` and re-renders. Two PostHog events (shown, start_clicked, see_everything_clicked).
+- **`src/tabs/HomeTab.jsx`** — added imports, derived `homeMode` state, three render branches (quiz / next30 / full dashboard). Override users with < 5 attempts get a "← back to focused mode" pill at the top of the dashboard view.
+
+Recommendation table by (level × urgency):
+- beginner_week → Post 3 (AUC Is Not Your Friend) + ModelEval
+- beginner_month → Post 128 (Observation Discipline) + ModelsMath
+- beginner_learning → Post 101 (Probability) + ModelsMath
+- mid_week → Post 1 (Training-Serving Skew) + Features
+- mid_month → Post 73 (XGBoost) + Classical
+- mid_learning → Post 119 (Generalisation Theory) + ModelEval
+- senior_week → Post 24 (6-Step Framework) + SystemDesign
+- senior_month → Post 4 (Recsys Design) + SystemDesign
+- senior_learning → Post 132 (Model Explainability) + ModelEval
+- default (skipped quiz) → Post 128 (Observation Discipline) + ModelsMath
+
+Each recommendation includes a one-sentence "why" rendered as an italic callout inside the card — closes the gap of "why am I being told to read this" without padding the UI.
+
+New state model (METRICS.md updated):
+- `msl_onboarding_level` — quiz Q1 answer
+- `msl_onboarding_urgency` — quiz Q2 answer
+- `msl_onboarding_completed` — flag preventing re-quiz, set on both submit and skip
+- `msl_home_mode_override` — set to `'dashboard'` when user clicks "show me everything"; cleared by "back to focused" pill
+
+PostHog event taxonomy (10 new events, all gated behind `VITE_POSTHOG_KEY` per existing pattern):
+- `onboarding_quiz_shown` / `_q1_answered` / `_q2_answered` / `_submitted` / `_skipped`
+- `next30_card_shown` / `_start_clicked` / `_see_everything_clicked`
+- `dashboard_back_to_focused_clicked`
+- `recommendation_completed`
+
+Success metrics (review at 2-week mark):
+- `next30_start_clicked / next30_card_shown > 50%` — primary success
+- `onboarding_quiz_skipped < 40%` — quiz is a service, not friction
+- `recommendation_completed > 30%` — recommendations actually useful
+- Revert criterion: `next30_see_everything_clicked > 70%` — focused mode is failing
+
+Brace diff 0 on all 4 touched/new files. Apostrophe + backtick audits OK.
+
 ### v4.111b — Spine MD sync + statefulness verification (2026-06-19)
 
 Quality pass after v4.111 ship. Updated NEXT.md, BRAIN_TRANSFER.md, CLAUDE.md, METRICS.md to reflect The MLE Path's expanded state (57 posts, 11 tiers, 54 ready, 121 glossary terms, 54 Simplify entries). Verified statefulness: no new localStorage keys introduced; internal identifiers (`msl_foundations_read`, `msl_foundations_tier`, `msl-open-foundations-path` event, `?path=foundations` URL param) preserved across the user-visible rename so existing user progress survives the upgrade. Cross-tab event wiring (HomeTab + ProfilePage + ContentMap dispatch → GradientTab listens) intact. METRICS.md updated to note tier range extended from t0…t6 to t0…t10 with old tier ids continuing to resolve correctly.

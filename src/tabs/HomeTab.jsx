@@ -4,6 +4,12 @@ import {
   FOUNDATIONS_TIERS, TOTAL_POSTS,
   readFoundationsRead, overallCompletion, isFoundationsTouched,
 } from '../data/foundationsPath.js'
+import {
+  recommendNext, readOnboarding, readHomeOverride, writeHomeOverride, deriveHomeMode,
+} from '../data/recommendationEngine.js'
+import { track } from '../analytics.js'
+import QuizCard from '../components/QuizCard.jsx'
+import Next30Card from '../components/Next30Card.jsx'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
@@ -202,6 +208,39 @@ export default function HomeTab({ onNavigate }) {
   const totalScenarios = Object.values(sectionProgress).reduce((s, p) => s + p.total, 0)
   const overallPct     = totalScenarios > 0 ? Math.round((totalAttempted / totalScenarios) * 100) : 0
 
+  // ── Cold Home / Next 30 Minutes mode derivation ─────────────────────────
+  const [homeMode, setHomeMode] = useState(() => {
+    const onboarding = readOnboarding()
+    const override = readHomeOverride()
+    return deriveHomeMode({
+      totalAttempted,
+      foundationsReadSize: readFoundationsRead().size,
+      onboardingCompleted: onboarding.completed,
+      override,
+    })
+  })
+  const [onboardingPick, setOnboardingPick] = useState(() => readOnboarding())
+  const [recommendation, setRecommendation] = useState(() =>
+    recommendNext({ level: onboardingPick.level, urgency: onboardingPick.urgency })
+  )
+
+  function handleQuizComplete(picked) {
+    setOnboardingPick(picked)
+    setRecommendation(recommendNext({ level: picked.level, urgency: picked.urgency }))
+    setHomeMode('next30')
+  }
+
+  function handleSeeEverything() {
+    setHomeMode('dashboard')
+  }
+
+  function handleBackToFocused() {
+    writeHomeOverride(null)
+    setRecommendation(recommendNext({ level: onboardingPick.level, urgency: onboardingPick.urgency }))
+    setHomeMode('next30')
+    track('dashboard_back_to_focused_clicked')
+  }
+
   // Strongest + not-started
   const rankedSections = SECTIONS
     .map(s => ({ ...s, pct: sectionProgress[s.id]?.pct || 0, total: sectionProgress[s.id]?.total || 0 }))
@@ -209,8 +248,58 @@ export default function HomeTab({ onNavigate }) {
   const strongest  = rankedSections.reduce((best, s) => (s.pct > (best?.pct || -1) ? s : best), null)
   const notStarted = rankedSections.find(s => s.pct === 0)
 
+  // ── Quiz mode — brand-new users see only the 2-question card ────────────
+  if (homeMode === 'quiz') {
+    return (
+      <div style={{ maxWidth: '660px', margin: '0 auto', paddingTop: '60px', paddingBottom: '48px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--prime)' }}>ML Systems Lab</div>
+        </div>
+        <QuizCard onComplete={handleQuizComplete} />
+      </div>
+    )
+  }
+
+  // ── Next 30 mode — early users see one recommendation ───────────────────
+  if (homeMode === 'next30') {
+    return (
+      <div style={{ maxWidth: '660px', margin: '0 auto', paddingTop: '60px', paddingBottom: '48px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--prime)' }}>ML Systems Lab</div>
+          {streak > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '999px', padding: '2px 8px' }}>
+              {streak} day streak
+            </div>
+          )}
+        </div>
+        <Next30Card recommendation={recommendation} onNavigate={onNavigate} onSeeEverything={handleSeeEverything} />
+      </div>
+    )
+  }
+
+  // ── Dashboard mode (default for returning users) ─────────────────────────
+  // Render the full historical Home below. Override-users get a "back to focused" pill.
   return (
     <div style={{ maxWidth: '660px', margin: '0 auto', paddingBottom: '48px' }}>
+
+      {/* Back to focused mode pill — only when user has fewer than 5 attempts AND override is active */}
+      {totalAttempted < 5 && readHomeOverride() === 'dashboard' && (
+        <div style={{ paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={handleBackToFocused}
+            style={{
+              padding: '6px 12px',
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--ink-low)',
+              background: 'rgba(0,0,0,0.18)',
+              border: '1px solid var(--rim)',
+              borderRadius: '999px',
+              cursor: 'pointer',
+            }}>
+            ← back to focused mode
+          </button>
+        </div>
+      )}
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{ paddingTop: '40px', marginBottom: '32px' }}>

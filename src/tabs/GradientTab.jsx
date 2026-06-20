@@ -13,6 +13,7 @@ import {
 } from '../data/foundationsPath.js'
 import { FOUNDATIONS_SIMPLIFY } from '../data/foundationsSimplify.js'
 import { GLOSSARY_LOOKUP, GLOSSARY_REGEX } from '../data/foundationsGlossary.js'
+import { track } from '../analytics.js'
 const POSTS = [
   {
     id: 1,
@@ -10035,6 +10036,20 @@ export default function GradientTab({ onNavigate }) {
     next.add(id)
     setRead(next)
     localStorage.setItem('msl_read', JSON.stringify([...next]))
+    // Activation: if this matches the last shown Next30 recommendation, fire and clear.
+    try {
+      const raw = localStorage.getItem('msl_last_recommendation')
+      if (raw) {
+        const rec = JSON.parse(raw)
+        if (rec && rec.postId === id && typeof rec.shownAt === 'number') {
+          track('recommendation_completed', {
+            recommendedPostId: id,
+            timeFromRecommendationMs: Date.now() - rec.shownAt,
+          })
+          localStorage.removeItem('msl_last_recommendation')
+        }
+      }
+    } catch {}
   }
 
   function handleSeriesChange(id) {
