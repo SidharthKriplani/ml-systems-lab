@@ -46,6 +46,38 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.119 — Strategy critique logged + content freeze + LinkedIn-first 30-day plan (2026-06-21)
+
+**No code changes. Strategic pivot logged in spine.**
+
+Received an antagonistic strategy critique from an outside chat after reading the four-lab + JSS + Career OS plan. Critique correctly identified that the last three MSL sessions (v4.116, v4.117, v4.118) shipped 123 MCQs + 57 Simplify versions + 50 SEO interview guides — none of which reached a single new human. The pattern: building feels like progress because it's measurable; distribution feels like risk because it can fail visibly.
+
+**The critique's central thesis (verbatim):** "You keep building because building is safe, and you avoid the one thing that's scary — putting a name and an email next to a single real user, and watching whether they come back. Thirty days of building, zero days of distribution, is the cliff."
+
+**My response in agreement, with two additions:**
+1. The most lethal item is #3 (ghost collector / localStorage-only), not #2 (spine scaffolding). Spine bloat is reversible; uncapturable users are gone forever.
+2. The SEO/prerender work isn't wrong in principle, it's wrong in sequencing. 174 prerendered HTML files only matter once GSC is verified and the sitemap submitted — both still TODOs from v4.115.
+
+**User decision logged:** "log all of this for now / I am going to do exposure through linkedin first."
+
+**Files touched (no code):**
+- Created \`docs/STRATEGY_CRITIQUE_2026-06-21.md\` — full critique verbatim + response + 30-day inversion plan + hard rule.
+- Updated \`NEXT.md\` — content freeze rule, LinkedIn-first 4-week schedule.
+- Updated \`LINEAGE.md\` — this entry.
+
+**Hard rule going forward (until user reverses):**
+- No new MCQs, Simplify versions, SEO guides, tabs, labs, or spine files.
+- Only acceptable session work: distribution (LinkedIn, GSC, sitemap submission, email capture, UTM tagging) + bug/perf fixes on distribution surfaces.
+- Bar to ship anything: "what does this move toward 100 emails or 100 weekly return visits?" If no answer, reject.
+
+**The 30-day inversion plan:**
+1. Ship email capture (week 4 target).
+2. Submit GSC + sitemap (week 1).
+3. Post batch_02_msl.md (5 drafts) over week 1-2.
+4. Pick ONE ICP: senior MLE in Bangalore, 3-7 YOE — the 50 SEO guides already target this implicitly.
+5. Do NOT build PSL. Do NOT scaffold its spine.
+6. Weekly: measure return visits + email signups. If both flat after 30 days, the problem is positioning, not content.
+
 ### v4.118 — STRATEGY SEO target hit: 17 more SEO guides → 50 total (2026-06-20)
 
 **Third same-day content push. Closes out the content backlog: STRATEGY target of 50 SEO interview guides is now hit.**

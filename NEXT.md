@@ -1,6 +1,57 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-19. **The MLE Path complete** (v4.105–v4.111): 57 posts across 11 tiers, dual-view (Rigorous + Simplify), prereq/successor knowledge graph, 121-term inline glossary. Renamed from "Foundations Path" in v4.111 to reflect the expanded scope (foundations through production engineering / MLOps / system design / interview bridge). No active sprint. Decide next direction based on usage signal.
+Updated: 2026-06-21. **CONTENT FREEZE — DISTRIBUTION ONLY.**
+
+After three back-to-back content sessions (v4.116, v4.117, v4.118) shipping 123 MCQs + 57 Simplify versions + 50 SEO interview guides, an outside strategy critique correctly identified that we have been **building because building is safe, and avoiding distribution because distribution can fail visibly.** See `docs/STRATEGY_CRITIQUE_2026-06-21.md` for the full critique + decision log. **Read it before opening any new MSL session.**
+
+## HARD RULE (until reversed by user)
+
+Until MSL has **either** 100 verified email subscribers **or** sustained 100 weekly returning visitors (PostHog measurable), the only acceptable MSL session work is:
+
+1. Distribution (LinkedIn posts, GSC submission, sitemap submission, email capture component, UTM tagging).
+2. Bug fixes that affect distribution surfaces (PostReader on indexed URLs, OG card render, etc.).
+3. Performance fixes on first-load for indexed pages.
+
+**Rejected at session-open:** new MCQs, new Simplify versions, new SEO guides, new tabs, new labs, new spine files, new strategy docs.
+
+If a session asks "should I write content X?" the answer is "what does that move toward the 100-email or 100-return-visit goal?" If it doesn't, it doesn't ship.
+
+## User decision (2026-06-21)
+
+> "log all of this for now / I am going to do exposure through linkedin first"
+
+LinkedIn exposure is the priority. Build sessions are paused.
+
+---
+
+## NEXT 30 DAYS — LinkedIn-first exposure plan
+
+### Week 1 (Days 1–7)
+
+1. **Post #1 from `docs/linkedin/batch_02_msl.md`** — Mon morning IST (Tue if Mon is a holiday). UTM-tagged link to MSL.
+2. **Submit GSC verification + sitemap.** Replace `REPLACE_WITH_YOUR_GSC_CODE` in `index.html` with the real GSC code. Submit `public/sitemap.xml` (188 URLs) in Search Console.
+3. **Post #2 from `batch_02_msl.md`** — Wed.
+4. **Post #3 from `batch_02_msl.md`** — Fri.
+5. **End of week:** check PostHog for new unique visitors. Note baseline.
+
+### Week 2 (Days 8–14)
+
+1. **Posts #4 and #5 from `batch_02_msl.md`** — Mon and Wed.
+2. **GSC indexing check** — how many of the 174 prerendered URLs has Google crawled? If <20%, the sitemap may need resubmission or crawl-quota investigation.
+3. **End of week:** decision point — is LinkedIn driving any MSL traffic? PostHog dashboard answers.
+
+### Week 3 (Days 15–21)
+
+1. **Write batch_03_msl.md** (5 more drafts) if Week 1-2 showed any traction.
+2. **Begin email-capture component design.** Single CTA on Home: "Get one production-ML judgment scenario in your inbox every week." One input, Resend or Mailchimp integration. No login.
+
+### Week 4 (Days 22–30)
+
+1. **Ship email capture.** Wire to backend (Resend recommended — generous free tier, simple API).
+2. **Post batch_03_msl.md** — 5 posts Mon-Fri.
+3. **Week 4 review:** how many emails captured? How many return visits? Decide if PSL becomes defensible (likely answer: not yet).
+
+---
 
 ---
 
