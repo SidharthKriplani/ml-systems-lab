@@ -254,90 +254,86 @@ const INTERVIEW_TOOLS = [
 
 
 
-// ── New 5-section nav structure ──────────────────────────────────────────────
+// ── Four-frame nav structure (D-15: KNOW / DO / BUILD / JUDGE + PREP·ASSESS) ──
+// Reorg only — every id is an existing tab id (routing untouched), except the two
+// `external` DO link-outs to the sibling labs (PL = Python/DSA, PAL = SQL).
 const NAV_SECTIONS = [
   {
-    id: 'features',
-    label: 'FEATURES',
+    id: 'know',
+    label: 'KNOW',
     items: [
-      { id: 'features', label: 'Feature Engineering', desc: 'Production failure modes in feature pipelines — skew, leakage, freshness.' },
+      { id: 'gradient',   label: 'Gradient',        desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
+      { id: 'cheatsheet', label: 'Cheatsheet',      desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
+      { id: 'interview',  label: 'Q&A Bank',        desc: '128+ senior MLE interview questions with model answers.' },
+      { id: 'trainer',    label: 'Trainer',         desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
+      { id: 'models',     label: 'Math Foundations', desc: 'Pyodide explorations — probability, linear algebra, PCA, hypothesis tests.' },
+      { id: 'landscape',  label: 'Landscape',       desc: 'ML tools & infrastructure landscape map.' },
     ],
   },
   {
-    id: 'evaluation',
-    label: 'EVALUATION',
+    id: 'do',
+    label: 'DO',
     items: [
-      { id: 'eval',      label: 'Model Evaluation', desc: 'Metric selection scenarios — AUC vs precision@K, calibration, segment slicing.' },
-      { id: 'classical', label: 'Classical ML',     desc: 'Tabular ML judgment — trees, ensembles, regularization, bias-variance.' },
-      { id: 'causal',    label: 'Causal Inference', desc: 'Experiment design, SUTVA, confounding, treatment effects.' },
-      { id: 'ts',        label: 'Time Series',      desc: 'Forecasting under non-stationarity, seasonal effects, walk-forward backtesting.' },
+      { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
+      { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
+      { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
+      { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
+      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://experimentation-systems-lab.vercel.app', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
     ],
   },
   {
-    id: 'systems',
-    label: 'SYSTEMS',
+    id: 'build',
+    label: 'BUILD',
     items: [
-      { id: 'design',       label: 'System Design', desc: 'End-to-end ML system design scenarios — the round most senior interviews lose.' },
-      { id: 'dl_serving',   label: 'DL Serving',    desc: 'Deep learning inference — latency, quantization, batching.' },
-      { id: 'mlops_deploy', label: 'Deployment',    desc: 'Production rollout patterns — canary, shadow, A/B, rollback.' },
-      { id: 'mlops_pipes',  label: 'CI/CD & Infra', desc: 'ML pipeline orchestration and infrastructure.' },
-      { id: 'monitor',      label: 'Monitoring',    desc: 'Drift detection, calibration loss, silent model staleness.' },
+      { id: 'projectlab',      label: 'Project Lab · Telco', desc: 'End-to-end churn notebook (Pyodide) with 5 judgment checkpoints.' },
+      { id: 'loan_default',    label: 'Project Lab · Loans', desc: 'Loan-default notebook — fairness audit, ECOA, disparate impact.' },
+      { id: 'fraud_detection', label: 'Project Lab · Fraud', desc: 'Fraud notebook — 1:200 imbalance, precision@K, ops capacity.' },
+      { id: 'defense',         label: 'Defense Plan',        desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
     ],
   },
   {
-    id: 'training',
-    label: 'TRAINING',
-    items: [
-      { id: 'models',      label: 'Math Foundations', desc: 'Pyodide-powered explorations — probability, linear algebra, PCA, hypothesis tests.' },
-      { id: 'dl',          label: 'Deep Learning',    desc: 'Neural network training failures and architecture decisions.' },
-      { id: 'dl_finetune', label: 'Fine-tuning',      desc: 'Transfer learning, parameter-efficient fine-tuning, when each works.' },
+    id: 'judge',
+    label: 'JUDGE',
+    groups: [
+      {
+        label: 'SCENARIOS',
+        items: [
+          { id: 'features',     label: 'Feature Engineering', desc: 'Skew, leakage, freshness — production failure modes.' },
+          { id: 'eval',         label: 'Model Evaluation',    desc: 'Metric selection, calibration, segment slicing.' },
+          { id: 'classical',    label: 'Classical ML',        desc: 'Trees, ensembles, regularization, bias-variance.' },
+          { id: 'causal',       label: 'Causal Inference',    desc: 'Experiment design, SUTVA, confounding, treatment effects.' },
+          { id: 'ts',           label: 'Time Series',         desc: 'Non-stationarity, seasonality, walk-forward backtesting.' },
+          { id: 'design',       label: 'System Design',       desc: 'End-to-end ML system design — the round seniors lose.' },
+          { id: 'dl',           label: 'Deep Learning',       desc: 'Training failures and architecture decisions.' },
+          { id: 'dl_finetune',  label: 'Fine-tuning',         desc: 'LoRA, freeze, LR strategy — when each works.' },
+          { id: 'dl_serving',   label: 'DL Serving',          desc: 'Inference latency, quantization, batching.' },
+          { id: 'monitor',      label: 'Monitoring',          desc: 'Drift, PSI, silent model staleness.' },
+          { id: 'mlops_deploy', label: 'Deployment',          desc: 'Canary, shadow, A/B, rollback.' },
+          { id: 'mlops_pipes',  label: 'CI/CD & Infra',       desc: 'Pipeline gates, model registry, infra decisions.' },
+          { id: 'airflow',      label: 'Airflow',             desc: 'DAG failures, backfill, late data.' },
+          { id: 'modeling',     label: 'Data Modeling',       desc: 'Star/OBT, SCDs, OLAP formats.' },
+        ],
+      },
+      {
+        label: 'ADVERSARIAL',
+        items: [
+          { id: 'spottheflaw',  label: 'Spot the Flaw',  desc: '12 analyses with one buried methodological flaw — find it.' },
+          { id: 'incidentroom', label: 'Incident Room',  desc: 'Cross-domain production incident diagnosis.' },
+          { id: 'codebugs',     label: 'Bug Hunt',        desc: 'Production code with exactly one buried flaw.' },
+          { id: 'casestudies',  label: 'Case Studies',    desc: 'Worked production timelines — diagnosis + fix.' },
+          { id: 'stafflayer',   label: 'Staff Layer',     desc: 'IC3 → IC5 → Staff perspective reveals.' },
+        ],
+      },
     ],
   },
   {
-    id: 'data',
-    label: 'DATA',
+    id: 'assess',
+    label: 'PREP & ASSESS',
     items: [
-      { id: 'spark',    label: 'Spark Lab',     desc: 'PySpark optimization scenarios — shuffle, skew, broadcast joins, AQE.' },
-      { id: 'airflow',  label: 'Airflow',       desc: 'Workflow orchestration patterns for ML pipelines.' },
-      { id: 'dbt',      label: 'dbt',           desc: 'Analytics engineering and SQL transformation patterns.' },
-      { id: 'modeling', label: 'Data Modeling', desc: 'Dimensional modelling and schema design for ML.' },
-    ],
-  },
-  {
-    id: 'interview',
-    label: 'INTERVIEW',
-    items: [
-      { id: 'mock_interview', label: 'Mock Interview · JD-to-prompt', desc: 'Paste a JD; get a customized AI interviewer system prompt for any LLM.' },
-      { id: 'interview',   label: 'Q&A Bank',         desc: '128 senior MLE interview questions with model answers across system design, ML, behavioural.' },
-      { id: 'combinator',  label: 'Timed Exam',       desc: 'Mixed-domain timed exam simulating the real interview pressure.' },
-      { id: 'verbal',      label: 'Verbal Practice',  desc: 'Speak your answer out loud with Web Speech API transcription.' },
-      { id: 'defense',     label: 'Defense Plan',     desc: 'Project defense round — walk through your past ML projects under interviewer pressure.' },
-      { id: 'takehome',    label: 'Take-Home',        desc: 'Take-home assignment scenarios with rubric-based evaluation.' },
-      { id: 'spottheflaw', label: 'Spot the Flaw',    desc: 'Identify the silent production failure in real ML decisions.' },
-      { id: 'stafflayer',  label: 'Staff Layer',      desc: 'Staff-level interview scenarios — beyond senior, into technical leadership.' },
-    ],
-  },
-  {
-    id: 'labs',
-    label: 'LABS',
-    items: [
-      { id: 'incidentroom',    label: 'Incident Room',         desc: 'Cross-domain production incident diagnosis — read symptoms, find root cause.' },
-      { id: 'mlcoding',        label: 'Code Problems',         desc: 'ML coding patterns — implement, debug, optimise, design (the 4-type framework).' },
-      { id: 'codebugs',        label: 'Bug Hunt',              desc: 'Production ML code with exactly one buried flaw — find it.' },
-      { id: 'trainer',         label: 'Trainer',               desc: 'Spaced-repetition training across all judgment scenarios.' },
-      { id: 'projectlab',      label: 'Project Lab · Telco',   desc: 'Full Pyodide notebook — Telco churn end-to-end with 5 judgment checkpoints.' },
-      { id: 'loan_default',    label: 'Project Lab · Loans',   desc: 'Full Pyodide notebook — loan default with ECOA compliance scenarios.' },
-      { id: 'fraud_detection', label: 'Project Lab · Fraud',   desc: 'Full Pyodide notebook — fraud detection at 1:200 imbalance, precision@K.' },
-      { id: 'casestudies',     label: 'Case Studies',          desc: 'Worked production case studies with timeline + diagnosis + fix.' },
-    ],
-  },
-  {
-    id: 'learn',
-    label: 'LEARN',
-    items: [
-      { id: 'gradient',   label: 'Gradient',   desc: 'Long-form essays — 140+ posts on production ML topics, sequenced as The MLE Path.' },
-      { id: 'cheatsheet', label: 'Cheatsheet', desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
-      { id: 'landscape',  label: 'Landscape',  desc: 'ML tools and infrastructure landscape map.' },
+      { id: 'combinator',     label: 'Timed Exam',      desc: 'Mixed-domain timed mock under interview pressure.' },
+      { id: 'mock_interview', label: 'Mock Interview',  desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
+      { id: 'takehome',       label: 'Take-Home Bank',  desc: '15 open-ended system-design questions; compare to a senior answer.' },
+      { id: 'verbal',         label: 'Verbal Practice · SAY', desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
     ],
   },
 ]
@@ -603,8 +599,22 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
     return Math.round((p.attempted / p.total) * 100)
   }
 
-  function NavItem({ id, label, desc, depth = 0 }) {
+  function NavItem({ id, label, desc, href, external, depth = 0 }) {
     const [hov, setHov] = useState(false)
+    if (external) {
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" title={desc || ''}
+          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'left',
+            padding: depth === 1 ? '4px 12px 4px 28px' : '4px 12px 4px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            textDecoration: 'none', cursor: 'pointer' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--prime-faint)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.4 }}>{label}</span>
+          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', flexShrink: 0, marginLeft: '4px' }}>sibling lab</span>
+        </a>
+      )
+    }
     const isActive = activeTabId === id
     const pct = getTabPct(id)
     const isDimmed = PREMIUM_TABS.has(id) && !isUnlocked
@@ -612,6 +622,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
       <button
         onClick={() => goTo(id)}
         title={desc || ''}
+        aria-current={isActive ? 'page' : undefined}
         className={isActive ? 'sidebar-item-active' : ''}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
@@ -725,13 +736,13 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
                           letterSpacing: '0.07em', textTransform: 'uppercase',
                         }}>{group.label}</div>
                         {group.items.map(item => (
-                          <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} depth={1} />
+                          <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} depth={1} />
                         ))}
                       </div>
                     ))
                   ) : (
                     section.items.map(item => (
-                      <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} />
+                      <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} />
                     ))
                   )}
                 </div>
@@ -769,11 +780,11 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 
 const BOTTOM_NAV_ITEMS = [
-  { id: 'home',      icon: '◎', label: 'Home',      defaultTab: 'home',         sections: [] },
-  { id: 'practice',  icon: '⊟', label: 'Practice',  defaultTab: 'features',     sections: ['features','evaluation','systems','training','data'] },
-  { id: 'labs',      icon: '⚡', label: 'Labs',      defaultTab: 'incidentroom', sections: ['labs'] },
-  { id: 'interview', icon: '◈', label: 'Interview',  defaultTab: 'interview',    sections: ['interview'] },
-  { id: 'learn',     icon: '∇', label: 'Learn',      defaultTab: 'gradient',     sections: ['learn'] },
+  { id: 'home',  icon: '◎', label: 'Home',  defaultTab: 'home',        sections: [] },
+  { id: 'know',  icon: '▤', label: 'Know',  defaultTab: 'gradient',    sections: ['know'] },
+  { id: 'do',    icon: '◳', label: 'Do',    defaultTab: 'mlcoding',    sections: ['do'] },
+  { id: 'build', icon: '⚒', label: 'Build', defaultTab: 'projectlab',  sections: ['build'] },
+  { id: 'judge', icon: '◈', label: 'Judge', defaultTab: 'spottheflaw', sections: ['judge'] },
 ]
 
 function BottomNav({ activeTabId, goTo }) {
@@ -792,6 +803,7 @@ function BottomNav({ activeTabId, goTo }) {
           const isActive = item.id === 'home' ? activeTabId === 'home' : item.sections.includes(activeSection)
           return (
             <button key={item.id} onClick={() => goTo(item.defaultTab)}
+              aria-current={isActive ? 'page' : undefined}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', gap: '4px',

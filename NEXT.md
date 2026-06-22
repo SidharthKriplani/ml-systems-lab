@@ -1,6 +1,37 @@
 # NEXT.md — Session Queue
 
-Updated: 2026-06-21. **CONTENT FREEZE — DISTRIBUTION ONLY.**
+---
+
+## ▶ ACTIVE DISPATCH (HQ, 2026-06-23) — DO THE FOUR-FRAME REFRAME NOW
+
+**Authorized by Sidharth.** This overrides the content-freeze below *for this one piece of work only* (it's reorg-only — no new content, so it respects the freeze's spirit). **Condition: the daily LinkedIn post keeps running** — the reframe does not replace the keystone. Everything else in the freeze still holds.
+
+**What to build:** implement `docs/NAV-REFRAME-SPEC.md` (it's implementation-ready — every `App.jsx` edit is spelled out in its §4). Reorg nav to **KNOW / DO / BUILD / JUDGE** (D-15, not "DEC-15"). Apply these **three correction overlays** on top of that spec:
+
+**1. Delegation fix (the spec has a bug).** The spec's two `⊘` "to-build" rows — "Python & DSA bank" and "SQL problem bank" (§2 table + §3) — are **NOT MSL's to build**. Per D-15 + D-16, Python fluency lives in **PL** (now live, GitHub repo `programming-lab`) and SQL fluency in **PAL**. Re-label those rows as **link-outs to the sibling labs** ("Python fluency → PL ↗", "SQL fluency → PAL ↗"), not "TO BUILD". MSL keeps its own `mlcoding` (ML-specific coding, `PythonCell`-based) as real DO content; `spark`/`dbt` stay too. _True in-MSL rendering of the sibling banks is a later build gated on the shared content contract (not built yet) — for this pass, link out, don't embed._
+
+**2. Adopt the best-of-breed components (D-16) while you're in the nav code.** The reframe is the moment to swap — don't reinvent:
+- **Nav → PAL `Sidebar` visual**, but **keep MSL's derived `getTabSection` active-state + MSL's `BottomNav`** (MSL is the ideal adopter — it already has the two fixes PAL's nav lacks). Add `aria-current="page"`. Net: PAL's look on MSL's engine + mobile.
+- **Icons → PAL `Icon.jsx`** (retire MSL's 3-mark `Icons.jsx`; PAL covers check/cross/warning).
+- **Frame-setter → the merged component:** PAL `HowTo`'s API (`skill` prop, `steps.slice(0,3)` cap, `color` prop) on MSL's `HowToStrip` chip visual. MSL owns the visual, so MSL builds the merge.
+- **Keep (MSL owns these canonical):** `FidelityBadge` (add `aria-expanded`), `GlobalSearch`+`ContentMap`, `PythonCell`, `GradientVisuals`.
+- **DEFER (not this pass — real work, off the reframe's critical path):** paywall swap (`AccessGate` → PAL `GateOverlay`), progress swap (→ GSL `readiness.js`/heatmap), KNOW-renderer (→ GSL `GroundTruth`).
+
+**3. Archive, never delete (D-18).** Git-tag the pre-reframe state, and move any replaced file (e.g. `Icons.jsx`) to `_legacy/` — do not `rm`.
+
+**HQ's calls on the spec's open decisions (§ "Open decisions"):**
+- **Approve the nav spec** — yes, implement it.
+- **Bottom-nav shape** — 5-slot ladder (Home·Know·Do·Build·Judge); ASSESS+SAY live in the Home/Today zone. No 6th slot — keep mobile clean.
+- **`PRACTICE_DOMAINS`** — retire as a top-level structure; keep the domain labels only as the optional in-JUDGE filter.
+- **Sequencing override** — yes, do it now (ahead of the "after distribution keystone" sequencing), because it's reorg-only and unblocks everything downstream. Conditioned on the daily post continuing.
+
+**Scope discipline:** IA reframe + delegation fix + the three component adoptions (nav/icons/frame-setter). Nothing else. Don't bundle the deferred swaps; don't write new content.
+
+**Build rules (CLAUDE.md):** macOS-only build (verify clean before deploy), **approve-first / never auto-push** (prepare commands, Sidharth runs them), `rm -f .git/index.lock .git/HEAD.lock` before staging, full repo path. Write MSL's own STATUS/LINEAGE on close.
+
+---
+
+Updated: 2026-06-21. **CONTENT FREEZE — DISTRIBUTION ONLY.** _(Superseded for the reframe only — see ACTIVE DISPATCH above.)_
 
 After three back-to-back content sessions (v4.116, v4.117, v4.118) shipping 123 MCQs + 57 Simplify versions + 50 SEO interview guides, an outside strategy critique correctly identified that we have been **building because building is safe, and avoiding distribution because distribution can fail visibly.** See `docs/STRATEGY_CRITIQUE_2026-06-21.md` for the full critique + decision log. **Read it before opening any new MSL session.**
 
@@ -31,6 +62,8 @@ Two HQ-directed, **read-only/propose-only** doc builds landed since v4.120 (neit
 
 - **5D content audit + framework** (`docs/CONTENT-AUDIT-5D.md`, `docs/CONTENT-FRAMEWORK.md`, `docs/linkedin/batch_03_msl.md`) — committed `a828dad`.
 - **Four-Frame Audit** (`docs/FOUR-FRAME-AUDIT.md`) — maps MSL's surface onto the Competence Model (`HQ/COMPETENCE-MODEL.md`, DEC-15). **Awaiting approval** (see `PENDING_APPROVALS.md`).
+- **Nav Reframe Spec** (`docs/NAV-REFRAME-SPEC.md`) — implementation-ready spec for reorganizing nav under the 4 frames (KNOW/DO/BUILD/JUDGE + SAY ribbon + ASSESS), every tab placed, Fluency rung marked thin/to-build.
+- **Nav Reframe IMPLEMENTED (v4.123, 2026-06-23)** — per HQ ACTIVE DISPATCH. `App.jsx` reframed to KNOW/DO/BUILD/JUDGE + PREP·ASSESS; 5-slot bottom-nav ladder; DO rung links out to PL (Python) + PAL (SQL) per D-16 delegation (no stubs); `aria-current` added (sidebar + bottom nav). Component adoptions (D-16): icons → PAL `Icon.jsx` (MSL `Icons.jsx` now a shim; original archived to `src/_legacy/`, D-18), frame-setter `HowToStrip` merged with PAL `HowTo` API (color + 3-step cap), `FidelityBadge` got `aria-expanded`. **esbuild full-bundle clean (EXIT 0); NOT yet `npm run build` (macOS-only) — Sidharth runs on Mac.** Prepared approve-first, **not pushed.** See `PENDING_APPROVALS.md`. Daily LinkedIn post continues (dispatch condition). _Deferred (not this pass): full PAL Sidebar visual transplant (kept MSL's sidebar + aria-current; render-gated), paywall/progress/KNOW-renderer swaps._
 
 **Headline finding:** MSL is an **hourglass** — deep recall+depth floor (Gradient) + over-indexed judgment apex, **pinched at FLUENCY** (only ≈13–15 ML-coding problems; no Python/DSA bank, no consolidated SQL bank) and thin at ownership-scaffold (3 tabular ProjectLabs). The load-bearing gap is **fluency** — exactly the Python-DSA + SQL build already requested. Confirmed priority for when the freeze lifts.
 

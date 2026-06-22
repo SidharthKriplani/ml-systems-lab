@@ -46,6 +46,36 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.123 — Four-frame nav reframe IMPLEMENTED + best-of-breed component adoption (2026-06-23)
+
+**Code change. `App.jsx` + 3 components edited; reorg only — no tab/data/content touched. esbuild full-bundle clean; macOS `npm run build` pending (Sidharth). Approve-first, not pushed.**
+
+Implemented `docs/NAV-REFRAME-SPEC.md` per HQ ACTIVE DISPATCH (`NEXT.md`), with the dispatch's three correction overlays:
+
+- **IA reframe (`src/App.jsx`):** `NAV_SECTIONS` rebuilt to the four frames **KNOW / DO / BUILD / JUDGE** (+ a PREP·ASSESS section carrying Combinator/Mock/Take-Home/Verbal — the ASSESS bucket + SAY ribbon, off the ladder). `BOTTOM_NAV_ITEMS` → the 5-slot ladder (Home·Know·Do·Build·Judge). Domain groupings retired as top-level (kept as data for the Cmd+K `ContentMap`). Every one of the 40 routable tab ids verified reachable (zero orphans); all 4 frame bottom-nav targets resolve.
+- **Delegation (D-15/D-16):** the DO rung ships MSL's own `mlcoding`/`spark`/`dbt` and **links out** to the sibling labs for general fluency — "Python fluency → PL ↗" (`github.com/SidharthKriplani/programming-lab`, no live Vercel URL yet) and "SQL fluency → PAL ↗" (`experimentation-systems-lab.vercel.app`). No "to-build" stubs. `NavItem` gained an `external` link-out branch (renders an `<a>`, hook-order safe).
+- **Component adoption (D-16):** `aria-current="page"` added to sidebar `NavItem` + `BottomNav` (the MSL-side nav fixes HQ named; kept MSL's derived `getTabSection` active-state + MSL `BottomNav`). **Icons → PAL:** adopted PAL `Icon.jsx` (added an `x` glyph PAL lacked); MSL `Icons.jsx` is now a thin shim delegating to it so the 11 call-sites are untouched. **Frame-setter merged:** `HowToStrip` took PAL `HowTo`'s API (`color` prop + `steps.slice(0,3)` cap) on MSL's chip visual. **`FidelityBadge`** got `aria-expanded`.
+- **Archive (D-18):** original `Icons.jsx` implementation moved to `src/_legacy/Icons.jsx` (never deleted); pre-reframe git tag in the proposed push.
+- **Deferred (not this pass, per scope discipline):** wholesale PAL Sidebar visual transplant (564 lines, PAL-coupled — can't render-verify in sandbox; kept MSL's sidebar + aria-current instead), and the paywall/progress/KNOW-renderer swaps.
+
+**Verification:** sandbox-native esbuild (0.28.1) full-bundle of `src/App.jsx` → EXIT 0 (only pre-existing duplicate-key lints in untouched `TimeSeriesTab.jsx`). Rollup/Vite production build is macOS-only — Sidharth runs it as the deploy gate.
+
+**Files:** `src/App.jsx`, `src/components/{Icon.jsx (new), Icons.jsx (shim), HowToStrip.jsx, FidelityBadge.jsx}`, `src/_legacy/Icons.jsx` (archive). Spine: `NEXT.md`, `PENDING_APPROVALS.md`.
+
+---
+
+### v4.122 — Nav Reframe Spec (four-frame IA) — spec only, no code (2026-06-22)
+
+**No code changes. `App.jsx` NOT edited — stopped at the spec for approval.**
+
+Follow-on to the Four-Frame Audit. Produced `docs/NAV-REFRAME-SPEC.md`: an implementation-ready plan to reorganize MSL's nav so every surface maps to its primary frame — KNOW / DO / BUILD / JUDGE (+ a SAY communication ribbon and an ASSESS bucket outside the ladder). Includes the complete tab→frame placement table (all 41 tab ids), the exact `App.jsx` edits across the six interdependent nav structures (`NAV_SECTIONS`, `BOTTOM_NAV_ITEMS`, `TAB_TO_ZONE`, `ZONE_DEFAULTS`, `PRACTICE_DOMAINS`, `INTERVIEW_TOOLS`) + their consumers, the Fluency rung marked **thin / to-build** (ML Coding + Spark + dbt live; Python-DSA + SQL banks shown as inert "TO BUILD" markers — not faked, not filled), and a macOS build/QA/push checklist.
+
+**Why spec-not-commit:** the reframe is a routing change that can't be build-verified in the sandbox (Rollup ARM64) and auto-deploys on push; it spans six interdependent structures; and DEC-15 sequences the lab overhaul after the distribution keystone. Reorg-only (no content touched), but a controller call to run it now — hence approval-gated. On approval the edits are mechanical.
+
+**Files added:** `docs/NAV-REFRAME-SPEC.md`. **Updated:** `NEXT.md` (STATUS), `PENDING_APPROVALS.md`. Not pushed.
+
+---
+
 ### v4.121 — Four-Frame Audit (Competence Model mapping) — docs only, propose-only (2026-06-22)
 
 **No code changes. Read-only audit; no nav/content/features touched — freeze respected.**

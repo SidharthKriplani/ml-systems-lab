@@ -34,6 +34,8 @@ export default function FidelityBadge({ tier }) {
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label={`Fidelity: ${t.label}. Click for detail.`}
         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '999px', background: t.bg, border: `1px solid ${t.border}`, color: t.color, fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 600, letterSpacing: '0.05em', cursor: 'pointer', textTransform: 'uppercase' }}
       >
         {t.short}

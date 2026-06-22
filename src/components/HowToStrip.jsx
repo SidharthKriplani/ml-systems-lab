@@ -1,20 +1,24 @@
 // ── HowToStrip ────────────────────────────────────────────────────────────────
 // Always-visible entry context for every practice tab.
 // Sets the cognitive frame before the user's first choice.
-// Pattern from GSL: skill name + 2–3 numbered steps. Never more than 3.
+// Frame-setter: MERGED component (D-16) — PAL HowTo's API (skill/steps/color,
+// steps capped at 3) on MSL's chip visual. Never more than 3 steps.
 //
 // Props:
-//   skill   string  — what you're building, e.g. "Production incident diagnosis"
-//   steps   string[] — 2–3 steps, each a short imperative phrase
+//   skill   string   — what you're building, e.g. "Production incident diagnosis"
+//   steps   string[] — up to 3 steps (sliced); each a short imperative phrase
+//   color   string   — accent (defaults to the ML/gold prime; pass a frame accent)
 
-export default function HowToStrip({ skill, steps }) {
+export default function HowToStrip({ skill, steps, color = 'var(--prime)' }) {
+  if (!skill && (!steps || steps.length === 0)) return null
+  const shown = (steps || []).slice(0, 3)
   return (
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: '16px',
       padding: '12px 16px',
       background: 'var(--surface)',
       border: '1px solid var(--rim)',
-      borderLeft: '3px solid var(--prime)',
+      borderLeft: '3px solid ' + color,
       borderRadius: '8px',
       marginBottom: '24px',
       flexWrap: 'wrap',
@@ -38,7 +42,7 @@ export default function HowToStrip({ skill, steps }) {
       <div style={{ width: '1px', background: 'var(--rim)', alignSelf: 'stretch', flexShrink: 0, margin: '2px 0' }} />
 
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-        {steps.map((step, i) => (
+        {shown.map((step, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
               width: '18px', height: '18px', borderRadius: '50%',
