@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { trackTabSwitch } from './analytics.js'
 import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
+import { Icon }    from './components/Icon.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
@@ -261,6 +262,7 @@ const NAV_SECTIONS = [
   {
     id: 'know',
     label: 'KNOW',
+    icon: 'book-open',
     items: [
       { id: 'gradient',   label: 'Gradient',        desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
       { id: 'cheatsheet', label: 'Cheatsheet',      desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
@@ -273,6 +275,7 @@ const NAV_SECTIONS = [
   {
     id: 'do',
     label: 'DO',
+    icon: 'terminal',
     items: [
       { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
       { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
@@ -284,6 +287,7 @@ const NAV_SECTIONS = [
   {
     id: 'build',
     label: 'BUILD',
+    icon: 'hammer',
     items: [
       { id: 'projectlab',      label: 'Project Lab · Telco', desc: 'End-to-end churn notebook (Pyodide) with 5 judgment checkpoints.' },
       { id: 'loan_default',    label: 'Project Lab · Loans', desc: 'Loan-default notebook — fairness audit, ECOA, disparate impact.' },
@@ -294,6 +298,7 @@ const NAV_SECTIONS = [
   {
     id: 'judge',
     label: 'JUDGE',
+    icon: 'scale',
     groups: [
       {
         label: 'SCENARIOS',
@@ -329,6 +334,7 @@ const NAV_SECTIONS = [
   {
     id: 'assess',
     label: 'PREP & ASSESS',
+    icon: 'clipboard',
     items: [
       { id: 'combinator',     label: 'Timed Exam',      desc: 'Mixed-domain timed mock under interview pressure.' },
       { id: 'mock_interview', label: 'Mock Interview',  desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
@@ -576,200 +582,284 @@ function PracticeDomainCard({ domain, onSelect, onGoBack, tabProgress, isUnlocke
 // ── DesktopSidebar ────────────────────────────────────────────────────────────
 // Guiding principle: user always knows where they are and what to do next.
 // Flat domain sections — one click to any tab. No lock icons. Progress inline.
-function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }) {
-  const activeSection = getTabSection(activeTabId)
-
-  const [openSections, setOpenSections] = useState(() => {
-    const s = getTabSection(activeTabId)
-    return s ? { [s]: true } : {}
-  })
+// ── Sidebar helpers (module scope — must persist across renders so the
+//    grid-row height transition animates instead of remounting/snapping) ──
+function SidebarCollapsible({ open, children }) {
+  const ref = useRef(null)
+  const [height, setHeight] = useState(open ? 'auto' : '0px')
+  const mounted = useRef(false)
 
   useEffect(() => {
-    const s = getTabSection(activeTabId)
-    if (s) setOpenSections(prev => ({ ...prev, [s]: true }))
-  }, [activeTabId])
+    const el = ref.current
+    if (!el) return
+    if (!mounted.current) { mounted.current = true; return }  // don't animate on first mount
 
-  function toggleSection(id) {
-    setOpenSections(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  function getTabPct(tabId) {
-    const p = tabProgress?.[tabId]
-    if (!p || p.total === 0) return 0
-    return Math.round((p.attempted / p.total) * 100)
-  }
-
-  function NavItem({ id, label, desc, href, external, depth = 0 }) {
-    const [hov, setHov] = useState(false)
-    if (external) {
-      return (
-        <a href={href} target="_blank" rel="noopener noreferrer" title={desc || ''}
-          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'left',
-            padding: depth === 1 ? '4px 12px 4px 28px' : '4px 12px 4px 16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            textDecoration: 'none', cursor: 'pointer' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--prime-faint)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.4 }}>{label}</span>
-          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', flexShrink: 0, marginLeft: '4px' }}>sibling lab</span>
-        </a>
-      )
+    let raf1, raf2
+    function onEnd(e) {
+      if (e.target !== el || e.propertyName !== 'height') return
+      if (open) setHeight('auto')           // let nested content grow freely once open
+      el.removeEventListener('transitionend', onEnd)
     }
-    const isActive = activeTabId === id
-    const pct = getTabPct(id)
-    const isDimmed = PREMIUM_TABS.has(id) && !isUnlocked
+
+    if (open) {
+      setHeight(el.scrollHeight + 'px')     // 0 -> measured height
+      el.addEventListener('transitionend', onEnd)
+    } else {
+      setHeight(el.scrollHeight + 'px')     // auto -> fixed px first...
+      raf1 = requestAnimationFrame(() => {  // ...then next frame collapse to 0 (so it transitions)
+        raf2 = requestAnimationFrame(() => setHeight('0px'))
+      })
+    }
+    return () => {
+      el.removeEventListener('transitionend', onEnd)
+      if (raf1) cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} style={{
+      height,
+      overflow: 'hidden',
+      transition: 'height 0.30s cubic-bezier(0.33,1,0.68,1)',
+      willChange: 'height',
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function SidebarChevron({ open, active }) {
+  return (
+    <span aria-hidden="true" style={{
+      fontSize: '9px', flexShrink: 0, display: 'inline-block',
+      color: active ? 'var(--prime)' : 'var(--ink-ghost)',
+      transition: 'transform 0.24s cubic-bezier(0.4,0,0.2,1), color var(--t-fast)',
+      transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+    }}>&#9662;</span>
+  )
+}
+
+function SidebarNavItem({ id, label, desc, href, external, indent = false, activeTabId, goTo, tabProgress, isUnlocked }) {
+  if (external) {
     return (
-      <button
-        onClick={() => goTo(id)}
-        title={desc || ''}
-        aria-current={isActive ? 'page' : undefined}
-        className={isActive ? 'sidebar-item-active' : ''}
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
+      <a href={href} target="_blank" rel="noopener noreferrer" title={desc || ''}
         style={{
-          width: '100%', textAlign: 'left',
-          padding: depth === 1 ? '4px 12px 4px 28px' : '4px 12px 4px 16px',
-          background: isActive ? undefined : hov ? 'var(--prime-faint)' : 'none',
-          border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          transition: 'background var(--t-fast)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '7px',
+          width: '100%', boxSizing: 'border-box', textAlign: 'left',
+          padding: indent ? '5px 11px 5px 18px' : '6px 11px',
+          borderRadius: 'var(--r-sm)', textDecoration: 'none', cursor: 'pointer',
+          color: 'var(--ink-low)', fontFamily: 'var(--font-sans)',
+          fontSize: indent ? '12.5px' : '13px', lineHeight: 1.5, letterSpacing: '-0.005em',
+          transition: 'background var(--t-fast), color var(--t-fast)',
         }}
-      >
-        <span style={{
-          fontFamily: 'var(--font-sans)', fontSize: '12px',
-          fontWeight: isActive ? 600 : 400,
-          color: isActive ? undefined : hov ? 'var(--ink-mid)' : 'var(--ink-low)',
-          transition: 'color var(--t-fast)', lineHeight: 1.4,
-        }}>{label}</span>
-        {pct > 0
-          ? <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isActive ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0, marginLeft: '4px' }}>{pct}%</span>
-          : isDimmed
-            ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
-            : null
-        }
-      </button>
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-low)' }}>
+        <span>{label}</span>
+        <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', flexShrink: 0 }}>&#8599;</span>
+      </a>
     )
   }
+  const isActive = activeTabId === id
+  const pr = tabProgress?.[id]
+  const pct = (!pr || pr.total === 0) ? 0 : Math.round((pr.attempted / pr.total) * 100)
+  const isDimmed = PREMIUM_TABS.has(id) && !isUnlocked
+  return (
+    <button
+      onClick={() => goTo(id)}
+      title={desc || ''}
+      aria-current={isActive ? 'page' : undefined}
+      className={isActive ? 'sidebar-item-active' : ''}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '7px',
+        width: '100%', textAlign: 'left',
+        padding: indent ? '5px 11px 5px 18px' : '6px 11px',
+        borderRadius: 'var(--r-sm)', border: 'none',
+        background: isActive ? undefined : 'transparent',
+        color: isActive ? undefined : 'var(--ink-low)',
+        fontFamily: 'var(--font-sans)',
+        fontWeight: isActive ? 600 : 400,
+        fontSize: indent ? '12.5px' : '13px', lineHeight: 1.5, letterSpacing: '-0.005em',
+        cursor: 'pointer',
+        transition: 'background var(--t-fast), color var(--t-fast)',
+      }}
+      onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' } }}
+      onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-low)' } }}
+    >
+      <span>{label}</span>
+      {pct > 0
+        ? <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: isActive ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0 }}>{pct}%</span>
+        : isDimmed
+          ? <span style={{ fontSize: '8px', color: 'var(--ink-ghost)', opacity: 0.6, flexShrink: 0 }}>pro</span>
+          : null}
+    </button>
+  )
+}
+
+function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }) {
+  const activeSection = getTabSection(activeTabId)
+  const JUDGE = NAV_SECTIONS.find(s => s.groups)
+  const subKey = (sid, label) => sid + ':' + label
+  function activeSubKeyFor() {
+    for (const sec of NAV_SECTIONS) {
+      if (!sec.groups) continue
+      const g = sec.groups.find(gr => gr.items.some(it => it.id === activeTabId))
+      if (g) return subKey(sec.id, g.label)
+    }
+    return JUDGE ? subKey(JUDGE.id, JUDGE.groups[0].label) : null
+  }
+  const [openFrame, setOpenFrame] = useState(() => activeSection || (NAV_SECTIONS[0] && NAV_SECTIONS[0].id))
+  const [openSub, setOpenSub]     = useState(() => activeSubKeyFor())
+
+  useEffect(() => {
+    const sec = getTabSection(activeTabId)
+    if (sec) setOpenFrame(sec)
+    for (const s of NAV_SECTIONS) {
+      if (!s.groups) continue
+      const g = s.groups.find(gr => gr.items.some(it => it.id === activeTabId))
+      if (g) setOpenSub(subKey(s.id, g.label))
+    }
+  }, [activeTabId])
+
+  function toggleFrame(id) { setOpenFrame(cur => (cur === id ? null : id)) }
+  function toggleSub(key)  { setOpenSub(cur => (cur === key ? null : key)) }
+
+  const navProps = { activeTabId, goTo, tabProgress, isUnlocked }
 
   return (
     <aside className="desktop-sidebar" style={{
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
       background: 'var(--depth)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-      borderRight: '1px solid var(--rim)',
-      flexDirection: 'column', overflowY: 'auto',
+      borderRight: '2px solid var(--rim-hi)',
+      display: 'flex', flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'none',
     }}>
 
-      {/* Logo */}
-      <button
-        onClick={() => goTo('home')}
-        style={{
-          padding: '14px 14px 12px', flexShrink: 0,
-          display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'var(--prime-faint)',
-          borderBottom: '1px solid var(--rim)',
-          border: 'none', cursor: 'pointer', width: '100%',
-          transition: 'opacity var(--t)',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = '0.82' }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-      >
-        <div style={{
-          width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
-          background: 'var(--prime)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--void)',
-          boxShadow: '0 0 18px var(--prime-glow), 0 2px 8px rgba(0,0,0,0.6)',
-        }}>ML</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 800, fontSize: '13px', color: 'var(--ink-hi)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>Systems Lab</span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>production ml judgment</span>
-        </div>
-      </button>
+      {/* Logo (PAL proportions) */}
+      <div style={{ padding: '15px 13px 9px', flexShrink: 0 }}>
+        <button
+          onClick={() => goTo('home')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '9px',
+            background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+            padding: '4px 3px', borderRadius: 'var(--r-sm)',
+            transition: 'opacity var(--t)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.78' }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+        >
+          <div style={{
+            width: '26px', height: '26px', borderRadius: '7px', flexShrink: 0,
+            background: 'var(--prime)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--void)',
+            boxShadow: '0 2px 8px var(--prime-glow)',
+          }}>ML</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'left' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: '14.5px', color: 'var(--ink-hi)', letterSpacing: '-0.035em', lineHeight: 1.1 }}>ML Systems Lab</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>production ml judgment</span>
+          </div>
+        </button>
+      </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '6px 0 8px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      <nav style={{ flex: 1, padding: '2px 8px 10px', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
-        <NavItem id="home" label="Home" />
-        <NavItem id="plans" label="Plans & Access" />
-        <NavItem id="profile" label="Profile" />
-        <NavItem id="resources" label="Resources" />
-        <div style={{ height: '1px', background: 'var(--rim)', margin: '6px 0' }} />
+        {/* TRACK (top, always visible) */}
+        <SidebarNavItem id="home" label="Home" {...navProps} />
+        <SidebarNavItem id="profile" label="Profile" {...navProps} />
+        <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
+        <SidebarNavItem id="resources" label="Resources" {...navProps} />
 
         {NAV_SECTIONS.map(section => {
-          const isOpen = !!openSections[section.id]
-          const hasActive = activeSection === section.id
+          const frameOpen = openFrame === section.id
+          const frameActive = activeSection === section.id
           return (
-            <div key={section.id}>
+            <div key={section.id} style={{ marginTop: '3px' }}>
               <button
-                onClick={() => toggleSection(section.id)}
+                onClick={() => toggleFrame(section.id)}
+                aria-expanded={frameOpen}
                 style={{
-                  width: '100%', textAlign: 'left', padding: '7px 12px 5px',
-                  background: 'none', border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  width: '100%', textAlign: 'left', padding: '9px 10px 5px',
+                  background: 'none', border: 'none', cursor: 'pointer',
                 }}
               >
-                <span style={{
-                  fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: '0.13em',
-                  color: hasActive ? 'var(--prime)' : 'var(--ink-ghost)',
-                  transition: 'color var(--t-fast)',
-                }}>{section.label}</span>
-                <span style={{
-                  fontSize: '8px', color: hasActive ? 'var(--prime)' : 'var(--ink-ghost)',
-                  display: 'inline-block',
-                  transform: isOpen ? 'rotate(90deg)' : 'none',
-                  transition: 'transform 0.18s ease, color var(--t-fast)',
-                }}>▶</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {section.icon && <Icon name={section.icon} size={13} color={frameActive ? 'var(--prime)' : 'var(--ink-low)'} style={{ flexShrink: 0, opacity: frameActive ? 1 : 0.62 }} />}
+                  <span style={{
+                    fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.11em', textTransform: 'uppercase',
+                    color: frameActive ? 'var(--prime)' : 'var(--ink-low)', opacity: frameActive ? 1 : 0.6,
+                    transition: 'color var(--t-fast)',
+                  }}>{section.label}</span>
+                </span>
+                <SidebarChevron open={frameOpen} active={frameActive} />
               </button>
 
-              {isOpen && (
-                <div>
-                  {section.groups ? (
-                    section.groups.map(group => (
+              <SidebarCollapsible open={frameOpen}>
+                {section.groups ? (
+                  section.groups.map(group => {
+                    const key = subKey(section.id, group.label)
+                    const subOpen = openSub === key
+                    const subActive = group.items.some(it => it.id === activeTabId)
+                    return (
                       <div key={group.label}>
-                        <div style={{
-                          padding: '5px 12px 2px 16px',
-                          fontSize: '9px', fontFamily: 'var(--font-mono)',
-                          color: 'var(--ink-ghost)', opacity: 0.65,
-                          letterSpacing: '0.07em', textTransform: 'uppercase',
-                        }}>{group.label}</div>
-                        {group.items.map(item => (
-                          <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} depth={1} />
-                        ))}
+                        <button
+                          onClick={() => toggleSub(key)}
+                          aria-expanded={subOpen}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            width: '100%', textAlign: 'left', padding: '5px 11px',
+                            borderRadius: 'var(--r-sm)', border: 'none', background: 'none', cursor: 'pointer',
+                            color: subActive ? 'var(--ink-mid)' : 'var(--ink-low)',
+                            fontFamily: 'var(--font-sans)', fontWeight: subActive ? 600 : 500,
+                            fontSize: '12px', letterSpacing: '0.02em', opacity: subActive ? 1 : 0.72,
+                            transition: 'color var(--t-fast)',
+                          }}
+                        >
+                          <span>{group.label}</span>
+                          <SidebarChevron open={subOpen} active={subActive} />
+                        </button>
+                        <SidebarCollapsible open={subOpen}>
+                          <div style={{ borderLeft: '1px solid var(--rim)', margin: '1px 0 3px 15px', paddingLeft: '2px' }}>
+                            {group.items.map(item => (
+                              <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} indent {...navProps} />
+                            ))}
+                          </div>
+                        </SidebarCollapsible>
                       </div>
-                    ))
-                  ) : (
-                    section.items.map(item => (
-                      <NavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} />
-                    ))
-                  )}
-                </div>
-              )}
+                    )
+                  })
+                ) : (
+                  section.items.map(item => (
+                    <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} {...navProps} />
+                  ))
+                )}
+              </SidebarCollapsible>
             </div>
           )
         })}
       </nav>
 
       {/* Search */}
-      <div style={{ padding: '8px 10px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
+      <div style={{ padding: '9px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
         <button
           onClick={onSearch}
           style={{
-            width: '100%', padding: '7px 10px',
-            display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'rgba(0,0,0,0.2)', border: '1px solid var(--rim)',
-            borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)',
-            fontSize: '12px', fontFamily: 'var(--font-sans)',
+            width: '100%', padding: '7px 11px',
+            display: 'flex', alignItems: 'center', gap: '7px',
+            background: 'var(--surface)', border: '1px solid var(--rim)',
+            borderRadius: 'var(--r-sm)', cursor: 'pointer', color: 'var(--ink-low)',
+            fontSize: '13px', fontFamily: 'var(--font-sans)', letterSpacing: '-0.005em',
             transition: 'border-color var(--t-fast), color var(--t-fast)',
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
         >
-          <span style={{ fontSize: '13px' }}>⌕</span>
-          <span>Search</span>
-          <kbd style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }}>⌘K</kbd>
+          <span style={{ fontSize: '13px' }}>&#9906;</span>
+          <span style={{ flex: 1, textAlign: 'left' }}>Search</span>
+          <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', background: 'var(--depth)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)', border: '1px solid var(--rim)' }}>&#8984;K</kbd>
         </button>
       </div>
 
