@@ -25,6 +25,19 @@ LinkedIn exposure is the priority. Build sessions are paused. v4.120 finalized t
 
 ---
 
+## STATUS (2026-06-22) — Four-Frame Audit done (propose-only)
+
+Two HQ-directed, **read-only/propose-only** doc builds landed since v4.120 (neither violates the freeze — no tabs/content/features built):
+
+- **5D content audit + framework** (`docs/CONTENT-AUDIT-5D.md`, `docs/CONTENT-FRAMEWORK.md`, `docs/linkedin/batch_03_msl.md`) — committed `a828dad`.
+- **Four-Frame Audit** (`docs/FOUR-FRAME-AUDIT.md`) — maps MSL's surface onto the Competence Model (`HQ/COMPETENCE-MODEL.md`, DEC-15). **Awaiting approval** (see `PENDING_APPROVALS.md`).
+
+**Headline finding:** MSL is an **hourglass** — deep recall+depth floor (Gradient) + over-indexed judgment apex, **pinched at FLUENCY** (only ≈13–15 ML-coding problems; no Python/DSA bank, no consolidated SQL bank) and thin at ownership-scaffold (3 tabular ProjectLabs). The load-bearing gap is **fluency** — exactly the Python-DSA + SQL build already requested. Confirmed priority for when the freeze lifts.
+
+**Sequence (per DEC-15, behind the freeze):** distribution keystone → fluency-coverage build (the new "DO" frame: Python/DSA + SQL, SQL to a variety standard) → IA reframe to the four frames → judgment rebalance (no net-new, reorganize under the 5D). No restructure built yet.
+
+---
+
 ## The 5 allowed Tier 1 items (do in this order — distribution work only)
 
 These are pulled from IDEAS.md. ANY other build work is rejected at session-open until distribution proves out.

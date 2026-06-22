@@ -46,6 +46,20 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.121 — Four-Frame Audit (Competence Model mapping) — docs only, propose-only (2026-06-22)
+
+**No code changes. Read-only audit; no nav/content/features touched — freeze respected.**
+
+HQ registered the Competence Model (`HQ/COMPETENCE-MODEL.md`, DEC-15): every lab scoped by four frames in a dependency ladder — recall+depth → fluency → ownership → judgment. This session audited MSL against it and produced `docs/FOUR-FRAME-AUDIT.md`: full surface inventory, per-surface frame tags (primary + secondary), a per-frame coverage table, a gap report, a propose-only IA restructure under the four frames, and a build-order note.
+
+**Finding:** MSL is an hourglass — deep recall+depth floor (Gradient ~140+ essays / Foundations Path) and over-indexed judgment apex (~20 scenario tabs + Spot-the-Flaw + Incident Room + Staff Layer 30 + Code Bugs 26), pinched at **fluency** (≈13–15 ML-coding problems only; no Python/DSA or consolidated SQL bank) and thin at ownership-scaffold (3 tabular ProjectLabs). Load-bearing gap = fluency; corrective build order = close fluency first (the requested Python-DSA + SQL banks → a new "DO" frame), then widen ownership, then rebalance (not expand) judgment under the 5D.
+
+Also recorded this session: the **5D content audit + framework** (`docs/CONTENT-AUDIT-5D.md`, `docs/CONTENT-FRAMEWORK.md`, `docs/linkedin/batch_03_msl.md`), committed `a828dad`.
+
+**Files added:** `docs/FOUR-FRAME-AUDIT.md`. **Files updated:** `NEXT.md` (STATUS block), `PENDING_APPROVALS.md` (new entry). Awaiting approval — prepared as a PROPOSED PUSH, not pushed.
+
+---
+
 ### v4.120 — Final spine port + LinkedIn cross-lab integration + chat consolidation (2026-06-21)
 
 **No code changes. Final statefulness port before this chat closes.**
