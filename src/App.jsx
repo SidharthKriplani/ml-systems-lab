@@ -345,6 +345,24 @@ const NAV_SECTIONS = [
   },
 ]
 
+// ── BY DOMAIN axis (D-20): domain is a second lens crossing all four frames ──
+// Tabs not listed are cross-domain ('all') and show in every domain view.
+const DOMAIN_OF = {
+  features: 'ml', eval: 'ml', classical: 'ml', design: 'ml', models: 'ml', mlcoding: 'ml', projectlab: 'ml', loan_default: 'ml', fraud_detection: 'ml',
+  spark: 'de', airflow: 'de', dbt: 'de', modeling: 'de',
+  dl: 'dl', dl_finetune: 'dl', dl_serving: 'dl',
+  causal: 'ds', ts: 'ds',
+  monitor: 'mlops', mlops_deploy: 'mlops', mlops_pipes: 'mlops',
+}
+const NAV_DOMAINS = [
+  { id: 'ml',    label: 'ML Engineering' },
+  { id: 'de',    label: 'Data Engineering' },
+  { id: 'dl',    label: 'Deep Learning' },
+  { id: 'ds',    label: 'Data Science' },
+  { id: 'mlops', label: 'MLOps' },
+]
+function domainOf(id) { return DOMAIN_OF[id] || 'all' }
+
 function getTabSection(tabId) {
   for (const s of NAV_SECTIONS) {
     const items = s.groups ? s.groups.flatMap(g => g.items) : (s.items || [])
@@ -711,6 +729,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
   }
   const [openFrame, setOpenFrame] = useState(() => activeSection || (NAV_SECTIONS[0] && NAV_SECTIONS[0].id))
   const [openSub, setOpenSub]     = useState(() => activeSubKeyFor())
+  const [activeDomain, setActiveDomain] = useState(null)
 
   useEffect(() => {
     const sec = getTabSection(activeTabId)
@@ -726,6 +745,25 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
   function toggleSub(key)  { setOpenSub(cur => (cur === key ? null : key)) }
 
   const navProps = { activeTabId, goTo, tabProgress, isUnlocked }
+
+  // Filter a frame's items by the active domain ('all' items always show);
+  // for DO/BUILD, surface an honest placeholder when a domain has no own content there.
+  function renderItems(items, sectionId, indent) {
+    const list = activeDomain ? items.filter(it => { const d = domainOf(it.id); return d === activeDomain || d === 'all' }) : items
+    const out = list.map(item => (
+      <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} indent={indent} {...navProps} />
+    ))
+    if (activeDomain && (sectionId === 'do' || sectionId === 'build') && !items.some(it => domainOf(it.id) === activeDomain)) {
+      const dom = NAV_DOMAINS.find(d => d.id === activeDomain)
+      out.push(
+        <div key='__ph' style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: indent ? '5px 11px 5px 18px' : '6px 11px', fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-ghost)', fontStyle: 'italic' }}>
+          <span>{dom ? dom.label : ''} — coming</span>
+          <span style={{ marginLeft: 'auto', fontSize: '8px', fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-ghost)', border: '1px solid var(--rim)', borderRadius: '999px', padding: '1px 6px', fontStyle: 'normal' }}>SOON</span>
+        </div>
+      )
+    }
+    return out
+  }
 
   return (
     <aside className="desktop-sidebar" style={{
@@ -814,23 +852,45 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
                         </button>
                         <SidebarCollapsible open={subOpen}>
                           <div style={{ borderLeft: '1px solid var(--rim)', margin: '1px 0 3px 15px', paddingLeft: '2px' }}>
-                            {group.items.map(item => (
-                              <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} indent {...navProps} />
-                            ))}
+                            {renderItems(group.items, section.id, true)}
                           </div>
                         </SidebarCollapsible>
                       </div>
                     )
                   })
                 ) : (
-                  section.items.map(item => (
-                    <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} {...navProps} />
-                  ))
+                  renderItems(section.items, section.id, false)
                 )}
               </SidebarCollapsible>
             </div>
           )
         })}
+
+        {/* BY DOMAIN — secondary lens crossing all four frames (D-20) */}
+        <div style={{ marginTop: '10px', borderTop: '1px solid var(--rim)', paddingTop: '4px' }}>
+          <div style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.11em', color: 'var(--ink-low)', opacity: 0.5, padding: '9px 10px 4px', textTransform: 'uppercase' }}>By Domain</div>
+          <button
+            onClick={() => setActiveDomain(null)}
+            aria-pressed={!activeDomain}
+            className={!activeDomain ? 'sidebar-item-active' : ''}
+            style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '6px 11px', borderRadius: 'var(--r-sm)', border: 'none', background: !activeDomain ? undefined : 'transparent', color: !activeDomain ? undefined : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: !activeDomain ? 600 : 400, fontSize: '13px', letterSpacing: '-0.005em', cursor: 'pointer', transition: 'background var(--t-fast), color var(--t-fast)' }}
+            onMouseEnter={e => { if (activeDomain) { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' } }}
+            onMouseLeave={e => { if (activeDomain) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-low)' } }}
+          >All domains</button>
+          {NAV_DOMAINS.map(d => {
+            const on = activeDomain === d.id
+            return (
+              <button key={d.id}
+                onClick={() => setActiveDomain(on ? null : d.id)}
+                aria-pressed={on}
+                className={on ? 'sidebar-item-active' : ''}
+                style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '6px 11px', borderRadius: 'var(--r-sm)', border: 'none', background: on ? undefined : 'transparent', color: on ? undefined : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: on ? 600 : 400, fontSize: '13px', letterSpacing: '-0.005em', cursor: 'pointer', transition: 'background var(--t-fast), color var(--t-fast)' }}
+                onMouseEnter={e => { if (!on) { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' } }}
+                onMouseLeave={e => { if (!on) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-low)' } }}
+              >{d.label}</button>
+            )
+          })}
+        </div>
       </nav>
 
       {/* Search */}

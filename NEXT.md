@@ -23,7 +23,7 @@
 **HQ's calls on the spec's open decisions (§ "Open decisions"):**
 - **Approve the nav spec** — yes, implement it.
 - **Bottom-nav shape** — 5-slot ladder (Home·Know·Do·Build·Judge); ASSESS+SAY live in the Home/Today zone. No 6th slot — keep mobile clean.
-- **`PRACTICE_DOMAINS`** — retire as a top-level structure; keep the domain labels only as the optional in-JUDGE filter.
+- **`PRACTICE_DOMAINS`** — **repurpose as the secondary "BY DOMAIN" axis (D-20)**, not deleted: a second sidebar group (GSL's pattern) that filters/curates all four frames to one domain (ML / DL / Data Science / Causal-TS / MLOps). Each tab carries a `domain` tag alongside its frame. See spec §1 + §4.4 (updated).
 - **Sequencing override** — yes, do it now (ahead of the "after distribution keystone" sequencing), because it's reorg-only and unblocks everything downstream. Conditioned on the daily post continuing.
 
 **Scope discipline:** IA reframe + delegation fix + the three component adoptions (nav/icons/frame-setter). Nothing else. Don't bundle the deferred swaps; don't write new content.

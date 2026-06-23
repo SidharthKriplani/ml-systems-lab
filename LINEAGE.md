@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.125 — BY DOMAIN second nav axis (D-20) — domain lens across the four frames (2026-06-23)
+
+**Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first, not pushed.**
+
+Implemented the D-20 cross-frame domain axis (GSL's pattern) in `DesktopSidebar`: a secondary **"By Domain"** sidebar group (ML Engineering · Data Engineering · Deep Learning · Data Science · MLOps + "All domains"). Selecting a domain curates the KNOW→DO→BUILD→JUDGE ladder to that domain's tabs (cross-domain tabs always show). Where a domain has no own content in **Do**/**Build**, an honest greyed placeholder row with a `SOON` pill renders ("leave missing as a placeholder" per Sidharth). Data model: a module-scope `DOMAIN_OF` map (tab id → domain; unlisted = cross-domain `'all'`) + `NAV_DOMAINS` + `activeDomain` state + a `renderItems()` filter. Only ML Engineering has a complete ladder (no placeholders); every other domain shows the Do/Build gap explicitly — the frames × domain coverage matrix made navigable.
+
+**Files:** `src/App.jsx`.
+
+---
+
 ### v4.124 — BreakLabs BrandMark rollout (D-19) — logo across slots 1–7 (2026-06-23)
 
 **Code + assets. esbuild full-bundle clean; macOS `npm run build` pending (Sidharth). Approve-first, not pushed.**

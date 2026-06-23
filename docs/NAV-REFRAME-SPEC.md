@@ -27,7 +27,7 @@ MSL
 └─ ⊗ ASSESS / TODAY               outside the ladder
 ```
 
-The four frames replace today's domain-shaped sections (FEATURES / EVALUATION / SYSTEMS / TRAINING / DATA / LABS / LEARN / INTERVIEW). Domains (ML / DE / DL / Causal-TS / MLOps) survive as an **optional filter inside JUDGE**, not as top-level peers.
+The four frames replace today's domain-shaped sections (FEATURES / EVALUATION / SYSTEMS / TRAINING / DATA / LABS / LEARN / INTERVIEW). Domains (ML / DL / Data Science / Causal-TS / MLOps) become a **secondary "BY DOMAIN" nav axis (D-20)** — a lens that cuts across all four frames (GSL's built pattern: a second sidebar group). Picking a domain curates the KNOW→DO→BUILD→JUDGE ladder down to that topic (guided curation — e.g. a DS-only user sees only DS content across every frame). **This supersedes the earlier "optional filter inside JUDGE" framing** — domain is now its own cross-frame axis, not a JUDGE-only filter.
 
 ---
 
@@ -119,7 +119,7 @@ All line numbers vs. current `src/App.jsx`. **No other files change.**
    ```
    ASSESS (`combinator`, `mock_interview`) + SAY (`verbal`) surface as a "Prep" cluster inside the Home/Today zone (cross-cutting), not as a bottom-nav frame — keeps the ladder clean on mobile's 5 slots.
 3. **`TAB_TO_ZONE`** (157–168) + **`ZONE_DEFAULTS`** (169–171) — collapse zone routing onto the new sections, or retire in favor of `getTabSection` if zones become redundant. Map `verbal/combinator/mock_interview → assess`, the rest per §2.
-4. **`PRACTICE_DOMAINS`** (178–233) — **retire as a top-level structure.** Its tabs move into JUDGE (scenarios) and BUILD (the 3 notebooks). Keep the domain labels only if reused as the optional JUDGE filter; otherwise delete the constant and its render path.
+4. **`PRACTICE_DOMAINS`** (178–233) — **repurpose as the secondary "BY DOMAIN" axis (D-20), do NOT delete.** Tabs still reparent to their primary frame (scenarios → JUDGE, notebooks → BUILD), but the domain labels now power a **second sidebar group** (like GSL's "BY DOMAIN": Retrieval/Eval/…) that filters/curates all four frames to one domain. MSL domains = **ML / DL / Data Science / Causal-TS / MLOps**. Each tab must carry a `domain` tag (alongside its frame) so the lens can scope it. This is guided curation, not a JUDGE-only filter.
 5. **`INTERVIEW_TOOLS`** (236–253) — split by frame: `interview/takehome → KNOW/JUDGE`, `spottheflaw/incidentroom → JUDGE`, `mlcoding → DO`, `defense → BUILD`, `verbal → SAY`, `combinator → ASSESS`. The SVG icons carry over.
 6. **Consumers to re-check after the edits** (must stay green):
    - `getTabSection` (345–351) & `getNavLabel` (353–359) — still resolve every tab id to a section/label (they iterate `NAV_SECTIONS`, so they "just work" once the sections are renamed, **provided every tab id is present in exactly one section**).
