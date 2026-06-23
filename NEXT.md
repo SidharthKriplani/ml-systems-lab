@@ -2,7 +2,23 @@
 
 ---
 
-## ▶ ACTIVE DISPATCH (HQ, 2026-06-23) — DO THE FOUR-FRAME REFRAME NOW
+## ✅ DONE & SHIPPED — Four-Frame Nav Reframe arc (2026-06-23, origin/main)
+
+The whole nav/brand arc below is **complete and pushed to origin/main** (Vercel live). In order:
+- `e1b7fd0` — **four-frame nav** (KNOW / DO / BUILD / JUDGE + PREP·ASSESS), PAL-visual sidebar (retokenized), one-open-per-level accordion + measured-height animation, frame icons, `aria-current`, BottomNav 5-slot ladder. DO rung link-outs: Python → PL repo, SQL → PAL.
+- `73be7a2` — **BreakLabs BrandMark (D-19)** across slots 1–7: stacked `break⌇labs / ML Systems` (gold) sidebar lockup, favicon monogram, OG card (1200×630), wired into hero/auth/gate/footer/loader; old assets archived to `_legacy/`.
+- `d23e97a` — **By Domain axis REMOVED** (explored as filter `296b922` then DomainHub page `a978b09`; both surfaced mostly placeholders — MSL per-domain content is lopsided, audience self-selects by frame not topic → dropped, see `LINEAGE.md` v4.124–v4.126). **SQL link-out fixed** to `product-analytics-lab.vercel.app/#/sql-lab`.
+- Best-of-breed component adoptions (D-16): PAL `Icon.jsx`, merged `HowToStrip` API, `FidelityBadge` aria. The **sidebar interaction standard** is codified in `HQ/DESIGN-STANDARD.md` ("THE SIDEBAR STANDARD") + MSL's UI inventory.
+
+**Net state:** clean four-frame nav, BreakLabs lockup, honest DO link-outs. No domain axis. Only loose item: `public/rss.xml` (build artifact) — ignore or fold into next commit.
+
+**Parked (only if revisited):** the domain hub needs **phase-2 content tagging** (a `domain` tag on every Gradient post / MCQ / scenario) to show real filtered content like GSL — a content build, not worth it pre-distribution.
+
+**Back to the standing rule:** the HQ reframe override is **spent**. The **content freeze below is back in force** — distribution-first only.
+
+---
+
+## ▶ ACTIVE DISPATCH (HQ, 2026-06-23) — DONE ✅ (four-frame reframe shipped; see "DONE & SHIPPED" above)
 
 **Authorized by Sidharth.** This overrides the content-freeze below *for this one piece of work only* (it's reorg-only — no new content, so it respects the freeze's spirit). **Condition: the daily LinkedIn post keeps running** — the reframe does not replace the keystone. Everything else in the freeze still holds.
 
