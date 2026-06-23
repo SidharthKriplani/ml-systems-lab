@@ -282,7 +282,7 @@ const NAV_SECTIONS = [
       { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
       { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
       { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
-      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://experimentation-systems-lab.vercel.app', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
+      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab/sql-e01', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
     ],
   },
   {
@@ -362,6 +362,65 @@ const NAV_DOMAINS = [
   { id: 'mlops', label: 'MLOps' },
 ]
 function domainOf(id) { return DOMAIN_OF[id] || 'all' }
+
+// ── DomainHub: a domain is a destination — its KNOW/DO/BUILD/JUDGE slice on one page (D-20) ──
+function DomainHub({ domain, goTo }) {
+  const meta = NAV_DOMAINS.find(d => d.id === domain) || { id: domain, label: domain }
+  const allItems = sid => { const sec = NAV_SECTIONS.find(s => s.id === sid); if (!sec) return []; return sec.groups ? sec.groups.flatMap(g => g.items) : (sec.items || []) }
+  const tabsFor = sid => allItems(sid).filter(it => domainOf(it.id) === domain && !it.external)
+  const BROWSE = {
+    know:  [{ id: 'gradient', label: 'Gradient essays' }, { id: 'interview', label: 'Q&A Bank' }, { id: 'trainer', label: 'Trainer · MCQ' }, { id: 'cheatsheet', label: 'Cheatsheet' }],
+    judge: [{ id: 'spottheflaw', label: 'Spot the Flaw' }, { id: 'incidentroom', label: 'Incident Room' }, { id: 'codebugs', label: 'Bug Hunt' }, { id: 'stafflayer', label: 'Staff Layer' }],
+  }
+  const FRAMES = [
+    { id: 'know',  label: 'KNOW',  sub: 'Recall + depth', icon: 'book-open' },
+    { id: 'do',    label: 'DO',    sub: 'Fluency',        icon: 'terminal' },
+    { id: 'build', label: 'BUILD', sub: 'Ownership',      icon: 'hammer' },
+    { id: 'judge', label: 'JUDGE', sub: 'Judgment',       icon: 'scale' },
+  ]
+  function Card({ id, label, desc, muted }) {
+    return (
+      <button onClick={() => { if (!muted) goTo(id) }} disabled={muted}
+        style={{ textAlign: 'left', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '13px 15px', cursor: muted ? 'default' : 'pointer', opacity: muted ? 0.5 : 1, transition: 'border-color var(--t-fast)' }}
+        onMouseEnter={e => { if (!muted) e.currentTarget.style.borderColor = 'var(--prime)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)' }}>{label}</span>
+          {muted
+            ? <span style={{ fontSize: '8px', fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-ghost)', border: '1px solid var(--rim)', borderRadius: '999px', padding: '1px 6px' }}>SOON</span>
+            : <span style={{ color: 'var(--prime)', fontSize: '13px' }}>&#8594;</span>}
+        </div>
+        {desc && <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.4 }}>{desc}</div>}
+      </button>
+    )
+  }
+  return (
+    <div style={{ fontFamily: 'var(--font-sans)' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--prime)', marginBottom: '6px' }}>By Domain</div>
+      <h1 style={{ fontSize: '30px', fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--ink-hi)', margin: '0 0 10px' }}>{meta.label}</h1>
+      <p style={{ fontSize: '14px', color: 'var(--ink-low)', maxWidth: '640px', lineHeight: 1.6, margin: '0 0 28px' }}>Everything for {meta.label}, across the four frames — what to know, what to do, what to build, and how you're judged on it. One topic, the whole ladder.</p>
+      {FRAMES.map(fr => {
+        const tabs = tabsFor(fr.id)
+        const browse = BROWSE[fr.id] || []
+        const empty = tabs.length === 0
+        return (
+          <div key={fr.id} style={{ marginBottom: '26px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Icon name={fr.icon} size={15} color='var(--prime)' />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--ink-hi)' }}>{fr.label}</span>
+              <span style={{ fontSize: '11px', color: 'var(--ink-ghost)' }}>{fr.sub}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+              {tabs.map(t => <Card key={t.id} id={t.id} label={t.label} desc={t.desc} />)}
+              {empty && (fr.id === 'do' || fr.id === 'build') && <Card muted label={meta.label + ' ' + fr.label.toLowerCase() + ' — coming'} />}
+              {browse.map(b => <Card key={b.id} id={b.id} label={b.label} />)}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 function getTabSection(tabId) {
   for (const s of NAV_SECTIONS) {
@@ -729,7 +788,6 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
   }
   const [openFrame, setOpenFrame] = useState(() => activeSection || (NAV_SECTIONS[0] && NAV_SECTIONS[0].id))
   const [openSub, setOpenSub]     = useState(() => activeSubKeyFor())
-  const [activeDomain, setActiveDomain] = useState(null)
 
   useEffect(() => {
     const sec = getTabSection(activeTabId)
@@ -746,23 +804,10 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 
   const navProps = { activeTabId, goTo, tabProgress, isUnlocked }
 
-  // Filter a frame's items by the active domain ('all' items always show);
-  // for DO/BUILD, surface an honest placeholder when a domain has no own content there.
   function renderItems(items, sectionId, indent) {
-    const list = activeDomain ? items.filter(it => { const d = domainOf(it.id); return d === activeDomain || d === 'all' }) : items
-    const out = list.map(item => (
+    return items.map(item => (
       <SidebarNavItem key={item.id} id={item.id} label={item.label} desc={item.desc} href={item.href} external={item.external} indent={indent} {...navProps} />
     ))
-    if (activeDomain && (sectionId === 'do' || sectionId === 'build') && !items.some(it => domainOf(it.id) === activeDomain)) {
-      const dom = NAV_DOMAINS.find(d => d.id === activeDomain)
-      out.push(
-        <div key='__ph' style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: indent ? '5px 11px 5px 18px' : '6px 11px', fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-ghost)', fontStyle: 'italic' }}>
-          <span>{dom ? dom.label : ''} — coming</span>
-          <span style={{ marginLeft: 'auto', fontSize: '8px', fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-ghost)', border: '1px solid var(--rim)', borderRadius: '999px', padding: '1px 6px', fontStyle: 'normal' }}>SOON</span>
-        </div>
-      )
-    }
-    return out
   }
 
   return (
@@ -866,23 +911,15 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
           )
         })}
 
-        {/* BY DOMAIN — secondary lens crossing all four frames (D-20) */}
+        {/* BY DOMAIN — each domain opens a hub curating all four frames (D-20) */}
         <div style={{ marginTop: '10px', borderTop: '1px solid var(--rim)', paddingTop: '4px' }}>
           <div style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.11em', color: 'var(--ink-low)', opacity: 0.5, padding: '9px 10px 4px', textTransform: 'uppercase' }}>By Domain</div>
-          <button
-            onClick={() => setActiveDomain(null)}
-            aria-pressed={!activeDomain}
-            className={!activeDomain ? 'sidebar-item-active' : ''}
-            style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '6px 11px', borderRadius: 'var(--r-sm)', border: 'none', background: !activeDomain ? undefined : 'transparent', color: !activeDomain ? undefined : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: !activeDomain ? 600 : 400, fontSize: '13px', letterSpacing: '-0.005em', cursor: 'pointer', transition: 'background var(--t-fast), color var(--t-fast)' }}
-            onMouseEnter={e => { if (activeDomain) { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' } }}
-            onMouseLeave={e => { if (activeDomain) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-low)' } }}
-          >All domains</button>
           {NAV_DOMAINS.map(d => {
-            const on = activeDomain === d.id
+            const on = activeTabId === 'domain_' + d.id
             return (
               <button key={d.id}
-                onClick={() => setActiveDomain(on ? null : d.id)}
-                aria-pressed={on}
+                onClick={() => goTo('domain_' + d.id)}
+                aria-current={on ? 'page' : undefined}
                 className={on ? 'sidebar-item-active' : ''}
                 style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '6px 11px', borderRadius: 'var(--r-sm)', border: 'none', background: on ? undefined : 'transparent', color: on ? undefined : 'var(--ink-low)', fontFamily: 'var(--font-sans)', fontWeight: on ? 600 : 400, fontSize: '13px', letterSpacing: '-0.005em', cursor: 'pointer', transition: 'background var(--t-fast), color var(--t-fast)' }}
                 onMouseEnter={e => { if (!on) { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--ink-mid)' } }}
@@ -1101,6 +1138,9 @@ export default function App() {
   const activeTabLabel = showBackBtn ? getNavLabel(activeTab) : null
 
   function renderContent() {
+    if (activeTab && activeTab.indexOf('domain_') === 0) {
+      return <DomainHub domain={activeTab.slice(7)} goTo={goTo} />
+    }
     if (activeTab === 'defense') {
       return (
         <Suspense fallback={<LoadingSpinner />}>
@@ -1316,7 +1356,7 @@ export default function App() {
           Also by the same team:{' '}
           <a href="https://genai-systems-lab-ivory.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>GenAI Systems Lab</a>
           {' · '}
-          <a href="https://experimentation-systems-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Product Analytics Lab</a>
+          <a href="https://product-analytics-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Product Analytics Lab</a>
         </p>
       </footer>
 

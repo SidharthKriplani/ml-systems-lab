@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.126 — BY DOMAIN reworked into a DomainHub page + PAL SQL link fix (2026-06-23)
+
+**Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first.**
+
+Corrected the D-20 model: a domain is a **destination, not a sidebar filter**. The By Domain entries now navigate to a new `DomainHub` page (`activeTab = 'domain_<id>'`) that renders the domain's KNOW/DO/BUILD/JUDGE slice on one page — domain-specific tabs as cards per frame, cross-cutting "browse" cards for KNOW/JUDGE, and `SOON` placeholders where Do/Build have no domain content (only ML Engineering has a full ladder). The earlier `activeDomain` sidebar *filter* (v4.125) was reverted; `renderItems` is a plain map again. **Open caveat:** the hub aggregates domain *tabs*, not yet per-post/per-question content (the container tabs aren't domain-tagged — that's the phase-2 content build; GSL has it, MSL doesn't). **Also fixed:** the DO "SQL fluency → PAL" link-out (and footer) pointed at the stale `experimentation-systems-lab.vercel.app`; now `product-analytics-lab.vercel.app/#/sql-lab/sql-e01`.
+
+**Files:** `src/App.jsx`.
+
+---
+
 ### v4.125 — BY DOMAIN second nav axis (D-20) — domain lens across the four frames (2026-06-23)
 
 **Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first, not pushed.**
