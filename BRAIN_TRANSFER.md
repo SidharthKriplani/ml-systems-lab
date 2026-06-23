@@ -9,6 +9,17 @@
 
 ---
 
+## LATEST STATE (2026-06-23, v4.127) — read before assuming the freeze-only world
+
+The lab's **nav + brand were overhauled** since the v4.119 freeze, under a one-off HQ override (reorg/brand only, no content). All shipped to origin/main (latest `c515835`):
+- Four-frame nav (KNOW/DO/BUILD/JUDGE + PREP·ASSESS), PAL-visual accordion + smooth animation + frame icons, 5-slot mobile bottom nav (mobile/desktop switch fixed in v4.127).
+- BreakLabs **BrandMark** (D-19): stacked `break⌇labs / ML Systems` lockup, favicon, OG card, wired across the app; old assets in `_legacy/`.
+- DO link-outs corrected (Python → PL repo, SQL → PAL `/#/sql-lab`).
+- **By Domain axis explored then removed** (lopsided per-domain content); parked pending phase-2 content tagging.
+- **The override is spent — content freeze is back in force.** Detail: `LINEAGE.md` v4.121–v4.127, `NEXT.md` "DONE & SHIPPED", `DECISIONS.md` DEC-2026-06-23-NAV.
+
+---
+
 ## What This Project Is
 
 ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300+ scenarios across 6 engineering domains + 9 interview tools. No backend, no accounts. React 18 + Vite SPA, localStorage-only persistence, deployed on Vercel. Live: https://ml-systems-lab-v9xe.vercel.app

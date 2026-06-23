@@ -4,12 +4,23 @@ Read this first, every session.
 
 ---
 
+## ✅ LATEST (2026-06-23) — nav/brand reframe shipped; freeze override SPENT
+
+Since the v4.119 freeze, an **HQ-authorized one-off override** ran the **four-frame nav reframe + BrandMark** (reorg/IA + brand only, no content). It is **done, committed, and live on origin/main** (latest: `c515835`). Quick state:
+- **Nav:** KNOW / DO / BUILD / JUDGE + PREP·ASSESS — PAL-visual sidebar (retokenized), one-open-per-level accordion, measured-height animation, frame icons, `aria-current`, 5-slot mobile BottomNav. Mobile/desktop nav switch verified (v4.127 fixed an inline-`display` regression).
+- **Brand:** `src/components/BrandMark.jsx` (D-19) — stacked `break⌇labs / ML Systems` lockup + favicon + OG, wired slots 1–7; old assets in `_legacy/`.
+- **DO link-outs:** Python → PL repo, SQL → `product-analytics-lab.vercel.app/#/sql-lab`.
+- **By Domain axis:** explored (filter, then DomainHub page) and **removed** — MSL per-domain content too lopsided; revisit only after phase-2 content tagging. (`LINEAGE.md` v4.121–v4.127; `DECISIONS.md` DEC-2026-06-23-NAV.)
+- The override is **spent** — the **content freeze below is back in force** (distribution-first).
+
+---
+
 ## ⚠️ READ BEFORE ANY BUILD WORK (added 2026-06-21, v4.119)
 
 MSL is in **CONTENT FREEZE** as of v4.119. Three required reads at session open, in order:
 
 1. **`docs/STRATEGY_CRITIQUE_2026-06-21.md`** — the gate doc. Captures why MSL stopped adding content, what's allowed, what's forbidden, and the 30-day distribution-first plan.
-2. **`BRAIN_TRANSFER.md`** — current state and version history (v4.116-v4.119).
+2. **`BRAIN_TRANSFER.md`** — current state and version history (v4.116–v4.127).
 3. **`NEXT.md`** — the active LinkedIn-first execution schedule.
 
 **The hard rule:** until MSL has 100 verified email subscribers OR sustained 100 weekly returning visitors, the only allowed session work is:

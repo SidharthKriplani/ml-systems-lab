@@ -5,6 +5,12 @@ This is the "why this works this way" file — not build history (that's LINEAGE
 
 ---
 
+## DEC-2026-06-23-NAV — Nav reframed to four frames; By Domain axis rejected for MSL
+
+The MSL nav is organized by the **Competence Model's four frames** (HQ D-15): KNOW / DO / BUILD / JUDGE, plus a PREP·ASSESS cluster and a SAY (communication) ribbon. Domains (ML / DE / DL / DS / MLOps) are **NOT** a navigation axis in MSL — the "By Domain" lens (HQ D-20, shipped in GSL) was built two ways (sidebar filter, then a DomainHub page) and **removed**, because (a) MSL's per-domain content is lopsided — only ML Engineering has a full KNOW→DO→BUILD→JUDGE ladder; DL/DS/MLOps are hollow in Do/Build, so hubs render mostly placeholders — and (b) MSL's audience self-selects by *frame* (where they are on the ladder), not by topic. **Rule:** keep the four-frame nav; do not re-add a domain axis unless/until content is domain-tagged at the item level (phase-2 content build) AND the per-domain ladders fill out. The general Python/SQL fluency banks are delegated out (D-16): MSL's DO rung links to PL (Python) and PAL (SQL), it does not rebuild them. (Implementation history: `LINEAGE.md` v4.121–v4.127.)
+
+---
+
 ## v4.119 STRATEGIC DECISIONS (2026-06-21) — read these first
 
 These override most "default" Cowork or build instincts. They are dated and tied to the antagonistic strategy critique in `docs/STRATEGY_CRITIQUE_2026-06-21.md`.

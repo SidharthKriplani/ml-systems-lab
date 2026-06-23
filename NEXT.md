@@ -10,6 +10,8 @@ The whole nav/brand arc below is **complete and pushed to origin/main** (Vercel 
 - `d23e97a` — **By Domain axis REMOVED** (explored as filter `296b922` then DomainHub page `a978b09`; both surfaced mostly placeholders — MSL per-domain content is lopsided, audience self-selects by frame not topic → dropped, see `LINEAGE.md` v4.124–v4.126). **SQL link-out fixed** to `product-analytics-lab.vercel.app/#/sql-lab`.
 - Best-of-breed component adoptions (D-16): PAL `Icon.jsx`, merged `HowToStrip` API, `FidelityBadge` aria. The **sidebar interaction standard** is codified in `HQ/DESIGN-STANDARD.md` ("THE SIDEBAR STANDARD") + MSL's UI inventory.
 
+- `c515835` — **mobile nav fix (v4.127):** the sidebar was stuck open on phones (an inline `display:flex` overrode the responsive hide); dropped it so the CSS governs. Mobile = bottom nav only; desktop = sidebar only.
+
 **Net state:** clean four-frame nav, BreakLabs lockup, honest DO link-outs. No domain axis. Only loose item: `public/rss.xml` (build artifact) — ignore or fold into next commit.
 
 **Parked (only if revisited):** the domain hub needs **phase-2 content tagging** (a `domain` tag on every Gradient post / MCQ / scenario) to show real filtered content like GSL — a content build, not worth it pre-distribution.
