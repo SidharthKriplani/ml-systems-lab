@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.127 — Mobile regression fix: sidebar no longer stuck open on phones (2026-06-23)
+
+**Code (`src/App.jsx`, 1 line). esbuild full-bundle clean.**
+
+Bug introduced by the v4.123 sidebar rewrite: the `<aside className="desktop-sidebar">` got an **inline** `display: 'flex'`, which overrode the responsive CSS `.desktop-sidebar { display: none }` (mobile) — so on phones the left sidebar stayed open *on top of* the bottom nav. Fix: dropped the inline `display` (kept `flexDirection`), letting the CSS class govern visibility. Now mobile = bottom nav only (sidebar hidden); desktop = sidebar only (bottom nav hidden via `.bottom-nav-safe { display:none }` at ≥769px). Lesson: never set `display` inline on an element whose visibility is responsive-controlled by a class.
+
+**Files:** `src/App.jsx`.
+
+---
+
 ### v4.126 — BY DOMAIN axis REMOVED (Sidharth's call) + PAL SQL link fix (2026-06-23)
 
 **Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first.**

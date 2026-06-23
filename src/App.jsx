@@ -733,7 +733,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
       background: 'var(--depth)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
       borderRight: '2px solid var(--rim-hi)',
-      display: 'flex', flexDirection: 'column', overflowY: 'auto',
+      flexDirection: 'column', overflowY: 'auto',
       zIndex: 60, scrollbarWidth: 'none',
     }}>
 
