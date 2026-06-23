@@ -46,17 +46,17 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
-### v4.126 — BY DOMAIN reworked into a DomainHub page + PAL SQL link fix (2026-06-23)
+### v4.126 — BY DOMAIN axis REMOVED (Sidharth's call) + PAL SQL link fix (2026-06-23)
 
 **Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first.**
 
-Corrected the D-20 model: a domain is a **destination, not a sidebar filter**. The By Domain entries now navigate to a new `DomainHub` page (`activeTab = 'domain_<id>'`) that renders the domain's KNOW/DO/BUILD/JUDGE slice on one page — domain-specific tabs as cards per frame, cross-cutting "browse" cards for KNOW/JUDGE, and `SOON` placeholders where Do/Build have no domain content (only ML Engineering has a full ladder). The earlier `activeDomain` sidebar *filter* (v4.125) was reverted; `renderItems` is a plain map again. **Open caveat:** the hub aggregates domain *tabs*, not yet per-post/per-question content (the container tabs aren't domain-tagged — that's the phase-2 content build; GSL has it, MSL doesn't). **Also fixed:** the DO "SQL fluency → PAL" link-out (and footer) pointed at the stale `experimentation-systems-lab.vercel.app`; now `product-analytics-lab.vercel.app/#/sql-lab/sql-e01`.
+**Decision: drop the domain axis from MSL entirely.** Explored two forms — a sidebar *filter* (v4.125) and a *DomainHub page* (the cross-sectional, GSL-style version) — but both surface mostly `SOON` placeholders because MSL's per-domain content is lopsided (only ML Engineering has a full KNOW/DO/BUILD/JUDGE ladder; DL/DS/MLOps are hollow in Do/Build), and MSL's audience self-selects by *frame* (where they are on the ladder), not by topic. True cross-sectional curation would need content-level domain tagging (every post/MCQ/scenario) — a big content build GSL has and MSL doesn't, not worth it pre-distribution. So: reverted to the clean **four-frame** nav (KNOW/DO/BUILD/JUDGE + PREP·ASSESS); removed `DOMAIN_OF`/`NAV_DOMAINS`/`domainOf`/`DomainHub`/the By Domain sidebar group/the domain render branch. The four frames + accordion + brandmark stand on their own. **Kept:** the DO "SQL fluency → PAL" link-out (+ footer) fixed to `product-analytics-lab.vercel.app/#/sql-lab/sql-e01` (was the stale `experimentation-systems-lab`). Domain hub = revisit only if MSL's per-domain content fills out (phase-2 content tagging).
 
-**Files:** `src/App.jsx`.
+**Files:** `src/App.jsx`. _(Supersedes v4.125 — the domain axis is out, not just reshaped.)_
 
 ---
 
-### v4.125 — BY DOMAIN second nav axis (D-20) — domain lens across the four frames (2026-06-23)
+### v4.125 — BY DOMAIN second nav axis (D-20) — domain lens across the four frames (2026-06-23) [SUPERSEDED → removed in v4.126]
 
 **Code (`src/App.jsx` only). esbuild full-bundle clean; macOS build pending. Approve-first, not pushed.**
 
