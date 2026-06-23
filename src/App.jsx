@@ -282,7 +282,7 @@ const NAV_SECTIONS = [
       { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
       { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
       { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
-      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab/sql-e01', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
+      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
     ],
   },
   {
