@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BrandMark } from '../BrandMark.jsx'
 import { signInWithGoogle, signInWithGitHub, signInWithEmail } from '../../utils/auth.js'
 
 // ── AuthModal ─────────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ export default function AuthModal({ open, onClose }) {
           </div>
           {step === 'main' ? (
             <>
+              <div style={{ marginBottom: '12px' }}><BrandMark variant='wordmark' size={15} /></div>
               <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.03em', margin: '0 0 6px' }}>Sign in to save your progress</h2>
               <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.6, margin: 0 }}>Free account — cross-device sync coming soon. Junior scenarios always free.</p>
             </>

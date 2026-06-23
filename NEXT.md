@@ -16,6 +16,7 @@
 - **Frame-setter → the merged component:** PAL `HowTo`'s API (`skill` prop, `steps.slice(0,3)` cap, `color` prop) on MSL's `HowToStrip` chip visual. MSL owns the visual, so MSL builds the merge.
 - **Keep (MSL owns these canonical):** `FidelityBadge` (add `aria-expanded`), `GlobalSearch`+`ContentMap`, `PythonCell`, `GradientVisuals`.
 - **DEFER (not this pass — real work, off the reframe's critical path):** paywall swap (`AccessGate` → PAL `GateOverlay`), progress swap (→ GSL `readiness.js`/heatmap), KNOW-renderer (→ GSL `GroundTruth`).
+- **BreakLabs logo (D-19, spec `docs/BRANDMARK-ROLLOUT.md` — local copy; canonical in HQ):** the nav-header lockup **rides this reframe** (slot 1 — you're rebuilding the sidebar anyway). Do the other slots too (favicon, OG, hero, gate header, footer, loading/404). Descriptor = **`ML Systems`**, accent = **gold `#F0A500`**. Wordmark + red seam are the cross-lab constant. Old favicon/og → `_legacy/`.
 
 **3. Archive, never delete (D-18).** Git-tag the pre-reframe state, and move any replaced file (e.g. `Icons.jsx`) to `_legacy/` — do not `rm`.
 

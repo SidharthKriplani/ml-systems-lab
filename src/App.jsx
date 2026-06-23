@@ -4,6 +4,7 @@ import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import { Icon }    from './components/Icon.jsx'
+import { BrandMark } from './components/BrandMark.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
@@ -749,17 +750,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.78' }}
           onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
         >
-          <div style={{
-            width: '26px', height: '26px', borderRadius: '7px', flexShrink: 0,
-            background: 'var(--prime)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--void)',
-            boxShadow: '0 2px 8px var(--prime-glow)',
-          }}>ML</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'left' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 900, fontSize: '14.5px', color: 'var(--ink-hi)', letterSpacing: '-0.035em', lineHeight: 1.1 }}>ML Systems Lab</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 600, color: 'var(--ink-ghost)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>production ml judgment</span>
-          </div>
+          <BrandMark variant='full' stacked descriptor='ML Systems' accent='#F0A500' size={16} />
         </button>
       </div>
 
@@ -1257,6 +1248,10 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', marginBottom: '8px', opacity: 0.85 }}>
+          <BrandMark variant='wordmark' size={13} />
+          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>· ML Systems · part of BreakLabs</span>
+        </div>
         <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
           Also by the same team:{' '}
           <a href="https://genai-systems-lab-ivory.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>GenAI Systems Lab</a>

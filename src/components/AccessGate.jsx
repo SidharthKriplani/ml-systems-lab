@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BrandMark } from './BrandMark.jsx'
 import { ACCESS_CODE, STORAGE_KEY } from '../utils/unlock.js'
 
 // ── AccessGate ─────────────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export default function AccessGate({
           Premium
         </div>
 
+        <div style={{ marginBottom: '12px' }}><BrandMark variant='wordmark' size={14} /></div>
         <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '22px', fontWeight: 800, color: 'var(--ink-hi)', letterSpacing: '-0.04em', marginBottom: '10px', lineHeight: 1.2 }}>
           {title}
         </h2>

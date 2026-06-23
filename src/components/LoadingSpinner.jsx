@@ -1,5 +1,6 @@
 // ── LoadingSpinner ───────────────────────────────────────────────────────────
 // Minimal fallback UI for React.lazy() + Suspense boundaries
+import { BrandMark } from './BrandMark.jsx'
 
 export default function LoadingSpinner() {
   return (
@@ -16,6 +17,7 @@ export default function LoadingSpinner() {
         alignItems: 'center',
         gap: '16px',
       }}>
+        <BrandMark variant='monogram' size={30} />
         {/* Animated spinner */}
         <div style={{
           width: '32px',

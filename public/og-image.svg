@@ -1,85 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0a0c"/>
-      <stop offset="50%" stop-color="#15140e"/>
-      <stop offset="100%" stop-color="#0a0a0c"/>
-    </linearGradient>
-    <linearGradient id="title" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#F0A500"/>
-      <stop offset="60%" stop-color="#fff7e6"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#F0A500" stop-opacity="0.0"/>
-      <stop offset="50%" stop-color="#F0A500" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#F0A500" stop-opacity="0.0"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="0%" r="60%">
-      <stop offset="0%" stop-color="#F0A500" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#F0A500" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-
-  <!-- Background -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect width="1200" height="630" fill="url(#glow)"/>
-
-  <!-- Top eyebrow -->
-  <g font-family="JetBrains Mono, monospace" font-size="14" letter-spacing="3" fill="#F0A500" font-weight="700">
-    <text x="80" y="100">↥  THE MLE PATH</text>
+  <rect width="1200" height="630" fill="#0A0A0B"/>
+  <rect x="0" y="624" width="1200" height="6" fill="#F0A500"/>
+  <text x="173.8" y="320" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="62" font-weight="500" letter-spacing="-0.5" fill="#F4F4F4">break</text>
+  <g transform="translate(366.8 266.7) scale(1.824)">
+    <path d="M6 2 L3 11 L9 17 L3 23 L6 32" fill="none" stroke="#FB5247" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-
-  <!-- Underline accent -->
-  <rect x="80" y="115" width="200" height="2" fill="url(#accent)"/>
-
-  <!-- Big title -->
-  <g font-family="Satoshi, Inter, system-ui, sans-serif">
-    <text x="80" y="220" font-size="78" font-weight="900" fill="url(#title)" letter-spacing="-3">The complete senior</text>
-    <text x="80" y="305" font-size="78" font-weight="900" fill="url(#title)" letter-spacing="-3">MLE preparation</text>
-    <text x="80" y="390" font-size="78" font-weight="900" fill="url(#title)" letter-spacing="-3">curriculum.</text>
-  </g>
-
-  <!-- Three stats row -->
-  <g font-family="Satoshi, Inter, system-ui, sans-serif">
-    <!-- 57 posts -->
-    <text x="80"  y="495" font-size="48" font-weight="800" fill="#F0A500" letter-spacing="-1">57</text>
-    <text x="80"  y="525" font-size="14" fill="#8b8b8e" font-weight="500" letter-spacing="1.5" font-family="JetBrains Mono, monospace">POSTS</text>
-
-    <!-- 11 tiers -->
-    <text x="220" y="495" font-size="48" font-weight="800" fill="#F0A500" letter-spacing="-1">11</text>
-    <text x="220" y="525" font-size="14" fill="#8b8b8e" font-weight="500" letter-spacing="1.5" font-family="JetBrains Mono, monospace">TIERS</text>
-
-    <!-- Free -->
-    <text x="360" y="495" font-size="48" font-weight="800" fill="#F0A500" letter-spacing="-1">Free</text>
-    <text x="360" y="525" font-size="14" fill="#8b8b8e" font-weight="500" letter-spacing="1.5" font-family="JetBrains Mono, monospace">NO SIGNUP</text>
-  </g>
-
-  <!-- Bottom URL -->
-  <g font-family="JetBrains Mono, monospace" font-size="14" fill="#5a5a5e" letter-spacing="1">
-    <text x="80" y="590">ml-systems-lab-v9xe.vercel.app</text>
-  </g>
-
-  <!-- ML Systems Lab badge top-right -->
-  <g transform="translate(1000, 80)">
-    <rect x="0" y="0" width="120" height="36" rx="18" fill="rgba(240,165,0,0.10)" stroke="rgba(240,165,0,0.30)" stroke-width="1"/>
-    <text x="60" y="23" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#F0A500" text-anchor="middle" letter-spacing="2">MSL</text>
-  </g>
-
-  <!-- 11-tier visual indicator (bottom right) -->
-  <g transform="translate(800, 420)">
-    <text x="0" y="-12" font-family="JetBrains Mono, monospace" font-size="11" fill="#8b8b8e" letter-spacing="1.5">TIER LADDER</text>
-    <g>
-      <rect x="0"   y="0"  width="320" height="10" rx="2" fill="#F0A500" opacity="0.85"/>
-      <rect x="0"   y="16" width="290" height="10" rx="2" fill="#F0A500" opacity="0.75"/>
-      <rect x="0"   y="32" width="270" height="10" rx="2" fill="#F0A500" opacity="0.68"/>
-      <rect x="0"   y="48" width="245" height="10" rx="2" fill="#F0A500" opacity="0.60"/>
-      <rect x="0"   y="64" width="225" height="10" rx="2" fill="#F0A500" opacity="0.52"/>
-      <rect x="0"   y="80" width="210" height="10" rx="2" fill="#F0A500" opacity="0.45"/>
-      <rect x="0"   y="96" width="195" height="10" rx="2" fill="#F0A500" opacity="0.38"/>
-      <rect x="0"  y="112" width="175" height="10" rx="2" fill="#F0A500" opacity="0.32"/>
-      <rect x="0"  y="128" width="155" height="10" rx="2" fill="#F0A500" opacity="0.26"/>
-      <rect x="0"  y="144" width="135" height="10" rx="2" fill="#F0A500" opacity="0.20"/>
-      <rect x="0"  y="160" width="115" height="10" rx="2" fill="#F0A500" opacity="0.15"/>
-    </g>
-  </g>
+  <text x="393.8" y="320" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="62" font-weight="500" letter-spacing="-0.5" fill="#F4F4F4">labs</text>
+  <text x="542.6" y="320" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="62" font-weight="500" fill="#7a6e60"> · </text>
+  <text x="654.2" y="320" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="62" font-weight="500" letter-spacing="-0.5" fill="#F0A500">ML Systems</text>
+  <text x="600.0" y="412" text-anchor="middle" font-family="DejaVu Sans, Inter, sans-serif" font-size="30" fill="#b8b8b8">Production ML judgment — debug the systems that silently fail.</text>
+  <text x="600.0" y="470" text-anchor="middle" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" font-size="19" letter-spacing="2" fill="#6b6b6b">KNOW · DO · BUILD · JUDGE</text>
 </svg>

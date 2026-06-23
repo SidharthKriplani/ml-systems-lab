@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FOUNDATIONS_TIERS, TOTAL_POSTS } from '../data/foundationsPath.js'
+import { BrandMark } from '../components/BrandMark.jsx'
 
 // ── Ghost data snippets — float in background to hint at product content ───────
 const GHOSTS = [
@@ -77,9 +78,8 @@ export default function SignedOutHome({ onShowAuth, onNavigate, onExplore }) {
         animation: mounted ? 'landing-in 0.5s cubic-bezier(0.16,1,0.3,1) both' : 'none',
       }}>
         {/* Logo badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '28px', padding: '6px 12px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '20px' }}>
-          <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: 'var(--prime)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '8px', color: 'var(--depth)' }}>ML</div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>ML Systems Lab</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '28px', padding: '7px 14px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '20px' }}>
+          <BrandMark variant='full' descriptor='ML Systems' accent='#F0A500' size={15} />
         </div>
 
         {/* Headline */}

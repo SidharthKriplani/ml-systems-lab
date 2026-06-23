@@ -46,6 +46,21 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.124 — BreakLabs BrandMark rollout (D-19) — logo across slots 1–7 (2026-06-23)
+
+**Code + assets. esbuild full-bundle clean; macOS `npm run build` pending (Sidharth). Approve-first, not pushed.**
+
+Implemented the canonical BreakLabs lockup in MSL per `docs/BRANDMARK-ROLLOUT.md` (D-19). Descriptor `ML Systems`, accent gold `#F0A500`; seam red `#FB5247` + wordmark + mono are the cross-lab constants.
+
+- **`src/components/BrandMark.jsx`** (new) — three variants (`full` / `wordmark` / `monogram`) from one component, MSL tokens.
+- **Slots wired:** (1) sidebar header → `full` lockup replacing the old "ML" square + "ML Systems Lab" wordmark; (4) `SignedOutHome` hero badge → `full`; (5) `AuthModal` + `AccessGate` headers → `wordmark`; (6) footer → `wordmark` + "· ML Systems · part of BreakLabs"; (7) `LoadingSpinner` → `monogram`.
+- **Assets (D-18 archived, not deleted):** new `public/favicon.svg` (monogram glyph) and `public/og-image.png` (1200×630, rendered via cairosvg from `public/og-image.svg` — void bg, `break⌇labs · ML Systems`, tagline, KNOW·DO·BUILD·JUDGE). Old `favicon.svg` → `_legacy/favicon-OLD.svg`; old `og-image.png` → `_legacy/og-image-OLD.png`. `index.html` paths unchanged (same `/favicon.svg`, `/og-image.png`).
+- **Verification:** esbuild parsed all 5 touched component files + full App bundle EXIT 0; OG PNG visually checked.
+
+**Files:** new `src/components/BrandMark.jsx`, `public/favicon.svg`, `public/og-image.png`, `public/og-image.svg`, `_legacy/favicon-OLD.svg`, `_legacy/og-image-OLD.png`; modified `src/App.jsx`, `src/tabs/SignedOutHome.jsx`, `src/components/{AuthModal.jsx, AccessGate.jsx, LoadingSpinner.jsx}`.
+
+---
+
 ### v4.123 — Four-frame nav reframe IMPLEMENTED + best-of-breed component adoption (2026-06-23)
 
 **Code change. `App.jsx` + 3 components edited; reorg only — no tab/data/content touched. esbuild full-bundle clean; macOS `npm run build` pending (Sidharth). Approve-first, not pushed.**
