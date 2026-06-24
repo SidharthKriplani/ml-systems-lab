@@ -46,6 +46,16 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.129 — Audit #033 salvage: archived-orphan value recovery (2026-06-24)
+
+After the archive decisions in v4.128, a "did we preserve the good parts?" review found the three orphans (`DataScienceTab`, `AskTab`, `GlobalSearch`) were archived on a *reachability* argument without comparing content. Content comparison reversed all three:
+
+- **DataScience harvest → ModelEval.** 24 scenarios, 0 live-duplicates. Experimentation/A-B (~11) ruled PAL's domain (stays archived). 13 MSL scenarios ported to ModelEval: new **Metric Pitfalls** module (8 — Goodhart, segment-masking, proxy-decoupling, precision/recall, time-horizon; the source's all-answer-0 flaw fixed by shuffling options) + **Calibration Clinic 6→14** (8 calibration method-selection scenarios). Schema-transformed (DS `correct`-key/`wrong{}` → ModelEval `options`/`answer` + `AccordionMCQ` fields).
+- **AskTab restored + merged with search.** Moved back to `tabs/`, wired into the KNOW frame (`ALL_TABS` + nav item + lazy import). Now answers from its 41-entry KB **and** surfaces a "Jump to in the app" strip.
+- **GlobalSearch borrowed.** Its curated 196-entry `INDEX` extracted to `src/data/searchIndex.js` (escape-safe via JSON.stringify) — now powers AskTab's content search via `searchContent()`. Shell stays in `_legacy/`.
+- Rule codified (DECISIONS.md + COMPONENT_RUBRICS R4): **"unwired" ≠ "redundant" — compare content before archiving.**
+- Verified: full esbuild bundle EXIT 0 (Linux native, since the repo's esbuild is Mac-arch); brace/bracket/apostrophe 0 on all touched files; ModelEval CALIBRATION 14 / METRIC_PITFALL 8 / MODULES 6.
+
 ### v4.128 — Audit #033 component redundancy sweep + R1 question-bank consolidation (2026-06-24)
 
 Full component-tier audit (rubrics + redundancy map in `docs/COMPONENT_RUBRICS.md`, logged AUDITS #033). Established the Existence Gate + Quality rubrics and the "Component governance" rules in DECISIONS.md (concept→owner map, question-bank single-source rule, scenario-schema field-map, <12=preview).

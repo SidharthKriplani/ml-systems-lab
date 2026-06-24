@@ -476,6 +476,182 @@ const CALIBRATION_SCENARIOS = [
     explanation: 'ECE measures calibration: does 70% predicted probability correspond to ~70% actual positives? Brier score measures both calibration AND sharpness (how extreme the predictions are). A model that outputs 0.30 for everything is perfectly calibrated for a 30% base rate but useless — Brier score captures this, ECE does not. The model has learned the base rate but not how to discriminate.',
     fix: 'Always report AUC-ROC alongside calibration metrics. Low Brier score with good ECE means model needs better discriminative features or a more powerful architecture. Decompose Brier score into calibration + refinement (sharpness) terms.',
   },
+  {
+    "id": "dsc-1",
+    "title": "Fraud model. Business team sets a threshold at 0.5 to flag transactions",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Fraud model. Business team sets a threshold at 0.5 to flag transactions. Model predicts 0.80 for many cases that are only 30% fraud in reality. Holdout set: 2k samples."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 0,
+    "diagnosis": "Platt scaling",
+    "explanation": "Threshold-based decision (0.5 cutoff) means calibration matters — the raw score will produce too many false positives. Holdout of 2k samples is too small for isotonic regression (it would overfit). Platt scaling fits a logistic regression on model outputs and works well with ~1k samples.",
+    "fix": "Use Platt scaling for this case."
+  },
+  {
+    "id": "dsc-2",
+    "title": "Recommendation ranker",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Recommendation ranker. Output scores used only for ordering items — never converted to probabilities, never used with a threshold."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 3,
+    "diagnosis": "No calibration needed",
+    "explanation": "Pure ranking use case. Calibration changes the magnitude of scores but does not change their ordering. If you never threshold or interpret the scores as probabilities, calibration adds zero business value. Save the compute.",
+    "fix": "Use No calibration needed for this case."
+  },
+  {
+    "id": "dsc-3",
+    "title": "Neural network text classifier",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Neural network text classifier. 10 classes. Model is systematically overconfident — outputs 0.99 for most predictions. 50k validation samples available."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 2,
+    "diagnosis": "Temperature scaling",
+    "explanation": "Neural networks are known to be systematically overconfident. Temperature scaling divides the logits by a single scalar T, reducing confidence without changing class rankings. Computationally cheap, preserves relative ordering, and 50k samples is more than enough to fit one parameter.",
+    "fix": "Use Temperature scaling for this case."
+  },
+  {
+    "id": "dsc-4",
+    "title": "Gradient boosting churn model",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Gradient boosting churn model. Calibration plot shows an S-curve (underestimates low probabilities, overestimates high ones). 500 holdout samples."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 0,
+    "diagnosis": "Platt scaling",
+    "explanation": "An S-shaped calibration curve is exactly what Platt scaling is designed to fix — it fits a sigmoid (logistic) function to the model outputs, which corrects the S-curve shape. 500 samples is too small for isotonic regression (it would overfit to noise).",
+    "fix": "Use Platt scaling for this case."
+  },
+  {
+    "id": "dsc-5",
+    "title": "Logistic regression trained on highly imbalanced data (1% positive rate)",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Logistic regression trained on highly imbalanced data (1% positive rate). Used for credit risk scoring — loan officers interpret the score directly as a probability."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 0,
+    "diagnosis": "Platt scaling",
+    "explanation": "Class imbalance causes logistic regression to produce miscalibrated probabilities, especially at the extremes. Since loan officers treat the output as a literal probability when making decisions, calibration accuracy is critical. Platt scaling works well here; isotonic is better if you have 10k+ holdout samples.",
+    "fix": "Use Platt scaling for this case."
+  },
+  {
+    "id": "dsc-6",
+    "title": "Model trained 6 months ago",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Model trained 6 months ago. Recent data shows distribution shift — calibration plot from the last month shows systematic deviation from the diagonal."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 0,
+    "diagnosis": "Platt scaling",
+    "explanation": "Distribution shift causing miscalibration should trigger recalibration (Platt or isotonic depending on holdout size). However, recalibration is a temporary fix — the underlying model may have decayed. Recalibrate now while scheduling a full retraining.",
+    "fix": "Use Platt scaling for this case."
+  },
+  {
+    "id": "dsc-7",
+    "title": "Random forest model",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Random forest model. Predicted probability histogram spikes near 0 and near 1 with very few intermediate values. 5k holdout samples."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 0,
+    "diagnosis": "Platt scaling",
+    "explanation": "Random forest probabilities are notoriously clunky — leaf node averaging produces values clustered near 0 and 1. Platt scaling is the standard fix. With 5k samples you are borderline for isotonic regression — try both with cross-validation and pick the one with lower calibration error.",
+    "fix": "Use Platt scaling for this case."
+  },
+  {
+    "id": "dsc-8",
+    "title": "Brand new model",
+    "tier": "Senior",
+    "difficulty": "mid",
+    "isFree": false,
+    "context": [
+      "Brand new model. Holdout set has only 200 samples. Calibration curve suggests the model is miscalibrated."
+    ],
+    "question": "Which calibration approach fits here — and why?",
+    "options": [
+      "Platt scaling",
+      "Isotonic regression",
+      "Temperature scaling",
+      "No calibration needed",
+      "Collect more data first"
+    ],
+    "answer": 4,
+    "diagnosis": "Collect more data first",
+    "explanation": "200 samples gives extremely noisy calibration estimates. Any calibration method (Platt or isotonic) fitted on 200 points will overfit the calibration curve and likely make things worse. Fix the data collection problem first, then calibrate.",
+    "fix": "Use Collect more data first for this case."
+  }
 ]
 
 function CalibrationClinic() {
@@ -484,10 +660,196 @@ function CalibrationClinic() {
       <div>
         <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Calibration Clinic</h3>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
-          A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 6 calibration failure patterns.
+          A model that outputs 0.95 should be right 95% of the time. Miscalibrated probabilities corrupt downstream decisions. Diagnose and fix 14 calibration failure patterns.
         </p>
       </div>
       <AccordionMCQ scenarios={CALIBRATION_SCENARIOS} accentColor="var(--prime)" contextLabel="Telemetry" storageKey="modeleval_calibration" />
+    </div>
+  )
+}
+
+
+const METRIC_PITFALL_SCENARIOS = [
+  {
+    "id": "mp-goodhart",
+    "title": "A support team optimizes their ML model for CSAT (customer satisfaction",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A support team optimizes their ML model for CSAT (customer satisfaction score). Engineers route easy, auto-resolvable tickets to the ML system and hard tickets to humans. CSAT for ML-handled tickets jumps from 3.2 to 4.6. The team celebrates."
+    ],
+    "question": "What is the metric design failure?",
+    "options": [
+      "The model needs recalibration",
+      "CSAT is the wrong metric — should use NPS",
+      "Goodhart's Law — the metric became the target, not the outcome",
+      "Sample size too small for statistical significance"
+    ],
+    "answer": 2,
+    "diagnosis": "Goodhart's Law — the metric got gamed",
+    "explanation": "Goodhart's Law: when a measure becomes a target, it ceases to be a good measure. The team didn't improve customer experience — they gamed the routing to inflate the score. The true metric (resolution quality on hard tickets) got worse.",
+    "fix": "track CSAT stratified by ticket difficulty, and monitor deflection rate as a counter-metric."
+  },
+  {
+    "id": "mp-aggregate_hides",
+    "title": "A recommendation model achieves overall NDCG@10 of 0.72, up from 0.68",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A recommendation model achieves overall NDCG@10 of 0.72, up from 0.68. The team ships. Two weeks later, mobile product managers report that mobile user engagement dropped 18%. Desktop engagement improved."
+    ],
+    "question": "What metric design mistake caused this?",
+    "options": [
+      "NDCG is the wrong metric for recommendations",
+      "Mobile users need a different model architecture",
+      "The model was undertrained",
+      "Aggregate metric masked a segment failure"
+    ],
+    "answer": 3,
+    "diagnosis": "Aggregate metric masked a segment failure",
+    "explanation": "Aggregate metrics hide segment-level failures. Desktop volume (80% of traffic) dominated the NDCG improvement, masking a significant degradation for mobile users.",
+    "fix": "always track segment metrics (device, user cohort, geography) alongside aggregate. A top-line improvement that harms a minority segment is not a win."
+  },
+  {
+    "id": "mp-proxy_decoupled",
+    "title": "A fraud model achieves AUC-PR of 0.91, up from 0.84",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A fraud model achieves AUC-PR of 0.91, up from 0.84. Offline metrics look great. After deployment, finance reports that fraud losses increased 12% month-over-month."
+    ],
+    "question": "What is the most likely cause?",
+    "options": [
+      "The model needs more training data",
+      "AUC-PR calculation is wrong",
+      "Feature pipeline has a bug",
+      "The offline metric has decoupled from the true business outcome"
+    ],
+    "answer": 3,
+    "diagnosis": "Proxy metric decoupled from the true outcome",
+    "explanation": "AUC-PR measures ranking quality over all thresholds. In production, the model runs at a specific threshold — if that threshold is miscalibrated, high AUC-PR doesn't prevent fraud losses. The true metric (fraud dollar loss) and the proxy metric (AUC-PR) have decoupled.",
+    "fix": "track precision and recall at your operating threshold, not just aggregate AUC. Add dollar-weighted false negative rate as a primary metric."
+  },
+  {
+    "id": "mp-rate_vs_count",
+    "title": "An email spam filter improves precision from 82% to 91%",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "An email spam filter improves precision from 82% to 91%. The team ships. Users complain that important emails are being blocked more frequently than before."
+    ],
+    "question": "What metric captures what actually went wrong?",
+    "options": [
+      "Email features have shifted distribution",
+      "The training set was too small",
+      "Recall dropped — more legitimate emails are being blocked as spam",
+      "Precision measures the wrong thing here"
+    ],
+    "answer": 2,
+    "diagnosis": "Optimized precision, ignored the recall drop",
+    "explanation": "Higher precision means fewer false positives (spam reaching inbox). But if recall dropped, more legitimate emails are falsely classified as spam. The team optimized one side of the precision-recall tradeoff without tracking the other.",
+    "fix": "in asymmetric cost scenarios (blocking real email is worse than missing spam), recall is the primary metric. Always define cost asymmetry before choosing which metric to optimize."
+  },
+  {
+    "id": "mp-time_horizon",
+    "title": "A recommendation feature increases 1-week retention from 34% to 38%",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A recommendation feature increases 1-week retention from 34% to 38%. The team ships. Six months later, 6-month retention has dropped from 61% to 54%."
+    ],
+    "question": "What metric design mistake caused this?",
+    "options": [
+      "The model degraded due to concept drift",
+      "Wrong time horizon — optimizing short-term at the expense of long-term",
+      "6-month retention is not a valid ML metric",
+      "Sample size was too small for the 6-month metric"
+    ],
+    "answer": 1,
+    "diagnosis": "Short-horizon win, long-horizon harm",
+    "explanation": "The model learned to optimize short-term engagement at the cost of long-term quality. This is a classic metric time horizon mismatch — the recommendation system shows engaging but lower-quality content that spikes 1-week retention but causes burnout.",
+    "fix": "track both short-term and long-term metrics. If they diverge in opposite directions post-ship, you're trading long-term health for short-term gains."
+  },
+  {
+    "id": "mp-counter_metric",
+    "title": "A search ranking model improves CTR from 3.2% to 3.8%",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A search ranking model improves CTR from 3.2% to 3.8%. The team ships. SRE reports p99 latency increased from 180ms to 340ms. The team says \"that's an infra problem, not a model problem.\""
+    ],
+    "question": "What was missing from the model's success criteria?",
+    "options": [
+      "CTR is the wrong metric for search ranking",
+      "Infra team should have scaled before the launch",
+      "The model needs to be quantized",
+      "A latency counter-metric was never defined as a release gate"
+    ],
+    "answer": 3,
+    "diagnosis": "Metric design failure",
+    "explanation": "CTR-only optimization ignores the cost of getting that CTR. The model likely became more complex or uses more features, increasing inference time. A counter-metric (max latency budget, or latency regression threshold) should be a hard gate on any model ship.",
+    "fix": "define counter-metrics before shipping: latency, cost per inference, coverage rate. A lift in the primary metric that exceeds counter-metric thresholds is a no-ship."
+  },
+  {
+    "id": "mp-leading_lagging",
+    "title": "A churn prediction model is evaluated on 30-day churn rate (whether a user",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "A churn prediction model is evaluated on 30-day churn rate (whether a user churned within 30 days of scoring). AUC is high. After deployment, the team notices the model scores correctly but interventions (discount emails) are sent too late to prevent churn."
+    ],
+    "question": "What is the metric design failure?",
+    "options": [
+      "The model needs a lower decision threshold",
+      "The label is a lagging indicator — the event has already started by scoring time",
+      "AUC is not appropriate for churn prediction",
+      "Email interventions are the wrong strategy"
+    ],
+    "answer": 1,
+    "diagnosis": "Metric design failure",
+    "explanation": "A 30-day churn label is a lagging indicator. By the time a user shows the behavioral signals that predict churn, they may be 25 days into the churn process. Intervening at day 27 is too late.",
+    "fix": "identify leading indicators (support ticket opens, usage frequency drop, feature disengagement) and predict from those signals 60-90 days out. Evaluate on whether interventions at high-score users reduce churn, not whether the model correctly identifies users who already churned."
+  },
+  {
+    "id": "mp-denominator_shift",
+    "title": "Conversion rate improves from 4.2% to 4.9% after a new recommendation model",
+    "tier": "Senior",
+    "difficulty": "senior",
+    "isFree": false,
+    "context": [
+      "Conversion rate improves from 4.2% to 4.9% after a new recommendation model ships. The business reports overall conversions dropped 8% in the same period."
+    ],
+    "question": "What happened?",
+    "options": [
+      "Revenue attribution is miscounted",
+      "The denominator (eligible traffic) shrank — fewer users were exposed to the model",
+      "The model has coverage gaps",
+      "Seasonality caused absolute conversion drop"
+    ],
+    "answer": 1,
+    "diagnosis": "Metric design failure",
+    "explanation": "Rate metrics can improve while absolute counts fall if the denominator shrinks. The model may be more conservative — it only recommends when confident, reducing coverage. Fewer recommendations but higher conversion rate = lower total conversions.",
+    "fix": "track both rate and absolute count. Coverage rate (% of sessions where model fires) is a critical counter-metric for any recommendation or ranking system."
+  }
+]
+
+function MetricPitfalls() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '18px', fontWeight: 800, color: 'var(--prime)', marginBottom: '6px', letterSpacing: '-0.02em' }}>Metric Design Pitfalls</h3>
+        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.6, maxWidth: '560px' }}>
+          A metric improvement that looks like a win can hide a loss. Spot 8 ways a headline number lies — Goodhart gaming, segment masking, proxy decoupling, and more.
+        </p>
+      </div>
+      <AccordionMCQ scenarios={METRIC_PITFALL_SCENARIOS} accentColor="var(--prime)" contextLabel="Situation" storageKey="modeleval_pitfalls" />
     </div>
   )
 }
@@ -767,6 +1129,7 @@ const MODULES = [
   { id: 'threshold',   label: 'Threshold Tuner',    icon: '', component: ThresholdTuner,    difficulty: 'mid',    isFree: false, readMin: 7  },
   { id: 'ranking',     label: 'Ranking Metrics',    icon: '', component: RankingMetrics,    difficulty: 'mid',    isFree: false, readMin: 8  },
   { id: 'shadow',      label: 'Shadow Mode',        icon: '', component: ShadowModeSim,     difficulty: 'junior', isFree: true,  readMin: 6  },
+  { id: 'pitfalls', label: 'Metric Pitfalls', icon: '', component: MetricPitfalls, difficulty: 'senior', isFree: false, readMin: 7 },
 ]
 
 

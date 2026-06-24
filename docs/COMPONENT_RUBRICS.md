@@ -140,9 +140,12 @@ At least **four incompatible scenario schemas** coexist, so the documented quali
 **Consequence:** the quality bar (whatsTested/staffFraming mandatory) is **structurally unenforceable on ~15 tabs** — they don't have the fields. Either the bar is silently violated app-wide, or it needs a documented field-mapping across schemas.
 **Fix:** pick one canonical scenario schema (or publish a field-map) so the item bar applies everywhere.
 
-### R4 — Orphans with real content *(Medium)*
-`DataScienceTab` (1063 lines, ~8 scenarios, **34 calibration hits — overlaps modeleval's territory**) and `AskTab` (945-line knowledge base) are **not in `ALL_TABS`** — unreachable. Either is wasted build sitting dark.
-**Fix:** decide merit. If wired, **dedup DataScience against modeleval/causal first** (Existence Gate Content axis). If not, archive → `_legacy/`.
+### R4 — Orphans with real content *(Medium — RESOLVED by comparison 2026-06-24; archive verdict REVERSED)*
+The first pass archived `DataScienceTab`, `AskTab`, `GlobalSearch` on a *reachability* argument ("unwired") plus keyword-fingerprint assumptions — **without comparing content**. A proper content comparison reversed all three:
+- **DataScienceTab** — 24 scenarios, **0 duplicate** any live scenario (max Jaccard 0.15). Split: ~11 experimentation/A-B (p-hacking, peeking, multiple testing) = **PAL's domain → stays archived**; **13 MSL-relevant** (calibration method-selection + metric-design pitfalls: Goodhart, segment-masking, proxy-decoupling) → **harvested into ModelEval** (new "Metric Pitfalls" module + Calibration Clinic 6→14; source all-answer-0 flaw fixed via option shuffle).
+- **AskTab** — ~36/41 KB entries unique. **Restored** to `tabs/` and **merged with search**: now answers from the KB *and* surfaces "Jump to in the app" content results.
+- **GlobalSearch** — its curated 196-entry `INDEX` is unique (richer than ContentMap's tree). **Borrowed** into `src/data/searchIndex.js` (now powers AskTab's search); the shell stays archived.
+**Lesson (now a rule):** "unwired" ≠ "redundant." Reachability is not a value argument. Compare content before archiving — Existence Gate Content axis must be *measured*, not assumed.
 
 ### R5 — Dead duplicates + cruft *(Low, fast wins — ✅ batch 1 done 2026-06-24)*
 **Archived → `_legacy/`:** `GlobalSearch.jsx` (superseded by `ContentMap`; dead App.jsx import also removed) · `JDPrepTab.jsx` (dead fallback, merged into Defense) · `DataScienceTab.jsx` + `AskTab.jsx` (unreachable orphans, per R4). Verified zero live refs; App.jsx brace diff 0.

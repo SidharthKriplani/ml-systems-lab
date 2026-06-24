@@ -1,4 +1,23 @@
 import { useState, useRef, useEffect } from 'react'
+import { searchContent } from '../data/searchIndex.js'
+
+// "Jump to in the app" strip — content-search results (borrowed from the retired GlobalSearch).
+function NavStrip({ nav, onNavigate }) {
+  return (
+    <div style={{ borderTop: '1px solid var(--rim)', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Jump to in the app</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {nav.map((it, i) => (
+          <button key={it.id + '-' + i} onClick={() => onNavigate(it.tab)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 7, cursor: 'pointer',
+              background: 'rgba(212,175,55,0.08)', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontSize: 12, fontFamily: 'var(--font-sans)' }}>
+            <span>{it.icon}</span><span style={{ color: 'var(--prime)', fontWeight: 500 }}>{it.title}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ── Knowledge Base ─────────────────────────────────────────────────────────────
 const KB = [
@@ -645,20 +664,22 @@ export default function AskTab({ onNavigate }) {
     const q = query.trim()
     if (!q) return
     const results = search(q)
+    const nav = searchContent(q)
     const userMsg = { id: Date.now() + '-u', type: 'user', text: q }
     const answerMsg = results.length > 0
-      ? { id: Date.now() + '-a', type: 'answer', results }
-      : { id: Date.now() + '-n', type: 'none' }
+      ? { id: Date.now() + '-a', type: 'answer', results, nav }
+      : { id: Date.now() + '-n', type: 'none', nav }
     setMessages(prev => [...prev, userMsg, answerMsg])
     setQuery('')
   }
 
   function handleSuggestion(q) {
     const results = search(q)
+    const nav = searchContent(q)
     const userMsg = { id: Date.now() + '-u', type: 'user', text: q }
     const answerMsg = results.length > 0
-      ? { id: Date.now() + '-a', type: 'answer', results }
-      : { id: Date.now() + '-n', type: 'none' }
+      ? { id: Date.now() + '-a', type: 'answer', results, nav }
+      : { id: Date.now() + '-n', type: 'none', nav }
     setMessages(prev => [...prev, userMsg, answerMsg])
   }
 
@@ -700,7 +721,7 @@ export default function AskTab({ onNavigate }) {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            KB Search
+            Ask &amp; Search
           </h2>
           <p style={{
             margin: '6px 0 0',
@@ -709,7 +730,7 @@ export default function AskTab({ onNavigate }) {
             fontFamily: 'var(--font-sans)',
             lineHeight: 1.6,
           }}>
-            Search the ML Systems KB — concepts, trade-offs, failure modes, production patterns.
+            Ask a question to get a KB answer — concepts, trade-offs, failure modes, production patterns — and jump straight to the matching modules and posts.
           </p>
           <p style={{
             margin: '6px 0 0',
@@ -849,8 +870,9 @@ export default function AskTab({ onNavigate }) {
                     fontFamily: 'var(--font-sans)',
                     lineHeight: 1.55,
                   }}>
-                    I don't have a specific answer for this. Try searching in the modules — the knowledge base covers ML fundamentals, Spark, system design, evaluation, causal inference, and more.
+                    I don't have a direct KB answer — but here's where in the app to look.
                   </p>
+                  {msg.nav && msg.nav.length > 0 && <NavStrip nav={msg.nav} onNavigate={onNavigate} />}
                 </div>
               )
             }
@@ -875,6 +897,7 @@ export default function AskTab({ onNavigate }) {
                       onNavigate={onNavigate}
                     />
                   ))}
+                  {msg.nav && msg.nav.length > 0 && <NavStrip nav={msg.nav} onNavigate={onNavigate} />}
                 </div>
               )
             }

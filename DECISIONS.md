@@ -438,3 +438,5 @@ New scenarios should populate the canonical `whatsTested`/`antiPattern`/`staffFr
 
 **5. Below 12 items = preview, not feature (R7).** A tab under the depth threshold is not marketed or counted as a finished feature, regardless of how the nav labels it.
 
+**6. "Unwired" ≠ "redundant" — compare content before archiving (R4).** A component being unreachable (not in `ALL_TABS`) is a *reachability* fact, not a *value* fact. Before archiving anything, run a content comparison (item-level dedup) against the live surfaces. If its content is unique, the verdict is merge/borrow/restore — not archive. The Existence Gate's Content axis must be **measured, not assumed.** (Learned the hard way: DataScienceTab, AskTab, and GlobalSearch were each archived on the unwired assumption and each turned out to hold unique content.)
+

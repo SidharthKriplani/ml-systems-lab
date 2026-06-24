@@ -52,6 +52,7 @@ const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
 const CheatsheetTab     = lazy(() => import('./tabs/CheatsheetTab.jsx'))
+const AskTab            = lazy(() => import('./tabs/AskTab.jsx'))
 const MockInterviewTab  = lazy(() => import('./tabs/MockInterviewTab.jsx'))
 const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
 
@@ -97,6 +98,7 @@ const ALL_TABS = [
   { id: 'profile',   component: ProfilePage },
   { id: 'resources',   component: ResourcesTab },
   { id: 'cheatsheet', component: CheatsheetTab },
+  { id: 'ask',        component: AskTab },
   { id: 'mock_interview', component: MockInterviewTab },
 ]
 
@@ -270,6 +272,7 @@ const NAV_SECTIONS = [
       { id: 'trainer',    label: 'Trainer',         desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
       { id: 'models',     label: 'Math Foundations', desc: 'Pyodide explorations — probability, linear algebra, PCA, hypothesis tests.' },
       { id: 'landscape',  label: 'Landscape',       desc: 'ML tools & infrastructure landscape map.' },
+      { id: 'ask',        label: 'Ask & Search',    desc: 'Ask a question for a KB answer, and jump to the matching modules and posts.' },
     ],
   },
   {
