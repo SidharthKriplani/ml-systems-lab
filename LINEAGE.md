@@ -46,6 +46,13 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.130 — Loose-end fixes + spine MD sync (2026-06-24)
+
+- `TimeSeriesTab.jsx`: removed 2 consecutive duplicate `fix:` keys (surfaced by the esbuild bundle's duplicate-object-key warning; one value was silently dropped). Pre-existing, not from this arc.
+- `NEXT.md`: corrected the stale Study-Room navigate path from `…/GitHub/upskill platforms (4)/ml-systems-lab` to `…/BreakLabs/labs/ml-systems-lab` (the real repo location — the stale path had sent commit commands to the wrong repo).
+- End-of-session MD sync: CLAUDE.md LATEST + BRAIN_TRANSFER.md LATEST STATE + NEXT.md (audit #033 DONE + distribution-next) + METRICS.md (`msl_score:modeleval_pitfalls`) updated for statefulness.
+- **Root-caused the recurring `npm run build` "# in project root" error:** inline `# comments` in pasted command blocks — zsh (no `interactive_comments`) passes `#` through as `vite build`'s positional root arg. Not a real build failure; not a stray file (full-depth find confirmed). Fix: run `npm run build` with no trailing comment.
+
 ### v4.129 — Audit #033 salvage: archived-orphan value recovery (2026-06-24)
 
 After the archive decisions in v4.128, a "did we preserve the good parts?" review found the three orphans (`DataScienceTab`, `AskTab`, `GlobalSearch`) were archived on a *reachability* argument without comparing content. Content comparison reversed all three:

@@ -9,7 +9,21 @@
 
 ---
 
-## LATEST STATE (2026-06-23, v4.127) — read before assuming the freeze-only world
+## LATEST STATE (2026-06-24, v4.128–v4.130) — Component audit #033 + salvage
+
+A full **component-tier audit + cleanup + salvage** ran on the frozen nav (freeze-overrides authorized inline by the user; no net-new content beyond recovered orphan content). Shipped to origin/main (`ea131eb` v4.128, `5b33892` v4.129, + pending loose-end v4.130):
+- **`docs/COMPONENT_RUBRICS.md`** (new) — Existence Gate + Component Quality rubrics, the tier above `CONTENT_QUALITY_BAR.md`. Applied audit = `AUDITS.md #033`. Governance rules in `DECISIONS.md` ("Component governance", 6 rules incl. **"unwired ≠ redundant"**).
+- **R1:** only real redundancy. `src/data/questionBank.js` = single source of truth; Trainer + Combinator import it (Combinator had ~31 verbatim copies of Trainer).
+- **R9 DRY:** `src/components/TabHeader.jsx` (×16 of 17 tabs migrated), `src/utils/shuffle.js`.
+- **Dead code → `_legacy/`:** GlobalSearch, JDPrepTab, testimonials.js (Icons.jsx kept — live shim).
+- **Depth (R7) corrected:** core ML tabs 23–57; only DataModeling/dbt/DLServing (~10–11) thin (periphery).
+- **Salvage:** the 3 orphans held UNIQUE content. DataScience → 13 MSL scenarios into ModelEval (Metric Pitfalls module + Calibration 6→14); experimentation = PAL (archived). **AskTab restored + merged with search** (KNOW frame). GlobalSearch INDEX → `src/data/searchIndex.js`.
+- **Build note:** `npm run build` "# in root" error = inline `# comments` in pasted commands (zsh passes `#` as vite root arg); run it with NO comment. Repos live at `…/BreakLabs/labs/`.
+- **Next:** distribution (GSC/sitemap, LinkedIn, email capture) — the audit was a freeze-safe detour, freeze still in force.
+
+---
+
+## PRIOR STATE (2026-06-23, v4.121–v4.127) — nav/brand reframe
 
 The lab's **nav + brand were overhauled** since the v4.119 freeze, under a one-off HQ override (reorg/brand only, no content). All shipped to origin/main (latest `c515835`):
 - Four-frame nav (KNOW/DO/BUILD/JUDGE + PREP·ASSESS), PAL-visual accordion + smooth animation + frame icons, 5-slot mobile bottom nav (mobile/desktop switch fixed in v4.127).

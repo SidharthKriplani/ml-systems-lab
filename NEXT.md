@@ -2,6 +2,30 @@
 
 ---
 
+## ▶ NEXT SESSION — back to distribution (freeze still in force)
+
+The component audit arc (below) is **complete and shipped**. It was a freeze-safe detour; the freeze is **back in force**. The gate to lift it is unchanged: **100 email subs OR 100 weekly returning visitors**. Next-session work, in priority order, all distribution:
+1. **GSC verification + sitemap submission** — replace `REPLACE_WITH_YOUR_GSC_CODE` in `index.html`, submit `public/sitemap.xml`.
+2. **Email-capture component on Home** — single CTA + input, Resend/LinkedIn newsletter. New `msl_email_captured` key (update METRICS.md).
+3. **LinkedIn cadence** — see `/Users/ASUS/Documents/Professional/LinkedIn/docs/STATUS.md` + `docs/linkedin/batch_02_msl.md`.
+4. **Set `VITE_POSTHOG_KEY` in Vercel** (no analytics without it).
+
+**Deferred (freeze-gated content, NOT cleanup):** R7's 3 genuinely-thin edge tabs — DataModeling, dbt, DLServing (~10–11 items each) → need ≥12. Build only after the freeze lifts.
+
+**Do NOT re-open** the redundancy/DRY/orphan work — it's done and verified (esbuild bundle clean). The 3 `_legacy/` shells (GlobalSearch, JDPrepTab, DataScienceTab's experimentation half) are correctly archived; their unique content was already harvested/borrowed forward.
+
+---
+
+## ✅ DONE & SHIPPED — Component audit #033 + salvage (2026-06-24, origin/main, v4.128–v4.130)
+
+Full component-tier audit + cleanup + salvage. Commits `ea131eb` (v4.128), `5b33892` (v4.129), + pending loose-end (v4.130).
+- **v4.128:** `docs/COMPONENT_RUBRICS.md` + `AUDITS.md #033` + `DECISIONS.md` governance rules. R1 question-bank consolidation (`src/data/questionBank.js`). R9 DRY (`TabHeader.jsx` ×16, `utils/shuffle.js`). Dead code → `_legacy/`. Accurate depth audit (R7 corrected).
+- **v4.129 salvage:** DataScience → 13 MSL scenarios harvested into ModelEval (Metric Pitfalls module + Calibration 6→14); experimentation = PAL (archived). AskTab restored + merged with search (KNOW frame). GlobalSearch INDEX → `src/data/searchIndex.js`.
+- **v4.130 (pending commit):** TimeSeriesTab duplicate `fix:` keys removed; stale repo path fixed in NEXT.md.
+- Verified via Linux-native esbuild bundle (EXIT 0) — the repo's esbuild is Mac-arch, can't run in sandbox. `npm run build` "# in root" error = inline `# comments` in pasted commands, not a real failure.
+
+---
+
 ## ✅ DONE & SHIPPED — Four-Frame Nav Reframe arc (2026-06-23, origin/main)
 
 The whole nav/brand arc below is **complete and pushed to origin/main** (Vercel live). In order:

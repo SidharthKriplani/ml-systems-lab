@@ -121,6 +121,7 @@ All keys are `msl_`-prefixed per CLAUDE.md rule #2.
 | `msl_score:causal_dag` | `JSON` | `CausalInferenceTab` — CausalDAGExplorer | Custom score for the DAG node-role identification module. Tracks correct/attempted across 3 pre-built DAGs. |
 | `msl_score:causal_exp` | `JSON` | `CausalInferenceTab` — ExperimentDesignFailures | AccordionMCQ score for experiment design failures module (SRM, novelty effect, SUTVA). |
 | `msl_score:dl_arch` | `JSON` | `DeepLearningTab` — ArchDecisionLab | AccordionMCQ score for architecture decision scenarios (CNN vs ViT, TFT vs LSTM, MoE vs dense). |
+| `msl_score:modeleval_pitfalls` | `JSON` | `ModelEvalTab` — MetricPitfalls (v4.129) | AccordionMCQ score for the Metric Design Pitfalls module (8 scenarios harvested from the archived DataScienceTab: Goodhart gaming, segment masking, proxy decoupling, precision/recall, time-horizon). |
 | `msl_score:classical_boundary` | `JSON {completed:true, ts:number}` | `ClassicalMLTab` — DecisionBoundaryLab | Written once when user has explored all 5 classifier modes. `ts` is Unix timestamp of completion. |
 | `msl_landscape_region` | `string` | `LandscapeTab` — Region selector | Selected region for career data filtering: 'Global' (default) or 'India'/'UK'/'US'/'EU'. Persists across sessions. |
 | `msl_score:behavioral` | `JSON {completed:true, ts:number}` | `InterviewPrepTab` — Behavioral scenarios | Interview behavioral judgment score. Written when behavioral scenario is completed. Tracks correctness and timestamps. |

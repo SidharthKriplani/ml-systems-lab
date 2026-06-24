@@ -4,14 +4,19 @@ Read this first, every session.
 
 ---
 
-## ✅ LATEST (2026-06-23) — nav/brand reframe shipped; freeze override SPENT
+## ✅ LATEST (2026-06-24, v4.128–v4.130) — Component audit #033 + salvage shipped
 
-Since the v4.119 freeze, an **HQ-authorized one-off override** ran the **four-frame nav reframe + BrandMark** (reorg/IA + brand only, no content). It is **done, committed, and live on origin/main** (latest: `c515835`). Quick state:
-- **Nav:** KNOW / DO / BUILD / JUDGE + PREP·ASSESS — PAL-visual sidebar (retokenized), one-open-per-level accordion, measured-height animation, frame icons, `aria-current`, 5-slot mobile BottomNav. Mobile/desktop nav switch verified (v4.127 fixed an inline-`display` regression).
-- **Brand:** `src/components/BrandMark.jsx` (D-19) — stacked `break⌇labs / ML Systems` lockup + favicon + OG, wired slots 1–7; old assets in `_legacy/`.
-- **DO link-outs:** Python → PL repo, SQL → `product-analytics-lab.vercel.app/#/sql-lab`.
-- **By Domain axis:** explored (filter, then DomainHub page) and **removed** — MSL per-domain content too lopsided; revisit only after phase-2 content tagging. (`LINEAGE.md` v4.121–v4.127; `DECISIONS.md` DEC-2026-06-23-NAV.)
-- The override is **spent** — the **content freeze below is back in force** (distribution-first).
+A full **component-tier audit + cleanup + salvage arc** ran on top of the frozen four-frame nav. Committed + pushed to origin/main (`ea131eb` v4.128, `5b33892` v4.129, + a pending loose-end fix v4.130). Freeze-overrides were authorized inline by the user for the refactors/salvage (no net-new content beyond *recovered* orphan content).
+
+- **New standard:** `docs/COMPONENT_RUBRICS.md` — the tier ABOVE `CONTENT_QUALITY_BAR.md`. Two rubrics: **Existence Gate** (name/content/adjacency/merit — per-axis floor, not sum) + **Component Quality** (8 dims). Full applied audit in `AUDITS.md #033`. `DECISIONS.md` "Component governance" codifies 6 standing rules (existence gate mandatory before any new component; one concept→owner; question-bank single-source; scenario-schema field-map; <12 items = preview; **"unwired ≠ redundant — compare content before archiving"**).
+- **R1 (v4.128) — the only true redundancy.** 4 disconnected MCQ pools; Combinator had copy-pasted ~31 of Trainer's questions verbatim. → `src/data/questionBank.js` is the single source of truth; Trainer + Combinator import it. quizData (Gradient Quiz, 374) left as its own surface; Interview Q&A (behavioural) stays separate.
+- **R9 DRY (v4.128).** `src/components/TabHeader.jsx` — the gradient `<h1>` was duplicated across 17 tabs → 16 migrated (SystemDesign left inline for its UA margin). `shuffle` → `src/utils/shuffle.js`.
+- **Dead code → `_legacy/`:** GlobalSearch, JDPrepTab, testimonials.js. Icons.jsx KEPT (live shim, 11 importers). Cruft `.bak`/`.tmp` removed.
+- **Depth audit (R7) — CORRECTED.** The first "thin flagship" claim (FeatureEng/Monitoring ~6) was a single-array proxy artifact. Accurate counts (modules + scenario-items): core ML tabs are 23–57; only **DataModeling 11, dbt 11, DLServing 10** are genuinely sub-threshold (DataEng + DLServing periphery — freeze-gated content, not redundancy).
+- **Salvage (v4.129) — the 3 archived orphans each held UNIQUE content** (compared, not assumed). **DataScience**: 24 scenarios, 0 live-dups; 13 MSL ones harvested into ModelEval (new **Metric Pitfalls** module + Calibration Clinic 6→14, source all-answer-0 flaw fixed by shuffle); ~11 experimentation/A-B ruled **PAL's domain**, stay archived. **AskTab restored** to `tabs/` + wired into the KNOW frame, now **merged with search** (KB answers + "Jump to in the app" via the borrowed index). **GlobalSearch's** 196-entry `INDEX` → `src/data/searchIndex.js` (powers AskTab search); shell stays archived.
+- **Build gotcha (important):** the recurring `npm run build` "project root contains #" error is **NOT a real build problem** — it's caused by inline `# comments` in pasted command blocks (zsh passes `#` through as vite's positional root arg). Run `npm run build` with **no trailing comment**. Code bundles clean (verified with a Linux-native esbuild since the repo's esbuild is Mac-arch). **Repos live at `/Users/ASUS/Documents/Professional/BreakLabs/labs/<repo>`** — the old `GitHub/upskill platforms (4)` path in some docs is stale (NEXT.md fixed).
+
+**Prior arc (2026-06-23, v4.121–v4.127):** four-frame nav reframe (KNOW/DO/BUILD/JUDGE + PREP·ASSESS) + BreakLabs BrandMark + domain-axis removal. The **content freeze remains in force**; distribution (GSC sitemap, LinkedIn cadence, email capture) is the next priority — the audit was a freeze-safe detour.
 
 ---
 
