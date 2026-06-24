@@ -684,7 +684,6 @@ const TS_MODEL_SCENARIOS = [
     answer: 1,
     diagnosis: 'The three conditions for neural TS models to win: (1) large training data (100k+ points), (2) multivariate inputs with non-linear interactions, (3) complex patterns that parametric models cannot represent. All three hold here. 315k timesteps is sufficient for TFT or N-BEATS training. Option A confuses sample size with the correct justification — data volume is necessary but not sufficient; the advantage comes from multi-variate non-linear modeling. Option C is a common practitioner belief but is wrong: regime changes are hard for all model families, and neural models don\'t handle them better without explicit indicators.',
     fix: 'Temporal Fusion Transformer (TFT) or N-BEATS for this use case. TFT natively handles multi-horizon forecasting with multi-variate inputs and produces interpretable attention weights. Add lockdown as a binary covariate. Use PyTorch Forecasting library. Validate on the last 6 months only — not a random split.',
-    fix: 'Temporal Fusion Transformer (TFT) or N-BEATS for this use case. TFT natively handles multi-horizon forecasting with multi-variate inputs and produces interpretable attention weights. Add lockdown as a binary covariate. Use PyTorch Forecasting library. Validate on the last 6 months only — not a random split.',
   },
   {
     id: 'ts_m5',
@@ -699,7 +698,6 @@ const TS_MODEL_SCENARIOS = [
     ],
     answer: 1,
     diagnosis: 'Intermittent demand violates ARIMA and Prophet assumptions (both assume relatively continuous observations). Croston\'s method models the non-zero demand level and the average inter-demand interval separately — purpose-built for this distribution. Option C (LightGBM + Tweedie) is a legitimate production approach and can outperform Croston at scale — it earns credit as a strong alternative. Option A (Prophet with floor) is a common team decision but Prophet\'s Fourier-based seasonality is poorly suited to series that are zero 90% of the time.',
-    fix: 'Use Croston\'s method or its improved variant ADIDA (Aggregate-Disaggregate Intermittent Demand Approach). In Python: statsforecast library has CrostonClassic and CrostonOptimized. Evaluate with Mean Absolute Scaled Error (MASE) which handles zeros, not MAPE. For the ML approach: Tweedie regression (LightGBM with tweedie objective) handles zero-inflated continuous approximations of count data.',
     fix: 'Use Croston\'s method or its improved variant ADIDA (Aggregate-Disaggregate Intermittent Demand Approach). In Python: statsforecast library has CrostonClassic and CrostonOptimized. Evaluate with Mean Absolute Scaled Error (MASE) which handles zeros, not MAPE. For the ML approach: Tweedie regression (LightGBM with tweedie objective) handles zero-inflated continuous approximations of count data.',
   },
   {

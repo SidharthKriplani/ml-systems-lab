@@ -400,7 +400,7 @@ Do this when there's time. In order:
    export ANKI_DIR="/Users/ASUS/Documents/Professional/Anki Files/active work (claude)/batch 1"
    ```
 3. **Install dep:** `pip install supabase`
-4. **Navigate:** `cd "/Users/ASUS/Documents/Professional/GitHub/upskill platforms (4)/ml-systems-lab"`
+4. **Navigate:** `cd "/Users/ASUS/Documents/Professional/BreakLabs/labs/ml-systems-lab"`
 5. **Dry run:** `python scripts/import_anki.py --dry-run --lane lane4`
 6. **Import:** `python scripts/import_anki.py --lane lane4` (Spark, 146 cards — start here)
 7. **Verify:** run the verification query at the bottom of `study_schema.sql`
