@@ -46,6 +46,17 @@ Key routing architecture:
 - Tapping active zone button resets it to its default (Practice → domain grid, Interview → tool hub)
 - `goTo(tabId)`: programmatic navigation from any tab via `onNavigate` prop
 
+### v4.128 — Audit #033 component redundancy sweep + R1 question-bank consolidation (2026-06-24)
+
+Full component-tier audit (rubrics + redundancy map in `docs/COMPONENT_RUBRICS.md`, logged AUDITS #033). Established the Existence Gate + Quality rubrics and the "Component governance" rules in DECISIONS.md (concept→owner map, question-bank single-source rule, scenario-schema field-map, <12=preview).
+
+**Decisive finding:** the only true redundancy in the live app is the question banks — cross-tab sweep of all 22 JUDGE/adversarial scenario tabs showed 0 body-text duplication; shared components clean; scenarios distinct. Item-level dedup proved CombinatorTab had copy-pasted ~31 of TrainerTab's questions verbatim.
+
+**Fixes shipped:**
+- **R1 (freeze-override):** new `src/data/questionBank.js` single source of truth. TrainerTab + CombinatorTab now import it; 31 verbatim duplicates collapsed to one definition. Trainer unchanged (60 Qs, relocated); Combinator MCQ pool = 60 referenced (`'T'+id`, type mcq) + 99 unique = 159; short-answer set untouched. Verified: brace/bracket/apostrophe 0, parses, cross-file dup re-probe 0 (was 31). quizData.js (374 Gradient-Quiz) left as its own surface.
+- **Cleanup (batch 1+2):** archived to `_legacy/` — `GlobalSearch.jsx` (+ dead App.jsx import removed), `JDPrepTab.jsx`, `DataScienceTab.jsx`, `AskTab.jsx`, `testimonials.js`. `interviewExperiences.js` parked. Cruft `TimeSeriesTab.jsx.bak` + `test_write.tmp` pending manual rm. `Icons.jsx` kept (live shim, 11 importers).
+- **DRY refactor (batch 4):** the identical 200-char gradient `<h1>` page-title style was copy-pasted across 17 tabs → extracted to `src/components/TabHeader.jsx`. 16 tabs migrated to `<TabHeader title=… />` (each tab's exact margin preserved via `style` prop; `SystemDesignTab` left inline — it alone used the UA-default margin, skipped to avoid a layout shift). `shuffle()` (duplicated in Trainer + InterviewPrep) → `src/utils/shuffle.js`. Verified: all 17 margins match the pre-refactor source exactly, brace/bracket/apostrophe 0 on all touched files, 0 leftover shuffle defs.
+
 ### v4.127 — Mobile regression fix: sidebar no longer stuck open on phones (2026-06-23)
 
 **Code (`src/App.jsx`, 1 line). esbuild full-bundle clean.**

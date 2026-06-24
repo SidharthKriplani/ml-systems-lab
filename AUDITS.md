@@ -166,7 +166,29 @@ For each practice tab (FeatureEngTab, ModelEvalTab, SystemDesignTab, MonitoringT
 
 ## Part I — Architecture & Strategic Audits
 
-*None run yet. Recommended before any major zone restructure or monetization decision.*
+### #033 — 2026-06-24 · Component Redundancy + Gap Audit (full sweep)
+
+First component-tier audit. Established two rubrics (Existence Gate + Quality) in `docs/COMPONENT_RUBRICS.md`; full findings live there. Method: `App.jsx`/`ALL_TABS` + orphan scan + per-file item counts + cross-tab topic fingerprinting + question-pool import-graph trace. Complements `docs/FOUR-FRAME-AUDIT.md` (strategic ladder) with the redundancy layer it lacks.
+
+**Findings (status ⚠️ Open unless noted):**
+- **R1 — Question-bank fragmentation (High; FIX-READY).** 4 inline pools, no source of truth: `quizData.js` (374, Gradient-only) · TrainerTab (59) · CombinatorTab (139) · InterviewPrepTab (135). **Item-level dedup probe confirms literal duplication:** CombinatorTab is a near-superset of TrainerTab (~23 verbatim, Jaccard 1.00) + ≥1 verbatim from quizData; 33 cross-pool near-dup pairs. InterviewPrepTab (behavioural) is distinct — keep separate. Fix: merge quizData+Trainer+Combinator into one tagged bank, tabs become views. → IDEAS.md.
+- **R2 — Concept scatter (High).** No canonical owner per concept. Calibration spans ~10 surfaces; SystemDesign is a topic-sponge (drift 42, leak 9, skew 12) re-covering specialised tabs. Fix: concept→owner map (starter in rubrics doc). → DECISIONS.md rule.
+- **R3 — Scenario-schema fragmentation (Medium-High).** ~4 incompatible item schemas; `CONTENT_QUALITY_BAR.md`'s required `whatsTested`/`staffFraming` fields exist on only 5 tabs, so the item bar is structurally unenforceable on ~15 tabs. Fix: one canonical schema or a published field-map.
+- **R4 — Orphans with real content (Medium).** `DataScienceTab` (~8 scenarios, 34 calibration hits, overlaps modeleval) and `AskTab` (945-line KB) not in `ALL_TABS`. Decide: wire-after-dedup or archive.
+- **R5 — Dead dups + cruft (Low; ✅ batch 1 done 2026-06-24).** Archived → `_legacy/`: `GlobalSearch.jsx` (+ removed its dead App.jsx import), `JDPrepTab.jsx`, `DataScienceTab.jsx`, `AskTab.jsx`. Verified zero live refs; App.jsx brace diff 0. **`Icons.jsx` kept** — live shim with 11 importers; full retirement is a separate 11-file import migration, not freeze-safe hygiene. Cruft `TimeSeriesTab.jsx.bak` + `test_write.tmp` pending manual `rm` (sandbox virtiofs perm block). Minor follow-up: vestigial `ask` zone config in `TAB_TO_ZONE`/`ZONE_DEFAULTS` (App.jsx 168/171) points at a tab id never in `ALL_TABS` — harmless (optional-chained), clean up later.
+- **R6 — Project Lab instance-vs-component (✅ resolved).** Telco/Loans/Fraud = 3 dataset instances of one component, not 3 components. Canonical worked example of the rule.
+- **R7 — Depth non-uniformity (⚠️ Medium; depth not redundancy). CORRECTED with accurate counts 2026-06-24.** First pass used a single-array proxy and was WRONG (claimed FeatureEng/Monitoring/ModelEval ~6 = thin flagships). Accurate parse (every content array, modules vs scenario-items split): those are healthy (FeatureEng 32, Monitoring 23, ModelEval 27). Real picture: spread 5×–57, median ≈24; core ML tabs all 23–57. Genuinely below the 12-item bar: **DataModeling 11, dbt 11, DLServing 10** (Data Eng + DL Serving periphery), plus CaseStudies 5 (by design — multi-part). Fix = freeze-gated content on those 3 edge tabs; core needs nothing. Full table in `docs/COMPONENT_RUBRICS.md` R7.
+- **R8 — Dead data files (⚠️ Low; extends R5).** `testimonials.js` (0 importers, confirmed dead) → archive; `interviewExperiences.js` (0 importers, blocked on Formspree/Tally) → PARK not archive.
+
+- **R9 — Code/style DRY (✅ done batch 4).** Beyond user-facing redundancy: the 200-char gradient page-title `<h1>` style was copy-pasted across 17 tabs → extracted to `components/TabHeader.jsx` (16 migrated, SystemDesign's UA-margin one skipped). `shuffle()` (×2) → `utils/shuffle.js`. Margins verified identical to source; all balances 0.
+
+**FULL-SWEEP COMPLETION (2026-06-24):** cross-tab scenario overlap checked across all 22 JUDGE/adversarial tabs (title + body Jaccard) = **0 real duplication**; shared components (15) clean; data files (7) → 2 dead. **Decisive conclusion: the only true redundancy in the live app is the question banks (R1).** Scenarios distinct, components clean — the rest is thinness (R7) or dead code (R5/R8), not duplication. Earlier blind spots now closed; audit complete for the live app.
+
+Treatment routing / status: **R1 → ✅ DONE (freeze-override, batch 3):** `src/data/questionBank.js` created as the single source of truth; 31 verbatim Combinator copies of Trainer collapsed to one definition. Trainer unchanged (60 Qs, relocated); Combinator MCQ pool = 60 referenced + 99 unique = 159; short-answer set untouched. Verified: brace/bracket/apostrophe 0 on all 3 files, questionBank parses, cross-file dup re-probe = 0 (was 31). *(quizData.js's 374 Gradient-Quiz MCQs left as their own surface — only 1 verbatim overlap, not worth folding now.)* R2 + R3 → ✅ codified in DECISIONS.md "Component governance". R4 → ✅ archived (batch 1). R5 → ✅ done (4 files archived). R8 → ✅ testimonials.js archived; interviewExperiences.js parked. R7 preview-labels → pending (deferred — low value, freeze-adjacent).
+
+---
+
+*Architecture/strategic slot. Recommended before any major zone restructure or monetization decision.*
 
 ---
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import PythonCell from '../components/PythonCell.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
@@ -1704,9 +1705,9 @@ export default function MLCodingTab({ onNavigate }) {
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px' }}>
       <div style={{ marginBottom: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Interview zone</div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: '0 0 10px' }}>
+        <TabHeader title="
           ML Coding Rounds
-        </h1>
+        " style={{ margin: '0 0 10px' }} />
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '580px', margin: '0 0 4px' }}>
           ML-specific Python problems that appear in real senior/staff interviews — custom loss functions, vectorised feature engineering, evaluation from scratch. Not DSA, not string manipulation. Runs live in your browser via Pyodide.
         </p>

@@ -405,3 +405,36 @@ Rationale:
 - `AskTab` is exempt from this rule — it already uses the Web Speech API and is a distinct interaction mode. An LLM integration there (user-supplied key) is tracked separately in Ideas.
 - Any prompt, template, or trainer tool that works standalone stays standalone. MSL's job is to generate the context, not run the trainer.
 
+---
+
+## Component governance (Audit #033, 2026-06-24)
+
+Standing rules to stop redundant build before it happens. Full rubrics + audit in `docs/COMPONENT_RUBRICS.md`.
+
+**1. Existence Gate is mandatory before any new component.** Score the four axes (name / content / adjacency / merit). A 0 on any axis blocks it: Name/Content 0 = duplicate (merge), Adjacency 0 = instance (add as an item, not a component), Merit 0 = reject. This is the pre-build check — run it before writing a new tab/component, every time.
+
+**2. One canonical owner per concept (R2).** A concept is *taught* in exactly one tab; everywhere else cross-links, never re-teaches. Binding starter map:
+
+| Concept | Owner | Cross-link only |
+|---|---|---|
+| Calibration | Model Evaluation | classical, dl_serving, monitoring, gradient |
+| Drift / PSI | Monitoring | systemdesign, mlops_deploy, featureeng |
+| Leakage | Feature Engineering | timeseries (temporal), systemdesign |
+| Imbalance / SMOTE | Model Evaluation (+ Fraud notebook) | classical |
+| Train–serve skew | Feature Engineering | systemdesign |
+| Behavioural Qs | Interview Q&A | keep out of the technical pools |
+
+**3. Question banks have one source of truth (R1).** No tab carries a private inline MCQ array. There is one tagged technical bank (`{id, topic, format, difficulty, gated}`); Trainer / Combinator / Gradient-Quiz are filtered *views* over it. The behavioural pool (Interview Q&A) is a separate surface. *(Implementation pending — see IDEAS.md; the audit proved Combinator copy-pasted Trainer, 33 verbatim pairs.)*
+
+**4. Scenario quality bar applies across schemas via a field-map (R3).** MSL has ~4 scenario schemas; rather than rewrite ~20 tabs, `CONTENT_QUALITY_BAR.md`'s required fields map onto each:
+
+| Quality-bar field | `staffFraming` schema | `reveal/fix` schema | `question/diagnosis` schema |
+|---|---|---|---|
+| whatsTested | whatsTested | (derive from title) | (derive from question) |
+| antiPattern | antiPattern | the tempting wrong `fix` | the tempting wrong `option` |
+| staffFraming + production tell | staffFraming | reveal | diagnosis |
+
+New scenarios should populate the canonical `whatsTested`/`antiPattern`/`staffFraming` triple; legacy tabs are read through this map. New schemas are not allowed without updating this table.
+
+**5. Below 12 items = preview, not feature (R7).** A tab under the depth threshold is not marketed or counted as a finished feature, regardless of how the nav labels it.
+

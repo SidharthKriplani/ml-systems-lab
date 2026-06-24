@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
 
@@ -440,7 +441,7 @@ export default function SpotTheFlawTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: 0 }}>Spot the Flaw</h1>
+          <TabHeader title="Spot the Flaw" />
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px', margin: '0 0 4px' }}>
           Every scenario looks reasonable. Each contains exactly one buried methodological flaw. Find it before the interviewer does.

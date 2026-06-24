@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import AccessGate from '../components/AccessGate.jsx'
 import { isUnlocked } from '../utils/unlock.js'
@@ -815,7 +816,7 @@ export default function ModelEvalTab({ onNavigate, user, onShowAuth }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Evaluation</h1>
+          <TabHeader title="Evaluation" />
         </div>
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.6, maxWidth: '580px' }}>
           Offline metrics lie. Pick the wrong metric and you'll ship a model that looks great on paper while failing in production.

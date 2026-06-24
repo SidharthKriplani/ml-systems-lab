@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
 import { markActivity } from '../utils/activity.js'
@@ -799,9 +800,9 @@ export default function IncidentRoomTab({ onNavigate }) {
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Interview zone</div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: '0 0 10px' }}>
+        <TabHeader title="
           Incident Room
-        </h1>
+        " style={{ margin: '0 0 10px' }} />
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '580px', margin: '0 0 4px' }}>
           Cross-domain production incidents — each requires reasoning across Feature Engineering, Monitoring, Serving, and Experimentation simultaneously. This is the judgment interviewers test when they ask "what would you check first?"
         </p>

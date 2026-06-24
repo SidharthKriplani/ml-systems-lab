@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import { CheckMark, CrossMark } from '../components/Icons'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 
@@ -737,7 +738,7 @@ export default function DLFineTuningTab({ onNavigate }) {
       {/* Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Fine-tuning & Adaptation</h1>
+          <TabHeader title="Fine-tuning & Adaptation" />
           <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '5px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>DL</span>
         </div>
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '680px', margin: 0 }}>

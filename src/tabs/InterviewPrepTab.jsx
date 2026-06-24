@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
+import { shuffle } from '../utils/shuffle.js'
 import { CheckMark } from '../components/Icons'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
@@ -915,9 +917,7 @@ export default function InterviewPrepTab({ onNavigate }) {
     return true
   }), [cat, company, level, search])
 
-  function shuffle(arr) {
-    const a = [...arr]; for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a
-  }
+  // shuffle moved to utils/shuffle.js
 
   if (mode === 'practice') return <TimedPractice questions={shuffle(filtered.length > 0 ? filtered : QUESTIONS)} onExit={() => setMode('bank')} />
 
@@ -933,7 +933,7 @@ export default function InterviewPrepTab({ onNavigate }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '6px' }}>Interview Prep</h1>
+        <TabHeader title="Interview Prep" style={{ marginBottom: '6px' }} />
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: '0 0 4px' }}>
           {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Plus 30 fluency drills for weak-to-strong vocabulary.
         </p>

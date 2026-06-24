@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import TabHeader from '../components/TabHeader.jsx'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { CheckMark, CrossMark } from '../components/Icons'
 import FidelityBadge from '../components/FidelityBadge.jsx'
@@ -1046,7 +1047,7 @@ export default function DeepLearningTab({ onNavigate }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: '0 0 6px', background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Training Lab</h1>
+        <TabHeader title="Training Lab" style={{ margin: '0 0 6px' }} />
         <p style={{ fontSize: '15px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '600px', margin: 0 }}>
           DL courses teach you to build. This domain teaches you to debug — training failures, gradient issues, optimizer tradeoffs, regularization choices, transformer internals. Real telemetry, real decisions.
         </p>

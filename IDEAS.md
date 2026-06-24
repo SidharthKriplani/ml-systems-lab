@@ -7,6 +7,16 @@ Last updated: 2026-06-21
 
 ---
 
+## 🎯 Product-design backlog — from HQ D-24 / `PRODUCT-DESIGN.md` (added 2026-06-24)
+
+_Gate-compliant: this is identity/distribution work, which the content freeze allows. It **refines active Tier-1 #1 (email capture on Home)**. Full spec: `HQ/IDENTITY-CAPTURE-SPEC.md`._
+
+- **[Tier 1, refines #1] Capture at investment, not a cold Home CTA.** Per D-24 + gradual-engagement, a Home email box converts far worse than capturing *after* the user has something to save. Move/duplicate the capture into an optional, benefit-framed "save your streak/progress" moment *after the first short streak + Aha*. Use the **unified Supabase identity** (reuse GSL/Career-OS Supabase — don't build MSL-only auth) so MSL feeds the one cross-lab account. Same "stop being a ghost-collector" goal; converts better.
+- **[Tier 2, post-freeze] Aha "first break" cold-start.** One curated opener (a Bug-Hunt / silent-drift reveal) in <60 sec, not a browse.
+- **[Tier 2, post-freeze] Hooked loop + usability gate.** Streak + varied reveal + daily trigger; Nielsen-10 / Norman discoverability pass; JTBD copy ("survive the hardest follow-up").
+
+---
+
 ## ⚠️ ACTIVE GATE (v4.119): CONTENT FREEZE
 
 Everything below this section is gated by the content freeze rule (see CLAUDE.md + DECISIONS.md DEC-2026-06-21-A). Only Tier 1 items that move toward email capture / GSC submission / LinkedIn linkback infrastructure are allowed to be built. Everything else stays in the backlog until distribution proves out.
@@ -22,6 +32,8 @@ Everything below this section is gated by the content freeze rule (see CLAUDE.md
 4. **Set `VITE_POSTHOG_KEY` in Vercel env vars.** Without this, no analytics collection at all. PostHog autocapture is OFF (PII risk on free-text) but explicit events fire. Currently dark.
 
 5. **Remove "free forever" from README badges per DEC-2026-06-21-B.** Replace with "free to start" or remove entirely. Update Plans page copy too. 30 minutes.
+
+**[Audit #033, 2026-06-24 — ✅ DONE batch 3] Question-bank consolidation (R1 — the only proven redundancy).** Built `src/data/questionBank.js` as the single source of truth; TrainerTab + CombinatorTab now import it. 31 verbatim Combinator copies of Trainer collapsed to one definition. Trainer unchanged (60 Qs); Combinator pool = 60 referenced + 99 unique. Verified 0 cross-file dup, brace/bracket/apostrophe clean. Remaining (optional, low value): fold `quizData.js`'s 374 Gradient-Quiz MCQs into the same bank with tags — only 1 verbatim overlap existed, so deferred. See `docs/COMPONENT_RUBRICS.md` R1 + DECISIONS.md "Component governance" §3.
 
 **Tier 1 ITEMS REJECTED until distribution proves out (do NOT pull from here):**
 - More Quiz MCQs (378 is enough)

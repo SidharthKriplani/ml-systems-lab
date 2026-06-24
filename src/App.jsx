@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { trackTabSwitch } from './analytics.js'
-import GlobalSearch from './components/GlobalSearch.jsx'
 import ContentMap   from './components/ContentMap.jsx'
 import AccessGate   from './components/AccessGate.jsx'
 import { Icon }    from './components/Icon.jsx'
