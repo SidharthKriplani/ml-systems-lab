@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { WarningMark, CrossMark } from '../components/Icons'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { Icon } from '../components/Icon.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -515,7 +516,7 @@ function ChampionChallenger() {
           <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.7, margin: '0 0 16px' }}>
             Champion-challenger isn't a single decision — it's a decision process. A latency regression that looks like a failure might be one profiling session away from a successful promotion. Always diagnose before rejecting.
           </p>
-          <button className="btn-ghost" onClick={reset} style={{ fontSize: '13px' }}>↺ Restart</button>
+          <button className="btn-ghost" onClick={reset} style={{ fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Icon name="rotate-ccw" size={13} /> Restart</button>
         </div>
       )}
     </div>

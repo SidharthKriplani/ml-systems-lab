@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Icon } from '../components/Icon.jsx'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -706,7 +707,7 @@ function LastDay({ initSection }) {
               <button onClick={() => setOpenTrap(openTrap === i ? null : i)}
                 style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--ink)', fontWeight: 500 }}>⚠ {t.trap}</span>
+                <span style={{ fontSize: '14px', color: 'var(--ink)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="alert-triangle" size={14} /> {t.trap}</span>
                 <span style={{ color: 'var(--prime)', fontSize: '11px', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{openTrap === i ? '▲' : '▼'}</span>
               </button>
               {openTrap === i && (
@@ -772,7 +773,7 @@ function ThreeDays({ onNavigate }) {
               <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Must Know</div>
               {d.mustKnow.map((m, j) => (
                 <div key={j} style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'flex-start' }}>
-                  <span style={{ color: 'var(--prime)', flexShrink: 0, fontSize: '12px', marginTop: '2px' }}>✓</span>
+                  <span style={{ color: 'var(--prime)', flexShrink: 0, fontSize: '12px', marginTop: '2px' }}><Icon name="check" size={12} /></span>
                   <span style={{ fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.6 }}>{m}</span>
                 </div>
               ))}
@@ -841,7 +842,7 @@ function OneWeek() {
               ))}
               <div style={{ marginTop: '14px', background: 'rgba(240,165,0,0.07)', borderLeft: '3px solid var(--prime)', padding: '10px 14px', borderRadius: '0 8px 8px 0',
                 fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
-                💡 {day.tip}
+                <Icon name="lightbulb" size={14} /> {day.tip}
               </div>
             </div>
           )}

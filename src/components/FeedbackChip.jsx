@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Icon } from './Icon.jsx'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 // After signing up at formspree.io, replace the ID below with your form ID.
@@ -141,7 +142,7 @@ export default function FeedbackChip() {
           onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(240,165,0,0.4)'}
           onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--rim)'}
         >
-          <span style={{ color: 'var(--prime)', fontSize: '13px' }}>★</span>
+          <Icon name="star-filled" size={13} />
           Rate
         </button>
       )}
@@ -184,7 +185,7 @@ export default function FeedbackChip() {
 
             {status === 'success' ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: '28px', marginBottom: '8px' }}>✓</div>
+                <div style={{ fontSize: '28px', marginBottom: '8px' }}><Icon name="check" size={28} /></div>
                 <div style={{ fontSize: '14px', color: 'var(--mint)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Thanks — feedback received.</div>
               </div>
             ) : (

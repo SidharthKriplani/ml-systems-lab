@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { Icon } from './Icon.jsx'
 
 const TIERS = {
   faithful: {
     label: 'Mathematically Faithful',
-    short: '✓ Real',
+    short: 'Real',
     color: 'var(--mint)',
     bg: 'rgba(52,211,153,0.10)',
     border: 'rgba(52,211,153,0.30)',
@@ -38,7 +39,7 @@ export default function FidelityBadge({ tier }) {
         aria-label={`Fidelity: ${t.label}. Click for detail.`}
         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '999px', background: t.bg, border: `1px solid ${t.border}`, color: t.color, fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 600, letterSpacing: '0.05em', cursor: 'pointer', textTransform: 'uppercase' }}
       >
-        {t.short}
+        {tier === 'faithful' && <Icon name="check" size={10} />}{t.short}
       </button>
       {open && (
         <div style={{ position: 'absolute', top: '28px', left: 0, zIndex: 20, minWidth: '220px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '10px 14px', boxShadow: 'var(--shadow-md)' }}>

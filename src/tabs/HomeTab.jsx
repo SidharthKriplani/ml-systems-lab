@@ -11,6 +11,7 @@ import { track } from '../analytics.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 import QuizCard from '../components/QuizCard.jsx'
 import Next30Card from '../components/Next30Card.jsx'
+import { Icon } from '../components/Icon.jsx'
 
 // ── Recently added — update when new content ships ────────────────────────────
 const RECENTLY_ADDED = [
@@ -33,7 +34,7 @@ const SECTION_TABS = {
 const SECTIONS = [
   { id: 'foundations', label: 'Foundations', desc: 'Math, stats, classical ML.',                     defaultTab: 'models',       icon: '≡' },
   { id: 'scenarios',   label: 'Scenarios',   desc: 'Production failure modes by responsibility.',    defaultTab: 'features',     icon: '⊟' },
-  { id: 'practice',    label: 'Practice',    desc: 'Incidents, coding problems, end-to-end labs.',   defaultTab: 'incidentroom', icon: '⚡' },
+  { id: 'practice',    label: 'Practice',    desc: 'Incidents, coding problems, end-to-end labs.',   defaultTab: 'incidentroom', icon: 'zap' },
   { id: 'interview',   label: 'Interview',   desc: '128 questions, timed exam, verbal, behavioral.', defaultTab: 'interview',    icon: '◈' },
   { id: 'learn',       label: 'Learn',       desc: '50 deep-dive posts on production ML.',           defaultTab: 'gradient',     icon: '∇' },
 ]
@@ -613,7 +614,7 @@ function SectionRow({ section, prog, onNavigate }) {
   return (
     <button onClick={() => onNavigate(section.defaultTab)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ textAlign: 'left', padding: '11px 14px', background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', width: '100%', transition: 'border-color var(--t), background var(--t)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <span style={{ fontSize: '15px', width: '18px', textAlign: 'center', color: 'var(--ink-ghost)', flexShrink: 0 }}>{section.icon}</span>
+      <span style={{ fontSize: '15px', width: '18px', textAlign: 'center', color: 'var(--ink-ghost)', flexShrink: 0 }}>{section.icon === 'zap' ? <Icon name="zap" size={15} /> : section.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: prog.total > 0 ? '4px' : '0' }}>
           <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '12px', color: 'var(--ink-hi)' }}>{section.label}</span>

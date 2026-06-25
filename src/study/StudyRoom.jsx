@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase.js'
 import { getNextInterval } from './sr.js'
+import { Icon } from '../components/Icon.jsx'
 
 // ── Lane metadata ─────────────────────────────────────────────────────────────
 const LANE_LABELS = {
@@ -281,7 +282,7 @@ function StudyRoomInner({ user, onClose }) {
         {/* All done */}
         {isDone && (
           <div style={{ textAlign: 'center', marginTop: '80px' }}>
-            <div style={{ fontSize: '40px', marginBottom: '16px', color: 'var(--prime)' }}>✓</div>
+            <div style={{ fontSize: '40px', marginBottom: '16px', color: 'var(--prime)' }}><Icon name="check" size={40} /></div>
             <h2 style={{
               fontFamily: 'var(--font-sans)', fontSize: '26px', fontWeight: 800,
               color: 'var(--ink-hi)', letterSpacing: '-0.04em', margin: '0 0 10px',

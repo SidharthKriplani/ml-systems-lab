@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { Icon } from '../components/Icon.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -754,7 +755,7 @@ function IncidentScenarios() {
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
             <button className="btn-primary" onClick={nextScenario} disabled={idx === SCENARIOS.length - 1}>Next scenario →</button>
-            <button className="btn-ghost" onClick={() => { setIdx(0); setShowTiers(false); setSelfAssessed(null) }}>↺ Restart</button>
+            <button className="btn-ghost" onClick={() => { setIdx(0); setShowTiers(false); setSelfAssessed(null) }} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Icon name="rotate-ccw" size={13} /> Restart</button>
           </div>
         </div>
       )}
@@ -1107,7 +1108,7 @@ function DesignCanvas() {
 
           <button className="btn-ghost" style={{ alignSelf: 'flex-start', fontSize: '12px' }}
             onClick={() => { setAnswers({}); setRevealed({}); setSubmitted(false) }}>
-            ↺ Restart review
+            <Icon name="rotate-ccw" size={13} /> Restart review
           </button>
         </div>
       )}

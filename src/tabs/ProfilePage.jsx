@@ -3,6 +3,7 @@ import { signOut } from '../utils/auth.js'
 import { pushProgressToSupabase, pullProgressFromSupabase } from '../utils/syncProgress.js'
 import { authEnabled } from '../utils/supabase.js'
 import { downloadProgressJSON } from '../utils/export.js'
+import { Icon } from '../components/Icon.jsx'
 import { readFoundationsRead, overallCompletion } from '../data/foundationsPath.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 
@@ -213,8 +214,8 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
               {foundationsComplete ? (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      ✓ Complete
+                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Icon name="check" size={11} /> Complete
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>
                       All {foundationsProg.total} MLE Path posts read.

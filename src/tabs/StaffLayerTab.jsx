@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { trackModuleComplete } from '../analytics'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { Icon } from '../components/Icon.jsx'
 
 const REVEALS_KEY = 'msl_staff_reveals'
 
@@ -323,7 +324,7 @@ export default function StaffLayerTab({ onNavigate }) {
             whiteSpace: 'nowrap',
           }}
         >
-          ↺ Reset reveals
+          <Icon name="rotate-ccw" size={13} /> Reset reveals
         </button>
       </div>
 

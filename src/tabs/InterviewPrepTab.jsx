@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import TabHeader from '../components/TabHeader.jsx'
 import { shuffle } from '../utils/shuffle.js'
 import { CheckMark } from '../components/Icons'
+import { Icon } from '../components/Icon.jsx'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
 
@@ -445,7 +446,7 @@ function FluencyDrills() {
               disabled={idx === FLUENCY_DRILLS.length - 1}>
               Next drill →
             </button>
-            <button className="btn-ghost" onClick={() => { setIdx(0); setRevealed(false) }}>↺ Restart</button>
+            <button className="btn-ghost" onClick={() => { setIdx(0); setRevealed(false) }}><Icon name="rotate-ccw" size={13} /> Restart</button>
           </div>
         </>
       )}
@@ -651,7 +652,7 @@ function TimedPractice({ questions, onExit }) {
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: 700, color: overtime ? 'var(--prime)' : 'var(--prime)' }}>
             {overtime ? '+' : ''}{mins}:{String(secs).padStart(2, '0')}
           </span>
-          <button onClick={onExit} className="btn-ghost" style={{ fontSize: '12px' }}>✕ Exit</button>
+          <button onClick={onExit} className="btn-ghost" style={{ fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Icon name="x" size={13} /> Exit</button>
         </div>
       </div>
 

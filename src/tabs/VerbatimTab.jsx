@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
+import { Icon } from '../components/Icon.jsx'
 
 const QUESTIONS = [
   { id: 1, category: 'System Design', text: 'Walk me through how you would design a real-time recommendation system for a platform with 100 million users.' },
@@ -89,7 +90,7 @@ function StarRating({ value, onChange }) {
             transition: 'color 0.1s',
           }}
         >
-          ★
+          <Icon name="star-filled" size={20} />
         </button>
       ))}
     </div>

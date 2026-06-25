@@ -1269,7 +1269,7 @@ function InteractionLeakage() {
 const MODULES = [
   { id: 'skew',                  label: 'Skew Simulator',              icon: '[S]', component: SkewSimulator,             difficulty: 'senior', isFree: false, readMin: 8  },
   { id: 'store',                 label: 'Feature Store Designer',      icon: '',    component: FeatureStoreDesigner,      difficulty: 'junior', isFree: true,  guestPreview: true, readMin: 6  },
-  { id: 'window',                label: 'Window Aggregation',          icon: '⏱',  component: WindowAggregationBuilder,  difficulty: 'mid',    isFree: false, readMin: 7  },
+  { id: 'window',                label: 'Window Aggregation',          icon: 'timer',  component: WindowAggregationBuilder,  difficulty: 'mid',    isFree: false, readMin: 7  },
   { id: 'leakage',               label: 'Leakage Zoo',                 icon: '',    component: FeatureLeakageZoo,         difficulty: 'mid',    isFree: false, readMin: 10 },
   { id: 'serving',               label: 'Online vs Offline',           icon: '',    component: OnlineOfflineDecider,      difficulty: 'senior', isFree: false, readMin: 6  },
   { id: 'arch',                  label: 'Architecture Diagram',        icon: '◈',  component: FeatureStoreArchitecture,  difficulty: 'senior', isFree: false, readMin: 5  },

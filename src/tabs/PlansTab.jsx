@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked } from '../utils/unlock.js'
 import { authEnabled } from '../utils/supabase.js'
+import { Icon } from '../components/Icon.jsx'
 
 // ── PlansTab — pricing + conversion surface ───────────────────────────────────
 //
@@ -190,8 +191,8 @@ export default function PlansTab({ onNavigate, onShowAuth, user }) {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
           {/* Sign-in state */}
           {user ? (
-            <div style={{ padding: '9px 18px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '7px', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--mint)' }}>
-              ✓ Signed in
+            <div style={{ padding: '9px 18px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '7px', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--mint)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Icon name="check" size={12} /> Signed in
             </div>
           ) : authEnabled ? (
             <button
