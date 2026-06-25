@@ -5,6 +5,15 @@ Last updated: June 2026
 
 ---
 
+### Icon system migration — monochrome Instrument standard (25 Jun 2026)
+
+HQ design standard applied to MSL: all emoji/glyph characters in JSX replaced with monochrome `<Icon>` components. Full HQ canonical `Icon.jsx` (84 icons + GLYPH_TO_ICON map) deployed to `src/components/`, superseding the prior 15-icon `Icons.jsx` shim (shim archived to `src/_legacy/` per D-18). Two new files added: `src/components/CompanyLogo.jsx` (Google `s2/favicons` service + letter-badge fallback; CSS vars adapted from HQ `--surface-2/--border/--text-muted` → MSL `--depth/--rim/--ink-ghost`) and `src/components/companyDomains.js` (319-entry canonical company→domain resolver, shared from HQ). 16 source files updated with Icon imports and emoji replacements. Remaining emoji are legitimate leaves: string ternaries (can't embed JSX in a string expression), Python code stored as JS strings, dynamic icon-map lookups, content/data fields, and icons not present in the GLYPH_TO_ICON map. `_legacy/` skipped throughout per policy. No version bump — design/infra, not content.
+
+**Files changed:** `src/components/Icon.jsx` (upgraded to HQ canonical 84-icon), `src/components/CompanyLogo.jsx` (new), `src/components/companyDomains.js` (new), `src/components/FidelityBadge.jsx`, `src/components/FeedbackChip.jsx`, `src/study/StudyRoom.jsx`, `src/App.jsx`, `src/tabs/CheatsheetTab.jsx`, `src/tabs/HomeTab.jsx`, `src/tabs/PlansTab.jsx`, `src/tabs/InterviewPrepTab.jsx`, `src/tabs/StaffLayerTab.jsx`, `src/tabs/MLOpsDeployTab.jsx`, `src/tabs/SystemDesignTab.jsx`, `src/tabs/VerbatimTab.jsx`, `src/tabs/ProfilePage.jsx`, `src/tabs/FeatureEngTab.jsx`  
+**Scale unchanged.** Commit pending (approve-first).
+
+---
+
 ## Origin
 
 Started as a personal study tool — a place to collect production ML judgment patterns that don't appear in textbooks or standard courses. The gap it targets: you can finish an ML course and still freeze when a model degrades silently in production, or when asked to choose between blue-green and canary at 3am. This lab is the answer to "where do you practice that?"

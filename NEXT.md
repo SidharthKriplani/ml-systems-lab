@@ -2,6 +2,12 @@
 
 ---
 
+## ✅ DONE (25 Jun 2026) — Icon system migration
+
+Full HQ canonical `Icon.jsx` (84 icons) deployed; `CompanyLogo.jsx` + `companyDomains.js` added. All replaceable emoji in 16 source files converted to `<Icon>` components. Commit prepared (approve-first) — run git commands from session. **No content changes; freeze remains in effect.**
+
+---
+
 ## ▶ NEXT SESSION — back to distribution (freeze still in force)
 
 The component audit arc (below) is **complete and shipped**. It was a freeze-safe detour; the freeze is **back in force**. The gate to lift it is unchanged: **100 email subs OR 100 weekly returning visitors**. Next-session work, in priority order, all distribution:
