@@ -15,15 +15,21 @@ const TRACK_MODULES = {
 }
 
 const FOUNDATION_STORES = [
-  { lsKey: 'msl-math-stats-foundation-v1',    tabId: 'math_stats_foundation',    label: 'Math & Stats Foundations',   total: 18 },
-  { lsKey: 'msl-classical-ml-foundation-v1',  tabId: 'classical_ml_foundation',  label: 'Classical ML Foundations',   total: 14 },
-  { lsKey: 'msl-eval-foundation-v1',          tabId: 'eval_foundation',           label: 'Eval Foundations',           total: 10 },
-  { lsKey: 'msl-unsupervised-foundation-v1',  tabId: 'unsupervised_foundation',   label: 'Unsupervised Foundations',   total:  8 },
-  { lsKey: 'msl-causal-foundation-v1',        tabId: 'causal_foundation',         label: 'Causal Foundations',         total:  8 },
-  { lsKey: 'msl-production-foundation-v1',    tabId: 'production_foundation',     label: 'Production Foundations',     total: 10 },
-  { lsKey: 'msl-monitoring-foundation-v1',    tabId: 'monitoring_foundation',     label: 'Monitoring Foundations',     total:  8 },
-  { lsKey: 'msl-system-design-foundation-v1', tabId: 'system_design_foundation',  label: 'System Design Foundations',  total:  8 },
-  { lsKey: 'msl-dl-foundation-v1',            tabId: 'dl_foundation',             label: 'Deep Learning Foundations',  total: 12 },
+  { lsKey: 'msl-math-stats-foundation-v1',       tabId: 'math_stats_foundation',        label: 'Math & Stats Foundations',       total: 18 },
+  { lsKey: 'msl-classical-ml-foundation-v1',     tabId: 'classical_ml_foundation',      label: 'Classical ML Foundations',       total: 14 },
+  { lsKey: 'msl-probabilistic-ml-foundation-v1', tabId: 'probabilistic_ml_foundation',  label: 'Probabilistic ML Foundations',   total:  9 },
+  { lsKey: 'msl-eval-foundation-v1',             tabId: 'eval_foundation',              label: 'Eval Foundations',               total: 10 },
+  { lsKey: 'msl-unsupervised-foundation-v1',     tabId: 'unsupervised_foundation',      label: 'Unsupervised Foundations',       total:  8 },
+  { lsKey: 'msl-causal-foundation-v1',           tabId: 'causal_foundation',            label: 'Causal Foundations',             total:  8 },
+  { lsKey: 'msl-dl-foundation-v1',               tabId: 'dl_foundation',                label: 'Deep Learning Foundations',      total: 12 },
+  { lsKey: 'msl-self-supervised-foundation-v1',  tabId: 'self_supervised_foundation',   label: 'Self-supervised Foundations',    total:  9 },
+  { lsKey: 'msl-rl-foundation-v1',               tabId: 'rl_foundation',                label: 'RL Foundations',                 total: 10 },
+  { lsKey: 'msl-production-foundation-v1',       tabId: 'production_foundation',        label: 'Production Foundations',         total: 10 },
+  { lsKey: 'msl-monitoring-foundation-v1',       tabId: 'monitoring_foundation',        label: 'Monitoring Foundations',         total:  8 },
+  { lsKey: 'msl-system-design-foundation-v1',    tabId: 'system_design_foundation',     label: 'System Design Foundations',      total:  8 },
+  { lsKey: 'msl-time-series-foundation-v1',      tabId: 'time_series_foundation',       label: 'Time Series Foundations',        total:  9 },
+  { lsKey: 'msl-graph-ml-foundation-v1',         tabId: 'graph_ml_foundation',          label: 'Graph ML Foundations',           total:  9 },
+  { lsKey: 'msl-bandits-foundation-v1',          tabId: 'bandits_foundation',           label: 'Bandits & Exploration Foundations', total: 9 },
 ]
 
 const PRACTICE_ROOMS = [

@@ -63,15 +63,22 @@ const PRACTICE_TRACK_MODULES = {
 // A module is "done" if its entry has a truthy completedAt.
 
 const FOUNDATION_KEYS = [
-  { id: 'math-stats',    key: 'msl-math-stats-foundation-v1' },
-  { id: 'classical-ml',  key: 'msl-classical-ml-foundation-v1' },
-  { id: 'eval',          key: 'msl-eval-foundation-v1' },
-  { id: 'unsupervised',  key: 'msl-unsupervised-foundation-v1' },
-  { id: 'causal',        key: 'msl-causal-foundation-v1' },
-  { id: 'production',    key: 'msl-production-foundation-v1' },
-  { id: 'monitoring',    key: 'msl-monitoring-foundation-v1' },
-  { id: 'system-design', key: 'msl-system-design-foundation-v1' },
-  { id: 'dl',            key: 'msl-dl-foundation-v1' },
+  { id: 'math-stats',        key: 'msl-math-stats-foundation-v1' },
+  { id: 'classical-ml',      key: 'msl-classical-ml-foundation-v1' },
+  { id: 'eval',              key: 'msl-eval-foundation-v1' },
+  { id: 'unsupervised',      key: 'msl-unsupervised-foundation-v1' },
+  { id: 'causal',            key: 'msl-causal-foundation-v1' },
+  { id: 'production',        key: 'msl-production-foundation-v1' },
+  { id: 'monitoring',        key: 'msl-monitoring-foundation-v1' },
+  { id: 'system-design',     key: 'msl-system-design-foundation-v1' },
+  { id: 'dl',                key: 'msl-dl-foundation-v1' },
+  // New domains
+  { id: 'rl',                key: 'msl-rl-foundation-v1' },
+  { id: 'time-series',       key: 'msl-time-series-foundation-v1' },
+  { id: 'self-supervised',   key: 'msl-self-supervised-foundation-v1' },
+  { id: 'graph-ml',          key: 'msl-graph-ml-foundation-v1' },
+  { id: 'bandits',           key: 'msl-bandits-foundation-v1' },
+  { id: 'probabilistic-ml',  key: 'msl-probabilistic-ml-foundation-v1' },
 ];
 
 // Prefix used by ALL practice-module done flags.

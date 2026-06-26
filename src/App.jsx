@@ -68,6 +68,13 @@ const ProductionFoundationTab     = lazy(() => import('./tabs/foundations/Produc
 const MonitoringFoundationTab     = lazy(() => import('./tabs/foundations/MonitoringFoundationTab.jsx').then(m => ({ default: m.MonitoringFoundationTab })))
 const SystemDesignFoundationTab   = lazy(() => import('./tabs/foundations/SystemDesignFoundationTab.jsx').then(m => ({ default: m.SystemDesignFoundationTab })))
 const DeepLearningFoundationTab   = lazy(() => import('./tabs/foundations/DeepLearningFoundationTab.jsx').then(m => ({ default: m.DeepLearningFoundationTab })))
+// New foundation runners — 6 additional domains
+const RLFoundationTab             = lazy(() => import('./tabs/foundations/RLFoundationTab.jsx').then(m => ({ default: m.RLFoundationTab })))
+const TimeSeriesFoundationTab     = lazy(() => import('./tabs/foundations/TimeSeriesFoundationTab.jsx').then(m => ({ default: m.TimeSeriesFoundationTab })))
+const SelfSupervisedFoundationTab = lazy(() => import('./tabs/foundations/SelfSupervisedFoundationTab.jsx').then(m => ({ default: m.SelfSupervisedFoundationTab })))
+const GraphMLFoundationTab        = lazy(() => import('./tabs/foundations/GraphMLFoundationTab.jsx').then(m => ({ default: m.GraphMLFoundationTab })))
+const BanditsFoundationTab        = lazy(() => import('./tabs/foundations/BanditsFoundationTab.jsx').then(m => ({ default: m.BanditsFoundationTab })))
+const ProbabilisticMLFoundationTab = lazy(() => import('./tabs/foundations/ProbabilisticMLFoundationTab.jsx').then(m => ({ default: m.ProbabilisticMLFoundationTab })))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -116,7 +123,7 @@ const ALL_TABS = [
   // Leaderboard + Progress
   { id: 'leaderboard',             component: LeaderboardTab },
   { id: 'progress',                component: ProgressTab },
-  // Foundation runners
+  // Foundation runners — original 9
   { id: 'math_stats_foundation',    component: MathStatsFoundationTab },
   { id: 'classical_ml_foundation',  component: ClassicalMLFoundationTab },
   { id: 'eval_foundation',          component: EvalFoundationTab },
@@ -126,6 +133,13 @@ const ALL_TABS = [
   { id: 'monitoring_foundation',    component: MonitoringFoundationTab },
   { id: 'system_design_foundation', component: SystemDesignFoundationTab },
   { id: 'dl_foundation',            component: DeepLearningFoundationTab },
+  // Foundation runners — 6 new domains
+  { id: 'rl_foundation',             component: RLFoundationTab },
+  { id: 'time_series_foundation',    component: TimeSeriesFoundationTab },
+  { id: 'self_supervised_foundation',component: SelfSupervisedFoundationTab },
+  { id: 'graph_ml_foundation',       component: GraphMLFoundationTab },
+  { id: 'bandits_foundation',        component: BanditsFoundationTab },
+  { id: 'probabilistic_ml_foundation', component: ProbabilisticMLFoundationTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -195,12 +209,17 @@ const TAB_TO_ZONE = {
   incidentroom: 'interview',
   mlcoding: 'interview',
   ask: 'ask',
-  // Foundation runners
-  math_stats_foundation: 'foundations', classical_ml_foundation: 'foundations',
-  eval_foundation: 'foundations', unsupervised_foundation: 'foundations',
-  causal_foundation: 'foundations', production_foundation: 'foundations',
-  monitoring_foundation: 'foundations', system_design_foundation: 'foundations',
-  dl_foundation: 'foundations',
+  // Foundation runners — all map to 'know' zone (FOUNDATIONS live under KNOW)
+  math_stats_foundation: 'know', classical_ml_foundation: 'know',
+  eval_foundation: 'know', unsupervised_foundation: 'know',
+  causal_foundation: 'know', production_foundation: 'know',
+  monitoring_foundation: 'know', system_design_foundation: 'know',
+  dl_foundation: 'know',
+  rl_foundation: 'know', time_series_foundation: 'know',
+  self_supervised_foundation: 'know', graph_ml_foundation: 'know',
+  bandits_foundation: 'know', probabilistic_ml_foundation: 'know',
+  // Library also lives under KNOW
+  gradient: 'know', cheatsheet: 'know',
 }
 const ZONE_DEFAULTS = {
   today: 'home', practice: null, read: 'gradient', interview: null, ask: 'ask',
@@ -291,41 +310,50 @@ const INTERVIEW_TOOLS = [
 
 
 // ── Nav structure ─────────────────────────────────────────────────────────────
-// FOUNDATIONS → LIBRARY → DO → BUILD → JUDGE → PREP & ASSESS → EXTRAS
+// KNOW (foundations + library) → DO → BUILD → JUDGE → PREP & ASSESS → EXTRAS
 const NAV_SECTIONS = [
   {
-    id: 'foundations',
-    label: 'FOUNDATIONS',
+    id: 'know',
+    label: 'KNOW',
     icon: 'layers',
     groups: [
       {
         label: 'ML THEORY',
         items: [
-          { id: 'math_stats_foundation',   label: 'Math & Stats',      desc: 'Probability, linear algebra, calculus, MLE/MAP — the mathematical core of ML.' },
-          { id: 'classical_ml_foundation', label: 'Classical ML',      desc: 'Linear models, trees, SVMs, regularization, generalization theory.' },
-          { id: 'eval_foundation',         label: 'Evaluation',        desc: 'Metrics from first principles, validation traps, offline vs online.' },
-          { id: 'unsupervised_foundation', label: 'Unsupervised',      desc: 'Clustering, dimensionality reduction, anomaly detection.' },
-          { id: 'causal_foundation',       label: 'Causal Inference',  desc: 'Potential outcomes, DAGs, uplift modeling, experiment design.' },
+          { id: 'math_stats_foundation',      label: 'Math & Stats',        desc: 'Probability, linear algebra, calculus, MLE/MAP — the mathematical core of ML.' },
+          { id: 'classical_ml_foundation',    label: 'Classical ML',        desc: 'Linear models, trees, SVMs, regularization, generalization theory.' },
+          { id: 'probabilistic_ml_foundation',label: 'Probabilistic ML',    desc: 'Gaussian processes, variational inference, BNNs, calibration, information geometry.' },
+          { id: 'eval_foundation',            label: 'Evaluation',          desc: 'Metrics from first principles, validation traps, offline vs online.' },
+          { id: 'unsupervised_foundation',    label: 'Unsupervised',        desc: 'Clustering, dimensionality reduction, anomaly detection.' },
+          { id: 'causal_foundation',          label: 'Causal Inference',    desc: 'Potential outcomes, DAGs, uplift modeling, experiment design.' },
         ],
       },
       {
-        label: 'SYSTEMS',
+        label: 'NEURAL & SEQUENTIAL',
         items: [
-          { id: 'production_foundation',    label: 'Feature Eng & Prod', desc: 'Training-serving skew, feature stores, pipeline architecture.' },
-          { id: 'monitoring_foundation',    label: 'Monitoring & Drift', desc: 'Data drift, concept drift, prediction monitoring, ML incidents.' },
-          { id: 'system_design_foundation', label: 'ML System Design',   desc: '6-step framework, RecSys, two-tower models, ML platform design.' },
-          { id: 'dl_foundation',            label: 'Deep Learning',      desc: 'Neural nets, backprop, attention, transformers, fine-tuning, serving.' },
+          { id: 'dl_foundation',              label: 'Deep Learning',       desc: 'Neural nets, backprop, attention, transformers, fine-tuning, serving.' },
+          { id: 'self_supervised_foundation', label: 'Self-supervised',     desc: 'Contrastive learning, SimCLR, MoCo, BYOL, MAE, CLIP, downstream adaptation.' },
+          { id: 'rl_foundation',              label: 'Reinforcement Learning', desc: 'MDPs, Bellman equations, policy gradients, PPO, RLHF, reward modeling.' },
         ],
       },
-    ],
-  },
-  {
-    id: 'library',
-    label: 'LIBRARY',
-    icon: 'book-open',
-    items: [
-      { id: 'gradient',   label: 'Gradient',   desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
-      { id: 'cheatsheet', label: 'Cheatsheet', desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
+      {
+        label: 'SYSTEMS & APPLIED',
+        items: [
+          { id: 'production_foundation',      label: 'Feature Eng & Prod',  desc: 'Training-serving skew, feature stores, pipeline architecture.' },
+          { id: 'monitoring_foundation',      label: 'Monitoring & Drift',  desc: 'Data drift, concept drift, prediction monitoring, ML incidents.' },
+          { id: 'system_design_foundation',   label: 'ML System Design',    desc: '6-step framework, RecSys, two-tower models, ML platform design.' },
+          { id: 'time_series_foundation',     label: 'Time Series',         desc: 'Stationarity, ARIMA, STL, neural forecasting (N-BEATS, TFT), causal impact.' },
+          { id: 'graph_ml_foundation',        label: 'Graph ML',            desc: 'GCNs, GraphSAGE, GAT, message passing, link prediction, GNNs at scale.' },
+          { id: 'bandits_foundation',         label: 'Bandits & Exploration', desc: 'UCB, Thompson sampling, contextual bandits, LinUCB, OPE, recsys exploration.' },
+        ],
+      },
+      {
+        label: 'LIBRARY',
+        items: [
+          { id: 'gradient',   label: 'Gradient',   desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
+          { id: 'cheatsheet', label: 'Cheatsheet', desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
+        ],
+      },
     ],
   },
   {
@@ -929,7 +957,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 
 const BOTTOM_NAV_ITEMS = [
   { id: 'home',        icon: '◎', label: 'Home',  defaultTab: 'home',                   sections: [] },
-  { id: 'foundations', icon: '▤', label: 'Learn', defaultTab: 'math_stats_foundation',   sections: ['foundations', 'library'] },
+  { id: 'foundations', icon: '▤', label: 'Learn', defaultTab: 'math_stats_foundation',   sections: ['know'] },
   { id: 'do',          icon: '◳', label: 'Do',    defaultTab: 'mlcoding',                sections: ['do'] },
   { id: 'build',       icon: '⚒', label: 'Build', defaultTab: 'projectlab',              sections: ['build'] },
   { id: 'judge',       icon: '◈', label: 'Judge', defaultTab: 'spottheflaw',             sections: ['judge', 'assess', 'extras'] },
