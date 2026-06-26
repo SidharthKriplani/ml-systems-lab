@@ -804,7 +804,7 @@ In production, the daily batch job takes 6 hours and is cached. Due to an infras
 
 After 3 weeks:
 - Churn recall drops from 78% to 51%
-- Accounts that churned on day 5 after the last batch run have stale `account_age_days`
+- Accounts that churned on day 5 after the last batch run have stale 'account_age_days'
 - The model was trained assuming this feature refreshes daily
 
 # Example of staleness:
