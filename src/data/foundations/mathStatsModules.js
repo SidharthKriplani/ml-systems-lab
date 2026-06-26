@@ -37,6 +37,7 @@ export const MATH_STATS_MODULES = [
       },
     ],
     takeaway: `The key insight is that posterior probability is the product of likelihood AND prior, which means in practice you must always ask what the base rate is before interpreting any model's output as a probability.`,
+    interactiveId: 'bayes_calculator',
   },
   {
     id: 'random_variables',
@@ -76,6 +77,7 @@ export const MATH_STATS_MODULES = [
       },
     ],
     takeaway: `The key insight is that a distribution's mean and variance together determine how reliably you can estimate anything from finite data, which means in practice you should always compute the standard error of your estimates before trusting them.`,
+    interactiveId: 'distribution_viz',
   },
   {
     id: 'joint_distributions',

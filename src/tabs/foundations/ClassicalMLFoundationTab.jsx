@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CLASSICAL_ML_MODULES } from '../../data/foundations/classicalMLModules.js'
+import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/classicalMLFoundationProgress.js'
 
 const DOMAIN = 'classical-ml'
@@ -154,6 +155,7 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
               <p style={{ fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{selected.takeaway}</p>
             </div>
           )}
+          {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
 
           {/* Key points */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',

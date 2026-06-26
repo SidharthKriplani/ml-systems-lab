@@ -37,6 +37,7 @@ export const EVAL_MODULES = [
       },
     ],
     takeaway: `The key insight is that precision and recall measure fundamentally opposite failure modes, which means the only correct way to choose a classification metric is to first quantify the business cost of FP vs FN — everything else follows from that ratio.`,
+    interactiveId: 'confusion_matrix_viz',
   },
   {
     id: 'auc_roc',
@@ -75,6 +76,7 @@ export const EVAL_MODULES = [
       },
     ],
     takeaway: `The key insight is that AUC-ROC measures ranking quality across all thresholds and denominates FPR with TN, which means it systematically overstates model quality when negatives vastly outnumber positives — in those cases you must use PR-AUC and evaluate precision at your actual operating recall.`,
+    interactiveId: 'roc_curve_viz',
   },
   {
     id: 'ranking_metrics',

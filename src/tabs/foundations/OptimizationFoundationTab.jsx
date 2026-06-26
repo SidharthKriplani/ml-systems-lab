@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { OPTIMIZATION_MODULES } from '../../data/foundations/optimizationModules.js'
+import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/optimizationFoundationProgress.js'
 
 const MODULES = OPTIMIZATION_MODULES
@@ -118,6 +119,7 @@ export function OptimizationFoundationTab({ onNavigate }) {
               <p style={{ fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{selected.takeaway}</p>
             </div>
           )}
+          {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Key Points</div>
             <ul style={{ margin: 0, paddingLeft: '1.2rem', listStyle: 'none' }}>

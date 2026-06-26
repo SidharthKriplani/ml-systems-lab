@@ -78,6 +78,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that k-means minimises within-cluster Euclidean distance, which forces it to assume spherical equal-size clusters — so whenever your data violates those assumptions (unequal sizes, non-convex shapes, outliers), the algorithm converges confidently to a wrong answer and the only fix is a different algorithm.`,
+    interactiveId: 'kmeans_viz',
   },
   {
     id: 'hierarchical',
@@ -192,6 +193,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that PCA finds directions of maximum variance, not directions of maximum relevance to your task — which means the components it discards may contain the class-discriminative signal you actually need, and variance explained is not a reliable proxy for information preserved for a specific downstream objective.`,
+    interactiveId: 'pca_viz',
   },
   {
     id: 'tsne_umap',

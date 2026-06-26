@@ -113,6 +113,7 @@ export const DEEP_LEARNING_MODULES = [
       },
     ],
     takeaway: `The key insight is that activation functions control whether gradient signals survive the backward pass, which means switching from sigmoid to ReLU (and later to GELU) was what made training deep networks possible — not more data or better hardware.`,
+    interactiveId: 'activation_functions',
   },
   {
     id: 'batch_norm',
@@ -307,6 +308,7 @@ export const DEEP_LEARNING_MODULES = [
       },
     ],
     takeaway: `The key insight is that self-attention creates direct O(1) paths between all positions while RNNs create O(n) paths, which means attention solves long-range dependency at the cost of O(n²) compute — every efficient Transformer variant is a different way to pay less for that direct connectivity.`,
+    interactiveId: 'attention_viz',
   },
   {
     id: 'transformers',

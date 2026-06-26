@@ -57,6 +57,7 @@ export const OPTIMIZATION_MODULES = [
       `The analytical gradient from backpropagation is exact (up to floating-point). The numerical gradient, computed by finite differences ((L(θ+ε) − L(θ−ε)) / 2ε), approximates it and is used to verify implementations. Gradient checking compares the two to catch bugs in backprop.`,
     ],
     takeaway: `The key insight of gradient descent is that you only need local information — the gradient at the current point — to make progress toward a minimum, which means you can optimize functions with millions of parameters without ever seeing the full landscape, as long as you choose a learning rate that matches the local curvature.`,
+    interactiveId: 'gradient_descent',
     checkQuestions: [
       {
         q: `If the learning rate is set to 10x the optimal value, what happens geometrically and what does the loss curve look like?`,
@@ -134,6 +135,7 @@ export const OPTIMIZATION_MODULES = [
       `With high momentum (β=0.9), the effective learning rate grows for approximately 1/(1−β) = 10 steps as velocity accumulates from zero. The first few steps behave like lower-momentum training. This warm-up effect is usually benign but is why some practitioners combine explicit learning rate warmup with momentum.`,
     ],
     takeaway: `The key insight of momentum is that maintaining a velocity vector — a running average of past gradients — gives the optimizer inertia that dampens oscillations in high-curvature directions while accelerating progress in consistent-gradient directions, which means momentum turns gradient descent from a direction-following algorithm into a trajectory-following algorithm.`,
+    interactiveId: 'momentum_viz',
     checkQuestions: [
       {
         q: `A model trains on a narrow ravine loss landscape. Plain SGD oscillates and makes slow progress. Explain mechanistically why momentum fixes this.`,
@@ -245,6 +247,7 @@ export const OPTIMIZATION_MODULES = [
       `Large language models universally use warmup + cosine or warmup + linear decay. Without warmup, Adam applied to a transformer at step 1 takes an enormous step because v_t ≈ 0 — this can corrupt early embeddings in a way that is difficult to recover from. A warmup of 1-4% of training steps prevents this.`,
     ],
     takeaway: `The key insight of learning rate schedules is that the shape of how α changes over training controls which region of the loss landscape the optimizer ultimately settles in — not just how fast it gets there — which means schedule choice is a generalization decision: warmup prevents early instability, cosine annealing encourages flat minima, and cyclic schedules explicitly oscillate to avoid sharp basins.`,
+    interactiveId: 'lr_schedule_viz',
     checkQuestions: [
       {
         q: `A transformer language model diverges in the first 100 training steps when trained with Adam and α=1e-4, β2=0.999. No warmup is used. What is the likely cause and fix?`,

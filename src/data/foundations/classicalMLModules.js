@@ -36,6 +36,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that OLS minimises squared residuals which implicitly assumes Gaussian noise, which means in practice checking the residual distribution and heteroscedasticity is not optional — it tells you whether your standard errors and p-values are trustworthy.`,
+    interactiveId: 'linear_regression_viz',
   },
   {
     id: 'logistic_regression',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DEEP_LEARNING_MODULES } from '../../data/foundations/deepLearningModules.js'
+import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/dlFoundationProgress.js'
 
 const MODULES = DEEP_LEARNING_MODULES
@@ -180,6 +181,7 @@ export function DeepLearningFoundationTab({ onNavigate }) {
               <p style={{ fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{selected.takeaway}</p>
             </div>
           )}
+          {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
