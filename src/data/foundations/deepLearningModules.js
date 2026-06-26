@@ -75,6 +75,7 @@ export const DEEP_LEARNING_MODULES = [
       },
     ],
     takeaway: `The key insight is that backprop computes all parameter gradients in O(1 forward pass) by caching intermediates and applying the chain rule locally, which means the entire foundation of modern deep learning rests on not recomputing anything twice.`,
+    interactiveId: 'backprop_viz',
   },
   {
     id: 'activations',

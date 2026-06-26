@@ -150,6 +150,7 @@ export const MATH_STATS_MODULES = [
       },
     ],
     takeaway: `The key insight is that minimising cross-entropy loss is mathematically identical to minimising KL divergence from your model to the true data distribution, which means every classification neural network is implicitly doing approximate Bayesian inference.`,
+    interactiveId: 'information_theory_viz',
   },
   {
     id: 'linear_algebra_basics',
@@ -425,6 +426,7 @@ export const MATH_STATS_MODULES = [
       },
     ],
     takeaway: `The key insight is that a p-value measures evidence against the null hypothesis, not the probability of any hypothesis being true, which means in practice you always need effect size, power, and business context alongside the p-value to make a decision.`,
+    interactiveId: 'hypothesis_testing_viz',
   },
   {
     id: 'mle_map',

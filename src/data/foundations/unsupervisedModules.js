@@ -155,6 +155,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that DBSCAN defines clusters by density-reachability chains rather than distance to a centroid, which means it can find clusters of any shape and explicitly labels outliers as noise — but a single eps threshold fails when clusters have different densities, which is why HDBSCAN is the default for production use.`,
+    interactiveId: 'dbscan_viz',
   },
   {
     id: 'pca',

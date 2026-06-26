@@ -50,7 +50,8 @@ function fromCanvas(cx, cy, w, h) {
 
 function drawScene(canvas, points, showResiduals) {
   const ctx = canvas.getContext('2d');
-  const { width: W, height: H } = canvas;
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const cs = getComputedStyle(document.documentElement);
   const prime    = cs.getPropertyValue('--prime').trim()    || '#F0A500';
   const depth    = cs.getPropertyValue('--depth').trim()    || '#111827';

@@ -75,6 +75,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that combining sigmoid activation with cross-entropy loss produces a gradient that is simply the prediction error (ŷ−y), which means in practice logistic regression is as easy to optimise as linear regression and is always the first classifier to try.`,
+    interactiveId: 'logistic_regression_viz',
   },
   {
     id: 'regularization',
@@ -109,6 +110,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that L1 regularisation produces sparse solutions because the diamond-shaped L1 constraint ball has corners on coordinate axes, which means in practice you should choose L1 (or elastic net) when you expect few features to matter and need automatic selection.`,
+    interactiveId: 'regularization_viz',
   },
   {
     id: 'generalization',
@@ -143,6 +145,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that bias and variance trade off as you change model complexity, which means in practice the best model is not the most accurate on training data but the one whose complexity is calibrated to the amount of training data available.`,
+    interactiveId: 'bias_variance_viz',
   },
   {
     id: 'trees',
@@ -283,6 +286,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that ensemble gains come from diversity (models making different errors), not from the number of models, which means in practice you should combine models with genuinely different architectures or feature views rather than averaging many copies of the same model.`,
+    interactiveId: 'ensemble_viz',
   },
   {
     id: 'svm',

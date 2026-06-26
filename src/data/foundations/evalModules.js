@@ -225,6 +225,7 @@ export const EVAL_MODULES = [
       },
     ],
     takeaway: `The key insight is that every CV strategy embeds an assumption about how the model will be deployed — temporal splitting embeds "future data is unavailable," group splitting embeds "new entities appear in production" — and using the wrong strategy produces an evaluation that tests a different deployment scenario than the real one.`,
+    interactiveId: 'cross_validation_viz',
   },
   {
     id: 'error_analysis',
@@ -297,6 +298,7 @@ export const EVAL_MODULES = [
       },
     ],
     takeaway: `The key insight is that AUC measures whether a model ranks correctly while calibration measures whether its probability estimates are honest, and these are independent — so for any application where the probability output drives a real-world decision, calibration must be evaluated and fixed separately from discrimination.`,
+    interactiveId: 'calibration_curve_viz',
   },
   {
     id: 'ablation',

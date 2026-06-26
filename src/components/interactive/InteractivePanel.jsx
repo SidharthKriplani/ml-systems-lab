@@ -12,7 +12,17 @@ const registry = {
   attention_viz:         lazy(() => import('./AttentionViz').then(m => ({ default: m.AttentionViz }))),
   momentum_viz:          lazy(() => import('./MomentumViz').then(m => ({ default: m.MomentumViz }))),
   confusion_matrix_viz:  lazy(() => import('./ConfusionMatrixViz').then(m => ({ default: m.ConfusionMatrixViz }))),
-  linear_regression_viz: lazy(() => import('./LinearRegressionViz').then(m => ({ default: m.LinearRegressionViz }))),
+  linear_regression_viz:      lazy(() => import('./LinearRegressionViz').then(m => ({ default: m.LinearRegressionViz }))),
+  bias_variance_viz:          lazy(() => import('./BiasVarianceViz').then(m => ({ default: m.BiasVarianceViz }))),
+  logistic_regression_viz:    lazy(() => import('./LogisticRegressionViz').then(m => ({ default: m.LogisticRegressionViz }))),
+  regularization_viz:         lazy(() => import('./RegularizationViz').then(m => ({ default: m.RegularizationViz }))),
+  cross_validation_viz:       lazy(() => import('./CrossValidationViz').then(m => ({ default: m.CrossValidationViz }))),
+  information_theory_viz:     lazy(() => import('./InformationTheoryViz').then(m => ({ default: m.InformationTheoryViz }))),
+  dbscan_viz:                 lazy(() => import('./DBSCANViz').then(m => ({ default: m.DBSCANViz }))),
+  backprop_viz:               lazy(() => import('./BackpropViz').then(m => ({ default: m.BackpropViz }))),
+  ensemble_viz:               lazy(() => import('./EnsembleViz').then(m => ({ default: m.EnsembleViz }))),
+  hypothesis_testing_viz:     lazy(() => import('./HypothesisTestingViz').then(m => ({ default: m.HypothesisTestingViz }))),
+  calibration_curve_viz:      lazy(() => import('./CalibrationCurveViz').then(m => ({ default: m.CalibrationCurveViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {
