@@ -55,6 +55,19 @@ const CheatsheetTab     = lazy(() => import('./tabs/CheatsheetTab.jsx'))
 const AskTab            = lazy(() => import('./tabs/AskTab.jsx'))
 const MockInterviewTab  = lazy(() => import('./tabs/MockInterviewTab.jsx'))
 const SignedOutHome     = lazy(() => import('./tabs/SignedOutHome.jsx'))
+// Leaderboard + Progress (named exports → wrap for lazy)
+const LeaderboardTab    = lazy(() => import('./tabs/LeaderboardTab.jsx').then(m => ({ default: m.LeaderboardTab })))
+const ProgressTab       = lazy(() => import('./tabs/ProgressTab.jsx').then(m => ({ default: m.ProgressTab })))
+// Foundation runners (all named exports)
+const MathStatsFoundationTab      = lazy(() => import('./tabs/foundations/MathStatsFoundationTab.jsx').then(m => ({ default: m.MathStatsFoundationTab })))
+const ClassicalMLFoundationTab    = lazy(() => import('./tabs/foundations/ClassicalMLFoundationTab.jsx').then(m => ({ default: m.ClassicalMLFoundationTab })))
+const EvalFoundationTab           = lazy(() => import('./tabs/foundations/EvalFoundationTab.jsx').then(m => ({ default: m.EvalFoundationTab })))
+const UnsupervisedFoundationTab   = lazy(() => import('./tabs/foundations/UnsupervisedFoundationTab.jsx').then(m => ({ default: m.UnsupervisedFoundationTab })))
+const CausalFoundationTab         = lazy(() => import('./tabs/foundations/CausalFoundationTab.jsx').then(m => ({ default: m.CausalFoundationTab })))
+const ProductionFoundationTab     = lazy(() => import('./tabs/foundations/ProductionFoundationTab.jsx').then(m => ({ default: m.ProductionFoundationTab })))
+const MonitoringFoundationTab     = lazy(() => import('./tabs/foundations/MonitoringFoundationTab.jsx').then(m => ({ default: m.MonitoringFoundationTab })))
+const SystemDesignFoundationTab   = lazy(() => import('./tabs/foundations/SystemDesignFoundationTab.jsx').then(m => ({ default: m.SystemDesignFoundationTab })))
+const DeepLearningFoundationTab   = lazy(() => import('./tabs/foundations/DeepLearningFoundationTab.jsx').then(m => ({ default: m.DeepLearningFoundationTab })))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -100,6 +113,19 @@ const ALL_TABS = [
   { id: 'cheatsheet', component: CheatsheetTab },
   { id: 'ask',        component: AskTab },
   { id: 'mock_interview', component: MockInterviewTab },
+  // Leaderboard + Progress
+  { id: 'leaderboard',             component: LeaderboardTab },
+  { id: 'progress',                component: ProgressTab },
+  // Foundation runners
+  { id: 'math_stats_foundation',    component: MathStatsFoundationTab },
+  { id: 'classical_ml_foundation',  component: ClassicalMLFoundationTab },
+  { id: 'eval_foundation',          component: EvalFoundationTab },
+  { id: 'unsupervised_foundation',  component: UnsupervisedFoundationTab },
+  { id: 'causal_foundation',        component: CausalFoundationTab },
+  { id: 'production_foundation',    component: ProductionFoundationTab },
+  { id: 'monitoring_foundation',    component: MonitoringFoundationTab },
+  { id: 'system_design_foundation', component: SystemDesignFoundationTab },
+  { id: 'dl_foundation',            component: DeepLearningFoundationTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -159,6 +185,7 @@ const GATE_COPY = {
 // ── Zone routing ──────────────────────────────────────────────────────────────
 const TAB_TO_ZONE = {
   home: 'today', landscape: 'today', plans: 'today', profile: 'today', resources: 'today',
+  leaderboard: 'today', progress: 'today',
   gradient: 'read', cheatsheet: 'read',
   mock_interview: 'interview',
   interview: 'interview',
@@ -168,6 +195,12 @@ const TAB_TO_ZONE = {
   incidentroom: 'interview',
   mlcoding: 'interview',
   ask: 'ask',
+  // Foundation runners
+  math_stats_foundation: 'foundations', classical_ml_foundation: 'foundations',
+  eval_foundation: 'foundations', unsupervised_foundation: 'foundations',
+  causal_foundation: 'foundations', production_foundation: 'foundations',
+  monitoring_foundation: 'foundations', system_design_foundation: 'foundations',
+  dl_foundation: 'foundations',
 }
 const ZONE_DEFAULTS = {
   today: 'home', practice: null, read: 'gradient', interview: null, ask: 'ask',
@@ -257,22 +290,42 @@ const INTERVIEW_TOOLS = [
 
 
 
-// ── Four-frame nav structure (D-15: KNOW / DO / BUILD / JUDGE + PREP·ASSESS) ──
-// Reorg only — every id is an existing tab id (routing untouched), except the two
-// `external` DO link-outs to the sibling labs (PL = Python/DSA, PAL = SQL).
+// ── Nav structure ─────────────────────────────────────────────────────────────
+// FOUNDATIONS → LIBRARY → DO → BUILD → JUDGE → PREP & ASSESS → EXTRAS
 const NAV_SECTIONS = [
   {
-    id: 'know',
-    label: 'KNOW',
+    id: 'foundations',
+    label: 'FOUNDATIONS',
+    icon: 'layers',
+    groups: [
+      {
+        label: 'ML THEORY',
+        items: [
+          { id: 'math_stats_foundation',   label: 'Math & Stats',      desc: 'Probability, linear algebra, calculus, MLE/MAP — the mathematical core of ML.' },
+          { id: 'classical_ml_foundation', label: 'Classical ML',      desc: 'Linear models, trees, SVMs, regularization, generalization theory.' },
+          { id: 'eval_foundation',         label: 'Evaluation',        desc: 'Metrics from first principles, validation traps, offline vs online.' },
+          { id: 'unsupervised_foundation', label: 'Unsupervised',      desc: 'Clustering, dimensionality reduction, anomaly detection.' },
+          { id: 'causal_foundation',       label: 'Causal Inference',  desc: 'Potential outcomes, DAGs, uplift modeling, experiment design.' },
+        ],
+      },
+      {
+        label: 'SYSTEMS',
+        items: [
+          { id: 'production_foundation',    label: 'Feature Eng & Prod', desc: 'Training-serving skew, feature stores, pipeline architecture.' },
+          { id: 'monitoring_foundation',    label: 'Monitoring & Drift', desc: 'Data drift, concept drift, prediction monitoring, ML incidents.' },
+          { id: 'system_design_foundation', label: 'ML System Design',   desc: '6-step framework, RecSys, two-tower models, ML platform design.' },
+          { id: 'dl_foundation',            label: 'Deep Learning',      desc: 'Neural nets, backprop, attention, transformers, fine-tuning, serving.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'library',
+    label: 'LIBRARY',
     icon: 'book-open',
     items: [
-      { id: 'gradient',   label: 'Gradient',        desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
-      { id: 'cheatsheet', label: 'Cheatsheet',      desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
-      { id: 'interview',  label: 'Q&A Bank',        desc: '128+ senior MLE interview questions with model answers.' },
-      { id: 'trainer',    label: 'Trainer',         desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
-      { id: 'models',     label: 'Math Foundations', desc: 'Pyodide explorations — probability, linear algebra, PCA, hypothesis tests.' },
-      { id: 'landscape',  label: 'Landscape',       desc: 'ML tools & infrastructure landscape map.' },
-      { id: 'ask',        label: 'Ask & Search',    desc: 'Ask a question for a KB answer, and jump to the matching modules and posts.' },
+      { id: 'gradient',   label: 'Gradient',   desc: 'Long-form essays — the MLE Path + Foundations Path, with production tells.' },
+      { id: 'cheatsheet', label: 'Cheatsheet', desc: '4-tier last-minute prep — flashcards, formulas, trade-offs, 7-day plan.' },
     ],
   },
   {
@@ -339,10 +392,22 @@ const NAV_SECTIONS = [
     label: 'PREP & ASSESS',
     icon: 'clipboard',
     items: [
-      { id: 'combinator',     label: 'Timed Exam',      desc: 'Mixed-domain timed mock under interview pressure.' },
-      { id: 'mock_interview', label: 'Mock Interview',  desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
-      { id: 'takehome',       label: 'Take-Home Bank',  desc: '15 open-ended system-design questions; compare to a senior answer.' },
-      { id: 'verbal',         label: 'Verbal Practice · SAY', desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
+      { id: 'interview',      label: 'Q&A Bank',         desc: '128+ senior MLE questions with model answers and 4-tier scoring.' },
+      { id: 'trainer',        label: 'Trainer',          desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
+      { id: 'combinator',     label: 'Timed Exam',       desc: 'Mixed-domain timed mock under interview pressure.' },
+      { id: 'mock_interview', label: 'Mock Interview',   desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
+      { id: 'takehome',       label: 'Take-Home Bank',   desc: '15 open-ended system-design questions; compare to a senior answer.' },
+      { id: 'verbal',         label: 'Verbal Practice',  desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
+    ],
+  },
+  {
+    id: 'extras',
+    label: 'EXTRAS',
+    icon: 'grid',
+    items: [
+      { id: 'landscape',   label: 'ML Landscape',  desc: 'ML tools & infrastructure landscape map.' },
+      { id: 'leaderboard', label: 'Leaderboard',   desc: 'Ranked by total problems and modules solved across every room.' },
+      { id: 'progress',    label: 'My Progress',   desc: 'Readiness score, heatmap, room progress bars, and study plan.' },
     ],
   },
 ]
@@ -851,7 +916,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
         >
           <span style={{ fontSize: '13px' }}>&#9906;</span>
-          <span style={{ flex: 1, textAlign: 'left' }}>Search</span>
+          <span style={{ flex: 1, textAlign: 'left' }}>Ask / Search</span>
           <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', background: 'var(--depth)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)', border: '1px solid var(--rim)' }}>&#8984;K</kbd>
         </button>
       </div>
@@ -863,11 +928,11 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
 // ── BottomNav ─────────────────────────────────────────────────────────────────
 
 const BOTTOM_NAV_ITEMS = [
-  { id: 'home',  icon: '◎', label: 'Home',  defaultTab: 'home',        sections: [] },
-  { id: 'know',  icon: '▤', label: 'Know',  defaultTab: 'gradient',    sections: ['know'] },
-  { id: 'do',    icon: '◳', label: 'Do',    defaultTab: 'mlcoding',    sections: ['do'] },
-  { id: 'build', icon: '⚒', label: 'Build', defaultTab: 'projectlab',  sections: ['build'] },
-  { id: 'judge', icon: '◈', label: 'Judge', defaultTab: 'spottheflaw', sections: ['judge'] },
+  { id: 'home',        icon: '◎', label: 'Home',  defaultTab: 'home',                   sections: [] },
+  { id: 'foundations', icon: '▤', label: 'Learn', defaultTab: 'math_stats_foundation',   sections: ['foundations', 'library'] },
+  { id: 'do',          icon: '◳', label: 'Do',    defaultTab: 'mlcoding',                sections: ['do'] },
+  { id: 'build',       icon: '⚒', label: 'Build', defaultTab: 'projectlab',              sections: ['build'] },
+  { id: 'judge',       icon: '◈', label: 'Judge', defaultTab: 'spottheflaw',             sections: ['judge', 'assess', 'extras'] },
 ]
 
 function BottomNav({ activeTabId, goTo }) {
@@ -1103,6 +1168,22 @@ export default function App() {
         </Suspense>
       )
     }
+    // Leaderboard needs user + onOpenProfile
+    if (activeTab === 'leaderboard') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <LeaderboardTab user={user} onOpenProfile={(uid) => { window.location.hash = '#/u/' + uid }} />
+        </Suspense>
+      )
+    }
+    // Progress needs user + onNavigate
+    if (activeTab === 'progress') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <ProgressTab user={user} onNavigate={goTo} />
+        </Suspense>
+      )
+    }
     // Free tabs with two-gate model need user + onShowAuth
     const FREE_TABS_WITH_AUTH = new Set(['features', 'eval', 'classical', 'models'])
     if (FREE_TABS_WITH_AUTH.has(activeTab)) {
@@ -1211,7 +1292,7 @@ export default function App() {
             onClick={() => setSearchOpen(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "var(--font-sans)" }}>
             <span style={{ fontSize: '13px' }}>⌕</span>
-            <span style={{ display: 'inline' }}>Search</span>
+            <span style={{ display: 'inline' }}>Ask / Search</span>
             <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
           </button>
           {authEnabled && (
