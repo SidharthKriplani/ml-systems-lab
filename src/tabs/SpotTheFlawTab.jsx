@@ -340,6 +340,520 @@ clinical_sensitivity = 0.61  # true positive rate on real cases`,
     reveal: '94% test accuracy is meaningless here because the test set uses the same labeling protocol as training. The 29% of cases where annotators disagreed (2-vs-1) were resolved by majority vote — but majority vote does not resolve clinical ground truth. If two radiologists systematically miss early-stage pneumonia and one catches it, majority vote always labels those cases as negative. The model learns to replicate systematic annotator error, not actual pathology. Test accuracy measures agreement with annotators, not diagnostic accuracy.',
     fix: 'Use adjudicated labels for the test set — cases where annotators disagree should be resolved by a senior radiologist or confirmed via follow-up imaging (CT, biopsy). Never share labeling protocol between train and test when the protocol itself may carry systematic error. Track sensitivity and specificity separately, not just accuracy — in imbalanced clinical tasks, accuracy can look high while sensitivity is dangerously low.',
   },
+  {
+    id: 'stf13',
+    title: 'Target Leakage in Credit Scoring',
+    flawCategory: 'Data Leakage',
+    setup: `A team builds a credit default prediction model for a lending platform. The target label is \`default_90d\` — whether the borrower missed payments for 90+ consecutive days.
+
+Feature engineering includes:
+
+feature_cols = [
+  'annual_income', 'debt_to_income', 'credit_score',
+  'num_open_accounts', 'total_credit_limit',
+  'days_past_due',          # <-- days since last missed payment
+  'num_delinquencies_2yr',  # <-- delinquency count last 2 years
+  'outstanding_balance',
+]
+
+model = XGBClassifier()
+model.fit(X_train, y_train)
+print(f"Test AUC: {roc_auc_score(y_test, model.predict_proba(X_test)[:,1])}")
+# Output: Test AUC: 0.987
+
+Feature importance — top 3:
+  days_past_due          0.61
+  num_delinquencies_2yr  0.14
+  credit_score           0.06
+
+The model's AUC of 0.987 impresses leadership. In production, AUC drops to 0.71.`,
+    question: 'The model reports 0.987 AUC in evaluation but 0.71 in production. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Information from the test set contaminated training' },
+      { category: 'Evaluation Error', desc: 'The evaluation protocol produces inflated results' },
+      { category: 'Distribution Shift', desc: 'Train and serve distributions differ' },
+      { category: 'Metric Mismatch', desc: 'AUC is the wrong metric for this problem' },
+      { category: 'Labeling Artifact', desc: 'The default labels are systematically biased' },
+    ],
+    correctCategory: 'Data Leakage',
+    reveal: '`days_past_due` is a direct proxy for the target label. A borrower who is 90+ days past due IS the event being predicted — the feature is derived from the same underlying event as the label. At training time, the snapshot of `days_past_due` is taken after default has already occurred; at serving time, you are predicting before default occurs. The model achieves 0.987 AUC not because it is powerful, but because it is essentially reading the answer off the label. At serve time, `days_past_due` reflects current (pre-default) payment history — a fundamentally different signal — and the model collapses.',
+    fix: 'Audit every feature for causal ordering: does this value become observable before or after the label is determined? Apply a strict point-in-time constraint — all features must reflect the state of the world at the moment of application (loan origination), not the state at label assignment (90 days later). Remove any feature derived from payment behavior that occurs after origination. Use a timeline diagram: draw the prediction point and the label point; every feature must sit to the left of the prediction point.',
+  },
+  {
+    id: 'stf14',
+    title: 'Cross-Validation on Time Series',
+    flawCategory: 'Evaluation Error',
+    setup: `A team builds a model to predict weekly retail sales. They use 104 weeks of historical data and perform 5-fold cross-validation to compare several models.
+
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.ensemble import RandomForestRegressor
+import numpy as np
+
+# 104 weeks of (features, sales_volume) pairs
+X, y = load_sales_data()   # X includes lag features, promotions, holidays
+
+kf = KFold(n_splits=5, shuffle=True, random_state=0)
+model = RandomForestRegressor(n_estimators=200, random_state=0)
+
+cv_scores = cross_val_score(model, X, y, cv=kf, scoring='neg_mae')
+print(f"CV MAE: {-cv_scores.mean():.0f} units  std: {cv_scores.std():.0f}")
+# Output: CV MAE: 312 units  std: 28
+
+# Production MAE (first 8 weeks after deployment): 891 units
+
+The team trusted the CV score to select the final model.`,
+    question: 'CV MAE is 312 units but production MAE is 891. What went wrong?',
+    options: [
+      { category: 'Data Leakage', desc: 'Information from the test set contaminated training' },
+      { category: 'Evaluation Error', desc: 'The cross-validation protocol is wrong for time series' },
+      { category: 'Distribution Shift', desc: 'Sales patterns changed after deployment' },
+      { category: 'Metric Mismatch', desc: 'MAE is the wrong metric for sales forecasting' },
+      { category: 'Labeling Artifact', desc: 'Sales volume labels were recorded incorrectly' },
+    ],
+    correctCategory: 'Evaluation Error',
+    reveal: '`KFold(shuffle=True)` randomises which weeks land in each fold. This means a validation fold may contain week 4 while the training set contains week 103. The model is evaluated on predicting the past using the future — temporal leakage. Lag features (e.g. sales_lag_1, sales_lag_4) computed from future weeks contaminate the training folds. The model learns seasonal patterns perfectly because future seasonality is present in training data. In production, no future data exists, so the model faces a genuinely harder forecasting task. The 312-unit CV MAE reflects interpolation, not extrapolation.',
+    fix: 'Replace `KFold` with `TimeSeriesSplit` for any time-ordered data. Better still, implement expanding-window walk-forward validation: train on weeks 1–52, evaluate on weeks 53–56; train on weeks 1–56, evaluate on weeks 57–60; and so on. This directly simulates the production setting — the model always forecasts forward from the last training week, never backward. Also ensure lag features are computed correctly within each fold (no leakage through the lag window across fold boundaries).',
+  },
+  {
+    id: 'stf15',
+    title: 'Spurious Correlation: ICU Ventilator Survival',
+    flawCategory: 'Distribution Shift',
+    setup: `A hospital system trains a mortality prediction model using 3 years of ICU admissions (n=18,400 patients).
+
+Top predictors from the trained logistic regression (positive coefficient = lower mortality risk):
+
+Feature                    Coefficient
+-----------------------------------------
+ventilator_support          +0.41   <-- more ventilation = lower mortality?
+vasopressor_count            -0.38
+age                          -0.29
+sofa_score                   -0.44
+days_in_icu                  +0.18
+
+The team validates on a held-out ICU cohort and achieves AUC = 0.81.
+They are excited: ventilator support appears protective.
+
+When the model is piloted at a community hospital (lower-acuity ICU), it systematically underestimates mortality for the sickest patients.`,
+    question: 'Why does ventilator support appear protective in training, and why does the model fail at the community hospital?',
+    options: [
+      { category: 'Data Leakage', desc: 'Future clinical outcomes leaked into training features' },
+      { category: 'Evaluation Error', desc: 'The held-out validation set was constructed incorrectly' },
+      { category: 'Distribution Shift', desc: 'The model learned a spurious correlation specific to the training ICU' },
+      { category: 'Metric Mismatch', desc: 'AUC is the wrong metric for mortality prediction' },
+      { category: 'Labeling Artifact', desc: 'Mortality labels were inconsistently recorded across units' },
+    ],
+    correctCategory: 'Distribution Shift',
+    reveal: 'At the training hospital (a tertiary academic center), ventilators are preferentially allocated to patients who are sick but recoverable — patients who are too sick to survive are often not intubated (comfort care decisions, palliative pathways). The population on ventilators is therefore systematically less likely to die not because ventilation is protective, but because the sickest patients are absent from the ventilated group. The model learns a hospital-specific triage policy, not a physiological relationship. At the community hospital, triage protocols differ — more patients are intubated regardless of prognosis — and the spurious protective signal inverts.',
+    fix: 'Causal audit every feature that reflects a clinical intervention: interventions are decided by clinicians who already have a prognosis estimate. Use causal DAGs to identify confounders. Before deploying to a new hospital, compare the feature distributions (especially intervention rates) between the training hospital and the target hospital. If they differ, the model may have learned the training hospital\'s implicit triage policy rather than generalizable physiology. External validation on a multi-site dataset is mandatory for clinical deployment.',
+  },
+  {
+    id: 'stf16',
+    title: 'NLP Train/Test Overlap at Document Level',
+    flawCategory: 'Data Leakage',
+    setup: `A team builds a sentence-pair similarity model for a legal document search engine. They train on sentence pairs from 10,000 legal contracts and evaluate on a held-out test set.
+
+Dataset construction:
+- 10,000 contracts, each split into sentences
+- Positive pairs: two sentences from the same clause
+- Negative pairs: random sentences from different clauses
+- Train/test split: 80/20 at the sentence-pair level
+
+from sklearn.model_selection import train_test_split
+pairs = extract_all_sentence_pairs(contracts)  # ~450,000 pairs
+train_pairs, test_pairs = train_test_split(pairs, test_size=0.2, random_state=42)
+
+model = SentenceBERT()
+model.fine_tune(train_pairs)
+print(f"Test F1: {evaluate(model, test_pairs):.3f}")
+# Output: Test F1: 0.931
+
+In a live search evaluation with new contracts, F1 drops to 0.71.`,
+    question: 'Test F1 is 0.931 but live performance is 0.71. What is the structural flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Information from the test set contaminated training' },
+      { category: 'Evaluation Error', desc: 'The evaluation metric is wrong for similarity models' },
+      { category: 'Distribution Shift', desc: 'Live contracts use different legal language' },
+      { category: 'Metric Mismatch', desc: 'F1 is the wrong metric for search relevance' },
+      { category: 'Labeling Artifact', desc: 'Similarity labels are systematically biased' },
+    ],
+    correctCategory: 'Data Leakage',
+    reveal: 'The train/test split was performed at the sentence-pair level, not the document level. A contract that appears in training will also have sentence pairs in the test set. The model sees text from contract #4821 during training; test pairs from the same contract share vocabulary, clause structure, and even verbatim boilerplate. The model can partially "memorise" document-specific language and match test sentences to training sentences from the same document — not by understanding semantic similarity but by surface lexical overlap. Live contracts are genuinely unseen at the document level, and the inflated 0.931 F1 does not hold.',
+    fix: 'Always split at the natural unit of independence — here, the document. Assign entire contracts to train or test, never split pairs across the same contract. `GroupShuffleSplit(groups=contract_ids)` achieves this in scikit-learn. Similarly, for any task with hierarchical structure (users, sessions, documents, patients), the split must happen at the top level of the hierarchy, not at the leaf level. After fixing, the baseline F1 will drop but will be an honest estimate of generalisation to new documents.',
+  },
+  {
+    id: 'stf17',
+    title: 'Model Selection Bias on Test Set',
+    flawCategory: 'Evaluation Error',
+    setup: `A team conducts a hyperparameter sweep to find the best gradient boosting model for predicting customer churn. They have a single fixed test set of 20,000 customers.
+
+search_results = []
+for params in hyperparameter_grid:  # 50 configurations
+    model = XGBClassifier(**params)
+    model.fit(X_train, y_train)
+    test_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:,1])
+    search_results.append({'params': params, 'test_auc': test_auc})
+
+best = max(search_results, key=lambda x: x['test_auc'])
+print(f"Best model test AUC: {best['test_auc']:.3f}")
+# Output: Best model test AUC: 0.891
+
+# Reported in the project summary as: "Our model achieves AUC 0.891 on held-out data"
+
+The model ships. Live AUC measured 6 weeks later: 0.847.`,
+    question: 'Why is the reported 0.891 AUC an overestimate of true model quality?',
+    options: [
+      { category: 'Data Leakage', desc: 'Test data was used to select features during preprocessing' },
+      { category: 'Evaluation Error', desc: 'Selecting the best model by test performance inflates the reported metric' },
+      { category: 'Distribution Shift', desc: 'Customer behavior changed between evaluation and deployment' },
+      { category: 'Metric Mismatch', desc: 'AUC is the wrong metric for churn prediction' },
+      { category: 'Labeling Artifact', desc: 'Churn labels are inconsistently defined' },
+    ],
+    correctCategory: 'Evaluation Error',
+    reveal: 'With 50 models evaluated on the same test set, the highest observed test AUC is the maximum of 50 random variables — even if all models had true AUC = 0.860, the expected maximum across 50 evaluations would be substantially higher. Each evaluation is a noisy estimate; picking the peak inflates the estimate. The test set has been used as a selection criterion, meaning it is no longer an unbiased estimator of generalisation performance. This is sometimes called "test set peeking" or "evaluation set overfitting." The gap (0.891 vs 0.847) is the selection inflation.',
+    fix: 'Reserve a final holdout set that is only touched once — after all model selection decisions are made. Workflow: use a validation set (or cross-validation) for all hyperparameter tuning and model selection; the test set is evaluated exactly once at the very end on the single chosen model. If a third split is impractical, use nested cross-validation (outer loop estimates generalisation, inner loop tunes hyperparameters). When reporting results, always disclose how many models/configurations were compared against the same test set.',
+  },
+  {
+    id: 'stf18',
+    title: 'Precision@K Without Exposure Control',
+    flawCategory: 'Metric Mismatch',
+    setup: `A music streaming platform evaluates its recommendation system offline using Precision@10 — the fraction of the top-10 recommended tracks that the user subsequently listened to.
+
+Offline evaluation results:
+  System A (new model):  Precision@10 = 0.38
+  System B (old model):  Precision@10 = 0.31
+
+The team ships System A, calling it a +22.6% improvement.
+
+Post-launch user research reveals:
+- Long-tail artist discovery is down 34% compared to the previous system
+- Users report recommendations feel "predictable" and "repetitive"
+- New artists have near-zero probability of appearing in top-10 lists
+- Catalog utilisation: top 1% of tracks account for 61% of all recommendations (up from 44%)`,
+    question: 'System A wins on Precision@10 but harms catalog diversity. What is the buried flaw in using Precision@10?',
+    options: [
+      { category: 'Data Leakage', desc: 'Future listening data contaminated the training labels' },
+      { category: 'Evaluation Error', desc: 'The Precision@10 calculation was implemented incorrectly' },
+      { category: 'Distribution Shift', desc: 'User taste changed between training and deployment' },
+      { category: 'Metric Mismatch', desc: 'Precision@10 rewards popularity bias and ignores catalog coverage' },
+      { category: 'Labeling Artifact', desc: 'Listening events were attributed to the wrong recommendation' },
+    ],
+    correctCategory: 'Metric Mismatch',
+    reveal: 'Precision@10 is computed against historical listening data, and users can only listen to tracks they were exposed to. Popular tracks appear in listening history at much higher rates than long-tail tracks — not because they are universally preferred, but because they are universally surfaced. System A learned to maximise Precision@10 by recommending the most popular tracks, which have the highest prior probability of appearing in any user\'s listening history regardless of personal taste. Long-tail tracks have near-zero probability of being in the evaluation labels even if the user would genuinely love them. The metric is measuring agreement with historical popularity, not recommendation quality.',
+    fix: 'Complement Precision@K with coverage and novelty metrics: Catalog Coverage (fraction of catalog ever recommended), Expected Intra-List Diversity (average pairwise dissimilarity in a recommendation slate), and Novelty (average inverse popularity of recommended items). Use IPS-corrected evaluation to reweight items by the probability they were exposed in the historical data. In A/B tests, measure not just CTR but session depth, long-tail engagement rate, and return-visit rate — these capture discovery value that Precision@K cannot.',
+  },
+  {
+    id: 'stf19',
+    title: 'Label Delay in Streaming Predictions',
+    flawCategory: 'Labeling Artifact',
+    setup: `A fintech company builds a real-time model to predict payment default risk at transaction time. The label is \`default_30d\` — whether the account misses a payment in the next 30 days.
+
+Training data construction:
+  - Transactions logged in real time with features (amount, merchant category, time, account balance)
+  - Labels joined from the payment outcomes table 30 days later
+  - Training set: 6 months of transactions with labels attached
+
+# Naive join — assumes all labels are available
+df = transactions.merge(outcomes, on='account_id', how='inner')
+# Inner join silently drops accounts that haven't yet resolved (< 30 days old)
+
+model.fit(df[feature_cols], df['default_30d'])
+print(f"Validation AUC: {roc_auc_score(val_y, model.predict_proba(val_X)[:,1])}")
+# Output: Validation AUC: 0.83
+
+Production AUC (30 days after deployment, measured on resolved accounts): 0.76
+Calibration is off: the model underestimates default probability for recently-opened accounts.`,
+    question: 'Validation AUC is 0.83 but production AUC is 0.76, with miscalibration on new accounts. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Future payment outcomes contaminated the training features' },
+      { category: 'Evaluation Error', desc: 'The validation set was constructed using the wrong time window' },
+      { category: 'Distribution Shift', desc: 'Payment behavior changed after the model was deployed' },
+      { category: 'Metric Mismatch', desc: 'AUC is the wrong metric for default risk' },
+      { category: 'Labeling Artifact', desc: 'The training labels are systematically biased by label resolution delay' },
+    ],
+    correctCategory: 'Labeling Artifact',
+    reveal: 'The inner join silently discards all accounts that have not yet resolved — i.e., accounts opened in the last 30 days at label-creation time. These accounts are disproportionately new customers. New accounts have different risk profiles (no payment history, thin credit file) and are precisely the population where accurate risk assessment matters most. The training set systematically excludes this population, so the model never learns from it. At production time, new accounts arrive constantly and the model encounters a distribution it was never trained on. The inner join creates survivorship bias: only accounts that survived long enough to get a label are included.',
+    fix: 'Use a left join and explicitly handle accounts with pending labels (e.g. set a flag `label_resolved = False` for transactions within 30 days of the label cutoff, and exclude them from training or treat them as censored). For survival/delay problems, consider a censored-label model (e.g. survival regression) that can learn from partial observations. Always document the label delay in your data pipeline, and validate that the label window in the training set matches the label window at serving time.',
+  },
+  {
+    id: 'stf20',
+    title: 'Multicollinearity Masking Feature Importance',
+    flawCategory: 'Evaluation Error',
+    setup: `A marketing team builds a linear regression model to predict weekly revenue from advertising spend. The feature set includes three spend channels that are always purchased together in the same budget package:
+
+feature_cols = [
+    'tv_spend',          # always correlated with digital
+    'digital_spend',     # always correlated with tv
+    'programmatic_spend',# subset of digital, r=0.97 with digital_spend
+    'email_sent_count',
+    'promo_active',
+]
+
+from sklearn.linear_model import Ridge
+model = Ridge(alpha=1.0)
+model.fit(X_train, y_train)
+
+# Feature coefficients (importance proxy)
+for feat, coef in zip(feature_cols, model.coef_):
+    print(f"  {feat:<25} {coef:+.3f}")
+
+# Output:
+#   tv_spend                  +0.041
+#   digital_spend             +0.038
+#   programmatic_spend        +0.029
+#   email_sent_count          +0.187
+#   promo_active              +0.312
+
+The team concludes TV and digital are relatively unimportant (low coefficients) and proposes cutting TV budget entirely.`,
+    question: 'The model assigns low coefficients to TV and digital spend. What is the flaw in concluding they are unimportant?',
+    options: [
+      { category: 'Data Leakage', desc: 'Spend data from future weeks contaminated the training features' },
+      { category: 'Evaluation Error', desc: 'Coefficient magnitude is misleading when features are highly correlated' },
+      { category: 'Distribution Shift', desc: 'The relationship between spend and revenue changed over time' },
+      { category: 'Metric Mismatch', desc: 'Revenue is the wrong optimisation target for this model' },
+      { category: 'Labeling Artifact', desc: 'Weekly revenue labels are aggregated incorrectly' },
+    ],
+    correctCategory: 'Evaluation Error',
+    reveal: 'When features are highly correlated (r=0.97 between `digital_spend` and `programmatic_spend`), the model distributes the total attribution across all correlated features. The combined importance of `tv_spend + digital_spend + programmatic_spend` is actually substantial — it is just split three ways because the model cannot distinguish their individual contributions. Dropping TV spend would remove a large portion of the correlated group, and revenue would drop significantly — but the individual coefficient of `tv_spend` gave no indication of this. This is a known limitation of coefficient magnitude as a feature importance metric under multicollinearity.',
+    fix: 'For correlated features, use grouped or permutation importance: permute the entire group of correlated features together (tv + digital + programmatic) and measure the joint importance drop. Alternatively, use VIF (Variance Inflation Factor) to detect multicollinearity before interpreting coefficients — VIF > 10 is a red flag. For budget allocation decisions, consider using marketing mix modeling (Shapley-value attribution or Bayesian MMM) which handles correlated spend channels explicitly. Never cut budget based on coefficient magnitude alone without checking feature correlations first.',
+  },
+  {
+    id: 'stf21',
+    title: 'Optimising CTR While Destroying Session Value',
+    flawCategory: 'Metric Mismatch',
+    setup: `An ad platform trains a CTR (click-through rate) prediction model to rank ads. They run an offline experiment:
+
+# Training objective: binary cross-entropy on click labels
+# Label: did the user click the ad (1) or not (0)?
+
+model = DeepFM(embedding_dim=64, hidden_layers=[256, 128, 64])
+model.train(click_log_dataset)
+
+# Offline evaluation
+offline_auc = evaluate_auc(model, held_out_click_log)
+print(f"Offline AUC: {offline_auc:.3f}")   # 0.792 (up from 0.761 baseline)
+
+They ship via A/B test. After 14 days (n=4.2M sessions):
+
+Metric                  Control    Treatment    Delta
+-----------------------------------------------------
+CTR                      2.41%      2.73%       +13.3%  *
+Revenue per session     $0.91      $0.83        -8.8%   *
+Session length (min)    6.2        4.8          -22.6%  *
+7-day retention         38.2%      34.1%        -10.7%  *
+
+(* p < 0.01)`,
+    question: 'CTR improved +13.3% but revenue and retention both declined. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Click labels from the test set contaminated model training' },
+      { category: 'Evaluation Error', desc: 'The A/B test was not run for long enough' },
+      { category: 'Distribution Shift', desc: 'User behavior changed between training and deployment' },
+      { category: 'Metric Mismatch', desc: 'CTR and AUC optimise for clicks, not for business value' },
+      { category: 'Labeling Artifact', desc: 'Click labels include accidental clicks and bot traffic' },
+    ],
+    correctCategory: 'Metric Mismatch',
+    reveal: 'The model was trained to maximise click probability, not business value. It learned to surface ads that are "curiosity clicks" — clickbait-style creatives that get clicked but deliver poor post-click experience. Users click, feel disappointed, shorten their session, and are less likely to return. CTR went up because the model got better at generating clicks; revenue per session fell because post-click conversion quality dropped; retention fell because user trust eroded. Optimising for a proxy metric (clicks) that is imperfectly correlated with the true objective (revenue, retention) produced a model that exploited the proxy while undermining the goal.',
+    fix: 'Define the objective hierarchy: revenue > retention > CTR. Train the model on the highest-level signal available — ideally conversion value or a weighted combination of clicks, conversions, and session signals. Use multi-task learning to jointly predict CTR, conversion rate, and post-click engagement. Establish guardrail metrics (revenue per session, 7-day retention) in every A/B test, not just the primary proxy metric. Any experiment that wins on the proxy but hurts a guardrail should be flagged for deep analysis before shipping.',
+  },
+  {
+    id: 'stf22',
+    title: 'User-Level vs Request-Level Splitting',
+    flawCategory: 'Data Leakage',
+    setup: `A team builds a personalised search ranking model. Each training example is a (user, query, result) triple with a relevance label.
+
+Dataset: 2.4M query sessions from 180,000 unique users.
+
+# Standard random split at the request level
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    features, labels, test_size=0.2, random_state=42
+)
+# X includes: user_id embedding, query_embedding, item_embedding,
+#             user_history_features (avg_clicks_by_category, top_genres)
+
+model = LightGBM()
+model.fit(X_train, y_train)
+ndcg = evaluate_ndcg(model, X_test, y_test)
+print(f"Test NDCG@10: {ndcg:.3f}")   # 0.687
+
+# Live evaluation (new users, first 4 weeks post-launch): NDCG@10 = 0.531`,
+    question: 'Test NDCG@10 is 0.687 but live performance on new users is 0.531. What is the buried flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'The same users appear in both train and test, inflating evaluation metrics' },
+      { category: 'Evaluation Error', desc: 'NDCG@10 is computed incorrectly on the test set' },
+      { category: 'Distribution Shift', desc: 'New users have different preferences than existing users' },
+      { category: 'Metric Mismatch', desc: 'NDCG is the wrong metric for personalised search' },
+      { category: 'Labeling Artifact', desc: 'Relevance labels are biased by prior search results' },
+    ],
+    correctCategory: 'Data Leakage',
+    reveal: 'The split is at the request level, so the same user appears in both training and test sets. A user who made 20 search sessions has ~16 in train and ~4 in test. The model learns user-specific preference patterns from those 16 training sessions; when it sees the same user\'s 4 test sessions, it has already seen that user and can leverage the stored user embedding and history features. This is user-level leakage through personalisation features. In production, new users have no prior sessions — the model must generalise to users it has never seen. The 0.687 NDCG reflects performance on known users, not cold-start performance.',
+    fix: 'Split at the user level: all sessions from a given user land entirely in train or test. `GroupShuffleSplit(groups=user_ids)` achieves this. Also evaluate separately on cold-start users (users with fewer than N prior sessions) since that is the hardest and most business-critical subpopulation. If the model relies heavily on user history features, track cold-start performance as a standalone metric in every experiment — new user retention depends on it.',
+  },
+  {
+    id: 'stf23',
+    title: 'Survivorship Bias in Stock Prediction',
+    flawCategory: 'Labeling Artifact',
+    setup: `A quant team builds a 6-month return prediction model using 15 years of US equity data. They source their universe from the current S&P 500 constituent list and pull 15 years of historical prices for those 500 companies.
+
+# Build training universe from current S&P 500 components
+current_sp500 = get_current_sp500_tickers()   # 500 tickers as of today
+
+historical_prices = {}
+for ticker in current_sp500:
+    historical_prices[ticker] = fetch_price_history(ticker, years=15)
+
+df = build_features_and_labels(historical_prices)
+# Features: momentum, value ratios, volatility, sector
+# Label: 6-month forward return
+
+model = RandomForestRegressor(n_estimators=500)
+model.fit(X_train, y_train)
+print(f"Out-of-sample Sharpe: {evaluate_sharpe(model, X_test, y_test):.2f}")
+# Output: Sharpe: 1.84
+
+Backtest shows consistent outperformance. Live trading produces Sharpe of 0.31 over 18 months.`,
+    question: 'The backtest shows Sharpe of 1.84 but live trading produces 0.31. What is the fundamental flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Future price data was used to construct training features' },
+      { category: 'Evaluation Error', desc: 'The Sharpe ratio was computed incorrectly' },
+      { category: 'Distribution Shift', desc: 'Market conditions changed between backtest and live trading' },
+      { category: 'Metric Mismatch', desc: 'Sharpe ratio is the wrong metric for equity prediction' },
+      { category: 'Labeling Artifact', desc: 'The training universe contains only surviving companies, biasing returns upward' },
+    ],
+    correctCategory: 'Labeling Artifact',
+    reveal: 'The training universe was built from today\'s S&P 500 constituents — companies that survived and thrived for 15 years. Over any 15-year window, hundreds of companies were added to or removed from the index: companies that went bankrupt, were acquired at distressed valuations, or declined and were delisted are absent. The model is trained only on winners. Every "historical" data point for a current constituent is actually a survivorship-selected positive example. Return distributions are systematically biased upward. The model learns patterns that correlate with long-term survival, which are not available at prediction time and overstate expected returns for the forward-looking universe.',
+    fix: 'Use a point-in-time index membership list: for any training date T, only include companies that were in the index at time T, not companies that happen to still be in the index today. Data vendors (CRSP, Compustat) provide historical constituent lists. At each rebalancing date, the investable universe should be the set of companies that were tradeable at that date — including those that subsequently went bankrupt or were delisted. This is the single most common and most costly mistake in quantitative backtesting.',
+  },
+  {
+    id: 'stf24',
+    title: 'Feedback Loop in Production Retraining',
+    flawCategory: 'Distribution Shift',
+    setup: `A content moderation team deploys a toxicity classifier. The model runs in production and its predictions are used to hide content flagged as toxic (score > 0.7). Moderators review a sample of flagged content to generate labels. These labels feed back into retraining every two weeks.
+
+# Retraining pipeline (runs every 2 weeks)
+def retrain_pipeline():
+    # Collect labels from moderator review queue
+    new_labels = fetch_moderator_labels()        # labels on model-flagged content
+    # Add to training data
+    training_data = existing_data + new_labels
+    new_model = train_classifier(training_data)
+    return new_model
+
+After 6 months of biweekly retraining, the team notices:
+- False negative rate (toxic content not flagged) rising from 8% to 19%
+- The model's precision on flagged items is high (0.94) but recall is falling
+- Content from a specific political subreddit is never flagged despite moderator escalations`,
+    question: 'The model retrains every 2 weeks and precision stays high, but recall is falling and a whole subreddit escapes detection. What is the flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Moderator labels are contaminated with model predictions' },
+      { category: 'Evaluation Error', desc: 'Precision and recall are computed on a biased evaluation set' },
+      { category: 'Distribution Shift', desc: 'The feedback loop creates a distribution that diverges from the true data-generating process' },
+      { category: 'Metric Mismatch', desc: 'Precision is the wrong primary metric for content moderation' },
+      { category: 'Labeling Artifact', desc: 'Moderators systematically disagree with the model\'s decisions' },
+    ],
+    correctCategory: 'Distribution Shift',
+    reveal: 'The retraining pipeline only collects labels on content the model already flagged (score > 0.7). Content that the model does not flag is never reviewed and never generates labels. Over successive retraining cycles, the model gets excellent labels for content that looks like what it already thinks is toxic, but zero labels for content it misses. The label distribution drifts toward content the current model catches. New or evolved forms of toxicity — including the specific political subreddit that adapted its language — are never represented in retraining data. The model becomes increasingly confident in catching old patterns while becoming increasingly blind to new ones. Precision stays high because the model is correct about what it flags; recall drops because the uncaught content is never fed back.',
+    fix: 'Reserve a random exploration slice of traffic (e.g. 5% of posts) that bypasses the classifier and goes directly to human review. This provides unbiased labels on content the model would have missed. Add a "low-confidence" queue: route content with scores 0.3–0.7 to moderators for labeling (these are the decision boundary cases most valuable for retraining). Track label distribution statistics across retraining cycles — if the positive label rate in new training data drifts significantly, that signals feedback loop degradation. Maintain a frozen evaluation set assembled independently of model predictions.',
+  },
+  {
+    id: 'stf25',
+    title: 'Unstratified CV on Severely Imbalanced Data',
+    flawCategory: 'Evaluation Error',
+    setup: `A team trains a fraud detection model on a severely imbalanced dataset: 1% fraud, 99% non-fraud (100,000 examples: 1,000 fraud, 99,000 legitimate).
+
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.ensemble import GradientBoostingClassifier
+
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+model = GradientBoostingClassifier()
+
+scores = cross_val_score(model, X, y, cv=kf, scoring='accuracy')
+print(f"Mean CV Accuracy: {scores.mean():.4f} +/- {scores.std():.4f}")
+# Mean CV Accuracy: 0.9901 +/- 0.0089
+
+# The team reports this as strong model performance.
+# Fold 7 breakdown (discovered later):
+#   Fold 7 train: 90,000 examples — 890 fraud
+#   Fold 7 test:  10,000 examples — 0 fraud (!!!)
+#   Fold 7 accuracy: 1.0000 (perfect — the model predicted all non-fraud)`,
+    question: 'The model reports 0.9901 mean CV accuracy including a perfect 1.0 fold. What is the flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Fraud labels from the test fold contaminated model training' },
+      { category: 'Evaluation Error', desc: 'Unstratified CV on imbalanced data produces unstable and misleading folds' },
+      { category: 'Distribution Shift', desc: 'Fraud patterns differ across folds due to temporal ordering' },
+      { category: 'Metric Mismatch', desc: 'Accuracy is the wrong metric for fraud detection' },
+      { category: 'Labeling Artifact', desc: 'Fraud labels are inconsistently applied across the dataset' },
+    ],
+    correctCategory: 'Evaluation Error',
+    reveal: 'With 1% fraud rate and unstratified 10-fold CV, random chance can assign 0 fraud examples to a fold. Fold 7 had 10,000 test examples and zero fraud cases — the model achieved perfect accuracy by predicting all non-fraud, which is uninformative. The high mean accuracy (0.9901) and high variance (0.0089) are both artifacts of the fold composition instability. The 0.0089 std is inflated by folds with zero positives producing artificially perfect scores. The model was never evaluated on its ability to detect fraud; it was evaluated on its ability to predict the majority class.',
+    fix: 'Use `StratifiedKFold` instead of `KFold` for any classification task with imbalance: `StratifiedKFold(n_splits=10, shuffle=True)` ensures each fold preserves the class ratio (approximately 1% fraud in each fold). Also replace accuracy with fraud-relevant metrics: F1 on the positive class, Precision-Recall AUC, or Cohen\'s kappa. As a rule: if any CV fold has fewer than ~30 positive examples, the fold\'s metric estimate is unreliable regardless of stratification — consider using fewer folds or upsampling before CV.',
+  },
+  {
+    id: 'stf26',
+    title: 'Temporal Proxy Feature at Serve Time',
+    flawCategory: 'Data Leakage',
+    setup: `A churn prediction model for a SaaS product is trained using features computed at prediction time (daily batch job).
+
+Training feature construction (daily batch, run at end of each day):
+  account_age_days = (today - account_created_at).days   # computed fresh daily
+
+The model is trained on 18 months of daily snapshots. It achieves strong validation performance:
+  Validation AUC: 0.881
+
+In production, the daily batch job takes 6 hours and is cached. Due to an infrastructure optimisation, the batch job runs only weekly and the cached features are reused for 7 days.
+
+After 3 weeks:
+- Churn recall drops from 78% to 51%
+- Accounts that churned on day 5 after the last batch run have stale `account_age_days`
+- The model was trained assuming this feature refreshes daily
+
+# Example of staleness:
+# Batch ran Monday. It is now Sunday.
+# account_age_days for a Monday-churning account = 365
+# account_age_days as the model expects (Sunday) = 372
+# Error: 7 days — small but compounded across all age-sensitive thresholds`,
+    question: 'Churn recall drops from 78% to 51% after the batch cadence changes from daily to weekly. What is the underlying flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Future churn events were encoded in training features' },
+      { category: 'Evaluation Error', desc: 'The model was evaluated on a non-representative validation period' },
+      { category: 'Distribution Shift', desc: 'The feature distribution at serve time differs from training due to staleness' },
+      { category: 'Metric Mismatch', desc: 'Recall is the wrong metric for churn prioritisation' },
+      { category: 'Labeling Artifact', desc: 'Churn labels are assigned inconsistently across accounts' },
+    ],
+    correctCategory: 'Distribution Shift',
+    reveal: 'The model was trained on features refreshed daily — `account_age_days` had at most 1 day of staleness. At weekly batch cadence, the same feature can be up to 7 days stale. The model was trained on a feature distribution where `account_age_days` accurately reflects today\'s account age. At serve time, it receives a feature that may be systematically off by 0–7 days, with a uniform error distribution across the week. Age-sensitive decision boundaries (e.g. "accounts aged 180–190 days have higher churn risk") are shifted. More critically, other time-varying features (days since last login, days since last payment) suffer the same staleness — every time-delta feature in the feature set is now drawn from a different distribution than training.',
+    fix: 'Document the expected freshness SLA for every feature at the time the model is trained. Store feature freshness metadata alongside model artifacts: "this model was trained on features with daily refresh; do not serve with staleness > 24 hours." Implement a monitoring check that compares the mean and distribution of time-delta features at serve time against training-time statistics — a stale batch will produce a clear distribution shift signal. If weekly batches are required for cost reasons, retrain the model on weekly-snapshot features so the training and serving distributions match.',
+  },
+  {
+    id: 'stf27',
+    title: 'Wrong Population for Offline Evaluation',
+    flawCategory: 'Distribution Shift',
+    setup: `A university trains an ML model to predict which students are at risk of dropping out. The goal is to trigger early interventions.
+
+Evaluation setup:
+  - Training/test population: all enrolled students (n=12,400)
+  - Model predicts dropout risk score (0–1)
+  - Test AUC: 0.84, Precision@20%: 0.61
+
+In production, the model is integrated into the existing support system:
+  - A rule-based system first flags students with GPA < 2.0 OR missed > 3 advising appointments
+  - Only rule-flagged students receive the ML model score
+  - Advisors use the ML score to prioritise outreach within the flagged pool
+
+After one semester, advisors report the model "adds no value" — it ranks students within the flagged pool almost randomly.
+Actual precision of the model within the flagged pool: 0.29 (worse than random for this subgroup).`,
+    question: 'Test AUC was 0.84 on all students but the model is useless within the flagged pool. What is the flaw?',
+    options: [
+      { category: 'Data Leakage', desc: 'Dropout labels from future semesters contaminated the training features' },
+      { category: 'Evaluation Error', desc: 'The test set was too small to produce a reliable AUC estimate' },
+      { category: 'Distribution Shift', desc: 'The model was evaluated on the full population but deployed on a pre-filtered subpopulation' },
+      { category: 'Metric Mismatch', desc: 'AUC is the wrong metric for a ranking-based intervention system' },
+      { category: 'Labeling Artifact', desc: 'Dropout labels are inconsistently defined across departments' },
+    ],
+    correctCategory: 'Distribution Shift',
+    reveal: 'The model was trained and evaluated on all 12,400 students — a population that includes low-risk students (GPA 3.8, perfect attendance) who are easy to distinguish from high-risk students. Most of the model\'s discriminative power comes from correctly scoring the easy cases at the extremes of the distribution. In production, the model only operates on students already flagged by the rule-based system (GPA < 2.0 OR missed advising). This flagged population is a hard subgroup: all members already show some risk signal. Within this restricted range, the features that drove the 0.84 AUC on the full population have much less discriminative power — the model was never trained to distinguish high-risk from very-high-risk within this stratum.',
+    fix: 'Evaluate the model on the population it will actually serve, not the full population. Re-run offline evaluation exclusively on the subset of students who would be flagged by the rule-based system at each historical time point. This gives an honest estimate of the model\'s value-add within the intervention pipeline. Better still, consider replacing the two-stage system with a single unified ML model trained on the full population but evaluated and calibrated for the operating subpopulation. Whenever a model is downstream of a filter (rule-based, another model, or a business constraint), the evaluation dataset must reflect that filter.',
+  },
 ]
 
 function ScenarioCard({ scenario, state, onPick }) {

@@ -963,6 +963,966 @@ export const TRAINER_QUESTIONS = [
     "whatsTested": "Whether you know AdaDelta eliminates the need for a global learning rate by using a ratio of two running averages.",
     "antiPattern": "Adam also addresses AdaGrad's diminishing LR problem but AdaDelta specifically removes the need for a global LR.",
     "staffFraming": "AdaGrad: LR / sqrt(accumulated gradients^2) → LR → 0 over time. AdaDelta: ratio of running averages. No manual LR needed."
+  },
+  {
+    "id": 61,
+    "domain": "Feature Engineering",
+    "q": "Which technique is most effective for handling a high-cardinality categorical feature with 50,000 unique values in a gradient boosted tree?",
+    "options": [
+      "One-hot encoding",
+      "Target encoding with leave-one-out to prevent leakage",
+      "Hashing trick with 256 buckets",
+      "Drop the feature — too many categories"
+    ],
+    "correct": 1,
+    "explanation": "Target encoding maps each category to the mean target value, reducing cardinality to a single float. Leave-one-out (or cross-validated) target encoding prevents the target leakage that plain target encoding introduces. GBTs handle this single numeric representation well. One-hot encoding creates 50,000 sparse columns that destroy tree efficiency. Hashing loses semantic meaning and causes collisions.",
+    "whatsTested": "High-cardinality encoding strategies for tree models.",
+    "antiPattern": "One-hot encoding is intuitive but catastrophic at this cardinality — 50k columns, most near-zero, and the tree\'s split finding becomes prohibitively slow.",
+    "staffFraming": "In production high-cardinality categoricals (user IDs, product IDs), we almost always use target encoding or embeddings, never one-hot. The choice depends on model type: embeddings for DNN, target encoding for GBT."
+  },
+  {
+    "id": 62,
+    "domain": "Feature Engineering",
+    "q": "A rolling 7-day average feature is computed correctly during training. In production, the same feature is sometimes computed from only 3 days of data for new users. What is this an example of?",
+    "options": [
+      "Data leakage",
+      "Training-serving skew",
+      "Label noise",
+      "Feature drift"
+    ],
+    "correct": 1,
+    "explanation": "Training-serving skew: the feature computation logic differs between training and serving. Training always had 7 full days; serving computes it on whatever history is available. The model learned a distribution of the 7-day average but receives a different distribution (3-day averages are noisier, higher variance). This causes silent performance degradation, not a crash.",
+    "whatsTested": "Training-serving skew due to inconsistent feature computation.",
+    "antiPattern": "Data leakage would mean test data contaminated training. Here training was clean — the problem is a serving discrepancy.",
+    "staffFraming": "The fix: share a single feature computation library between training and serving. If cold-start is unavoidable, use a separate indicator feature `has_full_history` and train the model on both the full and partial history cases."
+  },
+  {
+    "id": 63,
+    "domain": "Feature Engineering",
+    "q": "You are feature engineering for a fraud model. You want to include `user_lifetime_transaction_count` as a feature. What is the correct approach?",
+    "options": [
+      "Compute it using all historical transactions up to and including the label date",
+      "Compute it using all historical transactions, then join to training data",
+      "Compute it as of the transaction timestamp using only past transactions",
+      "Exclude it — lifetime aggregates cause leakage"
+    ],
+    "correct": 2,
+    "explanation": "Point-in-time correctness: the feature must reflect what was known at the moment of the transaction being labeled. Joining the full lifetime count includes future transactions (ones that happen after the labeled transaction) — leakage. The correct approach: for each labeled transaction at timestamp T, count only transactions before T. This is time-travel-safe aggregation.",
+    "whatsTested": "Point-in-time correctness for temporal aggregation features.",
+    "antiPattern": "Option B (join all historical) is the most common production mistake — it looks correct but silently inflates performance by encoding future transaction counts.",
+    "staffFraming": "All time-based aggregations in fraud/churn models must be computed as-of the label timestamp. A feature store with point-in-time join semantics (e.g. Feast, Tecton) enforces this at the infrastructure level."
+  },
+  {
+    "id": 64,
+    "domain": "Feature Engineering",
+    "q": "A feature pipeline computes Z-score normalization using the training set statistics (mean=50, std=10). At serve time, the feature distribution has shifted: mean=65, std=8. What is the practical impact?",
+    "options": [
+      "No impact — Z-score normalization is scale-invariant",
+      "The model receives out-of-distribution input but continues to produce predictions without error",
+      "The model crashes at inference time",
+      "The pipeline automatically recalibrates to the new distribution"
+    ],
+    "correct": 1,
+    "explanation": "The model receives silent out-of-distribution inputs. A value of 65 (the new mean) gets normalized to Z=(65-50)/10=1.5 instead of Z=0. The model interprets this as a high feature value when it is actually average. No exception is raised — the model silently degrades. This is training-serving skew via stale normalization parameters.",
+    "whatsTested": "Impact of stale preprocessing statistics in production.",
+    "antiPattern": "The model does not crash — this is the dangerous part. Silent degradation is harder to catch than an error.",
+    "staffFraming": "Fix: store the normalization parameters as model artifacts, version them, and monitor the distribution of raw feature values in production. Alert when input distribution drift exceeds a threshold."
+  },
+  {
+    "id": 65,
+    "domain": "Feature Engineering",
+    "q": "Which of the following is most likely to cause data leakage in a customer churn model?",
+    "options": [
+      "Including the customer\'s plan type as a feature",
+      "Including a support ticket count feature computed after the churn event",
+      "Using a 30-day rolling average of logins computed before the churn event",
+      "Including demographic features like age and region"
+    ],
+    "correct": 1,
+    "explanation": "Features computed after the churn event encode the outcome: customers who already churned may have higher or lower support ticket counts because they stopped using the product. The label (churned=1) is causing the feature value, not the other way around. This is classic leakage: the feature encodes the outcome it is meant to predict.",
+    "whatsTested": "Identifying temporal leakage from features computed after the label event.",
+    "antiPattern": "Option C (30-day rolling average before churn) is the correct approach — strictly past data. Option B\'s support tickets after churn creates a spurious correlation.",
+    "staffFraming": "Rule of thumb: for any feature, ask \'could this value have been different if the label were different?\' If yes, investigate temporal ordering."
+  },
+  {
+    "id": 66,
+    "domain": "Feature Engineering",
+    "q": "You discover that `feature_x` has a Pearson correlation of 0.85 with the target in the training set but only 0.12 in a held-out validation set collected one month later. What is the most likely explanation?",
+    "options": [
+      "Overfitting of the correlation estimate",
+      "Feature_x is temporally leaking the target",
+      "The validation set is too small",
+      "Pearson correlation is the wrong metric"
+    ],
+    "correct": 1,
+    "explanation": "A large correlation in training that collapses in a temporally separated validation set is the signature of temporal leakage: the feature encodes future information that is present during training (because training and the label share a time window) but absent in the future validation window. 0.85 → 0.12 is a near-total collapse, not overfitting noise.",
+    "whatsTested": "Recognizing temporal leakage from cross-period correlation collapse.",
+    "antiPattern": "Overfitting of a correlation estimate would produce a modest drop (0.85 → 0.65), not a near-zero collapse. A collapse this large almost always indicates leakage or concept drift.",
+    "staffFraming": "Always validate correlations on a temporally separated split. Random splits mask temporal leakage. The temporal validation set should simulate the real serve-time lag."
+  },
+  {
+    "id": 67,
+    "domain": "Model Evaluation",
+    "q": "A model achieves 0.91 AUC-ROC but 0.43 AUC-PR on a dataset with 2% positive rate. Which metric should you trust and why?",
+    "options": [
+      "AUC-ROC — it is more widely accepted and robust",
+      "AUC-PR — it is more informative for imbalanced datasets",
+      "They are equivalent — use whichever your team prefers",
+      "Neither — use F1 score instead"
+    ],
+    "correct": 1,
+    "explanation": "AUC-PR is the correct metric for imbalanced datasets. AUC-ROC is inflated by the large number of true negatives: a model can achieve 0.91 AUC-ROC while having poor precision. With 2% positive rate, true negatives dominate the ROC curve, making it easy to score well. AUC-PR only considers the positive class (precision and recall), making it far more diagnostic for rare-event prediction.",
+    "whatsTested": "Metric selection for class-imbalanced binary classification.",
+    "antiPattern": "AUC-ROC of 0.91 sounds impressive but on a 2% positive rate dataset, it may correspond to a model that has very low precision on the actual positives.",
+    "staffFraming": "For fraud, disease detection, or any rare-event problem: always report both AUC-ROC and AUC-PR. If they diverge dramatically, report AUC-PR as the headline. The business metric (precision, recall, F-beta at a specific threshold) matters most."
+  },
+  {
+    "id": 68,
+    "domain": "Model Evaluation",
+    "q": "You train a regression model and report RMSE=12.4 on the test set. A colleague claims the model is not well calibrated. What does model calibration mean in the context of regression?",
+    "options": [
+      "The model\'s mean prediction matches the test set mean",
+      "The model\'s predicted confidence intervals contain the true values at the stated coverage rate",
+      "The model has low variance across cross-validation folds",
+      "The RMSE is within 10% of the baseline model\'s RMSE"
+    ],
+    "correct": 1,
+    "explanation": "Calibration for regression (or probabilistic forecasting) means that 90% prediction intervals contain the true value 90% of the time, 50% intervals contain 50%, etc. A model can have low RMSE but poorly calibrated uncertainty: it might predict a mean accurately but report overconfident intervals. This matters in production for risk-sensitive decisions (inventory planning, loan pricing) where the uncertainty estimate drives the action.",
+    "whatsTested": "What calibration means for regression/probabilistic forecasting, distinct from accuracy.",
+    "antiPattern": "Option A (mean prediction matching test mean) is unbiasedness, not calibration. A biased model can be well-calibrated; an unbiased model can be badly calibrated.",
+    "staffFraming": "Check calibration with reliability diagrams (regression) or probability calibration curves (classification). In production, interval coverage is a key SLO for forecasting systems."
+  },
+  {
+    "id": 69,
+    "domain": "Model Evaluation",
+    "q": "A team evaluates their NLP model using accuracy on a held-out test set. A reviewer notes that the test set was assembled by the same annotators who labeled the training data. Why is this a problem?",
+    "options": [
+      "Annotator agreement is irrelevant to model evaluation",
+      "Annotators introduce consistent biases that inflate test accuracy on their own annotations",
+      "The test set should be larger, not differently sourced",
+      "Held-out accuracy is always a valid metric regardless of annotator overlap"
+    ],
+    "correct": 1,
+    "explanation": "When the same annotators label both train and test, systematic annotator biases are present in both. A model that learns annotator-specific patterns (writing style, bias, edge case handling) will score high on that annotator\'s test data but fail on production data labeled differently or unlabeled. This is annotation leakage: the model fits annotator artifacts, not the underlying task.",
+    "whatsTested": "Impact of annotator overlap between train and test on evaluation validity.",
+    "antiPattern": "Option C (larger test set) does not fix the annotator overlap problem — a large test set with the same annotator bias is still a biased evaluation.",
+    "staffFraming": "For robust NLP evaluation: hold out a cross-annotator set (different annotators, possibly different annotation guidelines), and report inter-annotator agreement separately. Production evaluation should use real user signal."
+  },
+  {
+    "id": 70,
+    "domain": "Model Evaluation",
+    "q": "Which of the following is NOT a valid reason to use a validation set that is temporally more recent than the training set?",
+    "options": [
+      "To simulate the temporal deployment gap between training and serving",
+      "To detect temporal concept drift that would cause production performance degradation",
+      "To ensure the validation set has more samples than the training set for statistical power",
+      "To avoid data leakage from future events into training features"
+    ],
+    "correct": 2,
+    "explanation": "The validation set size is determined by statistical power requirements, not by a rule that it must be larger than training. Temporal splits typically result in a smaller validation set (recent data) and larger training set (historical), and that is correct. The other three options are all valid and important reasons for temporal validation splits.",
+    "whatsTested": "Reasoning about temporal train/validation splits and what properties they should have.",
+    "antiPattern": "Statistical power is a valid concern, but it does not dictate which split is larger. You can achieve statistical power with a smaller, temporally correct validation set.",
+    "staffFraming": "In production ML, the temporal gap between your training cutoff and your evaluation period should mirror the expected deployment lag. If you retrain monthly, hold out the last month."
+  },
+  {
+    "id": 71,
+    "domain": "Model Evaluation",
+    "q": "A recommendation model is evaluated using Precision@10 on a random sample of users. The system has a popularity bias: 80% of recommendations are from the top-100 most popular items. Why might Precision@10 overstate real-world performance?",
+    "options": [
+      "Precision@10 only measures the first recommendation",
+      "Random user sampling does not account for new users without history",
+      "Popular items have more interactions in the logs, making them appear more relevant in Precision@10 but not necessarily driving user satisfaction",
+      "Precision@10 cannot be computed without knowing recall"
+    ],
+    "correct": 2,
+    "explanation": "Precision@10 labels an item as relevant if it was interacted with. Popular items have high prior interaction rates — users interact with them partly because of prior exposure, not pure relevance. A model surfacing only popular items achieves high Precision@10 because popularity correlates with interaction, but it may fail on the actual business goal: helping users discover relevant long-tail items. This is popularity bias inflating the offline metric.",
+    "whatsTested": "Popularity bias in recommendation system offline evaluation.",
+    "antiPattern": "The issue is not new users (cold start) — it is that popular items have inflated interaction rates that make Precision@10 an overoptimistic metric for overall recommendation quality.",
+    "staffFraming": "Complement Precision@10 with coverage (what fraction of the catalog appears in recommendations), serendipity, and intra-list diversity. Online A/B tests on satisfaction metrics (session time, return rate) catch what offline metrics miss."
+  },
+  {
+    "id": 72,
+    "domain": "Model Evaluation",
+    "q": "A model\'s confusion matrix shows: TP=80, FP=20, FN=5, TN=895. What is the most misleading single metric to report for this model?",
+    "options": [
+      "Precision (80%)",
+      "Recall (94%)",
+      "Accuracy (97.5%)",
+      "F1 score (86.5%)"
+    ],
+    "correct": 2,
+    "explanation": "Accuracy of 97.5% sounds excellent but is dominated by the 895 true negatives. On a dataset with 85 positives and 915 negatives (about 9% positive rate), this model has meaningful false positives (20). Accuracy rewards the majority class so heavily that a model predicting all-negative would achieve 91.5% accuracy. For any imbalanced classification task, accuracy is the most misleading headline metric.",
+    "whatsTested": "Understanding that accuracy is misleading for imbalanced datasets.",
+    "antiPattern": "Recall of 94% is actually the most useful single metric if false negatives are costly. F1 balances precision and recall. Neither is as misleading as accuracy in this imbalanced scenario.",
+    "staffFraming": "Default to reporting precision and recall (or F1 at the operating threshold) for any imbalanced problem. If a stakeholder asks \'how accurate is the model?\', redirect to the metric that reflects the business cost of each error type."
+  },
+  {
+    "id": 73,
+    "domain": "ML Systems",
+    "q": "A feature store serves real-time features for a fraud model. Which component is responsible for ensuring that training features are consistent with serving features?",
+    "options": [
+      "The model registry",
+      "A shared feature transformation library used by both the training pipeline and the serving layer",
+      "The data warehouse",
+      "The experiment tracking system"
+    ],
+    "correct": 1,
+    "explanation": "Training-serving consistency requires that the same transformation code runs in both pipelines. A shared library (or a feature platform like Feast, Tecton, or an in-house equivalent) ensures the computation is identical. The model registry stores model artifacts, not feature logic. The data warehouse stores historical data but typically runs batch transformations that differ from real-time serving.",
+    "whatsTested": "How to prevent training-serving skew in feature computation.",
+    "antiPattern": "Storing feature values in a database solves low-latency retrieval but does not solve the consistency problem if the offline computation differs from online computation.",
+    "staffFraming": "The gold standard: one feature computation function, called by both the training pipeline (offline) and the serving layer (online). Any divergence in feature code is a training-serving skew bug."
+  },
+  {
+    "id": 74,
+    "domain": "ML Systems",
+    "q": "Your ML model serving layer receives 50,000 requests per second with a p99 latency SLO of 20ms. Which of the following bottlenecks is hardest to solve without changing model architecture?",
+    "options": [
+      "Feature retrieval latency from Redis (p99=5ms)",
+      "Model inference on CPU (p99=18ms for a large GBT model)",
+      "Network overhead between microservices (p99=2ms)",
+      "Serialization/deserialization of the request payload (p99=1ms)"
+    ],
+    "correct": 1,
+    "explanation": "CPU inference at 18ms already consumes 90% of the 20ms budget, leaving no headroom for feature retrieval and serialization. Moving to GPU helps for neural networks but GBTs do not parallelize well on GPU. The practical fixes — model distillation, feature reduction, quantization, or moving to a lighter model — all require changing model architecture or training. The other bottlenecks have straightforward infrastructure fixes: Redis connection pooling, service mesh optimization, payload compression.",
+    "whatsTested": "Latency bottleneck analysis for ML serving systems.",
+    "antiPattern": "Redis at p99=5ms sounds slow but is well within budget and can be optimized via connection pooling or local caching. The inference bottleneck is the hard one.",
+    "staffFraming": "Before committing to a model architecture, benchmark inference latency at target QPS. A model that hits your accuracy target but not your latency SLO requires fundamental redesign, not tuning."
+  },
+  {
+    "id": 75,
+    "domain": "ML Systems",
+    "q": "A model retraining pipeline fails silently: it completes successfully but the newly trained model is identical to last week\'s model. What is the most likely cause?",
+    "options": [
+      "The training dataset was corrupted",
+      "The pipeline read from a stale or cached data source instead of fresh data",
+      "The model architecture changed in a breaking way",
+      "The learning rate was too low to make progress"
+    ],
+    "correct": 1,
+    "explanation": "Silent identity: the pipeline runs to completion, logs no errors, and produces a model — but if the training data path is stale (a cached snapshot, a pointer to an old partition, a bug in the date parameterization), the new model is trained on old data and converges to the same weights. This is a data pipeline correctness bug that bypasses typical error detection.",
+    "whatsTested": "Common failure mode in ML retraining pipelines: stale data sources.",
+    "antiPattern": "A low learning rate would cause slow convergence, not an identical model. Model architecture changes cause failures, not silent reproduction of the old model.",
+    "staffFraming": "Mitigation: log a hash of the training data alongside every model artifact. Alert if the training data hash matches the previous run. Monitor data freshness as a pipeline health metric."
+  },
+  {
+    "id": 76,
+    "domain": "ML Systems",
+    "q": "In a two-tower recommendation system, which of the following statements about the retrieval and ranking stages is correct?",
+    "options": [
+      "The ranking stage operates on the full item catalog",
+      "The retrieval stage uses rich cross-features between user and item",
+      "The retrieval stage produces a candidate set using approximate nearest neighbor search; ranking re-scores this set with richer features",
+      "Both stages share the same model weights"
+    ],
+    "correct": 2,
+    "explanation": "The two-tower pipeline: retrieval generates a small candidate set (e.g. top-1000 from 100M items) using ANN search over learned embeddings, optimizing for recall at the cost of precision. Ranking then applies expensive cross-features (user x item interactions, context) on only the 1000 candidates. This decomposition enables the system to scale: full-catalog scoring with rich features would be computationally infeasible at query time.",
+    "whatsTested": "Architecture of retrieval + ranking in industrial recommendation systems.",
+    "antiPattern": "The retrieval stage cannot use cross-features (user-item interactions) because these require computing interactions across all items, defeating the purpose of the two-stage design.",
+    "staffFraming": "The retrieval recall-ranking precision tradeoff: retrieval must have very high recall (don\'t miss relevant items) and ranking must have high precision (correctly re-rank the candidates). Tune retrieval to maximize recall@K, not precision."
+  },
+  {
+    "id": 77,
+    "domain": "ML Systems",
+    "q": "A data scientist wants to deploy a model update that reduces AUC by 0.5% but cuts inference latency by 60%. How should this tradeoff be evaluated?",
+    "options": [
+      "Reject — any AUC reduction is a regression",
+      "Run an A/B test measuring user-facing business metrics; latency reduction often increases online conversion more than AUC improvement does",
+      "Accept — latency improvements are always worth AUC tradeoffs",
+      "Compare RMSE instead of AUC to measure the true tradeoff"
+    ],
+    "correct": 1,
+    "explanation": "Offline AUC and online business metrics are correlated but not equivalent. A 60% latency reduction can increase revenue significantly: page load time directly affects conversion rate (Amazon found 100ms = 1% revenue). A 0.5% AUC drop may be within noise. The correct decision process: run an A/B test that measures the business metric (GMV, conversion, engagement) directly, not just offline proxies.",
+    "whatsTested": "Reasoning about offline metric tradeoffs vs. online business metrics.",
+    "antiPattern": "Accepting any AUC reduction is not a valid heuristic — it ignores latency\'s compounding effect on user behavior. Rejecting it outright ignores the business value of speed.",
+    "staffFraming": "Latency is a model quality dimension, not just an infrastructure concern. For user-facing models, a \'fast and slightly less accurate model\' often wins in A/B tests."
+  },
+  {
+    "id": 78,
+    "domain": "ML Systems",
+    "q": "What is shadow mode deployment and when is it the appropriate strategy?",
+    "options": [
+      "Deploying a model to a small percentage of users to measure online performance",
+      "Running a new model in parallel with the production model — new model receives real traffic, makes predictions, but those predictions are not served to users; used for validation before go-live",
+      "A rollback strategy where the old model is kept on standby",
+      "A/B testing where the shadow variant gets 1% of traffic"
+    ],
+    "correct": 1,
+    "explanation": "Shadow mode: the new model runs on real production traffic and makes predictions, but those predictions are discarded (not served). This validates that the model: (1) processes real inputs without errors, (2) produces valid output distributions, and (3) has acceptable latency under production load. It is the appropriate strategy before launching a model with significantly different architecture or for high-stakes deployments where an online A/B test is too risky.",
+    "whatsTested": "Shadow mode deployment: definition, purpose, and when to use it.",
+    "antiPattern": "Canary deployment (small % of traffic) does serve predictions to a fraction of users. Shadow mode does not serve any predictions — it is purely observational.",
+    "staffFraming": "Shadow mode is not optional for high-stakes ML systems (fraud, health, content moderation). Run shadow mode for at least one full business cycle before switching traffic."
+  },
+  {
+    "id": 79,
+    "domain": "Statistics & Probability",
+    "q": "A p-value of 0.04 is observed in an A/B test with n=500 per group. The same experiment is replicated with n=50,000 per group and the p-value is 0.001. The effect size is identical in both experiments. What does this illustrate?",
+    "options": [
+      "The larger experiment found a more significant effect",
+      "P-values are a function of sample size, not just effect size — a tiny, practically insignificant effect can achieve p<0.001 with sufficient n",
+      "The smaller experiment was underpowered and unreliable",
+      "The effect grew over time as more users were exposed"
+    ],
+    "correct": 1,
+    "explanation": "Statistical significance is not practical significance. With n=50,000, the standard error is 10x smaller than at n=500. The same true effect size will produce a much smaller p-value. The question \'is this statistically significant?\' becomes nearly always \'yes\' at large n, even for effects that are too small to matter (e.g. 0.01% conversion improvement). The right question is: \'is this effect large enough to be worth acting on?\'",
+    "whatsTested": "Understanding that p-values depend on sample size, not just effect size.",
+    "antiPattern": "The experiment was not underpowered at n=500 — it correctly detected the effect at p=0.04. The point is that p-values conflate effect size and sample size.",
+    "staffFraming": "Always report effect size (Cohen\'s d, relative lift) alongside p-values. Report confidence intervals. At large scale, treat clinical vs. statistical significance as separate questions."
+  },
+  {
+    "id": 80,
+    "domain": "Statistics & Probability",
+    "q": "Which of the following correctly describes the frequentist confidence interval interpretation?",
+    "options": [
+      "There is a 95% probability that the true parameter lies within this interval",
+      "If we repeat this experiment many times and construct the interval each time, 95% of such intervals will contain the true parameter",
+      "The parameter has a 95% chance of being within 2 standard deviations of the mean",
+      "The interval contains 95% of the observed data points"
+    ],
+    "correct": 1,
+    "explanation": "The frequentist CI interpretation is procedural, not probabilistic: the 95% refers to the long-run frequency of intervals constructed this way, not to a probability about the parameter. Once an interval is computed, the parameter either is or is not in it — there is no probability. Option A is the Bayesian credible interval interpretation, which is what most people intuitively want from a CI.",
+    "whatsTested": "Correct interpretation of frequentist confidence intervals vs. Bayesian credible intervals.",
+    "antiPattern": "Option A is the intuitive interpretation but it is a Bayesian statement, not a frequentist one. This is a classic interview trap.",
+    "staffFraming": "In practice, most practitioners use CIs as if they were credible intervals (option A), which is often fine as an approximation. But in a senior interview, knowing the technical distinction demonstrates statistical rigor."
+  },
+  {
+    "id": 81,
+    "domain": "Statistics & Probability",
+    "q": "A Bayesian A/B test concludes with 96% probability that treatment is better than control. What does this mean?",
+    "options": [
+      "The p-value is 0.04",
+      "Given the observed data and prior, the posterior probability that the treatment effect is positive is 96%",
+      "There is a 4% chance the experiment was conducted incorrectly",
+      "The confidence interval does not include zero"
+    ],
+    "correct": 1,
+    "explanation": "In Bayesian A/B testing, the 96% is a posterior probability — a statement about belief given data and prior: P(treatment > control | observed data, prior). This is directly interpretable as \'we are 96% sure the treatment is better.\' This is what practitioners typically want but cannot get from a frequentist p-value. The p-value is not the probability the null is true or false.",
+    "whatsTested": "Interpreting Bayesian A/B test outputs vs. frequentist p-values.",
+    "antiPattern": "The p-value would measure P(observed data or more extreme | null hypothesis true) — very different from a posterior probability. They are numerically unrelated.",
+    "staffFraming": "Bayesian A/B testing allows early stopping with correct type I error control, direct probability statements about the treatment effect, and incorporation of prior knowledge about typical lift sizes."
+  },
+  {
+    "id": 82,
+    "domain": "Statistics & Probability",
+    "q": "What is the primary risk of running 20 simultaneous A/B tests on the same user population?",
+    "options": [
+      "Higher infrastructure cost",
+      "Network effects between experiments causing interaction effects that invalidate individual test results",
+      "Insufficient sample size per experiment",
+      "Tests completing too quickly due to shared traffic"
+    ],
+    "correct": 1,
+    "explanation": "Interaction effects (also called experiment interference): if treatment A and treatment B both affect the same user behavior (e.g. both modify the homepage), the effect of A measured while B is also running reflects a confounded combination, not A alone. If A changes the recommendation algorithm and B changes the layout, the measured lift of A includes the interaction between A and B. This is the core challenge of multi-experiment platforms.",
+    "whatsTested": "Interaction effects in concurrent A/B testing.",
+    "antiPattern": "Sample size is shared across experiments (each gets a fraction of users) but the primary risk is interaction effects, not sample size — you can always partition users correctly. Infrastructure cost is irrelevant.",
+    "staffFraming": "Solutions: (1) user-level bucketing with disjoint treatment groups. (2) Holdout group that receives no experiments. (3) Interaction detection: measure if the joint treatment (A+B) effect differs from the sum of individual effects."
+  },
+  {
+    "id": 83,
+    "domain": "Statistics & Probability",
+    "q": "The Central Limit Theorem states that the sampling distribution of the mean approaches normality as n increases. Which of the following conditions is necessary for this to hold?",
+    "options": [
+      "The underlying distribution must be normal",
+      "The samples must be independent and identically distributed with finite variance",
+      "The sample size must exceed 30",
+      "The underlying distribution must be unimodal"
+    ],
+    "correct": 1,
+    "explanation": "The CLT requires: (1) independence — each observation is independent of others; (2) identical distribution — same distribution, same parameters; (3) finite variance — the variance of the underlying distribution must be finite. Heavy-tailed distributions (e.g. Pareto with alpha<2) have infinite variance and the CLT does not apply. The underlying distribution does not need to be normal, and the n>30 rule is a heuristic, not a mathematical requirement.",
+    "whatsTested": "Correct conditions for the Central Limit Theorem.",
+    "antiPattern": "n>30 is the most common wrong answer — it is a rule of thumb for approximately normal data, not a theorem requirement. For heavy-tailed distributions, n=10,000 may not be enough.",
+    "staffFraming": "In practice: check for heavy tails before relying on CLT-based inference. Revenue and session time metrics are often right-skewed; use bootstrap confidence intervals or non-parametric tests for robustness."
+  },
+  {
+    "id": 84,
+    "domain": "Statistics & Probability",
+    "q": "You run an experiment where each user can generate multiple events (page views). You aggregate to the user level (mean events per user) before running a t-test. Why is this the correct approach rather than using raw events?",
+    "options": [
+      "User-level aggregation increases statistical power",
+      "Page views from the same user are not independent — treating them as independent observations inflates sample size and underestimates variance",
+      "Raw events are too noisy for parametric tests",
+      "T-tests cannot handle count data"
+    ],
+    "correct": 1,
+    "explanation": "Independence assumption violation: within-user page views are positively correlated (an engaged user generates many views, a passive user generates few). Treating N_events as N independent observations dramatically understates variance and overstates statistical power. The correct observational unit is the user. The effective sample size is the number of users, not the number of events. Failing to aggregate results in artificially narrow confidence intervals and inflated false positive rates.",
+    "whatsTested": "Correct unit of analysis for A/B tests with clustered/nested data.",
+    "antiPattern": "User-level aggregation typically reduces statistical power (fewer observations) but provides correct inference. The power reduction is the price of correct analysis.",
+    "staffFraming": "The unit of randomization must equal the unit of analysis. If you randomize at user level, analyze at user level. If events are the unit, randomize at event level (rare and usually wrong)."
+  },
+  {
+    "id": 85,
+    "domain": "Deep Learning",
+    "q": "Why does batch normalization behave differently during training vs. inference?",
+    "options": [
+      "It uses different activation functions during inference",
+      "During training, statistics (mean, variance) are computed per mini-batch; during inference, exponential moving average statistics from training are used",
+      "Dropout is applied only during training and not inference",
+      "The learning rate is set to zero during inference"
+    ],
+    "correct": 1,
+    "explanation": "During training, BN normalizes each mini-batch using its own mean and variance — this is stochastic and depends on which examples appear together. During inference, using the current batch statistics would introduce randomness that depends on what else is in the batch. Instead, BN uses running statistics (exponential moving average of training batch statistics) that were accumulated during training. model.eval() in PyTorch switches to these running statistics.",
+    "whatsTested": "Train vs. inference behavior of batch normalization.",
+    "antiPattern": "Dropout (option C) is also train vs. inference different, but the question is specifically about BN. Confusing the two is a common mistake.",
+    "staffFraming": "Forgetting to call model.eval() before inference is a classic production bug. The model produces inconsistent predictions because it uses batch statistics from whatever batch happens to be evaluated together."
+  },
+  {
+    "id": 86,
+    "domain": "Deep Learning",
+    "q": "A transformer model with 12 attention heads and d_model=768. What is the dimensionality of each head\'s key, query, and value projections?",
+    "options": [
+      "768",
+      "64",
+      "12",
+      "256"
+    ],
+    "correct": 1,
+    "explanation": "Each head operates on a subspace of dimension d_model / n_heads = 768 / 12 = 64. The Q, K, V projections for each head are 64-dimensional. Multi-head attention computes attention in these 64-dimensional subspaces in parallel, then concatenates the 12 heads\' outputs back to 768 dimensions. This decomposition allows different heads to learn different attention patterns without increasing the total parameter count.",
+    "whatsTested": "Transformer multi-head attention dimensionality calculation.",
+    "antiPattern": "768 (full d_model) would mean each head sees the full representation space — that defeats the purpose of multiple heads and increases compute quadratically.",
+    "staffFraming": "For the BERT-base interview question: 12 heads x 64 dims = 768 total. Each head\'s Q/K/V projection is a (768, 64) matrix. Total attention parameters per layer: 3 x (768 x 64) x 12 heads + biases."
+  },
+  {
+    "id": 87,
+    "domain": "Deep Learning",
+    "q": "What is gradient checkpointing and when should you use it?",
+    "options": [
+      "A technique to clip gradient norms to prevent exploding gradients",
+      "A memory optimization that recomputes intermediate activations during backpropagation instead of storing them, trading compute for memory",
+      "A method to save gradient updates to disk for distributed training",
+      "A debugging tool to verify gradient flow through a network"
+    ],
+    "correct": 1,
+    "explanation": "Gradient checkpointing (also called activation recomputation): during the forward pass, only a subset of activations are saved; the rest are recomputed during backpropagation when needed. This reduces memory from O(n_layers) to O(sqrt(n_layers)) at the cost of approximately 30% more compute. Use it when: (1) fine-tuning large models (LLaMA-70B) on limited GPU memory; (2) training with large batch sizes that don\'t fit; (3) training very deep networks.",
+    "whatsTested": "Gradient checkpointing: definition, tradeoff, use cases.",
+    "antiPattern": "Gradient clipping (option A) prevents exploding gradients — different problem entirely. Checkpointing is a memory/compute tradeoff, not a stability technique.",
+    "staffFraming": "In practice: enable gradient checkpointing when you hit OOM during training of large models. DeepSpeed, PyTorch, and Hugging Face all support it natively. Expect ~30% training slowdown in exchange for 8-10x memory reduction."
+  },
+  {
+    "id": 88,
+    "domain": "Deep Learning",
+    "q": "A model achieves 98% training accuracy and 72% validation accuracy. Increasing dropout from 0.3 to 0.5 improves validation accuracy to 78% but reduces training accuracy to 89%. What does this indicate?",
+    "options": [
+      "The model is underfitting",
+      "Dropout at 0.5 successfully reduced overfitting by preventing co-adaptation of neurons",
+      "The model needs more data, not more dropout",
+      "Dropout is making the model worse overall"
+    ],
+    "correct": 1,
+    "explanation": "The original gap (98% train, 72% val = 26% gap) is classic overfitting: the model memorized training data. Increasing dropout disrupts co-adaptation of neurons (neurons learning to rely on specific other neurons), forcing more robust feature learning. The reduced training accuracy (89%) is expected and correct: dropout makes training harder by randomly zeroing activations. Validation improvement (72%→78%) confirms reduced overfitting. The gap narrowed from 26% to 11%.",
+    "whatsTested": "Effect of dropout on overfitting and the expected training vs. validation accuracy dynamic.",
+    "antiPattern": "Option D is wrong — 78% val accuracy is better than 72%, not worse. The training accuracy drop from 98% to 89% is desirable when it correlates with val improvement.",
+    "staffFraming": "Dropout is a regularizer; expect training accuracy to drop when it is applied. The signal that matters is validation accuracy. A 26% train-val gap screams overfitting; anything that narrows it while improving val is working."
+  },
+  {
+    "id": 89,
+    "domain": "Deep Learning",
+    "q": "What problem does layer normalization solve in transformer training that batch normalization does not handle well?",
+    "options": [
+      "Layer norm is faster to compute than batch norm",
+      "In transformers with variable-length sequences, batch norm computes statistics across the batch dimension, which includes padding tokens and makes statistics unstable; layer norm computes statistics per sample across the feature dimension",
+      "Layer norm does not require learnable parameters",
+      "Batch norm cannot be used in attention layers"
+    ],
+    "correct": 1,
+    "explanation": "Transformers process variable-length sequences with padding. Batch norm computes mean/variance across all sequence positions and all examples in a batch — padding tokens (which are masked and carry no signal) corrupt these statistics. Layer norm computes statistics per sample across the feature dimension (d_model), making it independent of sequence length and batch composition. This stability makes layer norm the standard for sequential models.",
+    "whatsTested": "Why layer norm is used in transformers instead of batch norm.",
+    "antiPattern": "Batch norm can technically be used in attention layers, but its statistics are corrupted by padding and inter-sample dependencies. Layer norm\'s per-sample normalization sidesteps both issues.",
+    "staffFraming": "Empirically: layer norm in transformers converges faster and more stably, especially with small batch sizes. In practice, you should never see batch norm in a transformer architecture."
+  },
+  {
+    "id": 90,
+    "domain": "Deep Learning",
+    "q": "During fine-tuning of a large language model, you observe that the model\'s perplexity on the fine-tuning task decreases but its perplexity on the original pretraining task increases significantly. What is this phenomenon called?",
+    "options": [
+      "Overfitting",
+      "Catastrophic forgetting",
+      "Gradient exploding",
+      "Distribution shift"
+    ],
+    "correct": 1,
+    "explanation": "Catastrophic forgetting: when fine-tuning on a new task, SGD updates overwrite the weights that encoded capabilities from pretraining. The model gains task-specific performance at the cost of general capabilities. This is especially problematic for LLMs where general reasoning is valuable. Mitigations: LoRA/PEFT (freeze most weights, update only small adapter matrices), EWC (penalize changes to important weights), replay (mix pretraining data into fine-tuning).",
+    "whatsTested": "Catastrophic forgetting in LLM fine-tuning.",
+    "antiPattern": "Overfitting would show training perplexity decreasing and validation (same task) increasing. Catastrophic forgetting shows different-task performance degrading.",
+    "staffFraming": "LoRA avoids catastrophic forgetting by design — only 0.1-1% of parameters are updated, leaving the majority of pretrained knowledge intact. Full fine-tuning risks forgetting; instruction tuning of 7B+ models should default to PEFT."
+  },
+  {
+    "id": 91,
+    "domain": "MLOps",
+    "q": "Which of the following is the correct order for a blue-green deployment of an ML model?",
+    "options": [
+      "Train new model → deploy to production → monitor → deprecate old model",
+      "Train new model → deploy to staging (green) → run shadow/canary traffic → swap traffic to green → deprecate blue",
+      "Train new model → deprecate old model → deploy new model → monitor",
+      "Train new model → immediately replace production model → rollback if errors"
+    ],
+    "correct": 1,
+    "explanation": "Blue-green: blue = current production. Green = new version in staging. Steps: (1) train and validate new model offline; (2) deploy green alongside blue in staging; (3) run shadow traffic or canary (5-10%) on green to validate online; (4) when green meets SLOs, shift 100% of traffic to green; (5) keep blue available for immediate rollback; (6) deprecate blue after stability window. The key property: zero-downtime cutover with instant rollback capability.",
+    "whatsTested": "Blue-green deployment process for ML models.",
+    "antiPattern": "Option D (immediate replace + rollback) is a risky in-place update, not blue-green. Option A lacks the staging/validation phase.",
+    "staffFraming": "For ML specifically: the canary phase is critical because model quality issues are often not caught by infrastructure health checks. Run canary long enough to observe a full business cycle (e.g. at least 24 hours for diurnal patterns)."
+  },
+  {
+    "id": 92,
+    "domain": "MLOps",
+    "q": "What is data versioning in MLOps and why is it critical for reproducibility?",
+    "options": [
+      "Storing multiple copies of your dataset in different formats",
+      "Tracking the exact data snapshot used to train each model version, enabling exact reproduction of any past model and auditing of training data for regulatory compliance",
+      "Compressing training datasets to reduce storage costs",
+      "Automatically augmenting training data"
+    ],
+    "correct": 1,
+    "explanation": "Data versioning: capturing a pointer or snapshot of the exact dataset (with its schema, content, and preprocessing) used for each model training run. Without data versioning, you cannot: (1) reproduce a model trained 6 months ago (data may have been modified or deleted); (2) audit what data a regulated model was trained on; (3) debug a production incident by bisecting which data version introduced a regression. Tools: DVC, Delta Lake time travel, S3 versioning + manifest files.",
+    "whatsTested": "Why data versioning is necessary for ML reproducibility and compliance.",
+    "antiPattern": "Multiple format copies (option A) is storage duplication, not versioning. Versioning is about point-in-time snapshots and audit trails, not format conversion.",
+    "staffFraming": "Minimum viable data versioning: log the training data S3 path + content hash in the model artifact metadata. Full versioning: DVC or Delta Lake with time-travel queries."
+  },
+  {
+    "id": 93,
+    "domain": "MLOps",
+    "q": "A production ML model\'s online AUC drops from 0.87 to 0.79 over 3 months. Feature drift monitoring shows no significant changes in input distributions. What should you investigate next?",
+    "options": [
+      "Retrain the model immediately",
+      "Investigate label drift — the relationship between features and labels (P(Y|X)) may have changed even if P(X) is stable",
+      "Increase the model\'s learning rate",
+      "Switch to a more complex model architecture"
+    ],
+    "correct": 1,
+    "explanation": "When input feature distribution (P(X)) is stable but model performance degrades, the culprit is concept drift: P(Y|X) has changed. The features look the same but they now predict a different outcome. Example: a model for loan default trained pre-economic-shock. Macroeconomic conditions changed the relationship between income and default probability, even though the income distribution itself did not shift significantly.",
+    "whatsTested": "Diagnosing concept drift vs. data drift when feature distributions are stable.",
+    "antiPattern": "Immediate retraining is the right eventual action, but not the right next investigation step. You first need to understand whether this is concept drift, a labeling change, or a pipeline bug.",
+    "staffFraming": "Monitoring hierarchy: (1) check for pipeline bugs first (data freshness, schema changes); (2) check feature distribution drift; (3) check label distribution; (4) estimate performance on a labeled holdout with recent labels (if available). Concept drift often requires both retraining and feature engineering updates."
+  },
+  {
+    "id": 94,
+    "domain": "MLOps",
+    "q": "You are building an ML pipeline that processes 1TB of training data daily. Which approach minimizes end-to-end pipeline latency?",
+    "options": [
+      "Load all data into memory, process sequentially",
+      "Process data in parallel using distributed compute (Spark/Ray) with partitioning aligned to downstream join keys",
+      "Use a single-node GPU instance for all preprocessing",
+      "Compress data before processing to reduce I/O time"
+    ],
+    "correct": 1,
+    "explanation": "At 1TB/day, single-node sequential processing is I/O and memory bound. Distributed processing (Spark, Ray, Beam) partitions the data across many nodes and processes chunks in parallel. Partitioning by join keys avoids shuffle (the most expensive operation in distributed processing). GPU preprocessing is limited by PCIe bandwidth for data loading and provides minimal benefit for CPU-bound transformations.",
+    "whatsTested": "Distributed data processing design for large ML pipelines.",
+    "antiPattern": "Compression reduces I/O bandwidth but adds CPU overhead for decompression. On modern cloud storage, bandwidth is often the bottleneck — compression helps here, but it is secondary to parallelism.",
+    "staffFraming": "Spark partition strategy: aim for 100-500MB per partition. Use `repartition(n)` on join keys before joins to co-locate matching records. Use `.cache()` if a dataset is used multiple times in the DAG."
+  },
+  {
+    "id": 95,
+    "domain": "MLOps",
+    "q": "Which metric should trigger an automatic model rollback in production?",
+    "options": [
+      "A 2% drop in offline AUC compared to the previous model",
+      "Online business metric (e.g. conversion rate or revenue per user) dropping more than X standard deviations below baseline within a time window",
+      "An increase in model inference latency above 5ms",
+      "A feature importance shift between model versions"
+    ],
+    "correct": 1,
+    "explanation": "Automatic rollback should be triggered by business impact, not offline metrics. Offline AUC measured on historical data may not reflect production performance and was already evaluated before deployment. Online business metrics (revenue, conversion, engagement) with predefined threshold alerts are the right trigger: if conversion drops 3+ sigma from baseline within 1 hour of deployment, roll back automatically. Latency SLO violations are infrastructure rollbacks, not model rollbacks.",
+    "whatsTested": "What metric should trigger ML model rollback.",
+    "antiPattern": "Offline AUC is computed before deployment and is not a real-time production signal. It cannot trigger a rollback because it does not change after deployment.",
+    "staffFraming": "Define rollback criteria before deployment: \'If metric X drops more than Y% compared to control in the first Z hours, trigger auto-rollback.\' This must be agreed with stakeholders pre-launch, not decided during an incident."
+  },
+  {
+    "id": 96,
+    "domain": "MLOps",
+    "q": "What is the purpose of an ML model registry?",
+    "options": [
+      "To store training datasets",
+      "To track, version, and manage trained model artifacts with metadata (performance metrics, training data, parameters) to enable reproducibility, auditing, and staged deployment",
+      "To schedule model retraining jobs",
+      "To monitor feature distributions in production"
+    ],
+    "correct": 1,
+    "explanation": "A model registry (MLflow Model Registry, SageMaker Model Registry, Vertex AI Model Registry) is the central store for model artifacts and their metadata. Key capabilities: (1) versioning — every trained model gets a version with full lineage; (2) lifecycle management — stage transitions (staging → production → archived); (3) approval gates — require sign-off before promoting to production; (4) metadata — training data version, hyperparameters, evaluation metrics. It enables rollback to any previous version and regulatory compliance.",
+    "whatsTested": "Definition and key capabilities of an ML model registry.",
+    "antiPattern": "Storing training datasets is the feature store and data lake\'s job. Scheduling retraining is the pipeline orchestrator\'s job. These are separate systems.",
+    "staffFraming": "Minimum viable registry: MLflow. Production-grade: integrated with CI/CD so model promotion requires passing automated quality gates and human approval."
+  },
+  {
+    "id": 97,
+    "domain": "Ranking & Retrieval",
+    "q": "In a learning-to-rank system, what is the difference between pointwise, pairwise, and listwise loss functions?",
+    "options": [
+      "They differ in how many documents are processed per GPU forward pass",
+      "Pointwise treats each document independently; pairwise optimizes relative order of document pairs; listwise directly optimizes list-level metrics like NDCG",
+      "They differ only in regularization strength",
+      "Pointwise is used for ads, pairwise for search, listwise for recommendations"
+    ],
+    "correct": 1,
+    "explanation": "Pointwise: treat ranking as regression/classification on individual documents (MSE on relevance scores). Simple but ignores document relationships. Pairwise: RankNet, LambdaRank — optimize P(doc_i ranked above doc_j) for pairs. Pairwise better captures ordering than pointwise. Listwise: LambdaMART, ListNet — directly optimize list-level metrics (NDCG, MAP). Listwise is typically strongest but most expensive. LambdaMART is the industry standard for large-scale ranking.",
+    "whatsTested": "Learning-to-rank loss function taxonomy.",
+    "antiPattern": "The choice is not per-domain (ads/search/rec) — it depends on dataset size, metric, and compute budget. LambdaMART (pairwise-gradient, listwise-approximation) is used across all three domains.",
+    "staffFraming": "In practice: LambdaMART with direct NDCG optimization is the go-to for ranking. For neural rankers: pairwise losses (hinge, cross-entropy on pairs) are common. Listwise requires sampling negative lists carefully."
+  },
+  {
+    "id": 98,
+    "domain": "Ranking & Retrieval",
+    "q": "What is Approximate Nearest Neighbor (ANN) search and why is exact nearest neighbor search not used in production retrieval?",
+    "options": [
+      "ANN is less accurate but approximate results are acceptable for most use cases",
+      "Exact nearest neighbor in high-dimensional embedding spaces is O(n×d) per query, which is too slow for real-time retrieval over millions/billions of items; ANN algorithms like HNSW and Faiss achieve sub-linear query time by building index structures that trade a small accuracy loss for 100-1000x speedup",
+      "ANN uses approximate embeddings to reduce storage costs",
+      "Exact search is used for small catalogs; ANN only for catalogs above 10M items"
+    ],
+    "correct": 1,
+    "explanation": "Exact k-NN at 100M items with 256-dimensional embeddings: 100M x 256 = 25.6B operations per query. At 50,000 QPS, this is infeasible. ANN algorithms (HNSW, IVF-PQ in Faiss, ScaNN) build graph or partition structures that narrow the search to a candidate set, reducing to sub-millisecond query time. The accuracy tradeoff: recall@10 of 95-99% instead of 100%. In practice, the ranking stage compensates for the 1-5% retrieval misses.",
+    "whatsTested": "Why ANN is necessary for production-scale retrieval systems.",
+    "antiPattern": "The cutoff for exact vs. approximate is not 10M — it depends on QPS, latency SLO, and dimensionality. At 100k items and low QPS, exact search may be fine. At 1M items and 10k QPS, ANN is necessary.",
+    "staffFraming": "HNSW (via Faiss or hnswlib) is the industry standard for low-latency ANN. For billion-scale: ScaNN (Google), Faiss IVF-PQ, or dedicated vector DBs (Pinecone, Weaviate). Tune the `ef_search` parameter to trade recall vs. latency."
+  },
+  {
+    "id": 99,
+    "domain": "Ranking & Retrieval",
+    "q": "NDCG@10 is 0.72 for model A and 0.68 for model B. Model A is launched. After 2 weeks, engagement metrics are flat despite the offline gap. What is the most likely explanation?",
+    "options": [
+      "The NDCG difference was statistically insignificant",
+      "Position bias in the click data used to compute NDCG inflated model A\'s offline score; in production without position bias, both models perform similarly",
+      "The A/B test was run incorrectly",
+      "Model B had better latency which offset the ranking quality difference"
+    ],
+    "correct": 1,
+    "explanation": "NDCG is computed from logged click data, which is subject to position bias: items shown at the top get more clicks regardless of relevance. If model A learned to rank items that were historically shown at the top (and thus had more clicks), it will score higher NDCG on the click-labeled data, but this advantage may not reflect true relevance — it reflects exposure. In production with no position bias (a random or fixed position), the offline advantage disappears.",
+    "whatsTested": "Position bias corrupting offline ranking metrics.",
+    "antiPattern": "Statistical insignificance would require computing the variance of NDCG across queries. A 0.04 gap on a large query set is typically significant. The more likely culprit is position bias.",
+    "staffFraming": "Correct offline evaluation for ranking: use inverse propensity scoring (IPS) to debias logged feedback, or use a set-aside randomized traffic for evaluation. NDCG on biased clicks is a biased metric."
+  },
+  {
+    "id": 100,
+    "domain": "Ranking & Retrieval",
+    "q": "A cold-start new item has no interaction history. Which retrieval strategy is most appropriate?",
+    "options": [
+      "Exclude new items until they have 10 interactions",
+      "Use content-based features (text embeddings, metadata, category) to generate an initial item embedding, gradually blending collaborative signal as interactions accumulate",
+      "Assign the new item a random embedding in the retrieval space",
+      "Force the item into all top-10 result sets to gather interaction data quickly"
+    ],
+    "correct": 1,
+    "explanation": "Content-based cold start: derive the initial item embedding from its metadata (title, description, category, image). This places the item in a semantically meaningful position in embedding space, enabling relevant retrieval from day one. As interactions accumulate, blend in collaborative signal (interaction-based embeddings). The progressive blending (e.g. content embedding at 0 interactions → 50% blend at 50 interactions → collaborative at 500+) is a standard industry approach.",
+    "whatsTested": "Cold start item embedding strategy in retrieval systems.",
+    "antiPattern": "Excluding new items (option A) creates a discovery gap — users never see new content, so it never gets interactions, creating a vicious cycle. Forcing new items into all results (option D) destroys relevance.",
+    "staffFraming": "In production: maintain two embedding tables (content-based and collaborative). Query both and blend at retrieval time based on interaction count. Popular items transition to collaborative embeddings; longtail items stay content-based."
+  },
+  {
+    "id": 101,
+    "domain": "Ranking & Retrieval",
+    "q": "What is the primary advantage of Maximum Marginal Relevance (MMR) in search result ranking?",
+    "options": [
+      "It maximizes total relevance of all retrieved documents",
+      "It balances relevance and diversity by penalizing redundant documents — selecting items that are relevant but dissimilar to already-selected items",
+      "It is faster than standard ranking algorithms",
+      "It directly optimizes for NDCG"
+    ],
+    "correct": 1,
+    "explanation": "MMR (Carbonell & Goldstein, 1998): at each selection step, choose the document that maximizes lambda×similarity(doc, query) - (1-lambda)×max_similarity(doc, already_selected). The second term penalizes redundancy. This produces result sets that are both relevant and diverse. lambda controls the relevance-diversity tradeoff. MMR is widely used in RecSys, search, and summarization where showing 10 nearly-identical results wastes display real estate.",
+    "whatsTested": "MMR as a diversity-relevance tradeoff algorithm.",
+    "antiPattern": "MMR does not directly optimize NDCG (option D) — it is a greedy algorithm, not a differentiable objective. It may actually reduce NDCG while improving user satisfaction.",
+    "staffFraming": "MMR is simple to implement and adds meaningful diversity. The lambda parameter is typically tuned via A/B test. For catalogs with heavy duplication (e.g. same artist\'s songs, same author\'s books), MMR or equivalent diversity constraints are essential."
+  },
+  {
+    "id": 102,
+    "domain": "Ranking & Retrieval",
+    "q": "In an ads ranking system, the bid ranking formula is: rank_score = bid × pCTR. A team proposes adding a quality score multiplier. What is the business justification?",
+    "options": [
+      "Quality score makes the formula more complex, deterring low-quality advertisers",
+      "Quality score (derived from ad relevance, landing page quality, historical CTR) incentivizes advertisers to create better ads — ads with high quality score can win at lower bids, aligning advertiser incentives with user experience",
+      "Quality score is used only for budgeting, not ranking",
+      "Quality score replaces pCTR in the formula"
+    ],
+    "correct": 1,
+    "explanation": "Without quality score, the only way to rank higher is to bid more. This creates an auction where the highest bidder wins regardless of relevance, degrading user experience. Quality score (Google AdWords\' approach) creates a compound incentive: a highly relevant ad with a lower bid can beat an irrelevant ad with a higher bid. This aligns the three-way interests: users see relevant ads, publishers maximize eCPM (bid × pCTR × quality), and advertisers with genuinely relevant products pay less.",
+    "whatsTested": "Role of quality score in ad ranking systems and advertiser incentive design.",
+    "antiPattern": "Quality score does not replace pCTR — it modifies the ranking score alongside pCTR. pCTR is the predicted click probability; quality score captures ad quality beyond what pCTR captures.",
+    "staffFraming": "The full ranking formula in production: rank_score = bid × pCTR × quality_score. The CPC charged is second-price: you pay the minimum needed to maintain your rank, not your full bid. This encourages truthful bidding."
+  },
+  {
+    "id": 103,
+    "domain": "Experiment Design",
+    "q": "What is the minimum detectable effect (MDE) in A/B testing and how does it affect sample size planning?",
+    "options": [
+      "MDE is the effect size you observe after running the test",
+      "MDE is the smallest true effect size you want to reliably detect; smaller MDE requires larger sample size, creating a tradeoff between sensitivity and experiment cost",
+      "MDE is fixed at 5% for all experiments",
+      "MDE determines how long you must run the experiment before checking results"
+    ],
+    "correct": 1,
+    "explanation": "MDE (Minimum Detectable Effect): the smallest lift (e.g. 1% conversion improvement) you want your test to detect with the stated power (typically 80%). Halving the MDE quadruples the required sample size (sample size ∝ 1/MDE²). This creates a fundamental tension: detecting tiny effects requires enormous samples (weeks of traffic), but teams often overestimate practical significance. MDE should be set to the minimum lift that is worth acting on, not the minimum lift the team hopes to see.",
+    "whatsTested": "MDE definition and its relationship to sample size and experiment design.",
+    "antiPattern": "MDE is set before the test, not observed from results. Setting MDE too small leads to underpowered experiments that run too long or detect impractically small effects.",
+    "staffFraming": "Practical MDE: ask the business \'what is the minimum lift that changes our decision?\' If conversion < 0.5% lift would not move the needle, set MDE = 0.5% and size accordingly. Common mistake: setting MDE based on what you want to detect, not what is worth acting on."
+  },
+  {
+    "id": 104,
+    "domain": "Experiment Design",
+    "q": "In an A/B test for a new feature, users in the control group interact with users in the treatment group (e.g. social features, marketplace). Why is this a problem?",
+    "options": [
+      "It increases statistical power",
+      "Network effects cause spillover: treatment effects contaminate the control group, making the measured lift an underestimate or overestimate of the true effect",
+      "It is not a problem if the groups are large enough",
+      "This only affects real-time streaming experiments"
+    ],
+    "correct": 1,
+    "explanation": "SUTVA violation (Stable Unit Treatment Value Assumption): standard A/B testing assumes no interaction between treatment and control. In social/marketplace/two-sided platforms, this fails. If a treated user (seeing the new feature) messages a control user, the control user is effectively partially treated. This contamination biases the measured treatment effect — typically causing underestimation if the feature creates positive network effects (because control benefits too).",
+    "whatsTested": "Network effects and SUTVA violation in A/B testing.",
+    "antiPattern": "Larger groups do not solve SUTVA violations — the contamination scales with the size of the experiment. The fix requires cluster-level randomization (randomize at geographic, social graph, or marketplace segment level).",
+    "staffFraming": "Solutions: (1) graph cluster randomization (randomize at friend-cluster level, not user level). (2) Holdout markets or geographic experiments. (3) Time-based splitting (pre/post, though this confounds time effects). All reduce statistical power, requiring longer experiments."
+  },
+  {
+    "id": 105,
+    "domain": "Experiment Design",
+    "q": "You run an A/B test for 2 weeks and observe no statistically significant effect (p=0.21). What is the correct conclusion?",
+    "options": [
+      "The feature has no effect and should be abandoned",
+      "Failure to reject the null does not confirm the null — the test may be underpowered; report the confidence interval for the effect size and compare to the MDE",
+      "Run the test for 2 more weeks until significance is achieved",
+      "Switch to a one-tailed test to find significance"
+    ],
+    "correct": 1,
+    "explanation": "Absence of evidence is not evidence of absence. p=0.21 means the data is consistent with both \'no effect\' and \'a small effect that was not detected.\' The correct analysis: report the 95% CI for the effect size. If the CI is [-0.1%, +0.3%] and MDE was 1%, you can conclude the effect is likely smaller than practical significance. If the CI is [-2%, +4%], you are underpowered and cannot conclude anything. Pre-specify MDE and power before running.",
+    "whatsTested": "Correct interpretation of non-significant A/B test results.",
+    "antiPattern": "Running longer after seeing p=0.21 is p-hacking / optional stopping. Switching to one-tailed test post-hoc is p-hacking. Both inflate false positive rates.",
+    "staffFraming": "Pre-commit to the decision rule before the experiment: \'If p > 0.05 and CI excludes effects larger than MDE, we will not ship.\' This prevents HARKing (Hypothesizing After Results are Known) and p-value fishing."
+  },
+  {
+    "id": 106,
+    "domain": "Experiment Design",
+    "q": "What is a holdout group and why should it be maintained in a product with continuous experimentation?",
+    "options": [
+      "A group of users excluded from all experiments, used as a baseline to measure the cumulative long-term effect of all shipped features",
+      "A group excluded from the treatment in a single A/B test",
+      "A set of reserved test users for QA",
+      "A statistical correction for multiple testing"
+    ],
+    "correct": 0,
+    "explanation": "In continuous experimentation, every user is always in some experiment. Without a holdout, there is no baseline: you cannot measure the cumulative effect of all shipped changes combined. A holdout group (typically 1-5% of users) never receives any treatment, providing a clean baseline for measuring long-term cumulative impact and detecting experiment-induced seasonality. Without a holdout, you risk optimizing for local metric improvements while missing long-term degradation.",
+    "whatsTested": "Purpose of a holdout group in a continuous experimentation platform.",
+    "antiPattern": "Option B describes a control group within a single experiment, not a holdout. A control group is defined per experiment; a holdout is global and permanent.",
+    "staffFraming": "Holdout groups reveal: (1) cumulative impact of all shipped features over time; (2) whether A/B test-measured lifts actually materialize in production; (3) seasonality effects that inflate or deflate individual experiment results."
+  },
+  {
+    "id": 107,
+    "domain": "Experiment Design",
+    "q": "An experiment shows a treatment effect of +3.2% conversion (p=0.02). The same experiment shows a -1.8% revenue per conversion (p=0.09). What should you conclude?",
+    "options": [
+      "Ship the treatment — conversion improved significantly",
+      "The experiment results are conflicting; conversion improved but revenue per conversion dropped; evaluate the joint metric (total revenue per user) before deciding",
+      "The revenue drop is not significant so ignore it",
+      "Run a longer test to get the revenue result to p<0.05"
+    ],
+    "correct": 1,
+    "explanation": "Multiple metrics in an A/B test must be evaluated jointly. A +3.2% conversion with -1.8% revenue per conversion may net out to a negative or positive effect on total revenue per user. p=0.09 for revenue is not \'confirmed no effect\' — it means the evidence is weaker, not absent. The joint metric (revenue per user = conversion rate × revenue per conversion) is the business-relevant metric. Evaluating them separately and cherry-picking the significant one is p-hacking.",
+    "whatsTested": "Multi-metric A/B test analysis and avoiding metric cherry-picking.",
+    "antiPattern": "Option C (ignore non-significant revenue drop) is the most common and dangerous mistake. Non-significant does not mean zero effect. It means the evidence is not strong enough to conclude either direction.",
+    "staffFraming": "Define a primary metric before the experiment. Secondary metrics inform context but do not override the primary. If you must evaluate tradeoffs, use a composite metric or hold a launch review where stakeholders explicitly accept the tradeoff."
+  },
+  {
+    "id": 108,
+    "domain": "Experiment Design",
+    "q": "What is a novelty effect in A/B testing and how does it bias results?",
+    "options": [
+      "New features are inherently more novel to measure",
+      "Users engage more with any new feature initially due to curiosity, inflating short-term metrics; after novelty wears off, performance returns toward baseline, causing the measured lift to overstate long-term value",
+      "Novelty effects only affect UI tests, not algorithm tests",
+      "Novelty effects cannot be detected and must be ignored"
+    ],
+    "correct": 1,
+    "explanation": "Novelty bias: users over-engage with any change simply because it is new. A new UI, a new recommendation algorithm, or a new notification pattern may show 10-15% lift in the first week, then decay to 3% after 4 weeks as novelty wears off. If you measure lift during the novelty peak and ship, you will overstate the long-term impact. Conversely, change aversion (users disliking change) causes initial under-engagement that recovers — the opposite effect.",
+    "whatsTested": "Novelty and change aversion effects in A/B testing.",
+    "antiPattern": "Novelty effects affect both algorithm and UI tests. Users notice algorithm changes too (different content appearing in their feed).",
+    "staffFraming": "Detection: run the experiment long enough to include a novelty decay period (typically 2-4 weeks). Monitor metrics week-over-week within the experiment. If lift declines week-over-week, novelty is present. Report the steady-state lift, not the peak."
+  },
+  {
+    "id": 109,
+    "domain": "SQL & Data",
+    "q": "A query runs in 45 seconds without an index on a 500M-row table. After adding an index on the filter column, it runs in 0.2 seconds. For which operation type does the index NOT provide this speedup?",
+    "options": [
+      "Equality filter: WHERE status = \'active\'",
+      "Range filter: WHERE created_at > \'2024-01-01\'",
+      "Full table aggregation: SELECT COUNT(*) FROM table (no WHERE clause)",
+      "Prefix search: WHERE name LIKE \'John%\'"
+    ],
+    "correct": 2,
+    "explanation": "Full table aggregation with no WHERE clause must scan every row regardless of index. An index on status or created_at does not help COUNT(*) with no filter — the database must still read all 500M rows to count them. Indexes accelerate selective reads (point lookups, range scans on a fraction of rows). When selectivity approaches 100% (full scan), the index overhead can make things slightly worse due to extra pointer lookups.",
+    "whatsTested": "When database indexes do and do not help — specifically that full table scans bypass index benefits.",
+    "antiPattern": "LIKE \'John%\' (option D) can use an index on name because it is a prefix match. LIKE \'%John%\' (contains) cannot use an index. This distinction is commonly confused.",
+    "staffFraming": "Index utility is proportional to selectivity. If a query returns >5-10% of rows, the query planner may choose a full scan over an index scan. Use EXPLAIN ANALYZE to verify the plan."
+  },
+  {
+    "id": 110,
+    "domain": "SQL & Data",
+    "q": "In Spark, what causes a shuffle and why is it the most expensive operation?",
+    "options": [
+      "Any transformation on a DataFrame",
+      "Operations that require data redistribution across partitions (groupBy, join, distinct, orderBy) — they require serializing, sending, and deserializing data across the network between executors",
+      "Reading data from S3",
+      "Writing data to Parquet"
+    ],
+    "correct": 1,
+    "explanation": "Shuffle: any operation that requires data with the same key to be co-located on the same executor. GroupBy must gather all rows with key=\'US\' onto the same executor. This involves: (1) map stage: each executor writes its portion of each key group to local disk; (2) network transfer: shuffle data is sent across the cluster; (3) reduce stage: receiving executors deserialize and process. At 1TB scale, shuffles can take minutes. Wide transformations (shuffle) vs. narrow transformations (map, filter — no shuffle).",
+    "whatsTested": "What causes shuffles in Spark and why they are expensive.",
+    "antiPattern": "Reading from S3 is an I/O operation but not a shuffle. Writing Parquet is an I/O operation. The shuffle is the inter-executor communication during computation.",
+    "staffFraming": "Shuffle optimization: (1) broadcast joins for small tables (avoid shuffle entirely); (2) partition on join keys before heavy join workloads; (3) tune `spark.sql.shuffle.partitions` (default 200 is often wrong); (4) use Kryo serialization to reduce shuffle data size."
+  },
+  {
+    "id": 111,
+    "domain": "SQL & Data",
+    "q": "A dbt model is failing with a duplicate key error in a surrogate key generation step. The surrogate key is defined as `dbt_utils.generate_surrogate_key([\'user_id\', \'event_date\'])`. What is the most likely cause?",
+    "options": [
+      "dbt does not support surrogate keys",
+      "There are multiple rows with the same (user_id, event_date) combination in the source data — the grain of the model does not match the expected uniqueness constraint",
+      "The surrogate key function is deprecated",
+      "NULL values in user_id or event_date are causing hash collisions"
+    ],
+    "correct": 1,
+    "explanation": "Surrogate keys are only unique if the combination of source columns is unique per row. If the upstream source has multiple events per user per day (e.g. user 123 has 5 events on 2024-01-15), generate_surrogate_key produces the same hash for all 5 rows, causing a duplicate key error. The fix: either aggregate to the correct grain before generating the key, or add additional columns to the key (e.g. event_id, event_timestamp).",
+    "whatsTested": "dbt surrogate key failures from grain mismatches in source data.",
+    "antiPattern": "NULL handling (option D): dbt_utils handles NULLs by coercing to a string representation before hashing, so NULLs alone do not cause collisions. Grain mismatch is the primary cause.",
+    "staffFraming": "Best practice: always add a `dbt test unique` and `not_null` test on surrogate keys. The grain of each model should be documented in the model header comment. Grain mismatches are the most common dbt data quality issue."
+  },
+  {
+    "id": 112,
+    "domain": "SQL & Data",
+    "q": "What is a window function in SQL and when should you use it instead of a subquery or GROUP BY?",
+    "options": [
+      "A function that filters rows in a time window",
+      "A function that computes a value across a set of rows related to the current row without collapsing the result into a single row — enabling ranking, running totals, and lead/lag without losing row-level granularity",
+      "A performance optimization for large tables",
+      "A function available only in PostgreSQL"
+    ],
+    "correct": 1,
+    "explanation": "Window functions (OVER clause) compute aggregates, rankings, or offsets across a partition of rows while retaining each original row. Example: `SUM(revenue) OVER (PARTITION BY user_id ORDER BY date)` computes a running revenue total per user without collapsing to one row per user. This is impossible with GROUP BY (which collapses rows) and verbose with correlated subqueries. Use cases: running totals, rank within group, lead/lag for time-series calculations.",
+    "whatsTested": "Window functions: what they are, why they are superior to correlated subqueries for these use cases.",
+    "antiPattern": "A correlated subquery for ranking (SELECT * FROM t1 WHERE N = (SELECT COUNT(*) FROM t1 WHERE ...)) runs once per row — O(n²). A window function runs in O(n log n). At scale, this difference is enormous.",
+    "staffFraming": "Rule: any time you need an aggregate but also need to keep individual rows, use a window function. `ROW_NUMBER()`, `RANK()`, `LAG()`/`LEAD()`, `SUM() OVER`, `AVG() OVER` are the most common. Know how `PARTITION BY` and `ORDER BY` interact within OVER."
+  },
+  {
+    "id": 113,
+    "domain": "SQL & Data",
+    "q": "In a data warehouse, what is the difference between a fact table and a dimension table, and what does the \'star schema\' refer to?",
+    "options": [
+      "Fact tables contain text; dimension tables contain numbers",
+      "Fact tables store measurable events or transactions at the grain level (e.g. each order); dimension tables store descriptive attributes (e.g. customer, product, date). Star schema: one central fact table joined to multiple dimension tables",
+      "Star schema means all tables have the same number of columns",
+      "Fact tables are updated daily; dimension tables are updated monthly"
+    ],
+    "correct": 1,
+    "explanation": "Star schema: fact table at center, dimension tables as rays. Fact table: each row is an event (order, page view, transaction) with foreign keys and numeric measures (revenue, quantity, duration). Dimension table: slowly-changing attributes (customer name, product category, country). The star schema enables fast aggregation queries (join fact to dimensions for slicing) and is optimized for OLAP read workloads.",
+    "whatsTested": "Data warehouse modeling: fact vs. dimension tables and star schema.",
+    "antiPattern": "Dimension tables can also have numeric fields (e.g. customer age, product price). The distinction is not text vs. numbers but events/measures vs. descriptive attributes.",
+    "staffFraming": "In practice: `fct_orders` (one row per order) joins to `dim_customers`, `dim_products`, `dim_dates`. Grain documentation is critical: always specify \'one row per X\' at the top of each model."
+  },
+  {
+    "id": 114,
+    "domain": "SQL & Data",
+    "q": "A query uses `SELECT DISTINCT user_id FROM events WHERE event_type = \'purchase\'`. At 10 billion rows, this query is slow. What is the most effective optimization?",
+    "options": [
+      "Add an index on event_type",
+      "Add a composite index on (event_type, user_id) — covering index eliminates the need to fetch the full row and speeds up deduplication",
+      "Increase the database connection pool size",
+      "Rewrite as a subquery"
+    ],
+    "correct": 1,
+    "explanation": "Covering index: an index that contains all columns needed by the query (event_type for filter, user_id for output). With a covering index on (event_type, user_id), the database reads only the index structure — it never touches the main table rows. At 10B rows, avoiding the row lookup is the dominant optimization. The index on event_type alone (option A) still requires fetching user_id from the main table for each matching row.",
+    "whatsTested": "Covering indexes for queries that filter and project a subset of columns.",
+    "antiPattern": "A single-column index on event_type accelerates the filter but still requires a heap fetch for user_id. The composite (event_type, user_id) covering index eliminates the heap access entirely.",
+    "staffFraming": "Covering index rule: if a query\'s WHERE and SELECT columns can all be served from the index, add all of them to the index. Put the filter column first, then the output column. Check with EXPLAIN ANALYZE that the plan shows \'Index Only Scan\'."
+  },
+  {
+    "id": 115,
+    "domain": "Optimization",
+    "q": "Why does Adam optimizer typically converge faster than SGD with momentum on modern deep learning tasks?",
+    "options": [
+      "Adam uses a higher learning rate than SGD",
+      "Adam maintains per-parameter adaptive learning rates (scaled by the second moment of gradients), allowing different features/layers to learn at appropriate speeds",
+      "Adam uses second-order information (Hessian)",
+      "Adam automatically tunes all hyperparameters"
+    ],
+    "correct": 1,
+    "explanation": "Adam computes per-parameter learning rates: parameters with large historical gradients get smaller effective LR; sparse parameters (rare features) get larger effective LR. This adaptivity handles the heterogeneity of gradients across layers (early layers have smaller gradients than later layers) and across features (frequent vs. rare). SGD + momentum uses a global LR for all parameters, which requires careful tuning per model architecture. Adam\'s adaptivity provides a better default, especially for models with embedding layers.",
+    "whatsTested": "Why Adam converges faster than SGD: per-parameter adaptive learning rates.",
+    "antiPattern": "Adam does not use the Hessian (option C) — that is Newton\'s method and is O(n³) for n parameters. Adam approximates the diagonal of the Hessian using the running second moment of gradients.",
+    "staffFraming": "Adam practical note: Adam often generalizes slightly worse than well-tuned SGD on computer vision tasks. For NLP/transformers and embeddings, Adam (or AdamW) is standard. Use AdamW (Adam + decoupled weight decay) over Adam for regularized training."
+  },
+  {
+    "id": 116,
+    "domain": "Optimization",
+    "q": "What does learning rate warmup do and why is it important for transformer training?",
+    "options": [
+      "Warmup prevents overfitting by starting with a low LR",
+      "Warmup increases LR from near-zero to the target LR over the first N steps. Early in training, model weights are random and gradient estimates are noisy — large LR updates from random initialization can send weights to bad regions. Warmup allows the optimizer to build reliable gradient statistics before taking large steps",
+      "Warmup is only necessary for CNNs",
+      "Warmup doubles the effective batch size"
+    ],
+    "correct": 1,
+    "explanation": "At the start of training, Adam\'s second moment estimate (v_t) is initialized to zero and takes several steps to stabilize. With bias correction, early steps can have inflated effective LR. Additionally, with random initialization, all layers have unstable, poorly calibrated gradient directions. Warmup (linear or square root) starts with a tiny LR, lets the model develop stable gradient statistics, then ramps to the target LR. Without warmup, loss often spikes or diverges early in training for large models.",
+    "whatsTested": "Purpose and mechanism of learning rate warmup.",
+    "antiPattern": "Warmup is not primarily about overfitting — it is about optimization stability. It is essential for transformers and was introduced in \'Attention Is All You Need\'.",
+    "staffFraming": "Standard transformer training recipe: linear warmup for 4-10% of training steps, then cosine annealing to near-zero. The warmup steps should be proportional to model size — larger models need more warmup."
+  },
+  {
+    "id": 117,
+    "domain": "Optimization",
+    "q": "A model\'s training loss oscillates wildly but the validation loss is stable and slowly decreasing. What does this indicate?",
+    "options": [
+      "The model is overfitting",
+      "The learning rate is too high for the training data but the validation set is a different distribution",
+      "The batch size is too small, causing noisy gradient estimates; the oscillation is sampling noise, not a model quality problem",
+      "The model architecture has too many parameters"
+    ],
+    "correct": 2,
+    "explanation": "Wild training loss oscillation with stable (decreasing) validation loss is the signature of a small batch size with a reasonable learning rate. Small batches produce high-variance gradient estimates — each batch is a noisy sample of the true gradient. The oscillation reflects batch-to-batch variance, not a fundamental problem. Validation loss, computed on the full validation set, averages out this noise and shows the true trend. Fixes: increase batch size (smooths gradients), use gradient accumulation, or reduce LR.",
+    "whatsTested": "Diagnosing training loss oscillation from small batch size.",
+    "antiPattern": "Overfitting (option A) would show training loss continuing to decrease while validation loss starts to increase. Oscillating training loss with decreasing validation loss is the opposite pattern.",
+    "staffFraming": "Practical diagnostics: if smoothing training loss (EMA with alpha=0.98) shows a clean downward trend, the oscillation is batch noise. If even the smoothed loss oscillates, the LR may be too high."
+  },
+  {
+    "id": 118,
+    "domain": "Optimization",
+    "q": "Gradient clipping is applied when the gradient norm exceeds a threshold. Which type of model most commonly requires gradient clipping and why?",
+    "options": [
+      "CNNs, because pooling layers amplify gradients",
+      "RNNs and transformers trained on long sequences, because gradients can explode through time steps or attention layers, causing parameter updates to overshoot",
+      "Linear models, because analytical solutions are unavailable",
+      "Models with BN, because BN destabilizes gradients"
+    ],
+    "correct": 1,
+    "explanation": "Exploding gradients are most common in RNNs (gradient signals must pass through many time steps via repeated weight matrix multiplication — eigenvalues > 1 cause exponential growth) and in transformers with large attention weights. Gradient clipping rescales the entire gradient vector if its L2 norm exceeds a threshold (typically 1.0), preventing single large updates that destabilize training. CNNs have bounded gradient flow through pooling; BN stabilizes rather than destabilizes.",
+    "whatsTested": "Why gradient clipping is needed for RNNs/transformers specifically.",
+    "antiPattern": "BN (option D) actually reduces gradient exploding by normalizing activations — BN networks are more stable, not less. Clipping is needed precisely when there is no BN-equivalent stabilization.",
+    "staffFraming": "Implementation: `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)`. Monitor gradient norms during training. If clipping fires frequently (>10% of batches), the LR is likely too high or the model architecture is unstable."
+  },
+  {
+    "id": 119,
+    "domain": "Optimization",
+    "q": "What is the difference between first-order and second-order optimization methods, and why are second-order methods rarely used for training deep neural networks?",
+    "options": [
+      "Second-order methods are slower to converge",
+      "Second-order methods (Newton\'s method, L-BFGS) use curvature information (Hessian) to take larger, more informed steps, but computing or approximating the Hessian for a model with millions of parameters is prohibitively expensive — O(n²) memory for the full Hessian, O(n) for diagonal approximations",
+      "Second-order methods cannot handle stochastic gradients",
+      "There is no practical difference for neural networks"
+    ],
+    "correct": 1,
+    "explanation": "Newton\'s method step: delta_theta = -H⁻¹∇L, where H is the n×n Hessian. For a model with n=100M parameters: storing H requires 100M² floats ≈ 40TB. Computing H⁻¹ is O(n³). Practical approximations: L-BFGS stores a low-rank approximation (expensive for neural nets); K-FAC uses a structured Kronecker-product approximation (used in some large-scale settings but not mainstream). First-order methods (SGD, Adam) scale to billions of parameters; second-order methods do not.",
+    "whatsTested": "Why second-order optimization is not used for training DNNs — computational complexity.",
+    "antiPattern": "Second-order methods DO converge faster (fewer iterations) than SGD — the issue is that each iteration is vastly more expensive. At small scale (few thousand parameters), L-BFGS works well.",
+    "staffFraming": "For DNN training: always use Adam/AdamW or SGD+momentum. Second-order methods appear in DNN research (K-FAC, Shampoo) but are not mainstream production practice. For convex optimization (logistic regression, SVM), L-BFGS is excellent."
+  },
+  {
+    "id": 120,
+    "domain": "Optimization",
+    "q": "A model trained with a large batch size achieves lower training loss but worse generalization than the same model trained with a small batch size and same number of epochs. Why?",
+    "options": [
+      "Large batches cause gradient explosion",
+      "Large batches produce more accurate gradient estimates that converge to sharp minima — regions with high curvature that do not generalize well. Small batches add gradient noise that acts as an implicit regularizer, steering toward flat minima that generalize better",
+      "Small batches benefit from the learning rate schedule more than large batches",
+      "Large batches overfit because more data is processed per update"
+    ],
+    "correct": 1,
+    "explanation": "Generalization gap from large batches (Keskar et al., 2017): large-batch SGD converges to sharp minima (high curvature) because clean gradients always point downhill steeply. Small-batch SGD\'s noisy gradients cause the optimization to escape sharp minima and settle in flat minima (low curvature), which generalize better — small perturbations to weights in flat regions do not significantly change loss. Mitigation: large-batch training with linear LR scaling rule and warmup helps but may not fully close the gap.",
+    "whatsTested": "Generalization gap between large and small batch training: sharp vs. flat minima.",
+    "antiPattern": "Large batches do not overfit in the traditional sense (option D) — they achieve lower training loss. The problem is the geometry of the solution found, not the amount of data processed.",
+    "staffFraming": "Practical implication: if you must use large batches (for GPU utilization), increase LR proportionally (linear scaling rule: LR *= batch_size / reference_batch_size) and add warmup. Gradient noise from small batches is not always a bug — sometimes it is the regularizer."
   }
 ];
 
