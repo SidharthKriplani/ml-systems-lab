@@ -79,6 +79,8 @@ const FOUNDATION_KEYS = [
   { id: 'graph-ml',          key: 'msl-graph-ml-foundation-v1' },
   { id: 'bandits',           key: 'msl-bandits-foundation-v1' },
   { id: 'probabilistic-ml',  key: 'msl-probabilistic-ml-foundation-v1' },
+  { id: 'optimization',      key: 'msl-optimization-foundation-v1' },
+  { id: 'data',              key: 'msl-data-foundation-v1' },
 ];
 
 // Prefix used by ALL practice-module done flags.

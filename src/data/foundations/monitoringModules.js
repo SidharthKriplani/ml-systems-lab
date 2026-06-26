@@ -4,7 +4,7 @@ export const MONITORING_MODULES = [
     title: 'Monitoring Taxonomy',
     subtitle: 'Data drift, concept drift, model decay, infrastructure drift',
     difficulty: 'foundational',
-    estimatedMin: 15,
+    estimatedMin: 35,
     tags: ['monitoring', 'drift', 'model decay', 'MLOps'],
     summary: `ML model monitoring tracks whether a deployed model continues to perform as expected over time. Four distinct failure modes require monitoring: data drift (input distribution changes), concept drift (the true relationship between inputs and outputs changes), model decay (performance degrades for any reason), and infrastructure drift (serving environment changes). Each has different detection methods and remediation strategies.`,
     keyPoints: [
@@ -67,7 +67,7 @@ export const MONITORING_MODULES = [
     title: 'Prediction Distribution Monitoring',
     subtitle: 'Output distribution shift, score distribution, confidence calibration drift',
     difficulty: 'intermediate',
-    estimatedMin: 15,
+    estimatedMin: 35,
     tags: ['prediction monitoring', 'score distribution', 'output drift'],
     summary: `Prediction distribution monitoring tracks the distribution of model outputs (scores, predicted classes, confidence) over time. This is the earliest available signal of model degradation — labels may be delayed by days or weeks, but predictions are logged instantly. Shifts in the prediction distribution indicate either input drift (model is seeing different inputs) or concept drift (model is behaving differently on similar inputs). It is the key proxy metric for model health without labels.`,
     keyPoints: [
@@ -109,7 +109,7 @@ export const MONITORING_MODULES = [
     title: 'Calibration Monitoring in Production',
     subtitle: 'Reliability diagrams from logged predictions, ECE over time, recalibration triggers',
     difficulty: 'intermediate',
-    estimatedMin: 15,
+    estimatedMin: 35,
     tags: ['calibration', 'ECE', 'reliability', 'production monitoring'],
     summary: `Calibration monitoring tracks whether the model's predicted probabilities remain well-calibrated over time. A well-calibrated model at training time can become miscalibrated in production due to distribution shift or concept drift. Calibration matters for downstream decisions that use probability thresholds (risk scoring, cost-sensitive classification) and for stacking (miscalibrated base models mislead meta-learners). Monitoring uses logged predictions and delayed labels.`,
     keyPoints: [
@@ -151,7 +151,7 @@ export const MONITORING_MODULES = [
     title: 'Alerting & Runbooks',
     subtitle: 'Alert thresholds, alert fatigue, P1/P2/P3 classification, runbook structure',
     difficulty: 'intermediate',
-    estimatedMin: 15,
+    estimatedMin: 35,
     tags: ['alerting', 'runbooks', 'incident response', 'on-call'],
     summary: `An effective alerting system gives early warning of model issues while minimising alert fatigue. Alerts are classified by severity (P1/P2/P3) based on business impact and time sensitivity. Every alert should have a corresponding runbook — a documented procedure for diagnosis and remediation that allows on-call engineers to respond effectively without expertise in the specific model. Without runbooks, alerts become noise.`,
     keyPoints: [

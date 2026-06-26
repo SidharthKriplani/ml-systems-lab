@@ -148,6 +148,13 @@ export function UnsupervisedFoundationTab({ onNavigate }) {
             </p>
           </div>
 
+          {selected.takeaway && (
+            <div style={{ background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Key Insight</div>
+              <p style={{ fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{selected.takeaway}</p>
+            </div>
+          )}
+
           {/* Key points */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>

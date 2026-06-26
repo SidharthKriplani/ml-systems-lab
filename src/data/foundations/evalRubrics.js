@@ -1307,4 +1307,158 @@ export const FOUNDATION_RUBRICS = {
       },
     ],
   },
+
+  optimization: {
+    label: 'Optimization',
+    tabId: 'optimization_foundation',
+    totalModules: 12,
+    masteryDescription:
+      'A master of optimization understands why gradient-based methods work, can diagnose training failures from first principles, select and configure optimizers for a given architecture, and reason about the relationship between optimizer choice, loss landscape geometry, and generalization.',
+    levels: {
+      novice:
+        'Knows gradient descent exists and that learning rate matters. Cannot explain why momentum helps or when Adam fails.',
+      building:
+        'Can implement SGD and Adam. Understands learning rate intuitively. Cannot explain bias correction in Adam or why weight decay matters differently for Adam vs SGD.',
+      competent:
+        'Can derive SGD, momentum, and Adam update rules; explain vanishing/exploding gradients; choose appropriate optimizer and LR schedule for a given setting; debug basic training instability.',
+      strong:
+        'Reasons about loss landscape geometry (sharp vs flat minima, saddle points), connects optimizer choice to generalization, understands gradient flow through deep networks, and can diagnose subtle training failures (Adam weight coupling, warmup rationale).',
+      interviewReady:
+        'Can explain why AdamW decouples weight decay from gradient adaptation, why SGD finds flatter minima than Adam, how LR warmup prevents early training instability, and what the theoretical limits of first-order methods are — and translate all of this to practical architecture decisions.',
+    },
+    interviewSignals: [
+      {
+        topic: 'Adam vs SGD generalization',
+        failSignal:
+          'Says "Adam is faster so just use Adam" without understanding the generalization tradeoff or when SGD is preferable.',
+        passSignal:
+          'States Adam converges faster but SGD with momentum often finds solutions that generalize better; transformers use Adam, many CNNs are trained with SGD.',
+        strongSignal:
+          'Explains that Adam\'s per-parameter adaptive learning rates allow it to escape sharp minima quickly but also allows it to converge to sharp minima; SGD with momentum uses isotropic step sizes — implicit bias toward flatter minima which generalize better (Keskar et al. 2017); AdamW decouples weight decay (L2 to parameters, not gradients) which partially recovers SGD-like generalization; discusses that for transformers, Adam is necessary because attention weights have wildly different gradient scales; for CNNs, SGD+momentum with cosine annealing often outperforms Adam on final accuracy.',
+        sampleQuestion:
+          'You\'re training a ResNet-50 on ImageNet. Your colleague uses AdamW; you use SGD+momentum+cosine schedule. After 90 epochs your model has 0.5% higher top-1 accuracy. Explain mechanistically why this gap might exist.',
+      },
+      {
+        topic: 'AdamW vs Adam: weight decay decoupling',
+        failSignal:
+          'Treats AdamW and Adam+L2 as equivalent. Cannot explain what "decoupled weight decay" means.',
+        passSignal:
+          'States that Adam+L2 adds the L2 gradient to the gradient before adaptive scaling — so the weight decay effect is divided by the adaptive scale factor v_t. AdamW applies weight decay directly to weights after the gradient step.',
+        strongSignal:
+          'Derives the difference: Adam+L2 computes g_t = g_t + λw_t, then adapts — the weight decay penalty is scaled by 1/√v_t (per-parameter), making it larger for low-gradient parameters and smaller for high-gradient ones. AdamW: θ_t = θ_{t-1} - α(m̂_t/√v̂_t) - αλθ_{t-1}. The weight decay is now uniform and independent of the adaptive scale. This restores the L2 regularization to its intended behavior; empirically critical for transformers — Loshchilov & Hutter showed AdamW consistently outperforms Adam+L2 on language modeling.',
+        sampleQuestion:
+          'Implement AdamW from scratch and point to exactly one line that differs from Adam+L2 regularization. Explain why that line matters.',
+      },
+      {
+        topic: 'Vanishing and exploding gradients',
+        failSignal:
+          'Says "use ReLU to fix vanishing gradients" without explaining why sigmoid/tanh cause the problem or what exploding gradients are.',
+        passSignal:
+          'States sigmoid saturates (derivative ≈ 0 at extremes), causing gradients to vanish through many layers; ReLU has gradient 1 for positive inputs; exploding gradients cause NaN loss; gradient clipping fixes exploding gradients.',
+        strongSignal:
+          'Explains via chain rule: ∂L/∂w₁ = ∂L/∂z_n · ∏ᵢ ∂zᵢ/∂z_{i-1} — product of n Jacobians. If each ‖Jᵢ‖ < 1 (sigmoid saturation), the product → 0 exponentially. If ‖Jᵢ‖ > 1 consistently (poor init), product → ∞. ReLU: gradient is 1 or 0 — avoids multiplicative decay but causes dead neurons. ResNets: skip connections create gradient highways (∂L/∂x = ∂L/∂F + I) — identity term ensures gradient signal regardless of F. Layer norm and batch norm stabilize activations so Jacobian norms stay near 1. He init calibrates initial weight scale for ReLU to prevent variance explosion at init.',
+        sampleQuestion:
+          'You\'re training a 50-layer MLP with sigmoid activations and observe that gradients at layer 1 are 1e-15 while gradients at layer 50 are 1.0. Explain what\'s happening and give two architectural changes that would fix it.',
+      },
+      {
+        topic: 'Learning rate warmup',
+        failSignal:
+          'Cannot explain why warmup is needed or what goes wrong without it.',
+        passSignal:
+          'States warmup gradually increases LR from near-0 to target value over the first N steps; prevents instability at the start of training.',
+        strongSignal:
+          'Explains the mechanism: at initialization, weights are random and the loss landscape is highly curved and unpredictable. A large LR immediately causes large steps into a poorly characterized landscape — high probability of landing in a bad region. Adam compounds this: the v_t (second moment) estimate is near-zero at step 0 (bias-corrected but still noisy), so effective LR = α/√v̂_t is very large for parameters with small initial gradients. Warmup addresses both: starts small, lets the second-moment estimate accumulate reliable signal before taking large steps. For transformers specifically, warmup is practically mandatory — cold-start with full LR causes loss spikes in the first ~1000 steps.',
+        sampleQuestion:
+          'You train a transformer without LR warmup and observe a loss spike in the first 200 steps followed by recovery. Explain exactly why the spike happens and why the model recovers.',
+      },
+      {
+        topic: 'Loss landscape and flat minima',
+        failSignal:
+          'Believes training loss optimization is the same as finding a good generalizing solution. Cannot explain what a "sharp" vs "flat" minimum is.',
+        passSignal:
+          'States flat minima generalize better because small perturbations to weights don\'t change loss much; sharp minima are sensitive to weight perturbations and tend to generalize poorly.',
+        strongSignal:
+          'Explains using the PAC-Bayes framework: a flat minimum has a large volume of low-loss weight configurations — perturbation-robust — consistent with good generalization bounds. A sharp minimum (large eigenvalues of the Hessian) is sensitive to small weight changes; a distribution shift between train and test effectively perturbs weights relative to the training landscape. Keskar et al. 2017: large-batch SGD (less noise) converges to sharper minima and generalizes worse; small-batch SGD noise acts as implicit regularization toward flat regions. SAM (Sharpness-Aware Minimization) explicitly seeks flat minima by minimizing the worst-case loss under weight perturbation: min_w max_{‖ε‖≤ρ} L(w+ε). Double descent: in overparameterized models, interpolation (zero train loss) minima exist in a connected manifold — SGD finds flat regions of this manifold.',
+        sampleQuestion:
+          'Explain why doubling batch size while keeping other hyperparameters constant often slightly hurts test accuracy on image classification, even though the training loss reaches the same value.',
+      },
+    ],
+  },
+
+  data: {
+    label: 'Data & Features',
+    tabId: 'data_foundation',
+    totalModules: 11,
+    masteryDescription:
+      'A master of data and features understands how data quality, distribution, and representation affect model performance end-to-end — can identify and prevent data leakage, handle class imbalance correctly, diagnose and respond to distribution shift, and design feature pipelines that are consistent between training and serving.',
+    levels: {
+      novice:
+        'Knows features need to be preprocessed. Cannot identify data leakage, explain MNAR, or reason about distribution shift.',
+      building:
+        'Can apply standard preprocessing (scaling, one-hot). Struggles with edge cases: high-cardinality categoricals, temporal splits, class imbalance beyond resampling.',
+      competent:
+        'Can design a correct preprocessing pipeline, identify common leakage patterns, choose appropriate imputation for MCAR/MAR/MNAR, and apply the right class imbalance technique for a given problem.',
+      strong:
+        'Reasons about training-serving skew from first principles, designs feature stores to prevent it, detects and responds to distribution shift, and selects feature engineering strategies based on model type and scale.',
+      interviewReady:
+        'Can design an end-to-end feature pipeline for a production system, proactively identify leakage vectors, explain why SMOTE works and when it fails, and describe how to detect covariate shift in a deployed model.',
+    },
+    interviewSignals: [
+      {
+        topic: 'Data leakage',
+        failSignal:
+          'Cannot identify data leakage in a scenario or conflates leakage with overfitting.',
+        passSignal:
+          'States that leakage occurs when information from the test set contaminates training; gives examples: scaling on full dataset, target encoding without CV.',
+        strongSignal:
+          'Categorizes leakage: (1) preprocessing leakage — fitting any transformer (scaler, imputer, encoder) on the full dataset before splitting; fix: fit only on train, transform val/test. (2) Target leakage — including features derived from the label (e.g., diagnosis code in a hospitalization model where diagnosis is recorded after admission decision). (3) Temporal leakage — using future data to predict the past (e.g., using 2024 features to predict 2023 outcomes). (4) Group leakage — same entity appears in train and test (patient ID, user ID). Explains why leakage produces optimistically biased CV scores and why the model fails in production: train distribution contains information that is unavailable at serving time.',
+        sampleQuestion:
+          'You build a churn model that achieves 95% AUC in cross-validation but 61% AUC in production. Name three leakage scenarios that could explain this gap and how you would detect each one.',
+      },
+      {
+        topic: 'Class imbalance strategies',
+        failSignal:
+          'Says "just use SMOTE" without understanding when it fails or why threshold moving is often preferable.',
+        passSignal:
+          'States SMOTE creates synthetic minority samples by interpolating between k-nearest neighbors; class weights upweight minority in loss; threshold moving adjusts decision threshold post-training.',
+        strongSignal:
+          'Explains mechanism tradeoffs: (1) SMOTE creates synthetic samples in feature space — works for tabular with moderate imbalance but can create noise for high-dimensional or categorical features; still requires the model to learn from synthetic points that don\'t correspond to real data distribution. (2) Class weights: cleanest solution for most cases — doesn\'t distort the data distribution, just changes the loss gradient. Weight = N_majority / N_minority as starting point. (3) Threshold moving: train on imbalanced data normally, then choose threshold that maximizes F1/precision@K/business metric on val set — doesn\'t change training at all. Best when you have a specific operating point in mind. (4) For extreme imbalance (1:10000), all methods struggle; fraud detection often uses anomaly detection framing instead.',
+        sampleQuestion:
+          'You\'re building a fraud detection model with 0.1% fraud rate. Your colleague proposes SMOTE to 50/50 balance. You disagree. What would you do instead and why?',
+      },
+      {
+        topic: 'Distribution shift: types and detection',
+        failSignal:
+          'Says models degrade over time without being able to name the type of shift or describe how to detect it.',
+        passSignal:
+          'States covariate shift = P(X) changes; concept drift = P(Y|X) changes; label shift = P(Y) changes; can be detected by monitoring feature distributions and prediction distributions.',
+        strongSignal:
+          'Distinguishes: (1) Covariate shift: input distribution changes but the relationship between inputs and labels stays the same — fix with importance weighting (weight each sample by P_test(x)/P_train(x)). (2) Concept drift: the true mapping from inputs to labels changes — fix by retraining; can be gradual or sudden. (3) Label shift: label marginal distribution changes (e.g., disease prevalence changes) while P(X|Y) stays the same — fix with label proportion estimation. Detection: Population Stability Index (PSI) for feature drift; KS test for distributional comparison; prediction distribution monitoring (PSI on scores); performance degradation monitoring (requires labels with delay). Explains that covariate shift is the most common and often causes model performance to degrade even without concept drift.',
+        sampleQuestion:
+          'Your model was trained in January and is serving in July. Feature PSI for "days_since_last_login" is 0.35 (high drift). Precision has dropped from 0.82 to 0.71. Walk through how you would diagnose whether this is covariate shift, concept drift, or a pipeline bug.',
+      },
+      {
+        topic: 'Training-serving skew and feature stores',
+        failSignal:
+          'Cannot explain what training-serving skew is or why it causes production failures.',
+        passSignal:
+          'States training-serving skew occurs when features are computed differently during training and serving; feature stores solve this by centralizing feature computation.',
+        strongSignal:
+          'Explains that training-serving skew is one of the most common production ML bugs: during training, features are computed in batch using offline data (e.g., pandas in a notebook); during serving, features are computed in real time (e.g., Python microservice or SQL query). Any discrepancy — different handling of null values, different aggregation window, different normalization — causes the model to receive different inputs than it was trained on. Feature stores solve this by defining features once in a shared registry; the same code runs for both batch feature computation (training) and real-time feature computation (serving). Point-in-time correct feature generation: when creating training data, features must reflect what was available at prediction time, not the future — otherwise training data is implicitly time-leaky.',
+        sampleQuestion:
+          'Your model uses a "7-day rolling average purchase amount" feature. Training data was generated using offline SQL on a data warehouse. Serving computes this in real time from a streaming database. List three ways these two computations could silently diverge.',
+      },
+      {
+        topic: 'Missing value mechanisms (MCAR, MAR, MNAR)',
+        failSignal:
+          'Treats all missing values the same and applies mean imputation without considering why the data is missing.',
+        passSignal:
+          'States MCAR = missing randomly, safe to drop or impute; MAR = missing depends on other observed variables; MNAR = missing depends on the value itself — hardest to handle.',
+        strongSignal:
+          'Explains implications of each: MCAR: missingness is independent of everything — mean/median imputation is unbiased; can safely drop rows. MAR: missingness depends on observed X — conditional imputation (MICE: Multiple Imputation by Chained Equations) is unbiased; model-based imputation using other features is valid. MNAR: missingness is related to the missing value itself (e.g., high-income people skip income field) — any imputation introduces systematic bias; best approach is to add a missingness indicator feature (binary flag: "income was missing") so the model can learn that "missing income" is itself informative; complete case analysis would select a biased subset. Gives test: compare distribution of other features between missing and non-missing rows — if different, data is likely MAR or MNAR.',
+        sampleQuestion:
+          'In your training data, 30% of users have missing "annual_income" values. The missing rate is higher for users with low engagement scores. What type of missingness is this, and what imputation strategy would you choose?',
+      },
+    ],
+  },
 };

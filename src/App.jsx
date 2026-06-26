@@ -75,6 +75,8 @@ const SelfSupervisedFoundationTab = lazy(() => import('./tabs/foundations/SelfSu
 const GraphMLFoundationTab        = lazy(() => import('./tabs/foundations/GraphMLFoundationTab.jsx').then(m => ({ default: m.GraphMLFoundationTab })))
 const BanditsFoundationTab        = lazy(() => import('./tabs/foundations/BanditsFoundationTab.jsx').then(m => ({ default: m.BanditsFoundationTab })))
 const ProbabilisticMLFoundationTab = lazy(() => import('./tabs/foundations/ProbabilisticMLFoundationTab.jsx').then(m => ({ default: m.ProbabilisticMLFoundationTab })))
+const OptimizationFoundationTab    = lazy(() => import('./tabs/foundations/OptimizationFoundationTab.jsx').then(m => ({ default: m.OptimizationFoundationTab })))
+const DataFoundationTab            = lazy(() => import('./tabs/foundations/DataFoundationTab.jsx').then(m => ({ default: m.DataFoundationTab })))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -140,6 +142,8 @@ const ALL_TABS = [
   { id: 'graph_ml_foundation',       component: GraphMLFoundationTab },
   { id: 'bandits_foundation',        component: BanditsFoundationTab },
   { id: 'probabilistic_ml_foundation', component: ProbabilisticMLFoundationTab },
+  { id: 'optimization_foundation',     component: OptimizationFoundationTab },
+  { id: 'data_foundation',             component: DataFoundationTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -218,6 +222,7 @@ const TAB_TO_ZONE = {
   rl_foundation: 'know', time_series_foundation: 'know',
   self_supervised_foundation: 'know', graph_ml_foundation: 'know',
   bandits_foundation: 'know', probabilistic_ml_foundation: 'know',
+  optimization_foundation: 'know', data_foundation: 'know',
   // Library also lives under KNOW
   gradient: 'know', cheatsheet: 'know',
 }
@@ -326,6 +331,8 @@ const NAV_SECTIONS = [
           { id: 'eval_foundation',            label: 'Evaluation',          desc: 'Metrics from first principles, validation traps, offline vs online.' },
           { id: 'unsupervised_foundation',    label: 'Unsupervised',        desc: 'Clustering, dimensionality reduction, anomaly detection.' },
           { id: 'causal_foundation',          label: 'Causal Inference',    desc: 'Potential outcomes, DAGs, uplift modeling, experiment design.' },
+          { id: 'optimization_foundation',    label: 'Optimization',        desc: 'Gradient descent, SGD, momentum, Adam, LR schedules, loss landscapes, gradient flow.' },
+          { id: 'data_foundation',            label: 'Data & Features',     desc: 'Data quality, feature engineering, encoding, scaling, imbalance, distribution shift, leakage.' },
         ],
       },
       {
