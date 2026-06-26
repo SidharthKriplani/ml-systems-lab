@@ -180,6 +180,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that a decision tree's high variance comes from the instability of greedy splits, which means in practice you never use a single tree for prediction — you use it as the building block for random forests or gradient boosting.`,
+    interactiveId: 'decision_tree_viz',
   },
   {
     id: 'random_forest',
@@ -214,6 +215,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that random forests reduce variance by averaging many decorrelated trees, which means in practice max_features (controlling tree correlation) matters more than n_estimators (controlling how many trees you average).`,
+    interactiveId: 'random_forest_viz',
   },
   {
     id: 'gradient_boosting',
@@ -321,6 +323,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that SVMs find the maximum-margin separator using only the support vectors, which means in practice the kernel trick lets you learn non-linear boundaries without ever computing high-dimensional features — but SVMs do not scale to large datasets and gradient boosting is usually preferred.`,
+    interactiveId: 'svm_viz',
   },
   {
     id: 'knn',
@@ -355,6 +358,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that KNN assumes that nearby points in feature space have similar labels, which means in practice the quality of the distance metric (or embedding space) matters far more than the choice of k.`,
+    interactiveId: 'knn_viz',
   },
   {
     id: 'naive_bayes',
@@ -457,6 +461,7 @@ export const CLASSICAL_ML_MODULES = [
       },
     ],
     takeaway: `The key insight is that class imbalance is a cost asymmetry problem, not a data quantity problem, which means in practice the most important intervention is threshold tuning at deployment to match the actual cost ratio of false positives to false negatives for your specific use case.`,
+    interactiveId: 'class_imbalance_viz',
   },
   {
     id: 'feature_selection',

@@ -23,6 +23,16 @@ const registry = {
   ensemble_viz:               lazy(() => import('./EnsembleViz').then(m => ({ default: m.EnsembleViz }))),
   hypothesis_testing_viz:     lazy(() => import('./HypothesisTestingViz').then(m => ({ default: m.HypothesisTestingViz }))),
   calibration_curve_viz:      lazy(() => import('./CalibrationCurveViz').then(m => ({ default: m.CalibrationCurveViz }))),
+  decision_tree_viz:       lazy(() => import('./DecisionTreeViz').then(m => ({ default: m.DecisionTreeViz }))),
+  svm_viz:                 lazy(() => import('./SVMViz').then(m => ({ default: m.SVMViz }))),
+  knn_viz:                 lazy(() => import('./KNNViz').then(m => ({ default: m.KNNViz }))),
+  random_forest_viz:       lazy(() => import('./RandomForestViz').then(m => ({ default: m.RandomForestViz }))),
+  class_imbalance_viz:     lazy(() => import('./ClassImbalanceViz').then(m => ({ default: m.ClassImbalanceViz }))),
+  anomaly_detection_viz:   lazy(() => import('./AnomalyDetectionViz').then(m => ({ default: m.AnomalyDetectionViz }))),
+  gmm_viz:                 lazy(() => import('./GMMViz').then(m => ({ default: m.GMMViz }))),
+  batch_norm_viz:          lazy(() => import('./BatchNormViz').then(m => ({ default: m.BatchNormViz }))),
+  rnn_viz:                 lazy(() => import('./RNNViz').then(m => ({ default: m.RNNViz }))),
+  tsne_viz:                lazy(() => import('./TSNEViz').then(m => ({ default: m.TSNEViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

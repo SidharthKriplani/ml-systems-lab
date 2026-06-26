@@ -233,6 +233,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that t-SNE and UMAP are visualisation tools that distort data geometry to reveal neighbourhood structure — t-SNE's inter-cluster distances are completely meaningless while UMAP's are approximate — which means running k-means on their 2D output is always wrong, and any apparent cluster in a 2D plot requires validation in the original high-dimensional space.`,
+    interactiveId: 'tsne_viz',
   },
   {
     id: 'autoencoders_dim_reduction',
@@ -309,6 +310,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that GMM generalises k-means by giving each point a soft probability of belonging to each cluster and allowing clusters to be elliptical — the EM algorithm computes these assignments and updates cluster parameters iteratively, but converges to a local optimum, which means multiple restarts and principled model selection with BIC are required for reliable results.`,
+    interactiveId: 'gmm_viz',
   },
   {
     id: 'anomaly_detection',
@@ -347,6 +349,7 @@ export const UNSUPERVISED_MODULES = [
       },
     ],
     takeaway: `The key insight is that different anomaly detection algorithms embed different definitions of "unusual" — Isolation Forest says anomalies are easy to isolate, LOF says they have lower density than their neighbours, autoencoders say they are hard to reconstruct — and choosing the right algorithm means choosing which definition matches the structure of the anomalies you expect to see.`,
+    interactiveId: 'anomaly_detection_viz',
   },
   {
     id: 'topic_modeling',

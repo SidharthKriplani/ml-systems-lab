@@ -154,6 +154,7 @@ export const DEEP_LEARNING_MODULES = [
       },
     ],
     takeaway: `The key insight is that normalisation (BatchNorm/LayerNorm) and regularisation (dropout/weight decay) are solving opposite problems — normalisation stabilises the optimisation landscape so training converges, while regularisation reduces capacity so the learned solution generalises.`,
+    interactiveId: 'batch_norm_viz',
   },
   {
     id: 'optimizers',
@@ -271,6 +272,7 @@ export const DEEP_LEARNING_MODULES = [
       },
     ],
     takeaway: `The key insight is that the LSTM's cell state is a learned gradient highway that sidesteps the vanishing gradient problem — but this advantage over vanilla RNNs only matters for long-range dependencies, and for most sequence tasks above 512 tokens, the Transformer's direct O(1) path length between positions makes it the better choice despite the O(n²) memory cost.`,
+    interactiveId: 'rnn_viz',
   },
   {
     id: 'attention',
