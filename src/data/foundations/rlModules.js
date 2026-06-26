@@ -153,6 +153,7 @@ export const RL_MODULES = [
     subtitle: 'REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based',
     difficulty: 'intermediate',
     estimatedMin: 50,
+    interactiveId: 'policy_gradient_viz',
     tags: ['policy gradient', 'reinforce', 'log-derivative', 'variance reduction', 'baseline', 'continuous actions'],
     summary: `Policy gradient methods directly parameterise and optimise the policy π_θ(a|s), rather than learning a value function and deriving the policy from it. The fundamental result is the Policy Gradient Theorem: ∇_θ J(θ) = E_{τ~π_θ}[Σ_t ∇_θ log π_θ(a_t|s_t) · G_t]. This is elegant — you never need the environment's transition model. But REINFORCE, the direct application, has catastrophically high variance: the return G_t used as the weight can be enormous and highly variable, making gradient estimates noisy to the point of uselessness. Understanding how and why baseline subtraction reduces variance without introducing bias — and why policy gradients are necessary for continuous and stochastic action spaces where value-based methods cannot apply — is what separates a deep understanding from surface familiarity.`,
     keyPoints: [

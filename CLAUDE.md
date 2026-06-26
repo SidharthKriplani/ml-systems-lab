@@ -4,7 +4,34 @@ Read this first, every session.
 
 ---
 
-## ✅ LATEST (2026-06-24, v4.128–v4.130) — Component audit #033 + salvage shipped
+## ✅ LATEST (2026-06-26) — Interactives + content expansion
+
+**6 new interactive components** in `src/components/interactive/`:
+- `QLearningViz` (q_learning_viz) — 7×7 grid world, Q-table heatmap, policy arrows
+- `ThompsonSamplingViz` (thompson_sampling_viz) — 5-arm bandit, Beta posteriors, vs ε-greedy vs UCB1
+- `WeightInitViz` (weight_init_viz) — 10-layer init comparison, Xavier/He/zeros/large-normal histograms
+- `TimeSeriesDecompViz` (time_series_decomp_viz) — trend+seasonal+residual decomposition
+- `GaussianProcessViz` (gaussian_process_viz) — GP regression, click to add points, posterior bands
+- `PolicyGradientViz` (policy_gradient_viz) — REINFORCE on 4-arm bandit, softmax policy evolution
+
+`InteractivePanel.jsx` updated with all 6. `rlModules.js`: policy_gradient_viz wired to `policy_gradients`.
+
+**⚠️ PENDING (next session — top priority):**
+- Wire remaining 5 new interactiveIds to module files (none of these 5 have it yet):
+  - `q_learning_viz` → id `deep_q_networks` in rlModules.js
+  - `thompson_sampling_viz` → id `thompson_sampling` in banditsModules.js
+  - `weight_init_viz` → id `neural_nets` in deepLearningModules.js
+  - `time_series_decomp_viz` → id `seasonality_decomposition` in timeSeriesModules.js
+  - `gaussian_process_viz` → id `gaussian_processes` in probabilisticMLModules.js
+- Voice rewrite: `unsupervisedModules.js` NOT DONE. `optimizationModules`, `mathStatsModules`, `deepLearningModules`, `classicalMLModules` partially done (interrupted — verify quality).
+- `quizData.js` posts 51–126 still missing (228 MCQs)
+
+**Content expansions (committed separately, already pushed or pending below):**
+SpotTheFlawTab 12→27 scenarios · VerbatimTab 25→65 questions · questionBank.js Trainer MCQs 60→120
+
+---
+
+## Prior arc (2026-06-24, v4.128–v4.130) — Component audit #033 + salvage shipped
 
 A full **component-tier audit + cleanup + salvage arc** ran on top of the frozen four-frame nav. Committed + pushed to origin/main (`ea131eb` v4.128, `5b33892` v4.129, + a pending loose-end fix v4.130). Freeze-overrides were authorized inline by the user for the refactors/salvage (no net-new content beyond *recovered* orphan content).
 

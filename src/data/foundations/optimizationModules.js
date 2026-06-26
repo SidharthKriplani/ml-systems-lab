@@ -17,7 +17,7 @@ export const OPTIMIZATION_MODULES = [
       `"Finding the minimum" is the wrong frame for deep learning. What optimizers actually find are points with very low loss — not necessarily the absolute lowest. For overparameterized networks, local minima, saddle points, and flat regions all tend to generalize similarly well.`,
       `Sharp vs flat minima: a sharp minimum has high curvature — the loss rises steeply in every direction. A flat minimum has low curvature — the loss stays low across a wide basin. Flat minima generalize better because small perturbations in parameters do not dramatically change the loss. This is the geometric reason why SGD's gradient noise is a feature, not a bug.`,
     ],
-    takeaway: `The key insight of loss landscapes is that optimization in deep learning is not about finding the global minimum — it is about navigating a high-dimensional surface to a flat, low-loss region, which means the geometry of the landscape (sharp vs flat, saddle points, plateaus) determines both how you optimize and how well the solution generalizes.`,
+    takeaway: `Optimization in deep learning is not a search for the global minimum — it is a search for a flat, low-loss region. The geometry of the landscape, not just the loss value, determines how well the solution generalizes.`,
     checkQuestions: [
       {
         q: `Why does MSE loss produce a convex (bowl-shaped) landscape for linear regression but not for a two-layer neural network with ReLU activations?`,
@@ -56,7 +56,7 @@ export const OPTIMIZATION_MODULES = [
       `One "epoch" means processing all training data once. One gradient step means one update w ← w − α·∇L. In full-batch gradient descent, one epoch equals one gradient step. In SGD, one epoch equals N gradient steps for N training examples. This distinction matters when comparing convergence speed.`,
       `The analytical gradient from backpropagation is exact (up to floating-point). The numerical gradient, computed by finite differences ((L(θ+ε) − L(θ−ε)) / 2ε), approximates it and is used to verify implementations. Gradient checking compares the two to catch bugs in backprop.`,
     ],
-    takeaway: `The key insight of gradient descent is that you only need local information — the gradient at the current point — to make progress toward a minimum, which means you can optimize functions with millions of parameters without ever seeing the full landscape, as long as you choose a learning rate that matches the local curvature.`,
+    takeaway: `You only need one local measurement — the gradient at the current point — to take a step toward lower loss. The hard part is choosing a step size that matches the curvature you cannot see.`,
     interactiveId: 'gradient_descent',
     checkQuestions: [
       {
@@ -96,7 +96,7 @@ export const OPTIMIZATION_MODULES = [
       `SGD's implicit regularization: recent theory (Smith & Le, 2018; He et al., 2019) shows SGD minimizes not just the loss but the loss plus an implicit penalty proportional to α/B. Increasing α or decreasing B increases this penalty, biasing solutions toward flat minima. This is why SGD with large learning rate finds flatter solutions than Adam — not from explicit regularization, but from the optimization dynamics.`,
       `When large batch is acceptable: for inference serving and distributed training where throughput matters, large batches are used with learning rate warmup and careful tuning. The generalization gap from large batches can sometimes be closed by training longer or using ghost batch normalization — but it requires effort that small-batch training avoids automatically.`,
     ],
-    takeaway: `The key insight of mini-batch SGD is that gradient noise is not a bug to be eliminated — it is an implicit regularizer that finds flatter minima, which means choosing batch size is a generalization decision as much as a computational one, and large-batch training often requires explicit countermeasures to match small-batch generalization.`,
+    takeaway: `Gradient noise is not a bug — it is an implicit regularizer. Batch size is a generalization decision as much as a computational one, and large-batch training often needs explicit countermeasures just to match small-batch generalization.`,
     checkQuestions: [
       {
         q: `Two teams train the same model: Team A uses B=32, Team B uses B=2048 with 64x the learning rate (linear scaling rule). Both reach the same training loss. Why might Team B's model generalize worse?`,
@@ -134,7 +134,7 @@ export const OPTIMIZATION_MODULES = [
       `Momentum helps escape saddle points. At a saddle point the gradient is zero, but accumulated velocity from prior steps carries the optimizer through the zero-gradient region. Plain gradient descent stalls; momentum coasts through.`,
       `With high momentum (β=0.9), the effective learning rate grows for approximately 1/(1−β) = 10 steps as velocity accumulates from zero. The first few steps behave like lower-momentum training. This warm-up effect is usually benign but is why some practitioners combine explicit learning rate warmup with momentum.`,
     ],
-    takeaway: `The key insight of momentum is that maintaining a velocity vector — a running average of past gradients — gives the optimizer inertia that dampens oscillations in high-curvature directions while accelerating progress in consistent-gradient directions, which means momentum turns gradient descent from a direction-following algorithm into a trajectory-following algorithm.`,
+    takeaway: `Momentum turns gradient descent from a direction-follower into a trajectory-follower. The optimizer builds up inertia in consistent-gradient directions and dampens oscillations in high-curvature ones — it is running on rails, not stumbling step by step.`,
     interactiveId: 'momentum_viz',
     checkQuestions: [
       {
@@ -173,7 +173,7 @@ export const OPTIMIZATION_MODULES = [
       `ρ (decay rate) choice: ρ=0.9 gives a window of 10 steps — responds quickly to gradient changes. ρ=0.99 gives 100 steps — more stable but slower to adapt. For tasks with highly non-stationary gradients (e.g., RL), lower ρ is preferred. For stable supervised learning, ρ=0.9-0.99 works well.`,
       `For non-differentiable points in word2vec and early NLP models, most parameter gradients are zero at any step. AdaGrad's G_i stays near zero for those parameters, preserving a high effective learning rate exactly when an infrequent but informative update arrives. Plain SGD with fixed α gives equally-sized updates regardless of gradient history — no such benefit.`,
     ],
-    takeaway: `The key insight of AdaGrad and RMSProp is that per-parameter learning rates — scaled by gradient history — automatically solve the sparse feature problem and approximate curvature-aware updates without computing the full Hessian, which means you get closer to optimal step sizes for free, with the caveat that AdaGrad's monotone accumulation kills learning rates for dense parameters unless replaced by RMSProp's exponential moving average.`,
+    takeaway: `Per-parameter learning rates scaled by gradient history give you curvature-aware steps for free — but AdaGrad's accumulation is one-way. It solves the sparse feature problem and then slowly strangles dense-gradient parameters. RMSProp swaps the sum for an exponential moving average and that single change is what makes it viable for deep networks.`,
     checkQuestions: [
       {
         q: `AdaGrad is used to train word embeddings for a 100,000-word vocabulary. After 500,000 training steps, what happens to the learning rate for the embedding of "the" vs the embedding of "platypus"? Which converges more correctly?`,
@@ -208,7 +208,7 @@ export const OPTIMIZATION_MODULES = [
       `Wilson et al. (2017) showed that adaptive methods (Adam, RMSProp) consistently find sharper minima than SGD across multiple tasks, leading to lower test accuracy. The fix is AdamW with appropriate weight decay, learning rate warmup, and often a cosine decay schedule — together these provide implicit regularization that compensates for Adam's tendency toward sharp minima.`,
       `The numerical stability term ε=1e-8 has a significant effect when √v̂_t is very small. In this regime, the effective step is α/(√v̂_t + 1e-8) ≈ α·1e8 — enormous. Some practitioners use ε=1e-6 or 1e-4 for sparse-gradient parameters. TensorFlow defaults to ε=1e-7; PyTorch to 1e-8.`,
     ],
-    takeaway: `The key insight of Adam is that combining gradient direction (first moment) with gradient scale (second moment) and correcting for initialization bias gives an optimizer that nearly eliminates the need to tune learning rates per parameter, which means in practice you use Adam as a fast workhorse for transformers and AdamW with weight decay whenever generalization is the primary concern.`,
+    takeaway: `Adam is your fast workhorse — nearly zero per-parameter tuning, reliable early convergence, the default for transformers. Switch to AdamW with weight decay the moment generalization matters, because L2 in the loss does not behave as regularization under adaptive scaling.`,
     checkQuestions: [
       {
         q: `Without bias correction, what happens to Adam's step size in the first 10 training steps when β1=0.9, β2=0.999? Why does this matter for training stability?`,
@@ -246,7 +246,7 @@ export const OPTIMIZATION_MODULES = [
       `The linear scaling rule (Goyal et al., 2017): multiplying batch size by k should multiply peak learning rate by k. Larger batches have lower gradient variance, so a larger step is needed to achieve the same amount of noise-driven exploration. This rule holds up to B~8192; beyond that, additional warmup steps are required.`,
       `Large language models universally use warmup + cosine or warmup + linear decay. Without warmup, Adam applied to a transformer at step 1 takes an enormous step because v_t ≈ 0 — this can corrupt early embeddings in a way that is difficult to recover from. A warmup of 1-4% of training steps prevents this.`,
     ],
-    takeaway: `The key insight of learning rate schedules is that the shape of how α changes over training controls which region of the loss landscape the optimizer ultimately settles in — not just how fast it gets there — which means schedule choice is a generalization decision: warmup prevents early instability, cosine annealing encourages flat minima, and cyclic schedules explicitly oscillate to avoid sharp basins.`,
+    takeaway: `The schedule shape controls where you land, not just how fast you get there. Warmup prevents early Adam instability, cosine annealing settles the optimizer into flat basins, and cyclic schedules keep shaking it loose from sharp ones — schedule is a generalization decision.`,
     interactiveId: 'lr_schedule_viz',
     checkQuestions: [
       {
@@ -281,7 +281,7 @@ export const OPTIMIZATION_MODULES = [
       `The LSTM cell state c_t = f_t ⊙ c_{t-1} + i_t ⊙ g_t achieves the same idea through gating. When f_t ≈ 1, the gradient of the cell state w.r.t. c_{t-1} is approximately 1 — a gradient superhighway through time. This is why LSTMs model long-range dependencies without exploding or vanishing gradients.`,
       `Layer normalization stabilizes gradient flow by normalizing activations to zero mean and unit variance per sample, then applying learnable scale and shift. Activation values stay away from the saturation region of nonlinearities, preventing the Jacobian singular values from drifting far from 1. This is why transformers using LayerNorm can train stably without gradient clipping in some configurations.`,
     ],
-    takeaway: `The key insight of gradient flow is that training depth is limited by the multiplicative product of Jacobians through layers — vanishing if they are small, exploding if they are large — which means every architectural solution to depth (ResNets, LSTMs, LayerNorm) is fundamentally a solution to the gradient propagation problem, not just a representational one.`,
+    takeaway: `Every layer in a deep network is a Jacobian multiplied in the backward pass. Stack enough small ones and the gradient vanishes; stack ones slightly above 1 and it explodes. ResNets, LSTMs, and LayerNorm are not representational tricks — they are gradient propagation infrastructure.`,
     checkQuestions: [
       {
         q: `A 20-layer sigmoid network fails to train — training loss barely decreases. A 20-layer ReLU network trains fine. Explain the mechanistic difference in gradient flow between the two.`,
@@ -319,7 +319,7 @@ export const OPTIMIZATION_MODULES = [
       `Orthogonal initialization: W is set to a random orthogonal matrix (eigenvalues all have magnitude 1). This ensures the weight matrix neither amplifies nor shrinks signal in any direction. Useful for RNNs where the recurrent weight matrix is applied many times — orthogonality prevents both vanishing and exploding gradients. Not commonly used for feedforward networks but effective for RNNs.`,
       `Biases are typically initialized to zero — this does not cause the symmetry problem because symmetry is already broken by the random weights. The exception is LSTM forget gate biases, often initialized to 1.0 to encourage the gate to pass through most of the cell state at the start of training, avoiding vanishing gradients through the cell state in early training.`,
     ],
-    takeaway: `The key insight of weight initialization is that the forward-pass activation variance and backward-pass gradient variance must both be approximately preserved through depth, which means initialization is the first line of defense against vanishing/exploding gradients — before any architectural fix like ResNets or LayerNorm — and the correct formula depends on the activation function you are using.`,
+    takeaway: `Initialization is the first line of defense against vanishing and exploding gradients — before ResNets, before LayerNorm. The variance must survive both the forward pass and the backward pass, and the right formula depends entirely on which activation function you use.`,
     checkQuestions: [
       {
         q: `A 30-layer network with tanh activations is initialized with W ~ N(0, 1). Training loss barely decreases. What is happening and what is the fix?`,
@@ -353,7 +353,7 @@ export const OPTIMIZATION_MODULES = [
       `K-FAC (Kronecker-Factored Approximate Curvature) approximates the Fisher information matrix using the layer structure of neural networks, representing each layer's Fisher block as a Kronecker product of two small matrices. K-FAC has been used to train ResNets faster than SGD in terms of steps, but the per-step cost is 2-5x higher — wall-clock comparisons are mixed.`,
       `Deep learning uses first-order methods not because they are theoretically better but because: (1) n is too large for second-order methods, (2) mini-batch gradients are too noisy for accurate Hessian estimation, and (3) overparameterized networks have many equivalent solutions — the gradient points toward any of them, making curvature estimation less critical.`,
     ],
-    takeaway: `The key insight of second-order methods is that curvature information (the Hessian) enables theoretically optimal optimization steps, but the O(n²) memory and O(n³) inversion costs make exact second-order methods impractical for networks with more than ~10^5 parameters, which means deep learning's reliance on first-order methods is a computational constraint, not a theoretical one — we use gradient descent not because it is optimal but because it is the only thing that scales.`,
+    takeaway: `Deep learning's reliance on first-order methods is a computational constraint, not a theoretical preference. The Hessian would give optimal steps, but a million-parameter network needs a 10^12-entry Hessian. We use gradient descent not because it is the best — because it is the only thing that scales.`,
     checkQuestions: [
       {
         q: `A 3-parameter loss function has Hessian H = [[4, 0, 0], [0, 1, 0], [0, 0, 100]] and gradient g = [2, 1, 10]. Compare the gradient descent step (α=0.01) to the Newton step. What does this reveal about condition number?`,
@@ -387,7 +387,7 @@ export const OPTIMIZATION_MODULES = [
       `Implicit bias of gradient descent: for overparameterized linear models, gradient descent with zero initialization converges to the minimum-norm interpolating solution. For neural networks, the implicit bias is more complex but SGD appears to bias toward solutions that are flat (low Hessian norm) and simple (small weight norms). This is one reason overparameterized networks do not overfit as badly as classical theory predicts.`,
       `In continual learning, the network must find parameters in the intersection of flat basins for all tasks. If the basins do not overlap, the network forgets earlier tasks. Catastrophic forgetting is a geometric problem: the loss landscape changes when task data changes, and a sharp minimum for task 1 has high loss for task 2 data.`,
     ],
-    takeaway: `The key insight of loss landscape geometry is that high-dimensional optimization naturally avoids local minima (they barely exist) but is threatened by sharp saddle points and sharp minima, which means generalization is determined by which region of the loss landscape you land in — flat basin or sharp peak — and all modern regularization techniques (dropout, weight decay, SAM, small batch sizes) are ultimately mechanisms for biasing the optimizer toward flat, wide basins.`,
+    takeaway: `Local minima are not the enemy — they barely exist in high dimensions. Sharp minima are. Every modern regularization technique — dropout, weight decay, SAM, small batches — is ultimately a mechanism for steering the optimizer toward flat, wide basins rather than sharp peaks.`,
     checkQuestions: [
       {
         q: `Why are local minima less of a concern in high-dimensional deep network loss landscapes than in classical 1D or 2D optimization? Give the probabilistic argument.`,
@@ -426,7 +426,7 @@ export const OPTIMIZATION_MODULES = [
       `Interaction between optimizer and regularization: large learning rate + weight decay (AdamW) gives aggressive regularization, good for large models. Small batch size provides implicit regularization via gradient noise — often sufficient without additional regularization. Large batch + SAM compensates for large-batch tendency to find sharp minima. Adam without weight decay acts as if λ=0, because L2 terms are swallowed by adaptive scaling — almost always a mistake for fine-tuning large models.`,
       `The regularization budget: applying multiple regularization techniques simultaneously can over-regularize (too much bias, underfitting). A practical starting point: begin with one regularizer (weight decay in AdamW for transformers; L2 for SGD), then add dropout only if validation loss diverges significantly from training loss. Label smoothing is nearly free — negligible interaction with other regularizers — and can be added by default for classification tasks.`,
     ],
-    takeaway: `The key insight of gradient clipping and regularization is that generalization in deep learning comes from explicitly constraining what the optimizer can do — bounding gradient magnitudes, shrinking weights, adding noise, and softening targets — which means the optimizer + regularizer combination must be chosen as a system: AdamW with weight decay for transformers, clipped gradient norm for any sequence model, and dropout and label smoothing as inexpensive additions that rarely hurt and often help.`,
+    takeaway: `The optimizer and regularizer are not separate decisions — they are a system. AdamW with weight decay for transformers, gradient norm clipping for any sequence model, dropout and label smoothing as inexpensive additions. Get the pairing wrong and the regularization either does nothing or double-counts.`,
     checkQuestions: [
       {
         q: `A transformer language model trained with Adam (no weight decay) and L2 regularization (λ=0.01 in the loss) has the same training loss as a model trained with AdamW (weight_decay=0.01) but significantly worse test perplexity. Why?`,

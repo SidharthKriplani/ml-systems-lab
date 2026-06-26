@@ -36,7 +36,7 @@ export const MATH_STATS_MODULES = [
         a: `Without smoothing, P(new_word | spam) = 0 and P(new_word | ham) = 0. The Naïve Bayes posterior for any class becomes 0 × (other terms) = 0, making the posterior undefined (0/0 after normalisation). Laplace smoothing adds α=1 to every word count: P(word | class) = (count + 1)/(N_class + |V|). This gives every unseen word a small non-zero probability equal to 1/(N_class + |V|), preserving the contribution of all other words and acting as a uniform Dirichlet prior over the vocabulary.`
       },
     ],
-    takeaway: `The key insight is that posterior probability is the product of likelihood AND prior, which means in practice you must always ask what the base rate is before interpreting any model's output as a probability.`,
+    takeaway: `Posterior probability is likelihood times prior. A 99%-accurate test can still be wrong 91% of the time — if you forget to multiply by the base rate. Always ask what the prior is before trusting a model output as a probability.`,
     interactiveId: 'bayes_calculator',
   },
   {
@@ -76,7 +76,7 @@ export const MATH_STATS_MODULES = [
         a: `The MLE is p̂ = 1/100 = 0.01. The variance of p̂ (as a sample proportion) is p(1−p)/n = 0.01×0.99/100 ≈ 0.0001, giving standard error SE ≈ 0.01. A 95% CI is approximately 0.01 ± 1.96×0.01 = [−0.0096, 0.0296] — the lower bound is negative, which is nonsensical for a probability. This illustrates that with sparse counts the Normal approximation breaks down; use a Beta posterior or exact binomial CI instead. The estimate is essentially noise at n=100.`
       },
     ],
-    takeaway: `The key insight is that a distribution's mean and variance together determine how reliably you can estimate anything from finite data, which means in practice you should always compute the standard error of your estimates before trusting them.`,
+    takeaway: `Mean and variance together tell you how reliably you can estimate anything from finite data. Never report an estimate without its standard error — that number is what separates a finding from a guess.`,
     interactiveId: 'distribution_viz',
   },
   {
@@ -111,7 +111,7 @@ export const MATH_STATS_MODULES = [
         a: `High correlation (multicollinearity) makes XᵀX near-singular: the normal equation (XᵀX)⁻¹Xᵀy is numerically unstable, and small changes in the training data produce large swings in estimated coefficients. The coefficients lose interpretability — you cannot say "feature A has effect b₁" because A and B are almost exchangeable. The fix is Ridge regression (L2 regularisation), which adds λI to XᵀX before inversion: (XᵀX + λI)⁻¹ is always well-conditioned. Alternatively, remove one of the correlated features or use PCA to decorrelate first.`
       },
     ],
-    takeaway: `The key insight is that zero correlation only rules out linear dependence, which means in practice you need mutual information or rank-based tests to check whether two variables are truly independent.`,
+    takeaway: `Zero correlation rules out linear dependence — nothing more. Two variables can have ρ=0 while one is a deterministic function of the other. Use mutual information or rank-based tests when you actually need to check independence.`,
   },
   {
     id: 'information_theory',
@@ -149,7 +149,7 @@ export const MATH_STATS_MODULES = [
         a: `KL(p||q) = H(p,q) − H(p). Model 1: KL = 0.3 − 0.2 = 0.1 nats. Model 2: KL = 0.5 − 0.2 = 0.3 nats. Model 1 is 3× closer to the true distribution in KL terms. The minimum achievable cross-entropy is H(p) = 0.2 — this is the Bayes error rate in terms of cross-entropy. A cross-entropy of 0.2 would mean the model has perfectly learned the true distribution. This framing makes clear that reducing cross-entropy below H(p) is impossible without overfitting to noise.`
       },
     ],
-    takeaway: `The key insight is that minimising cross-entropy loss is mathematically identical to minimising KL divergence from your model to the true data distribution, which means every classification neural network is implicitly doing approximate Bayesian inference.`,
+    takeaway: `Minimising cross-entropy is identical to minimising KL divergence from your model to the true data distribution. Every classification network you train is doing approximate KL minimisation — the loss function is not a design choice, it follows from the probabilistic model you assumed.`,
     interactiveId: 'information_theory_viz',
   },
   {
@@ -184,7 +184,7 @@ export const MATH_STATS_MODULES = [
         a: `Forming XᵀX squares the condition number: if κ(X)=κ, then κ(XᵀX)=κ². For κ=10⁶ (not unusual), κ(XᵀX)=10¹² — beyond double precision's ~10¹⁶ range, meaning 4 significant digits are lost. QR decomposition X=QR gives θ̂=R⁻¹Qᵀy, working with condition number κ(X) directly. sklearn's LinearRegression uses SVD-based pseudoinverse (even more stable) by default, which is why it never fails due to exact multicollinearity — it computes the minimum-norm solution automatically.`
       },
     ],
-    takeaway: `The key insight is that every ML forward pass is a sequence of linear maps composed with non-linearities, which means understanding norms and rank directly predicts where a model will fail numerically or fail to generalise.`,
+    takeaway: `Every ML forward pass is a sequence of matrix multiplications and nonlinearities. Norms tell you the geometry those operations assume; rank tells you where information is irreversibly lost. Both predict failure modes before you ever run an experiment.`,
   },
   {
     id: 'eigendecomposition',
@@ -218,7 +218,7 @@ export const MATH_STATS_MODULES = [
         a: `The normal equation requires inverting XᵀX. If κ(X) is large, κ(XᵀX) = κ(X)² is enormous — small perturbations in data cause large swings in θ̂. Ridge regression solves (XᵀX + λI)θ̂ = Xᵀy. Adding λI shifts all eigenvalues up by λ: the smallest eigenvalue becomes σ_min² + λ, so κ_ridge = (σ_max² + λ)/(σ_min² + λ). With large enough λ, κ_ridge ≈ σ_max²/λ — much smaller than without Ridge. The cost is bias: the solution is pulled toward zero. This is the Ridge bias-variance tradeoff in eigenvalue form.`
       },
     ],
-    takeaway: `The key insight is that a matrix's eigenvalues tell you both the geometry of its action and the speed of any gradient-based optimisation that involves it, which means in practice you should check condition numbers before fitting any linear model.`,
+    takeaway: `A matrix's eigenvalues fingerprint its geometry and directly determine how fast any gradient-based method converges on it. Check the condition number before fitting any linear model — a ratio of 10^6 means 10^6-fold slower convergence in the worst direction.`,
   },
   {
     id: 'svd',
@@ -252,7 +252,7 @@ export const MATH_STATS_MODULES = [
         a: `The sharp drop from 10 to 0.1 (100× decrease) suggests the data has 3 meaningful dimensions of variation and the rest is likely noise. Keep components 1-3: explained variance ∝ σ² → [10000, 2500, 100, 0.01, ...] → cumulative [10000, 12500, 12600, ...] — components 1-3 capture 12500/12600 ≈ 99.2% of variance. The spectral gap (ratio of consecutive singular values) is the signal-to-noise indicator. Values after the gap are numerical noise — keeping them adds variance to downstream models without signal.`
       },
     ],
-    takeaway: `The key insight is that any matrix can be decomposed into input directions, scaling factors, and output directions, which means in practice the singular value spectrum tells you both the intrinsic dimensionality of your data and the numerical stability of any computation involving that matrix.`,
+    takeaway: `Any matrix decomposes into input directions, scaling factors, and output directions. Read the singular value spectrum and you get two things at once: the intrinsic dimensionality of your data and a direct measure of how numerically stable any computation involving that matrix will be.`,
   },
   {
     id: 'pca_theory',
@@ -286,7 +286,7 @@ export const MATH_STATS_MODULES = [
         a: `Two likely causes: (1) The discriminative information for the classification task is in the 15% of low-variance directions that PCA discarded. For word vectors, rare but semantically important distinctions (e.g., negation words) may have low corpus-level variance but high task-relevance. (2) PCA maximises reconstruction variance, not class separability — it is unsupervised. Fix: try supervised dimensionality reduction (LDA, which maximises class separability), use task-specific fine-tuning, or determine the minimum number of PCs that preserve classification performance via cross-validation rather than a variance threshold.`
       },
     ],
-    takeaway: `The key insight is that PCA discards low-variance directions, which means in practice you must verify that the discarded variance does not contain task-relevant signal before using PCA as a preprocessing step.`,
+    takeaway: `PCA keeps high-variance directions and throws away low-variance ones. Before using it as a preprocessing step, verify that the discarded directions do not contain task-relevant signal — the discriminative information your classifier needs may live exactly in the low-variance subspace PCA eliminates.`,
   },
   {
     id: 'calculus_ml',
@@ -320,7 +320,7 @@ export const MATH_STATS_MODULES = [
         a: `A quadratic loss L(θ) = ½θᵀHθ has level curves that are ellipses. If H has eigenvalues λ_min and λ_max, the ellipse is elongated: width ratio √(λ_max/λ_min) = √κ. Gradient descent on an elongated ellipse zigzags: it takes a big step perpendicular to the valley (steep direction) but makes tiny progress along the valley (flat direction). Convergence rate per step is ((κ−1)/(κ+1))² ≈ 1 − 4/κ for large κ — meaning you need O(κ) steps. With κ=1000, you need ~1000 steps for the same progress that one Newton step would achieve. This is why standardising features (equalising the scale of H's eigenvalues) dramatically accelerates gradient descent.`
       },
     ],
-    takeaway: `The key insight is that the gradient tells you direction and the Hessian tells you curvature, which means in practice poorly conditioned loss landscapes (caused by unscaled features or high learning rates) are the most common reason training diverges or converges slowly.`,
+    takeaway: `The gradient tells you direction; the Hessian tells you curvature. Poorly conditioned loss landscapes — caused by unscaled features or mismatched learning rates — are the most common reason training diverges or crawls, and both are fixable before any architecture change.`,
   },
   {
     id: 'matrix_calculus',
@@ -353,7 +353,7 @@ export const MATH_STATS_MODULES = [
         a: `Several possibilities: (1) Layout convention error — the gradient shape is right but transposed, causing the update to go in the wrong direction. (2) Missing the gradient for b (bias) if the layer has bias. (3) Sign error — returning the gradient instead of its negative (though the optimiser handles the sign, a sign error in a custom layer compounds). (4) The finite-difference check used a small input where the layer is well-behaved, but the actual training data activates a different code path (e.g., a conditional or a non-differentiable point). Always check gradient norms during training to verify they are neither zero (vanished) nor exploding.`
       },
     ],
-    takeaway: `The key insight is that the gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation, which means in practice you can derive the backpropagation rule for any linear operation from this single pattern.`,
+    takeaway: `The gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation. Memorize that one pattern and you can derive backpropagation for any linear layer from scratch.`,
   },
   {
     id: 'convex_optimization',
@@ -387,7 +387,7 @@ export const MATH_STATS_MODULES = [
         a: `Optimal learning rate: η = 1/L = 0.01. Condition number: κ = L/μ = 100/0.1 = 1000. Convergence rate: ρ = (κ−1)/(κ+1) = 999/1001 ≈ 0.998. Each step reduces the gap by factor 0.998. To reduce error by 100×: 0.998^t = 0.01 → t = log(0.01)/log(0.998) ≈ (−4.6)/(−0.002) ≈ 2300 steps. The high condition number explains why preconditioning (or standardising features) is so important — it could reduce κ by orders of magnitude, cutting required steps proportionally.`
       },
     ],
-    takeaway: `The key insight is that the condition number of the loss landscape — not the learning rate alone — determines convergence speed, which means in practice standardising features and using adaptive optimisers are both attempts to reduce the effective condition number.`,
+    takeaway: `The condition number of the loss landscape — not the learning rate alone — determines how fast you converge. Standardising features and using adaptive optimisers are two different ways to attack the same problem: reducing the effective condition number seen by gradient descent.`,
   },
   {
     id: 'hypothesis_testing',
@@ -425,7 +425,7 @@ export const MATH_STATS_MODULES = [
         a: `At α=0.05, p=0.15 means we fail to reject H₀ (independence). This does NOT mean the variables are independent — it means we do not have sufficient evidence to conclude dependence. Power may be low (small sample → can't detect small associations). Limitations: (1) Chi-squared requires expected cell counts ≥ 5 — if violated, results are unreliable. (2) The test is non-directional — it detects any pattern of dependence but says nothing about direction or magnitude. (3) Correlation vs. causation — even significant association does not imply one causes the other.`
       },
     ],
-    takeaway: `The key insight is that a p-value measures evidence against the null hypothesis, not the probability of any hypothesis being true, which means in practice you always need effect size, power, and business context alongside the p-value to make a decision.`,
+    takeaway: `A p-value measures evidence against the null hypothesis — it is not the probability that any hypothesis is true. Never ship or kill a feature on a p-value alone. You need effect size, power, and business context too.`,
     interactiveId: 'hypothesis_testing_viz',
   },
   {
@@ -460,7 +460,7 @@ export const MATH_STATS_MODULES = [
         a: `With n=10, MAP (Ridge-regularised logistic regression) almost certainly outperforms MLE. With so few samples, MLE overfits: the likelihood is nearly flat in many parameter directions and the weights grow large. The Gaussian prior pulls weights toward zero, acting as a strong regulariser. With n=10, the bias from the prior is a small cost compared to the large variance reduction. As n grows into the thousands, the likelihood term dominates the prior, MAP → MLE, and the difference shrinks to near zero. This is why regularisation should be reduced (λ → 0) as training set size grows — tuning λ via CV on a large dataset naturally selects smaller values.`
       },
     ],
-    takeaway: `The key insight is that every regularised ML model is secretly a MAP estimate with an implicit prior on the weights, which means choosing your regularisation type is equivalent to stating your prior belief about what the model parameters should look like.`,
+    takeaway: `Every regularised ML model is a MAP estimate with an implicit prior. L2 says weights are probably small and Gaussian. L1 says most weights are probably exactly zero. The regularisation you pick is a statement about what you believe the model should look like before seeing data.`,
   },
   {
     id: 'bayesian_inference',
@@ -494,7 +494,7 @@ export const MATH_STATS_MODULES = [
         a: `ELBO (Evidence Lower BOund): log P(X) = ELBO(q) + KL(q(θ)||P(θ|X)) where ELBO = E_q[log P(X,θ)] − E_q[log q(θ)]. Since KL ≥ 0, ELBO ≤ log P(X) — it is a lower bound on the log marginal likelihood. Maximising ELBO is equivalent to minimising KL(q||P(θ|X)): it makes q as close as possible to the true posterior. What it fails to capture: (1) Reverse KL causes mode-seeking — if P(θ|X) is multimodal, q collapses to one mode. (2) The variational family may not contain the true posterior (e.g., mean-field VI assumes independence between parameters, which underestimates posterior correlations). These approximation errors make VI biased — unlike MCMC which is asymptotically exact.`
       },
     ],
-    takeaway: `The key insight is that Bayesian inference gives you a full distribution over parameters rather than a point estimate, which means in practice it is the right tool when you need calibrated uncertainty — but the cost is that the posterior is rarely tractable and requires MCMC or variational approximation.`,
+    takeaway: `Bayesian inference gives you a distribution over parameters, not a point. That distribution is the right answer when calibrated uncertainty matters — for small data, sequential updating, or uncertainty-aware decisions. The cost is that the posterior is almost never tractable, which is why MCMC and variational inference exist.`,
   },
   {
     id: 'em_algorithm',
@@ -528,7 +528,7 @@ export const MATH_STATS_MODULES = [
         a: `The ELBO lower bound on log P(X|θ) is: ELBO = E_{q(Z)}[log P(X,Z|θ)] − E_{q(Z)}[log q(Z)] = log P(X|θ) − KL(q(Z) || P(Z|X,θ)). The E-step maximises ELBO over q(Z) with θ fixed: the maximum is achieved by setting q(Z) = P(Z|X,θ) (the true posterior), making KL=0 and ELBO = log P(X|θ) exactly. This is exact when P(Z|X,θ) is tractable (e.g., GMM, HMM with forward-backward). When P(Z|X,θ) is intractable (e.g., deep latent variable models), q(Z) is restricted to a tractable family and KL>0 — this is variational EM (VAEs). The M-step maximises ELBO over θ with q fixed — for neural networks, this is a gradient step rather than a closed-form update.`
       },
     ],
-    takeaway: `The key insight is that EM converts an intractable marginal likelihood maximisation into a sequence of tractable complete-data optimisations, which means in practice it is the right tool whenever you have latent variables and a model with tractable complete-data likelihood.`,
+    takeaway: `EM converts one intractable optimisation — the marginal likelihood over hidden variables — into a sequence of tractable ones by alternating between filling in the hidden variable distribution and maximising the resulting expected log-likelihood. The moment you have latent variables and a tractable complete-data likelihood, EM is the natural algorithm.`,
   },
   {
     id: 'concentration_inequalities',
@@ -562,7 +562,7 @@ export const MATH_STATS_MODULES = [
         a: `Chebyshev: P(|X̄−μ| ≥ ε) ≤ Var(X̄)/ε² = σ²/(nε²) — polynomial decay in n. Hoeffding: P(|X̄−μ| ≥ ε) ≤ 2exp(−2nε²/range²) — exponential decay in n. Hoeffding is exponentially tighter because it uses the stronger assumption that X is bounded. Chebyshev only requires finite variance. Prefer Chebyshev when: (1) the RV is unbounded (e.g., normal data — Hoeffding doesn't apply), (2) you only know the variance, not the range. Hoeffding requires [a,b] to be known and finite — for example, it applies to loss functions bounded in [0,1] (binary classification) but not to unbounded regression losses.`
       },
     ],
-    takeaway: `The key insight is that generalisation gap shrinks as O(√(log(model_complexity)/n)), which means in practice adding more data has a larger effect on generalisation than reducing model complexity by a constant factor.`,
+    takeaway: `Generalisation gap shrinks as O(√(log(model_complexity)/n)). Doubling your data shrinks the gap by √2. Halving your model class only shaves off a constant from the log term. More data beats smaller models in almost every practical regime.`,
   },
   {
     id: 'monte_carlo',
@@ -596,7 +596,7 @@ export const MATH_STATS_MODULES = [
         a: `REINFORCE: ∇J(π) ≈ (1/N)Σ R(τᵢ)∇log π(τᵢ). Variance is high because: (1) The return R(τ) for a full episode has high variance due to stochasticity in transitions and policy. (2) The gradient is estimated from a single trajectory, which may be noisy. Variance reduction: (1) Baseline subtraction: ∇J ≈ Σ (R(τ) − b)∇log π(τ) — subtract baseline b (e.g., value function V(s)) from the return. This is unbiased (E[b·∇log π] = b·E[∇log π] = b·0 = 0) but reduces variance. (2) Temporal decomposition: instead of using total return R(τ), use reward-to-go Σ_{t'≥t} r_{t'} — future rewards don't depend on past actions, so using them is unbiased and reduces variance.`
       },
     ],
-    takeaway: `The key insight is that Monte Carlo integration error scales as O(1/√N) regardless of dimension, which means in practice it is the only feasible integration method for high-dimensional ML problems like variational inference and policy gradient estimation.`,
+    takeaway: `Monte Carlo error scales as O(1/√N) regardless of dimension — numerical quadrature degrades exponentially with dimension. That dimension-independence is the entire reason Monte Carlo dominates variational inference, policy gradients, and any other high-dimensional expectation you need to estimate.`,
   },
   {
     id: 'sampling_distributions',
@@ -629,6 +629,6 @@ export const MATH_STATS_MODULES = [
         a: `The standard CLT requires finite variance. For Pareto with tail index α > 2, the variance is finite and the CLT applies — but convergence is slow because the distribution is heavy-tailed. You may need n > 10,000 for the normal approximation to be accurate, rather than the n > 30 rule of thumb for light-tailed distributions. For Pareto with α ≤ 2, the variance is infinite and the standard CLT does not apply — the generalised CLT applies with stable distributions instead. In practice: always check kurtosis and tail behaviour before trusting CLT-based inference on financial or web data.`
       },
     ],
-    takeaway: `The key insight is that the CLT makes sample means Normally distributed regardless of the underlying distribution, which means in practice you can use Normal-theory confidence intervals and t-tests for any reasonably sized dataset — but "reasonably sized" depends on how heavy-tailed your data is.`,
+    takeaway: `The CLT makes sample means Normal regardless of the underlying distribution — that is the entire foundation of classical inference. But "reasonably sized" depends on tail behavior: n=30 works fine for near-Gaussian data, but power-law distributions may need n > 10,000 before the Normal approximation holds.`,
   },
 ]

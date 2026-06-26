@@ -33,6 +33,10 @@ const registry = {
   batch_norm_viz:          lazy(() => import('./BatchNormViz').then(m => ({ default: m.BatchNormViz }))),
   rnn_viz:                 lazy(() => import('./RNNViz').then(m => ({ default: m.RNNViz }))),
   tsne_viz:                lazy(() => import('./TSNEViz').then(m => ({ default: m.TSNEViz }))),
+  weight_init_viz:         lazy(() => import('./WeightInitViz').then(m => ({ default: m.WeightInitViz }))),
+  thompson_sampling_viz:   lazy(() => import('./ThompsonSamplingViz').then(m => ({ default: m.ThompsonSamplingViz }))),
+  gaussian_process_viz:    lazy(() => import('./GaussianProcessViz').then(m => ({ default: m.GaussianProcessViz }))),
+  policy_gradient_viz:     lazy(() => import('./PolicyGradientViz').then(m => ({ default: m.PolicyGradientViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {
