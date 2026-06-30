@@ -1,6 +1,7 @@
 export const TIME_SERIES_MODULES = [
   {
     id: 'stationarity',
+    interactiveId: 'stationarity_viz',
     title: 'Stationarity & Differencing',
     subtitle: 'Unit root tests, spurious regression, integration order, cointegration',
     difficulty: 'foundational',

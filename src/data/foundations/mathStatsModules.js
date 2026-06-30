@@ -328,6 +328,7 @@ export const MATH_STATS_MODULES = [
   },
   {
     id: 'convex_optimization',
+    interactiveId: 'convex_optimization_viz',
     title: 'Convex Optimization & Gradient Descent',
     subtitle: 'Convergence guarantees, learning rate, momentum, Adam',
     difficulty: 'intermediate',

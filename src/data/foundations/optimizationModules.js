@@ -184,6 +184,7 @@ export const OPTIMIZATION_MODULES = [
   },
   {
     id: 'adam_adamw',
+    interactiveId: 'adam_viz',
     title: 'Adam and AdamW',
     subtitle: 'Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.',
     difficulty: 'intermediate',

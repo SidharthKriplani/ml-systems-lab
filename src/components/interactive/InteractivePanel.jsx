@@ -50,6 +50,10 @@ const registry = {
   gnn_message_passing_viz:     lazy(() => import('./GNNMessagePassingViz').then(m => ({ default: m.GNNMessagePassingViz }))),
   vae_viz:                     lazy(() => import('./VAEViz').then(m => ({ default: m.VAEViz }))),
   arima_viz:                   lazy(() => import('./ARIMAViz').then(m => ({ default: m.ARIMAViz }))),
+  adam_viz:                    lazy(() => import('./AdamViz').then(m => ({ default: m.AdamViz }))),
+  variational_inference_viz:   lazy(() => import('./VariationalInferenceViz').then(m => ({ default: m.VariationalInferenceViz }))),
+  convex_optimization_viz:     lazy(() => import('./ConvexOptimizationViz').then(m => ({ default: m.ConvexOptimizationViz }))),
+  stationarity_viz:            lazy(() => import('./StationarityViz').then(m => ({ default: m.StationarityViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

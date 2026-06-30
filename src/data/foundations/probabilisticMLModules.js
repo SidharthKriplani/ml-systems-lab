@@ -77,6 +77,7 @@ export const PROBABILISTIC_ML_MODULES = [
   },
   {
     id: 'variational_inference',
+    interactiveId: 'variational_inference_viz',
     title: 'Variational Inference',
     subtitle: 'ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC',
     difficulty: 'advanced',
