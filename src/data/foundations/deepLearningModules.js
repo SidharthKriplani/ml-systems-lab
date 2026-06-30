@@ -310,7 +310,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `Heads with nearly uniform attention are "no-op" heads — they compute an essentially uniform average over the values, which is nearly equivalent to a mean pooling operation. These heads are not learning meaningful relationships. This can occur due to: (1) redundant heads — the model does not need all 12 heads for this task, and some have been allocated to "do nothing"; (2) training with too much attention dropout, preventing heads from specialising; (3) insufficient training data or too short training. What to do: these heads can be safely pruned — replace the 12 heads with 9 and the model should have the same performance with lower compute. This is attention head pruning, a standard technique for compressing Transformers. Before pruning, verify by ablating: set these heads' outputs to 0 and measure performance drop. If it is negligible, prune them.`,
       },
     ],
-    takeaway: `The key insight is that self-attention creates direct O(1) paths between all positions while RNNs create O(n) paths, which means attention solves long-range dependency at the cost of O(n²) compute — every efficient Transformer variant is a different way to pay less for that direct connectivity.`,
+    takeaway: `Self-attention buys O(1) information paths between any two positions — that is the property RNNs cannot replicate. The price is O(n²) memory and compute. Every efficient Transformer variant (FlashAttention, Longformer, BigBird) is a different strategy for paying less for that direct connectivity.`,
     interactiveId: 'attention_viz',
   },
   {
@@ -349,7 +349,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `Sinusoidal PE adds fixed position vectors to the token embeddings before the first layer. For sequences longer than the maximum training length, positions beyond that length produce PE values the model has never seen, causing out-of-distribution behavior — the model cannot generalise to longer sequences. Also, absolute position encodings make it hard for the model to learn that the relative distance between two tokens matters more than their absolute positions. RoPE addresses this by encoding relative positions intrinsically through the attention mechanism: rotating Q and K vectors means the dot product QᵀK is a function only of the relative angle (position difference), not absolute position. ALiBi adds a linear penalty to attention logits proportional to relative distance (penalising attending to far-away positions) rather than modifying embeddings — it generalises better to longer sequences without retraining because the relative distance penalty is well-defined for any length.`,
       },
     ],
-    takeaway: `The key insight is that the Transformer's power comes from combining three things — direct all-to-all attention, residual connections that preserve gradient flow, and a large FFN that stores knowledge — which means removing any one of these three components causes significant degradation.`,
+    takeaway: `The Transformer's power comes from three mutually dependent components: direct all-to-all attention, residual connections that carry gradients to early layers, and a large FFN that stores knowledge. Pull out any one and the system degrades measurably — they are not independent design choices.`,
   },
   {
     id: 'pretraining',
@@ -387,7 +387,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `The mechanistic explanation is not fully settled, but the strongest current view is that pre-training on next-token prediction at scale implicitly trains the model as a meta-learner. The training corpus contains many sequences of the form "input, output, input, output, input, output" (articles, code, Q&A pages) — the model learns that given this in-context pattern, the next output should follow the same pattern as the previous ones. At inference, providing k examples in the prompt creates an activation pattern the model has seen many times in pre-training, and it "meta-learns" the task from the in-context examples by updating its internal attention patterns (not its weights). Evidence: larger models show dramatically better few-shot learning, suggesting that the scale of pre-training (not prompting technique) is what enables this capability. The failure mode is that in-context learning is brittle to prompt format and can fail on tasks that were not represented in pre-training.`,
       },
     ],
-    takeaway: `The key insight is that pre-training compresses billions of tokens of world knowledge into model weights, which means fine-tuning on hundreds of examples is feasible because you are adapting a rich representation, not learning from scratch.`,
+    takeaway: `Pre-training compresses billions of tokens of world knowledge into model weights. Fine-tuning on hundreds of examples works because you are adapting a rich representation — not learning from random noise. The pre-trained checkpoint is doing most of the heavy lifting.`,
   },
   {
     id: 'finetune',
@@ -425,7 +425,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `Without LoRA: you need 10 separate LLaMA-7B instances (10 × 14GB = 140GB GPU memory) — requires 2 A100 80GB GPUs minimum, and each request must be routed to the right instance. With LoRA: all 10 customers share a single base LLaMA-7B (14GB) and only the LoRA adapters are customer-specific (~50MB per customer for r=16 on attention matrices). Total: ~15GB GPU memory for all 10 customers combined. Architecture: at request time, load the customer-specific LoRA adapter and apply it to the shared base model. For high-throughput serving: merge LoRA into base weights per-request (low latency, no adapter overhead during inference) or maintain separate adapted model copies if traffic per customer justifies it. This is how multi-tenant LLM serving works at scale — providers like Predibase built entire businesses around this pattern.`,
       },
     ],
-    takeaway: `The key insight is that LoRA exploits the low intrinsic dimensionality of task-specific weight updates, which means fine-tuning a 70B model can be done with 0.2% of its parameters — and because adapters merge into base weights, there is zero serving latency penalty.`,
+    takeaway: `Task-specific weight updates live in a low-dimensional subspace — LoRA exploits this to fine-tune a 70B model with 0.2% of its parameters. And because the adapter matrices merge directly into the base weights, the deployed model is byte-for-byte identical to the original at inference — zero latency overhead.`,
   },
   {
     id: 'quantization',
@@ -463,7 +463,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `INT8 quantisation is calibrated for a specific input distribution. A production data change can shift the activation distributions away from the calibrated ranges — activations are clipped or imprecisely rounded for out-of-calibration inputs, causing large prediction errors. Investigation steps: (1) Check feature/input distribution shift — are the new inputs significantly different from calibration data? (2) Check activation statistics: add logging hooks to capture the actual activation ranges at inference and compare against the calibration-time ranges. Large discrepancies confirm distribution shift as the cause. (3) Recalibrate: run PTQ calibration on a sample of the new production inputs. The new scale factors will be optimised for the new distribution. (4) If distribution shift is expected to continue changing, consider using dynamic quantisation (scale factors computed per inference batch) instead of static calibration — slower but always calibrated to the current distribution.`,
       },
     ],
-    takeaway: `The key insight is that quantisation is fundamentally a calibration problem — the scale factors that map float ranges to integer ranges must match the actual activation distributions at inference, which means a model quantised on the wrong calibration data will silently degrade on out-of-distribution inputs.`,
+    takeaway: `Quantisation is fundamentally a calibration problem. The scale factors that map float ranges to integer ranges are only correct for the distribution they were calibrated on — run a model calibrated on news articles against medical text and the activation ranges will be wrong, the clipping will be silent, and the accuracy drop will surprise you.`,
   },
   {
     id: 'dl_serving',
@@ -501,7 +501,7 @@ export const DEEP_LEARNING_MODULES = [
         a: `Static batching: collect a batch of B requests, run all B to completion before starting new requests. Problem: if request A needs 10 tokens and request B needs 200 tokens, the GPU is underutilised for requests C through Z that arrived after the batch was full — they wait for request B's 200-token generation to finish. GPU utilisation: ~30-50% for typical length distributions. Continuous batching (Orca algorithm): at each decode step, any request that has just generated an EOS (end of sequence) token is immediately removed from the batch and a waiting request is inserted. The batch size stays roughly constant but its composition changes at every step. This means no request waits for another's long generation — the GPU stays busy with productive tokens at all times. GPU utilisation: 80-90%. The throughput improvement is 3-5× for typical LLM serving workloads where output length variance is high. vLLM implements continuous batching with PagedAttention for efficient KV cache management.`,
       },
     ],
-    takeaway: `The key insight is that GPU serving throughput is dominated by batch size while latency is dominated by model size and sequence length, which means every serving optimisation is a choice about where to spend the budget: more memory for KV cache, more compute for batch processing, or less precision for speed.`,
+    takeaway: `GPU serving throughput is dominated by batch size; latency is dominated by model size and sequence length. Every serving optimisation is a budget decision: more memory buys KV cache and more concurrent users, more compute buys larger batches and higher throughput, less precision buys both at a small accuracy cost.`,
   },
   {
     id: 'dl_debugging',

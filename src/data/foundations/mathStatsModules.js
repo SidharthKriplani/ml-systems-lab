@@ -222,6 +222,7 @@ export const MATH_STATS_MODULES = [
   },
   {
     id: 'svd',
+    interactiveId: 'svd_viz',
     title: 'Singular Value Decomposition',
     subtitle: 'SVD definition, low-rank approximation, connection to PCA',
     difficulty: 'intermediate',
@@ -566,6 +567,7 @@ export const MATH_STATS_MODULES = [
   },
   {
     id: 'monte_carlo',
+    interactiveId: 'monte_carlo_viz',
     title: 'Monte Carlo Methods',
     subtitle: 'Sampling, importance sampling, MCMC, variance reduction',
     difficulty: 'advanced',

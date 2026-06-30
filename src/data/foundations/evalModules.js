@@ -80,6 +80,7 @@ export const EVAL_MODULES = [
   },
   {
     id: 'ranking_metrics',
+    interactiveId: 'ndcg_viz',
     title: 'Ranking Metrics',
     subtitle: 'NDCG, MAP, MRR — search and recommendation quality',
     difficulty: 'intermediate',

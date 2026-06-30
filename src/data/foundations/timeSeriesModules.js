@@ -41,6 +41,7 @@ export const TIME_SERIES_MODULES = [
 
   {
     id: 'arima_family',
+    interactiveId: 'arima_viz',
     title: 'ARIMA Family',
     subtitle: 'AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure',
     difficulty: 'intermediate',
@@ -81,6 +82,7 @@ export const TIME_SERIES_MODULES = [
 
   {
     id: 'seasonality_decomposition',
+    interactiveId: 'time_series_decomp_viz',
     title: 'Seasonality & Decomposition',
     subtitle: 'STL, additive vs multiplicative, X-13-ARIMA-SEATS, Fourier terms, irregular seasonality',
     difficulty: 'intermediate',

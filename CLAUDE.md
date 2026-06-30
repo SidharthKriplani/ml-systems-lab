@@ -4,30 +4,43 @@ Read this first, every session.
 
 ---
 
-## ✅ LATEST (2026-06-26) — Interactives + content expansion
+## ✅ LATEST (2026-06-30) — 8 new interactives + voice rewrites complete
 
-**6 new interactive components** in `src/components/interactive/`:
-- `QLearningViz` (q_learning_viz) — 7×7 grid world, Q-table heatmap, policy arrows
-- `ThompsonSamplingViz` (thompson_sampling_viz) — 5-arm bandit, Beta posteriors, vs ε-greedy vs UCB1
-- `WeightInitViz` (weight_init_viz) — 10-layer init comparison, Xavier/He/zeros/large-normal histograms
-- `TimeSeriesDecompViz` (time_series_decomp_viz) — trend+seasonal+residual decomposition
-- `GaussianProcessViz` (gaussian_process_viz) — GP regression, click to add points, posterior bands
-- `PolicyGradientViz` (policy_gradient_viz) — REINFORCE on 4-arm bandit, softmax policy evolution
+**New interactive components** in `src/components/interactive/`:
+- `ContrastiveViz` (contrastive_viz) — 2D embedding space, SimCLR-style attraction/repulsion, temperature slider
+- `GNNMessagePassingViz` (gnn_message_passing_viz) — 7-node graph, 3 message-passing rounds, particle animation
+- `VAEViz` (vae_viz) — 2D latent space scatter + pixel-art decoder, click to sample, KL prior ring
+- `ARIMAViz` (arima_viz) — 104-pt time series, p/d/q sliders, 3-panel canvas (forecast/diff/ACF)
+- `HierarchicalClusteringViz` (hierarchical_clustering_viz) — dendrogram + scatter, draggable cut-height threshold, 3 linkage types
 
-`InteractivePanel.jsx` updated with all 6. `rlModules.js`: policy_gradient_viz wired to `policy_gradients`.
+**InteractivePanel.jsx registry additions (this + prior session):**
+- q_learning_viz, time_series_decomp_viz, exploration_exploitation_viz (were built but unregistered)
+- contrastive_viz, gnn_message_passing_viz, vae_viz, arima_viz, hierarchical_clustering_viz (new)
 
-**⚠️ PENDING (next session — top priority):**
-- Wire remaining 5 new interactiveIds to module files (none of these 5 have it yet):
-  - `q_learning_viz` → id `deep_q_networks` in rlModules.js
-  - `thompson_sampling_viz` → id `thompson_sampling` in banditsModules.js
-  - `weight_init_viz` → id `neural_nets` in deepLearningModules.js
-  - `time_series_decomp_viz` → id `seasonality_decomposition` in timeSeriesModules.js
-  - `gaussian_process_viz` → id `gaussian_processes` in probabilisticMLModules.js
-- Voice rewrite: `unsupervisedModules.js` NOT DONE. `optimizationModules`, `mathStatsModules`, `deepLearningModules`, `classicalMLModules` partially done (interrupted — verify quality).
+**InteractiveId wiring completed:**
+- gradient_boosting_viz → classicalMLModules `gradient_boosting`
+- loss_landscape_viz → optimizationModules `loss_landscape_intuition`
+- svd_viz → mathStatsModules `svd`
+- monte_carlo_viz → mathStatsModules `monte_carlo`
+- ndcg_viz → evalModules `ranking_metrics`
+- exploration_exploitation_viz → rlModules `exploration_exploitation`
+- contrastive_viz → selfSupervisedModules `contrastive_loss`
+- gnn_message_passing_viz → graphMLModules `message_passing_framework`
+- vae_viz → probabilisticMLModules `vae_foundations`
+- arima_viz → timeSeriesModules `arima_family`
+- hierarchical_clustering_viz → unsupervisedModules `hierarchical`
+
+**Voice rewrites — all complete (0 "which means" hits):**
+- deepLearningModules ✓ · classicalMLModules ✓ · dataModules ✓ · causalModules ✓ · productionModules ✓
+- optimizationModules ✓ · mathStatsModules ✓ · unsupervisedModules ✓ (prior session)
+
+**⚠️ PENDING:**
 - `quizData.js` posts 51–126 still missing (228 MCQs)
+- Interactives still to build: adam_viz (optimizationModules `adam_adamw`), variational_inference_viz (probabilisticMLModules `variational_inference`), convex_optimization_viz (mathStatsModules `convex_optimization`), stationarity_viz (timeSeriesModules `stationarity`)
 
-**Content expansions (committed separately, already pushed or pending below):**
+**Prior-session content (uncommitted):**
 SpotTheFlawTab 12→27 scenarios · VerbatimTab 25→65 questions · questionBank.js Trainer MCQs 60→120
+GradientBoostingViz, LossLandscapeViz, SVDViz, MonteCarloViz, NDCGViz, ExplorationExploitationViz
 
 ---
 

@@ -1,6 +1,7 @@
 export const OPTIMIZATION_MODULES = [
   {
     id: 'loss_landscape_intuition',
+    interactiveId: 'loss_landscape_viz',
     title: 'Loss Landscape Intuition',
     subtitle: 'The geometric picture of what optimization is actually minimizing.',
     difficulty: 'foundational',
@@ -303,6 +304,7 @@ export const OPTIMIZATION_MODULES = [
   },
   {
     id: 'weight_initialization',
+    interactiveId: 'weight_init_viz',
     title: 'Weight Initialization',
     subtitle: 'Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.',
     difficulty: 'intermediate',

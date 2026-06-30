@@ -219,6 +219,7 @@ export const CLASSICAL_ML_MODULES = [
   },
   {
     id: 'gradient_boosting',
+    interactiveId: 'gradient_boosting_viz',
     title: 'Gradient Boosting & XGBoost',
     subtitle: 'Residual fitting, shrinkage, XGBoost regularisation, early stopping',
     difficulty: 'intermediate',
@@ -287,7 +288,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `Ensemble accuracy = individual model accuracy — no improvement at all. The diversity principle: if models make identical errors (correlation ρ=1), averaging does nothing because the errors do not cancel. The ensemble error formula: ε_ensemble ≈ ε(1+(T-1)ρ)/T. With ρ=1 and T=2: ε_ensemble ≈ ε(1+1)/2 = ε. This is why using the same algorithm with different random seeds gives minimal gain (high ρ), while combining a neural network and a gradient boosted tree gives more gain (different inductive biases lead to different error patterns, lower ρ).`
       },
     ],
-    takeaway: `The key insight is that ensemble gains come from diversity (models making different errors), not from the number of models, which means in practice you should combine models with genuinely different architectures or feature views rather than averaging many copies of the same model.`,
+    takeaway: `Ensemble gains come from diversity — models making different errors — not from the count. Averaging many copies of the same model barely moves the needle. Combine a gradient boosted tree and a neural network, and you are actually buying something; run five random forests with different seeds and you are mostly wasting compute.`,
     interactiveId: 'ensemble_viz',
   },
   {
@@ -322,7 +323,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `Prefer SVM when: (1) The dataset is small (n < 10K) and high-dimensional — SVMs have better theoretical guarantees (margin maximisation) in this regime. (2) The classes are well-separated — hard-margin or small-slack SVM exploits this. (3) You need a kernel for non-linear boundaries and cannot engineer features. Prefer logistic regression when: (1) You need calibrated probability outputs — SVM outputs distances, not probabilities (Platt scaling fixes this but adds complexity). (2) Large datasets (n > 100K) — LR scales linearly in n, SVM does not. (3) Interpretability matters — LR coefficients are log-odds ratios; SVM weights have less direct interpretation. (4) You want a fast baseline — LR trains in seconds.`
       },
     ],
-    takeaway: `The key insight is that SVMs find the maximum-margin separator using only the support vectors, which means in practice the kernel trick lets you learn non-linear boundaries without ever computing high-dimensional features — but SVMs do not scale to large datasets and gradient boosting is usually preferred.`,
+    takeaway: `SVMs find the widest possible margin using only the support vectors — every other training point is irrelevant once training is done. The kernel trick lets you get non-linear boundaries without ever computing high-dimensional features explicitly. Both properties are theoretically elegant and practically limited: SVMs stall at n > 100K, and gradient boosting wins at scale.`,
     interactiveId: 'svm_viz',
   },
   {
@@ -357,7 +358,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `Choose KNN when: (1) The decision boundary is highly non-linear and irregular — KNN adapts to any boundary shape without feature engineering. (2) The training set is very small and the feature space is low-dimensional (d < 20) — KNN with k=5 often outperforms logistic regression that has too few samples to estimate coefficients reliably. (3) You need online learning — adding a new training point to KNN requires no retraining, just appending to the index. (4) Instance-based explanations matter — "your prediction is X because your nearest neighbours are A, B, C" is intuitive. Prefer logistic regression or trees when: large n (KNN inference is O(nd)); high d; need probability outputs; training time is not a constraint.`
       },
     ],
-    takeaway: `The key insight is that KNN assumes that nearby points in feature space have similar labels, which means in practice the quality of the distance metric (or embedding space) matters far more than the choice of k.`,
+    takeaway: `KNN bets that nearby points in feature space have similar labels. If your distance metric is bad — wrong scale, wrong space, wrong features — no value of k fixes it. The embedding or metric is the model; k is just a smoothing dial.`,
     interactiveId: 'knn_viz',
   },
   {
@@ -392,7 +393,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `Very cautious: NB posteriors are poorly calibrated — the independence assumption makes P(y|x) converge toward 0 and 1 faster than the true probabilities. A NB output of 0.99 does not mean 99% of similarly-scored emails are spam. To get calibrated probabilities: (1) Apply Platt scaling — fit a logistic regression a·f+b on the NB log-odds f = log(P(spam)/P(ham)) using a held-out calibration set. (2) Apply isotonic regression if you have enough calibration data (>1000 samples) and suspect non-monotone miscalibration. After calibration, validate on a separate test set using a reliability diagram and ECE.`
       },
     ],
-    takeaway: `The key insight is that Naïve Bayes works despite violated conditional independence because classification only requires the correct ranking of class posteriors, not accurate probability values, which means in practice it is the fastest and most interpretable classifier to use as a baseline for text and high-dimensional sparse data.`,
+    takeaway: `Naïve Bayes works despite wildly violated independence assumptions because correct ranking of class posteriors is all classification needs — not accurate probabilities. That makes it the fastest and most interpretable baseline for text and sparse high-dimensional data. Just never trust the raw probability outputs without calibration.`,
   },
   {
     id: 'calibration',
@@ -426,7 +427,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `The meta-learner uses base model probability outputs as features. If a base model is overconfident (outputs 0.95 when the true probability is 0.65), the meta-learner receives a feature value of 0.95 for what is actually a moderate-confidence example. The meta-learner tries to learn the relationship between these features and the true label — but miscalibrated features have a different scale than calibrated ones, making the meta-learner's job harder. In the worst case: the meta-learner trusts the overconfident model too much (the feature 0.95 looks like a strong signal) and under-weights the other base models. After calibration, all base models' outputs are on the same probability scale, and the meta-learner can correctly learn their relative reliability.`
       },
     ],
-    takeaway: `The key insight is that a model's AUC and its calibration are independent properties, which means in practice any time you use predicted probabilities to make decisions (not just rankings) you must verify calibration with a reliability diagram and apply Platt scaling or temperature scaling if needed.`,
+    takeaway: `AUC and calibration measure entirely different things and a model can be excellent at one while failing at the other. Any time predicted probabilities drive a downstream decision — not just a ranking — plot the reliability diagram first. A 0.95-AUC model with an ECE of 0.20 is confidently wrong, not confidently right.`,
   },
   {
     id: 'class_imbalance',
@@ -460,7 +461,7 @@ export const CLASSICAL_ML_MODULES = [
         a: `Training: set class_weight = {0: 1, 1: 10} — the loss for misclassifying a positive (cancer) sample is 10× the loss for misclassifying a negative. This shifts the decision boundary toward higher recall. Threshold: at deployment, tune the threshold on a calibration set to achieve the cost-optimal tradeoff: expected cost = FP_rate × 1 + FN_rate × 10. Find threshold minimising this. Evaluation: use F_β with β=√10 ≈ 3.16 (F_β weighs recall β times more than precision); also report Precision, Recall, and the cost metric directly. Never report only accuracy — it hides the critical false-negative rate.`
       },
     ],
-    takeaway: `The key insight is that class imbalance is a cost asymmetry problem, not a data quantity problem, which means in practice the most important intervention is threshold tuning at deployment to match the actual cost ratio of false positives to false negatives for your specific use case.`,
+    takeaway: `Class imbalance is a cost asymmetry problem, not a data quantity problem. You can fix the training procedure with class weights in ten seconds. What you cannot skip is threshold tuning at deployment — the right decision threshold depends entirely on the actual cost ratio of false positives to false negatives for your specific task, and the default 0.5 is almost never that.`,
     interactiveId: 'class_imbalance_viz',
   },
   {
@@ -495,6 +496,6 @@ export const CLASSICAL_ML_MODULES = [
         a: `Two likely explanations: (1) Many of the 20 features are correlated — the information they collectively provide is redundant, and any individual feature can be replaced by a correlated substitute. Gini importance distributes credit among correlated features, making each look moderately important. True importance only appears when all correlated partners are removed simultaneously. (2) The model is robust to feature removal and individual features contribute marginally. Fix: (1) Use permutation importance or SHAP instead of Gini. (2) Try sequential ablation: remove subsets of correlated features together and measure the group's collective importance. (3) Check feature correlations among the 20 selected features — groups with |corr|>0.8 are likely providing redundant information.`
       },
     ],
-    takeaway: `The key insight is that feature selection must happen inside the cross-validation loop to avoid selection bias, which means in practice the simplest reliable approach is to train one gradient boosting model on all features and use SHAP or permutation importance to identify the top-k.`,
+    takeaway: `Feature selection must run inside the cross-validation loop — do it on the full dataset and you have already peeked at the test fold. In practice, the simplest reliable pipeline is: train one gradient boosting model on all features, rank by SHAP or permutation importance, take the top-k. One training run, selection bias avoided, interactions accounted for.`,
   },
 ]

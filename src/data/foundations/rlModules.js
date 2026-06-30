@@ -114,6 +114,7 @@ export const RL_MODULES = [
   },
   {
     id: 'deep_q_networks',
+    interactiveId: 'q_learning_viz',
     title: 'Deep Q-Networks',
     subtitle: 'Experience replay, target network, Double DQN, Dueling, Prioritized Replay, failure modes',
     difficulty: 'intermediate',
@@ -289,6 +290,7 @@ export const RL_MODULES = [
   },
   {
     id: 'exploration_exploitation',
+    interactiveId: 'exploration_exploitation_viz',
     title: 'Exploration vs Exploitation',
     subtitle: 'ε-greedy, UCB, curiosity (ICM), count-based, Thompson sampling, high-dimensional exploration',
     difficulty: 'advanced',

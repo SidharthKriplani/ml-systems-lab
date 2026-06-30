@@ -28,6 +28,7 @@ export const SELF_SUPERVISED_MODULES = [
   },
   {
     id: 'contrastive_loss',
+    interactiveId: 'contrastive_viz',
     title: 'Contrastive Loss Functions',
     subtitle: 'NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment',
     difficulty: 'intermediate',

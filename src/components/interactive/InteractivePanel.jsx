@@ -37,6 +37,19 @@ const registry = {
   thompson_sampling_viz:   lazy(() => import('./ThompsonSamplingViz').then(m => ({ default: m.ThompsonSamplingViz }))),
   gaussian_process_viz:    lazy(() => import('./GaussianProcessViz').then(m => ({ default: m.GaussianProcessViz }))),
   policy_gradient_viz:     lazy(() => import('./PolicyGradientViz').then(m => ({ default: m.PolicyGradientViz }))),
+  gradient_boosting_viz:   lazy(() => import('./GradientBoostingViz').then(m => ({ default: m.GradientBoostingViz }))),
+  loss_landscape_viz:      lazy(() => import('./LossLandscapeViz').then(m => ({ default: m.LossLandscapeViz }))),
+  monte_carlo_viz:         lazy(() => import('./MonteCarloViz').then(m => ({ default: m.MonteCarloViz }))),
+  ndcg_viz:                lazy(() => import('./NDCGViz').then(m => ({ default: m.NDCGViz }))),
+  svd_viz:                 lazy(() => import('./SVDViz').then(m => ({ default: m.SVDViz }))),
+  q_learning_viz:              lazy(() => import('./QLearningViz').then(m => ({ default: m.QLearningViz }))),
+  time_series_decomp_viz:      lazy(() => import('./TimeSeriesDecompViz').then(m => ({ default: m.TimeSeriesDecompViz }))),
+  exploration_exploitation_viz: lazy(() => import('./ExplorationExploitationViz').then(m => ({ default: m.ExplorationExploitationViz }))),
+  hierarchical_clustering_viz: lazy(() => import('./HierarchicalClusteringViz').then(m => ({ default: m.HierarchicalClusteringViz }))),
+  contrastive_viz:             lazy(() => import('./ContrastiveViz').then(m => ({ default: m.ContrastiveViz }))),
+  gnn_message_passing_viz:     lazy(() => import('./GNNMessagePassingViz').then(m => ({ default: m.GNNMessagePassingViz }))),
+  vae_viz:                     lazy(() => import('./VAEViz').then(m => ({ default: m.VAEViz }))),
+  arima_viz:                   lazy(() => import('./ARIMAViz').then(m => ({ default: m.ARIMAViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

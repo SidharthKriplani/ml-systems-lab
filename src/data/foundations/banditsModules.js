@@ -113,6 +113,7 @@ export const BANDITS_MODULES = [
   },
   {
     id: 'thompson_sampling',
+    interactiveId: 'thompson_sampling_viz',
     title: 'Thompson Sampling',
     subtitle: 'Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS',
     difficulty: 'intermediate',

@@ -106,6 +106,7 @@ export const GRAPH_ML_MODULES = [
   },
   {
     id: 'message_passing_framework',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Message Passing Neural Networks (MPNN)',
     subtitle: 'Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers',
     difficulty: 'advanced',

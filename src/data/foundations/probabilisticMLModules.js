@@ -41,6 +41,7 @@ export const PROBABILISTIC_ML_MODULES = [
   },
   {
     id: 'gaussian_processes',
+    interactiveId: 'gaussian_process_viz',
     title: 'Gaussian Processes',
     subtitle: 'Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation',
     difficulty: 'advanced',
@@ -110,6 +111,7 @@ export const PROBABILISTIC_ML_MODULES = [
   },
   {
     id: 'vae_foundations',
+    interactiveId: 'vae_viz',
     title: 'Variational Autoencoders',
     subtitle: 'Generative model, ELBO, reparameterisation trick, posterior collapse, β-VAE, representation learning',
     difficulty: 'advanced',
