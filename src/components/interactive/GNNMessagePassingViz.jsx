@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 const EDGES = [[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,6],[5,6]]
 const POS = [[0.12,0.5],[0.33,0.22],[0.33,0.78],[0.55,0.1],[0.55,0.5],[0.55,0.9],[0.78,0.5]]
@@ -283,10 +283,11 @@ function drawGraphWithTable(canvas, allRounds, currentRound, particleProgress) {
   }
 }
 
-export function GNNMessagePassingViz() {
+export const GNNMessagePassingViz = forwardRef(function GNNMessagePassingViz(props, ref) {
   const canvasRef = useRef(null)
   const roRef = useRef(null)
   const rafRef = useRef(null)
+  const autoPlayRef = useRef(false)
 
   const allRoundsRef = useRef(computeRounds(INIT_FEATURES))
   const [currentRound, setCurrentRound] = useState(0)
@@ -313,6 +314,15 @@ export function GNNMessagePassingViz() {
 
   // Initial draw
   useEffect(() => { redraw(0, null) }, [redraw])
+
+  // Auto-advance when autoPlayRef is true and not currently animating
+  useEffect(() => {
+    if (autoPlayRef.current && !isAnimating && currentRound < 3) {
+      const t = setTimeout(() => nextRound(), 300)
+      return () => clearTimeout(t)
+    }
+    if (currentRound >= 3) autoPlayRef.current = false
+  }, [isAnimating, currentRound, nextRound])
 
   const nextRound = useCallback(() => {
     if (isAnimating || currentRound >= 3) return
@@ -348,6 +358,24 @@ export function GNNMessagePassingViz() {
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
 
+  const play = useCallback(() => {
+    if (currentRound >= 3) return
+    autoPlayRef.current = true
+    if (!isAnimating) nextRound()
+  }, [currentRound, isAnimating, nextRound])
+
+  const pause = useCallback(() => {
+    autoPlayRef.current = false
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+  }, [])
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset,
+    step: () => { autoPlayRef.current = false; nextRound(); },
+  }), [play, pause, reset, nextRound])
+
   const btnStyle = (disabled) => ({
     padding: '0.3rem 0.75rem',
     fontSize: '0.78rem',
@@ -379,4 +407,4 @@ export function GNNMessagePassingViz() {
       </div>
     </div>
   )
-}
+})

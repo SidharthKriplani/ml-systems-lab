@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useImperativeHandle, forwardRef, useCallback } from 'react';
 
 // Seeded pseudo-random (mulberry32)
 function mulberry32(seed) {
@@ -95,7 +95,7 @@ function toCanvasY(tpr) {
   return PAD.top + (1 - tpr) * (CANVAS_H - PAD.top - PAD.bottom);
 }
 
-export function ROCCurveViz() {
+export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
   const dataset = useMemo(() => generateDataset(), []);
   const rocPoints = useMemo(() => computeROCPoints(dataset), [dataset]);
   const auc = useMemo(() => computeAUC(rocPoints), [rocPoints]);
@@ -226,6 +226,41 @@ export function ROCCurveViz() {
 
   }, [rocPoints, auc, metrics]);
 
+  const autoPlayRef = useRef(null)
+
+  useImperativeHandle(ref, () => ({
+    play: () => {
+      if (autoPlayRef.current) return
+      autoPlayRef.current = setInterval(() => {
+        setThreshold(t => {
+          const next = t + 0.05
+          if (next > 1) {
+            clearInterval(autoPlayRef.current)
+            autoPlayRef.current = null
+            return 1
+          }
+          return parseFloat(next.toFixed(2))
+        })
+      }, 200)
+    },
+    pause: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+    },
+    reset: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+      setThreshold(0.5)
+    },
+    step: () => {
+      setThreshold(t => parseFloat(Math.min(1, t + 0.05).toFixed(2)))
+    },
+  }), [])
+
   const fmt = (v, digits = 3) => (v === null ? 'N/A' : v.toFixed(digits));
 
   return (
@@ -314,4 +349,4 @@ export function ROCCurveViz() {
       </div>
     </div>
   );
-}
+})

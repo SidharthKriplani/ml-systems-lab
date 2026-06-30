@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 
 // mulberry32 seeded RNG
 function mulberry32(seed) {
@@ -105,9 +105,11 @@ function computeAccuracy(depth) {
 
 const ACCURACIES = { 1: computeAccuracy(1), 2: computeAccuracy(2), 3: computeAccuracy(3), 4: computeAccuracy(4) };
 
-export function DecisionTreeViz() {
+export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const animRef = useRef(null);
+  const depthRef = useRef(2);
   const [depth, setDepth] = useState(2);
 
   useEffect(() => {
@@ -216,6 +218,38 @@ export function DecisionTreeViz() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => { depthRef.current = depth; }, [depth]);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let lastTime = 0;
+    const tick = (time) => {
+      if (time - lastTime >= 800) {
+        lastTime = time;
+        if (depthRef.current >= 4) { animRef.current = null; return; }
+        setDepth(d => d + 1);
+      }
+      animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setDepth(1);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setDepth(d => Math.min(d + 1, 4));
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+
   const depthNote = depth <= 2
     ? "Underfitting — misses patterns in the data"
     : depth === 3
@@ -254,4 +288,4 @@ export function DecisionTreeViz() {
       </div>
     </div>
   );
-}
+})

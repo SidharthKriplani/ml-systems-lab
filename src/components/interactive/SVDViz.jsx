@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 
 // ─── SVD for 2×2 matrix ───────────────────────────────────────────────────────
 function svd2x2(a, b, c, d) {
@@ -449,7 +449,7 @@ const S = {
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function SVDViz() {
+export const SVDViz = forwardRef(function SVDViz(props, ref) {
   // Panel 1 state
   const [matA, setMatA] = useState({ a: 2, b: 1, c: -0.5, d: 1.5 });
   const canvasGeoRef = useRef(null);
@@ -548,6 +548,34 @@ export function SVDViz() {
   useEffect(() => {
     animStateRef.current = { step: animStep, t: animT };
   }, [animStep, animT]);
+
+  const play = useCallback(() => {
+    startAnimation();
+  }, [startAnimation]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+    animStateRef.current = { step: 0, t: 1 };
+    setAnimStep(0);
+    setAnimT(1);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause()
+    setMatA({ a: 2, b: 1, c: -0.5, d: 1.5 })
+    setRank(2)
+  }, [pause])
+
+  const stepRank = useCallback(() => {
+    pause()
+    setRank(prev => {
+      const opts = [1, 2, 4, 'full']
+      const i = opts.indexOf(prev)
+      return opts[(i + 1) % opts.length]
+    })
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play: startAnimation, pause, reset, step: stepRank }), [startAnimation, pause, reset, stepRank]);
 
   // ─── Error for current rank ─────────────────────────────────────────────────
   const { error, maxError } = useMemo(() => {
@@ -698,4 +726,4 @@ export function SVDViz() {
       </div>
     </div>
   );
-}
+})

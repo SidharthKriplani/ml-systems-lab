@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { InteractiveShell } from './InteractiveShell'
 
 const registry = {
   gradient_descent:      lazy(() => import('./GradientDescentDemo').then(m => ({ default: m.GradientDescentDemo }))),
@@ -85,7 +86,9 @@ export function InteractivePanel({ interactiveId }) {
             Loading...
           </div>
         }>
-          <Component />
+          <InteractiveShell>
+            <Component />
+          </InteractiveShell>
         </Suspense>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 
 // Fixed weights
 const W1 = [[0.5, -0.3], [0.2, 0.8]];
@@ -57,7 +57,7 @@ function edgeOpacity(val, maxVal) {
 
 const NODE_R = 20;
 
-export function BackpropViz() {
+export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const [x1, setX1] = useState(1.0);
   const [x2, setX2] = useState(0.5);
   const [target, setTarget] = useState(1.0);
@@ -138,6 +138,13 @@ export function BackpropViz() {
     const maxVal = mode === 'forward' ? maxFwdW : maxBwdG;
     return edgeThickness(val, maxVal);
   };
+
+  useImperativeHandle(ref, () => ({
+    play: () => {},
+    pause: () => {},
+    reset: () => setMode('forward'),
+    step: () => setMode(m => m === 'forward' ? 'backward' : 'forward'),
+  }), [])
 
   const sliderStyle = { width: '100%', accentColor: 'var(--prime)', cursor: 'pointer' };
   const inkMid = { color: 'var(--ink-mid)', fontSize: 13 };
@@ -310,4 +317,4 @@ export function BackpropViz() {
       </p>
     </div>
   );
-}
+})

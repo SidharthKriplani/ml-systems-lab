@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 // ── Activation function definitions ──────────────────────────────────────────
 
@@ -126,7 +126,7 @@ function drawActivations(canvas, showDerivative) {
   })
 }
 
-export function ActivationFunctions() {
+export const ActivationFunctions = forwardRef(function ActivationFunctions(props, ref) {
   const [showDerivative, setShowDerivative] = useState(false)
   const canvasRef = useRef(null)
 
@@ -143,6 +143,13 @@ export function ActivationFunctions() {
     window.addEventListener('resize', redraw)
     return () => window.removeEventListener('resize', redraw)
   }, [redraw])
+
+  useImperativeHandle(ref, () => ({
+    play: () => {},
+    pause: () => {},
+    reset: () => setShowDerivative(false),
+    step: () => setShowDerivative(s => !s),
+  }), [])
 
   return (
     <div style={{ fontFamily: 'var(--font-sans)' }}>
@@ -235,4 +242,4 @@ export function ActivationFunctions() {
       </div>
     </div>
   )
-}
+})

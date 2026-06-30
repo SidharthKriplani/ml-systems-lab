@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Simple LCG seeded at 42
 function makeLCG(seed) {
@@ -180,9 +180,10 @@ function drawCanvas(canvas, mode) {
   });
 }
 
-export function ClassImbalanceViz() {
+export const ClassImbalanceViz = forwardRef(function ClassImbalanceViz(props, ref) {
   const [mode, setMode] = useState('Original');
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   useEffect(() => {
     if (canvasRef.current) drawCanvas(canvasRef.current, mode);
@@ -255,6 +256,36 @@ export function ClassImbalanceViz() {
     },
   };
 
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setMode(m => {
+        const idx = MODES.indexOf(m);
+        return MODES[(idx + 1) % MODES.length];
+      });
+    }, 800);
+  }, []);
+
+  const pause = useCallback(() => {
+    clearInterval(animRef.current);
+    animRef.current = null;
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setMode('Original');
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setMode(m => {
+      const idx = MODES.indexOf(m);
+      return MODES[(idx + 1) % MODES.length];
+    });
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+
   return (
     <div style={s.wrapper}>
       <div style={s.heading}>Class Imbalance</div>
@@ -311,4 +342,4 @@ export function ClassImbalanceViz() {
       </div>
     </div>
   );
-}
+})

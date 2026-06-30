@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 
 function mulberry32(seed) {
   return function () {
@@ -69,18 +69,52 @@ function computeRBFGrid() {
 
 const RBF_GRID = computeRBFGrid();
 
-export function SVMViz() {
+export const SVMViz = forwardRef(function SVMViz(props, ref) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [mode, setMode] = useState("Linear");
   const [cValue, setCValue] = useState(1);
 
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setCValue(prev => {
+        const next = +(prev + 0.5).toFixed(1)
+        return next > 10 ? 0.1 : next
+      })
+    }, 400)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setCValue(1)
+    setMode("Linear")
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setCValue(c => Math.min(10, +(c + 0.5).toFixed(1)))
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
   useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
+
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     const W = canvas.clientWidth;
     const H = canvas.clientHeight;
+    if (W === 0 || H === 0) return;
     const PAD = 24;
     const plotW = W - PAD * 2;
     const plotH = H - PAD * 2;
@@ -133,7 +167,6 @@ export function SVMViz() {
       // Margin label
       ctx.fillStyle = "rgba(240,165,0,0.6)";
       ctx.font = "10px var(--font-sans, sans-serif)";
-      const marginPx = (rightMarginX - leftMarginX) * plotW;
       ctx.fillText(`margin = ${(marginHalf * 2).toFixed(2)}`, PAD + (0.50 * plotW) - 20, PAD - 6);
 
     } else {
@@ -197,7 +230,11 @@ export function SVMViz() {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-  }, [mode, cValue, canvasRef.current && canvasRef.current.width]);
+  }, [mode, cValue]);
+
+  useEffect(() => {
+    draw();
+  }, [draw]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -210,6 +247,7 @@ export function SVMViz() {
       canvas.height = Math.round(rect.height * dpr);
       const ctx = canvas.getContext("2d");
       ctx.scale(dpr, dpr);
+      draw();
     });
     observer.observe(container);
     const dpr = window.devicePixelRatio || 1;
@@ -218,8 +256,9 @@ export function SVMViz() {
     canvas.height = Math.round(rect.height * dpr);
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
+    draw();
     return () => observer.disconnect();
-  }, []);
+  }, [draw]);
 
   const svCount = mode === "Linear" ? SUPPORT_VECTORS.size : "N/A";
   const marginWidth = mode === "Linear"
@@ -279,4 +318,4 @@ export function SVMViz() {
       </div>
     </div>
   );
-}
+})

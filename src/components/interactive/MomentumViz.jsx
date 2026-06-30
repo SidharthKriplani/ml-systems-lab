@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const W1_RANGE = [-2, 2];
 const W2_RANGE = [-2, 2];
@@ -74,66 +74,96 @@ function drawScene(ctx, trajectory, color, cw, ch, isDone) {
   }
 }
 
+function paintCanvas(canvas, trajectoryVanilla, trajectoryMomentum) {
+  if (!canvas) return;
+  const cw = canvas.clientWidth / 2;
+  const ch = canvas.clientHeight;
+  if (cw === 0 || ch === 0) return;
+  const ctx = canvas.getContext('2d');
+
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+  // Left panel background
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0, 0, cw, ch);
+  // Right panel background
+  ctx.fillStyle = 'rgba(0,0,0,0.10)';
+  ctx.fillRect(cw, 0, cw, ch);
+
+  // Divider
+  ctx.fillStyle = 'rgba(150,150,150,0.3)';
+  ctx.fillRect(cw - 1, 0, 2, ch);
+
+  // Panel labels
+  ctx.save();
+  ctx.fillStyle = 'rgba(200,200,200,0.6)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Vanilla GD', cw / 2, 14);
+  ctx.fillText('GD + Momentum', cw + cw / 2, 14);
+  ctx.restore();
+
+  // Left: vanilla
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, cw, ch);
+  ctx.clip();
+  drawScene(ctx, trajectoryVanilla, '#f59e0b', cw, ch);
+  ctx.restore();
+
+  // Right: momentum (offset by cw)
+  ctx.save();
+  ctx.translate(cw, 0);
+  ctx.beginPath();
+  ctx.rect(0, 0, cw, ch);
+  ctx.clip();
+  drawScene(ctx, trajectoryMomentum, '#60a5fa', cw, ch);
+  ctx.restore();
+}
+
 function useCanvas(trajectoryVanilla, trajectoryMomentum) {
   const canvasRef = useRef(null);
+  const trajVRef = useRef(trajectoryVanilla);
+  const trajMRef = useRef(trajectoryMomentum);
+  trajVRef.current = trajectoryVanilla;
+  trajMRef.current = trajectoryMomentum;
 
+  // ResizeObserver: resize backing store and redraw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ro = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      paintCanvas(canvas, trajVRef.current, trajMRef.current);
+    });
+    ro.observe(canvas);
+    // Initial size
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
-    ctx.scale(dpr, dpr);
-    const cw = canvas.clientWidth / 2;
-    const ch = canvas.clientHeight;
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    }
+    return () => ro.disconnect();
+  }, []);
 
-    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-    // Left panel background
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.fillRect(0, 0, cw, ch);
-    // Right panel background
-    ctx.fillStyle = 'rgba(0,0,0,0.10)';
-    ctx.fillRect(cw, 0, cw, ch);
-
-    // Divider
-    ctx.fillStyle = 'rgba(150,150,150,0.3)';
-    ctx.fillRect(cw - 1, 0, 2, ch);
-
-    // Panel labels
-    ctx.save();
-    ctx.fillStyle = 'rgba(200,200,200,0.6)';
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Vanilla GD', cw / 2, 14);
-    ctx.fillText('GD + Momentum', cw + cw / 2, 14);
-    ctx.restore();
-
-    // Left: vanilla
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, cw, ch);
-    ctx.clip();
-    drawScene(ctx, trajectoryVanilla, '#f59e0b', cw, ch);
-    ctx.restore();
-
-    // Right: momentum (offset by cw)
-    ctx.save();
-    ctx.translate(cw, 0);
-    ctx.beginPath();
-    ctx.rect(0, 0, cw, ch);
-    ctx.clip();
-    drawScene(ctx, trajectoryMomentum, '#60a5fa', cw, ch);
-    ctx.restore();
+  // Redraw on trajectory changes
+  useEffect(() => {
+    paintCanvas(canvasRef.current, trajectoryVanilla, trajectoryMomentum);
   }, [trajectoryVanilla, trajectoryMomentum]);
-
 
   return canvasRef;
 }
 
-export function MomentumViz() {
+export const MomentumViz = forwardRef(function MomentumViz(props, ref) {
   const [alpha, setAlpha] = useState(0.09);
   const [beta, setBeta] = useState(0.9);
   const [running, setRunning] = useState(false);
@@ -218,6 +248,13 @@ export function MomentumViz() {
     setTrajV([[1.5, 1.5]]);
     setTrajM([[1.5, 1.5]]);
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    play: () => setRunning(true),
+    pause: () => setRunning(false),
+    reset,
+    step: doStep,
+  }), [reset, doStep])
 
   const vLoss = loss(...vanillaRef.current.w);
   const mLoss = loss(...momentumRef.current.w);
@@ -345,4 +382,4 @@ export function MomentumViz() {
       </p>
     </div>
   );
-}
+})

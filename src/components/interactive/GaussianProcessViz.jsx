@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG (mulberry32) ──────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -285,8 +285,9 @@ function drawScene(canvas, points, l, sigmaF, sigmaN, priorSeeds) {
 // ─── Component ────────────────────────────────────────────────────────────────
 const PRIOR_SEEDS = [42, 137, 256, 512, 999];
 
-export function GaussianProcessViz() {
+export const GaussianProcessViz = forwardRef(function GaussianProcessViz(props, ref) {
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [l, setL] = useState(0.3);
   const [sigmaF, setSigmaF] = useState(1.0);
@@ -386,6 +387,50 @@ export function GaussianProcessViz() {
     });
     setPoints(prev => [...prev, ...newPts]);
   }, []);
+
+  const addOnePoint = useCallback(() => {
+    setPoints(prev => {
+      const rng = mulberry32((Date.now() + prev.length * 1337) & 0xffffffff);
+      const x = rng();
+      const y = Math.sin(2 * Math.PI * x) + 0.3 * randNormal(rng);
+      return [...prev, [x, Math.max(Y_MIN, Math.min(Y_MAX, y))]];
+    });
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let lastTime = 0;
+    const tick = (time) => {
+      if (time - lastTime >= 800) {
+        lastTime = time;
+        setPoints(prev => {
+          if (prev.length >= 20) { animRef.current = null; return prev; }
+          const rng = mulberry32((Date.now() + prev.length * 1337) & 0xffffffff);
+          const x = rng();
+          const y = Math.sin(2 * Math.PI * x) + 0.3 * randNormal(rng);
+          return [...prev, [x, Math.max(Y_MIN, Math.min(Y_MAX, y))]];
+        });
+      }
+      if (animRef.current !== null) animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const resetPoints = useCallback(() => {
+    pause();
+    setPoints([]);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset: resetPoints,
+    step: addOnePoint,
+  }), [play, pause, resetPoints, addOnePoint]);
 
   // ── Button style ──────────────────────────────────────────────────────────
   const btnStyle = {
@@ -495,4 +540,4 @@ export function GaussianProcessViz() {
       </div>
     </div>
   );
-}
+})

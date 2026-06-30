@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 function entropy(probs) {
   let h = 0;
@@ -363,8 +363,32 @@ function KLMode() {
   );
 }
 
-export function InformationTheoryViz() {
+export const InformationTheoryViz = forwardRef(function InformationTheoryViz(props, ref) {
   const [tab, setTab] = useState('entropy');
+  const animRef = useRef(null);
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setTab(t => t === 'entropy' ? 'kl' : 'entropy')
+    }, 1500)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setTab('entropy')
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setTab(t => t === 'entropy' ? 'kl' : 'entropy')
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
 
   return (
     <div style={{
@@ -403,4 +427,4 @@ export function InformationTheoryViz() {
       {tab === 'entropy' ? <EntropyMode /> : <KLMode />}
     </div>
   );
-}
+})

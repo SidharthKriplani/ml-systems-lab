@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ──────────────────────────────────────────────
 // Constants
@@ -303,7 +303,7 @@ function draw(canvas, logits, rewardHistory, episodeCount) {
 // ──────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────
-export function PolicyGradientViz() {
+export const PolicyGradientViz = forwardRef(function PolicyGradientViz(props, ref) {
   const canvasRef = useRef(null);
   const logitsRef = useRef([0, 0, 0, 0]);
   const baselineRef = useRef(0);
@@ -370,6 +370,43 @@ export function PolicyGradientViz() {
     const canvas = canvasRef.current;
     if (canvas) draw(canvas, logitsRef.current, rewardHistoryRef.current, 0);
   }, []);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      if (isRunningRef.current) return
+      isRunningRef.current = true
+      for (let i = 0; i < 10; i++) {
+        const r = runEpisode(logitsRef.current, baselineRef, rngRef.current)
+        rewardHistoryRef.current.push(r)
+      }
+      const newEp = rewardHistoryRef.current.length
+      setEpisode(newEp)
+      isRunningRef.current = false
+    }, 100)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    handleReset()
+  }, [pause, handleReset])
+
+  const step = useCallback(() => {
+    pause()
+    runN(1)
+  }, [pause, runN])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   // ── Derived display ──
   const probs = softmax(logitsRef.current);
@@ -471,4 +508,4 @@ export function PolicyGradientViz() {
       </div>
     </div>
   );
-}
+})

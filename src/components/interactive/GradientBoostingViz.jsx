@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG (mulberry32) ──────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -362,10 +362,11 @@ function drawCanvas(canvas, round, stumpsData, eta) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function GradientBoostingViz() {
+export const GradientBoostingViz = forwardRef(function GradientBoostingViz(props, ref) {
   const canvasRef = useRef(null);
   const stumpsRef = useRef([]);
   const stateRef  = useRef({ round: 0, eta: 0.5 });
+  const animRef   = useRef(null);
 
   const [round, setRound] = useState(0);
   const [eta, setEta] = useState(0.5);
@@ -417,6 +418,35 @@ export function GradientBoostingViz() {
   const handleReset = useCallback(() => {
     setRound(0);
   }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    let lastTime = 0
+    const tick = (time) => {
+      if (stateRef.current.round >= 8) { animRef.current = null; return }
+      if (time - lastTime >= 800) {
+        lastTime = time
+        setRound(r => {
+          const nr = Math.min(r + 1, 8)
+          stateRef.current = { ...stateRef.current, round: nr }
+          return nr
+        })
+      }
+      animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
+  }, [])
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset: handleReset,
+    step: handleAddTree,
+  }), [play, pause, handleReset, handleAddTree])
 
   const handleEtaChange = useCallback((e) => {
     const newEta = parseFloat(e.target.value);
@@ -534,6 +564,7 @@ export function GradientBoostingViz() {
       </div>
 
       {/* Legend */}
+
       <div style={{
         display: 'flex',
         gap: '20px',
@@ -574,4 +605,4 @@ export function GradientBoostingViz() {
       </div>
     </div>
   );
-}
+})

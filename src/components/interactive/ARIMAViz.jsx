@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG ───────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -95,13 +95,15 @@ const FORECAST_STEPS = TOTAL - TRAIN_END;
 const ACF_LAGS = 12;
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function ARIMAViz() {
+export const ARIMAViz = forwardRef(function ARIMAViz(props, ref) {
   const [p, setP] = useState(2);
   const [d, setD] = useState(1);
   const [q, setQ] = useState(1);
   const [seed, setSeed] = useState(1337);
+  const [visibleForecastCount, setVisibleForecastCount] = useState(FORECAST_STEPS);
 
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   // Derived data
   const rawSeries = generateSeries(seed);
@@ -275,9 +277,10 @@ export function ARIMAViz() {
       const startX = px(TRAIN_END - 1);
       const startY = py(fittedOriginal[TRAIN_END - 1] || rawSeries[TRAIN_END - 1]);
       ctx.moveTo(startX, startY);
-      for (let i = 0; i < forecastOrig.length; i++) {
+      const visibleForecast = forecastOrig.slice(0, visibleForecastCount);
+      for (let i = 0; i < visibleForecast.length; i++) {
         const t = TRAIN_END + i;
-        ctx.lineTo(px(t), py(forecastOrig[i]));
+        ctx.lineTo(px(t), py(visibleForecast[i]));
       }
       ctx.stroke();
       ctx.setLineDash([]);
@@ -449,7 +452,7 @@ export function ARIMAViz() {
     }
 
     // ─── void ───────────────────────────────────────────────────────────────
-  }, [p, d, q, seed, rawSeries, trainRaw, testRaw, diffSeries, fittedOriginal, forecastOrig, acfValues, acfBound]);
+  }, [p, d, q, seed, rawSeries, trainRaw, testRaw, diffSeries, fittedOriginal, forecastOrig, acfValues, acfBound, visibleForecastCount]);
 
   useEffect(() => { draw(); }, [draw]);
 
@@ -461,6 +464,39 @@ export function ARIMAViz() {
     ro.observe(canvas);
     return () => ro.disconnect();
   }, [draw]);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let count = visibleForecastCount >= FORECAST_STEPS ? 0 : visibleForecastCount;
+    setVisibleForecastCount(count);
+    const tick = () => {
+      count++;
+      setVisibleForecastCount(count);
+      if (count < FORECAST_STEPS) {
+        animRef.current = requestAnimationFrame(tick);
+      } else {
+        animRef.current = null;
+      }
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, [visibleForecastCount]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setP(2); setD(1); setQ(1); setSeed(1337);
+    setVisibleForecastCount(0);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setVisibleForecastCount(v => Math.min(v + 1, FORECAST_STEPS));
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   const SliderLabel = ({ label, value, min, max, onChange }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem' }}>
@@ -559,4 +595,4 @@ export function ARIMAViz() {
       </div>
     </div>
   );
-}
+})

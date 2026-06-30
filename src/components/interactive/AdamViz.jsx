@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 // ── Optimizer implementations ─────────────────────────────────────────────────
 
@@ -114,7 +114,7 @@ const MAX_STEPS = 200
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function AdamViz() {
+export const AdamViz = forwardRef(function AdamViz(props, ref) {
   const canvasRef = useRef(null)
   const animRef   = useRef(null)
 
@@ -358,6 +358,46 @@ export function AdamViz() {
     }
   }, []) // eslint-disable-line
 
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let s = step;
+    const tick = () => {
+      s++;
+      setStep(s);
+      draw(s);
+      if (s < MAX_STEPS) {
+        animRef.current = requestAnimationFrame(tick);
+      } else {
+        animRef.current = null;
+        setRunning(false);
+      }
+    };
+    setRunning(true);
+    animRef.current = requestAnimationFrame(tick);
+  }, [step, draw]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+    setRunning(false);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setStep(0);
+    draw(0);
+  }, [pause, draw]);
+
+  const stepOne = useCallback(() => {
+    pause();
+    setStep(s => {
+      const ns = Math.min(s + 1, MAX_STEPS);
+      draw(ns);
+      return ns;
+    });
+  }, [pause, draw]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step: stepOne }), [play, pause, reset, stepOne]);
+
   const toggleVisible = (key) =>
     setVisible(v => ({ ...v, [key]: !v[key] }))
 
@@ -420,4 +460,4 @@ export function AdamViz() {
       </p>
     </div>
   )
-}
+})

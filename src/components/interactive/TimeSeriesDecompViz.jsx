@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded RNG — mulberry32
 function mulberry32(seed) {
@@ -228,13 +228,14 @@ function drawDecomp(canvas, data) {
   ctx.stroke();
 }
 
-export function TimeSeriesDecompViz() {
+export const TimeSeriesDecompViz = forwardRef(function TimeSeriesDecompViz(props, ref) {
   const [slope, setSlope] = useState(0.2);
   const [amplitude, setAmplitude] = useState(15);
   const [noiseStd, setNoiseStd] = useState(5);
   const [seed, setSeed] = useState(0xabcdef);
 
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   const data = generateSeries(slope, amplitude, noiseStd, seed);
   const snr = computeSNR(data.trend, data.seasonal, data.noise);
@@ -274,6 +275,29 @@ export function TimeSeriesDecompViz() {
   useEffect(() => {
     redraw();
   }, [redraw]);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setSeed(s => (s + 1) & 0xffffff);
+    }, 800);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setSlope(0.2); setAmplitude(15); setNoiseStd(5); setSeed(0xabcdef);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setSeed(s => (s + 1) & 0xffffff);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   const sliderContainerStyle = {
     display: 'flex',
@@ -417,4 +441,4 @@ export function TimeSeriesDecompViz() {
       </p>
     </div>
   );
-}
+})

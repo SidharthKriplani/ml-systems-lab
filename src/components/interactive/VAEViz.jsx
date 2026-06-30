@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG ───────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -86,8 +86,9 @@ function canvasToLatent(cx, cy, w, h, pad) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function VAEViz() {
+export const VAEViz = forwardRef(function VAEViz(props, ref) {
   const scatterRef = useRef(null);
+  const animRef = useRef(null);
   const [sample, setSample] = useState(null); // { z1, z2 }
   const [hovered, setHovered] = useState(null);
 
@@ -287,6 +288,34 @@ export function VAEViz() {
     const z1 = AXIS_MIN + rng() * (AXIS_MAX - AXIS_MIN);
     const z2 = AXIS_MIN + rng() * (AXIS_MAX - AXIS_MIN);
     setSample({ z1, z2 });
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      sampleRandom();
+    }, 800);
+  }, [sampleRandom]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const resetImperative = useCallback(() => {
+    pause();
+    setSample(null);
+    setHovered(null);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    sampleRandom();
+  }, [pause, sampleRandom]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset: resetImperative, step }), [play, pause, resetImperative, step]);
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current); };
   }, []);
 
   // Decoder output
@@ -502,4 +531,4 @@ export function VAEViz() {
       </div>
     </div>
   );
-}
+})

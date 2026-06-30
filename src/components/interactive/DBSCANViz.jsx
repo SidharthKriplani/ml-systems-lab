@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded deterministic RNG (mulberry32)
 function mulberry32(seed) {
@@ -96,7 +96,7 @@ function runDBSCAN(points, eps, minPts) {
 
 const CLUSTER_COLORS = ['#F0A500', '#4A9EFF', '#2DD4BF', '#FF6B6B'];
 
-export function DBSCANViz() {
+export const DBSCANViz = forwardRef(function DBSCANViz(props, ref) {
   const canvasRef = useRef(null);
   const [eps, setEps] = useState(0.08);
   const [minPts, setMinPts] = useState(4);
@@ -242,6 +242,42 @@ export function DBSCANViz() {
     setHovered(minDist < 0.05 ? closest : null);
   }, []);
 
+  const autoPlayRef = useRef(null)
+
+  useImperativeHandle(ref, () => ({
+    play: () => {
+      if (autoPlayRef.current) return
+      autoPlayRef.current = setInterval(() => {
+        setEps(e => {
+          const next = parseFloat((e + 0.005).toFixed(3))
+          if (next > 0.2) {
+            clearInterval(autoPlayRef.current)
+            autoPlayRef.current = null
+            return 0.2
+          }
+          return next
+        })
+      }, 80)
+    },
+    pause: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+    },
+    reset: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+      setEps(0.08)
+      setMinPts(4)
+    },
+    step: () => {
+      setEps(e => parseFloat(Math.min(0.2, e + 0.01).toFixed(3)))
+    },
+  }), [])
+
   const sliderStyle = {
     width: '100%',
     accentColor: 'var(--prime)',
@@ -340,4 +376,4 @@ export function DBSCANViz() {
       </p>
     </div>
   );
-}
+})

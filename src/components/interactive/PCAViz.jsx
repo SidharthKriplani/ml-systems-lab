@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded LCG
 function makeLCG(seed) {
@@ -239,9 +239,44 @@ const styles = {
   },
 };
 
-export function PCAViz() {
+export const PCAViz = forwardRef(function PCAViz(props, ref) {
   const canvasRef = useRef(null);
   const [rho, setRho] = useState(0.85);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setRho(prev => {
+        const next = parseFloat((prev + 0.05).toFixed(2))
+        return next > 0.98 ? 0 : next
+      })
+    }, 400)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setRho(0.85)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setRho(prev => {
+      const next = parseFloat((prev + 0.05).toFixed(2))
+      return next > 0.98 ? 0.98 : next
+    })
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const pts = useMemo(() => generateCorrelated(rho), [rho]);
   const stats = useMemo(() => computeStats(pts), [pts]);
@@ -333,4 +368,4 @@ export function PCAViz() {
       )}
     </div>
   );
-}
+})

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // erf approximation (Horner form of Abramowitz & Stegun 7.1.26)
 function erf(x) {
@@ -33,13 +33,14 @@ const CW = 500;
 const CH = 200;
 const PAD = { top: 16, right: 20, bottom: 36, left: 20 };
 
-export function HypothesisTestingViz() {
+export const HypothesisTestingViz = forwardRef(function HypothesisTestingViz(props, ref) {
   const [muA, setMuA] = useState(0.80);
   const [muB, setMuB] = useState(0.84);
   const [sigma, setSigma] = useState(0.03);
   const [n, setN] = useState(50);
 
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   const stats = useMemo(() => computeStats(muA, muB, sigma, n), [muA, muB, sigma, n]);
 
@@ -268,6 +269,39 @@ export function HypothesisTestingViz() {
 
   }, [muA, muB, sigma, n, stats]);
 
+  const play = useCallback(() => {
+    if (animRef.current) return
+    let lastTime = 0
+    const tick = (time) => {
+      if (time - lastTime >= 100) {
+        lastTime = time
+        setMuB(b => {
+          const nb = Math.min(0.90, b + 0.005)
+          if (nb >= 0.90) { animRef.current = null; return nb }
+          return nb
+        })
+      }
+      if (animRef.current !== null) animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setMuA(0.80); setMuB(0.84); setSigma(0.03); setN(50)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setMuB(b => Math.min(0.90, +(b + 0.01).toFixed(3)))
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
   const sig = stats.pTwoTail < 0.05;
   const fmt = (v, d = 4) => v.toFixed(d);
 
@@ -374,4 +408,4 @@ export function HypothesisTestingViz() {
       </div>
     </div>
   );
-}
+})

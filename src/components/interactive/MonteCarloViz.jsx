@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 
 function mulberry32(seed) {
   return function () {
@@ -36,7 +36,7 @@ const FUNCTIONS = {
 const TRUE_PI = Math.PI
 const MAX_DOTS = 2000
 
-export function MonteCarloViz() {
+export const MonteCarloViz = forwardRef(function MonteCarloViz(props, ref) {
   const canvasRef = useRef(null)
   const stateRef = useRef({
     samples: [],        // [{x,y,inside}] for pi panel
@@ -88,6 +88,35 @@ export function MonteCarloViz() {
     }
     const newN = s.samples.length
     setN(newN)
+  }, [])
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      addSamples(50)
+    }, 300)
+  }, [addSamples])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    resetAll()
+  }, [pause, resetAll])
+
+  const step = useCallback(() => {
+    pause()
+    addSamples(50)
+  }, [pause, addSamples])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
   }, [])
 
   // Draw everything
@@ -406,4 +435,4 @@ export function MonteCarloViz() {
       </div>
     </div>
   )
-}
+})

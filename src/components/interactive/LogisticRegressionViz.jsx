@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded RNG — mulberry32
 function mulberry32(seed) {
@@ -221,9 +221,38 @@ function computeStats(threshold) {
   return { TP, TN, FP, FN, accuracy, precision, recall };
 }
 
-export function LogisticRegressionViz() {
+export const LogisticRegressionViz = forwardRef(function LogisticRegressionViz(props, ref) {
   const [threshold, setThreshold] = useState(0.5);
   const canvasRef = useRef(null);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setThreshold(prev => prev >= 0.85 ? 0.1 : parseFloat((prev + 0.05).toFixed(2)))
+    }, 700)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setThreshold(0.5)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setThreshold(prev => prev >= 0.85 ? 0.1 : parseFloat((prev + 0.05).toFixed(2)))
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const stats = useMemo(() => computeStats(threshold), [threshold]);
 
@@ -350,4 +379,4 @@ export function LogisticRegressionViz() {
       </p>
     </div>
   );
-}
+})

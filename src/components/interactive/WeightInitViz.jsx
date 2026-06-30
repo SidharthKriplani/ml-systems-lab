@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ---------------------------------------------------------------------------
 // Seeded RNG (mulberry32)
@@ -370,10 +370,47 @@ const S = {
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export function WeightInitViz() {
+export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
   const [initId, setInitId] = useState(`he`);
   const [activationId, setActivationId] = useState(`relu`);
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
+
+  const INIT_IDS = ['zeros', 'large', 'xavier', 'he'];
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setInitId(prev => {
+        const idx = INIT_IDS.indexOf(prev);
+        return INIT_IDS[(idx + 1) % INIT_IDS.length];
+      });
+    }, 1000);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setInitId('he');
+    setActivationId('relu');
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setInitId(prev => {
+      const idx = INIT_IDS.indexOf(prev);
+      return INIT_IDS[(idx + 1) % INIT_IDS.length];
+    });
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current); };
+  }, []);
 
   // Recompute simulation when inputs change
   const layerStats = (() => {
@@ -446,4 +483,4 @@ export function WeightInitViz() {
       <div style={S.descBox}>{strategy.desc}</div>
     </div>
   );
-}
+})

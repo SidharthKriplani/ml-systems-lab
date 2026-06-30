@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const LOSS = (w) => (w - 3) ** 2;
 const GRAD = (w) => 2 * (w - 3);
@@ -124,7 +124,7 @@ function drawPlot(canvas, trajectory, currentW) {
   ctx.stroke();
 }
 
-export function GradientDescentDemo() {
+export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props, ref) {
   const canvasRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -265,6 +265,13 @@ export function GradientDescentDemo() {
     : `gradient is zero → already at the minimum`;
 
   const newW = w - alpha * grad;
+
+  useImperativeHandle(ref, () => ({
+    play: () => { if (!done) setRunning(true) },
+    pause: () => { setRunning(false) },
+    reset: handleReset,
+    step: handleStep,
+  }), [done, handleReset, handleStep])
 
   const styles = {
     root: {
@@ -518,4 +525,4 @@ export function GradientDescentDemo() {
       </div>
     </div>
   );
-}
+})

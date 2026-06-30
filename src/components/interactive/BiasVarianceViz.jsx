@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded RNG — mulberry32
 function mulberry32(seed) {
@@ -222,9 +222,10 @@ function drawScene(canvas, degree, coeffs) {
   }
 }
 
-export function BiasVarianceViz() {
+export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
   const [degree, setDegree] = useState(3);
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   const coeffs = fitPoly(DATA, degree);
   const mse = coeffs ? computeMSE(DATA, coeffs) : null;
@@ -265,6 +266,38 @@ export function BiasVarianceViz() {
     if (!canvas || canvas.width === 0) return;
     drawScene(canvas, degree, coeffs);
   }, [degree, coeffs]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    const tick = () => {
+      setDegree(d => {
+        const nd = d >= 12 ? 12 : d + 1;
+        if (nd >= 12) {
+          animRef.current = null;
+          return nd;
+        }
+        animRef.current = requestAnimationFrame(tick);
+        return nd;
+      });
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setDegree(1);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setDegree(d => Math.min(d + 1, 12));
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   return (
     <div style={{
@@ -367,4 +400,4 @@ export function BiasVarianceViz() {
       </p>
     </div>
   );
-}
+})

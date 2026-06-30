@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 const DISTS = ['Normal', 'Poisson', 'Exponential', 'Beta']
 
@@ -218,7 +218,7 @@ function drawCanvas(canvas, dist, params) {
   })
 }
 
-export function DistributionVisualizer() {
+export const DistributionVisualizer = forwardRef(function DistributionVisualizer(props, ref) {
   const [dist, setDist]     = useState('Normal')
   const [mu, setMu]         = useState(0)
   const [sigma, setSigma]   = useState(1)
@@ -247,6 +247,24 @@ export function DistributionVisualizer() {
     window.addEventListener('resize', redraw)
     return () => window.removeEventListener('resize', redraw)
   }, [redraw])
+
+  const distIdxRef = useRef(0)
+
+  useImperativeHandle(ref, () => ({
+    play: () => {
+      // No continuous animation; play cycles through distributions
+    },
+    pause: () => {},
+    reset: () => {
+      distIdxRef.current = 0
+      setDist(DISTS[0])
+      setMu(0); setSigma(1); setPoisLambda(3); setExpLambda(1); setAlpha(2); setBeta(2)
+    },
+    step: () => {
+      distIdxRef.current = (distIdxRef.current + 1) % DISTS.length
+      setDist(DISTS[distIdxRef.current])
+    },
+  }), [])
 
   const stats   = getStats(dist, params)
   const formula = getFormula(dist)
@@ -358,4 +376,4 @@ export function DistributionVisualizer() {
       </div>
     </div>
   )
-}
+})

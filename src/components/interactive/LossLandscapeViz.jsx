@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react'
 
 function loss(w1, w2) {
   return (
@@ -184,7 +184,7 @@ function worldToCanvas(w1, w2, size) {
 
 const CONTOUR_LEVELS = [0.5, 1.0, 1.5, 2.0, 3.0, 5.0]
 
-export function LossLandscapeViz() {
+export const LossLandscapeViz = forwardRef(function LossLandscapeViz(props, ref) {
   const canvasRef = useRef(null)
   const optStateRef = useRef(makeOptimizerState())
   const rafRef = useRef(null)
@@ -412,6 +412,12 @@ export function LossLandscapeViz() {
     }
   }, [drawFrame, updateStats])
 
+  const pause = useCallback(() => {
+    runningRef.current = false
+    setRunning(false)
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+  }, [])
+
   const handleRun = useCallback(() => {
     if (runningRef.current) return
     runningRef.current = true
@@ -440,6 +446,8 @@ export function LossLandscapeViz() {
     speedRef.current = v
     setSpeed(v)
   }, [])
+
+  useImperativeHandle(ref, () => ({ play: handleRun, pause, reset: handleReset, step: handleStep }), [handleRun, pause, handleReset, handleStep])
 
   // Initial draw + ResizeObserver
   useEffect(() => {
@@ -621,4 +629,4 @@ export function LossLandscapeViz() {
       </div>
     </div>
   )
-}
+})

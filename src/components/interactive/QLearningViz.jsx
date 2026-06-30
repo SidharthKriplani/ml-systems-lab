@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ──────────────────────────────────────────────
 // Constants
@@ -276,7 +276,7 @@ function draw(canvas, qt, agentR, agentC, episodeCount) {
 // ──────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────
-export function QLearningViz() {
+export const QLearningViz = forwardRef(function QLearningViz(props, ref) {
   const canvasRef = useRef(null);
   const qtRef = useRef(makeQTable());
   const epsilonRef = useRef(1.0);
@@ -418,6 +418,68 @@ export function QLearningViz() {
     setIsAnimating(false);
   }, [episode]);
 
+  const animRef = useRef(null)
+
+  const pause = useCallback(() => {
+    if (animFrameRef.current) { cancelAnimationFrame(animFrameRef.current); animFrameRef.current = null }
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+    isRunningRef.current = false
+    setIsAnimating(false)
+  }, [])
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      if (isRunningRef.current) return
+      isRunningRef.current = true
+      let totalReward = 0
+      for (let i = 0; i < 10; i++) {
+        totalReward = runEpisode(qtRef.current, epsilonRef)
+      }
+      agentPosRef.current = [...START]
+      setEpisode(prev => {
+        const newEp = prev + 10
+        const canvas = canvasRef.current
+        if (canvas) draw(canvas, qtRef.current, START[0], START[1], newEp)
+        return newEp
+      })
+      setLastReward(parseFloat(totalReward.toFixed(2)))
+      setEpsilonDisplay(parseFloat(epsilonRef.current.toFixed(4)))
+      isRunningRef.current = false
+    }, 200)
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    handleReset()
+  }, [pause, handleReset])
+
+  const step = useCallback(() => {
+    pause()
+    if (isRunningRef.current) return
+    isRunningRef.current = true
+    const totalReward = runEpisode(qtRef.current, epsilonRef)
+    agentPosRef.current = [...START]
+    setEpisode(prev => {
+      const newEp = prev + 1
+      const canvas = canvasRef.current
+      if (canvas) draw(canvas, qtRef.current, START[0], START[1], newEp)
+      return newEp
+    })
+    setLastReward(parseFloat(totalReward.toFixed(2)))
+    setEpsilonDisplay(parseFloat(epsilonRef.current.toFixed(4)))
+    isRunningRef.current = false
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => {
+      if (animRef.current) clearInterval(animRef.current)
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+    }
+  }, [])
+
   const btnStyle = {
     padding: '6px 14px',
     borderRadius: '4px',
@@ -553,4 +615,4 @@ export function QLearningViz() {
       </div>
     </div>
   );
-}
+})

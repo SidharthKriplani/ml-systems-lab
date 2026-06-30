@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useImperativeHandle, forwardRef, useCallback, useEffect } from 'react';
 
 const PRESETS = [
   {
@@ -31,7 +31,7 @@ function fmtPct(n) {
   return `${(n * 100).toFixed(1)}%`;
 }
 
-export function BayesCalculator() {
+export const BayesCalculator = forwardRef(function BayesCalculator(props, ref) {
   const [pH, setPH] = useState(0.01);
   const [pEH, setPEH] = useState(0.99);
   const [pEnotH, setPEnotH] = useState(0.05);
@@ -208,6 +208,44 @@ export function BayesCalculator() {
     },
   };
 
+  const presetIdxRef = useRef(0)
+  const autoPlayRef = useRef(null)
+
+  const applyPreset = useCallback((idx) => {
+    const p = PRESETS[idx]
+    setPH(p.pH)
+    setPEH(p.pEH)
+    setPEnotH(p.pEnotH)
+  }, [])
+
+  useImperativeHandle(ref, () => ({
+    play: () => {
+      if (autoPlayRef.current) return
+      autoPlayRef.current = setInterval(() => {
+        presetIdxRef.current = (presetIdxRef.current + 1) % PRESETS.length
+        applyPreset(presetIdxRef.current)
+      }, 1000)
+    },
+    pause: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+    },
+    reset: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+      presetIdxRef.current = 0
+      applyPreset(0)
+    },
+    step: () => {
+      presetIdxRef.current = (presetIdxRef.current + 1) % PRESETS.length
+      applyPreset(presetIdxRef.current)
+    },
+  }), [applyPreset])
+
   const barFill = (value, color) => ({
     position: 'absolute',
     left: 0,
@@ -371,4 +409,4 @@ export function BayesCalculator() {
       </div>
     </div>
   );
-}
+})

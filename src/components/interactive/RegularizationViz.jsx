@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const BETA_OLS = [2.5, -1.8, 0.3, -0.1, 1.2, -0.6];
 const LAMBDA_MIN = 0;
@@ -234,13 +234,46 @@ function drawPaths(canvas, mode, lambda) {
   }
 }
 
-export function RegularizationViz() {
+export const RegularizationViz = forwardRef(function RegularizationViz(props, ref) {
   const [mode, setMode] = useState('L1');
   const [lambda, setLambda] = useState(0);
   const barRef = useRef(null);
   const pathRef = useRef(null);
 
   const coeffs = computeCoeffs(mode, lambda);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setLambda(prev => {
+        const next = +(prev + 0.1).toFixed(2)
+        return next > 3 ? 0 : next
+      })
+    }, 200)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setLambda(0)
+    setMode('L1')
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setLambda(l => Math.min(3, +(l + 0.1).toFixed(2)))
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const drawAll = useCallback(() => {
     if (barRef.current && barRef.current.clientWidth > 0) {
@@ -442,4 +475,4 @@ export function RegularizationViz() {
       </p>
     </div>
   );
-}
+})

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 function makeLCG(seed) {
   let s = seed >>> 0;
@@ -191,9 +191,38 @@ const S = {
   note: { marginTop: 12, padding: '10px 14px', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: 6, fontSize: 12, color: `var(--ink-mid, #aaa)`, lineHeight: 1.6 },
 };
 
-export function TSNEViz() {
+export const TSNEViz = forwardRef(function TSNEViz(props, ref) {
   const [activeIdx, setActiveIdx] = useState(1);
   const canvasRef = useRef(null);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setActiveIdx(i => (i + 1) % 3)
+    }, 1500)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setActiveIdx(1)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setActiveIdx(i => (i + 1) % 3)
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const activeTab = TABS[activeIdx];
 
@@ -252,4 +281,4 @@ export function TSNEViz() {
       </div>
     </div>
   );
-}
+})

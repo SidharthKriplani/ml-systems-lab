@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG ───────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -382,7 +382,7 @@ function drawCorrHeatmap(canvas, featureRatio) {
   // Title
   ctx.fillStyle = inkLow;
   ctx.font = `9px var(--font-sans, sans-serif)`;
-  ctx.fillText('Tree correlation heatmap', PAD.left, 11);
+  ctx.fillText('Tree correlation', PAD.left, 11);
 
   // Cells
   for (let i = 0; i < N; i++) {
@@ -426,7 +426,7 @@ function drawCorrHeatmap(canvas, featureRatio) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function RandomForestViz() {
+export const RandomForestViz = forwardRef(function RandomForestViz(props, ref) {
   const [nActive, setNActive] = useState(0);
   const [featureRatio, setFeatureRatio] = useState(0.5);
 
@@ -439,6 +439,38 @@ export function RandomForestViz() {
     if (errorCanvasRef.current) drawErrorBars(errorCanvasRef.current, featureRatio);
     if (corrCanvasRef.current) drawCorrHeatmap(corrCanvasRef.current, featureRatio);
   }, [nActive, featureRatio]);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setNActive(prev => {
+        if (prev >= 8) { clearInterval(animRef.current); animRef.current = null; return 0 }
+        return prev + 1
+      })
+    }, 600)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setNActive(0)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setNActive(n => Math.min(8, n + 1))
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   useEffect(() => { redrawAll(); }, [redrawAll]);
 
@@ -531,4 +563,4 @@ export function RandomForestViz() {
       </div>
     </div>
   );
-}
+})

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded deterministic RNG
 function mulberry32(seed) {
@@ -209,10 +209,47 @@ function PanelCanvas({ predictFn, boundary, isEnsemble, title, accuracy: acc }) 
   );
 }
 
-export function EnsembleViz() {
+export const EnsembleViz = forwardRef(function EnsembleViz(props, ref) {
+  const animRef = useRef(null);
+  const [visibleStumps, setVisibleStumps] = useState(3);
+
   const accA = STUMP_ACCURACIES[0];
   const accB = STUMP_ACCURACIES[1];
   const accC = STUMP_ACCURACIES[2];
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let lastTime = 0;
+    const stumpCountRef = { value: visibleStumps };
+    const tick = (time) => {
+      if (time - lastTime >= 700) {
+        lastTime = time;
+        setVisibleStumps(v => {
+          const nv = v >= 3 ? 1 : v + 1;
+          stumpCountRef.value = nv;
+          return nv;
+        });
+      }
+      animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, [visibleStumps]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setVisibleStumps(1);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setVisibleStumps(v => v >= 3 ? 1 : v + 1);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: 24, fontFamily: 'var(--font-sans)' }}>
@@ -241,27 +278,33 @@ export function EnsembleViz() {
 
       {/* 2×2 grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <PanelCanvas
-          predictFn={STUMPS[0].predict}
-          boundary={STUMPS[0].boundary}
-          isEnsemble={false}
-          title="Stump A"
-          accuracy={accA}
-        />
-        <PanelCanvas
-          predictFn={STUMPS[1].predict}
-          boundary={STUMPS[1].boundary}
-          isEnsemble={false}
-          title="Stump B"
-          accuracy={accB}
-        />
-        <PanelCanvas
-          predictFn={STUMPS[2].predict}
-          boundary={STUMPS[2].boundary}
-          isEnsemble={false}
-          title="Stump C"
-          accuracy={accC}
-        />
+        <div style={{ opacity: visibleStumps >= 1 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
+          <PanelCanvas
+            predictFn={STUMPS[0].predict}
+            boundary={STUMPS[0].boundary}
+            isEnsemble={false}
+            title="Stump A"
+            accuracy={accA}
+          />
+        </div>
+        <div style={{ opacity: visibleStumps >= 2 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
+          <PanelCanvas
+            predictFn={STUMPS[1].predict}
+            boundary={STUMPS[1].boundary}
+            isEnsemble={false}
+            title="Stump B"
+            accuracy={accB}
+          />
+        </div>
+        <div style={{ opacity: visibleStumps >= 3 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
+          <PanelCanvas
+            predictFn={STUMPS[2].predict}
+            boundary={STUMPS[2].boundary}
+            isEnsemble={false}
+            title="Stump C"
+            accuracy={accC}
+          />
+        </div>
         <PanelCanvas
           predictFn={ensemblePredict}
           boundary={null}
@@ -288,4 +331,4 @@ export function EnsembleViz() {
       </p>
     </div>
   );
-}
+})

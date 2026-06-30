@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const TOKENS = ['The', 'cat', 'sat', 'on', 'mat'];
 
@@ -19,9 +19,34 @@ const WEIGHTS = {
   ],
 };
 
-export function AttentionViz() {
+export const AttentionViz = forwardRef(function AttentionViz(props, ref) {
   const [mode, setMode] = useState('encoder');
   const [selectedRow, setSelectedRow] = useState(0);
+  const animRef = useRef(null);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setSelectedRow(r => (r + 1) % TOKENS.length);
+    }, 600);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setSelectedRow(0);
+    setMode('encoder');
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setSelectedRow(r => (r + 1) % TOKENS.length);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   const weights = WEIGHTS[mode];
   const selectedWeights = weights[selectedRow];
@@ -210,4 +235,4 @@ export function AttentionViz() {
       </p>
     </div>
   );
-}
+})

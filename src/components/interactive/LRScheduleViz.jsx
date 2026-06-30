@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
 
 const T = 100;
 
@@ -131,7 +131,7 @@ function drawChart(canvas, schedules, alpha0) {
   });
 }
 
-export function LRScheduleViz() {
+export const LRScheduleViz = forwardRef(function LRScheduleViz(props, ref) {
   const [alpha0, setAlpha0] = useState(0.5);
   const [warmupPct, setWarmupPct] = useState(10); // percent of T
   const canvasRef = useRef(null);
@@ -160,6 +160,41 @@ export function LRScheduleViz() {
     if (!canvas) return;
     drawChart(canvas, schedules, alpha0);
   }, [schedules, alpha0]);
+
+  const [currentEpoch, setCurrentEpoch] = useState(0)
+  const autoPlayRef = useRef(null)
+
+  useImperativeHandle(ref, () => ({
+    play: () => {
+      if (autoPlayRef.current) return
+      autoPlayRef.current = setInterval(() => {
+        setCurrentEpoch(e => {
+          if (e >= T - 1) {
+            clearInterval(autoPlayRef.current)
+            autoPlayRef.current = null
+            return e
+          }
+          return e + 1
+        })
+      }, 80)
+    },
+    pause: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+    },
+    reset: () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+        autoPlayRef.current = null
+      }
+      setCurrentEpoch(0)
+    },
+    step: () => {
+      setCurrentEpoch(e => Math.min(T - 1, e + 1))
+    },
+  }), [])
 
   const sliderStyle = {
     accentColor: 'var(--prime)',
@@ -277,4 +312,4 @@ export function LRScheduleViz() {
       </p>
     </div>
   );
-}
+})

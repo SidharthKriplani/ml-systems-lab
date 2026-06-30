@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Loss functions ───────────────────────────────────────────────────────────
 function lossConvex(x) { return (x + 1) ** 2; }
@@ -321,7 +321,7 @@ function drawRight(ctx, W, H, kappa, lr) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function ConvexOptimizationViz() {
+export const ConvexOptimizationViz = forwardRef(function ConvexOptimizationViz(props, ref) {
   const [isConvex, setIsConvex] = useState(true);
   const [lr, setLr] = useState(0.1);
   const [startX, setStartX] = useState(2.0);
@@ -332,6 +332,7 @@ export function ConvexOptimizationViz() {
   const [rightStats, setRightStats] = useState(null);
 
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   const computeAndDraw = useCallback((doRun) => {
     const canvas = canvasRef.current;
@@ -467,6 +468,15 @@ export function ConvexOptimizationViz() {
     computeAndDraw(false);
   };
 
+  const play = useCallback(() => { setHasRun(true); computeAndDraw(true); }, [computeAndDraw]);
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+  const resetImp = useCallback(() => { setHasRun(false); setPathStats(null); computeAndDraw(false); }, [computeAndDraw]);
+  const stepImp = useCallback(() => { setHasRun(true); computeAndDraw(true); }, [computeAndDraw]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset: resetImp, step: stepImp }), [play, pause, resetImp, stepImp]);
+
   // Initial draw
   useEffect(() => { computeAndDraw(hasRun); }, [computeAndDraw, hasRun]);
 
@@ -589,4 +599,4 @@ export function ConvexOptimizationViz() {
       </div>
     </div>
   );
-}
+})

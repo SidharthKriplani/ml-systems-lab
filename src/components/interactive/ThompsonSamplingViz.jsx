@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ── Seeded RNG ──────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -371,7 +371,7 @@ function drawRegretCanvas(canvas, thompsonRegret, epsilonRegret, ucbRegret) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export function ThompsonSamplingViz() {
+export const ThompsonSamplingViz = forwardRef(function ThompsonSamplingViz(props, ref) {
   const [trialCount, setTrialCount] = useState(0);
 
   const betaCanvasRef = useRef(null);
@@ -383,6 +383,7 @@ export function ThompsonSamplingViz() {
   const ucbRef = useRef(initUCB());
   const rngRef = useRef(mulberry32(SEED));
   const trialsRef = useRef(0);
+  const animRef = useRef(null);
 
   // Prime color ref (read once on mount, used in draw functions)
   const primeColorRef = useRef('#F0A500');
@@ -520,6 +521,33 @@ export function ThompsonSamplingViz() {
     trialsRef.current = 0;
     setTrialCount(0);
   }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      runTrials(5)
+    }, 100)
+  }, [runTrials])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    handleReset()
+  }, [pause, handleReset])
+
+  const step = useCallback(() => {
+    pause()
+    runTrials(1)
+  }, [pause, runTrials])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const ts = thompsonRef.current;
   const eg = egRef.current;
@@ -731,4 +759,4 @@ export function ThompsonSamplingViz() {
       )}
     </div>
   );
-}
+})

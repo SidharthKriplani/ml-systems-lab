@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Seeded RNG ───────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -154,12 +154,13 @@ function drawSeriesLine(ctx, series, padL, padR, panelTop, panelH, color, dash =
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export function StationarityViz() {
+export const StationarityViz = forwardRef(function StationarityViz(props, ref) {
   const [seriesIdx, setSeriesIdx] = useState(0);
   const [showDiff, setShowDiff] = useState(false);
   const [window_size, setWindowSize] = useState(20);
 
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   const config = SERIES_CONFIG[seriesIdx];
 
@@ -428,6 +429,7 @@ export function StationarityViz() {
 
   useEffect(() => { draw(); }, [draw]);
 
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -448,6 +450,30 @@ export function StationarityViz() {
   });
 
   const cfg = SERIES_CONFIG[seriesIdx];
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setSeriesIdx(i => (i + 1) % SERIES_CONFIG.length);
+    }, 1000);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setSeriesIdx(0);
+    setShowDiff(false);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setSeriesIdx(i => (i + 1) % SERIES_CONFIG.length);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif' }}>
@@ -536,4 +562,4 @@ export function StationarityViz() {
       </div>
     </div>
   );
-}
+})

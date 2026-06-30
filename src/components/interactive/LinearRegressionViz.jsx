@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const INITIAL_POINTS = [
   [0.1, 0.15], [0.2, 0.25], [0.3, 0.20], [0.35, 0.40], [0.45, 0.45],
@@ -138,12 +138,50 @@ function drawScene(canvas, points, showResiduals) {
   }
 }
 
-export function LinearRegressionViz() {
+export const LinearRegressionViz = forwardRef(function LinearRegressionViz(props, ref) {
   const canvasRef = useRef(null);
   const [points, setPoints] = useState(INITIAL_POINTS.map(p => [...p]));
   const [showResiduals, setShowResiduals] = useState(false);
 
   const ols = computeOLS(points);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setPoints(prev => {
+        const x = 0.1 + Math.random() * 0.8
+        const y = Math.max(0, Math.min(1, 0.8 * x + 0.1 + (Math.random() - 0.5) * 0.15))
+        return [...prev, [x, y]]
+      })
+    }, 600)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setPoints(INITIAL_POINTS.map(p => [...p]))
+    setShowResiduals(false)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setPoints(prev => {
+      const x = 0.1 + Math.random() * 0.8
+      const y = Math.max(0, Math.min(1, 0.8 * x + 0.1 + (Math.random() - 0.5) * 0.15))
+      return [...prev, [x, y]]
+    })
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   // Draw whenever points or showResiduals change
   useEffect(() => {
@@ -364,4 +402,4 @@ export function LinearRegressionViz() {
       </p>
     </div>
   );
-}
+})

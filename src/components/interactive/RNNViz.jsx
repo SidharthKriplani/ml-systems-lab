@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // ─── Module-scope math ───────────────────────────────────────────────────────
 
@@ -245,8 +245,37 @@ function H0Ghost({ selected }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function RNNViz() {
+export const RNNViz = forwardRef(function RNNViz(props, ref) {
   const [selectedStep, setSelectedStep] = useState(1);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setSelectedStep(s => s < 4 ? s + 1 : 1)
+    }, 1200)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setSelectedStep(1)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setSelectedStep(s => s < 4 ? s + 1 : 1)
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const compPanel = useMemo(() => {
     const t    = selectedStep - 1;  // 0-indexed
@@ -378,4 +407,4 @@ export function RNNViz() {
       </div>
     </div>
   );
-}
+})

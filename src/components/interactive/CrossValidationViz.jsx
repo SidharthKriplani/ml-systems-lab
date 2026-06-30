@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const N_SAMPLES = 30;
 
@@ -38,9 +38,10 @@ const K_INFO = {
   10: { label: 'k=10', note: 'Expensive but low-variance estimate' },
 };
 
-export function CrossValidationViz() {
+export const CrossValidationViz = forwardRef(function CrossValidationViz(props, ref) {
   const [k, setK] = useState(5);
   const [foldIdx, setFoldIdx] = useState(0); // 0-based
+  const animRef = useRef(null);
 
   const valSet = useMemo(() => getFoldIndices(k, foldIdx), [k, foldIdx]);
   const accs = FOLD_ACCURACIES[k];
@@ -64,6 +65,31 @@ export function CrossValidationViz() {
   function next() {
     setFoldIdx(f => (f + 1) % k);
   }
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setFoldIdx(f => (f + 1) % k);
+    }, 800);
+  }, [k]);
+
+  const pause = useCallback(() => {
+    clearInterval(animRef.current);
+    animRef.current = null;
+  }, []);
+
+  const resetCV = useCallback(() => {
+    pause();
+    setK(5);
+    setFoldIdx(0);
+  }, [pause]);
+
+  const stepCV = useCallback(() => {
+    pause();
+    setFoldIdx(f => (f + 1) % k);
+  }, [pause, k]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset: resetCV, step: stepCV }), [play, pause, resetCV, stepCV]);
 
   // Arrange 30 squares: 2 rows of 15
   const rows = [[...Array(15).keys()], [...Array(15).keys()].map(i => i + 15)];
@@ -321,4 +347,4 @@ export function CrossValidationViz() {
       </div>
     </div>
   );
-}
+})

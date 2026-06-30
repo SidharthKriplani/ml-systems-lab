@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 function MetricBar({ label, value, formatted }) {
   const pct = Math.min(1, Math.max(0, isNaN(value) ? 0 : value));
@@ -51,11 +51,21 @@ function Slider({ label, value, onChange }) {
   );
 }
 
-export function ConfusionMatrixViz() {
+const THRESHOLD_CONFIGS = [
+  { TP: 40, FP: 10, FN: 15, TN: 35 },
+  { TP: 35, FP: 7,  FN: 20, TN: 38 },
+  { TP: 28, FP: 4,  FN: 27, TN: 41 },
+  { TP: 20, FP: 2,  FN: 35, TN: 43 },
+  { TP: 12, FP: 1,  FN: 43, TN: 44 },
+];
+
+export const ConfusionMatrixViz = forwardRef(function ConfusionMatrixViz(props, ref) {
   const [TP, setTP] = useState(40);
   const [FP, setFP] = useState(10);
   const [FN, setFN] = useState(15);
   const [TN, setTN] = useState(35);
+  const animRef = useRef(null);
+  const configIdxRef = useRef(0);
 
   const total = TP + FP + FN + TN;
 
@@ -127,6 +137,36 @@ export function ConfusionMatrixViz() {
       text: '#4ade80',
     },
   ];
+
+  const pause = useCallback(() => {
+    clearInterval(animRef.current);
+    animRef.current = null;
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      configIdxRef.current = (configIdxRef.current + 1) % THRESHOLD_CONFIGS.length;
+      const c = THRESHOLD_CONFIGS[configIdxRef.current];
+      setTP(c.TP); setFP(c.FP); setFN(c.FN); setTN(c.TN);
+    }, 800);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    const c = THRESHOLD_CONFIGS[0];
+    setTP(c.TP); setFP(c.FP); setFN(c.FN); setTN(c.TN);
+    configIdxRef.current = 0;
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    configIdxRef.current = (configIdxRef.current + 1) % THRESHOLD_CONFIGS.length;
+    const c = THRESHOLD_CONFIGS[configIdxRef.current];
+    setTP(c.TP); setFP(c.FP); setFN(c.FN); setTN(c.TN);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   return (
     <div style={{
@@ -243,4 +283,4 @@ export function ConfusionMatrixViz() {
       </div>
     </div>
   );
-}
+})

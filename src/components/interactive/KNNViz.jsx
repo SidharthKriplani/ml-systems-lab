@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 
 function mulberry32(seed) {
   return function () {
@@ -74,12 +74,49 @@ function computeDecisionGrid(k) {
 const GRIDS = {};
 for (const k of ODD_KS) GRIDS[k] = computeDecisionGrid(k);
 
-export function KNNViz() {
+export const KNNViz = forwardRef(function KNNViz(props, ref) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [k, setK] = useState(5);
   const [query, setQuery] = useState(null);
   const [result, setResult] = useState(null);
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      setK(prev => {
+        const idx = ODD_KS.indexOf(prev)
+        return ODD_KS[(idx + 1) % ODD_KS.length]
+      })
+    }, 800)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setK(5)
+    setQuery(null)
+    setResult(null)
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    setK(prev => {
+      const idx = ODD_KS.indexOf(prev)
+      return ODD_KS[(idx + 1) % ODD_KS.length]
+    })
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
+  }, [])
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -105,13 +142,41 @@ export function KNNViz() {
     const N = 20;
     const cellW = plotW / N;
     const cellH = plotH / N;
-    const alphaMap = { A: "rgba(240,165,0,0.07)", B: "rgba(80,130,220,0.07)", C: "rgba(60,179,113,0.07)" };
+    const alphaMap = { A: "rgba(240,165,0,0.30)", B: "rgba(80,130,220,0.30)", C: "rgba(60,179,113,0.28)" };
     for (let gy = 0; gy < N; gy++) {
       for (let gx = 0; gx < N; gx++) {
         ctx.fillStyle = alphaMap[grid[gy][gx]];
         ctx.fillRect(PAD + gx * cellW, PAD + gy * cellH, cellW, cellH);
       }
     }
+
+    // Boundary lines between decision regions
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 1;
+    for (let gy = 0; gy < N; gy++) {
+      for (let gx = 0; gx < N - 1; gx++) {
+        if (grid[gy][gx] !== grid[gy][gx + 1]) {
+          const x = PAD + (gx + 1) * cellW;
+          ctx.beginPath();
+          ctx.moveTo(x, PAD + gy * cellH);
+          ctx.lineTo(x, PAD + (gy + 1) * cellH);
+          ctx.stroke();
+        }
+      }
+    }
+    for (let gy = 0; gy < N - 1; gy++) {
+      for (let gx = 0; gx < N; gx++) {
+        if (grid[gy][gx] !== grid[gy + 1][gx]) {
+          const y = PAD + (gy + 1) * cellH;
+          ctx.beginPath();
+          ctx.moveTo(PAD + gx * cellW, y);
+          ctx.lineTo(PAD + (gx + 1) * cellW, y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
 
     // Query state: search radius circle
     if (query && result) {
@@ -291,4 +356,4 @@ export function KNNViz() {
       </div>
     </div>
   );
-}
+})

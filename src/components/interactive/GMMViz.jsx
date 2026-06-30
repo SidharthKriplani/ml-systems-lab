@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded LCG random — deterministic floats in [0,1)
 function makeLCG(seed) {
@@ -253,7 +253,7 @@ const styles = {
   modeRow: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 },
 };
 
-export function GMMViz() {
+export const GMMViz = forwardRef(function GMMViz(props, ref) {
   const canvasRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -305,6 +305,16 @@ export function GMMViz() {
     if (step >= 6) return;
     setRunning((r) => !r);
   }, [step]);
+
+  const play = useCallback(() => { if (step < 6) setRunning(true); }, [step]);
+  const pause = useCallback(() => { setRunning(false); }, []);
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset: handleReset,
+    step: handleStep,
+  }), [play, pause, handleReset, handleStep]);
 
   return (
     <div style={styles.root}>
@@ -379,4 +389,4 @@ export function GMMViz() {
       </div>
     </div>
   );
-}
+})

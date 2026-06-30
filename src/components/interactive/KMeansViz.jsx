@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded LCG random — produces deterministic floats in [0,1)
 function makeLCG(seed) {
@@ -205,7 +205,7 @@ const styles = {
   },
 };
 
-export function KMeansViz() {
+export const KMeansViz = forwardRef(function KMeansViz(props, ref) {
   const canvasRef = useRef(null);
   const intervalRef = useRef(null);
   const runStateRef = useRef(null);
@@ -217,12 +217,24 @@ export function KMeansViz() {
     const ro = new ResizeObserver(() => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(rect.height * dpr);
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
+      const { points: cp, centroids: cc, phase: ph, k: ck } = runStateRef.current;
+      drawCanvas(canvas, cp, cc, ph, ck);
     });
     ro.observe(canvas);
+    // Initial sizing
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    }
     return () => ro.disconnect();
   }, []);
 
@@ -235,8 +247,8 @@ export function KMeansViz() {
   const [converged, setConverged] = useState(false);
   const [running, setRunning] = useState(false);
 
-  // Keep a ref of current state for the interval loop
-  runStateRef.current = { points, centroids, stepCount, converged };
+  // Keep a ref of current state for the interval loop and ResizeObserver
+  runStateRef.current = { points, centroids, stepCount, converged, phase, k };
 
   const redraw = useCallback(() => {
     if (canvasRef.current) {
@@ -315,17 +327,28 @@ export function KMeansViz() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [k]);
 
+  useImperativeHandle(ref, () => ({
+    play: () => { if (phase !== 'init' && !converged) { handleInit(); } },
+    pause: () => { setRunning(false) },
+    reset: handleReset,
+    step: () => {
+      if (phase === 'init') { handleInit(); } else { handleStep(); }
+    },
+  }), [phase, converged, handleInit, handleStep, handleReset])
+
   return (
     <div style={styles.root}>
       <p style={styles.title}>K-Means Clustering</p>
       <p style={styles.subtitle}>{`42 points · 3 natural clusters · step through E-step / M-step`}</p>
 
-      <canvas
-        ref={canvasRef}
-        width={640}
-        height={300}
-        style={styles.canvas}
-      />
+      <div style={{ position: 'relative', width: '100%', minHeight: '320px' }}>
+        <canvas
+          ref={canvasRef}
+          width={640}
+          height={300}
+          style={{ ...styles.canvas, height: '100%', minHeight: '320px' }}
+        />
+      </div>
 
       <div style={styles.controls}>
         <label style={styles.sliderLabel}>
@@ -384,4 +407,4 @@ export function KMeansViz() {
       )}
     </div>
   );
-}
+})

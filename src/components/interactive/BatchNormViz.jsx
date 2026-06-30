@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const SCENARIOS = [
   { label: 'Healthy init', values: [-0.8, 0.3, 1.1, -0.4, 0.7, -1.2, 0.5, 0.2] },
@@ -133,11 +133,38 @@ function DotPlot({ values, min, max, color, showMeanLine, showBand, meanVal, std
   );
 }
 
-export function BatchNormViz() {
+export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
   const [scenario, setScenario] = useState(0);
   const [gamma, setGamma] = useState(1.0);
   const [beta, setBeta] = useState(0.0);
   const [showGB, setShowGB] = useState(false);
+  const animRef = useRef(null);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setScenario(s => (s + 1) % SCENARIOS.length);
+    }, 1000);
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setScenario(0);
+    setGamma(1.0);
+    setBeta(0.0);
+    setShowGB(false);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setScenario(s => (s + 1) % SCENARIOS.length);
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   const computed = useMemo(() => {
     const vals = SCENARIOS[scenario].values;
@@ -304,4 +331,4 @@ export function BatchNormViz() {
       </div>
     </div>
   );
-}
+})

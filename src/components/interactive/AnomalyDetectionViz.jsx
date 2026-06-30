@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 // LCG seeded RNG
 function makeLCG(seed) {
@@ -70,7 +70,7 @@ const ISOLATION_SPLITS = [
 const CANVAS_W = 420;
 const CANVAS_H = 280;
 
-function drawCanvas(canvas, threshold, showSplits) {
+function drawCanvas(canvas, threshold, showSplits, visibleCount = ALL_POINTS.length) {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   canvas.width = Math.round(rect.width * dpr);
@@ -124,7 +124,7 @@ function drawCanvas(canvas, threshold, showSplits) {
   }
 
   // Draw all points
-  ALL_POINTS.forEach(({ x, y, score }) => {
+  ALL_POINTS.slice(0, visibleCount).forEach(({ x, y, score }) => {
     const isAnomaly = score >= threshold;
     // size proportional to score: min 4px, max 10px
     const r = 4 + (score - 0.12) / (0.91 - 0.12) * 6;
@@ -151,18 +151,52 @@ function drawCanvas(canvas, threshold, showSplits) {
   ctx.fillText(`threshold = ${threshold.toFixed(2)}`, PAD + 2, PAD + 12);
 }
 
-export function AnomalyDetectionViz() {
+export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props, ref) {
   const [threshold, setThreshold] = useState(0.6);
   const [showSplits, setShowSplits] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(ALL_POINTS.length);
   const canvasRef = useRef(null);
+  const animRef = useRef(null);
 
   useEffect(() => {
-    if (canvasRef.current) drawCanvas(canvasRef.current, threshold, showSplits);
-  }, [threshold, showSplits]);
+    if (canvasRef.current) drawCanvas(canvasRef.current, threshold, showSplits, visibleCount);
+  }, [threshold, showSplits, visibleCount]);
 
-  const flagged = ALL_POINTS.filter((p) => p.score >= threshold);
-  const trueAnomaliesDetected = ALL_POINTS
+  const flagged = ALL_POINTS.slice(0, visibleCount).filter((p) => p.score >= threshold);
+  const trueAnomaliesDetected = ALL_POINTS.slice(0, visibleCount)
     .filter((p, i) => i >= 40 && p.score >= threshold).length;
+
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    let count = visibleCount >= ALL_POINTS.length ? 0 : visibleCount;
+    setVisibleCount(count);
+    const tick = () => {
+      count++;
+      setVisibleCount(count);
+      if (count < ALL_POINTS.length) {
+        animRef.current = requestAnimationFrame(tick);
+      } else {
+        animRef.current = null;
+      }
+    };
+    animRef.current = requestAnimationFrame(tick);
+  }, [visibleCount]);
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setVisibleCount(0);
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setVisibleCount(v => Math.min(v + 1, ALL_POINTS.length));
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   const s = {
     wrapper: {
@@ -385,4 +419,4 @@ export function AnomalyDetectionViz() {
       </div>
     </div>
   );
-}
+})

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const SEED_POINTS = [
   [0.15, 0.75], [0.22, 0.82], [0.18, 0.68], [0.28, 0.78],
@@ -109,9 +109,10 @@ function getClusters(merges, threshold, n) {
   return assignment;
 }
 
-export function HierarchicalClusteringViz() {
+export const HierarchicalClusteringViz = forwardRef(function HierarchicalClusteringViz(props, ref) {
   const scatterRef = useRef(null);
   const dendroRef = useRef(null);
+  const animRef = useRef(null);
   const mergesRef = useRef([]);
   const leafOrderRef = useRef([]);
   const maxHeightRef = useRef(1);
@@ -437,10 +438,49 @@ export function HierarchicalClusteringViz() {
     };
   }, [handleDendroMouseUp, getThreshFromY]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     const maxH = maxHeightRef.current;
     setThreshold(maxH * 0.5);
-  };
+  }, []);
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    let lastTime = 0
+    const tick = (time) => {
+      if (time - lastTime >= 600) {
+        lastTime = time
+        setThreshold(t => {
+          const maxH = maxHeightRef.current
+          const current = t ?? maxH * 0.5
+          const next = Math.max(0, current - maxH * 0.1)
+          if (next <= 0) { animRef.current = null; return 0 }
+          return next
+        })
+      }
+      if (animRef.current !== null) animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
+  }, [])
+
+  const step = useCallback(() => {
+    pause()
+    setThreshold(t => {
+      const maxH = maxHeightRef.current
+      const current = t ?? maxH * 0.5
+      return Math.max(0, current - maxH * 0.1)
+    })
+  }, [pause])
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset: handleReset,
+    step,
+  }), [play, pause, handleReset, step])
 
   const btnBase = {
     padding: '4px 12px',
@@ -546,4 +586,4 @@ export function HierarchicalClusteringViz() {
       </p>
     </div>
   );
-}
+})

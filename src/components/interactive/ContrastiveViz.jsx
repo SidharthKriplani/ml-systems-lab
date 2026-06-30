@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 function mulberry32(seed) {
   return function() {
@@ -211,7 +211,7 @@ function drawScene(canvas, points, classIds) {
   ctx.globalAlpha = 1
 }
 
-export function ContrastiveViz() {
+export const ContrastiveViz = forwardRef(function ContrastiveViz(props, ref) {
   const canvasRef = useRef(null)
   const stateRef = useRef(null)
   const rafRef = useRef(null)
@@ -283,6 +283,28 @@ export function ContrastiveViz() {
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
 
+  const play = useCallback(() => {
+    if (rafRef.current) return;
+    setIsRunning(true);
+    const tick = () => {
+      step(1, temperature, lr);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [step, temperature, lr]);
+
+  const pause = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    setIsRunning(false);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    reset,
+    step: () => { pause(); step(1); },
+  }), [play, pause, reset, step]);
+
   const btnStyle = (disabled) => ({
     padding: '0.3rem 0.75rem',
     fontSize: '0.78rem',
@@ -340,4 +362,4 @@ export function ContrastiveViz() {
       </div>
     </div>
   )
-}
+})

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 
 const RELEVANCE_GRADES = [3, 0, 2, 1, 3, 0, 1, 2]
 const ITEM_LABELS = ['Item A', 'Item B', 'Item C', 'Item D', 'Item E', 'Item F', 'Item G', 'Item H']
@@ -64,7 +64,7 @@ function fmt(val) {
   return val.toFixed(3)
 }
 
-export function NDCGViz() {
+export const NDCGViz = forwardRef(function NDCGViz(props, ref) {
   const [ranking, setRanking] = useState([...INITIAL_ORDER])
 
   const currentGrades = ranking.map(idx => RELEVANCE_GRADES[idx])
@@ -102,6 +102,35 @@ export function NDCGViz() {
     const indexed = RELEVANCE_GRADES.map((g, i) => ({ g, i }))
     indexed.sort((a, b) => b.g - a.g || a.i - b.i)
     setRanking(indexed.map(x => x.i))
+  }, [])
+
+  const animRef = useRef(null)
+
+  const play = useCallback(() => {
+    if (animRef.current) return
+    animRef.current = setInterval(() => {
+      shuffle()
+    }, 1000)
+  }, [shuffle])
+
+  const pause = useCallback(() => {
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    pause()
+    setRanking([...INITIAL_ORDER])
+  }, [pause])
+
+  const step = useCallback(() => {
+    pause()
+    shuffle()
+  }, [pause, shuffle])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+
+  useEffect(() => {
+    return () => { if (animRef.current) clearInterval(animRef.current) }
   }, [])
 
   const KS = [3, 5, 8]
@@ -464,4 +493,4 @@ export function NDCGViz() {
       </div>
     </div>
   )
-}
+})

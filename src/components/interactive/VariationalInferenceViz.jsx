@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
 // ── True posterior (bimodal) ──────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ function getPrime() {
 
 const INIT_STATE = { mu1: 0, mu2: 0, logSig1: 0, logSig2: 0 }
 
-export function VariationalInferenceViz() {
+export const VariationalInferenceViz = forwardRef(function VariationalInferenceViz(props, ref) {
   const canvasRef = useRef(null)
   const animRef   = useRef(null)
   const stateRef  = useRef({ ...INIT_STATE })
@@ -384,6 +384,31 @@ export function VariationalInferenceViz() {
     draw()
   }, [draw])
 
+  const pause = useCallback(() => {
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
+    setOptimizing(false)
+  }, [])
+
+  const stepOnce = useCallback(() => {
+    pause()
+    const LR = 0.05
+    const { mu1, mu2, logSig1, logSig2 } = stateRef.current
+    const grad = elboGrad(mu1, mu2, logSig1, logSig2)
+    stateRef.current = {
+      mu1:     mu1     + LR * grad.dmu1,
+      mu2:     mu2     + LR * grad.dmu2,
+      logSig1: logSig1 + LR * grad.dlogSig1,
+      logSig2: logSig2 + LR * grad.dlogSig2,
+    }
+    const elbo = computeELBO(stateRef.current.mu1, stateRef.current.mu2, stateRef.current.logSig1, stateRef.current.logSig2, 50)
+    elboHistRef.current.push(elbo)
+    setElboVal(elbo)
+    setDisplayState({ ...stateRef.current })
+    draw()
+  }, [pause, draw])
+
+  useImperativeHandle(ref, () => ({ play: optimize, pause, reset, step: stepOnce }), [optimize, pause, reset, stepOnce])
+
   // ResizeObserver
   useEffect(() => {
     const canvas = canvasRef.current
@@ -453,4 +478,4 @@ export function VariationalInferenceViz() {
       </p>
     </div>
   )
-}
+})

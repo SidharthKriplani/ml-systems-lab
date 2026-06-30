@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const MODELS = {
   perfect: {
@@ -36,10 +36,11 @@ const CW = 400;
 const CH = 300;
 const PAD = { top: 20, right: 20, bottom: 50, left: 55 };
 
-export function CalibrationCurveViz() {
+export const CalibrationCurveViz = forwardRef(function CalibrationCurveViz(props, ref) {
   const [modelKey, setModelKey] = useState('perfect');
   const canvasRef = useRef(null);
   const histRef   = useRef(null);
+  const animRef   = useRef(null);
 
   const model = MODELS[modelKey];
 
@@ -255,6 +256,36 @@ export function CalibrationCurveViz() {
     ctx.stroke();
   }, [model]);
 
+  const play = useCallback(() => {
+    if (animRef.current) return;
+    animRef.current = setInterval(() => {
+      setModelKey(k => {
+        const idx = MODEL_KEYS.indexOf(k);
+        return MODEL_KEYS[(idx + 1) % MODEL_KEYS.length];
+      });
+    }, 800);
+  }, []);
+
+  const pause = useCallback(() => {
+    clearInterval(animRef.current);
+    animRef.current = null;
+  }, []);
+
+  const reset = useCallback(() => {
+    pause();
+    setModelKey('perfect');
+  }, [pause]);
+
+  const step = useCallback(() => {
+    pause();
+    setModelKey(k => {
+      const idx = MODEL_KEYS.indexOf(k);
+      return MODEL_KEYS[(idx + 1) % MODEL_KEYS.length];
+    });
+  }, [pause]);
+
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+
   return (
     <div style={{
       fontFamily: 'var(--font-sans, sans-serif)',
@@ -342,4 +373,4 @@ export function CalibrationCurveViz() {
       </div>
     </div>
   );
-}
+})
