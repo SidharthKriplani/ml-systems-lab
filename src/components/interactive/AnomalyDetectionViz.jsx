@@ -71,9 +71,14 @@ const CANVAS_W = 420;
 const CANVAS_H = 280;
 
 function drawCanvas(canvas, threshold, showSplits) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const style = getComputedStyle(document.documentElement);
   const prime = style.getPropertyValue('--prime').trim() || '#F59E0B';
   const depth = style.getPropertyValue('--depth').trim() || '#111827';

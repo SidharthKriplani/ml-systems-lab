@@ -75,7 +75,12 @@ const WRONG_COLOR = '#FF6B6B';
 function drawPanel(canvas, predictFn, boundary, isEnsemble) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
   const PAD = 20;
   const dw = W - 2 * PAD, dh = H - 2 * PAD;
 
@@ -198,9 +203,7 @@ function PanelCanvas({ predictFn, boundary, isEnsemble, title, accuracy: acc }) 
       </div>
       <canvas
         ref={canvasRef}
-        width={180}
-        height={160}
-        style={{ width: '100%', display: 'block' }}
+        style={{ width: '100%', height: '160px', display: 'block' }}
       />
     </div>
   );

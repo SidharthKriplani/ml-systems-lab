@@ -81,10 +81,15 @@ function useCanvas(trajectoryVanilla, trajectoryMomentum) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const cw = canvas.width / 2;
-    const ch = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.scale(dpr, dpr);
+    const cw = canvas.clientWidth / 2;
+    const ch = canvas.clientHeight;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
     // Left panel background
     ctx.fillStyle = 'rgba(0,0,0,0.15)';
@@ -123,6 +128,7 @@ function useCanvas(trajectoryVanilla, trajectoryMomentum) {
     drawScene(ctx, trajectoryMomentum, '#60a5fa', cw, ch);
     ctx.restore();
   }, [trajectoryVanilla, trajectoryMomentum]);
+
 
   return canvasRef;
 }
@@ -288,10 +294,9 @@ export function MomentumViz() {
       {/* Canvas */}
       <canvas
         ref={canvasRef}
-        width={560}
-        height={260}
         style={{
           width: '100%',
+          height: '260px',
           borderRadius: '0.4rem',
           border: '1px solid var(--rim)',
           display: 'block',

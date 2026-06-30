@@ -16,7 +16,8 @@ function toCanvas(w, loss, width, height) {
 
 function drawPlot(canvas, trajectory, currentW) {
   const ctx = canvas.getContext('2d');
-  const { width, height } = canvas;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
   const cs = getComputedStyle(document.documentElement);
   const prime = cs.getPropertyValue('--prime').trim() || '#F0A500';
   const rimColor = cs.getPropertyValue('--rim').trim() || '#333';
@@ -126,6 +127,22 @@ function drawPlot(canvas, trajectory, currentW) {
 export function GradientDescentDemo() {
   const canvasRef = useRef(null);
   const intervalRef = useRef(null);
+
+  // DPR scaling: resize canvas backing store to match physical pixels
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    });
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   const [alpha, setAlpha] = useState(0.10);
   const [step, setStep] = useState(0);

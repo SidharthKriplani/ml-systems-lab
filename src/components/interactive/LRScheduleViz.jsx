@@ -48,8 +48,8 @@ const SCHEDULES = [
 
 function drawChart(canvas, schedules, alpha0) {
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const pad = { top: 20, right: 20, bottom: 36, left: 46 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top - pad.bottom;
@@ -138,6 +138,22 @@ export function LRScheduleViz() {
 
   const warmupSteps = Math.round((warmupPct / 100) * T);
   const schedules = computeSchedules(alpha0, warmupSteps);
+
+  // DPR scaling: resize canvas backing store to match physical pixels
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    });
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;

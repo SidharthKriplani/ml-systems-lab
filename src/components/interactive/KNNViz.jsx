@@ -85,8 +85,8 @@ export function KNNViz() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const W = canvas.width;
-    const H = canvas.height;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
     const PAD = 20;
     const plotW = W - PAD * 2;
     const plotH = H - PAD * 2;
@@ -195,14 +195,21 @@ export function KNNViz() {
     const container = containerRef.current;
     if (!canvas || !container) return;
     const observer = new ResizeObserver(() => {
-      const w = Math.min(container.clientWidth, 450);
-      canvas.width = w;
-      canvas.height = Math.round(w * (320 / 450));
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
       draw();
     });
     observer.observe(container);
-    canvas.width = Math.min(container.clientWidth, 450);
-    canvas.height = Math.round(canvas.width * (320 / 450));
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
     draw();
     return () => observer.disconnect();
   }, [draw]);
@@ -211,13 +218,11 @@ export function KNNViz() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const cx = (e.clientX - rect.left) * scaleX;
-    const cy = (e.clientY - rect.top) * scaleY;
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
     const PAD = 20;
-    const plotW = canvas.width - PAD * 2;
-    const plotH = canvas.height - PAD * 2;
+    const plotW = canvas.clientWidth - PAD * 2;
+    const plotH = canvas.clientHeight - PAD * 2;
     const qx = (cx - PAD) / plotW;
     const qy = 1 - (cy - PAD) / plotH;
 

@@ -78,10 +78,13 @@ function unitCircle(n = 100) {
 // ─── Panel 1 draw ─────────────────────────────────────────────────────────────
 function drawGeometric(canvas, a, b, c, d, animStep, animT) {
   const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.scale(dpr, dpr);
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
-  canvas.width = W;
-  canvas.height = H;
 
   const cs = getComputedStyle(document.documentElement);
   const depth = cs.getPropertyValue('--depth').trim() || '#111';
@@ -299,10 +302,13 @@ function frobeniusError(A, R) {
 
 function drawHeatmap(canvas, matrix, label) {
   const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.scale(dpr, dpr);
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
-  canvas.width = W;
-  canvas.height = H;
 
   const cs = getComputedStyle(document.documentElement);
   const depth = cs.getPropertyValue('--depth').trim() || '#111';

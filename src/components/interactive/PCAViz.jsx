@@ -76,8 +76,8 @@ function computeStats(pts) {
 
 function drawCanvas(canvas, pts, stats, rho) {
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const cs = getComputedStyle(document.documentElement);
   const depth = cs.getPropertyValue('--depth').trim() || '#111';
   const rim = cs.getPropertyValue('--rim').trim() || '#333';
@@ -245,6 +245,22 @@ export function PCAViz() {
 
   const pts = useMemo(() => generateCorrelated(rho), [rho]);
   const stats = useMemo(() => computeStats(pts), [pts]);
+
+  // DPR scaling: resize canvas backing store to match physical pixels
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    });
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   const redraw = useCallback(() => {
     if (canvasRef.current) {

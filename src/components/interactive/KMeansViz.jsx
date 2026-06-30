@@ -82,8 +82,8 @@ function centroidMoveDist(prev, next) {
 
 function drawCanvas(canvas, points, centroids, phase, k) {
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const cs = getComputedStyle(document.documentElement);
   const depth = cs.getPropertyValue('--depth').trim() || '#111';
   const rim = cs.getPropertyValue('--rim').trim() || '#333';
@@ -209,6 +209,22 @@ export function KMeansViz() {
   const canvasRef = useRef(null);
   const intervalRef = useRef(null);
   const runStateRef = useRef(null);
+
+  // DPR scaling: resize canvas backing store to match physical pixels
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+    });
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   const [k, setK] = useState(3);
   const [phase, setPhase] = useState('init');

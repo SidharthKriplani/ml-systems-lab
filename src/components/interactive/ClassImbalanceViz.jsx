@@ -69,9 +69,14 @@ const CANVAS_W = 420;
 const CANVAS_H = 280;
 
 function drawCanvas(canvas, mode) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const style = getComputedStyle(document.documentElement);
   const prime = style.getPropertyValue('--prime').trim() || '#F59E0B';
   const depth = style.getPropertyValue('--depth').trim() || '#111827';
@@ -96,13 +101,15 @@ function drawCanvas(canvas, mode) {
   const T = THRESHOLDS[mode];
 
   // Background shading: x + y < T => blue side, > T => amber side
-  // We scan columns
-  const imageData = ctx.createImageData(W, H);
-  for (let px = 0; px < W; px++) {
-    for (let py = 0; py < H; py++) {
-      const nx = (px - PAD) / plotW;
-      const ny = 1 - (py - PAD) / plotH;
-      const idx = (py * W + px) * 4;
+  // We scan columns (use physical canvas pixels since putImageData bypasses ctx transform)
+  const physW = canvas.width;
+  const physH = canvas.height;
+  const imageData = ctx.createImageData(physW, physH);
+  for (let px = 0; px < physW; px++) {
+    for (let py = 0; py < physH; py++) {
+      const nx = (px / dpr - PAD) / plotW;
+      const ny = 1 - (py / dpr - PAD) / plotH;
+      const idx = (py * physW + px) * 4;
       if (nx < 0 || nx > 1 || ny < 0 || ny > 1) continue;
       if (nx + ny < T) {
         // blue side

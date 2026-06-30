@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 function makeLCG(seed) {
   let s = seed >>> 0;
@@ -106,12 +106,17 @@ const INSIGHTS = {
   p100: `Too high — global distances dominate, losing cluster tightness.`,
 };
 
-const W = 430;
-const H = 300;
 const PAD = 28;
 
 function drawCanvas(canvas, points) {
   const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
 
   // Compute min/max
   let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
@@ -192,11 +197,19 @@ export function TSNEViz() {
 
   const activeTab = TABS[activeIdx];
 
-  useEffect(() => {
+  const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     drawCanvas(canvas, activeTab.data);
-  }, [activeIdx]);
+  }, [activeTab]);
+
+  useEffect(() => { redraw(); }, [redraw]);
+
+  useEffect(() => {
+    const obs = new ResizeObserver(() => redraw());
+    if (canvasRef.current) obs.observe(canvasRef.current);
+    return () => obs.disconnect();
+  }, [redraw]);
 
   return (
     <div style={S.root}>
@@ -217,9 +230,7 @@ export function TSNEViz() {
 
       <canvas
         ref={canvasRef}
-        width={W}
-        height={H}
-        style={S.canvas}
+        style={{ ...S.canvas, width: '100%', height: '300px' }}
       />
 
       <div style={S.legend}>

@@ -82,8 +82,13 @@ function blendColors(colors, weights) {
 
 function drawCanvas(canvas, points, stepIdx, mode) {
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
   const cs = getComputedStyle(document.documentElement);
   const depth = cs.getPropertyValue('--depth').trim() || '#111';
   const rim = cs.getPropertyValue('--rim').trim() || '#333';
@@ -264,6 +269,12 @@ export function GMMViz() {
 
   useEffect(() => { redraw(); }, [redraw]);
 
+  useEffect(() => {
+    const obs = new ResizeObserver(() => redraw());
+    if (canvasRef.current) obs.observe(canvasRef.current);
+    return () => obs.disconnect();
+  }, [redraw]);
+
   // Auto-advance when running
   useEffect(() => {
     if (!running) { clearInterval(intervalRef.current); return; }
@@ -302,9 +313,7 @@ export function GMMViz() {
 
       <canvas
         ref={canvasRef}
-        width={430}
-        height={290}
-        style={styles.canvas}
+        style={{ ...styles.canvas, height: '290px' }}
       />
 
       {/* Step slider */}

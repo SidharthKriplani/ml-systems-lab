@@ -117,8 +117,8 @@ export function DecisionTreeViz() {
     const style = getComputedStyle(document.documentElement);
     const prime = style.getPropertyValue("--prime").trim() || "#F0A500";
     const rimColor = style.getPropertyValue("--rim").trim() || "#333";
-    const W = canvas.width;
-    const H = canvas.height;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
     const PAD = 20;
     const plotW = W - PAD * 2;
     const plotH = H - PAD * 2;
@@ -199,13 +199,20 @@ export function DecisionTreeViz() {
     const container = containerRef.current;
     if (!canvas || !container) return;
     const observer = new ResizeObserver(() => {
-      const w = Math.min(container.clientWidth, 450);
-      canvas.width = w;
-      canvas.height = Math.round(w * (300 / 450));
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
     });
     observer.observe(container);
-    canvas.width = Math.min(container.clientWidth, 450);
-    canvas.height = Math.round(canvas.width * (300 / 450));
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
     return () => observer.disconnect();
   }, []);
 

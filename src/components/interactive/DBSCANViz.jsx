@@ -107,7 +107,12 @@ export function DBSCANViz() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.scale(dpr, dpr);
+    const W = canvas.clientWidth, H = canvas.clientHeight;
     const PAD = 30;
     const dw = W - 2 * PAD, dh = H - 2 * PAD;
 
@@ -224,9 +229,9 @@ export function DBSCANViz() {
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / rect.width;
     const my = 1 - (e.clientY - rect.top) / rect.height;
-    const PAD_FRAC = 30 / canvas.width;
+    const PAD_FRAC = 30 / canvas.clientWidth;
     const px = (mx - PAD_FRAC) / (1 - 2 * PAD_FRAC);
-    const py = (my - PAD_FRAC / (canvas.height / canvas.width)) / (1 - 2 * 30 / canvas.height);
+    const py = (my - PAD_FRAC / (canvas.clientHeight / canvas.clientWidth)) / (1 - 2 * 30 / canvas.clientHeight);
 
     let closest = null, minDist = Infinity;
     for (let i = 0; i < POINTS.length; i++) {
@@ -260,9 +265,7 @@ export function DBSCANViz() {
 
       <canvas
         ref={canvasRef}
-        width={450}
-        height={300}
-        style={{ width: '100%', borderRadius: 8, border: '1px solid var(--rim)', display: 'block', cursor: 'crosshair' }}
+        style={{ width: '100%', height: '300px', borderRadius: 8, border: '1px solid var(--rim)', display: 'block', cursor: 'crosshair' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
       />

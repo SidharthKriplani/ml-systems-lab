@@ -47,6 +47,11 @@ export function HypothesisTestingViz() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.scale(dpr, dpr);
     const cs = getComputedStyle(canvas);
 
     const prime    = cs.getPropertyValue('--prime').trim()     || '#F0A500';
@@ -55,8 +60,8 @@ export function HypothesisTestingViz() {
     const rim      = cs.getPropertyValue('--rim').trim()       || '#334155';
     const depth    = cs.getPropertyValue('--depth').trim()     || '#0f172a';
 
-    const W = CW;
-    const H = CH;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
 
@@ -288,9 +293,7 @@ export function HypothesisTestingViz() {
 
       <canvas
         ref={canvasRef}
-        width={CW}
-        height={CH}
-        style={{ display: 'block', borderRadius: '8px', maxWidth: '100%', width: '100%' }}
+        style={{ display: 'block', borderRadius: '8px', maxWidth: '100%', width: '100%', height: `${CH}px` }}
       />
 
       <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
