@@ -22,25 +22,50 @@ The algorithm you pick is your answer to that question, and different answers pr
     checkQuestions: [
       {
         q: `A clustering of customers produces 5 clusters with silhouette score=0.62. A domain expert says 3 of the clusters look identical in terms of purchasing behaviour. How do you reconcile this?`,
-        a: `The silhouette score measures geometric separation in feature space, but the domain expert is judging semantic similarity in purchasing behaviour — these can genuinely disagree. If 3 clusters are statistically separate (different centroids in feature space) but behaviourally identical (same RFM profile, same product affinities), it means the features used have spurious variance that drives geometric separation without capturing the business-relevant dimensions. The fix is not to trust the metric over the expert: revisit feature selection to ensure features directly encode purchasing behaviour, not noise dimensions. Re-run the clustering on the revised features. The silhouette score is a tool, not a ground truth — the expert's knowledge of what makes customers distinct is the actual success criterion.`,
+        options: [
+          `A) Trust the silhouette score — a score of 0.62 is strong evidence the 5 clusters are genuinely distinct, and the expert is likely mistaken`,
+          `B) Run the clustering again with a different random seed to see if the expert's observation persists across runs`,
+          `C) The silhouette score measures geometric separation, not semantic similarity — revisit feature selection so features encode purchasing behaviour, not noise dimensions`,
+          `D) Increase k to 8 to subdivide the similar clusters and force more geometric separation`,
+        ],
+        answer: `C`,
       },
       {
         q: `You run k-means and DBSCAN on the same dataset. k-means silhouette=0.71, DBSCAN silhouette=0.43. Should you prefer k-means?`,
-        a: `Not necessarily. Silhouette score is computed using Euclidean distances and implicitly assumes convex clusters — it is biased toward methods that produce round, compact clusters like k-means. If the true cluster shapes are non-convex (C-shapes, rings, elongated), DBSCAN may be recovering the real structure even while scoring lower on a metric that cannot see non-convex shapes. The right diagnostic: visualise both clusterings on 2D projections (PCA or UMAP), examine whether DBSCAN's noise points are genuine outliers, and test whether cluster membership from each method predicts meaningful outcomes in a downstream task. Always validate clustering against the application objective, not just the intrinsic metric.`,
+        options: [
+          `A) Not necessarily — silhouette is biased toward convex clusters, and DBSCAN may be recovering the correct non-convex structure even while scoring lower`,
+          `B) Yes — silhouette is an objective metric and a higher score unambiguously means better clustering quality`,
+          `C) Yes — k-means always produces more stable clusters because it uses deterministic centroid updates`,
+          `D) Not necessarily — but only if DBSCAN used more than 5 clusters, since silhouette scores decrease with fewer clusters`,
+        ],
+        answer: `A`,
       },
       {
         q: `A colleague proposes using k-means with k=150 to cluster 10,000 user-behaviour vectors with 512 features. What are the failure modes?`,
-        a: `Three compounding problems. First, the curse of dimensionality: in 512 dimensions, Euclidean distances between points are nearly uniform, so the "nearest centroid" assignment is noisy and centroids converge slowly. Apply PCA or UMAP to reduce to 30-50 dimensions first. Second, k=150 with n=10,000 gives on average 67 points per cluster — many clusters will have fewer than 20 points, making centroids unstable and the assignment arbitrary. k should be at most sqrt(n/2) ≈ 70 as a rough upper bound. Third, k-means++ initialisation with k=150 takes k passes to initialise, which is slow. More fundamentally, with k this large, cluster structure will be highly sensitive to initialisation. Run with high n_init and check that WCSS converges consistently.`,
+        options: [
+          `A) The only problem is runtime — k=150 will be slow but will produce valid clusters once it converges`,
+          `B) k-means cannot handle more than 100 clusters regardless of dataset size`,
+          `C) Mini-batch k-means should be used instead, which resolves all three problems automatically`,
+          `D) Three compounding problems: curse of dimensionality in 512 dimensions, k=150 gives unstable micro-clusters with ~67 points each, and initialisation sensitivity with k this large`,
+        ],
+        answer: `D`,
       },
       {
         q: `You need to explain to a non-technical stakeholder why you cannot report "clustering accuracy." What do you say?`,
-        a: `Accuracy requires a known correct answer: accuracy = fraction of predictions that match the true label. Clustering is unsupervised — there are no true labels, so there is no ground truth to compare against. The goal of clustering is to discover structure, not to match a pre-specified structure. What you can report instead: silhouette score (how tightly packed and well-separated the clusters are, on a scale from -1 to 1), cluster stability (do you get similar clusters when you run it again or on a random subset of the data), and business validation (does each cluster map to a recognisable customer segment that your team can act on). The last criterion is the one that actually matters for the business.`,
+        options: [
+          `A) Accuracy can be computed but requires running clustering multiple times to average across seeds`,
+          `B) Accuracy requires known correct labels to compare against — clustering is unsupervised with no ground truth, so you report silhouette score, cluster stability, and business validation instead`,
+          `C) Accuracy is technically computable but misleading, so we report WCSS instead`,
+          `D) Accuracy requires at least 10,000 samples; with smaller datasets only silhouette is valid`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `The algorithm you pick encodes your definition of "similar" — k-means says round blobs, DBSCAN says density chains, hierarchical says nothing — and the math will always produce groups regardless of whether those groups reflect real structure or just the method's assumptions.`,
   },
   {
     id: 'kmeans',
+    interactiveId: 'kmeans_viz',
     title: 'K-Means Clustering',
     subtitle: `Lloyd's algorithm, k-means++ init, silhouette, failure modes`,
     difficulty: 'foundational',
@@ -60,23 +85,53 @@ The algorithm you pick is your answer to that question, and different answers pr
     checkQuestions: [
       {
         q: `K-means gives very different results on different runs on the same dataset. What is wrong and how do you fix it?`,
-        a: `Different runs converge to different local optima because k-means with random initialisation starts from a different point in the WCSS landscape each time. Three fixes: (1) Use k-means++ initialisation (n_init=10, init='k-means++' in sklearn) — much less sensitive to starting positions because centroids begin spread across the data. (2) Run multiple times and keep the result with the lowest total WCSS — sklearn's KMeans does this automatically when n_init > 1. (3) If variance persists even with k-means++, it means the WCSS landscape has many equally-good local optima — which often indicates the true number of clusters is ambiguous, or the data does not have spherical structure. In that case, try hierarchical clustering or DBSCAN and see if a more stable structure emerges.`,
+        options: [
+          `A) The dataset has non-spherical clusters — switch to DBSCAN which is deterministic`,
+          `B) Use a fixed random seed — this guarantees finding the global optimum of WCSS`,
+          `C) Different runs converge to different local optima from random initialization — fix by using k-means++ init and running multiple restarts (n_init > 1), keeping the lowest WCSS result`,
+          `D) The k value is wrong — instability always means k is set too high`,
+        ],
+        answer: `C`,
       },
       {
         q: `You apply k-means to 50,000 customer vectors with 200 features. Silhouette scores are uniformly low (0.08–0.12) for all k from 2 to 20. What does this tell you and what do you do?`,
-        a: `Uniformly low silhouette across all k means k-means cannot find separable structure in the data. Three root causes: (1) The curse of dimensionality — in 200 dimensions, Euclidean distances between points are nearly uniform, so all centroids are roughly equidistant from all points. Apply PCA to reduce to 20-30 dimensions (capturing ~90% of variance) and re-run. (2) The data may not have cluster structure — it may be a continuous distribution without natural groups. Inspect 2D PCA projections for visual separation before assuming clusters exist. (3) The features may not encode the relevant similarity for the business purpose — if you are clustering by purchasing behaviour but features include user age and location, the geometric structure reflects those demographics, not behaviour. Feature selection or transformation is the fix here.`,
+        options: [
+          `A) Uniformly low silhouette across all k signals the curse of dimensionality or absent cluster structure — apply PCA to ~20-30 dimensions, inspect 2D projections for visual separation, and reconsider whether the features encode the relevant business similarity`,
+          `B) The silhouette threshold for high-dimensional data is lower — scores of 0.08-0.12 are actually acceptable for 200 features`,
+          `C) Increase k beyond 20 — silhouette scores will improve once k is large enough to capture fine-grained subgroups`,
+          `D) Switch to hierarchical clustering — silhouette is known to be incompatible with k-means on large datasets`,
+        ],
+        answer: `A`,
       },
       {
         q: `A k-means run with k=5 produces one cluster with 90% of the data and four clusters each with 2-3%. What likely went wrong?`,
-        a: `This is k-means's failure mode on data with very unequal cluster densities or sizes. The dominant cluster likely contains most of the data because: (1) k was set too high — the data may have only 2 natural groups, and k-means is trying to carve 5 clusters where there are only 2, creating tiny splinters from the boundary regions of the real clusters. (2) There are true outliers or a heavy-tailed distribution where most points are compact but a few extreme points each get their own cluster. (3) The initialisation placed 4 starting centroids in a low-density region. Diagnose by trying k=2,3 and checking silhouette scores. If k=2 gives two large balanced clusters, the k=5 result is wrong. Also run with n_init=20 to rule out an unlucky initialisation as the cause.`,
+        options: [
+          `A) The dataset is too large for k-means — use MiniBatchKMeans for datasets where one cluster dominates`,
+          `B) k=5 may be too high, or there are true outliers that each captured a tiny cluster, or initialization placed 4 centroids in low-density regions — diagnose by trying k=2,3 and checking silhouette`,
+          `C) The silhouette metric should be replaced with WCSS to properly diagnose unequal cluster sizes`,
+          `D) This is expected behaviour for k-means on imbalanced datasets — use class weights to rebalance`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is the difference between k-means and k-medoids, and when would you choose each?`,
-        a: `K-means represents each cluster by its centroid — the arithmetic mean of all points in the cluster. The centroid need not be an actual data point. K-medoids represents each cluster by its medoid — the actual data point that minimises total distance to all other cluster members. The centroid can be pulled far from the cluster by outliers; the medoid cannot, because it must be an existing point and extreme outliers are outvoted by the dense core. Choose k-medoids when: (1) The data has significant outliers that would distort centroids. (2) Your distance metric is not Euclidean (e.g., edit distance between strings, Jaccard distance between sets) — in those cases, centroid means are undefined. (3) Interpretability matters and you want to report a representative example rather than an abstract average. The cost is that k-medoids (PAM algorithm) is O(k(n-k)²) per iteration — much slower than k-means's O(nkd).`,
+        options: [
+          `A) K-means is faster but only works on binary data; k-medoids handles continuous features`,
+          `B) They are mathematically identical — the difference is only that k-medoids uses Manhattan distance instead of Euclidean`,
+          `C) K-means uses the arithmetic mean centroid; k-medoids uses an actual data point as the representative — choose k-medoids when data has significant outliers, non-Euclidean distances, or when interpretable representative examples are needed`,
+          `D) K-medoids always produces better clusters — k-means should only be used when runtime is the top concern`,
+        ],
+        answer: `C`,
       },
       {
         q: `Explain why k-means is equivalent to the EM algorithm on a specific probabilistic model. What does this reveal about its assumptions?`,
-        a: `K-means is the hard-assignment limit of EM applied to a Gaussian Mixture Model where all components share the same isotropic covariance σ²I and σ→0. In the EM limit with identical covariances: the E-step (computing soft responsibilities) degenerates to a hard assignment — each point belongs to the component with the highest likelihood, which is the nearest centroid. The M-step (updating means) remains computing the cluster mean. This equivalence reveals k-means's hidden assumptions: it assumes each cluster is a spherical Gaussian with identical radius (same σ for all clusters). Non-spherical clusters violate this (fix: full-covariance GMM). Different-density clusters violate this (fix: allow different σ per component). Soft cluster membership is sometimes the right answer (fix: GMM with soft assignments). Understanding k-means as hard-assignment equal-covariance EM explains every one of its failure modes.`,
+        options: [
+          `A) K-means is equivalent to EM on a Poisson mixture model, which reveals it assumes count-distributed features`,
+          `B) K-means is the hard-assignment limit of EM on a GMM where all components share the same isotropic covariance σ²I and σ→0 — revealing assumptions of spherical, equal-radius clusters and hard membership`,
+          `C) K-means is equivalent to EM only when all clusters have the same size, which is why it fails on unequal cluster sizes`,
+          `D) K-means is the special case of EM where the M-step is replaced by gradient descent, not a probabilistic model equivalence`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `K-means converges every time — the dangerous part is that it converges just as confidently when your clusters are non-spherical, unequal in size, or contaminated by outliers as when everything is perfect.`,
@@ -105,19 +160,43 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     checkQuestions: [
       {
         q: `You are clustering genes based on expression profiles. Why might hierarchical clustering with Ward linkage be more appropriate than k-means?`,
-        a: `Gene expression clusters typically have a natural biological hierarchy — genes belong to pathways, pathways belong to regulatory modules, modules belong to broader biological processes. Hierarchical clustering reveals this multi-level structure from a single run: you can cut at different heights to get pathway-level clusters (many small groups), module-level clusters (medium groups), or process-level clusters (few large groups). K-means forces you to commit to exactly one k before seeing results, which means you either run it 10 times for different k values or guess. Ward linkage is specifically appropriate because co-expressed gene clusters tend to be compact and similarly-sized — Ward minimises within-cluster variance, producing groups that share tight co-expression profiles. The dendrogram is also directly interpretable by biologists who compare it to known pathway databases.`,
+        options: [
+          `A) Hierarchical clustering is always preferred for biological data because gene expression features are non-Gaussian`,
+          `B) Ward linkage specifically handles the high dimensionality of gene expression data better than k-means centroids`,
+          `C) K-means is faster but hierarchical clustering is needed when the dataset has more than 500 genes`,
+          `D) Gene expression clusters have a natural biological hierarchy across pathway, module, and process levels — one hierarchical run gives every granularity simultaneously, and Ward linkage produces the compact co-expression groups biologists compare to known pathway databases`,
+        ],
+        answer: `D`,
       },
       {
         q: `Two researchers use the same dataset but different linkage criteria. Researcher A uses single linkage and gets one large cluster containing 95% of the data. Researcher B uses Ward linkage and gets 5 balanced clusters. Who is right?`,
-        a: `Both results are mathematically valid given their linkage criterion, but they reveal different aspects of the data's structure. Single linkage's chaining effect means the 95% cluster is held together by a chain of nearby points — remove a few bridging points and it fragments. Ward linkage ignores these bridges and instead optimises for compact, internally homogeneous groups. Whether A or B is "right" depends on what the data actually contains. If the data has elongated manifold structure (filamentary, chain-like), single linkage is capturing the true topology. If the data has 5 distinct blobs connected by sparse bridges, single linkage is being fooled by the bridges while Ward is recovering the real structure. The diagnostic: visualise the data in 2D (PCA/UMAP), check the cophenetic correlation for both linkages, and validate which clustering aligns with domain knowledge.`,
+        options: [
+          `A) Researcher B is right — single linkage always produces degenerate results due to chaining and should never be used`,
+          `B) Researcher A is right — one large cluster means the data has no true subgroup structure`,
+          `C) Both results are valid given their linkage criterion — the correct interpretation depends on whether the data has filamentary chain structure (A is right) or five distinct blobs connected by bridges (B is right); validate with PCA/UMAP visualization and cophenetic correlation`,
+          `D) Neither is right — the correct approach is to average the two results`,
+        ],
+        answer: `C`,
       },
       {
         q: `How do you determine the optimal cut height on a dendrogram when there is no obvious long gap?`,
-        a: `When the dendrogram lacks an obvious long gap, the data may not have clear discrete clusters. Several approaches: (1) Accelerations plot: plot the second derivative of the linkage distances (the increase in distance at each merge step). Peaks in the acceleration plot correspond to large jumps in merge distance — the peak position is a more quantitative version of visually identifying long lines. (2) Silhouette analysis across different cuts: for each possible k (each cut height that gives a different k), compute mean silhouette score and choose the k that maximises it. (3) Domain knowledge: if the application requires exactly k clusters, cut at the height that produces k clusters regardless of the gap structure. (4) Mixture model comparison: fit a GMM with varying k and compare BIC — this is more principled than visual dendrogram inspection for data without clear hierarchical structure.`,
+        options: [
+          `A) Always cut at the median linkage height, which maximises cluster balance`,
+          `B) The absence of a long gap proves the data has no cluster structure — stop and use a different algorithm`,
+          `C) Use the accelerations plot (second derivative of linkage distances), silhouette analysis across different cuts, domain knowledge, or compare a GMM BIC curve — no single method is authoritative when gaps are absent`,
+          `D) Use complete linkage instead — it always produces clearer gaps than Ward linkage`,
+        ],
+        answer: `C`,
       },
       {
         q: `A colleague wants to run hierarchical clustering on 100,000 points. What do you tell them?`,
-        a: `Naive agglomerative clustering on 100,000 points requires storing an n×n distance matrix of 100,000² / 2 = 5 billion pairs — roughly 40 GB of memory at 8 bytes per float. This is infeasible on a standard machine. The computation itself is O(n³), which at 100,000 points would take approximately (100,000)³ / 10^9 = 10^6 seconds — months of compute. The practical alternatives: (1) Use BIRCH to compress the data into a Clustering Feature tree first, then run hierarchical clustering on the compressed representation (a few thousand leaf nodes rather than 100,000 points). (2) Use HDBSCAN, which achieves hierarchical cluster structure in O(n log n). (3) Subsample: run hierarchical clustering on a representative 5,000-10,000 point sample, then assign remaining points to their nearest cluster. Option 2 is the best for most modern applications.`,
+        options: [
+          `A) Use single linkage — its SLINK implementation runs in O(n log n) and handles 100,000 points easily`,
+          `B) Hierarchical clustering is feasible up to 500,000 points with modern hardware; the O(n²) limit only applies to Ward linkage`,
+          `C) Subsample to 10,000 points, run hierarchical clustering, then assign remaining points by nearest-centroid`,
+          `D) Naive agglomerative clustering on 100,000 points requires ~40 GB for the distance matrix and months of O(n³) compute — use HDBSCAN (O(n log n) with hierarchical structure), BIRCH + agglomerative, or subsample to 5,000-10,000 points`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `The dendrogram answers "what is the right k?" by encoding cluster structure at every granularity in one run — natural boundaries show up as long vertical segments, and the absence of long segments means the data probably lacks discrete structure.`,
@@ -125,6 +204,7 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
   },
   {
     id: 'dbscan',
+    interactiveId: 'dbscan_viz',
     title: 'DBSCAN',
     subtitle: 'Core/border/noise points, eps and minPts, non-spherical clusters',
     difficulty: 'intermediate',
@@ -144,19 +224,43 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     checkQuestions: [
       {
         q: `K-means gives 5 circular clusters on GPS location data, but you suspect the true structure has non-circular geographic regions. How do you set up DBSCAN and validate it?`,
-        a: `For GPS (2D lat/lon) data, compute the k-distance plot with k=4 (minPts=4, the rule for 2D): for each point, compute the distance to its 4th-nearest neighbour and sort ascending. Find the knee — this is the eps value separating the dense location clusters from scattered noise points. Set minPts=4 and eps at the knee. Validate: (1) Visually inspect the clusters on a map — do they follow natural geographic boundaries (neighbourhoods, parks, roads) rather than circles? (2) Check that noise points are genuinely sparse areas (highways, open water), not legitimate locations. (3) Compare cluster count and coverage against domain knowledge. (4) If some genuine locations are labelled as noise, either reduce eps or increase the minimum density threshold — GPS data often has isolated visits that should belong to a cluster but are rare.`,
+        options: [
+          `A) Use minPts=2 to maximise sensitivity, then validate by counting how many more clusters DBSCAN finds compared to k-means`,
+          `B) Set eps by taking the mean pairwise distance divided by 10, which is the standard GPS calibration rule`,
+          `C) DBSCAN is not suitable for GPS data because lat/lon coordinates require spherical distance, which DBSCAN does not support`,
+          `D) Use the k-distance plot with k=4 to find eps at the knee; validate by inspecting clusters on a map for geographic boundary alignment, checking that noise points are genuinely sparse areas, and adjusting eps if known locations are mislabelled as noise`,
+        ],
+        answer: `D`,
       },
       {
         q: `DBSCAN with eps=0.5 and minPts=5 produces 1 cluster containing 95% of data and 200 noise points. What does this indicate and what do you try?`,
-        a: `One giant cluster means eps is too large — the radius is so wide that all dense regions are connected into a single density-reachable component. The 200 noise points are genuinely isolated. To fix: reduce eps. Use the k-distance plot (k=5): find the knee more carefully. If the current eps of 0.5 is well above the knee, the knee is at a much smaller value. Halve eps incrementally (0.25, 0.1, 0.05) and inspect how the number of clusters changes. Also consider: if the data truly has no density gap between clusters — all points are in one continuous dense region — then DBSCAN is the wrong algorithm for finding subgroups. In that case try hierarchical clustering to see if the dendrogram reveals merge-distance gaps, or k-means if you are willing to assume blob-shaped clusters. The 200 noise points are a useful signal: their positions may represent genuine outliers that you should examine for anomaly patterns regardless of the clustering outcome.`,
+        options: [
+          `A) eps is too small — the radius is not wide enough to connect the dense regions into their natural clusters`,
+          `B) minPts is too high — reducing it to 2 will split the single large cluster into meaningful subgroups`,
+          `C) One giant cluster means eps is too large — reduce eps using the k-distance plot knee, halving incrementally; if no density gap exists between groups, DBSCAN is the wrong algorithm for finding subgroups`,
+          `D) The 200 noise points indicate the dataset has significant outliers that are preventing proper cluster formation — remove them first`,
+        ],
+        answer: `C`,
       },
       {
         q: `You apply DBSCAN to customer embeddings in 128 dimensions and get mostly noise (90% of points labelled -1). What is happening and how do you fix it?`,
-        a: `This is the curse of dimensionality applied to DBSCAN: in 128 dimensions, Euclidean distances between all pairs of points converge toward the same value. The result is that no point has "many neighbours within eps" unless eps is extremely large — because the volume of a ball in 128D space grows as r^128, meaning you need an enormous radius to capture nearby points. At any eps small enough to be discriminating, every point appears isolated and gets labelled noise. The fix is dimensionality reduction before DBSCAN: apply PCA or UMAP to reduce to 10-20 dimensions where distances are still meaningful. UMAP is preferred because it specifically preserves neighbourhood structure (which is what DBSCAN uses). Then re-run DBSCAN on the low-dimensional embeddings with appropriate eps from the k-distance plot on the reduced space.`,
+        options: [
+          `A) The minPts value is set too high for 128-dimensional data — reduce it to 2 and re-run`,
+          `B) DBSCAN labels as noise any point that is not a core point, so 90% noise just means the dataset has few dense regions — this is the correct output`,
+          `C) The training data is contaminated — 90% of points are genuine anomalies and only 10% are normal`,
+          `D) In 128 dimensions, Euclidean distances converge so no point has many neighbours within a discriminating eps — apply PCA or UMAP to reduce to 10-20 dimensions where neighbourhood structure is meaningful before re-running DBSCAN`,
+        ],
+        answer: `D`,
       },
       {
         q: `What is the difference between noise in DBSCAN and outliers detected by Isolation Forest? When would you use each for anomaly detection?`,
-        a: `DBSCAN noise is defined by density: a point is noise if it has fewer than minPts neighbours within eps — it is in a sparse region relative to the chosen density threshold. DBSCAN noise is local and density-dependent: a point that is noise in one part of the feature space might be a core point in a sparser region. Isolation Forest defines anomaly score by isolation depth: anomalies are points that require few random splits to isolate — they are in sparse, extreme regions of feature space globally. The difference: DBSCAN requires a density that makes sense for both normal points and the anomaly context; Isolation Forest is parameter-lighter (no eps to tune) and globally ranks all points by anomaly score. Use DBSCAN when you simultaneously want clusters (normal structure) and outliers (noise), especially for geographic or low-dimensional data. Use Isolation Forest when you only need anomaly scores, the data is high-dimensional, or when a continuous anomaly score (rather than binary noise label) is needed for a downstream decision threshold.`,
+        options: [
+          `A) They are equivalent — both define anomalies as points with fewer than k neighbours within a fixed radius`,
+          `B) DBSCAN noise requires labelled normal data; Isolation Forest is fully unsupervised`,
+          `C) DBSCAN noise is density-defined and local — points in sparse regions relative to eps/minPts; Isolation Forest gives a global continuous anomaly score based on isolation depth — use DBSCAN when you simultaneously want clusters and outliers on low-dimensional data; Isolation Forest when you need ranked anomaly scores or high-dimensional data`,
+          `D) Isolation Forest is always superior — DBSCAN noise labelling should only be used as a preprocessing step before Isolation Forest`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `DBSCAN finds clusters of any shape and labels outliers explicitly — but a single ε threshold breaks when clusters have different densities, which is exactly the problem HDBSCAN was built to fix.`,
@@ -164,6 +268,7 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
   },
   {
     id: 'pca',
+    interactiveId: 'pca_viz',
     title: 'PCA — Principal Component Analysis',
     subtitle: 'Eigenvectors, explained variance, when to use and when it fails',
     difficulty: 'intermediate',
@@ -183,19 +288,43 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     checkQuestions: [
       {
         q: `You run PCA on a dataset with 100 features. The first component captures 85% of variance and the second captures 8%. How do you decide how many components to keep for a downstream classifier?`,
-        a: `The 85% in one component suggests the data has one dominant direction of variance, and 8% for the second means most remaining variance is also captured quickly. Two steps: (1) Plot the cumulative explained variance curve — where does it flatten? If 95% is reached by component 5 and 99% by component 15, start with 15 components for the classifier. (2) Do not solely rely on variance thresholds — the direction explaining 85% of variance may be an irrelevant confound (like batch effect in genomics, or lighting variation in images). Run the classifier with components 1-15, then try excluding the dominant component 1 and see if accuracy improves. If it does, the first component was a confound, not a signal. For important applications, cross-validate at several component counts (5, 10, 15, 20, all 100) and pick based on validation performance, not explained variance alone.`,
+        options: [
+          `A) Always keep only the first component when it captures more than 80% of variance — additional components add noise`,
+          `B) Keep components until cumulative variance reaches 95%, then cross-validate at several component counts — also test excluding component 1 in case it is a confound rather than a signal`,
+          `C) The 85% variance in one component means 1 component is sufficient for any downstream task`,
+          `D) Keep all 100 components — PCA is only used for visualization, not for feature selection before classifiers`,
+        ],
+        answer: `B`,
       },
       {
         q: `A colleague skips standardisation before PCA on a dataset with features including income (range $20k-$500k), age (18-80), and binary flags (0 or 1). What goes wrong?`,
-        a: `Without standardisation, PCA is dominated by the income feature because it has variance ~(240,000)² — roughly 10 billion times larger than the variance of binary flags (~0.25) and thousands of times larger than age variance. The first principal component will be almost entirely the income direction. All the information in age and binary flags will be compressed into later components that the analyst is likely to discard. The model built on these components will effectively be modelling only income, not the multivariate structure of the data. Fix: StandardScaler before PCA converts each feature to zero mean and unit variance, so income, age, and binary flags all contribute equally to the covariance matrix. The principal components then reflect the correlation structure, not the raw scale structure.`,
+        options: [
+          `A) PCA will fail to converge because the covariance matrix becomes singular when features have different scales`,
+          `B) The binary flags will dominate all principal components because their values are bounded between 0 and 1`,
+          `C) PCA is scale-invariant and standardisation is only needed for distance-based algorithms like k-means`,
+          `D) Income dominates all principal components because its variance (~10 billion times larger than binary flags) dwarfs the contribution of age and binary features — all information in those features is compressed into later discarded components`,
+        ],
+        answer: `D`,
       },
       {
         q: `You apply PCA to reduce 1,000-dimensional text embeddings to 50 dimensions before running k-means. Cluster quality is poor. What might PCA have discarded?`,
-        a: `PCA discards the directions of lowest variance. In high-dimensional text embeddings (e.g., sentence-BERT), the highest-variance directions often capture global semantic properties like document length, formality, or language style — these are not necessarily what distinguishes meaningful topic clusters. The cluster-discriminative signal (the directions along which document topics differ) may have lower absolute variance than those global properties. PCA discards those dimensions. The fix: (1) Try UMAP instead of PCA for dimensionality reduction — UMAP preserves local neighbourhood structure, which is more relevant for clustering than global variance directions. (2) Use supervised PCA or Linear Discriminant Analysis if you have some labels. (3) Try clustering in the full 1,000-dimensional space with cosine distance (which is appropriate for text embeddings and ignores magnitude) rather than Euclidean distance.`,
+        options: [
+          `A) PCA cannot be applied to text embeddings — use word2vec dimensionality reduction instead`,
+          `B) Nothing — PCA preserves 90%+ variance so cluster quality problems must be caused by k-means hyperparameters`,
+          `C) PCA discards low-variance directions, which may contain the cluster-discriminative signal for topic differences — try UMAP (which preserves local neighbourhood structure) or cluster directly with cosine distance in the full embedding space`,
+          `D) PCA discarded the stop words that k-means needs to separate topics correctly`,
+        ],
+        answer: `C`,
       },
       {
         q: `Two datasets have the same dimensions and PCA explained-variance ratios. Are they similar datasets? What would you additionally check?`,
-        a: `No — explained variance ratios only tell you about the eigenvalue spectrum shape, not about the actual content or structure of the data. Two datasets can have identical eigenvalue spectra with entirely different data distributions. Additional checks: (1) Loadings (eigenvectors): which original features contribute to each principal component? If both datasets load income heavily on PC1, they share that structure; if different features dominate, the variance structure is fundamentally different. (2) Scatterplots of PC1 vs PC2: the geometric shape of the projection (linear cloud, L-shape, clusters) tells you about data structure. (3) Reconstruction error distribution: the spread and skewness of reconstruction errors tells you whether the low-d approximation is uniformly good or fails on specific subgroups. (4) Correlation between original features and principal components: the correlation matrix reveals which features are moving together, not just which directions have high variance.`,
+        options: [
+          `A) Yes — identical eigenvalue spectra prove the datasets have the same underlying structure`,
+          `B) No — check PCA loadings (which features drive each component), scatterplots of PC1 vs PC2, reconstruction error distribution, and correlations between features and components`,
+          `C) Compare only the first two components — if PC1 and PC2 loadings match, the datasets are structurally equivalent`,
+          `D) Identical explained-variance ratios are sufficient to confirm similarity — no additional checks are needed`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `PCA finds directions of maximum variance — and the task-discriminative signal might live in a low-variance direction that PCA throws out, so variance explained is not a reliable proxy for information preserved for a downstream model.`,
@@ -222,19 +351,43 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     checkQuestions: [
       {
         q: `You run t-SNE with perplexity=5 and see 50 tiny, tight clusters. You run with perplexity=100 and see 3 blobs. Which represents the "true" structure?`,
-        a: `Neither run alone is definitive. Perplexity=5 shows fine-grained local groupings: with only 5 effective neighbours, each point is compared only to its immediate vicinity, producing many small tight groups that reflect local density variation. Perplexity=100 shows coarse global groupings: the algorithm is now averaging over 100 neighbours, blurring local detail into broad regions. The truth likely involves both scales of structure — 3 coarse groups, each internally subdivided. To assess: (1) Run at intermediate perplexities (15, 30, 50) and look for structures that appear consistently across runs. (2) Use UMAP (more robust to parameter choice, better global preservation) and compare. (3) Run k-means in the original high-dimensional space for k=3, k=10, k=50 and check whether those clusterings align with the t-SNE structure at the corresponding perplexity. The structures that appear in both the parametric clustering and t-SNE are most likely real.`,
+        options: [
+          `A) Perplexity=5 is always more accurate — lower perplexity reveals true local structure that high perplexity obscures`,
+          `B) Perplexity=100 is always more accurate — t-SNE requires high perplexity to capture meaningful global structure`,
+          `C) Neither alone is definitive — run at intermediate perplexities (15, 30, 50), use UMAP for comparison, and run k-means in the original high-dimensional space; structures that appear in both the parametric clustering and t-SNE across perplexity values are most likely real`,
+          `D) Both are wrong — t-SNE is unreliable at any perplexity setting and should not be used for exploratory analysis`,
+        ],
+        answer: `C`,
       },
       {
         q: `A team visualises 50,000 single-cell RNA-seq measurements with t-SNE, sees 12 distinct clusters, and runs k-means on the 2D t-SNE embedding. Explain two problems with this approach.`,
-        a: `Two fundamental problems. First, k-means on t-SNE embeddings uses Euclidean distances in 2D t-SNE space. But t-SNE distorts inter-cluster distances — the 2D distances between cluster centroids bear no consistent relationship to distances in the 50,000-dimensional gene expression space. K-means will partition the 2D space by proximity, which may correctly capture visually obvious clusters but will misgroup points at cluster boundaries where t-SNE's distortion is largest. Correct approach: run k-means (or Leiden algorithm, standard in single-cell analysis) in the original space or on PCA-reduced dimensions (30-50 components), then use t-SNE only to visualise the result. Second, the 12 apparent t-SNE clusters may be an artefact of the perplexity setting and random initialisation — different perplexity values may produce 8 or 20 clusters. Validate that the same 12 groups appear consistently across multiple t-SNE runs and perplexity values before treating them as biological cell types.`,
+        options: [
+          `A) t-SNE is too slow for 50,000 cells and k-means cannot handle RNA-seq data directly`,
+          `B) The number of clusters should be determined by BIC, not visual inspection; and k-means should use cosine distance for RNA-seq data`,
+          `C) k-means on t-SNE embeddings uses distances distorted by the t-distribution so cluster boundaries are wrong; and the 12 apparent clusters may be artefacts of the perplexity setting that disappear under different runs or perplexity values`,
+          `D) t-SNE does not work on high-dimensional data — PCA must be applied first, after which k-means on the 2D output is valid`,
+        ],
+        answer: `C`,
       },
       {
         q: `Your t-SNE plot shows two large clusters that are completely separated. Does this mean these two groups are very different from each other in the original space?`,
-        a: `No. t-SNE's repulsive forces push clusters apart in 2D regardless of how far apart they are in the original space — t-SNE maximises the visual separation between any groups that are locally separated. Two groups that differ by only one gene (and are thus close in high-dimensional space) can appear as completely separate clusters in t-SNE if they have slightly different local density. Conversely, two groups that are moderately different in high-dimensional space can appear adjacent if the t-SNE optimisation happened to place them close. To determine whether two t-SNE clusters are genuinely far apart in the original space: compute their actual distance in the original space (e.g., centroid distance, average pairwise distance), run UMAP and check if the two groups are still separated (UMAP preserves global distances better), or use statistical tests (e.g., MANOVA) on original features to confirm the groups are genuinely distinct.`,
+        options: [
+          `A) Yes — complete visual separation in t-SNE directly corresponds to large distance in the original high-dimensional space`,
+          `B) Yes — t-SNE's heavy-tailed t-distribution preserves inter-cluster distances proportionally`,
+          `C) No — t-SNE's repulsive forces push any locally-separated groups apart visually regardless of their true high-dimensional distance; verify with actual centroid distance, UMAP comparison, or statistical tests on original features`,
+          `D) Only if the same separation appears at both low and high perplexity settings`,
+        ],
+        answer: `C`,
       },
       {
         q: `You need to compress 768-dimensional BERT embeddings to 2D for visualisation and downstream k-means clustering. What is your pipeline and why?`,
-        a: `Two-step pipeline, not one. Step 1: dimensionality reduction for the clustering step — apply PCA to reduce from 768 to 50 dimensions (retaining 90-95% of variance). This removes noise dimensions while preserving global linear structure in a form that k-means can use with meaningful Euclidean distances. Run k-means on the 50-d PCA space, not in 768-d (too slow, curse of dimensionality) and not in 2-d UMAP (distorted distances). Step 2: visualisation only — apply UMAP to the 50-d PCA space (not raw 768-d, for speed) with n_neighbors=15 and reduce to 2D. Colour the 2D UMAP plot by k-means cluster assignments from step 1. This way the clustering is based on a proper metric in a reasonable-dimensional space, and the visualisation shows whether the UMAP structure confirms those cluster boundaries. Using UMAP directly for clustering would produce suboptimal clusters because global distances are only approximately preserved, and using t-SNE for clustering is wrong because inter-cluster distances are meaningless.`,
+        options: [
+          `A) Apply UMAP directly from 768D to 2D, then run k-means on the 2D output — UMAP preserves distances well enough for clustering`,
+          `B) Apply t-SNE to 2D for visualisation and k-means simultaneously — t-SNE is preferred for BERT embeddings because it handles the dense manifold structure better`,
+          `C) Apply PCA to 50D (clustering step), run k-means on the 50D space, then apply UMAP to 2D separately (visualisation step), colouring by k-means labels — clustering on PCA-50 uses meaningful Euclidean distances; UMAP 2D is for display only`,
+          `D) Run k-means directly in 768D — dimensionality reduction before clustering discards information and reduces clustering accuracy`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `t-SNE and UMAP are for looking at data, not for generating features — inter-cluster distances in t-SNE are deliberately distorted, UMAP's are approximate, and clustering on either's 2D output will mislead you at exactly the boundaries that matter most.`,
@@ -251,7 +404,11 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     keyPoints: [
       `**Autoencoder structure: encoder f_θ: ℝ^d → ℝ^k (k << d), decoder g_φ: ℝ^k → ℝ^d, trained end-to-end to minimize reconstruction loss L(x, g_φ(f_θ(x))).** MSE for continuous features, cross-entropy for binary or probability outputs. The bottleneck forces the network to compress the essential structure of x into k dimensions — anything it cannot reconstruct is discarded. Non-linear activation functions are what allow the bottleneck to capture curved manifolds rather than just flat subspaces.`,
       `**Autoencoder vs PCA: a shallow autoencoder with linear activations and MSE loss recovers the same subspace as PCA — the eigenvectors of the covariance matrix.** Add non-linear activations and the autoencoder becomes non-linear PCA, fitting a curved low-dimensional manifold. Spirals, non-linear clusters, and any structure that lives on a curved surface in high-d space can be captured by an autoencoder but not by PCA.`,
-      `**Variational Autoencoder: the encoder outputs parameters of a distribution — mean μ and log-variance log σ².** The latent code is sampled: z = μ + σ · ε where ε ~ N(0,I). Training minimizes reconstruction loss plus KL divergence between the posterior q(z|x) = N(μ, σ²) and prior p(z) = N(0,I). The KL term compresses the latent space toward a smooth Gaussian — similar inputs get similar latent distributions, enabling meaningful interpolation. Without the KL term, the latent space fragments and interpolation between latent vectors produces meaningless output.`,
+      `**Variational Autoencoder: the encoder outputs parameters of a distribution — mean μ and log-variance log σ².** The latent code is sampled:
+
+$z = μ + σ · ε where ε ~ N(0,I). Training minimizes reconstruc$
+
+tion loss plus KL divergence between the posterior q(z|x) = N(μ, σ²) and prior p(z) = N(0,I). The KL term compresses the latent space toward a smooth Gaussian — similar inputs get similar latent distributions, enabling meaningful interpolation. Without the KL term, the latent space fragments and interpolation between latent vectors produces meaningless output.`,
       `**Anomaly detection workflow: train exclusively on normal data.** At inference time, compute reconstruction error per sample. Normal patterns have been learned — normal samples reconstruct well. Anomalous inputs differ from anything in training, so the decoder reconstructs them poorly — high reconstruction error flags them. The advantage over simpler methods: the autoencoder captures complex multi-feature dependencies simultaneously (e.g., all 500 sensor readings and their correlations) that distance-based methods miss.`,
       `**Bottleneck size determines whether the approach works: too small, and important normal structure is lost — normal samples also reconstruct poorly, making anomaly scores uninformative.** Too large, and the decoder memorizes training data — anomalies reconstruct just as well as normal points, and no separation exists. Start by estimating the intrinsic dimensionality of the normal data from a PCA scree plot (how many components for 95% reconstruction quality), use that as a starting bottleneck size, and tune based on validation anomaly detection performance.`,
       `**Denoising autoencoders: corrupt the input with noise (masking, Gaussian noise, random dropout) and train the network to reconstruct the clean version.** The model is forced to learn which features carry signal vs noise — producing representations more robust than a standard autoencoder. Better generalization, better anomaly detection in noisy environments. Denoising autoencoders are also the theoretical precursor to diffusion models.`,
@@ -261,25 +418,50 @@ The cost is stark: O(n²) memory to store the pairwise distance matrix and O(n³
     checkQuestions: [
       {
         q: `You train an autoencoder for anomaly detection and find that reconstruction error is high for both normal and anomalous samples. What might be wrong?`,
-        a: `High reconstruction error on normal training samples means the autoencoder failed to learn the normal data distribution — it is underfitting. Three root causes: (1) Bottleneck too small — the compression is too aggressive and the decoder cannot recover the input from the compressed code. Increase bottleneck dimension. (2) Model too small or underfit — increase network depth/width or train longer. (3) Feature preprocessing — if features have very different scales, MSE reconstruction loss is dominated by high-variance features. Apply standardisation before training. Separately, if reconstruction error is low for anomalies (rather than high), the bottleneck is too large — the autoencoder is memorising rather than generalising, so it reconstructs everything well. The right operating regime is: normal samples have low reconstruction error, anomalies have high. Tune bottleneck size to separate these two distributions.`,
+        options: [
+          `A) High reconstruction error on all samples means the bottleneck is too large — reduce it to force the model to discriminate`,
+          `B) The training data must be contaminated with anomalies — retrain with a cleaner dataset`,
+          `C) High reconstruction error on normal samples means the autoencoder is underfitting — bottleneck too small, model too shallow, or features not standardised; separately, if error is low for anomalies, the bottleneck is too large and the model is memorising`,
+          `D) Autoencoders always have high reconstruction error initially — the anomaly threshold should be set relative to the training error distribution regardless of its absolute level`,
+        ],
+        answer: `C`,
       },
       {
         q: `What is the reparameterisation trick in a VAE and why is it necessary?`,
-        a: `In a VAE, the encoder outputs the parameters (μ, σ) of a Gaussian distribution and the latent code z is sampled from it: z ~ N(μ, σ²). The problem is that sampling is a non-differentiable operation — you cannot backpropagate gradients through a stochastic node. The reparameterisation trick factorises the randomness out: instead of sampling z ~ N(μ, σ²) directly, write z = μ + σ · ε where ε ~ N(0,1) is a fixed noise sample drawn outside the computation graph. Now μ and σ are deterministic functions of the input (differentiable paths), and ε is external randomness not part of the parameters. Gradients of the loss with respect to μ and σ flow cleanly through z = μ + σ·ε. Without the reparameterisation trick, you cannot train the encoder by gradient descent, which is why the VAE objective requires it. The same trick applies to any distribution with a location-scale parametrisation (Laplace, logistic).`,
+        options: [
+          `A) It replaces the KL divergence term with a simpler L2 penalty, making the loss function differentiable`,
+          `B) It is optional — modern autograd frameworks can differentiate through sampling operations directly`,
+          `C) It removes the need for a decoder by sampling directly from the prior distribution at inference time`,
+          `D) Sampling z ~ N(μ, σ²) is non-differentiable, so the trick rewrites z = μ + σ·ε with ε ~ N(0,1) drawn outside the computation graph — making μ and σ differentiable paths so gradients flow to the encoder`,
+        ],
+        answer: `D`,
       },
       {
         q: `An autoencoder trained on manufacturing sensor readings is being used for anomaly detection. A maintenance engineer reports that known defective sensors are not flagged. What could cause this and how do you debug?`,
-        a: `Known defective sensors not flagged means their reconstruction error is low — the autoencoder is reconstructing their patterns accurately. Four mechanisms: (1) Training data contamination: if defective sensors were present in the training data labelled as normal, the autoencoder has learned to reconstruct that defective pattern. Audit training data purity. (2) Bottleneck too large: the autoencoder is memorising and can reconstruct anything, normal or not. Reduce bottleneck dimension or add more regularisation. (3) Defect type is low-amplitude: if the defect manifests as a small deviation in a few sensors while other sensors are at normal values, reconstruction loss is dominated by the normal sensors and the defective signal is a small fraction of total MSE. Normalise per sensor and weight reconstruction error by expected sensor variance. (4) Wrong reconstruction metric: if the defect is a timing/phase anomaly rather than amplitude, MSE may miss it — try frequency-domain features or sequence-aware anomaly scoring.`,
+        options: [
+          `A) The bottleneck is definitely too small — always increase bottleneck size when known anomalies are not flagged`,
+          `B) Known defects not flagged means reconstruction error is low for them — possible causes are training data contamination (defective patterns in training), bottleneck too large (memorisation), low-amplitude defects swamped by MSE on other sensors, or wrong reconstruction metric for the defect type`,
+          `C) Autoencoders cannot detect sensor anomalies — use Isolation Forest instead for manufacturing data`,
+          `D) The model needs more training epochs — defective patterns are only detected after full convergence`,
+        ],
+        answer: `B`,
       },
       {
         q: `Compare using a VAE latent space versus using PCA components for anomaly detection. What are the trade-offs?`,
-        a: `Both methods detect anomalies by measuring how far a sample is from the learned normal representation. PCA anomaly detection computes the reconstruction error in PCA space (distance from the PCA hyperplane) or Mahalanobis distance in PCA-component space. It is fast, interpretable (each component is a linear combination of original features), and has a closed-form solution — no training instability. It works well when normal data is approximately Gaussian and linear-manifold structured. VAE anomaly detection uses the ELBO loss or reconstruction error. The VAE captures non-linear manifold structure that PCA cannot — if normal sensor data lies on a non-linear curve, PCA underestimates the "normal distance" for data on the curve, while the VAE learns the curve. However, VAEs require careful training (mode collapse, posterior collapse), hyperparameter tuning (bottleneck size, KL weight), and are harder to interpret. Use PCA for quick anomaly baselines, linear data, or when interpretability is needed. Use autoencoders/VAEs when normal data has complex non-linear dependencies (e.g., correlated time-series, images, sequential patterns).`,
+        options: [
+          `A) PCA is always better for anomaly detection because it has a closed-form solution and never suffers from training instability`,
+          `B) VAE is always better because non-linear manifold structure is universal in real-world sensor data`,
+          `C) PCA is fast, interpretable, and works well on approximately Gaussian linear data; VAE captures non-linear manifold structure but requires careful training — use PCA for quick baselines and interpretability, autoencoders/VAEs when normal data has complex non-linear dependencies`,
+          `D) They produce identical anomaly scores when the VAE bottleneck size matches the number of PCA components retained`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Autoencoders turn reconstruction failure into an anomaly signal — train on normal data, and anything the decoder cannot reconstruct well is flagged — but only if the bottleneck is sized right: too wide and the model memorizes, too narrow and normal samples also fail.`,
   },
   {
     id: 'gmm',
+    interactiveId: 'gmm_viz',
     title: 'Gaussian Mixture Models',
     subtitle: 'EM algorithm, soft assignments, model selection with BIC/AIC',
     difficulty: 'advanced',
@@ -291,9 +473,17 @@ The model is a weighted sum of K Gaussian components: p(x) = sum_k π_k N(x | μ
 
 Because the component assignments are latent, direct maximization of log-likelihood is intractable — the EM algorithm solves this by alternating between soft-assigning each point to components (E-step) and updating parameters to maximize expected log-likelihood (M-step). EM is guaranteed to not decrease log-likelihood at each step, but it only reaches a local optimum — multiple restarts are not optional. The covariance type is the key practical decision: full covariance is the most expressive but overfits badly in high dimensions; diagonal covariance is far more robust and is usually the right choice.`,
     keyPoints: [
-      `**GMM generative model: to generate one data point, sample a component k with probability π_k (mixing weight), then sample x from N(μ_k, Σ_k).** Parameters to fit: {π_k, μ_k, Σ_k} for k=1,...,K. The log-likelihood is L = sum_i log sum_k π_k N(x_i | μ_k, Σ_k). Direct maximization is intractable because of the log-sum — EM introduces a latent variable z_i (which component generated x_i) and maximizes a tractable lower bound instead.`,
+      `**GMM generative model: to generate one data point, sample a component k with probability π_k (mixing weight), then sample x from N(μ_k, Σ_k).** Parameters to fit: {π_k, μ_k, Σ_k} for
+
+$k=1,...,K. The log-likelihood is L = sum_i log sum_k π_k N(x_i | μ_k, Σ_k). Direct maximization is intractable$
+
+because of the log-sum — EM introduces a latent variable z_i (which component generated x_i) and maximizes a tractable lower bound instead.`,
       `**E-step: compute responsibility r_{ik} = P(z_i=k | x_i, θ) via Bayes' rule: r_{ik} = π_k N(x_i | μ_k, Σ_k) / sum_j π_j N(x_i | μ_j, Σ_j).** Each r_{ik} is in [0,1] and responsibilities for point i sum to 1. This is the soft assignment — point i belongs to component k with probability r_{ik}. K-means is the degenerate version where this is a hard 0/1 assignment to the nearest centroid, which is why k-means's assumptions are visible in the GMM formulation.`,
-      `**M-step: update parameters using responsibilities as weighted counts.** N_k = sum_i r_{ik}, μ_k = (sum_i r_{ik} x_i) / N_k, Σ_k = (sum_i r_{ik} (x_i − μ_k)(x_i − μ_k)^T) / N_k, π_k = N_k / n. All closed-form — no gradient descent. EM guarantees log-likelihood is non-decreasing at each step, but converges to a local optimum that depends on initialization.`,
+      `**M-step: update parameters using responsibilities as weighted counts.**
+
+$N_k = sum_i r_{ik}, μ_k = (sum_i r_{ik} x_i) / N_k, Σ_k = (sum_i r_{ik} (x_i − μ_k)(x_i − μ_k)^T) / N_k, π_k = N_k / n.$
+
+All closed-form — no gradient descent. EM guarantees log-likelihood is non-decreasing at each step, but converges to a local optimum that depends on initialization.`,
       `**GMM is a strict generalization of k-means: k-means is the limit of GMM where all Σ_k = σ²I (identical isotropic covariance) and σ→0 (hard assignments).** Relax Σ_k to allow different shapes and orientations, and you get elliptical clusters. Allow soft assignments (σ > 0) and you get probabilistic membership. These two relaxations together are why GMM handles the cases that k-means fails on.`,
       `**Covariance type is the main practical decision: full covariance needs d(d+1)/2 parameters per component — expressive but overfits badly in high dimensions (you need far more samples than parameters).** Diagonal covariance uses d parameters per component and assumes conditional independence between features — much more robust. Spherical (Σ_k = σ_k² I, one parameter per component) is closest to k-means. Match covariance type to the dimensionality and sample size of your data.`,
       `**Model selection with BIC: BIC = −2 log L + p log n (p = number of free parameters).** AIC = −2 log L + 2p. More components always improve log-likelihood — BIC and AIC penalize that by charging for the parameter count. Plot BIC vs K and find the elbow or minimum. BIC penalizes parameters more heavily than AIC (log n vs 2 per parameter), so BIC prefers simpler models and is less likely to overfit on finite samples.`,
@@ -303,19 +493,43 @@ Because the component assignments are latent, direct maximization of log-likelih
     checkQuestions: [
       {
         q: `EM for GMM is guaranteed to not decrease log-likelihood at each step, yet it often converges to a poor local optimum. How is this possible?`,
-        a: `The guarantee that EM does not decrease log-likelihood is a statement about local monotonicity, not global optimality. The log-likelihood landscape for a GMM with K components is multimodal — there are many local maxima with different log-likelihood values. EM ascends the log-likelihood hill from wherever it starts, reaching the nearest local maximum. Starting from different initial parameters produces convergence to different local maxima. The E-step computes the exact posterior over component assignments given the current parameters; the M-step finds the exact maximum of the expected complete-data log-likelihood (Q function). Both steps are optimal given the current position, but the sequence of steps is hill-climbing on the full log-likelihood, not finding the global peak. Mitigation: run EM from multiple starting points (random restarts or k-means++ initialisation) and retain the solution with the highest final log-likelihood. This increases the chance of finding the global or a high-quality local optimum.`,
+        options: [
+          `A) The guarantee is incorrect — EM can decrease log-likelihood when the covariance matrices become singular`,
+          `B) EM only guarantees improvement when initialised with k-means++ — random initialisation breaks the monotonicity guarantee`,
+          `C) The guarantee is about local monotonicity, not global optimality — the log-likelihood landscape is multimodal and EM hill-climbs to the nearest local maximum from its starting point; run multiple random restarts and keep the highest final log-likelihood`,
+          `D) The convergence to poor optima only occurs with diagonal covariance — use full covariance to guarantee global optimality`,
+        ],
+        answer: `C`,
       },
       {
         q: `You fit a GMM with K=5 and diagonal covariance on 10,000 points in 50 dimensions. BIC keeps decreasing as you increase K from 1 to 20. What does this suggest and what do you do?`,
-        a: `BIC still decreasing at K=20 means the data has more distinct density modes than 20, or the Gaussian assumption is wrong so the model needs many components to approximate the true distribution. Possibilities: (1) The true number of clusters is genuinely large — perhaps there are 30-50 natural groups. Continue increasing K and look for a BIC plateau or minimum. (2) The data contains outliers or heavy-tailed distributions that require many Gaussian components to approximate a single non-Gaussian cluster. Preprocess to remove outliers and re-fit. (3) The feature space has high redundancy and spurious correlations — dimensionality reduction (PCA to 10-15 components, retaining 90% variance) before fitting the GMM may reveal a cleaner structure with a lower optimal K. (4) GMM is simply the wrong model for this data — consider k-means (simpler), HDBSCAN (no distributional assumption), or non-parametric density estimation.`,
+        options: [
+          `A) BIC always decreases monotonically with K — the correct stopping rule is when AIC and BIC disagree`,
+          `B) The data genuinely has more than 20 natural groups — always continue increasing K until BIC starts increasing`,
+          `C) Switch to full covariance — diagonal covariance is causing BIC to underestimate the penalty term`,
+          `D) Either the true cluster count exceeds 20, or outliers/non-Gaussianity require many components to approximate — try dimensionality reduction (PCA to 10-15 components) before GMM, remove outliers, or consider HDBSCAN if the Gaussian assumption is violated`,
+        ],
+        answer: `D`,
       },
       {
         q: `A customer segmentation GMM has a component with mixture weight π_k = 0.001 that collapses to a tiny covariance (singular matrix). What happened and how do you fix it?`,
-        a: `This is a degenerate solution: the component has latched onto one or a few points and fitted an extremely tight Gaussian around them — the covariance matrix collapses toward zero and the log-likelihood of those points under this component goes to infinity, which makes the EM update artificially inflate that component's contribution. It is a pathological local maximum. Root cause: bad initialisation placed a component centroid near an isolated point, and EM drove the covariance to zero to maximise their contribution. Fixes: (1) Add regularisation — a minimum eigenvalue constraint or a small diagonal offset to each covariance (regularization_covar in sklearn's BayesianGaussianMixture). (2) Use Bayesian GMM which places a Dirichlet prior on mixture weights — components with very small weight get penalised, preventing collapse. (3) Re-initialise with k-means++ and run again. (4) Reduce K — the degenerate component may indicate K is too large for the data.`,
+        options: [
+          `A) This is normal behaviour — components with small mixture weights always have small covariances by definition`,
+          `B) The component has latched onto one or a few isolated points and driven its covariance to zero to maximise those points' likelihood — fix by adding covariance regularisation, using Bayesian GMM, re-initialising with k-means++, or reducing K`,
+          `C) Increase the number of EM iterations — degenerate components resolve themselves with more training`,
+          `D) Switch to full covariance — diagonal covariance always produces degenerate components when mixture weights are small`,
+        ],
+        answer: `B`,
       },
       {
         q: `How do you use GMM for density estimation and anomaly detection? What determines the anomaly threshold?`,
-        a: `GMM for density estimation: after fitting, p(x) = sum_k π_k N(x | μ_k, Σ_k) gives the estimated density at any point x. High-density regions correspond to clusters of normal points; low-density regions are unusual. For anomaly detection: compute log p(x_i) for each sample. Samples with very low log-likelihood (in the tail of the density) are anomalies. Threshold selection: (1) Percentile-based — label the bottom τ% of training log-likelihoods as anomalies, where τ is the expected contamination rate from domain knowledge. (2) Validation-based — if some labelled anomalies are available, choose the threshold that maximises F1 or precision at a target recall on the validation set. (3) Decision-cost-based — choose the threshold at which the cost of FPs and FNs is balanced given their business costs. GMM density estimation is more interpretable than Isolation Forest (you can report which component an anomaly is far from) but makes stronger parametric assumptions (Gaussianity) that may not hold for all anomaly types.`,
+        options: [
+          `A) GMM anomaly detection requires labelled anomalies to set the threshold — it cannot operate unsupervised`,
+          `B) Use the number of mixture components as the threshold — points assigned to components with fewer than 5% mixture weight are anomalies`,
+          `C) After fitting, compute log p(x) = log sum_k π_k N(x|μ_k, Σ_k) per sample; flag samples with very low log-likelihood; set threshold by percentile (expected contamination rate), validation against labelled anomalies, or decision-cost balancing`,
+          `D) GMM density estimation only works for anomaly detection when K=1 — multiple components make the threshold ambiguous`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `GMM lifts three k-means restrictions at once — soft assignments, elliptical clusters, log-likelihood as the fit criterion — but EM only finds a local optimum, so run multiple restarts and use BIC to choose K.`,
@@ -323,6 +537,7 @@ Because the component assignments are latent, direct maximization of log-likelih
   },
   {
     id: 'anomaly_detection',
+    interactiveId: 'anomaly_detection_viz',
     title: 'Anomaly Detection',
     subtitle: 'Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels',
     difficulty: 'intermediate',
@@ -342,19 +557,43 @@ Because the component assignments are latent, direct maximization of log-likelih
     checkQuestions: [
       {
         q: `You are detecting network intrusion anomalies from 1 million log events per day with 200 features. Which method do you choose and why?`,
-        a: `Isolation Forest is the primary choice for this scale and dimensionality. At 1M events/day and 200 features: Isolation Forest trains in O(n log n) ≈ 20M operations, which takes seconds. Scoring new events is O(log n) per sample — real-time feasible. Handles high dimensions better than LOF (which is O(n²) — 10^12 operations for 1M events) and one-class SVM (O(n²) to O(n³)). Does not require Gaussian assumptions. Setting: contamination=0.01 (expected 1% anomaly rate from domain knowledge), n_estimators=100, max_samples=256 (subsampling per tree speeds training without much accuracy loss). Alternative if temporal pattern matters: LSTM autoencoder trained on normal traffic sequences — captures contextual anomalies (unusual sequences even if each packet looks normal). The autoencoder approach handles collective anomalies that Isolation Forest misses by treating each event independently.`,
+        options: [
+          `A) LOF — it detects local density anomalies which are most common in network intrusion patterns`,
+          `B) One-class SVM with RBF kernel — it learns a non-linear boundary around normal traffic that handles the high feature count well`,
+          `C) Isolation Forest — O(n log n) training and O(log n) scoring makes it feasible at 1M events/day with 200 features; handles high dimensions better than LOF (O(n²)) or one-class SVM (O(n²-n³)); use LSTM autoencoder if temporal sequence patterns matter for contextual anomalies`,
+          `D) Mahalanobis distance on a fitted multivariate Gaussian — the most interpretable option for explaining detected intrusions to security teams`,
+        ],
+        answer: `C`,
       },
       {
         q: `LOF detects an anomaly in a dataset with two clusters of very different sizes and densities. A point in the smaller, denser cluster gets LOF=0.9 (classified as normal). A point at the edge of the larger, sparser cluster gets LOF=1.8 (classified as anomaly). Is this correct behaviour?`,
-        a: `This is correct and intentional LOF behaviour. LOF is locally normalised — it compares each point's density to its neighbours' densities. The point in the dense cluster has LOF=0.9 because its local density (high) is similar to its neighbours' local densities (also high) — it is a normal member of its local neighbourhood. The point at the edge of the sparse cluster has LOF=1.8 because its local density is lower than its k-nearest neighbours' densities (which are deeper in the dense core of the cluster). From its local perspective, it is genuinely sparser than its surroundings — an outlier in its local context. This is the correct semantic: a point that is unusual relative to its neighbours is anomalous, regardless of global density. The alternative — flagging the entire dense cluster as outliers because the global density is higher there — is the global outlier problem, which LOF is specifically designed to avoid.`,
+        options: [
+          `A) No — the point in the dense small cluster should have a high LOF because the cluster is unusual relative to the global data distribution`,
+          `B) No — LOF should be calibrated relative to global density, not local neighbourhood density`,
+          `C) No — LOF=0.9 indicates a numerical error; LOF values cannot be below 1 for any point`,
+          `D) Yes — LOF is locally normalised by design; the dense-cluster point is normal relative to its equally-dense neighbours (LOF≈1), while the sparse-cluster edge point is sparser than its denser-core neighbours (LOF>1), which is the correct semantic`,
+        ],
+        answer: `D`,
       },
       {
         q: `Your Isolation Forest model is flagging 15% of transactions as anomalies, but the fraud team says the actual fraud rate is 0.5%. What do you change?`,
-        a: `The contamination parameter is set too high — it is telling Isolation Forest to treat 15% of the training data as anomalous, which sets the decision threshold at the 15th percentile of anomaly scores. At contamination=0.15, anything with score below the 85th percentile of training scores is flagged. Set contamination=0.005 (0.5% fraud rate) and recompute the threshold. The threshold will shift to the 99.5th percentile of training anomaly scores — only the most isolated points will be flagged. If the fraud team's 0.5% estimate is uncertain, sweep contamination from 0.001 to 0.01 and plot precision/recall against the small labelled set of confirmed fraud cases. Set contamination at the value where precision and recall balance appropriately for the fraud team's operational capacity (how many alerts they can review per day). The contamination parameter is the most important business-level hyperparameter in anomaly detection.`,
+        options: [
+          `A) Increase n_estimators from 100 to 500 — more trees reduce the false positive rate`,
+          `B) Set contamination=0.005 to align with the 0.5% fraud rate, which shifts the decision threshold to the 99.5th percentile of training anomaly scores; sweep contamination from 0.001 to 0.01 and calibrate against labelled fraud cases and the team's review capacity`,
+          `C) Switch to LOF — Isolation Forest is known to have high false positive rates at low fraud rates`,
+          `D) Reduce max_samples per tree — smaller subsamples reduce over-sensitivity and lower the false positive rate`,
+        ],
+        answer: `B`,
       },
       {
         q: `You have 1,000 labelled normal samples and 0 labelled anomalies. How do you build and evaluate an anomaly detection model?`,
-        a: `With only normal labels, use a semi-supervised approach: train Isolation Forest or an autoencoder exclusively on the 1,000 normal samples, treating the entire training set as the normal distribution to model. Evaluation strategy: (1) Holdout-based anomaly injection — hold out 200 normal samples during training. Generate synthetic anomalies by: sampling uniform random points from the feature bounding box (definitely anomalous), or by applying large random perturbations to held-out normals (likely anomalous). Evaluate precision/recall on this synthetic test set. This validates that the model correctly identifies points outside the normal distribution but does not guarantee it flags real-world anomaly types. (2) Expert review — collect 50-100 samples that the model scores as most anomalous from a fresh unlabelled dataset. Have domain experts classify them as anomalous or not. Precision@50 gives a practical estimate of real-world precision. (3) Before deployment, create a labelled anomaly set via adversarial review or by collecting confirmed incidents over the first month of production use. Retrain with this data to improve recall on known anomaly types.`,
+        options: [
+          `A) You cannot build an anomaly detection model without labelled anomalies — collect anomaly labels first`,
+          `B) Train a supervised binary classifier using synthetic anomalies as the negative class`,
+          `C) Use a one-class SVM which requires only normal samples, and evaluate by checking that its boundary tightly encircles all training points`,
+          `D) Train Isolation Forest or autoencoder exclusively on normal samples; evaluate via synthetic anomaly injection (uniform samples from feature bounding box), expert review of top-k flagged samples (Precision@50), and collect confirmed incidents in the first month of production to build a labelled set for retraining`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `Each anomaly detection algorithm is a definition of "unusual" encoded as math — pick the one whose definition matches the anomalies you expect, because Isolation Forest will miss contextual anomalies just as surely as LOF will miss them in large datasets.`,
@@ -381,19 +620,43 @@ Because the component assignments are latent, direct maximization of log-likelih
     checkQuestions: [
       {
         q: `You train LDA with K=10 topics but the coherence score is low — words within each topic are not semantically related. List 3 concrete things to try.`,
-        a: `Three targeted interventions: (1) Improve preprocessing — add bigrams for common domain phrases (topic modeling splits "machine_learning" into two tokens that dilute both topics), remove more stop words, and increase minimum document frequency to eliminate rare words that appear in few documents and add noise. The most common reason for incoherent topics is a noisy vocabulary. (2) Try a different K — K=10 may be forcing the model to subdivide natural topics or merge unrelated ones. Plot coherence vs K from K=2 to K=30 and find the peak. A typical coherence vs K curve peaks around the true number of topics and then degrades as topics fragment. (3) Switch to NMF — NMF with TF-IDF input often produces more coherent topics than LDA on short texts (product reviews, news headlines, tweets) because TF-IDF already de-emphasises common words, and the parts-based NMF representation naturally produces sparse, coherent word groups. If domain expertise matters, also try BERTopic for semantically richer topics.`,
+        options: [
+          `A) Increase training iterations, use a larger vocabulary, and switch from Gibbs sampling to variational EM`,
+          `B) Improve preprocessing (add bigrams, extend stop words, raise minimum document frequency), plot coherence vs K from 2 to 30 to find the peak, and switch to NMF with TF-IDF if short texts are dominant`,
+          `C) Increase K to 20 — incoherence at K=10 always means the number of topics is set too low`,
+          `D) Decrease the α hyperparameter to force sparser document-topic distributions, which always improves coherence`,
+        ],
+        answer: `B`,
       },
       {
         q: `A document about "machine learning in healthcare" has LDA topic proportions: topic 3 (medicine) = 0.45, topic 7 (ML) = 0.40, topic 1 (other) = 0.15. How do you use this for document retrieval vs document categorisation?`,
-        a: `For document retrieval: the soft topic proportions are ideal. Instead of assigning the document to one class, represent it as a topic vector [0, 0.15, 0, 0.45, 0, 0, 0, 0.40, ...] and use cosine similarity between topic vectors to find similar documents. A query about "deep learning for diagnosis" will have high probability on both the ML and medicine topics and will correctly retrieve this document even though it is not purely about either. This is the key advantage of LDA over hard clustering for retrieval. For document categorisation: if the downstream task needs a single category, the highest-proportion topic (topic 3, medicine, 0.45) is the primary label, but report uncertainty — the document is nearly equally about medicine and ML. If the task requires a strict 1-category assignment, build a supervised classifier that uses these soft topic vectors as features, giving a calibrated prediction rather than just argmax.`,
+        options: [
+          `A) For both retrieval and categorisation assign the document to its highest-proportion topic (medicine) — the soft proportions are only used to set a confidence score`,
+          `B) For retrieval represent the document as a topic vector and use cosine similarity to find documents with similar proportions; for categorisation the soft vector feeds a supervised classifier rather than a hard argmax`,
+          `C) Soft topic proportions are only valid for retrieval when all proportions are above 0.1; below that threshold use hard assignment`,
+          `D) LDA topic proportions cannot be used for retrieval — use TF-IDF cosine similarity instead and reserve LDA output for categorisation only`,
+        ],
+        answer: `B`,
       },
       {
         q: `You find that the top 10 words for 3 out of 10 LDA topics are nearly identical (all contain "data", "model", "analysis", "result", "method"). What does this indicate?`,
-        a: `These three topics are dominated by generic methodology vocabulary rather than domain-specific content words — they represent the same underlying "generic research paper language" topic that LDA has split into three versions due to slight variation in word co-occurrence patterns. Root causes: (1) K is too high — with K=10 you are forcing 10 distinctions when the data has fewer natural topics. (2) Generic academic vocabulary was not removed from the corpus — words like "data", "model", "method" appear across all topics and should be added to the stop word list or removed by their high document frequency. Fix: increase minimum document frequency threshold to remove words appearing in more than 70% of documents (they are uninformative across topics). Then reduce K to 7 and compare coherence. The generic words should be treated like stop words — their presence in the vocabulary causes topic dilution.`,
+        options: [
+          `A) The three topics are capturing genuine sub-disciplines of methodology that happen to share vocabulary`,
+          `B) K is set too low — increase K so each topic can specialise further`,
+          `C) The Dirichlet α hyperparameter is too large, causing topics to share too many words`,
+          `D) Generic methodology vocabulary was not removed from the vocabulary — add high-document-frequency words ("data", "model", "method") to the stop list; also reduce K as the model is carving one underlying topic into three near-duplicate versions`,
+        ],
+        answer: `D`,
       },
       {
         q: `What is the difference between perplexity and coherence as metrics for LDA? Why do they sometimes disagree about the optimal K?`,
-        a: `Perplexity measures the model's ability to predict held-out test words — it is a generative model fitness metric. Lower perplexity = the model predicts unseen words better = better statistical fit. Coherence measures the semantic relatedness of the top words within each topic using external co-occurrence statistics — it is a human-interpretability proxy metric. They disagree about K for a systematic reason: perplexity is minimised by having many topics that precisely describe small subsets of the vocabulary — K=1,000 nearly memorises the vocabulary. Coherence is maximised by having a moderate number of topics that each focus on semantically related word clusters — too many topics fragment meaningful groups. Adding more topics always helps perplexity but starts hurting coherence after the optimal K because topics split into subsets that are semantically incoherent. The optimal K for human use is the one that maximises coherence; the optimal K for statistical fit is the one that minimises perplexity. They represent different objectives, and for topic modeling's primary use case (human interpretation), coherence is the right metric to optimise.`,
+        options: [
+          `A) They measure the same thing with different scales — disagreement indicates a bug in the coherence calculation`,
+          `B) Perplexity measures human interpretability and coherence measures statistical fit — use perplexity for production and coherence for academic evaluation`,
+          `C) Coherence is only valid when computed on the training corpus — using an external reference corpus like Wikipedia causes it to disagree with perplexity`,
+          `D) Perplexity is a generative fit metric that always improves with more topics; coherence is a human-interpretability proxy that peaks at moderate K then degrades as topics fragment — they optimise different objectives and coherence is the right metric for topic modeling's primary use case`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `Statistical fit (perplexity) and human interpretability (coherence) measure different things and disagree about the optimal K — a topic model can score well on one while failing completely on the other, and the only test that actually matters is whether domain experts can label every topic with a meaningful name.`,

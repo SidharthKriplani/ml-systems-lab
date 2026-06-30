@@ -18,25 +18,53 @@ A model that tells you "conversion rate = 3.2%" with no indication of how confid
       `**Credible intervals and confidence intervals answer different questions.** A 95% Bayesian credible interval [L, U] means P(θ ∈ [L,U] | data) = 0.95 — a direct probability statement about where the parameter is. A 95% frequentist confidence interval means that if you repeated the experiment many times, 95% of the resulting intervals would contain the true θ. For any single computed interval, the true θ either is or isn't in it. Credible intervals are what stakeholders intuitively mean when they ask "how likely is it that the true value is in this range?" — confidence intervals don't answer that question.`,
       `**Sequential Bayesian updating is the natural model for streaming systems: the posterior from today becomes the prior for tomorrow.** With Beta-Binomial, after day 1 you have Beta(α₁, β₁); feed it new data on day 2 and you get Beta(α₁ + new_successes, β₁ + new_failures). No reprocessing of historical data. The prior from yesterday is a sufficient summary of everything observed so far — this is what makes it computationally attractive for systems that must update continuously.`,
       `**Prior sensitivity is the thing practitioners skip and then regret.** In low-data regimes, the prior dominates — your conclusions are largely determined by what you assumed before seeing any data. In high-data regimes, the likelihood takes over and the prior washes out. Always sanity-check: re-run with a more diffuse prior. If the posterior shifts substantially, you do not yet have enough data to draw firm conclusions — the result is prior-driven, not data-driven.`,
-      `**MAP (Maximum A Posteriori) estimate: θ_MAP = argmax_θ [log p(X|θ) + log p(θ)].** This is regularised MLE — L2 regularisation corresponds to a Gaussian prior, L1 to a Laplace prior. MAP is often the right production choice (fast, no integration), but it collapses the posterior to a point and discards all information about posterior shape. Using a MAP estimate for predictions is the same as ignoring posterior uncertainty.`,
+      `**MAP (Maximum A Posteriori) estimate:
+
+$θ_MAP = argmax_θ [log p(X|θ) + log p(θ)].** This is regularised MLE — L2 regul$
+
+arisation corresponds to a Gaussian prior, L1 to a Laplace prior. MAP is often the right production choice (fast, no integration), but it collapses the posterior to a point and discards all information about posterior shape. Using a MAP estimate for predictions is the same as ignoring posterior uncertainty.`,
       `**Priors that look uninformative often aren't.** A uniform prior over θ ∈ [0,1] looks neutral but assigns equal probability to CTR = 0.01 and CTR = 0.99 — which may be a strong prior in a context where rates above 20% are implausible. A uniform prior over log(θ) implies a very different belief. Always ask what your prior implies about the quantities you actually care about, not just the parameterisation you happened to write down.`,
     ],
     checkQuestions: [
       {
-        q: 'You run a Bayesian A/B test. After 500 conversions each, the posterior P(p_A > p_B | data) = 0.94. Your decision threshold is 0.95. Your boss says "just call it — it\'s clearly A". What do you do and why?',
-        a: 'Do not call it early without examining the expected loss. P(A>B)=0.94 is close but below threshold — the 6% probability that B is actually better is not negligible, especially if the magnitude of the loss matters. Compute the expected loss from a wrong decision: if A is rolled out but B is actually better, what is the expected revenue difference? If the loss is small (e.g., 0.01% conversion rate difference), maybe proceed. If the loss is large, wait for more data or lower the threshold explicitly and document the risk. Simply calling it because it "looks like A" violates the decision rule you set prospectively — it introduces optional stopping bias even in Bayesian tests when the threshold is used loosely.',
+        q: `You run a Bayesian A/B test. After 500 conversions each, the posterior P(p_A > p_B | data) = 0.94. Your decision threshold is 0.95. Your boss says "just call it — it's clearly A". What do you do and why?`,
+        options: [
+          `A) Do not call it yet — examine expected loss first. P(A>B)=0.94 is below threshold; the 6% chance B is better is non-negligible. Compute expected revenue loss if A is rolled out but B is actually better before deciding.`,
+          `B) Call it for A immediately, since 0.94 is practically indistinguishable from 0.95 and further data collection is wasteful when the result is this clear.`,
+          `C) Reject A and collect more data indefinitely until P(A>B) reaches exactly 1.0, since Bayesian thresholds must be met precisely.`,
+          `D) Switch to a frequentist p-value test, since Bayesian thresholds are inherently subjective and cannot support a business decision.`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'What is the marginal likelihood p(X) in Bayes\' theorem and why is it hard to compute?',
-        a: 'p(X) = ∫ p(X|θ)p(θ)dθ is the normalising constant that makes the posterior a valid probability distribution. It requires integrating the likelihood over the entire parameter space under the prior. For models with continuous, high-dimensional θ, this integral is analytically intractable — there is no closed form. It requires approximations: MCMC (samples from the posterior avoiding explicit normalisation via Metropolis-Hastings ratio), variational inference (lower bound on log p(X) via the ELBO), or conjugate priors (where the integral has a known closed form). The marginal likelihood is also the quantity used for Bayesian model selection — the model with higher p(X) is preferred, balancing fit and complexity via automatic Occam\'s razor.',
+        q: `What is the marginal likelihood p(X) in Bayes' theorem and why is it hard to compute?`,
+        options: [
+          `A) p(X) is the maximum likelihood estimate of the data and is hard to compute because gradient ascent is slow in high dimensions.`,
+          `B) p(X) is the prior probability of the parameters and is hard to compute because priors are often improper.`,
+          `C) p(X) = ∫ p(X|θ)p(θ)dθ is the normalising constant requiring integration over all parameters. It is intractable for continuous high-dimensional θ, which is why MCMC, VI, and conjugate shortcuts exist.`,
+          `D) p(X) is the posterior mode and is hard to compute because the likelihood surface has multiple local optima.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'You have Beta(2,2) prior on a coin\'s bias θ. You flip it 3 times and observe HHH. What is the posterior and MAP estimate? How does this differ from the MLE?',
-        a: 'Posterior: Beta(2+3, 2+0) = Beta(5, 2). MAP = (α-1)/(α+β-2) = 4/5 = 0.8. MLE = 3/3 = 1.0. The prior pulls the estimate away from the degenerate MLE of 1.0. With only 3 observations, the Beta(2,2) prior (equivalent to 2 pseudo-successes and 2 pseudo-failures) materially regularises the estimate. The posterior is also a distribution — not just 0.8, but with spread reflecting uncertainty. E[θ|data] = 5/7 ≈ 0.71 (posterior mean is more conservative than MAP). As n → ∞, all three converge.',
+        q: `You have Beta(2,2) prior on a coin's bias θ. You flip it 3 times and observe HHH. What is the posterior and MAP estimate? How does this differ from the MLE?`,
+        options: [
+          `A) Posterior is Beta(3,2), MAP = 0.5, MLE = 1.0. The prior has no effect on MAP since the Beta family is not conjugate to the Binomial.`,
+          `B) Posterior is Beta(5,2), MAP = 4/5 = 0.8, MLE = 3/3 = 1.0. The prior pulls the estimate away from the degenerate MLE of 1.0; the posterior mean E[θ|data] = 5/7 ≈ 0.71 is even more conservative.`,
+          `C) Posterior is Beta(5,2), MAP = 1.0, MLE = 0.8. With only 3 observations the prior dominates, so MAP equals MLE.`,
+          `D) Posterior is Beta(2,5), MAP = 2/7 ≈ 0.29, MLE = 0.0. The symmetric prior pulls the estimate toward zero as a regularisation effect.`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'When would you NOT use Bayesian inference in production and use frequentist methods instead?',
-        a: 'When computational cost is prohibitive: computing the posterior requires MCMC or VI — much slower than fitting a point estimate. Most production ranking/recommendation systems cannot afford this per inference call. When the prior is hard to specify and the choice matters: in high-stakes settings with small data, an incorrect prior leads to incorrect conclusions. Frequentist methods make no prior assumptions. When interpretability and regulatory compliance require frequentist framing: clinical trials, financial risk models, and legal standards often mandate confidence intervals and p-values. When the model is so large (e.g., billion-parameter neural networks) that Bayesian inference over all weights is practically impossible — deep ensembles or conformal prediction are used instead.',
+        q: `When would you NOT use Bayesian inference in production and use frequentist methods instead?`,
+        options: [
+          `A) When you have very large datasets, since Bayesian inference is only valid for small samples and the prior always dominates in large-data regimes.`,
+          `B) When the model has a closed-form posterior, since frequentist methods are required whenever the posterior is available analytically.`,
+          `C) When you want to report p-values, since Bayesian methods can always compute equivalent p-values but frequentist methods are more accurate.`,
+          `D) When computational cost is prohibitive, when the prior is hard to specify and small data makes it matter, when regulatory compliance mandates frequentist framing, or when the model is too large for practical Bayesian inference over all weights.`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `The practical cost of collapsing to a point estimate (MAP) shows up in the predictive distribution: MAP plugged into p(x*|θ̂) underestimates uncertainty because it pretends the parameter is known exactly. The correct predictive distribution integrates over the posterior and is wider, especially in low-data regimes. The credible interval vs confidence interval distinction is the sharpest interview signal: credible intervals are direct probability statements about where the parameter is; confidence intervals are long-run coverage guarantees that say nothing about any single computed interval.`,
@@ -56,7 +84,11 @@ A model that says "house price = $450,000" with no indication of uncertainty is 
 The cost is O(n³) compute and O(n²) memory for the matrix inversion at the core of the posterior update, which hits a hard wall around n = 10,000. Everything in the sparse GP literature exists to get around that wall.`,
     keyPoints: [
       `**A GP is fully specified by a mean function m(x) and a kernel k(x, x').** Any finite collection f(x₁), ..., f(xₙ) follows a multivariate Gaussian: f ~ N(m, K) where Kᵢⱼ = k(xᵢ, xⱼ). The kernel encodes structural beliefs about the function — its smoothness, length-scale, and periodicity. This is the prior over functions. A bad kernel is a bad prior: it doesn't just affect fit, it determines what shapes of function the GP can even consider.`,
-      `**GP regression posterior: given noisy observations y = f(X) + ε, ε ~ N(0, σ²I), the posterior at new points X* is Gaussian with mean μ* = m(X*) + K(X*,X)[K(X,X)+σ²I]⁻¹(y-m(X)) and variance Σ* = K(X*,X*) - K(X*,X)[K(X,X)+σ²I]⁻¹K(X,X*).** The variance term is what other regression methods don't give you: it collapses near observed data (the model knows what it knows) and balloons in unexplored regions (the model knows what it doesn't know).`,
+      `**GP regression posterior: given noisy observations
+
+$y = f(X) + ε, ε ~ N(0, σ²I), the posterior at new points X* is Gaussian with mean μ* = m(X*) + K(X*,X)[K(X,X)+σ²I]⁻¹(y-m(X)$
+
+) and variance Σ* = K(X*,X*) - K(X*,X)[K(X,X)+σ²I]⁻¹K(X,X*).** The variance term is what other regression methods don't give you: it collapses near observed data (the model knows what it knows) and balloons in unexplored regions (the model knows what it doesn't know).`,
       `**Defaulting to RBF is the most common GP mistake.** RBF (squared exponential) is infinitely differentiable — it assumes the function is smoother than almost any real-world process. Sensor readings, financial returns, and experimental measurements are not infinitely differentiable. Matérn kernels control differentiability via ν: Matérn 3/2 (once differentiable) and 5/2 (twice differentiable) are almost always better defaults. The kernel is the most consequential modelling decision you make with a GP — it encodes what kinds of functions can explain the data.`,
       `**Hyperparameters (length-scale ℓ, signal variance σ², noise σ²_n) are learned by maximising the log marginal likelihood: log p(y|X,θ) = -½yᵀ(K+σ²I)⁻¹y - ½log|K+σ²I| - n/2 log(2π).** The first term rewards fit; the log-determinant penalises complexity — an overly flexible kernel can explain any data but pays a large penalty in the log-determinant term. This is automatic Occam's razor: the simplest kernel consistent with the data wins.`,
       `**O(n³) is the central engineering constraint.** Inverting the n×n kernel matrix costs O(n³) compute and O(n²) memory. For n > 10,000, this is simply infeasible on standard hardware. This single fact drives the entire sparse GP literature — every method there is a different strategy for approximating or avoiding that matrix inversion.`,
@@ -67,16 +99,34 @@ The cost is O(n³) compute and O(n²) memory for the matrix inversion at the cor
     ],
     checkQuestions: [
       {
-        q: 'You have 50,000 training points and want to use a GP. What are your options and what do you trade away with each?',
-        a: 'Option 1: Exact GP with Cholesky decomposition — O(n³) = infeasible for n=50k. Option 2: SVGP with m=500 inducing points. Train with minibatch SGD, O(m³) per step. Trade-off: the inducing point approximation introduces bias — the posterior is not the true GP posterior, it is a variational approximation. Predictive uncertainty may be underestimated between inducing points. Option 3: SKI (Structured Kernel Interpolation) — places inducing points on a regular grid, uses Toeplitz structure for O(n log n) matrix-vector products. Requires inputs to be low-dimensional and works best on 1-3D grids. Option 4: Use a deep kernel (DKN) — map inputs through a neural network, then apply a GP in the latent space. Retains O(m³) for the GP but gains expressivity of neural feature learning. For n=50k, SVGP or DKN with good inducing point selection (k-means initialisation) is the standard recommendation.',
+        q: `You have 50,000 training points and want to use a GP. What are your options and what do you trade away with each?`,
+        options: [
+          `A) SVGP with m inducing points trained via minibatch SGD at O(m³) per step, SKI for low-dimensional grid-structured inputs, or deep kernel networks for expressive feature learning — each trades away exact posterior accuracy for tractability.`,
+          `B) Use an exact GP with float16 precision to halve memory usage, reducing the effective cost to O(n²) without any approximation error.`,
+          `C) Switch to a random forest, since GPs are only defined for n < 1,000 and cannot be extended to larger datasets under any circumstances.`,
+          `D) Use RBF kernel with automatic hyperparameter tuning; the O(n³) cost is manageable with modern GPUs for n = 50,000 in under an hour.`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'Your GP Bayesian optimisation run converges prematurely — the acquisition function keeps suggesting the same region. What went wrong and how do you fix it?',
-        a: 'Premature convergence usually indicates insufficient exploration: the acquisition function is exploiting the current best region rather than exploring uncertain areas. Possible causes: (1) UCB with too-small κ — the confidence bound rewards exploitation too heavily. Increase κ to force exploration. (2) The GP posterior variance has collapsed at a bad optimum because the noise model is wrong — if σ²_n is too large, the GP thinks all observations are noise and uncertainty never decreases. Check the learned hyperparameters. (3) The kernel length-scale is too large — the GP believes the function is smooth everywhere, so nearby unexplored points seem well-characterised. Fix: use Matérn with shorter length-scale, or add an ARD (Automatic Relevance Determination) kernel. (4) Use Thompson Sampling instead of EI/UCB — it naturally provides diversity in suggestions by sampling different function realisations.',
+        q: `Your GP Bayesian optimisation run converges prematurely — the acquisition function keeps suggesting the same region. What went wrong and how do you fix it?`,
+        options: [
+          `A) The kernel length-scale is too short, causing the GP to treat every new point as uncorrelated. Fix by increasing the length-scale via marginal likelihood optimisation.`,
+          `B) Insufficient exploration: UCB κ is too small (over-exploiting), noise model is wrong causing posterior variance to not decrease, or length-scale is too large. Fix by increasing κ, checking learned hyperparameters, or using Thompson Sampling for diversity.`,
+          `C) The ELBO has collapsed because the inducing points are too sparse. Add more inducing points and retrain from scratch.`,
+          `D) Premature convergence is expected in GP BO and signals that the global optimum has been found; the correct response is to stop the run and report the best result found so far.`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'How does the GP marginal likelihood objective perform automatic model selection, and what is its failure mode?',
-        a: 'The log marginal likelihood log p(y|X,θ) = -½yᵀ(K+σ²I)⁻¹y - ½log|K+σ²I| - n/2 log(2π) has two terms in tension: the first term (data fit) rewards kernels that explain the data well. The second term (log-determinant complexity penalty) penalises kernels that are too expressive — an overly flexible kernel can fit any data, but the log|K| term is large, penalising it. This Occam\'s razor is automatic: the MML prefers the simplest model consistent with the data. Failure mode: with n << hyperparameter count, the MML surface has multiple local optima. Random restarts help but do not guarantee the global optimum. In very low-data regimes (n < 20), the MML can be dominated by the prior and the learned hyperparameters may not reflect the true function structure — use informative priors on hyperparameters (fully Bayesian treatment of θ) or simply validate out-of-sample.',
+        q: `How does the GP marginal likelihood objective perform automatic model selection, and what is its failure mode?`,
+        options: [
+          `A) It performs cross-validation by holding out 20% of data; failure mode is overfitting when the validation set is not representative.`,
+          `B) It maximises the posterior over kernels using a Dirichlet prior; failure mode is when the prior over kernels is misspecified.`,
+          `C) It maximises predictive accuracy on a held-out test set; failure mode is data leakage when test points are too close to training points.`,
+          `D) The log marginal likelihood balances data fit against a log-determinant complexity penalty (automatic Occam's razor). Failure mode: multiple local optima in low-data regimes requiring random restarts, and hyperparameter estimates that may not reflect true function structure when n < 20.`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `The O(n³) wall is the central engineering fact about GPs, and SVGP with inducing points is the standard workaround — but the tradeoff is that the variational approximation underestimates predictive uncertainty between inducing points. Kernel choice encodes the prior over functions: RBF assumes infinite differentiability (wrong for most real processes), Matérn 5/2 assumes twice-differentiability (usually correct), and a periodic kernel is required for any recurring pattern — the GP is only as good as the prior you encode in its kernel.`,
@@ -104,16 +154,34 @@ The cost is that you only find the best approximation within your chosen family,
     ],
     checkQuestions: [
       {
-        q: 'Explain why the ELBO is a lower bound on log p(x) and why maximising it is equivalent to minimising KL[q ‖ p(z|x)].',
-        a: 'log p(x) = log ∫ p(x,z)dz = log E_q[p(x,z)/q(z)] ≥ E_q[log p(x,z)/q(z)] by Jensen\'s inequality (log is concave). The RHS is the ELBO = E_q[log p(x,z)] - E_q[log q(z)]. The gap between log p(x) and the ELBO equals KL[q(z) ‖ p(z|x)]: log p(x) - ELBO = E_q[log q(z) - log p(z|x)] = KL[q ‖ p(z|x)] ≥ 0. So ELBO = log p(x) - KL[q ‖ p(z|x)]. Since log p(x) is fixed wrt q, maximising ELBO over q is exactly minimising KL[q ‖ p(z|x)].',
+        q: `Explain why the ELBO is a lower bound on log p(x) and why maximising it is equivalent to minimising KL[q ‖ p(z|x)].`,
+        options: [
+          `A) The ELBO is a lower bound because log p(x) ≥ 0 by definition; maximising it tightens the bound from below until it reaches the true log-likelihood.`,
+          `B) The ELBO lower-bounds log p(x) via the Cauchy-Schwarz inequality; maximising ELBO is equivalent to minimising the reverse KL[p(z|x) ‖ q], which spreads q across all posterior modes.`,
+          `C) By Jensen's inequality (log is concave), log E_q[p(x,z)/q(z)] ≥ E_q[log p(x,z)/q(z)] = ELBO. The gap equals KL[q ‖ p(z|x)] ≥ 0, so maximising ELBO over q exactly minimises KL[q ‖ p(z|x)].`,
+          `D) The ELBO lower-bounds log p(x) because it omits the reconstruction term; maximising it is equivalent to maximising the prior entropy of q.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Your mean field VI model gives very tight posteriors (narrow q distributions) but makes poor predictions. What is likely happening and how do you diagnose it?',
-        a: 'Likely cause: mean field VI has converged to a single mode of a multimodal posterior, and the narrow q is overconfident in that mode. The true posterior may be multimodal (e.g., the model is non-identifiable — swapping two cluster centres gives the same likelihood). Diagnosis: (1) Compare ELBO at convergence from multiple random initialisations — if they differ substantially, the landscape is multimodal. (2) Run short MCMC chains (HMC) and compare marginal posteriors — if MCMC posteriors are much wider or multimodal while VI posteriors are narrow, the variational family is inadequate. (3) Check posterior predictive samples — draw θ ~ q(θ) and generate x* ~ p(x*|θ). If samples are much less diverse than held-out data, the posterior is underestimated. Fix: use normalising flows or mixture-of-Gaussians as the variational family, or switch to MCMC if uncertainty is critical.',
+        q: `Your mean field VI model gives very tight posteriors (narrow q distributions) but makes poor predictions. What is likely happening and how do you diagnose it?`,
+        options: [
+          `A) VI has converged to a single posterior mode due to the mode-seeking forward KL. Diagnose by comparing ELBOs across random initialisations, running short MCMC chains for comparison, and checking posterior predictive sample diversity.`,
+          `B) The learning rate is too high, causing the ELBO to oscillate rather than converge; reduce the learning rate and rerun.`,
+          `C) The model is underfitting because the variational family is too expressive; switch to a simpler mean-field family with fewer parameters.`,
+          `D) Tight posteriors always indicate correct convergence; poor predictions mean the likelihood function is misspecified and unrelated to VI.`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'What is the difference between CAVI and black-box variational inference (BBVI), and when does each apply?',
-        a: 'CAVI (Coordinate Ascent VI) requires conjugate prior-likelihood pairs so that the optimal qᵢ update is analytically closed form. It is fast and exact within the mean field family but only works for models designed with conjugate structure (e.g., LDA with Dirichlet-Multinomial). BBVI (Black-Box VI) estimates the ELBO gradient using Monte Carlo: ∇_λ ELBO = E_q[∇_λ log q(z|λ) · (log p(x,z) - log q(z|λ))]. This works for any differentiable model but the gradient estimator has high variance — requires variance reduction tricks (control variates, reparameterisation). Reparameterisation trick (used in VAEs): if q(z|λ) = N(μ,σ²), write z = μ + σε where ε ~ N(0,1). Then ∇_λ ELBO = E_ε[∇_λ log p(x, μ+σε) - ∇_λ log q(μ+σε|λ)]. The gradient now passes through the sampled z, giving low-variance estimates. BBVI with reparameterisation is the default for neural latent variable models.',
+        q: `What is the difference between CAVI and black-box variational inference (BBVI), and when does each apply?`,
+        options: [
+          `A) CAVI uses stochastic gradients while BBVI uses exact gradients; CAVI is faster but requires GPU hardware while BBVI runs on CPU.`,
+          `B) CAVI requires conjugate prior-likelihood pairs for closed-form coordinate updates; BBVI estimates ELBO gradients via Monte Carlo and applies to any differentiable model, using reparameterisation to reduce gradient variance.`,
+          `C) CAVI and BBVI are equivalent algorithms with different names; the choice is purely stylistic.`,
+          `D) BBVI requires conjugate priors while CAVI works for any model; CAVI is used in VAEs and BBVI in LDA.`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `VI is biased by construction: it minimises KL[q ‖ p], which is mode-seeking, so it concentrates on one posterior mode and systematically underestimates uncertainty. Tight VI posteriors do not mean the true posterior is tight — they may mean VI found one mode and ignored the rest. The practical choice is: VI when scalability matters and approximate uncertainty is acceptable; MCMC when exact uncertainty is the deliverable and you can afford the runtime.`,
@@ -128,30 +196,60 @@ The cost is that you only find the best approximation within your chosen family,
     tags: ['VAE', 'ELBO', 'reparameterisation', 'posterior collapse', 'beta-VAE', 'latent space'],
     summary: `Standard autoencoders compress data into a latent code and reconstruct it — but the latent space is irregular. Interpolating between two codes often passes through empty regions that decode into nonsense, because there is no constraint on what the latent space looks like globally. VAEs solve this by placing a probabilistic structure on the latent space: instead of mapping each input to a single point, the encoder maps it to a distribution q(z|x), and the KL regularisation term forces these distributions to stay close to a standard Gaussian prior.
 
-The result is a continuous, densely populated latent space where interpolation makes sense and unseen points decode coherently. The reparameterisation trick — writing z = μ + σ·ε where ε ~ N(0,I) — is what makes gradients flow through the sampling step. The central failure mode is posterior collapse: an expressive decoder learns to model p(x) without using z at all, the encoder degenerates to the prior, KL drops to zero, and you have trained a very expensive unconditional generator.`,
+The result is a continuous, densely populated latent space where interpolation makes sense and unseen points decode coherently. The reparameterisation trick — writing
+
+$z = μ + σ·ε where ε ~ N(0,I) — is what makes gradients flow$
+
+through the sampling step. The central failure mode is posterior collapse: an expressive decoder learns to model p(x) without using z at all, the encoder degenerates to the prior, KL drops to zero, and you have trained a very expensive unconditional generator.`,
     keyPoints: [
       `**The generative model: p_θ(x,z) = p_θ(x|z)p(z) where p(z) = N(0,I).** The decoder p_θ(x|z) maps a latent code to a distribution over x. The problem is fitting this model: to learn θ via maximum likelihood you need p_θ(x) = ∫ p_θ(x|z)p(z)dz, which requires marginalising over all possible latent codes — intractable. VAEs avoid this by optimising a lower bound (the ELBO) instead.`,
       `**The encoder q_φ(z|x) = N(μ_φ(x), diag(σ_φ(x)²)) is a neural network mapping input x to the parameters of an approximate posterior over z.** This is amortised VI: rather than running a separate optimisation per input to find q(z|x), one encoder network handles all inputs at once. The cost is that the encoder is an approximation — it learns the best single function from inputs to posteriors, not the exact posterior for each input.`,
       `**VAE ELBO: L(θ,φ;x) = E_{q_φ(z|x)}[log p_θ(x|z)] - KL[q_φ(z|x) ‖ p(z)].** The reconstruction term rewards the decoder for explaining the data given latent codes sampled from the encoder. The KL term penalises the encoder for drifting from the prior N(0,I). For diagonal Gaussian q, the KL is closed form: -½ Σⱼ(1 + log σⱼ² - μⱼ² - σⱼ²) — so the only stochastic step that requires a gradient estimator is the expectation over q in the reconstruction term.`,
-      `**The reparameterisation trick: you cannot backpropagate through z ~ N(μ, σ²) because the sampling step is stochastic and has no gradient.** Fix: write z = μ_φ(x) + σ_φ(x)⊙ε where ε ~ N(0,I). Now z is a deterministic function of the encoder parameters and a fixed noise draw. Gradients flow through μ and σ back to φ. Without this trick, VAE training requires high-variance REINFORCE-style gradient estimates — end-to-end training becomes impractical. The trick breaks down precisely when z is discrete (Bernoulli, categorical), where no differentiable reparameterisation exists.`,
+      `**The reparameterisation trick: you cannot backpropagate through z ~ N(μ, σ²) because the sampling step is stochastic and has no gradient.** Fix: write
+
+$z = μ_φ(x) + σ_φ(x)⊙ε where ε ~ N(0,I). Now z is a deterministic func$
+
+tion of the encoder parameters and a fixed noise draw. Gradients flow through μ and σ back to φ. Without this trick, VAE training requires high-variance REINFORCE-style gradient estimates — end-to-end training becomes impractical. The trick breaks down precisely when z is discrete (Bernoulli, categorical), where no differentiable reparameterisation exists.`,
       `**Posterior collapse is the central VAE failure mode.** When the decoder is sufficiently expressive (PixelCNN, autoregressive Transformer), it can model p(x) without using z at all. The encoder then learns q(z|x) ≈ N(0,I) — identical to the prior regardless of x. The KL term drops to near zero, reconstruction loss stays low, and training happily converges to a model where the latent space carries no information. Symptom: KL ≈ 0 after training. Cause: decoder power exceeds the bottleneck created by the KL penalty.`,
       `**Fixes for posterior collapse: KL annealing — start with β=0 (pure reconstruction), linearly ramp β to 1 over the first 30% of training.** This forces the decoder to first learn to use z before the KL regularisation becomes active. Free bits — floor the KL per latent dimension at δ bits, so the optimiser cannot collapse dimensions to zero without incurring a penalty. Both interventions make the decoder see informative z before it has a chance to learn to ignore z.`,
-      `**β-VAE multiplies the KL term by β: L = E[log p(x|z)] - β·KL[q(z|x) ‖ p(z)]. β > 1 over-penalises KL, forcing the encoder to compress information into fewer, more independent latent dimensions — each dimension learns to control one factor of variation. β < 1 relaxes regularisation to combat posterior collapse.** The tradeoff is explicit: higher β gives better disentanglement and worse reconstruction quality. β = 1 is the standard VAE.`,
+      `**β-VAE multiplies the KL term by β:
+
+$L = E[log p(x|z)] - β·KL[q(z|x) ‖ p(z)]. β > 1 over-penalises KL, forcing the enco$
+
+der to compress information into fewer, more independent latent dimensions — each dimension learns to control one factor of variation. β < 1 relaxes regularisation to combat posterior collapse.** The tradeoff is explicit: higher β gives better disentanglement and worse reconstruction quality. β = 1 is the standard VAE.`,
       `**Standard autoencoders have irregular latent spaces — interpolating between two encoded points often passes through low-density regions that decode into garbage.** VAE latent spaces avoid this because the KL regularisation forces encoder outputs to stay close to N(0,I), which is dense everywhere. Spherical interpolation between two VAE codes z₁ and z₂ produces semantically coherent intermediate samples because the path stays in the high-density region of the prior.`,
       `**Production uses for VAEs: anomaly detection (low ELBO = poor reconstruction or high KL → flag as out-of-distribution), data imputation (infer z from observed dimensions, decode to fill missing values), molecule generation (VAE latent spaces over molecular graphs enable gradient-based optimisation of chemical properties).** VAE outputs are blurrier than GAN or diffusion outputs — this is a direct mathematical consequence of optimising expected MSE under an approximate posterior, which averages over plausible reconstructions rather than sampling one.`,
     ],
     checkQuestions: [
       {
-        q: 'Explain why the reparameterisation trick is necessary, and describe a case where it cannot be applied.',
-        a: 'Without reparameterisation: the ELBO gradient wrt φ is ∇_φ E_{z~q_φ}[f(z)] = ∇_φ ∫ f(z)q_φ(z)dz. The sampling distribution depends on φ, so you cannot push ∇_φ inside the expectation directly. The REINFORCE (score function) estimator does ∇_φ E[f(z)] = E[f(z)∇_φ log q_φ(z)] — unbiased but extremely high variance. Reparameterisation: write z = g_φ(ε) where ε ~ p(ε) does not depend on φ. Then ∇_φ E_{ε~p}[f(g_φ(ε))] = E_ε[∇_φ f(g_φ(ε))] — push gradient inside, low variance. Inapplicable when z is discrete (Bernoulli, Categorical): there is no differentiable reparameterisation. Workarounds: Gumbel-Softmax trick (continuous relaxation with temperature τ → 0 approaches discrete), REINFORCE with baseline for discrete VAEs. Discrete VAEs are used in VQ-VAE (vector quantisation) and DALL-E v1.',
+        q: `Explain why the reparameterisation trick is necessary, and describe a case where it cannot be applied.`,
+        options: [
+          `A) The trick is needed because autodiff frameworks cannot handle matrix operations inside expectations; it cannot be applied when the encoder outputs more than 512 dimensions.`,
+          `B) The trick converts stochastic sampling into a deterministic function of fixed noise ε ~ p(ε), allowing gradients to flow through μ and σ to φ with low variance. It cannot be applied when z is discrete (Bernoulli, categorical) — Gumbel-Softmax is the workaround.`,
+          `C) The trick avoids computing the KL divergence exactly; it cannot be applied when the prior p(z) is not a standard Gaussian.`,
+          `D) The trick eliminates the reconstruction term from the ELBO for faster training; it cannot be applied in convolutional architectures.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Your VAE\'s KL loss is near zero after 10 epochs. What is happening and how do you fix it?',
-        a: 'Near-zero KL means q(z|x) ≈ p(z) = N(0,I) — the encoder is outputting the prior regardless of x. This is posterior collapse: the decoder has learned to reconstruct x without using z. Diagnosis: check if reconstruction loss is still decreasing (if yes, the decoder is powerful enough to model p(x) autoregressively without z). Fixes: (1) KL annealing: start training with β=0 (pure reconstruction), linearly increase β to 1 over the first 30% of training. This forces the decoder to first learn to use z before the KL regularisation becomes active. (2) Free bits: set KL cost to max(KL, λ) per latent dimension with λ ≈ 0.5 — no penalty when KL is small, preventing collapse. (3) Reduce decoder capacity: use a simpler decoder (e.g., MLP instead of PixelCNN). The most expressive decoders collapse the most easily because they can ignore z and still achieve low reconstruction loss.',
+        q: `Your VAE's KL loss is near zero after 10 epochs. What is happening and how do you fix it?`,
+        options: [
+          `A) Near-zero KL is the intended behaviour in a well-trained VAE — it means the posterior is perfectly aligned with the prior, indicating successful training.`,
+          `B) The encoder learning rate is too high, causing the KL term to diverge and then collapse. Reduce the encoder learning rate by a factor of 10.`,
+          `C) The reconstruction loss weight is too large relative to KL. Set both to equal weight and retrain.`,
+          `D) Posterior collapse: the decoder reconstructs x without using z, so the encoder outputs the prior regardless of input. Fix with KL annealing (start β=0, ramp to 1) or free bits (floor KL per dimension at λ ≈ 0.5).`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'Why do VAE-generated images look blurry compared to GAN outputs, and is this fixable within the VAE framework?',
-        a: 'VAEs maximise E_{q(z|x)}[log p_θ(x|z)] — expected log-likelihood averaged over the posterior distribution of z given x. When p_θ(x|z) is a Gaussian, this is equivalent to minimising mean squared reconstruction error averaged over z samples. MSE averages over possible reconstructions — if x* could plausibly be decoded from z with slight spatial variation, the MSE-optimal output is the average of those possibilities, which is blurry. GANs instead use an adversarial loss that scores sharpness directly, producing individual samples rather than averages. Within the VAE framework: (1) Use a perceptual loss (VGG feature-space MSE) instead of pixel-MSE — reduces blurriness but changes the generative model semantics. (2) Use VQ-VAE with a separate autoregressive prior — quantises z, enabling discrete latent codes that support sharper decodings. (3) Add a GAN discriminator term to the ELBO (as in VAE-GAN hybrids). True VAE blurriness under Gaussian decoder is not fully fixable without changing the loss function.',
+        q: `Why do VAE-generated images look blurry compared to GAN outputs, and is this fixable within the VAE framework?`,
+        options: [
+          `A) VAEs optimise expected MSE averaged over the posterior of z, which averages over plausible reconstructions and produces blurry outputs. Within the VAE framework, perceptual losses, VQ-VAE, or GAN discriminator terms reduce blurriness but the Gaussian decoder blurriness is not fully fixable without changing the loss.`,
+          `B) VAEs use smaller network architectures than GANs, so blurriness is purely a capacity issue fixable by using deeper encoders and decoders.`,
+          `C) GAN outputs appear sharper only because they memorise training images; VAE outputs are actually more realistic on unseen distributions.`,
+          `D) VAE blurriness is caused by the KL regularisation term destroying high-frequency information; setting β = 0 removes blurriness completely.`,
+        ],
+        answer: `A`,
       },
     ],
     takeaway: `Posterior collapse — KL → 0, encoder mapping every input to the prior, decoder ignoring z — is caused by expressive decoders that can model p(x) without information from z; KL annealing is the standard fix, because it forces the decoder to commit to using z before the KL penalty activates. VAE blurriness is a mathematical consequence: optimising expected MSE over the posterior averages over all plausible reconstructions, whereas GANs and diffusion models sample individual reconstructions. The reparameterisation trick is what makes VAE training tractable, and it breaks exactly when z is discrete — no differentiable reparameterisation exists for Bernoulli or categorical latents.`,
@@ -165,8 +263,16 @@ The result is a continuous, densely populated latent space where interpolation m
     tags: ['MCMC', 'HMC', 'Metropolis-Hastings', 'Laplace approximation', 'importance sampling', 'R-hat', 'ESS'],
     summary: `Outside of conjugate models, the posterior p(θ|X) is intractable — you cannot compute it, only approximate it. The question is how much approximation you can tolerate and at what computational cost. MAP (maximum a posteriori) is the fastest: find the mode and stop, discarding all information about posterior shape. Laplace adds one matrix inversion to recover a Gaussian approximation around the MAP — fast but wrong if the posterior is multimodal or heavy-tailed. MCMC is the gold standard: given enough time, it converges to the true posterior, but "enough time" is often hours or days for complex models. Most production ML systems use MAP with frequentist standard errors and reserve MCMC for settings where exact uncertainty is the product — clinical decision support, scientific inference, hierarchical models. Knowing when each method is appropriate, and critically how to diagnose whether MCMC has actually converged, is what separates theoretical understanding from practical competence.`,
     keyPoints: [
-      `**Laplace approximation: find the MAP, compute the Hessian H = -∇²log p(θ|X) at that point, approximate the posterior as N(θ_MAP, H⁻¹).** No sampling — just one optimisation and one Hessian computation. When the posterior is genuinely unimodal and approximately Gaussian (which the Bernstein-von Mises theorem guarantees asymptotically), this is excellent. It fails badly for multimodal posteriors because the Hessian only captures local curvature at one mode — if the posterior has mass elsewhere, the Laplace approximation misses it entirely.`,
-      `**Importance sampling estimates E_p[f(θ)] using a proposal q: E_p[f(θ)] ≈ Σᵢ wᵢ f(θᵢ) where wᵢ ∝ p(θᵢ|X)/q(θᵢ).** The effective sample size ESS ≈ (Σwᵢ)²/Σwᵢ² tells you how many i.i.d. samples the weighted set is worth. In high dimensions, IS collapses catastrophically: the typical sets of p and q have negligible overlap, almost all weights are near zero, and a few lucky samples dominate the estimate. ESS < 5% of N means the IS estimate is unreliable regardless of sample count.`,
+      `**Laplace approximation: find the MAP, compute the Hessian
+
+$H = -∇²log p(θ|X) at that point, approximate the posterior as N(θ_MAP, H⁻¹).** No sampling — just one optimisation$
+
+and one Hessian computation. When the posterior is genuinely unimodal and approximately Gaussian (which the Bernstein-von Mises theorem guarantees asymptotically), this is excellent. It fails badly for multimodal posteriors because the Hessian only captures local curvature at one mode — if the posterior has mass elsewhere, the Laplace approximation misses it entirely.`,
+      `**Importance sampling estimates E_p[f(θ)] using a proposal q: E_p[f(θ)] ≈ Σᵢ wᵢ f(θᵢ) where wᵢ ∝ p(θᵢ|X)/q(θᵢ).** The effective sample size
+
+$ESS ≈ (Σwᵢ)²/Σwᵢ² tells you how many i.i.d. samples the w$
+
+eighted set is worth. In high dimensions, IS collapses catastrophically: the typical sets of p and q have negligible overlap, almost all weights are near zero, and a few lucky samples dominate the estimate. ESS < 5% of N means the IS estimate is unreliable regardless of sample count.`,
       `**Metropolis-Hastings: propose θ* ~ q(θ*|θ_current), accept with probability α = min(1, p(θ*|X)q(θ_current|θ*) / p(θ_current|X)q(θ*|θ_current)).** The intractable normaliser p(X) cancels in the ratio p(θ*|X)/p(θ_current|X) = p(X|θ*)p(θ*) / p(X|θ)p(θ) — this is the key insight that makes MCMC work at all for unnormalised posteriors. You never need to compute p(X); you only need ratios.`,
       `**HMC augments the state with momentum and uses gradient information to make large, correlated proposals that are accepted at high rates.** Random-walk MH explores via small random steps — inefficient in high dimensions because it takes many steps to traverse the posterior. HMC uses the gradient of log p(θ|X) to simulate Hamiltonian dynamics, enabling large steps that respect the posterior geometry. NUTS (No-U-Turn Sampler) adapts step size and trajectory length automatically and is the default in Stan and PyMC.`,
       `**MCMC diagnostics are non-negotiable.** R-hat (Gelman-Rubin): run K independent chains from different starting points. R-hat = √(total variance / within-chain variance). R-hat < 1.01 → chains have converged to the same distribution. R-hat > 1.1 → chains are exploring different regions; you do not yet have samples from the posterior. ESS accounts for within-chain autocorrelation: ESS < 100 per parameter means high Monte Carlo error. Trace plots should look like a "hairy caterpillar" — no trends, no sticking, all chains overlapping.`,
@@ -176,16 +282,34 @@ The result is a continuous, densely populated latent space where interpolation m
     ],
     checkQuestions: [
       {
-        q: 'You run 4 MCMC chains with NUTS. After 2000 samples per chain, R-hat = 1.35 for a key parameter. What do you do?',
-        a: 'R-hat = 1.35 >> 1.01 — the chains have not converged. The chains are exploring different regions of the posterior. Steps: (1) Examine trace plots for all 4 chains — look for systematic differences (e.g., two chains stuck at high values, two at low values), trends indicating the chain has not finished burning in, or slow mixing. (2) Check for divergences in HMC — if there are many divergences, the posterior has a funnel or extreme curvature. Non-centred reparameterisation likely needed. (3) Run chains much longer — 2000 samples is often insufficient for hierarchical models. Try 10,000 samples with adequate warmup. (4) Check the model specification: is the posterior actually multimodal? Unidentifiable models (e.g., label-switching in mixture models) cause persistent R-hat > 1 regardless of chain length. Fix the model with ordering constraints or other identifiability constraints. Never report results with R-hat > 1.01.',
+        q: `You run 4 MCMC chains with NUTS. After 2000 samples per chain, R-hat = 1.35 for a key parameter. What do you do?`,
+        options: [
+          `A) Accept the result — R-hat = 1.35 is within the commonly cited threshold of R-hat < 2.0, and 2000 samples per chain is generally sufficient for most models.`,
+          `B) Discard all samples and rerun with a different likelihood family, since R-hat > 1.2 always indicates model misspecification.`,
+          `C) Thin the chains to reduce autocorrelation — keeping every 10th sample will bring R-hat below 1.01.`,
+          `D) Chains have not converged (R-hat >> 1.01). Examine trace plots for systematic differences, check for HMC divergences indicating funnel geometry, run chains much longer (10,000+ samples), and verify model identifiability. Never report results with R-hat > 1.01.`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'Why does importance sampling fail in high dimensions, and what is the effective sample size telling you?',
-        a: 'In d dimensions, the typical set of p (where the posterior mass concentrates) and the typical set of q have exponentially shrinking overlap as d increases. Even if q and p are both Gaussians with similar means, if p has slightly smaller variance, then q will draw samples from the tails of p where p(θ)/q(θ) is exponentially small — almost all weights will be near zero except for a few lucky samples near the mode. ESS captures this: if ESS = 10 out of N = 10,000 samples, then effectively only 10 samples are contributing to the estimate — the remaining 9,990 have negligible weight. The estimate is dominated by a handful of samples and has extremely high variance. In practice, IS becomes unusable for d > ~20 without careful proposal design (SMC, annealed IS). The log-weight variance ≈ d × (variance of log p - log q per dimension) — exponential in d.',
+        q: `Why does importance sampling fail in high dimensions, and what is the effective sample size telling you?`,
+        options: [
+          `A) IS fails in high dimensions because the proposal distribution q must be specified analytically, which becomes impossible when the parameter space exceeds 20 dimensions.`,
+          `B) In high dimensions the typical sets of p and q have exponentially shrinking overlap, so almost all weights are near zero. ESS = (Σwᵢ)²/Σwᵢ² tells you how many i.i.d. samples the weighted set is worth — ESS = 10 out of 10,000 means only 10 samples drive the estimate.`,
+          `C) IS fails because the acceptance rate drops below 1% in high dimensions, making it equivalent to rejection sampling which is known to be inefficient.`,
+          `D) IS fails because the normalising constant p(X) cannot be computed exactly in more than 10 dimensions, making the weights undefined.`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'What is the Bernstein-von Mises theorem and when does it break down?',
-        a: 'The Bernstein-von Mises (BvM) theorem: under regularity conditions, as n → ∞, the posterior p(θ|X) converges to N(θ_true, I(θ_true)⁻¹/n) — a Gaussian centred at the MLE with covariance equal to the inverse Fisher information. This means: (1) In large samples, the posterior is approximately Gaussian. (2) The Laplace approximation becomes exact. (3) Bayesian credible intervals coincide with frequentist confidence intervals. Breakdown conditions: (a) Non-regular models: non-differentiable likelihoods, boundaries, or non-identifiable models (mixture models with k unknown). (b) High-dimensional settings where d grows with n: if d/n → c > 0, BvM fails — the posterior does not concentrate at the truth. (c) Misspecified models: if the true data-generating process is not in the model class, BvM can fail or converge to the wrong distribution. (d) Semiparametric/nonparametric models: infinite-dimensional posteriors do not satisfy BvM in general. Practical implication: do not trust the Laplace approximation for models with fewer than ~50 observations per parameter.',
+        q: `What is the Bernstein-von Mises theorem and when does it break down?`,
+        options: [
+          `A) BvM states that with sufficient data the posterior converges to a Gaussian centred at the MLE with covariance equal to the inverse Fisher information. It breaks down for non-regular models, high-dimensional settings where d/n → c > 0, misspecified models, and nonparametric posteriors.`,
+          `B) BvM states that MAP always equals MLE in large samples; it breaks down when the prior is informative.`,
+          `C) BvM states that the posterior predictive converges to the empirical distribution; it breaks down when the model is parametric rather than nonparametric.`,
+          `D) BvM states that all Bayesian credible intervals are asymptotically equivalent to bootstrap intervals; it breaks down when bootstrapping is computationally infeasible.`,
+        ],
+        answer: `A`,
       },
     ],
     takeaway: `R-hat > 1.01 means the chains are not sampling from the same distribution — the samples are not from the posterior. This is not a warning to note; it means you do not have valid posterior samples. Non-centred reparameterisation for hierarchical models eliminates the funnel geometry that causes divergences by changing μ_i ~ N(μ, σ²) to μ_i = μ + σ·z_i, z_i ~ N(0,1). The Metropolis-Hastings ratio cancels p(X) — this is the key insight that makes MCMC possible for unnormalised posteriors, because you only ever need the ratio of densities, not the densities themselves.`,
@@ -213,16 +337,34 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
     ],
     checkQuestions: [
       {
-        q: 'A model predicts 90% probability that a tumour is benign. Is this aleatoric or epistemic uncertainty, and how would you tell the difference?',
-        a: 'The 10% probability of malignancy could reflect either type. To distinguish: (1) Collect more data from similar cases. If the 10% uncertainty persists even with thousands of similar images, it is aleatoric — the images themselves are ambiguous (low contrast, poor resolution, borderline morphology). If the uncertainty decreases with more similar training data, it was epistemic — the model was uncertain because it had seen few similar cases. (2) Use a BNN or ensemble: epistemic uncertainty appears as disagreement between ensemble members or high posterior variance over weights. Aleatoric uncertainty appears as high variance in the likelihood term p(y|x,θ) for any given θ. (3) Practically: epistemic is higher in sparse data regions (rare tumour type, unusual scan protocol). Aleatoric is higher for inherently ambiguous images regardless of training set size. For clinical deployment: aleatoric uncertainty means "get a second opinion or better scan"; epistemic means "this patient type is underrepresented in our training data — flag for clinical review and log for future retraining."',
+        q: `A model predicts 90% probability that a tumour is benign. Is this aleatoric or epistemic uncertainty, and how would you tell the difference?`,
+        options: [
+          `A) Aleatoric if the uncertainty persists with more similar training data; epistemic if more data reduces it. Use BNN/ensemble disagreement to separate the two: epistemic shows as high weight-posterior variance, aleatoric as high likelihood variance p(y|x,θ) for any given θ.`,
+          `B) It is always aleatoric because medical imaging uncertainty is inherent in the imaging modality and cannot be reduced by collecting more training data.`,
+          `C) It is always epistemic because neural network outputs reflect only training data coverage, not intrinsic label ambiguity.`,
+          `D) The distinction is irrelevant in practice; both types are handled identically by temperature scaling before deployment.`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'You need uncertainty estimates for a 100M-parameter production model. MC Dropout adds 100ms per call (20 forward passes). What alternatives exist?',
-        a: 'The latency budget rules out MC Dropout for synchronous production calls. Options: (1) Last-layer Laplace: compute the Hessian of the last layer only (e.g., softmax weights, d=1024×C). One forward pass + one matrix-vector product with H_last⁻¹. Latency: ~same as a single forward pass + O(C²) overhead. Good calibration for classification tasks. (2) Single-pass deterministic uncertainty: SNGP (Spectral Normalised GP output layer) adds a GP head to the last layer, computes posterior variance in one forward pass. DUQ (Deterministic Uncertainty Quantification) uses RBF kernel distances in feature space. (3) Conformal prediction post-hoc: calibrate prediction sets offline on a held-out set, then at inference use the model\'s softmax output + precomputed thresholds. Zero additional latency at inference. (4) Distill the ensemble into a single model with uncertainty outputs (knowledge distillation from ensemble to BNN). (5) Asynchronous uncertainty: serve the point prediction synchronously, compute ensemble/MC-Dropout uncertainty asynchronously and log it for monitoring without blocking the user. The right choice depends on whether uncertainty gates a decision (synchronous needed) or is used for monitoring (asynchronous acceptable).',
+        q: `You need uncertainty estimates for a 100M-parameter production model. MC Dropout adds 100ms per call (20 forward passes). What alternatives exist?`,
+        options: [
+          `A) Increase dropout rate to 0.9 — higher dropout reduces the number of passes needed from 20 to 2, cutting latency to 10ms with the same uncertainty quality.`,
+          `B) There are no practical alternatives; MC Dropout is the only method that works for models above 10M parameters.`,
+          `C) Last-layer Laplace (one forward pass + small matrix-vector product), single-pass deterministic methods (SNGP, DUQ), conformal prediction with zero inference overhead, ensemble distillation, or asynchronous uncertainty computation for monitoring use-cases.`,
+          `D) Switch to a smaller 10M-parameter model — uncertainty quality is proportional to model size, so a smaller model gives better-calibrated uncertainty faster.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'What guarantee does conformal prediction provide, and what assumption can violate it?',
-        a: 'Conformal prediction guarantees: P(y* ∈ C(x*)) ≥ 1-α, where α is the target miscoverage rate (e.g., 0.1 for 90% coverage). This is a marginal coverage guarantee — averaged over the draw of x*. It does not guarantee conditional coverage P(y* ∈ C(x*)|x*) ≥ 1-α for every specific x*. The assumption required is exchangeability: the calibration set and the test point (x*,y*) are jointly exchangeable (a generalisation of i.i.d.). Violations: (1) Distribution shift — if the test distribution differs from calibration, exchangeability fails and coverage is not guaranteed. A model calibrated on hospital A may not achieve 90% coverage on hospital B. (2) Temporal non-stationarity — if the data-generating process changes over time, past calibration data is not exchangeable with future test data. (3) Selective prediction (only predict on confident examples) — selecting test examples based on the model score breaks exchangeability unless handled carefully (Mondrian conformal prediction conditions on additional covariates). Practical implication: recompute conformal quantiles on fresh calibration data from the same distribution as current test data, and monitor coverage on production data.',
+        q: `What guarantee does conformal prediction provide, and what assumption can violate it?`,
+        options: [
+          `A) Conformal prediction guarantees the prediction set always contains exactly one correct label, assuming the model achieves > 80% accuracy on calibration data.`,
+          `B) Conformal prediction guarantees P(y* ∈ C(x*)) ≥ 1-α under exchangeability. This guarantee fails under distribution shift (test distribution differs from calibration), temporal non-stationarity, or selective prediction that breaks exchangeability.`,
+          `C) Conformal prediction guarantees conditional coverage P(y* ∈ C(x*)|x*) ≥ 1-α for every specific x*; the assumption violated is model calibration.`,
+          `D) Conformal prediction guarantees the prediction set has minimal size; the assumption violated is that the model must be a neural network.`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Deep ensembles consistently outperform MC Dropout and most VI-based BNN approximations on calibration benchmarks, and their advantage is function-space diversity from different loss basins — not Bayesian posterior coverage. The aleatoric/epistemic distinction has a concrete operational meaning: aleatoric uncertainty cannot be reduced by collecting more data, while epistemic uncertainty is a direct signal of where more data will improve the model. Conformal prediction is the only method with a formal marginal coverage guarantee under exchangeability — everything else is heuristic.`,
@@ -244,20 +386,42 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
       `**Platt scaling: fit sigmoid(af(x) + b) on a held-out calibration set.** Two parameters can fix asymmetric miscalibration that temperature scaling cannot — when over/underconfidence differs across the probability range. Originally developed for SVMs. Use Platt scaling when temperature scaling leaves a residual pattern in the reliability diagram. Risk of overfitting on small calibration sets.`,
       `**Isotonic regression: fit a non-parametric monotone function from predicted probabilities to observed frequencies.** Most flexible calibration method — can correct any shape of systematic miscalibration. Overfits aggressively on small calibration sets. Reserve for when you have > 10,000 calibration samples and temperature scaling is insufficient.`,
       `**Why miscalibration matters in production: a fraud score of 0.8 that corresponds to 60% true risk leads to systematic under-blocking at a threshold of 0.7.** A sepsis model saying 90% when the true rate is 60% changes treatment decisions. If the output probability feeds downstream as a feature, miscalibration propagates through the pipeline. Threshold-based decisions require accurate probabilities at that threshold — ECE averaged across bins will not tell you whether you are miscalibrated at your specific decision boundary.`,
-      `**Calibration and discrimination are orthogonal.** A model that always predicts the base rate is perfectly calibrated but useless. Calibration is necessary but not sufficient. The Brier score = (1/n)Σ(pᵢ - yᵢ)² decomposes into calibration + refinement, jointly penalising both. Use AUC/AP for discrimination, ECE for calibration, and Brier score as a joint summary.`,
+      `**Calibration and discrimination are orthogonal.** A model that always predicts the base rate is perfectly calibrated but useless. Calibration is necessary but not sufficient. The Brier
+
+$score = (1/n)Σ(pᵢ - yᵢ)² decomposes into calibration + refinemen$
+
+t, jointly penalising both. Use AUC/AP for discrimination, ECE for calibration, and Brier score as a joint summary.`,
     ],
     checkQuestions: [
       {
-        q: 'Your model has 92% accuracy but ECE = 12%. What does this mean, and what would you do?',
-        a: 'High accuracy but high ECE means the model makes correct predictions but with wrong confidence levels — likely overconfident. On average, in each calibration bin, the predicted confidence exceeds the observed accuracy by ~12 percentage points. For example, when the model says 95% confidence, the true accuracy in that bin is ~83%. This matters for any downstream use of the probability. Steps: (1) Inspect the reliability diagram to see where miscalibration is worst. (2) Apply temperature scaling: fit T on a held-out validation set by minimising NLL. Check if ECE drops to acceptable levels (< 3%). (3) If temperature scaling is insufficient (asymmetric miscalibration), try Platt scaling. (4) Verify calibration on the test set (not the calibration set used to fit T). (5) Report both pre- and post-calibration ECE. Note: calibration should be measured on the same distribution the model will be deployed on — if distribution shift is expected, recalibrate on recent in-distribution data periodically.',
+        q: `Your model has 92% accuracy but ECE = 12%. What does this mean, and what would you do?`,
+        options: [
+          `A) ECE = 12% means the model has 12% label noise in the training set; retrain with a cleaner dataset.`,
+          `B) High accuracy with high ECE means the model ranks correctly but predicted probabilities are inaccurate — likely overconfident by ~12 percentage points per bin. Apply temperature scaling, inspect the reliability diagram, and verify post-calibration ECE on the test set.`,
+          `C) ECE = 12% is acceptable for a model with 92% accuracy since calibration degrades proportionally with accuracy gains.`,
+          `D) High ECE with high accuracy means the model is underconfident; apply Platt scaling with a < 1 to sharpen predictions.`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'You need to compare two models for a medical triage application. Model A has AUC=0.88, ECE=0.03. Model B has AUC=0.91, ECE=0.11. Which do you deploy?',
-        a: 'For medical triage, the decision depends on how predictions are used. If the model output triggers a threshold-based action (e.g., "high risk if score > 0.7 → immediate escalation"), calibration is critical — Model B\'s ECE=0.11 means its stated 0.7 probability may correspond to actual risk of 0.59, leading to systematic under-triage. Model A\'s better calibration means its threshold is more reliable. If the model output is used only for relative ranking (e.g., prioritise the top 100 patients by risk score), AUC matters more and Model B is better. For triage that uses probability thresholds to determine care pathway: prefer Model A or recalibrate Model B. Post-hoc calibration of Model B (temperature scaling) should be attempted first — if Model B\'s ECE can be brought to < 0.03 without losing much AUC, it wins. Request both pre- and post-calibration ECE for any model comparison in probabilistic prediction contexts.',
+        q: `You need to compare two models for a medical triage application. Model A has AUC=0.88, ECE=0.03. Model B has AUC=0.91, ECE=0.11. Which do you deploy?`,
+        options: [
+          `A) For triage using probability thresholds, calibration is critical. Try to recalibrate Model B first — if temperature scaling brings its ECE to ~0.03 without losing AUC, deploy B. Otherwise, prefer Model A whose stated probabilities are reliable at the decision boundary.`,
+          `B) Always deploy the higher-AUC model (B) in medical settings — ranking quality is the only metric that matters for triage prioritisation.`,
+          `C) Neither model is deployable; medical applications require ECE < 0.01 and AUC > 0.95 by regulatory standards.`,
+          `D) Deploy Model A only — ECE is always more important than AUC in any medical application regardless of how the model output is used.`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'Why does standard cross-entropy training produce overconfident neural networks, and does label smoothing fix it?',
-        a: 'Cross-entropy loss is minimised when the model outputs a one-hot probability vector — infinite logit for the correct class, -∞ for all others. With finite-capacity networks, training pushes logits to increasingly large values to approach this ideal, resulting in softmax outputs concentrated near 1.0 on the argmax class. This is the overconfidence mechanism. Label smoothing (replace hard targets y_i ∈ {0,1} with soft targets (1-ε)y_i + ε/K) penalises overconfident outputs by assigning small probability ε/K to all non-target classes. It was shown by Müller et al. (2019) that label smoothing improves calibration, sometimes dramatically — but also that it distorts the penultimate-layer representations, reducing their usefulness as features for downstream tasks. Label smoothing is not a substitute for post-hoc calibration: it changes the training objective and may not achieve the same ECE reduction as temperature scaling. The current recommendation: use label smoothing (ε ≈ 0.1) during training for regularisation benefits, then always apply temperature scaling post-training for deployment.',
+        q: `Why does standard cross-entropy training produce overconfident neural networks, and does label smoothing fix it?`,
+        options: [
+          `A) Cross-entropy is minimised as softmax outputs approach one-hot, pushing logits to large values. Label smoothing (soft targets) penalises overconfident outputs and improves calibration, but it also distorts penultimate-layer representations; temperature scaling post-training is still recommended.`,
+          `B) Cross-entropy training is not the cause of overconfidence — the real cause is batch normalisation, which should be replaced with layer normalisation.`,
+          `C) Label smoothing fully fixes overconfidence and eliminates the need for any post-hoc calibration method.`,
+          `D) Cross-entropy training produces underconfidence, not overconfidence; label smoothing corrects this by sharpening the logits.`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Temperature scaling cannot hurt accuracy (argmax is unchanged) and fixes most of the systematic overconfidence that cross-entropy training induces — it is the mandatory post-training step before using a neural classifier for probabilistic decisions. The AUC vs ECE tradeoff is the calibration insight that matters most: AUC measures ranking quality, ECE measures whether probabilities are accurate at the threshold you actually use for decisions. A model with high AUC but poor calibration is systematically mispricing risk at every decision boundary.`,
@@ -273,28 +437,58 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
 
 The result is faster convergence per step. The catch: computing and inverting the full FIM is O(p²) in storage and O(p³) in compute — prohibitive at any useful scale. Adam's per-parameter learning rate scaling is a diagonal FIM approximation, which explains both why Adam works and why it fails when parameters are highly correlated.`,
     keyPoints: [
-      `**The Fisher information matrix: F = E_{x~p_θ}[∇_θ log p(x|θ) ∇_θ log p(x|θ)ᵀ].** The FIM measures how much the output distribution changes when θ is perturbed: KL[p_θ ‖ p_{θ+δ}] ≈ ½ δᵀFδ locally. So the FIM is the curvature of the KL divergence landscape — the metric tensor for distribution space. Flat directions in F (zero eigenvalues) are parameter directions that do not change the output distribution at all — overparameterisation, symmetries, dead neurons.`,
+      `**The Fisher information matrix:
+
+$F = E_{x~p_θ}[∇_θ log p(x|θ) ∇_θ log p(x|θ)ᵀ].** The FIM measures how much the outpu$
+
+t distribution changes when θ is perturbed: KL[p_θ ‖ p_{θ+δ}] ≈ ½ δᵀFδ locally. So the FIM is the curvature of the KL divergence landscape — the metric tensor for distribution space. Flat directions in F (zero eigenvalues) are parameter directions that do not change the output distribution at all — overparameterisation, symmetries, dead neurons.`,
       `**Standard gradient descent is not covariant under reparameterisation: if you apply a bijective transformation φ = h(θ), the gradient direction in φ-space is different from the gradient direction in θ-space (after accounting for the Jacobian).** This means the solution gradient descent finds depends on how you chose to parameterise the model — different implementations of the same model (batch norm vs weight normalisation) converge to different solutions. Natural gradient is covariant: the update corresponds to the same distribution-space step regardless of parameterisation.`,
       `**Natural gradient update: θ_{t+1} = θ_t - η F(θ_t)⁻¹ ∇_θ L.** In a loss landscape with a ravine (high curvature in one direction, low in another), standard SGD zigzags — large steps in the steep direction oscillate, small steps in the shallow direction barely move. Natural gradient rescales: small steps in the steep direction, large steps in the shallow direction. Per distribution-space step, you get more loss reduction than any Euclidean-metric gradient step.`,
       `**FIM = second derivative of KL: KL[p_θ ‖ p_{θ+δ}] ≈ ½δᵀFδ.** This is the operational definition that connects information geometry to practical optimisation. Directions with large Fisher eigenvalues change the model's output distribution a lot per unit parameter change — natural gradient takes small steps there. Directions with small eigenvalues change the distribution very little — natural gradient takes large steps there. Euclidean gradient ignores all of this.`,
-      `**K-FAC (Kronecker-Factored Approximate Curvature) makes natural gradient tractable for neural networks.** For a layer with weight matrix W, the FIM admits a Kronecker product approximation F ≈ A ⊗ G where A = E[aₜaₜᵀ] (input activation covariance) and G = E[gₜgₜᵀ] (output gradient covariance). Storage drops from O(p²) to O(d_in² + d_out²) per layer. Inversion is separable: (A⊗G)⁻¹ = A⁻¹⊗G⁻¹. K-FAC captures within-layer input-output correlations — the structure that Adam's diagonal approximation misses.`,
-      `**Adam is a diagonal FIM approximation.** The second moment v_t ≈ diag(F) estimates only the diagonal of the Fisher. Dividing the gradient by √v_t + ε approximates rescaling by the diagonal Fisher — each parameter gets an independent learning rate based on its gradient variance. This works well when parameters are approximately uncorrelated. When parameters are highly correlated (collinear features, attention across similar tokens), the off-diagonal terms of F matter and Adam's approximation fails.`,
+      `**K-FAC (Kronecker-Factored Approximate Curvature) makes natural gradient tractable for neural networks.** For a layer with weight matrix W, the FIM admits a Kronecker product approximation
+
+$F ≈ A ⊗ G where A = E[aₜaₜᵀ] (input activation covariance) and G = E[gₜgₜᵀ] (output gradient covariance). Storage$
+
+drops from O(p²) to O(d_in² + d_out²) per layer. Inversion is separable: (A⊗G)⁻¹ = A⁻¹⊗G⁻¹. K-FAC captures within-layer input-output correlations — the structure that Adam's diagonal approximation misses.`,
+      `**Adam is a diagonal FIM approximation.** The second moment
+
+$v_t ≈ diag(F) estimates only the diagonal of the Fisher. Dividing the gradient by √v_t + ε approximates rescaling by the di$
+
+agonal Fisher — each parameter gets an independent learning rate based on its gradient variance. This works well when parameters are approximately uncorrelated. When parameters are highly correlated (collinear features, attention across similar tokens), the off-diagonal terms of F matter and Adam's approximation fails.`,
       `**K-FAC vs Adam: Adam is the practical choice for most deep learning because K-FAC's per-step cost is much higher.** K-FAC wins when data is small, per-step compute is affordable, and the correlations between parameters are strong — some supervised learning benchmarks and RL settings. The convergence advantage is real: K-FAC typically converges in fewer steps, but each step costs more than Adam.`,
       `**TRPO and PPO formalise the natural gradient idea in RL.** TRPO explicitly constrains KL[π_old ‖ π_new] ≤ δ at each update — this is a trust region in distribution space, exactly what natural gradient descent respects. Euclidean constraints on weight updates do not prevent large changes in the policy distribution. KL constraints do — and large distribution changes destabilise RL training. PPO approximates the KL constraint with a clipped surrogate, trading theoretical precision for engineering simplicity.`,
       `**The FIM connects to confidence intervals in MLE.** By the Cramér-Rao bound, Var(θ̂) ≥ F(θ)⁻¹ for any unbiased estimator. The MLE achieves this bound asymptotically. The inverse FIM is the asymptotic covariance of the MLE — this is where frequentist confidence intervals for point estimates come from. In continual learning, Elastic Weight Consolidation (EWC) penalises changes to parameters with high Fisher information, preserving knowledge from previous tasks by anchoring the highest-curvature directions.`,
     ],
     checkQuestions: [
       {
-        q: 'Why is the natural gradient invariant to reparameterisation of the model parameters, and why does this matter?',
-        a: 'Standard gradient: if φ = h(θ) is a reparameterisation, ∇_φ L = J⁻ᵀ ∇_θ L where J = ∂φ/∂θ. The gradient direction changes under reparameterisation — the step depends on how you chose to parameterise the model. Natural gradient: F_φ = J⁻ᵀ F_θ J⁻¹ (FIM transforms as a covariant tensor). F_φ⁻¹ ∇_φ L = J F_θ⁻¹ J^{-T} J^{-T} ∇_θ L — this correctly maps back to the same update in θ-space (up to Jacobian). The natural gradient step corresponds to the same distribution-space step regardless of parameterisation. Why it matters: for neural networks, different parameterisations (e.g., using batch norm, or reparameterising weights vs. activations) should not change which optimum is found. Standard gradient descent is sensitive to parameterisation — you get different solutions depending on how you implement the same model (e.g., batch norm vs. weight normalisation produces different implicit regularisation). Natural gradient is theoretically parameterisation-free.',
+        q: `Why is the natural gradient invariant to reparameterisation of the model parameters, and why does this matter?`,
+        options: [
+          `A) Natural gradient is invariant because the FIM is always the identity matrix under any reparameterisation, making F⁻¹∇L equal to ∇L regardless of parameterisation.`,
+          `B) Natural gradient is invariant because it uses second-order information; standard gradient uses only first-order information which changes under reparameterisation.`,
+          `C) Natural gradient is invariant because the step size η is adapted per-parameter; different parameterisations just require rescaling η.`,
+          `D) The FIM transforms as a covariant tensor (F_φ = J⁻ᵀF_θJ⁻¹), so F_φ⁻¹∇_φL maps to the same distribution-space step regardless of parameterisation. This matters because standard SGD finds different optima depending on model parameterisation (e.g., batch norm vs weight normalisation).`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'Adam\'s second moment estimate v_t ≈ diag(F). What does this mean for Adam\'s performance on highly correlated parameters?',
-        a: 'Adam uses a diagonal approximation to the FIM — it rescales each parameter\'s gradient independently based on that parameter\'s gradient variance, but ignores correlations between parameters (off-diagonal elements of F). For highly correlated parameters (e.g., features in a linear layer with collinear inputs, or parameters in two adjacent residual blocks with strong shared gradient signals), the diagonal F misrepresents the true curvature. Consequence: Adam takes steps that are suboptimal in correlated directions — it may overstep in directions where the true curvature (including correlations) is high, or understep in directions where the diagonal approximation underestimates the step size. This manifests as slower convergence on problems with highly correlated parameters (certain NLP tasks with attention across similar tokens, or dense layers with correlated input features). K-FAC handles this by modelling input-output correlations within each layer via the Kronecker product, which explains why K-FAC converges in fewer steps than Adam on some tasks — at higher per-step computational cost.',
+        q: `Adam's second moment estimate v_t ≈ diag(F). What does this mean for Adam's performance on highly correlated parameters?`,
+        options: [
+          `A) Adam performs better on correlated parameters because the moving average of v_t smooths out the correlations over time, effectively approximating the off-diagonal FIM terms.`,
+          `B) Adam performs identically on correlated and uncorrelated parameters because the diagonal FIM approximation is provably tight when the learning rate is small enough.`,
+          `C) Adam's diagonal FIM approximation ignores off-diagonal correlations, leading to suboptimal steps in correlated directions. K-FAC captures within-layer input-output correlations and converges in fewer steps on tasks with highly correlated parameters, at higher per-step cost.`,
+          `D) Adam applies a full FIM inverse internally via the Adam epsilon term; the diagonal approximation is only used for numerical stability, not for the step direction.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'What is the connection between the Fisher information matrix and confidence intervals in maximum likelihood estimation?',
-        a: 'By the Cramér-Rao bound, the variance of any unbiased estimator θ̂ satisfies Var(θ̂) ≥ F(θ)⁻¹. The MLE achieves this bound asymptotically: √n(θ̂_MLE - θ_true) → N(0, F(θ_true)⁻¹) in distribution. The asymptotic covariance of the MLE is the inverse FIM — this is where frequentist confidence intervals for MLEs come from. In practice: compute the observed FIM (Hessian of log-likelihood at θ̂) as a consistent estimator of the expected FIM. The ij-th element of F⁻¹ gives the asymptotic covariance between θ̂ᵢ and θ̂ⱼ. For deep neural networks: the FIM is p×p (p = millions of parameters) — direct inversion is impossible. Diagonal approximations give per-parameter confidence intervals, which are used in continual learning (Elastic Weight Consolidation — EWC penalises changes to parameters with high Fisher information, preserving important knowledge from previous tasks).',
+        q: `What is the connection between the Fisher information matrix and confidence intervals in maximum likelihood estimation?`,
+        options: [
+          `A) By the Cramér-Rao bound, Var(θ̂) ≥ F(θ)⁻¹ for any unbiased estimator; the MLE achieves this asymptotically. The inverse FIM is the asymptotic covariance of the MLE, which is where frequentist confidence intervals and EWC's importance weights come from.`,
+          `B) The FIM equals the Hessian of the log-likelihood only at the MLE; elsewhere they are unrelated, so confidence intervals must use the Hessian, not the FIM.`,
+          `C) The FIM provides confidence intervals only for exponential family models; for other likelihoods, bootstrap confidence intervals must be used instead.`,
+          `D) The connection is purely theoretical; in practice, confidence intervals are computed from the Jacobian of the loss function, not the FIM.`,
+        ],
+        answer: `A`,
       },
     ],
     takeaway: `Parameter space is the wrong space to measure gradient steps — what matters is how much the model's output distribution changes per step, which is measured by the FIM. Adam's diagonal FIM approximation works when parameters are uncorrelated but fails when off-diagonal Fisher terms are large. The TRPO/PPO connection is the most concrete production application: constraining updates by KL[π_old ‖ π_new] instead of Euclidean weight change is what stabilises RL training, because Euclidean constraints on weights do not bound how much the policy distribution changes.`,
@@ -322,16 +516,34 @@ The key observation is that most real-world variables are not all directly depen
     ],
     checkQuestions: [
       {
-        q: 'In a Bayesian network X → Z ← Y, are X and Y marginally independent? Are they independent given Z?',
-        a: 'X → Z ← Y is a v-structure (collider at Z). Marginally: X and Y are independent (no active path between X and Y when Z is not observed — the collider Z blocks the path). P(X,Y) = P(X)P(Y). Conditionally given Z: conditioning on the collider Z opens the path X → Z ← Y — X and Y become dependent given Z. This is Berkson\'s paradox (collider bias, selection bias). Example: Talent (X) and Beauty (Y) are independent in the population. Among movie stars (Z = "hired by Hollywood", which requires either high talent or high beauty), talent and beauty become negatively correlated — knowing a movie star has low talent increases our belief they must be highly beautiful to explain their career. Practical implication: in causal analysis, never condition on a collider unless you explicitly account for the induced dependence.',
+        q: `In a Bayesian network X → Z ← Y, are X and Y marginally independent? Are they independent given Z?`,
+        options: [
+          `A) X and Y are marginally dependent because they share the common effect Z; conditioning on Z makes them independent by blocking the v-structure path.`,
+          `B) X and Y are marginally independent and also independent given Z, because Z is a collider and colliders always block paths regardless of whether Z is observed.`,
+          `C) X and Y are marginally independent (the collider Z blocks the path when unobserved). Conditioning on Z opens the path — X and Y become dependent given Z. This is Berkson's paradox: conditioning on a common effect induces a spurious correlation between its causes.`,
+          `D) X and Y are marginally dependent due to the directed edges; conditioning on Z renders them independent because the path is blocked.`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'What is the treewidth of a graph and why does it determine inference complexity in PGMs?',
-        a: 'Treewidth is a graph property that measures "how close to a tree" a graph is. A tree has treewidth 1. The junction tree algorithm converts a graph into a tree of cliques (junction tree) where the largest clique has size (treewidth + 1). Inference on the junction tree is exact via belief propagation, running in time O(K^{tw+1} × nodes) where K is the state space size and tw is the treewidth. For tw = 1 (trees): inference is O(K² × n) — tractable. For tw = 20, K = 3 (binary-ish states): O(3^{21}) per node — intractable. Many real-world graphical models (social networks, medical diagnosis networks) have high treewidth, making exact inference #P-hard. This is the fundamental limitation of PGMs: the expressiveness of rich conditional independence structure comes at the cost of exponential inference complexity in general graphs. Modern approaches: loopy belief propagation (approximate, fast, widely used in error-correcting codes and computer vision), MCMC on the graph, variational inference with factorised approximations.',
+        q: `What is the treewidth of a graph and why does it determine inference complexity in PGMs?`,
+        options: [
+          `A) Treewidth is the maximum node degree in the graph; inference complexity is O(K^{max_degree}) per node, which is tractable for sparse graphs.`,
+          `B) Treewidth is the number of cycles in the graph; each cycle adds a factor of K to inference complexity, making loopy graphs exponentially harder.`,
+          `C) Treewidth is the minimum number of edges to remove to make the graph a tree; inference complexity is O(K^{removed_edges}) using the junction tree algorithm.`,
+          `D) Treewidth measures how close the graph is to a tree; the junction tree algorithm runs exact inference in O(K^{tw+1} × nodes). Trees (tw=1) are tractable at O(K²·n); high-treewidth graphs (social networks, dense medical networks) make exact inference #P-hard, forcing loopy BP, MCMC, or VI approximations.`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'You want to use an HMM for anomaly detection in a time series of server metrics. What are the failure modes and how would you address them?',
-        a: 'Core HMM assumptions and their failure modes: (1) Markov assumption: p(sₜ|s₁,...,sₜ₋₁) = p(sₜ|sₜ₋₁). Real server metrics often have long-range dependencies (daily seasonality over 1440 minutes, weekly patterns) that a first-order Markov chain cannot capture. Fix: higher-order HMM (k-th order: condition on sₜ₋₁,...,sₜ₋ₖ) or add time-of-day as a feature in the emission distribution. (2) Stationarity: the transition matrix A and emission parameters are fixed across time. Server behaviour changes (deployments, traffic spikes, configuration changes). Fix: sliding window re-estimation of parameters; online EM for HMMs. (3) Emission distribution mismatch: standard HMMs use Gaussian or discrete emissions. If metrics are multivariate and have non-Gaussian tails (e.g., latency distributions are heavy-tailed log-normal), the emission model is misspecified. Use mixture-of-Gaussians emissions or Student-t. (4) Number of hidden states K must be specified: if K is too small, the model cannot distinguish anomaly from unusual-but-normal states. Too large: overfit. Use model selection (BIC, held-out log-likelihood) to choose K. (5) Anomaly definition ambiguity: HMMs assign probabilities to sequences, not events. Anomaly = low p(x₁,...,xT) under the model, but the model may not have learned what constitutes a real anomaly vs. a novel-but-normal pattern if training data is contaminated.',
+        q: `You want to use an HMM for anomaly detection in a time series of server metrics. What are the failure modes and how would you address them?`,
+        options: [
+          `A) The Viterbi algorithm is the only valid inference method for anomaly detection; using forward-backward instead gives incorrect marginals. Use Viterbi and flag states with low emission probability as anomalies.`,
+          `B) HMM failure modes include the Markov assumption breaking for long-range dependencies (daily/weekly seasonality), stationarity failing under deployments, Gaussian emission mismatch for heavy-tailed metrics, incorrect K selection, and training data contamination — each requiring targeted fixes like higher-order HMMs, sliding-window EM, Student-t emissions, or BIC-based model selection.`,
+          `C) HMMs cannot detect anomalies by definition since they model normal behaviour; use an isolation forest instead for any anomaly detection task involving time series.`,
+          `D) The only failure mode is choosing K incorrectly; set K = number of known operational states and all other issues resolve automatically.`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `The collider rule is the most interview-critical concept in PGMs: conditioning on a collider Z opens the path between its parents X and Y, creating a dependence that did not exist marginally. This is Berkson's paradox and the mechanism behind selection bias in observational studies. Treewidth determines inference complexity: exact inference is tractable only for low-treewidth graphs, and the exponential cost in treewidth is the primary reason PGMs lost perception tasks to neural networks — but PGMs remain the right tool when conditional independence structure must be explicitly represented, inspected, and explained.`,

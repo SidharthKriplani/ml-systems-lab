@@ -25,23 +25,53 @@ A single malformed row can silently flip a column from int64 to object, causing 
     checkQuestions: [
       {
         q: `A colleague argues that outlier rows should simply be removed before training to keep the model clean. What breaks if you follow this advice blindly on a fraud detection dataset?`,
-        a: `Fraud transactions are inherently outliers — they are rare, high-value, and anomalous by definition. Removing outliers before training a fraud model would systematically eliminate the positive class, leaving you with a model trained almost entirely on legitimate transactions. The model would learn to classify everything as non-fraud and achieve 99%+ accuracy on a dataset where fraud is 1% — while catching zero fraud cases. Outlier removal requires knowing why a value is extreme, not just that it is extreme.`,
+        options: [
+          `A) The model trains faster but loses calibration on high-value transactions, requiring threshold recalibration before deployment.`,
+          `B) Fraud transactions are inherently outliers — rare, high-value, anomalous by definition. Removing outliers would systematically eliminate the positive class, leaving a model trained almost entirely on legitimate transactions that achieves 99%+ accuracy while catching zero fraud. Outlier removal requires knowing WHY a value is extreme, not just that it is.`,
+          `C) Removing outliers reduces variance but introduces bias toward the mean transaction profile, causing the model to underperform only on weekend transactions.`,
+          `D) The model becomes overconfident on the majority class but can be corrected by applying SMOTE after the outlier removal step.`,
+        ],
+        answer: `B`,
       },
       {
-        q: `You join two tables on a customer ID and your training set shrinks from 500,000 rows to 380,000 without any error. What likely happened and why does it matter for your model?`,
-        a: `A left join or inner join dropped 120,000 rows because those customer IDs had no match in the second table. This is a referential integrity failure — the IDs exist in one system but not the other, likely because of different data collection pipelines or time windows. This matters enormously: the 120,000 dropped rows are almost certainly not a random sample. They might be older customers, customers from a different region, or customers who churned — exactly the population where your model's predictions matter most. The model is trained on a biased subset and will generalize poorly to the full population.`,
+        q: `You join two tables on a customer ID and your training set shrinks from 500,000 to 380,000 rows without any error. What likely happened and why does it matter?`,
+        options: [
+          `A) A deduplication step silently ran during the join, removing duplicate customer records — this is expected behavior and the remaining rows are a random sample.`,
+          `B) A filter on a date column excluded older customers during the join, but since the sample is still large the model will generalize without issue.`,
+          `C) The join used a DISTINCT clause internally, collapsing multi-purchase customers to one row per customer ID and slightly underrepresenting heavy buyers.`,
+          `D) Referential integrity failure — 120,000 rows were lost because customer IDs had no match in the second table. This matters enormously: the dropped rows are almost certainly not a random sample — likely older customers, different region, or churned customers — so the model trains on a biased subset and generalizes poorly to the full population.`,
+        ],
+        answer: `D`,
       },
       {
         q: `What is the difference between an outlier and an impossible value, and why should they be handled differently?`,
-        a: `An outlier is a value that is statistically extreme but potentially valid — a transaction of $50,000 is unusual but can happen. An impossible value is one that violates a hard constraint regardless of context — a person cannot be -3 years old, a percentage cannot be 150. Outliers require domain judgment: they may be signal (rare fraud) or noise (entry errors). Impossible values are always errors and should be nullified before any other processing. Treating them differently matters because imputing an impossible value (e.g., replacing -3 age with the mean) propagates the error into the training data as if it were real information.`,
+        options: [
+          `A) An outlier is statistically extreme but potentially valid (a $50,000 transaction is unusual but possible). An impossible value violates a hard constraint (a person cannot be -3 years old). Outliers require domain judgment; impossible values are always errors and should be nullified before any other processing. Imputing an impossible value propagates the error as if it were real information.`,
+          `B) An outlier is any value above the 99th percentile; an impossible value is any value above the 99.9th percentile. Both should be clipped to the 99th percentile to stabilize model training.`,
+          `C) An outlier is a data entry error; an impossible value is a measurement instrument failure. Outliers should be removed; impossible values should be imputed with the domain-specific minimum valid value.`,
+          `D) Both terms describe the same phenomenon — values that fall outside two standard deviations from the mean. The distinction is semantic and does not affect handling.`,
+        ],
+        answer: `A`,
       },
       {
-        q: `You run a data profile on your training set in January and the model performs well. You retrain in June without re-profiling and performance drops. What data quality issue is most likely responsible?`,
-        a: `Distribution shift between the January and June data — a data quality issue that profiling would have caught. Common causes: a new data source was added (changing the null rate or value range of a feature), a upstream system changed its encoding (e.g., a categorical field now uses different labels), or a business event changed the real-world distribution (a pricing change that shifted transaction amounts). Without profiling at retraining time, the pipeline reports no error but the model is now trained on a different distribution than the one it was originally validated on.`,
+        q: `You run a data profile on training set in January and model performs well. You retrain in June without re-profiling and performance drops. What data quality issue is most likely responsible?`,
+        options: [
+          `A) The model's hyperparameters are no longer optimal because the dataset grew larger in June, requiring a new grid search.`,
+          `B) Random seed differences between January and June training runs caused the model to converge to a different local minimum.`,
+          `C) Distribution shift between January and June data that profiling would have caught — new data source added (changed null rate or value range), upstream system changed encoding (categorical field uses different labels), or a business event changed the real-world distribution. Without profiling at retraining time, the pipeline reports no error but the model trains on a different distribution than originally validated.`,
+          `D) The validation split was smaller in June due to more training rows, causing the evaluation to be noisier and less representative of true performance.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `A column in your dataset has 55% null values. A colleague says to impute with the median. What should you do before accepting that advice?`,
-        a: `First, determine the mechanism of missingness: why are 55% of values missing? If the nulls are MNAR (Missing Not At Random) — e.g., patients with the most severe condition are the ones who didn't get the lab test recorded — then imputing with the median fills in values that are systematically wrong for the highest-risk group, introducing bias. Second, consider whether the column is worth including at all: a feature observed for only 45% of rows will create interaction effects that are poorly estimated. Third, check whether the missing rate in the test set matches training (55%) — if it doesn't, there is a structural data collection difference. Imputing with the median is only appropriate after these questions are answered.`,
+        q: `A column has 55% null values. A colleague says to impute with the median. What should you do before accepting that advice?`,
+        options: [
+          `A) Run a Shapiro-Wilk test to confirm the non-null values are normally distributed; if they are, use mean imputation instead of median.`,
+          `B) First determine the mechanism of missingness (WHY 55% are missing). If MNAR, imputing with median fills in systematically wrong values for highest-risk cases. Then consider whether the column is worth including at all (45% observed rows creates poorly estimated interactions). Also check if missing rate in test set matches training — if not, there is a structural data collection difference. Median imputation is only appropriate after these questions are answered.`,
+          `C) Check whether the column has more than 10 unique values; if so, KNN imputation is always superior to median imputation regardless of the missingness mechanism.`,
+          `D) Immediately drop the column — any feature with more than 30% nulls introduces more bias than predictive value and should never be imputed.`,
+        ],
+        answer: `B`,
       },
     ],
   },
@@ -68,20 +98,44 @@ A single malformed row can silently flip a column from int64 to object, causing 
     takeaway: `The mechanism of missingness — not the missing rate — determines the right treatment. Imputing MNAR data systematically fills in the wrong values for the cases where your model is most consequential. Choosing a method before diagnosing the mechanism is a modeling error, not a statistical one.`,
     checkQuestions: [
       {
-        q: `You are building a model to predict hospital readmission. A lab test result is missing for 30% of patients. A colleague imputes with the median. What is wrong with this approach and what would you do instead?`,
-        a: `Lab tests are typically ordered when a clinician suspects a problem — meaning the test is more likely to be missing when the patient appears healthy, and present when the clinician is concerned. This is MNAR: the probability of the value being missing depends on the value itself (patients with extreme lab values get tested; patients near normal do not). Imputing with the median assigns an "average" lab value to patients who were never tested, which may be systematically wrong for the sickest patients. The right approach is to add a binary "was this test ordered" indicator feature, which captures the clinical signal of missingness. Model-based imputation from other covariates can also be used, but only after acknowledging the MNAR risk.`,
+        q: `You are building a model to predict hospital readmission. A lab test result is missing for 30% of patients. A colleague imputes with the median. What is wrong?`,
+        options: [
+          `A) Median imputation is only valid for normally distributed columns; the correct choice for skewed lab values is mean imputation after log-transforming the column.`,
+          `B) The missingness rate of 30% is too low to matter — complete-case analysis (dropping these rows) would be both simpler and unbiased.`,
+          `C) Median imputation will inflate the variance of the imputed column, causing the model to overweight this feature during training.`,
+          `D) Lab tests are typically ordered when a clinician suspects a problem — the test is more likely MISSING when the patient appears healthy, making this MNAR. Imputing with the median assigns average lab values to untested patients who may be systematically different. The right approach is to add a binary "was this test ordered" indicator feature, which captures the clinical signal of missingness. Model-based imputation from other covariates is also possible but only after acknowledging MNAR risk.`,
+        ],
+        answer: `D`,
       },
       {
         q: `Why is it data leakage to fit a mean imputer on the full dataset (train + test) before splitting?`,
-        a: `When you compute the column mean on the full dataset, that mean is influenced by the test-set values. When you then impute missing values in the training set using that mean, the training set's imputed values contain information derived from the test set. This means the model is indirectly "seeing" test-set statistics during training, which inflates cross-validation and test-set accuracy. In production, you will never have access to future data when computing your imputer — so fitting on the full dataset creates an unrealistic and optimistic evaluation. The rule is: fit all preprocessing transformers (scalers, imputers, encoders) on the training fold only.`,
+        options: [
+          `A) When you compute the column mean on the full dataset, that mean is influenced by test-set values. Imputing the training set with that mean means training data contains information derived from the test set. The model indirectly sees test-set statistics during training, inflating accuracy. In production, future data is never available when computing the imputer — fit all preprocessing transformers on the training fold only.`,
+          `B) Fitting on the full dataset computes a mean that is biased toward the majority class, which causes the imputer to systematically overestimate values for the minority class.`,
+          `C) The imputer fitted on the full dataset will have higher variance than one fitted on the training set alone, producing noisier imputations that hurt model performance.`,
+          `D) Fitting the imputer before splitting prevents you from using cross-validation later, because the imputer's parameters cannot be re-fitted inside each fold.`,
+        ],
+        answer: `A`,
       },
       {
         q: `What is the difference between mean imputation and MICE, and when does the difference matter most?`,
-        a: `Mean imputation replaces all missing values in a column with that column's mean — it is fast and simple but ignores all relationships between columns. MICE treats imputation as a prediction problem: for each column with missing values, it trains a regression model using all other columns as features, imputes the missing values with those predictions, then iterates until convergence. The difference matters most when features are correlated. If missing income values are predictable from education level, employment status, and age, MICE will produce accurate imputations while mean imputation will produce the overall average regardless of these predictors. For MCAR data with low missingness rates, the difference is small. For MAR data with correlated features and moderate missingness (10-30%), MICE can dramatically improve imputation accuracy.`,
+        options: [
+          `A) Mean imputation is biased for large datasets while MICE is unbiased for any dataset size; the difference always matters regardless of missingness rate.`,
+          `B) Mean imputation uses the training-set mean; MICE uses the test-set mean during inference. The difference matters when train and test distributions differ.`,
+          `C) Mean imputation replaces missing values with the column mean — fast but ignores column relationships. MICE treats imputation as a prediction problem: for each column with missing values, it trains a regression model using all other columns as features and iterates until convergence. The difference matters most when features are correlated — if missing income values are predictable from education/employment/age, MICE produces accurate imputations while mean imputation produces the overall average regardless of predictors.`,
+          `D) Mean imputation and MICE produce identical results for numerical columns; the difference only matters for categorical columns where MICE uses a classifier instead of a regressor.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `A model trained with complete-case analysis (dropping all rows with any null) achieves 92% accuracy. When you deploy it, accuracy drops to 84%. What is the most likely explanation?`,
-        a: `The dropped rows were not MCAR — they were systematically different from the complete cases. The model was trained on a biased subset (rows where all features happened to be observed) and tuned its decision boundaries to that subset. In production, it encounters the full population including the types of rows that were dropped during training. The 8-point accuracy gap reflects the distribution mismatch between the training population (complete cases only) and the production population (everyone). This is the core danger of complete-case analysis: it is only valid when missing data is MCAR, which is rarely true in practice.`,
+        q: `A model trained with complete-case analysis (dropping all rows with any null) achieves 92% accuracy. When you deploy, accuracy drops to 84%. What is the most likely explanation?`,
+        options: [
+          `A) The model overfit to the complete cases during training; adding L2 regularization would have prevented the 8-point accuracy gap.`,
+          `B) The dropped rows were not MCAR — they were systematically different from the complete cases. The model trained on a biased subset and tuned decision boundaries to that subset. In production it encounters the full population including the types of rows dropped during training. The 8-point gap reflects distribution mismatch between the training population (complete cases) and the production population (everyone). Complete-case analysis is only valid when MCAR, which is rarely true in practice.`,
+          `C) The production dataset has a higher null rate than training, which causes the model's learned coefficients to extrapolate outside their training range.`,
+          `D) The 92% training accuracy was computed on the same rows used to drop nulls, introducing a selection bias into the accuracy estimate itself.`,
+        ],
+        answer: `B`,
       },
     ],
   },
@@ -110,20 +164,44 @@ The tradeoff is that engineered features encode assumptions. A domain-correct as
     takeaway: `Models learn from the geometry of the feature space you give them. The same information in the wrong representation can be entirely invisible to the model — not learned slowly, but never learned at all. Encoding choices are structural decisions, not preprocessing details.`,
     checkQuestions: [
       {
-        q: `You have a "time_of_day" feature encoded as an integer from 0 to 23. Your model performs poorly on predictions for late-night events. What is the encoding problem and how do you fix it?`,
-        a: `The raw integer encoding treats hour 23 and hour 0 as maximally different (23 apart), when in reality they are 1 hour apart on the circular clock. A model using this encoding cannot learn that midnight behavior resembles 11pm behavior. The fix is sin/cos encoding: create two new features, sin(2π·hour/24) and cos(2π·hour/24). These two features together encode each hour as a point on the unit circle, so that hour 23 and hour 0 are geometrically close. This is essential for any cyclical feature: day-of-week (period 7), month-of-year (period 12), and degrees (period 360) all need the same treatment.`,
+        q: `You have a 'time_of_day' feature encoded as integer 0-23. Your model performs poorly on predictions for late-night events. What is the encoding problem and fix?`,
+        options: [
+          `A) The integer encoding creates a class imbalance between daytime and nighttime hours; the fix is to oversample late-night training examples using SMOTE.`,
+          `B) Integer encoding treats midnight as the midpoint of the day rather than a boundary; the fix is to shift all values by 12 so that noon maps to 0.`,
+          `C) Integer encoding assigns too much weight to the hour feature relative to other features; the fix is to standardize the hour column with StandardScaler.`,
+          `D) Raw integer encoding places hour 23 and hour 0 at maximum distance (23 apart), when they are 1 hour apart on the circular clock. The model cannot learn that midnight behavior resembles 11pm. Fix: sin/cos encoding — create sin(2π·hour/24) and cos(2π·hour/24). Together these encode each hour as a point on the unit circle: hour 23 and hour 0 geometrically close. Essential for all cyclical features: day-of-week (period 7), month-of-year (period 12), degrees (period 360).`,
+        ],
+        answer: `D`,
       },
       {
         q: `Why does log-transforming an income feature help a linear regression model but not a random forest?`,
-        a: `Linear regression assumes a linear relationship between each feature and the target. When income is right-skewed (a few extremely high earners), the linear model devotes most of its coefficient's explanatory power to distinguishing the extreme values, effectively ignoring variation among typical earners. Log-transforming compresses the upper tail and spreads the distribution more evenly, making the linear relationship more valid. A random forest, by contrast, splits on thresholds: it can learn "if income > $50,000 go left, else go right" regardless of the scale or distribution. Monotone transformations like log do not change which threshold is the optimal split — the forest finds equivalent splits either way. Log transform matters for models that assume distributional properties (linear models, SVMs, neural nets with linear layers) and is largely irrelevant for tree-based models.`,
+        options: [
+          `A) Linear regression assumes a linear relationship between each feature and the target. Right-skewed income causes the linear model to devote its coefficient's power to distinguishing extreme values, ignoring variation among typical earners. Log-transforming compresses the upper tail, making the linear relationship more valid. Random forest splits on thresholds — monotone transformations like log don't change which threshold is optimal. Log transform matters for models assuming distributional properties (linear, SVM, neural nets) and is largely irrelevant for tree-based models.`,
+          `B) Log transformation improves both model types equally; the difference in practice is that random forests already regularize through bagging, so the benefit is masked by that regularization.`,
+          `C) Log transformation helps linear regression because it removes outliers; random forests are not affected because they naturally ignore outliers through their majority-vote ensemble mechanism.`,
+          `D) Log transformation converts multiplication relationships into addition relationships, which only matters for linear regression when the true relationship is multiplicative rather than additive.`,
+        ],
+        answer: `A`,
       },
       {
-        q: `You are building a fraud detection model and add an interaction term: transaction_amount × is_international. What does this feature capture that neither original feature captures alone?`,
-        a: `The interaction term captures the combined effect of high-value international transactions — the pattern that high amounts are suspicious specifically when the transaction is international, not when it is domestic. Individually, transaction_amount tells the model about scale and is_international tells the model about geography. Neither alone tells the model that their combination is the key fraud signal. The interaction term is the product of these two features, which will be large (high amount × international = 1) only when both conditions hold. A linear model cannot discover this relationship from the original features; it can only learn additive effects. For tree models, the interaction is learnable without an explicit feature (the tree can split on amount within the international subset), but the explicit feature can still speed up training.`,
+        q: `You are building a fraud detection model and add interaction term: transaction_amount × is_international. What does this feature capture?`,
+        options: [
+          `A) It captures the total transaction volume for international merchants, which is the same signal as summing all international transaction amounts over a time window.`,
+          `B) It captures geographic risk independent of amount — flagging all international transactions regardless of their size, which is equivalent to using is_international alone.`,
+          `C) It captures the combined effect: high-value international transactions as a fraud signal — high amounts suspicious specifically when the transaction is international, not when domestic. Individually, transaction_amount captures scale and is_international captures geography. Neither alone captures that their COMBINATION is the key fraud signal. The product is large only when both conditions hold. Linear models cannot discover this from original features; for tree models the explicit feature can speed up training.`,
+          `D) It captures the variance in transaction amounts across international vs. domestic transactions, which is better estimated by computing the ratio of international mean to domestic mean.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `A data scientist creates 200 interaction features from a 20-feature dataset and reports improved validation accuracy. What risk does this improvement mask and how would you verify it?`,
-        a: `With 200 additional features (most of which are noise), the model has dramatically more capacity to overfit the training and validation sets. If the validation set was used to tune any hyperparameters, or if features were selected based on validation performance, the reported improvement is optimistic. To verify, you need a held-out test set that was never touched during feature construction or selection. You should also check training vs. validation accuracy gap — a much larger gap after adding interaction features signals overfitting. The principled approach is to select interaction features using domain knowledge or statistical tests on the training fold only, before any validation evaluation.`,
+        q: `A data scientist creates 200 interaction features from 20-feature dataset and reports improved validation accuracy. What risk does this improvement mask?`,
+        options: [
+          `A) The risk is multicollinearity — 200 interaction features will be highly correlated with their parent features, making coefficient estimates unstable and impossible to interpret.`,
+          `B) With 200 additional features (mostly noise), the model has dramatically more capacity to overfit. If the validation set was used to tune hyperparameters or features were selected based on validation performance, the reported improvement is optimistic. To verify: need a held-out test set never touched during feature construction. Also check the training vs. validation accuracy gap — a much larger gap after adding interaction features signals overfitting. Correct approach: select interaction features using domain knowledge or statistical tests on training fold only, before any validation evaluation.`,
+          `C) The risk is that the 200 interaction features may not be available at serving time if the underlying raw features are computed in different pipelines with different latency requirements.`,
+          `D) The validation accuracy improvement is real but temporary — the model will degrade within a few retraining cycles as the interaction features cause numerical instability in gradient descent.`,
+        ],
+        answer: `B`,
       },
     ],
   },
@@ -150,20 +228,44 @@ The tradeoff is that engineered features encode assumptions. A domain-correct as
     takeaway: `Every encoding encodes an assumption about category structure. Ordinal encoding asserts that distance between categories is real. One-hot asserts equal distance but creates sparsity at scale. Target encoding is compact but leaks labels without cross-validation. The wrong encoding for the wrong feature is not a preprocessing detail — it is a false claim that the model will learn as if it were true.`,
     checkQuestions: [
       {
-        q: `You apply ordinal encoding to a "city" feature with 50 unique values and train a linear regression. What exactly goes wrong?`,
-        a: `Ordinal encoding assigns integers 0–49 to the 50 cities in an arbitrary order. Linear regression learns a single coefficient for the city feature, which it multiplies by the integer to get a contribution to the prediction. This means the model is forced to assume that "city 49" has exactly 49 times the effect of "city 1" — a constraint with no basis in reality. Cities that happen to receive adjacent integers are treated as similar; cities with high integers are given disproportionate weight. The model fits a meaningless linear trend across an arbitrary ordering. One-hot encoding would instead give the model an independent coefficient for each city, removing the false linearity assumption. Tree models are immune to this problem because they learn threshold splits (city_code > 25?) rather than linear relationships.`,
+        q: `You apply ordinal encoding to a 'city' feature with 50 unique values and train a linear regression. What exactly goes wrong?`,
+        options: [
+          `A) Ordinal encoding increases the cardinality of the feature, causing gradient descent to converge more slowly than with one-hot encoding.`,
+          `B) Ordinal encoding introduces a dummy variable trap because the integers 0–49 sum to a predictable total, creating perfect multicollinearity with the intercept term.`,
+          `C) Ordinal encoding forces the model to treat all 50 cities as equally spaced on a continuous scale, which slightly underestimates the effect of the most common city category.`,
+          `D) Ordinal encoding assigns integers 0-49 in arbitrary order. Linear regression learns a single coefficient for the city feature, multiplied by the integer. The model is forced to assume city 49 has exactly 49× the effect of city 1 — no basis in reality. Cities with adjacent integers are treated as similar; high integers get disproportionate weight. The model fits a meaningless linear trend across an arbitrary ordering. One-hot encoding gives independent coefficients for each city. Tree models are less affected (they learn threshold splits not linear relationships).`,
+        ],
+        answer: `D`,
       },
       {
         q: `Walk through exactly why target encoding without cross-validation causes data leakage.`,
-        a: `When you compute target encoding by taking the mean target for all rows with category X, you include the row you are about to use as a training example. That row's own target value contributes to the encoded feature value for that row. In the extreme case of a category with only one row, the encoded value is exactly the target value — the model receives a feature that is a direct copy of what it is trying to predict, making training accuracy artificially perfect. Even with many rows per category, each row's encoded value reflects its own outcome slightly, inflating apparent in-sample performance. The fix is leave-one-out or fold-based encoding: when computing the mean target for a training row, exclude that row's own target from the mean. During inference, use the mean over all training rows with that category.`,
+        options: [
+          `A) When computing target encoding by taking mean target for all rows with category X, you INCLUDE the row you're about to use as a training example. That row's own target value contributes to the encoded feature value. In the extreme case: a category with only one row → encoded value IS the target (direct copy of what model is predicting → artificially perfect training accuracy). Fix: leave-one-out (exclude current row's target from mean) or fold-based encoding (compute means from training folds only).`,
+          `B) Target encoding without cross-validation leaks because the encoding is fitted on the validation set instead of the training set, allowing validation labels to contaminate training feature values.`,
+          `C) Target encoding causes leakage by allowing the model to memorize category-level statistics instead of learning the underlying patterns, which inflates training accuracy but not test accuracy.`,
+          `D) Target encoding without cross-validation leaks because the global mean target used as a fallback for unseen categories reveals the class balance of the full dataset including the test set.`,
+        ],
+        answer: `A`,
       },
       {
         q: `At inference time, your model receives a city it has never seen in training. How does each encoding strategy handle this, and which is most robust?`,
-        a: `One-hot encoding sets all city indicator columns to 0 — equivalent to a new implicit "other" category. This is handled silently but may produce unpredictable behavior if the model never learned to act on all-zero city columns. Ordinal encoding has no valid integer for an unseen city — you must either assign it the "unknown" integer or raise an error. Target encoding has no mean target for an unseen city — the typical fallback is the global mean target, which is reasonable but loses the per-category signal. Hash encoding maps the new city to a bucket automatically — the hash function always produces a valid bucket index, making it the most naturally robust to new categories. Embedding layers require a dedicated "unknown" token or a fallback to the zero vector. In production systems, maintaining an explicit "other" or "unknown" category in the vocabulary and training on it is the most robust general approach.`,
+        options: [
+          `A) All encoding strategies raise a KeyError for unseen categories; the only robust approach is to add an explicit "unknown" category during training with enough examples to learn a meaningful representation.`,
+          `B) One-hot encoding and target encoding both fail silently for unseen categories; ordinal encoding is the most robust because it can always assign the next available integer.`,
+          `C) One-hot: sets all city indicator columns to 0 (silent implicit "other" category, may produce unpredictable behavior). Ordinal: no valid integer for unseen city — must assign "unknown" integer or raise error. Target encoding: no mean target for unseen city — typical fallback is global mean target (reasonable but loses per-category signal). Hash encoding: maps new city to bucket automatically via hash function — ALWAYS produces valid bucket index, most naturally robust to new categories.`,
+          `D) Target encoding is most robust for unseen categories because the global mean fallback produces the same prediction as the base rate, which is always the safest default for unknown inputs.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `A feature has 5,000 unique merchant IDs and you are training a neural network. Why is one-hot encoding a bad choice here, and what should you use instead?`,
-        a: `One-hot encoding 5,000 merchant IDs produces 4,999 binary columns (dropping one for the intercept). For a dataset with, say, 100,000 rows, each column has on average 20 non-zero values — an extremely sparse input. Neural networks learn poorly from sparse inputs because gradient flow through nearly-all-zero feature vectors is weak, weight updates are small, and most neurons learn nothing from most examples. The resulting embedding matrix (first layer weights × 5,000 input columns) has 5,000 × d parameters where d is the hidden dimension — orders of magnitude more than needed. An embedding layer is the right choice: it directly looks up a learned dense vector for each merchant ID without constructing a 5,000-dimensional sparse input, uses only 5,000 × d parameters (same count), and can capture semantic similarity between merchants that one-hot encoding cannot represent.`,
+        q: `A feature has 5,000 unique merchant IDs and you are training a neural network. Why is one-hot encoding a bad choice?`,
+        options: [
+          `A) One-hot encoding 5,000 merchant IDs is computationally feasible but semantically wrong — the binary representation falsely implies that all merchants are equidistant from each other in feature space.`,
+          `B) One-hot 5,000 merchant IDs → 4,999 binary columns. With 100,000 rows, each column has average 20 non-zero values — extremely sparse input. Neural networks learn poorly from sparse inputs: gradient flow through nearly-all-zero feature vectors is weak, weight updates small, most neurons learn nothing from most examples. Embedding layer: directly looks up learned dense vector for each merchant ID without constructing 5,000-dimensional sparse input, uses same 5,000 × d parameters, can capture semantic similarity between merchants.`,
+          `C) One-hot encoding 5,000 IDs creates the dummy variable trap at scale — the 5,000 columns sum to exactly 1 for every row, producing perfect multicollinearity that causes gradient descent to diverge.`,
+          `D) One-hot encoding is a bad choice because merchant IDs change over time as new merchants onboard, requiring the model to be retrained from scratch whenever a new merchant appears.`,
+        ],
+        answer: `B`,
       },
     ],
   },
@@ -191,25 +293,50 @@ Gradient descent steps are proportional to gradient magnitude — a feature on [
     takeaway: `Gradient descent, Euclidean distance, and regularization all implicitly weight large-scale features over small-scale ones — through optimization dynamics, not through any signal about importance. Scale the inputs to remove this artifact. Fit the scaler on training data only, and refit it inside the cross-validation loop, not outside it.`,
     checkQuestions: [
       {
-        q: `You fit a StandardScaler on your entire dataset (train + test combined) before splitting. What exactly is wrong with this?`,
-        a: `When you compute the mean and standard deviation over the full dataset, those statistics are influenced by the test-set values. The mean used to center each feature and the standard deviation used to scale it encode information about the test set distribution. When you then transform the training data using these statistics, the training representation reflects the test set. This is data leakage: the model's training environment contains information that would not be available at the time of training in a real deployment. The effect is that your cross-validation and test-set accuracy are optimistically biased — the model has seen, through the scaler, some statistical properties of examples it is supposedly being evaluated on. The correct approach: fit the scaler on the training fold only, then apply the same fitted scaler to both the training fold and the validation/test set.`,
+        q: `You fit a StandardScaler on your entire dataset (train + test combined) before splitting. What exactly is wrong?`,
+        options: [
+          `A) Computing mean and std over the full dataset means statistics are influenced by test-set values. The training data transformation reflects the test distribution — data leakage. CV and test-set accuracy are optimistically biased because the model has seen, through the scaler, statistical properties of examples it is supposedly evaluated on. Correct: fit scaler on training fold only, apply same fitted scaler to both training fold and validation/test.`,
+          `B) Fitting on the full dataset computes a mean that overrepresents the majority class, causing the scaler to center features at values unrepresentative of the minority class.`,
+          `C) Fitting the scaler before splitting means you cannot use the same scaler inside cross-validation folds, forcing you to fit a new scaler for each fold which increases computation time.`,
+          `D) The StandardScaler requires a minimum of 1,000 samples per class to compute stable mean and standard deviation estimates; fitting on the full dataset inflates these estimates.`,
+        ],
+        answer: `A`,
       },
       {
-        q: `A K-Means clustering of customer data with features [age (range 20-80), annual_income (range 20,000-200,000)] produces clusters that are entirely separated by income and ignore age. Why does this happen and how do you fix it?`,
-        a: `K-Means computes Euclidean distance between data points. The income feature has a range of 180,000 while the age feature has a range of 60. A difference of 1 year in age contributes 1 unit to the Euclidean distance, while a difference of $1,000 in income contributes 1,000 units — and income ranges are in the tens of thousands. Income dominates the distance computation so completely that age is effectively invisible: two customers of the same income but 30 years apart in age look nearly identical to K-Means. The fix is to standardize both features before clustering: after standardization, each feature has std=1, so a 1-std difference in age and a 1-std difference in income contribute equally to the distance calculation. The clusters will then reflect variation in both features.`,
+        q: `A K-Means clustering of customer data with features [age (range 20-80), annual_income (range 20,000-200,000)] produces clusters entirely separated by income and ignores age. Why and fix?`,
+        options: [
+          `A) K-Means computes Euclidean distance. Income range = 180,000; age range = 60. A 1-year age difference contributes 1 unit to Euclidean distance; a $1,000 income difference contributes 1,000 units. Income dominates so completely that age is effectively invisible — two customers same income but 30 years apart look nearly identical. Fix: standardize both features before clustering. After standardization, each feature has std=1, so 1-std differences in both features contribute equally to distance.`,
+          `B) K-Means assigns cluster membership based on the feature with the highest variance; since income has higher variance than age, it automatically dominates. The fix is to use PCA to combine both features into a single principal component before clustering.`,
+          `C) The clustering is correct — income is a more important segmentation variable than age for most business use cases. Standardizing would artificially inflate the importance of age.`,
+          `D) K-Means uses Manhattan distance by default in sklearn, which gives equal weight to all features regardless of scale. The income-dominated clusters suggest a data quality issue where age was recorded incorrectly.`,
+        ],
+        answer: `A`,
       },
       {
         q: `You are doing 5-fold cross-validation and you fit a MinMaxScaler on the full training set before the CV loop. What is the consequence?`,
-        a: `The MinMaxScaler computes the minimum and maximum of each feature across all 5 folds combined. When the CV loop evaluates fold 1 (folds 2-5 as training, fold 1 as validation), the scaler has already been fit using fold 1 values — so fold 1's min/max values contributed to the scaling parameters. The validation fold transformation therefore reflects statistics derived from the validation examples, which constitutes leakage. In practice, this usually has a small effect (the min/max of one fold does not change dramatically from the full dataset), but the correct approach is to fit the scaler inside the CV loop: fit on the training folds, then transform the validation fold using only the training-fold statistics.`,
+        options: [
+          `A) Fitting the MinMaxScaler before the CV loop means all 5 folds share the same scaling parameters, which reduces variance in the CV estimate but introduces a small amount of pessimistic bias.`,
+          `B) The MinMaxScaler fitted before the CV loop will have its parameters invalidated when the CV loop creates train/validation subsets, causing sklearn to automatically refit the scaler on each fold anyway.`,
+          `C) MinMaxScaler computes min and max across all 5 folds combined. When evaluating fold 1 as validation, scaler was already fit using fold 1 values — fold 1's min/max contributed to scaling parameters. Validation fold transformation reflects statistics derived from validation examples — leakage. Correct approach: fit scaler INSIDE CV loop on training folds, then transform validation fold using only training-fold statistics.`,
+          `D) The consequence is purely computational — fitting the scaler once before the loop is more efficient than fitting it inside each fold, and the accuracy difference is negligible for min-max scaling.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `Why does applying StandardScaler to the inputs of a random forest not improve performance, while applying it to a logistic regression typically does?`,
-        a: `A random forest learns by finding optimal binary splits on individual features: "is feature X > threshold T?" The answer to this question is identical regardless of whether X is in its original scale or has been standardized — the relative ordering of values is preserved, so the same threshold exists (just at a different numeric value). Scaling does not change which split is optimal, only the numeric value of the threshold. A logistic regression, by contrast, learns a weighted sum of features: the prediction is a function of w1·x1 + w2·x2 + ... + wk·xk. If x1 ranges from 0 to 1 and x2 ranges from 0 to 100,000, gradient descent will update w2 much more slowly (large-scale features have smaller gradients relative to their contribution), and regularization will penalize w1 much more aggressively than w2 for the same effect size. Standardization removes this asymmetry, allowing the optimizer to converge faster and regularization to penalize fairly.`,
+        q: `Why does applying StandardScaler to inputs of a random forest not improve performance, while applying it to logistic regression typically does?`,
+        options: [
+          `A) StandardScaler improves both model types equally when features have different units; the perceived difference in benefit is due to random forest's higher baseline accuracy masking the improvement.`,
+          `B) Random forest learns by finding optimal binary splits on individual features: "feature X > threshold T?" Answer is identical regardless of whether X is original scale or standardized — relative ordering preserved, same optimal threshold exists. Logistic regression learns weighted sum: if x1 ranges 0-1 and x2 ranges 0-100,000, gradient descent updates w2 much more slowly and regularization penalizes w1 much more aggressively for same effect size. Standardization removes this asymmetry — faster convergence and fairer regularization.`,
+          `C) Random forest does not benefit from StandardScaler because it uses rank-based splits internally, which are already scale-invariant by design, unlike logistic regression which uses raw feature values.`,
+          `D) StandardScaler helps logistic regression only when features have different units (e.g., dollars vs. years); when all features are in the same units, the benefit disappears for both model types.`,
+        ],
+        answer: `B`,
       },
     ],
   },
   {
     id: 'class_imbalance',
+    interactiveId: 'class_imbalance_viz',
     title: 'Class Imbalance',
     subtitle: `When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.`,
     difficulty: 'intermediate',
@@ -231,24 +358,54 @@ Gradient descent steps are proportional to gradient magnitude — a feature on [
     takeaway: `The model is not the problem — the evaluation metric and the loss function are. Reporting accuracy on imbalanced data is a measurement failure. The first fix is switching to precision, recall, and AUC-PR. The second is adjusting the loss via class weights or threshold — not necessarily resampling.`,
     checkQuestions: [
       {
-        q: `Your fraud model achieves 99.2% accuracy and your colleague is satisfied. What would you check to determine if this model is actually useful?`,
-        a: `First, check the baseline: if 99% of transactions are legitimate, predicting "not fraud" for every transaction yields 99% accuracy. The model needs to beat this trivial baseline on metrics that actually capture fraud detection. Check recall (sensitivity): what fraction of actual fraud cases does the model correctly flag? A model with 99.2% accuracy and 0% recall catches no fraud at all. Check precision: of the cases flagged as fraud, what fraction are actually fraudulent? And compute the AUC-PR (area under the precision-recall curve) which directly measures performance on the minority class. If the model has high accuracy but low recall and low AUC-PR, it is effectively a sophisticated version of "always predict not fraud" and is useless for the actual business purpose.`,
+        q: `Your fraud model achieves 99.2% accuracy and your colleague is satisfied. What would you check?`,
+        options: [
+          `A) Check for class imbalance in the training set and verify the model's F1 score on the test set. If F1 is above 0.9, the 99.2% accuracy is genuine and the model is working correctly.`,
+          `B) Check whether the model was trained with sufficient regularization — high accuracy on imbalanced data is often a sign that L2 regularization is too weak and the model has overfit to the majority class.`,
+          `C) Check the AUC-ROC score — if AUC-ROC is above 0.95, the accuracy is meaningful and the model is distinguishing fraud from legitimate transactions correctly.`,
+          `D) First check baseline: if 99% of transactions are legitimate, predicting "not fraud" for everything yields 99% accuracy. Check recall: what fraction of actual fraud cases does the model correctly flag? A model with 99.2% accuracy and 0% recall catches no fraud. Check precision: of cases flagged as fraud, what fraction are actually fraudulent? Compute AUC-PR which directly measures performance on the minority class. High accuracy + low recall + low AUC-PR = sophisticated version of "always predict not fraud" = useless.`,
+        ],
+        answer: `D`,
       },
       {
         q: `Why is applying SMOTE to the full dataset before splitting into train and test sets invalid?`,
-        a: `SMOTE generates synthetic minority samples by interpolating between real minority samples. If you apply it to the full dataset, some of the synthetic samples will be near real test-set minority examples, because the interpolation uses test-set neighbors. The test set then contains synthetic examples (not real data) and is no longer a valid holdout for estimating real-world performance — you are evaluating the model on made-up data points that are structurally similar to what it trained on. The correct procedure: split first into train and test using real data, then apply SMOTE only to the training set. The test set must always contain only real, unmodified examples so that it represents actual production distribution.`,
+        options: [
+          `A) SMOTE generates synthetic minority samples by interpolating between real minority samples. If applied before splitting, some synthetic samples will be geometrically near real test-set minority examples — the test set then contains synthetic data structurally similar to training points and is no longer a valid holdout. Correct: split into train/test using real data FIRST, then apply SMOTE ONLY to training set. Test set must always contain only real, unmodified examples.`,
+          `B) SMOTE applied before splitting is invalid because it changes the class balance of the test set, making it impossible to compute meaningful precision and recall metrics on the held-out data.`,
+          `C) SMOTE applied before splitting is invalid because it requires knowing the class labels of the test set, which means the model has implicitly seen the test labels during preprocessing.`,
+          `D) SMOTE applied before splitting is computationally wasteful — synthetic samples generated from the full dataset will be discarded when the test set is held out, so applying SMOTE inside the training set is more efficient.`,
+        ],
+        answer: `A`,
       },
       {
         q: `Compare class weighting and SMOTE: when would you choose one over the other for a 50:1 imbalanced tabular dataset?`,
-        a: `Class weighting is almost always the first choice for tabular data: it requires no data modification, works natively in most model implementations, interacts cleanly with cross-validation (no risk of resampling-before-splitting leakage), and scales to any imbalance ratio without generating data. SMOTE is preferred when the minority class is genuinely underrepresented in feature space — when there are too few minority examples for the model to learn a good decision boundary, not just that the loss function is unbalanced. For a 50:1 ratio with thousands of minority examples, class weighting is sufficient. For a 50:1 ratio with only 50 minority examples total, SMOTE can help by creating a denser minority region for the model to learn from. For deep learning, class weighting is almost always preferred because SMOTE on high-dimensional or mixed-type tabular data is harder to validate.`,
+        options: [
+          `A) Always use SMOTE for tabular data — class weighting only adjusts the loss function, while SMOTE physically creates new training examples that give the model more minority-class decision boundary to learn from.`,
+          `B) Always use class weighting — SMOTE is only appropriate for image data where interpolating pixel values produces realistic augmented examples, not for tabular data where interpolation between rows lacks domain meaning.`,
+          `C) Class weighting is almost always first choice for tabular data: no data modification, works natively in most model implementations, integrates cleanly with cross-validation, scales to any imbalance ratio. SMOTE preferred when the minority class is genuinely underrepresented in feature space — too few minority examples for model to learn a good decision boundary. For 50:1 with thousands of minority examples: class weighting sufficient. For 50:1 with only 50 minority examples: SMOTE creates denser minority region. For deep learning: class weighting almost always preferred.`,
+          `D) Choose between them based on model type: class weighting works best for gradient boosted trees while SMOTE works best for logistic regression and neural networks.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `You lower the classification threshold from 0.5 to 0.2 and your recall increases from 0.6 to 0.9 but precision drops from 0.8 to 0.3. Is this an improvement?`,
-        a: `Whether this is an improvement depends entirely on the relative cost of false negatives versus false positives in the deployment context. A higher recall (0.9 vs 0.6) means catching 50% more actual fraud cases — if each fraud case costs $5,000 uncaught, this is highly valuable. The lower precision (0.3 vs 0.8) means more false positives — if each false positive triggers a $50 manual review, the increase in false positives needs to be justified by the cases caught. The decision cannot be made from these numbers alone without knowing the business cost ratio. In fraud detection, where the cost of missing a fraud is typically much higher than the cost of a false alarm, a threshold of 0.2 may well be the right operating point. The correct approach is to compute the expected cost at each threshold and choose the minimum-cost threshold.`,
+        q: `You lower classification threshold from 0.5 to 0.2 and recall increases 0.6 to 0.9 but precision drops 0.8 to 0.3. Is this an improvement?`,
+        options: [
+          `A) No — the F1 score decreased. F1 is the harmonic mean of precision and recall, and a precision drop from 0.8 to 0.3 outweighs a recall gain from 0.6 to 0.9, so the lower threshold makes the model worse.`,
+          `B) Depends entirely on the relative cost of false negatives vs. false positives in deployment context. Higher recall (0.9) catches 50% more actual fraud. Lower precision (0.3) means more false positives. If each fraud costs $5,000 uncaught and each false positive triggers $50 manual review, threshold 0.2 is likely right. The decision cannot be made from numbers alone without knowing the business cost ratio — compute expected cost at each threshold and choose the minimum.`,
+          `C) Yes — recall is the primary metric for fraud detection, and any improvement in recall is always an improvement in a fraud model regardless of the precision impact.`,
+          `D) Yes — the model now catches 90% of fraud cases, which exceeds the industry standard threshold of 85% recall required for a production fraud detection system.`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is the SMOTE failure mode when minority and majority classes heavily overlap in feature space?`,
-        a: `SMOTE generates synthetic minority samples by interpolating between existing minority samples along the line connecting a sample to one of its k nearest minority neighbors. When minority and majority classes overlap significantly, some minority samples are surrounded by majority samples, and the synthetic points generated by interpolating between minority samples will fall inside the majority-class region. The model trains on these synthetic minority samples as if they are real minority examples, but at inference time, those feature-space regions produce majority-class predictions — the synthetic samples are misleading. This is why SMOTE-ENN and SMOTE-Tomek variants exist: they apply an undersampling step after SMOTE to remove synthetic samples that are misclassified by k-NN, cleaning the decision boundary and removing the cross-class synthetic contamination.`,
+        options: [
+          `A) When classes overlap heavily, SMOTE generates synthetic samples that are indistinguishable from majority class examples, causing the model to learn that all high-density regions belong to the minority class.`,
+          `B) Heavy class overlap causes SMOTE to generate synthetic samples that are exact duplicates of existing minority samples, providing no new geometric information and negating the benefit of oversampling.`,
+          `C) Heavy class overlap makes SMOTE extremely slow because the k-NN search must examine a larger fraction of the dataset to find the k nearest minority neighbors for each sample.`,
+          `D) SMOTE generates synthetic minority samples by interpolating between existing minority samples. When classes overlap significantly, some minority samples are surrounded by majority samples. Synthetic points generated by interpolating between minority samples will FALL INSIDE the majority-class region — misleading/contradictory training signal. This is why SMOTE-ENN and SMOTE-Tomek exist: they apply undersampling after SMOTE to remove synthetic samples misclassified by k-NN, cleaning the decision boundary.`,
+        ],
+        answer: `D`,
       },
     ],
   },
@@ -277,24 +434,54 @@ The model trains successfully, metrics are excellent, the model ships, and then 
     takeaway: `Any information that flows from evaluation examples into training — through preprocessing statistics, feature engineering, or incorrect splits — creates an optimistic illusion of generalization that evaporates when real data arrives. No error fires during training. The model reports excellent metrics and fails in production. The only protection is structural: enforce the split before fitting any transformer, and validate on data the model has never touched.`,
     checkQuestions: [
       {
-        q: `You build a model to predict customer churn. You include "support_tickets_after_churn_date" as a feature. The model achieves 98% accuracy. What is the problem?`,
-        a: `This is label leakage through a target-derived feature. "Support tickets after churn date" can only be known after the customer has already churned — you are using future information (post-churn behavior) as a feature to predict whether the customer churns. At prediction time (before churn happens), this feature would be unknown. The model achieves 98% accuracy because it has essentially been given the answer. In production, when you try to predict churn for currently active customers, this feature is unavailable (the customer has not yet churned, so there are no post-churn tickets), and the model's accuracy will collapse. The fix is strict temporal cutoffs: only use information available before the prediction date as features.`,
+        q: `You build a model to predict customer churn. You include 'support_tickets_after_churn_date' as a feature. The model achieves 98% accuracy. What is the problem?`,
+        options: [
+          `A) Label leakage through a target-derived feature. "Support tickets after churn date" can only be known AFTER the customer has already churned — using future information (post-churn behavior) to predict whether the customer churns. At prediction time (before churn happens), this feature is unknown. The model achieves 98% because it has essentially been given the answer. In production, for currently active customers, this feature is unavailable and accuracy will collapse.`,
+          `B) The model is overfitting to the support ticket count, which is a noisy signal — the fix is to add regularization and cap the feature at the 95th percentile to reduce its influence on the model.`,
+          `C) The 98% accuracy is actually legitimate — support ticket behavior is a strong predictor of churn intent, and customers who submit many tickets before churning do so because they are dissatisfied.`,
+          `D) The feature introduces multicollinearity because support ticket count is correlated with tenure, causing the model's coefficient estimates to be unstable and the 98% accuracy to be unreliable.`,
+        ],
+        answer: `A`,
       },
       {
         q: `Why does random train-test splitting fail for time-series forecasting, and what is the correct splitting strategy?`,
-        a: `In a time-series problem, the future depends on the past — a model trained to predict sales tomorrow should only use data from today and before. Random splitting shuffles examples across time, creating a situation where a model might be trained on data from March to predict January. In production, January comes before March, so March data would never be available when predicting January. The model learns temporal correlations backward, producing an accuracy estimate that is impossible to achieve in deployment. The correct strategy is a temporal split: train on data from time 0 to T, validate on data from T to T+k. For cross-validation, use an expanding or sliding window: each fold trains on earlier data and evaluates on immediately subsequent data, always maintaining the constraint that training data is older than validation data.`,
+        options: [
+          `A) Random splitting fails because it changes the class balance between train and test sets; for time-series data, stratified splitting by time period is required to maintain the correct temporal distribution.`,
+          `B) Random splitting fails because time-series data has autocorrelation — randomly shuffled examples violate the independence assumption of most ML algorithms, causing inflated accuracy estimates.`,
+          `C) Random splitting shuffles examples across time, so the model might be trained on March data to predict January. In production, January comes before March — March data would never be available when predicting January. The model learns temporal correlations backward, producing accuracy impossible to achieve in deployment. Correct strategy: temporal split — train on time 0 to T, validate on T to T+k. For CV: expanding or sliding window where each fold trains on earlier data and evaluates on immediately subsequent data.`,
+          `D) Random splitting fails because seasonality patterns (weekly, monthly, annual) get split across train and test, causing the model to learn incomplete seasonal cycles that do not generalize to full cycles in production.`,
+        ],
+        answer: `C`,
       },
       {
         q: `You run 5-fold cross-validation on a medical imaging dataset with 500 patients and 20 images per patient. You get CV accuracy of 94%. You deploy and get 71%. What happened?`,
-        a: `Group leakage: a random 5-fold split put different images from the same patient into different folds. A patient might have 16 images in the training fold and 4 in the validation fold. The model learned the specific patterns of each patient's imaging (lighting, scanner calibration, patient-specific anatomy) during training and then "validated" on different images of the same patients it already knew. The 94% CV accuracy measures how well the model generalizes to new images of patients it has already seen — which is much easier than generalizing to new patients entirely. The 71% production accuracy is the true generalization score (to unseen patients). The fix is grouped k-fold splitting: all images of a given patient must stay in the same fold, ensuring validation always uses patients the model has never seen.`,
+        options: [
+          `A) The 5-fold CV used too few folds — with 500 patients, 10-fold or leave-one-out CV is required to get an unbiased estimate. Using only 5 folds optimistically inflates the estimated accuracy.`,
+          `B) Group leakage: random 5-fold split put different images from the same patient into different folds. Patient might have 16 images in training and 4 in validation. Model learned patient-specific patterns (lighting, scanner calibration, anatomy) during training and validated on different images of patients it already knew. 94% CV measures generalization to new images of seen patients — much easier than new patients entirely. 71% is true generalization. Fix: grouped k-fold — all images of a given patient must stay in the same fold.`,
+          `C) The model was trained on a dataset that included images from the same scanner, but the deployed model encounters images from different scanners — a distribution shift problem unrelated to the splitting strategy.`,
+          `D) The 94% CV accuracy was computed on augmented images during training but 71% production accuracy reflects the model's performance on unaugmented images in deployment.`,
+        ],
+        answer: `B`,
       },
       {
         q: `List three preprocessing operations that can cause leakage when applied before the train-test split.`,
-        a: `First, StandardScaler and MinMaxScaler: fitting on the full dataset computes mean, std, min, max across train and test together, so the training data's normalization reflects test-set statistics. Second, SimpleImputer or KNNImputer: imputing missing values using statistics computed from the full dataset (including test examples) means test-set values influence the fill values used in training. Third, target encoding: computing per-category mean target across the full dataset means each row's encoded feature value reflects all other rows' labels including those in the test set, creating a direct channel for label information to flow into training features. All three must be fit on training data only and then applied (using the training-fit parameters) to the validation and test sets.`,
+        options: [
+          `A) Feature selection, hyperparameter tuning, and model selection all cause leakage when performed before the train-test split because they use test-set performance to make decisions.`,
+          `B) Outlier removal, duplicate detection, and missing value imputation all cause leakage because they use global dataset statistics that incorporate test-set rows.`,
+          `C) Log transformation, binning, and interaction feature creation all cause leakage because they change the statistical properties of training features based on the full dataset distribution.`,
+          `D) (1) StandardScaler and MinMaxScaler: fitting on full dataset computes mean/std/min/max across train and test together — training data normalization reflects test-set statistics; (2) SimpleImputer or KNNImputer: imputing missing values using full-dataset statistics means test-set values influence fill values used in training; (3) Target encoding: computing per-category mean target across full dataset means each row's encoded feature value reflects all other rows' labels including test set — direct channel for label information into training features.`,
+        ],
+        answer: `D`,
       },
       {
         q: `What is the correct order of operations for preprocessing inside a k-fold cross-validation loop?`,
-        a: `For each fold: (1) Split the training indices from the validation indices according to the fold definition. (2) Using only the training indices, fit all preprocessing transformers — scaler, imputer, encoder. (3) Transform the training data using the fitted transformers. (4) Transform the validation data using the same fitted transformers (fitted on training only — never refit on validation). (5) Train the model on the transformed training data. (6) Evaluate the model on the transformed validation data. The key invariant is that the validation data must always be transformed using parameters derived exclusively from training data. This mimics the production scenario where your deployed model uses a scaler fitted during training to process new incoming data.`,
+        options: [
+          `A) For each fold: (1) split training indices from validation indices; (2) using ONLY training indices, fit all preprocessing transformers (scaler, imputer, encoder); (3) transform training data using fitted transformers; (4) transform validation data using same fitted transformers (fitted on training only — NEVER refit on validation); (5) train model on transformed training data; (6) evaluate model on transformed validation data. Key invariant: validation data must always be transformed using parameters derived EXCLUSIVELY from training data.`,
+          `B) Fit all preprocessing transformers on the full training set before the loop, then inside each fold: transform the training and validation portions, train the model, and evaluate. This is correct because fitting on the full training set avoids fold-specific outliers from influencing the transformer.`,
+          `C) Inside each fold: first evaluate the model on the raw validation data to get a baseline, then fit preprocessing transformers on the training fold, transform the training fold, retrain the model, and report the improvement over baseline.`,
+          `D) Fit all preprocessing transformers once on the entire dataset (train + test) before any splitting to ensure consistent feature distributions across all folds and the final test evaluation.`,
+        ],
+        answer: `A`,
       },
     ],
   },
@@ -321,20 +508,44 @@ The model trains successfully, metrics are excellent, the model ships, and then 
     takeaway: `More features always increase model capacity and often increase overfitting. Feature selection is a bias-variance tradeoff: too few features and the model misses signal; too many and it memorizes noise. Performing selection on the test set is leakage that invalidates the evaluation — it must happen inside the training process, ideally inside each cross-validation fold.`,
     checkQuestions: [
       {
-        q: `You filter features by Pearson correlation with the target and retain only the top 20. Your model performs worse than with all 100 features. What most likely went wrong?`,
-        a: `Pearson correlation measures linear dependence between a single feature and the target, evaluated in isolation. Features with weak marginal correlation may still be essential when combined with other features — they capture interaction effects that neither feature reveals alone. For example, "time_of_day" might have near-zero correlation with purchase probability overall, but when combined with "day_of_week", it powerfully predicts conversion. Filter methods cannot detect this because they evaluate features one at a time. Additionally, features with non-linear relationships to the target will be underranked by Pearson correlation: a quadratic or U-shaped relationship has near-zero Pearson correlation but strong predictive value. The fix is to use mutual information (which captures non-linear dependence) or wrapper methods (which evaluate feature subsets via model performance, capturing interactions).`,
+        q: `You filter features by Pearson correlation with target and retain only top 20. Your model performs worse than with all 100 features. What most likely went wrong?`,
+        options: [
+          `A) Retaining only 20 features likely dropped several highly correlated features that were providing redundant but stabilizing signal; ridge regression on all 100 features would have been a better choice than filter-based selection.`,
+          `B) The top-20 Pearson correlation cutoff was too aggressive — retaining the top 40 features would have preserved enough signal for good performance while still reducing overfitting.`,
+          `C) Pearson correlation measures linear dependence between a single feature and target IN ISOLATION. Features with weak marginal correlation may still be essential when combined with other features (capture interaction effects). Additionally, non-linear relationships (quadratic, U-shaped) have near-zero Pearson correlation but strong predictive value. Filter methods cannot detect this — they evaluate features one at a time. Fix: use mutual information (captures non-linear dependence) or wrapper methods (evaluate feature subsets via model performance, capturing interactions).`,
+          `D) The model overfit to the 20 selected features because the smaller feature set gave gradient descent fewer parameters to regularize, causing the model to memorize the training data more aggressively.`,
+        ],
+        answer: `C`,
       },
       {
-        q: `Why does LASSO shrink some coefficients to exactly zero while Ridge (L2) rarely does, even though both add a penalty?`,
-        a: `The geometry of the constraint region differs between L1 and L2. L2 regularization adds a penalty proportional to the sum of squared coefficients, which is a smooth sphere in coefficient space — the minimum of the penalized objective almost never hits a coordinate axis, so coefficients are pushed toward (but not to) zero. L1 regularization adds a penalty proportional to the sum of absolute values, which is a diamond (or hypercube) in coefficient space. The corners of this diamond lie on the coordinate axes (where exactly one coefficient is non-zero and the rest are zero). The optimization landscape of a loss function intersects the L1 constraint region at these corners, producing exact zeros. This is why L1 effectively performs feature selection while L2 produces small but non-zero coefficients. Elastic Net (a mixture of L1 and L2) provides sparsity (from L1) while stabilizing the selection among correlated features (from L2's grouping effect).`,
+        q: `Why does LASSO shrink some coefficients to exactly zero while Ridge (L2) rarely does?`,
+        options: [
+          `A) LASSO uses a higher default regularization strength than Ridge, causing more aggressive shrinkage; if Ridge were tuned to the same regularization strength as LASSO, it would also produce exact zeros.`,
+          `B) Geometry of constraint region differs between L1 and L2. L2 adds penalty proportional to sum of squared coefficients — a smooth sphere in coefficient space. The optimization minimum almost never hits a coordinate axis, so coefficients pushed toward (but not to) zero. L1 adds penalty proportional to sum of absolute values — a diamond in coefficient space. Corners of the diamond lie on coordinate axes (where one or more coefficients are exactly zero). The optimization landscape intersects the L1 constraint region AT THESE CORNERS, producing exact zeros. Elastic Net (mixture of L1+L2) provides sparsity while stabilizing selection among correlated features.`,
+          `C) LASSO uses coordinate descent optimization while Ridge uses gradient descent; coordinate descent naturally produces exact zeros as a numerical artifact of updating one coefficient at a time.`,
+          `D) LASSO applies the penalty to the raw coefficient values while Ridge applies it to the squared coefficients; squaring small values makes them even smaller, which paradoxically prevents Ridge from reaching zero.`,
+        ],
+        answer: `B`,
       },
       {
-        q: `You compute feature importance from a gradient boosted tree and find that "customer_id" is the second most important feature. What has happened?`,
-        a: `Tree feature importance (measured by total impurity reduction across all splits) is biased toward high-cardinality features — features with many unique values offer more potential split points. "Customer_id" is a unique identifier with cardinality equal to the number of rows. The tree can use it to memorize the training set: split on customer_id = 12345 to perfectly isolate a single customer's rows. This produces large impurity reductions at training time but generalizes to zero new customers at test time. Customer_id is essentially an index key with no predictive signal for unseen data. The fix: remove identifier columns before training, or use permutation importance, which measures the actual performance degradation from shuffling a feature rather than the training-time impurity reduction.`,
+        q: `You compute feature importance from a gradient boosted tree and find that 'customer_id' is the second most important feature. What has happened?`,
+        options: [
+          `A) Customer IDs encode temporal information — older customers have lower IDs and newer customers have higher IDs — so the model has learned to use ID as a proxy for customer tenure, which is a legitimate predictive signal.`,
+          `B) The gradient boosted tree has discovered that certain customer IDs belong to VIP customers with systematically different behavior; this is a valid signal that should be preserved as a categorical feature.`,
+          `C) The feature importance computation has a bug — customer_id should have been excluded from the feature matrix before training, and the impurity reduction scores for all other features need to be recomputed without it.`,
+          `D) Tree feature importance (total impurity reduction across splits) is BIASED TOWARD HIGH-CARDINALITY FEATURES. "customer_id" is a unique identifier with cardinality = number of rows. The tree can use it to memorize training set: split on customer_id = 12345 perfectly isolates a single customer's rows → large impurity reductions at training time but generalizes to ZERO for new customers. Fix: remove identifier columns before training, or use PERMUTATION IMPORTANCE (measures actual performance degradation from shuffling feature rather than training-time impurity reduction).`,
+        ],
+        answer: `D`,
       },
       {
-        q: `A linear model has two features that are 0.97 correlated (e.g., "height_cm" and "height_inches"). What specific failure mode does this cause and how do you fix it?`,
-        a: `When two features are highly correlated, they both carry nearly the same information. The model can achieve the same prediction by assigning a large positive weight to one and a large negative weight to the other, or any linear combination of the two — there are infinitely many coefficient combinations that produce identical predictions. The normal equations for linear regression become numerically near-singular: small changes in the training data cause large swings in the estimated coefficients. This is multicollinearity. Symptoms: high VIF (likely >50 for 0.97 correlation), unstable coefficients across bootstrap samples, inability to interpret which feature is "important." The fix: (1) drop one of the correlated features (height_cm and height_inches carry identical information); (2) apply Ridge regression (L2), which stabilizes coefficients under collinearity by penalizing their magnitude; or (3) create a single combined feature (their average or principal component).`,
+        q: `A linear model has two features that are 0.97 correlated (e.g., 'height_cm' and 'height_inches'). What specific failure mode does this cause and fix?`,
+        options: [
+          `A) Two near-identical features → model can achieve same prediction by assigning large positive weight to one and large negative to other — infinitely many coefficient combinations produce identical predictions. Normal equations become numerically near-singular: small data changes cause large coefficient swings. VIF likely >50. Symptoms: unstable coefficients across bootstrap samples, inability to interpret which feature is "important," coefficients may flip sign. Fix: (1) drop one correlated feature; (2) apply Ridge regression (L2 stabilizes under collinearity); (3) create single combined feature (average or principal component).`,
+          `B) Two near-identical features cause the model to double-count the effect of height, producing coefficients that are half the true value for each feature. The fix is to divide both coefficients by 2 after fitting.`,
+          `C) Near-perfect correlation between features causes gradient descent to oscillate during training, requiring a much smaller learning rate to converge. The fix is to reduce the learning rate by a factor proportional to the correlation coefficient.`,
+          `D) Two features with 0.97 correlation will produce a VIF of exactly 33.3 (= 1/(1-0.97²)); if this is below 50, multicollinearity is not severe enough to require intervention.`,
+        ],
+        answer: `A`,
       },
     ],
   },
@@ -364,23 +575,53 @@ A model making predictions on shifted data still outputs high confidence scores.
     checkQuestions: [
       {
         q: `Your fraud model was trained in 2022. In 2024, fraudsters adopt a new technique that makes fraudulent transactions look like legitimate ones. What type of shift is this and can it be fixed without new labels?`,
-        a: `This is concept drift: the conditional relationship P(Y|X) has changed. In 2022, the feature patterns that predicted fraud (large transactions to new merchants, unusual geographies) were valid. In 2024, the new fraud technique mimics legitimate transaction patterns, so the same feature values now have a different label. This cannot be corrected by reweighting old training data — the 2022 labels are simply wrong for describing the 2024 relationship between features and fraud. The only fix is fresh labeled data: you need examples of the new fraud pattern, labeled by human reviewers or rule-based systems, and a retraining or fine-tuning step. Covariate shift (P(X) changes) can sometimes be corrected by importance weighting without new labels, but concept drift cannot.`,
+        options: [
+          `A) This is covariate shift: P(X) has changed because fraudulent transactions now have different feature distributions. It can be corrected by importance weighting old training data to match the new transaction distribution without requiring new labels.`,
+          `B) This is label shift: P(Y) has changed because the fraud rate has decreased as fraudsters succeed in mimicking legitimate transactions. It can be corrected using Black Box Shift Estimation to adjust the predicted probability distribution.`,
+          `C) This is concept drift: P(Y|X) has changed. In 2022, feature patterns predicting fraud were valid. In 2024, new fraud technique mimics legitimate transaction patterns — same feature values now have different labels. CANNOT be corrected by reweighting old training data — the 2022 labels are simply wrong for describing the 2024 relationship. Only fix: fresh labeled data (examples of new fraud pattern, labeled by human reviewers or rule-based systems) and retraining/fine-tuning. Covariate shift CAN sometimes be corrected by importance weighting without new labels, but concept drift CANNOT.`,
+          `D) This is both covariate shift and concept drift simultaneously; the only reliable fix is a complete model rebuild using only data from 2024 with all 2022 training data discarded.`,
+        ],
+        answer: `C`,
       },
       {
         q: `Describe what happens to a model's confidence scores under distribution shift, and why this makes shift especially dangerous.`,
-        a: `A model's confidence score is determined by its learned parameters applied to the input features — it is a function of the model's internal state, not of whether the input is representative of the training distribution. Under distribution shift, the model receives inputs it has never encountered before, but its sigmoid or softmax output will still produce a number between 0 and 1. Commonly, shifted inputs land in regions of feature space where the model produces high-confidence predictions (because they resemble the boundaries of known classes or because the model generalizes confidently outside its training manifold). The result is that the model continues to output confident predictions even as its accuracy collapses. Unlike a database query that errors on invalid input, the model silently returns a wrong answer with 95% confidence. This makes shift dangerous: there is no automatic error signal. Monitoring requires external ground truth labels (with their associated time lag) or sophisticated distribution-level tests.`,
+        options: [
+          `A) Under distribution shift, model confidence scores decrease toward 0.5 as the model becomes uncertain about inputs it has not seen before — this provides a natural detection signal that can trigger alerts when average confidence drops below a threshold.`,
+          `B) Model's confidence score is determined by learned parameters applied to input features — it is a function of the model's internal state, NOT of whether input is representative of training distribution. Under distribution shift, shifted inputs often land in regions where model produces HIGH-CONFIDENCE predictions. The model continues outputting 95% confidence even as accuracy collapses. Unlike a database query that errors on invalid input, the model SILENTLY returns a wrong answer with 95% confidence. No automatic error signal — only external ground truth labels or sophisticated distribution-level tests can detect it.`,
+          `C) Distribution shift causes confidence scores to become perfectly calibrated — the model's 70% confidence predictions are correct exactly 70% of the time — making it easier to detect shift by comparing calibration curves between training and production.`,
+          `D) Under mild distribution shift, confidence scores remain stable; only severe distribution shift (PSI > 0.5) causes confidence scores to diverge from their training-time distribution in a detectable way.`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is the difference between covariate shift and concept drift, and why does the distinction determine whether you can avoid retraining?`,
-        a: `Covariate shift: P(X) changes (the input feature distribution shifts) but P(Y|X) stays the same (given the same inputs, the correct label is unchanged). Example: your training data was 80% urban users, but your production users are 60% rural — but rural users with the same feature profile still convert at the same rate. Because P(Y|X) is unchanged, your old labeled training data is still correct — it just underrepresents the current input distribution. This can be corrected by importance weighting: up-weight training examples that resemble production, down-weight those that do not, without collecting new labels. Concept drift: P(Y|X) changes — the same feature values now predict different outcomes. Old training labels are wrong under the new relationship. Importance weighting on wrong labels produces a wrong model. New labels are required.`,
+        options: [
+          `A) Covariate shift affects numeric features while concept drift affects categorical features; the distinction determines which type of reweighting or re-encoding strategy is needed.`,
+          `B) Covariate shift happens gradually over months while concept drift happens suddenly in response to discrete events; the distinction determines whether to use a sliding window or a full historical dataset for retraining.`,
+          `C) Covariate shift and concept drift are two names for the same phenomenon — any change in the input distribution that causes model performance to degrade. Both require the same fix: trigger-based retraining when PSI exceeds 0.2.`,
+          `D) Covariate shift: P(X) changes but P(Y|X) stays same — old labeled training data is still correct, just underrepresents current input distribution. CAN be corrected by importance weighting: up-weight training examples resembling production, without collecting new labels. Concept drift: P(Y|X) changes — same feature values now predict different outcomes. Old training labels are WRONG under new relationship. Importance weighting on wrong labels produces wrong model. NEW LABELS are required. The distinction determines the fix: one requires reweighting (no new labels), the other requires new labeled data.`,
+        ],
+        answer: `D`,
       },
       {
-        q: `You run a KS test comparing the training and production distributions of your top 5 features and find p < 0.01 for one feature. What does this mean and what should you do?`,
-        a: `A p-value < 0.01 on the KS test means you can reject the null hypothesis (that training and production distributions for this feature are drawn from the same distribution) with 99% confidence. The feature's distribution has statistically significantly shifted between training time and production. The next steps: (1) investigate the magnitude of shift, not just statistical significance — with large samples, even trivial shifts become statistically significant. Use PSI to measure practical magnitude: PSI > 0.1 warrants concern, PSI > 0.2 requires action. (2) Investigate the cause: is this a data collection change (a bug introduced a null imputation that changed the distribution?), a real-world change (a new user cohort?), or seasonal variation? (3) Check whether downstream model performance has degraded. If performance is still on target, the shift may not be impacting predictions. If performance has degraded, trigger retraining or rollback.`,
+        q: `You run a KS test comparing training and production distributions of your top 5 features and find p < 0.01 for one feature. What does this mean and what should you do?`,
+        options: [
+          `A) p < 0.01 on KS test means you can reject H₀ (same distribution) with 99% confidence — feature distribution has statistically significantly shifted. Next steps: (1) investigate MAGNITUDE of shift, not just significance — with large samples, even trivial shifts become significant. Use PSI: PSI > 0.1 warrants concern, PSI > 0.2 requires action; (2) investigate CAUSE: data collection change? new user cohort? seasonal variation?; (3) check whether downstream model performance has degraded — if still on target, shift may not be impacting predictions; (4) if performance degraded: trigger retraining or rollback.`,
+          `B) p < 0.01 means the feature distribution has shifted and the model must be immediately retrained before serving any additional predictions — statistical significance at this level indicates the model's outputs are no longer valid.`,
+          `C) p < 0.01 is below the standard significance threshold of 0.05, which means the null hypothesis is rejected too strongly — this is likely a false positive caused by the large sample size, and no action is needed unless p < 0.001.`,
+          `D) p < 0.01 means the single shifted feature has invalidated the entire model; all 5 features should be re-engineered from scratch using only production data collected after the shift was detected.`,
+        ],
+        answer: `A`,
       },
       {
         q: `A model deployed in January shows 89% AUC. By June, AUC has drifted to 78%. Feature distribution monitoring shows stable PSI across all features. What type of shift does this suggest?`,
-        a: `Stable feature distributions (low PSI) but degraded model performance (AUC drop) is the signature of concept drift: P(X) has not changed (hence stable PSI on features) but P(Y|X) has changed (hence degraded accuracy). The model's learned mapping from features to labels was calibrated to the January relationship — that relationship has since changed. Common causes: seasonal shifts in user behavior (January vs. June shopping patterns differ), competitive changes (a competitor launched a product that changed which users are motivated to convert), policy changes (a new pricing model changed what features predict churn), or external events (a regulatory change modified what fraud looks like). The fix is new labeled data from the post-shift period and retraining. Feature monitoring alone (PSI) is insufficient — you also need to monitor model output distribution and track prediction accuracy with ground-truth labels.`,
+        options: [
+          `A) The stable PSI rules out any form of distribution shift — the AUC drop must be caused by a bug introduced in the model serving infrastructure between January and June, not by data-related issues.`,
+          `B) The combination of stable feature distributions and degraded performance suggests label shift: P(Y) has changed (the overall fraud rate has increased) but P(X|Y) is stable (fraudulent transactions look the same). Fix: use BBSE to reweight predicted probabilities without retraining.`,
+          `C) Stable feature distributions (low PSI) but degraded model performance (AUC drop) = signature of CONCEPT DRIFT: P(X) unchanged (hence stable PSI) but P(Y|X) changed (hence degraded accuracy). The model's learned mapping from features to labels was calibrated to the January relationship — that relationship has since changed. Common causes: seasonal shifts, competitive changes, policy changes, external events. Fix: new labeled data from post-shift period and retraining. Feature monitoring alone (PSI) is insufficient — also need model output distribution and ground-truth label accuracy tracking.`,
+          `D) Stable PSI with degraded AUC indicates covariate shift in features not being monitored — the top 5 features are stable but secondary features have shifted. Fix: expand PSI monitoring to all features before considering retraining.`,
+        ],
+        answer: `C`,
       },
     ],
   },
@@ -396,7 +637,11 @@ A model making predictions on shifted data still outputs high confidence scores.
 This means augmentation strategies are domain-specific, cannot be automated without human validation, and do not help when the model is underfitting — adding harder variations to data the model cannot yet learn makes the problem worse, not better.`,
     keyPoints: [
       `**Label preservation is the non-negotiable constraint.** A "6" rotated 180 degrees looks like a "9." A "1" flipped horizontally is still a "1" — but the domain expert must verify this for every class before applying any transformation at scale. The model cannot distinguish label-preserving augmentations from label-violating ones. Applying label-violating augmentations creates conflicting supervision: the same visual pattern receives different labels depending on which rotation was applied, and training diverges or learns the wrong invariances.`,
-      `**Mixup creates new training examples by linearly interpolating between two existing examples: new_x = λ·x1 + (1-λ)·x2, new_y = λ·y1 + (1-λ)·y2.** The model trains on blended pixels with blended labels. This forces linear behavior between training examples — the model cannot make arbitrary predictions in the regions between training points. The result is stronger regularization and better calibration. Mixup is particularly effective for image classification and tabular data with continuous labels.`,
+      `**Mixup creates new training examples by linearly interpolating between two existing examples:
+
+$new_x = λ·x1 + (1-λ)·x2, new_y = λ·y1 + (1-λ)·y2.** The model trains on blended pixe$
+
+ls with blended labels. This forces linear behavior between training examples — the model cannot make arbitrary predictions in the regions between training points. The result is stronger regularization and better calibration. Mixup is particularly effective for image classification and tabular data with continuous labels.`,
       `**Back-translation for text augmentation: translate a sentence to French, then back to English using a different model.** The result is a grammatically natural paraphrase with the same meaning but different vocabulary and phrasing. This is effective precisely because it produces the kind of surface variation that synonym replacement rules cannot replicate — the paraphrase is a real human-like sentence, not a mechanically constructed one.`,
       `**Apply augmentations on-the-fly during training, not as a preprocessing step.** Pre-computed augmentations mean the model sees the same rotated version of an image at every epoch — it memorizes the specific augmented pixel arrangement just as easily as the original. On-the-fly randomization applies a different random transformation at each training step, so across many epochs the model effectively trains on a near-infinite variety of augmented versions and is forced to learn the underlying invariance.`,
       `**Augmentation does not help underfitting models.** If training accuracy is low (the model has not captured the signal in the original data), adding more varied examples makes the problem harder without fixing the capacity or representation issue. The diagnostic: compare training and validation accuracy. High train, low validation means the model is overfitting — augmentation helps. Low train, low validation means the model is underfitting — fix the architecture or features first.`,
@@ -409,19 +654,43 @@ This means augmentation strategies are domain-specific, cannot be automated with
     checkQuestions: [
       {
         q: `You are training a digit recognition model and augment by rotating all training images up to 45 degrees. Performance degrades. What went wrong?`,
-        a: `Many handwritten digits are not rotationally invariant to large angles. A "6" rotated 180 degrees looks like a "9." A "9" rotated 90 degrees looks ambiguous. A "1" rotated 45 degrees is still a "1" but an unusual one. By augmenting with 45-degree rotations, you introduced label-violating samples: images labeled "6" that visually look like "9" to any human. The model is trained with conflicting supervision — the same visual pattern receives different labels depending on whether it is the original or an augmented version. The rule is that augmentations must be label-safe for every class, not just for some. Modest rotations (up to 10-15 degrees) are typically label-safe for digit recognition; 45-degree rotations are not.`,
+        options: [
+          `A) Rotating training images up to 45 degrees increases the effective dataset size but reduces the signal-to-noise ratio because rotated digits are less frequent in the real-world distribution of handwritten digits.`,
+          `B) Many handwritten digits are NOT rotationally invariant to large angles. A "6" rotated 180° looks like a "9." A "9" rotated 90° looks ambiguous. By augmenting with 45° rotations, you introduced label-violating samples: images labeled "6" that visually look like "9." The model trains with conflicting supervision — same visual pattern receives different labels depending on whether it is original or augmented. Augmentations must be label-safe for EVERY class; modest rotations (10-15°) are typically safe for digit recognition, 45° rotations are not.`,
+          `C) Rotating by up to 45 degrees is label-safe for all digits except "6" and "9"; the fix is to apply the same 45-degree rotation augmentation to all digit classes except those two.`,
+          `D) The 45-degree rotation augmentation is correct but was applied too early in training — augmentation should only be applied after the model has converged on the original (non-augmented) training data.`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is Mixup augmentation and why does it act as a regularizer?`,
-        a: `Mixup constructs new training examples by linearly interpolating between two randomly selected training examples: new_x = λ·x1 + (1-λ)·x2 and new_y = λ·y1 + (1-λ)·y2, where λ is drawn from a Beta distribution. The training example is literally a weighted average of two images (pixels blended) and the label is a weighted mixture of the two label vectors. It acts as a regularizer because it forces the model to predict a smooth interpolation of labels in the regions between training examples. Without Mixup, the model is only supervised at discrete training points and can behave arbitrarily in between. Mixup constrains the model to be approximately linear between pairs of training examples, which reduces overfitting and improves calibration (the model's confidence is better aligned with its actual accuracy).`,
+        options: [
+          `A) Mixup randomly selects a subset of training examples and replaces their labels with the mode label of their k-nearest neighbors — it acts as a regularizer by smoothing label noise in the training set.`,
+          `B) Mixup applies multiple random augmentations (rotation, flip, crop) to each training image and averages the predictions — it acts as a regularizer by reducing model variance through ensemble averaging during training.`,
+          `C) Mixup trains the model on pairs of training examples simultaneously by concatenating them along the feature axis — it acts as a regularizer by exposing the model to longer input sequences than it will encounter at inference time.`,
+          `D) Mixup constructs new training examples by linearly interpolating between two randomly selected training examples: new_x = λ·x1 + (1-λ)·x2 and new_y = λ·y1 + (1-λ)·y2, where λ drawn from Beta distribution. The training example is literally a weighted average of two images with blended labels. Acts as regularizer because it forces the model to predict smooth interpolation of labels in regions BETWEEN training examples — constrains model to be approximately linear between pairs. Reduces overfitting and improves calibration.`,
+        ],
+        answer: `D`,
       },
       {
         q: `When does augmentation help and when does it not? Give a scenario for each.`,
-        a: `Augmentation helps when the model overfits: a small dataset where the model achieves near-perfect training accuracy but poor validation accuracy is exactly the regime where augmentation — by creating more diverse training examples — reduces variance. Example: a medical imaging classifier with 500 training images per class; random crops, flips, and color jitter dramatically expand the effective training set. Augmentation does not help when the model underfits: if training accuracy is 60% (the model has not yet captured the signal in the original data), adding more variations of already-unlearnable data makes the problem harder without fixing the capacity or training problem. Example: using a linear model on image pixel features — adding augmented images will not fix the fundamental insufficiency of the representation. The diagnostic is to compare training and validation accuracy: high train, low validation → augmentation helps; low train, low validation → fix the model first.`,
+        options: [
+          `A) Augmentation helps when the model OVERFITS: small dataset where model achieves near-perfect training accuracy but poor validation accuracy — augmentation creates more diverse training examples, reduces variance. Example: medical imaging classifier with 500 training images per class. Does NOT help when model UNDERFITS: if training accuracy is 60%, adding more variations of already-unlearnable data makes problem harder without fixing capacity/representation issue. Example: using linear model on image pixel features — augmentation won't fix the fundamental insufficiency of the representation.`,
+          `B) Augmentation always helps regardless of whether the model is overfitting or underfitting — the only difference is the magnitude of improvement, which is larger for overfitting models.`,
+          `C) Augmentation helps for image and text data but never helps for tabular data — the lack of spatial or semantic structure in tabular features means augmented examples do not represent realistic variations of the original data.`,
+          `D) Augmentation helps when the validation accuracy is below 80% — below this threshold, the model needs more diverse training examples to generalize. Above 80%, the model is already generalizing well and augmentation provides no further benefit.`,
+        ],
+        answer: `A`,
       },
       {
         q: `Why should augmentation transformations be applied on-the-fly during training rather than pre-computed and saved to disk?`,
-        a: `If augmentations are pre-computed (applied once before training), the model sees the same augmented versions of each image at every epoch. In epoch 1, it sees "cat_image_1_rotated_23deg." In epoch 5, it sees exactly the same "cat_image_1_rotated_23deg" again. After enough epochs, the model memorizes these specific augmented versions just as easily as it would memorize the originals — no regularization benefit is achieved. On-the-fly augmentation applies a random transformation at each training step: epoch 1 might use rotation=23deg; epoch 5 might use rotation=7deg for the same image. Each time the model sees an image, it sees a freshly randomized variant. Over thousands of epochs, the model is effectively trained on a near-infinite variety of augmented versions, which forces it to learn the underlying invariances rather than memorizing specific pixel arrangements.`,
+        options: [
+          `A) Pre-computing augmentations creates files that are too large to fit in memory, while on-the-fly augmentation generates only the current batch's augmented versions, reducing peak memory usage.`,
+          `B) Pre-computed augmentations cannot be used with data loaders that shuffle training examples at each epoch, while on-the-fly augmentation works correctly regardless of the shuffling order.`,
+          `C) If pre-computed (applied once before training), model sees SAME augmented versions at every epoch — in epoch 1 and epoch 5 the model sees exactly the same "cat_image_1_rotated_23deg." After enough epochs, model memorizes these specific augmented versions just as easily as originals — no regularization benefit. On-the-fly augmentation applies RANDOM transformation at each training step: epoch 1 might use rotation=23°, epoch 5 might use rotation=7° for same image. Over thousands of epochs, model effectively trained on near-infinite variety, forced to learn underlying invariances rather than memorizing specific pixel arrangements.`,
+          `D) Pre-computed augmentations bias the model toward the specific transformations chosen before training, while on-the-fly augmentation allows the augmentation strategy to be updated between training runs without regenerating the dataset.`,
+        ],
+        answer: `C`,
       },
     ],
   },
@@ -449,20 +718,44 @@ The model receives inputs it was never trained on, accuracy collapses, and no er
     takeaway: `A model is a function of code and data together. Versioning only the code leaves half the reproducibility problem unsolved. Centralizing feature computation eliminates training-serving skew by making divergence structurally impossible rather than hoping discipline holds. Loud pipeline failures are better than silent ones — a pipeline that fails on day one is always better than one that silently corrupts a model and surfaces six weeks later.`,
     checkQuestions: [
       {
-        q: `A model trained and evaluated in your offline pipeline shows 91% AUC. After deployment, production AUC is 77%. No distribution shift is detected in features monitored at prediction time. What is the most likely cause?`,
-        a: `The most likely cause is training-serving skew: the features used during serving are computed differently from the features used during training. Monitoring features at prediction time confirms their distribution is stable (ruling out distribution shift), but if the feature values themselves are wrong — computed with different logic, different null handling, different time windows — the model receives inputs it was never trained on. Common examples: the training pipeline computed "days since last purchase" using a batch SQL snapshot with a specific cutoff time, but the serving system computes it from a live database that includes transactions from the current day. Or timezone handling differs (UTC in training, local time in serving). Or a feature is computed from a different table version in production. The fix is to audit the feature computation code in both pipelines and compare output values for the same raw input on a held-out sample.`,
+        q: `A model trained and evaluated in offline pipeline shows 91% AUC. After deployment, production AUC is 77%. No distribution shift detected in features monitored at prediction time. What is the most likely cause?`,
+        options: [
+          `A) The model overfits the offline evaluation set because the offline pipeline uses a fixed train-test split rather than cross-validation, making the 91% AUC estimate optimistically biased.`,
+          `B) Training-serving skew — features used during serving computed differently from features used during training. Monitoring features at prediction time confirms distribution is stable (ruling out distribution shift), but if feature VALUES themselves are wrong (different logic, null handling, time windows), model receives inputs it was never trained on. Common examples: training pipeline used batch SQL snapshot with specific cutoff time; serving system computes from live database including same-day transactions. Or timezone handling differs. Fix: audit feature computation code in both pipelines and compare output values for same raw input on held-out sample.`,
+          `C) The 14-point AUC gap is within normal variance for real-world ML deployments and does not indicate a specific technical problem — it reflects the inherent difficulty of generalizing from offline evaluation to production conditions.`,
+          `D) The production AUC drop indicates that the model's hyperparameters were tuned for the offline distribution and need to be re-tuned on production data before redeployment.`,
+        ],
+        answer: `B`,
       },
       {
-        q: `You need to reproduce a model trained 8 months ago to debug a regression. You have the training code at the exact commit, but you cannot reproduce the results. What is missing from your MLOps setup?`,
-        a: `Data versioning is missing. The training code alone is insufficient to reproduce a model — you also need the exact dataset used to train it. Eight months ago, the training set had a specific set of rows, feature values, and label assignments. Since then, the upstream data has likely changed: new rows have been added, old rows may have been updated or deleted, feature engineering pipelines may have been modified. Without DVC (or equivalent data versioning), you cannot recover the exact dataset state that existed 8 months ago. The fix for the future: use DVC to commit a .dvc pointer file alongside each model training run, so the dataset version is permanently associated with the code version. With experiment tracking (MLflow), also record the dataset version as a run parameter.`,
+        q: `You need to reproduce a model trained 8 months ago to debug a regression. You have the training code at the exact commit, but you cannot reproduce the results. What is missing?`,
+        options: [
+          `A) The random seed used during training is missing — without fixing the random seed for train-test splitting and model initialization, the same code will always produce a different model.`,
+          `B) The hyperparameter configuration is missing — without the exact learning rate, regularization strength, and tree depth used in the original training run, the same code will converge to a different model.`,
+          `C) The Python package versions are missing — without the exact dependency versions (scikit-learn, pandas, numpy), the same code running on a different package version will produce different numerical results.`,
+          `D) Data versioning is missing. Training code alone insufficient to reproduce a model — also need exact dataset used to train it. Eight months ago, training set had specific rows, feature values, and label assignments. Since then, upstream data has likely changed: new rows added, old rows updated/deleted, feature engineering pipelines modified. Without DVC (or equivalent), cannot recover exact dataset state from 8 months ago. Fix for future: use DVC to commit .dvc pointer file alongside each model training run so dataset version permanently associated with code version.`,
+        ],
+        answer: `D`,
       },
       {
         q: `What is point-in-time correctness in a feature store and what goes wrong without it?`,
-        a: `Point-in-time correctness ensures that when you assemble a training example for a model predicting on date T, you use the feature values as they existed at time T — not as they exist when you assemble the training data (which could be months later). Without it, you commit temporal leakage: for a customer churn model, if you use today's "30-day purchase count" to label a training example from 6 months ago, you include purchases from the 5 months after the label date. The feature value is contaminated by future information. A feature store with point-in-time support maintains the full history of feature values with timestamps, and the training data assembly query specifies "give me the feature value for customer X as of date T" — not "give me the current value." Without this, every historical training example is contaminated by future data, producing inflated accuracy that collapses in production.`,
+        options: [
+          `A) Point-in-time correctness ensures that when assembling training example for model predicting on date T, you use feature values AS THEY EXISTED at time T — not as they exist when you assemble the training data (possibly months later). Without it: temporal leakage — for a customer churn model, if you use today's "30-day purchase count" to label a training example from 6 months ago, you INCLUDE purchases from the 5 months AFTER the label date. Feature value contaminated by future information. Feature store with point-in-time support queries feature values "as of" specified timestamp. Without this: every historical training example contaminated by future data, producing inflated accuracy that collapses in production.`,
+          `B) Point-in-time correctness ensures that training and serving use the same timestamp format (UTC vs. local time) to prevent timezone-related feature skew. Without it, features computed in training and serving will have different values for the same raw events.`,
+          `C) Point-in-time correctness ensures that the feature store's online layer serves features with latency below the model's SLA. Without it, serving latency spikes cause the model to fall back to default feature values, degrading prediction quality.`,
+          `D) Point-in-time correctness ensures that the same version of each feature is used across all folds of cross-validation. Without it, different folds may use features computed from different snapshots of the upstream data, introducing fold-to-fold variance in the CV estimate.`,
+        ],
+        answer: `A`,
       },
       {
-        q: `An upstream team renames a column from "transaction_value" to "txn_amount" without notifying your team. Your retraining pipeline runs successfully with no errors. Six weeks later, you notice model performance has dropped. What happened and how would a data contract have prevented it?`,
-        a: `The pipeline read the renamed column as null (the old column name no longer exists in the table, and many SQL engines return nulls for missing columns rather than erroring). The imputer filled in the mean of a now-null column — likely 0 or the column's historical mean from the imputer fitted at the previous training run. The model was retrained on a version of the transaction value feature that was entirely imputed noise, producing silently degraded performance six weeks before it was noticed. A data contract would have prevented this: it specifies that the upstream table must contain a column named "transaction_value" of type FLOAT with a null rate below 1%. The data validation step runs this contract check before any feature computation, and when the column is absent, the pipeline fails immediately with a descriptive error — blocking the corrupted retraining run and alerting the team the day it happened, not six weeks later.`,
+        q: `An upstream team renames a column from 'transaction_value' to 'txn_amount' without notifying your team. Your retraining pipeline runs successfully with no errors. Six weeks later, model performance dropped. What happened and how would a data contract have prevented it?`,
+        options: [
+          `A) The pipeline read renamed column as null (old column name no longer exists; many SQL engines return nulls for missing columns rather than erroring). Imputer filled in mean of now-null column — likely 0 or historical mean from previous imputer. Model retrained on version of transaction value feature that was entirely imputed noise, silently degraded, not discovered for 6 weeks. Data contract would prevent this: specifies upstream table MUST contain column named "transaction_value" of type FLOAT with null rate below 1%. Data validation step runs this check before any feature computation, and when column is absent, pipeline FAILS IMMEDIATELY with descriptive error — blocking corrupted retraining run and alerting team on day 1.`,
+          `B) The pipeline automatically mapped the old column name to the new one using fuzzy string matching, but the mapping introduced a one-day lag that shifted all temporal features by 24 hours, gradually degrading time-sensitive predictions.`,
+          `C) The renamed column caused a schema mismatch that the pipeline silently handled by dropping the column entirely; the model retrained without the feature, which reduced its predictive power by the amount attributable to transaction value.`,
+          `D) The pipeline cached the old column schema from the previous training run and continued reading the correct data for 6 weeks until the cache expired, at which point the column name mismatch surfaced as a performance drop.`,
+        ],
+        answer: `C`,
       },
     ],
   },

@@ -8,8 +8,16 @@ export const BANDITS_MODULES = [
     tags: ['bandit', 'exploration', 'regret', 'exploration-exploitation', 'stochastic'],
     summary: `A/B testing commits samples to both arms for the full experiment duration, even if one arm is clearly losing early. In online settings — recommending ads, articles, treatments — every suboptimal recommendation has a real cost. Multi-armed bandits formalise the exploration-exploitation tradeoff: you must try options to learn their value (explore), but you want to choose the best option as often as possible (exploit). Doing both simultaneously is the core challenge. Regret — the accumulated cost of not always choosing the best arm — is the right metric for this problem, not reward prediction accuracy: a perfect reward model with a greedy policy still incurs linear regret if it never explores and fails to discover a better arm. The Lai-Robbins lower bound (Ω(log T)) is the key theoretical anchor: any consistent algorithm must pull suboptimal arms at a rate proportional to log T divided by the KL divergence between arm distributions. You cannot beat log T; you can only match it.`,
     keyPoints: [
-      `**Regret is the right metric, not reward accuracy.** Pseudo-regret R_T = T·μ* − Σ_t μ_{a_t} measures the cumulative gap between the optimal arm's expected reward and your policy's expected rewards. A model that predicts rewards perfectly but selects greedily has zero exploration. If it happened to underestimate the best arm early, it never corrects and incurs linear regret O(T) — the prediction accuracy is high but the decision quality is permanently compromised.`,
-      `**Expected regret decomposes as R_T = Σ_{a≠a*} Δ_a · E[N_a(T)] where Δ_a = μ* − μ_a is the suboptimality gap for arm a and N_a(T) is the number of times you pull it.** Minimising regret means minimising pulls on suboptimal arms — but identifying which arms are suboptimal requires the exploration you are trying to limit. This is the circular dependency that makes the problem hard.`,
+      `**Regret is the right metric, not reward accuracy.** Pseudo-regret
+
+$R_T = T·μ* − Σ_t μ_{a_t} measures the cumulative gap betwe$
+
+en the optimal arm's expected reward and your policy's expected rewards. A model that predicts rewards perfectly but selects greedily has zero exploration. If it happened to underestimate the best arm early, it never corrects and incurs linear regret O(T) — the prediction accuracy is high but the decision quality is permanently compromised.`,
+      `**Expected regret decomposes as
+
+$R_T = Σ_{a≠a*} Δ_a · E[N_a(T)] where Δ_a = μ* − μ_a is the suboptimality gap for arm a an$
+
+d N_a(T) is the number of times you pull it.** Minimising regret means minimising pulls on suboptimal arms — but identifying which arms are suboptimal requires the exploration you are trying to limit. This is the circular dependency that makes the problem hard.`,
       `**Lai-Robbins lower bound (1985): for any consistent algorithm (sub-polynomial regret on every instance), expected regret satisfies E[R_T] ≥ Σ_{a: Δ_a > 0} Δ_a / KL(μ_a, μ*) · ln T.** This is Ω(log T) and cannot be beaten asymptotically. Algorithms achieving O(log T) regret are optimal. The KL term tells you why near-optimal arms are expensive: if two arms are very similar (small KL), you need many pulls to distinguish them, and each suboptimal pull costs Δ_a.`,
       `**Instance regret vs minimax regret are different goals.** UCB-type algorithms achieve O(log T) on specific instances but O(√(KT)) in the worst case. EXP3 achieves O(√(KT ln K)) in the fully adversarial setting without any distributional assumptions. An algorithm optimal for T = 10^6 may underperform at T = 1000 — asymptotic optimality says nothing about finite-horizon performance where prior warm-starting and instance-specific constants dominate.`,
       `**Stochastic MAB assumes rewards are i.i.d. from fixed but unknown distributions.** The optimal arm is fixed. Most recommendation and ad-serving problems are approximately stochastic over short windows. UCB and Thompson Sampling are designed for this setting and achieve O(log T) regret.`,
@@ -19,20 +27,44 @@ export const BANDITS_MODULES = [
     ],
     checkQuestions: [
       {
-        q: 'You have a news article recommendation system with 500 candidate articles. Each user visit is a bandit round. Why is regret a better objective than classification accuracy of click prediction?',
-        a: 'Classification accuracy measures how well the model predicts clicks — it evaluates the model in isolation, not the policy. Regret measures the cumulative opportunity cost of the recommendation policy. A model can have high click prediction accuracy but, if the policy is purely greedy (always recommend the highest-predicted-CTR article), it never explores new articles. If one new article is actually best but had a low initial estimate, greedy policy has linear regret — it never discovers it. Regret forces you to optimize the sequential decision process: the joint accuracy-exploration tradeoff. In production, this translates to: maximizing total clicks (or revenue) over a horizon, not per-round prediction error.',
+        q: `You have a news article recommendation system with 500 candidate articles. Each user visit is a bandit round. Why is regret a better objective than classification accuracy of click prediction?`,
+        options: [
+          `A) Click prediction accuracy directly measures revenue, making it superior to regret for business optimization`,
+          `B) Regret measures the cumulative opportunity cost of the policy — a greedy high-accuracy model that never explores may permanently miss the best article, incurring linear regret even with perfect per-round predictions`,
+          `C) Regret is easier to compute than classification accuracy in online settings`,
+          `D) Classification accuracy ignores the reward signal, so it is always a worse metric regardless of the policy used`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'What is the difference between pseudo-regret and expected regret? Which is typically analyzed in theory?',
-        a: 'Expected regret (sometimes called "expected regret") is E[Σ_t (μ* − μ_{a_t})], the expectation over randomness in both the rewards and the algorithm\'s random choices. Pseudo-regret is Σ_t (μ* − μ_{a_t}) — the gap using the true best arm mean μ* — and is itself a random variable (over algorithm randomness) whose expectation is expected regret. A stronger notion, high-probability regret, bounds Σ_t (μ* − r_{a_t,t}) — the actual cumulative loss including reward noise. Theory typically analyzes expected pseudo-regret because it factors out reward noise (which is zero-mean and cancels in expectation) and focuses on the sub-optimality of arm selection. The distinction matters in adversarial settings where the reward noise is part of the adversary\'s strategy.',
+        q: `What is the difference between pseudo-regret and expected regret? Which is typically analyzed in theory?`,
+        options: [
+          `A) Pseudo-regret is the expectation over algorithm randomness of the gap using true arm means; expected regret further averages over reward noise. Theory typically analyzes pseudo-regret because reward noise cancels in expectation, focusing analysis on arm selection sub-optimality`,
+          `B) They are equivalent terms — theory uses whichever is notationally convenient`,
+          `C) Expected regret is the stronger bound because it includes reward noise; pseudo-regret ignores noise and is therefore easier but less meaningful for practice`,
+          `D) Pseudo-regret is only defined for adversarial settings; expected regret applies to stochastic bandits`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'In a clinical trial with 4 treatments and 200 patients total, should you use a bandit algorithm? What ethical constraints interact with regret minimization?',
-        a: 'Bandit algorithms (response-adaptive randomisation, e.g., Thompson Sampling) minimize cumulative regret, steering more patients toward the currently-best-estimated treatment as the trial progresses. This is ethically attractive: fewer patients receive inferior treatments. However, there are major tensions: (1) Statistical validity — adaptive designs complicate inference; the final test of H0 requires correcting for the adaptive allocation (group-sequential or permutation tests). (2) Regulatory acceptance — FDA/EMA require pre-specified stopping rules and allocation ratios; pure bandit designs are often not accepted without extensive pre-registration. (3) SUTVA — if patients interact (e.g., infectious disease), treatment assignment of one affects others. (4) Unknown reward delay — in many trials, outcomes are observed months later, making online updating impossible. For a senior MLE answer: bandit algorithms are appropriate for internal rapid-iteration decisions (A/B tests) but require careful statistical design in regulated clinical contexts.',
+        q: `In a clinical trial with 4 treatments and 200 patients total, should you use a bandit algorithm? What ethical constraints interact with regret minimization?`,
+        options: [
+          `A) No — bandit algorithms are inappropriate for clinical trials because they violate patient consent requirements`,
+          `B) Yes, but only if the trial is non-randomized and outcomes are binary`,
+          `C) Yes, but only for internal rapid-iteration decisions; bandit algorithms are generally not appropriate for regulated clinical trials without pre-registered stopping rules, corrected inference, and careful handling of delayed outcomes and SUTVA violations`,
+          `D) Bandit algorithms are always preferred in clinical trials because minimizing regret directly minimizes patient harm`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'The Lai-Robbins lower bound is Ω(log T). Does this mean no algorithm can do better than O(log T) regret? What assumptions does the bound depend on?',
-        a: 'The Lai-Robbins bound says: for any *consistent* algorithm (regret is o(T^α) for every α > 0 and every bandit instance), the expected regret on at least some instances must grow as Ω(log T). So no: you cannot do better than O(log T) regret uniformly across all instances with a consistent algorithm. The bound requires: (1) Stochastic i.i.d. rewards from a parametric family (e.g., Bernoulli, exponential). (2) Consistency of the algorithm. (3) The lower bound is problem-instance-dependent — involves KL divergence between arm distributions. You can achieve O(1) regret on any specific instance if you have a correct prior (Bayesian oracle) but you cannot guarantee this simultaneously across all instances. In the adversarial setting (no distributional assumptions), the lower bound is Ω(√(KT)), not log T.',
+        q: `The Lai-Robbins lower bound is Ω(log T). Does this mean no algorithm can do better than O(log T) regret? What assumptions does the bound depend on?`,
+        options: [
+          `A) Yes, no algorithm can ever achieve sub-logarithmic regret under any assumptions`,
+          `B) The bound only applies to adversarial settings; stochastic MAB algorithms routinely achieve O(1) regret`,
+          `C) No consistent algorithm can uniformly beat O(log T) across all stochastic instances; the bound requires i.i.d. rewards from a parametric family, algorithm consistency, and is instance-dependent via KL divergence. In the adversarial setting the minimax lower bound is Ω(√(KT)) instead`,
+          `D) The bound applies only when K > log T; with few arms sub-logarithmic regret is achievable`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Regret — not reward prediction accuracy — is the right objective for bandit problems, because a model that predicts rewards correctly but selects greedily incurs linear regret whenever it initially underestimates the best arm. The Lai-Robbins lower bound (Ω(log T)) means no consistent algorithm can do better than O(log T) regret on all instances, and the KL term in the bound tells you why: near-optimal arms require many pulls to eliminate, because small distributional differences are hard to detect.`,
@@ -60,16 +92,34 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
     ],
     checkQuestions: [
       {
-        q: 'You deploy ε=0.1 greedy for ad serving with K=50 ads. After 3 months, CTR on most ads has dropped 30% due to creative fatigue, but a new batch of ads was just added. What happens and how do you fix it?',
-        a: 'Two problems: (1) Creative fatigue — the empirical means for existing ads reflect historical CTR, not current CTR. The exploit step (90% of traffic) now exploits stale statistics, potentially serving degraded ads. (2) New ads — cold start. New ads have zero pulls, so they never appear in the exploit step; they get only ε/K = 0.1/50 = 0.2% of traffic each, which is far too little to evaluate them quickly. Fix: (a) Discounted empirical mean: μ̂_a ← 0.99·μ̂_a + 0.01·r for recent observations (exponential moving average). (b) Forced exploration: new ads get a forced pull budget (e.g., 100 pulls) before entering the standard pool. (c) Sliding window: recompute means over the last W=7 days only. (d) Switch to Thompson Sampling with a Beta(1,1) prior reset for new ads — uncertainty bonus handles cold start naturally.',
+        q: `You deploy ε=0.1 greedy for ad serving with K=50 ads. After 3 months, CTR on most ads has dropped 30% due to creative fatigue, but a new batch of ads was just added. What happens and how do you fix it?`,
+        options: [
+          `A) Only the cold start problem matters here — creative fatigue does not affect ε-greedy because the exploit step automatically adjusts to new CTR levels`,
+          `B) Two problems occur: (1) stale empirical means cause the exploit step to serve degraded ads whose historical CTR no longer reflects current performance; (2) new ads get only ε/K = 0.2% of traffic each, far too little for rapid evaluation. Fix with discounted means, forced exploration budgets for new ads, and/or switching to Thompson Sampling`,
+          `C) ε-greedy handles this well because the 10% exploration traffic continuously samples all ads including new ones`,
+          `D) The fix is simply to increase ε to 0.5 temporarily, which gives new ads more traffic without changing the algorithm`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'Prove informally that ε-greedy with fixed ε has linear regret (O(T)) even with optimal ε.',
-        a: 'With fixed ε, the algorithm explores uniformly at rate ε in every round forever. The regret from exploration rounds is: in each exploration round, the expected per-step regret is Σ_a P(pull a)·Δ_a = (1/K)·Σ_a Δ_a = Δ̄ (average suboptimality gap). Over T rounds, exploration regret ≥ ε·T·Δ̄ — linear in T. No matter how small ε is, as long as ε > 0, the exploration term grows linearly. For sub-linear regret you need ε_t → 0 as t → ∞. This is why annealing schedules are required. With ε_t = c/t, the total exploration regret = Σ_t ε_t·Δ̄ = c·Δ̄·Σ_t 1/t = O(log T). The exploit term is O(log T) as well because arm mean estimates converge quickly.',
+        q: `Prove informally that ε-greedy with fixed ε has linear regret (O(T)) even with optimal ε.`,
+        options: [
+          `A) Fixed ε causes linear regret because the algorithm never converges — it keeps switching between arms forever`,
+          `B) Linear regret follows because exploration rounds cause the empirical mean to oscillate, never settling on the best arm`,
+          `C) Fixed ε causes linear regret because exploration rounds cause variance in the estimate to grow with T`,
+          `D) In every round, exploration contributes expected per-step regret ε·Δ̄ (average suboptimality gap), so total exploration regret ≥ ε·T·Δ̄ — linear in T regardless of how small ε is. Sub-linear regret requires ε_t → 0; with ε_t = c/t, total regret = O(log T)`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'In a production system you A/B test two versions of ε-greedy: (a) ε=0.05, (b) adaptive ε_t = 1/√t. After T=10,000 rounds with K=10 arms, which achieves lower regret and why might (a) still be preferred in engineering practice?',
-        a: '(b) achieves lower asymptotic regret: O(K log T) vs O(T) for fixed ε. With T=10,000 and K=10, adaptive ε gives roughly O(10 · 9.2) ≈ O(92) ·constant regret terms, while fixed ε=0.05 gives 0.05·10,000·Δ̄ = 500·Δ̄ regret from exploration alone. However, (a) may be preferred in practice because: (1) Stationarity: ε=0.05 continuously explores, making it robust to reward distribution shifts without code changes. (2) Interpretability: constant exploration rate is easy to reason about and audit. Operations teams understand "5% traffic is exploratory." (3) Tuning stability: 1/√t annealing is sensitive to t=0 initialization — if t resets (system restart, daily cronjob), exploration rate jumps back. (4) In many real systems, T_effective is short per cohort (content has a 1-2 day lifecycle), so asymptotic regret differences don\'t materialize.',
+        q: `In a production system you A/B test two versions of ε-greedy: (a) ε=0.05, (b) adaptive ε_t = 1/√t. After T=10,000 rounds with K=10 arms, which achieves lower regret and why might (a) still be preferred in engineering practice?`,
+        options: [
+          `A) Adaptive ε_t achieves lower asymptotic regret (O(K log T) vs O(T)) because exploration cost decreases over time. Fixed ε=0.05 may still be preferred in practice for stationarity robustness, operational interpretability, and insensitivity to t=0 resets — especially when effective horizon T per cohort is short`,
+          `B) Fixed ε=0.05 always achieves lower regret because adaptive schedules are unstable`,
+          `C) They achieve identical regret in practice; the theoretical difference only manifests at T > 10^9`,
+          `D) Adaptive ε_t achieves lower regret only when K > 20; for K=10 fixed ε is superior`,
+        ],
+        answer: `A`,
       },
     ],
     takeaway: `Fixed ε causes linear regret because the exploration cost ε·T grows without bound — annealing ε_t → 0 is mathematically required, not optional. The two critical production failure modes are cold start (new arms get ε/K of traffic, often far too little for rapid evaluation) and stale means (frozen empirical means do not track non-stationary reward drift). Both require patches that UCB and Thompson Sampling handle more naturally.`,
@@ -83,32 +133,68 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
     tags: ['UCB', 'UCB1', 'confidence bound', 'optimism', 'KL-UCB', 'MOSS'],
     summary: `Epsilon-greedy's fundamental problem is that it allocates exploration uniformly — it has no mechanism for deciding which arms deserve more exploration. UCB solves this with a principled principle: always pull the arm whose true mean could plausibly be highest given what has been observed. The UCB index is μ̂_a + confidence_bonus, where the bonus shrinks as an arm accumulates data and grows as t increases. An arm that is either genuinely high-reward or under-explored will win the argmax — and if it wins because it was over-estimated, the next observation corrects that, shrinking its UCB. Over-optimism is self-correcting. UCB1 achieves O(log T) regret matching the Lai-Robbins lower bound. In production, UCB's determinism (fully reproducible, no random coin flips) makes it auditable — but naive UCB scales poorly to millions of arms because maintaining per-arm confidence intervals becomes expensive.`,
     keyPoints: [
-      `**UCB1: a_t = argmax_a [μ̂_a + √(2 ln t / N_a(t))].** The confidence bonus √(2 ln t / N_a) has two properties: it decays as N_a grows (arm is better understood, exploration less urgent) and grows as t increases (global pressure to revisit under-pulled arms). An arm never pulled at all has infinite UCB by convention and gets pulled first — this is the natural cold-start solution.`,
+      `**UCB1:
+
+$a_t = argmax_a [μ̂_a + √(2 ln t / N_a(t))].** The confidence bonus √(2 ln t / N_a) has two properties: it de$
+
+cays as N_a grows (arm is better understood, exploration less urgent) and grows as t increases (global pressure to revisit under-pulled arms). An arm never pulled at all has infinite UCB by convention and gets pulled first — this is the natural cold-start solution.`,
       `**UCB1 regret bound: E[R_T] ≤ Σ_{a: Δ_a > 0} [8 ln T / Δ_a + (1 + π²/3)·Δ_a].** The 8/Δ_a factor means near-optimal arms (small Δ_a) get pulled more — which is correct, because they take many observations to identify as suboptimal. Arms with large gaps are eliminated quickly; arms close to optimal require persistent exploration until the confidence intervals separate.`,
       `**Optimism principle: UCB acts as if each arm's mean is at its most optimistic plausible value.** If the true mean really is that high, pulling the arm is correct. If the true mean is lower, the next observation shrinks the confidence interval and the arm's UCB falls. Over-optimism generates the exploration needed to correct itself — this is why UCB never ignores an uncertain arm forever.`,
       `**UCB1-tuned replaces the fixed 1/4 variance bound with empirical variance: UCB = μ̂_a + √(min(1/4, V_a(t)) · ln t / N_a) where V_a accounts for both estimated variance and the uncertainty in that estimate.** Arms with low variance get tighter confidence intervals, focusing exploration budget on arms where variance is genuinely high. Empirically outperforms UCB1 when reward variance differs substantially across arms.`,
-      `**KL-UCB uses the KL divergence between empirical and true mean as the confidence bound: UCB_a = max{q : N_a · KL(μ̂_a, q) ≤ ln t + c ln ln t}.** This is tighter than Hoeffding-based bounds (which UCB1 uses) and achieves the Lai-Robbins lower bound with matching constant. More computationally expensive — requires solving a one-dimensional optimisation per arm — but asymptotically optimal in a way UCB1 is not.`,
-      `**MOSS (Minimax Optimal Strategy in Stochastic case): UCB index = μ̂_a + √(max(0, ln(T/(K·N_a))) / N_a).** Achieves minimax-optimal O(√(KT)) over worst-case instances. UCB1 is instance-optimal (low regret when gaps are large) but not minimax-optimal. Use UCB1 when you have reason to believe gaps are large; use MOSS when you need worst-case robustness.`,
+      `**KL-UCB uses the KL divergence between empirical and true mean as the confidence bound:
+
+$UCB_a = max{q : N_a · KL(μ̂_a, q) ≤ ln t + c ln ln t}.** This is t$
+
+ighter than Hoeffding-based bounds (which UCB1 uses) and achieves the Lai-Robbins lower bound with matching constant. More computationally expensive — requires solving a one-dimensional optimisation per arm — but asymptotically optimal in a way UCB1 is not.`,
+      `**MOSS (Minimax Optimal Strategy in Stochastic case): UCB
+
+$index = μ̂_a + √(max(0, ln(T/(K·N_a))) / N_a).** Achieves minimax-optimal O(√(KT)) over worst-case instances. UCB1 is$
+
+instance-optimal (low regret when gaps are large) but not minimax-optimal. Use UCB1 when you have reason to believe gaps are large; use MOSS when you need worst-case robustness.`,
       `**For continuous arm spaces, naive discretisation into K = T^{1/3} bins achieves O(T^{2/3}) regret.** Kernel UCB or GP-UCB handle smooth reward functions by using a GP posterior as the confidence bound — O(T^{(d+1)/(d+2)}) regret in d dimensions. The GP's posterior variance is the uncertainty measure, and the acquisition function is the UCB index.`,
       `**At web scale with K=10M arms, naive argmax is O(K) per step — infeasible at thousands of QPS.** Practical approaches: two-stage retrieval (ANN on embeddings to get top-100 candidates, then UCB over 100); pre-compute UCB scores in batch and store in Redis; hierarchical UCB (tree over arm categories, UCB at each level to select which subtree to descend).`,
       `**Heavy-tailed rewards (Cauchy, Pareto) break Hoeffding-based UCB confidence bounds, causing under-covering and insufficient exploration.** The empirical mean itself has high variance for heavy-tailed distributions. Use robust mean estimators (trimmed mean, median of means) with correspondingly modified confidence intervals when reward distributions have heavy tails.`,
     ],
     checkQuestions: [
       {
-        q: 'You have K=5 arms with true means [0.9, 0.8, 0.5, 0.3, 0.1]. After t=100 rounds with UCB1, arm 1 has been pulled N_1=30 times and arm 5 has been pulled N_5=5 times. Compute the UCB scores and explain what the algorithm will do.',
-        a: 'UCB score = μ̂_a + √(2 ln t / N_a). Assuming empirical means track true means: UCB_1 = 0.9 + √(2·ln(100)/30) = 0.9 + √(9.21/30) = 0.9 + √0.307 ≈ 0.9 + 0.554 = 1.454. UCB_5 = 0.1 + √(2·ln(100)/5) = 0.1 + √(9.21/5) = 0.1 + √1.842 ≈ 0.1 + 1.357 = 1.457. The algorithm pulls arm 5 because its UCB (1.457) slightly exceeds arm 1\'s UCB (1.454). This is the "optimism" at work: arm 5 is under-explored (N=5), so the algorithm gives it the benefit of the doubt. After one more pull of arm 5 reveals a low reward, its UCB drops and the algorithm returns to arm 1. This demonstrates how UCB naturally balances exploration of poorly-estimated arms with exploitation of known good ones.',
+        q: `You have K=5 arms with true means [0.9, 0.8, 0.5, 0.3, 0.1]. After t=100 rounds with UCB1, arm 1 has been pulled N_1=30 times and arm 5 has been pulled N_5=5 times. Compute the UCB scores and explain what the algorithm will do.`,
+        options: [
+          `A) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 1 because it has the higher empirical mean`,
+          `B) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 5 because both arms have similar UCB scores but arm 5 has higher variance`,
+          `C) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 5 because its exploration bonus (N_5=5) dominates — demonstrating how UCB naturally gives under-explored arms the benefit of the doubt despite low empirical means`,
+          `D) UCB_1 ≈ 0.9, UCB_5 ≈ 0.1; the algorithm always pulls the arm with the highest empirical mean`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Why does UCB1\'s regret bound have a 1/Δ_a factor? What does this imply about performance when arms are very close in quality?',
-        a: 'The 1/Δ_a factor reflects that near-optimal arms (small Δ_a) require many pulls to confidently identify them as sub-optimal. The confidence interval for arm a must shrink to width less than Δ_a before the algorithm stops pulling it. The number of pulls needed is O(ln T / Δ_a²). Multiplying by Δ_a (the per-pull regret) gives O(ln T / Δ_a) total regret contribution per arm. When arms are very close (Δ_a ≈ 0), regret can be very large — O(ln T / ε) for any ε > 0. In the limit Δ → 0, the lower bound diverges: any algorithm must explore heavily to distinguish near-equal arms, accumulating large regret. This is the correct behavior: if all arms are nearly identical, exploration is expensive but necessary. In practice this means UCB (and all algorithms) perform poorly when the reward signal is noisy and arms are close — you need either very large T or domain knowledge to resolve this.',
+        q: `Why does UCB1's regret bound have a 1/Δ_a factor? What does this imply about performance when arms are very close in quality?`,
+        options: [
+          `A) The 1/Δ_a factor is a mathematical artifact; it does not affect practical performance`,
+          `B) Near-optimal arms (small Δ_a) require O(ln T / Δ_a²) pulls to confidently identify as suboptimal — the confidence interval must shrink to width < Δ_a. Per-pull regret Δ_a times number of pulls gives O(ln T / Δ_a) per arm. When arms are nearly equal, both lower and upper bounds diverge: any algorithm must explore heavily to distinguish them`,
+          `C) The 1/Δ_a factor means UCB performs better when arms are close in quality because it allocates more exploration to resolve near-ties`,
+          `D) The 1/Δ_a factor appears because UCB overestimates the confidence bound by a factor of Δ_a`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'You\'re designing an ad serving system with 10 million ads. Describe a practical UCB architecture that is computationally feasible.',
-        a: 'Naive UCB is O(10M) per request — infeasible at thousands of QPS. Practical approaches: (1) Two-stage selection: use a fast retrieval stage (ANN on embedding similarity, diversity constraints) to produce a candidate set of K=100 ads per request, then run UCB over K=100. (2) Pre-compute UCB scores: batch update UCB index for all 10M ads every B=1000 rounds. Store scores in a low-latency key-value store (Redis/Bigtable). Retrieve scores for candidate set at serve time. This amortizes compute: 10M updates per batch, O(K) lookup per request. (3) Hierarchical UCB: tree structure over ads (e.g., ad category → advertiser → ad). UCB at each level selects which subtree to descend into. O(log K) per round, updates are local. (4) Tiered exploration: only run UCB exploration for ads with < 1000 impressions; for high-impression ads, use pure exploitation. Caps the tail of cold-start exploration cost. (5) Shared parameters (LinUCB): represent ad rewards as linear function of ad features, reducing the bandit problem to parameter estimation over a lower-dimensional space rather than K separate mean estimates.',
+        q: `You're designing an ad serving system with 10 million ads. Describe a practical UCB architecture that is computationally feasible.`,
+        options: [
+          `A) Two-stage selection (ANN retrieval to top-100 candidates, then UCB over 100), combined with pre-computed UCB scores in Redis updated in batches, hierarchical UCB over ad categories, and tiered exploration only for ads with < 1000 impressions — amortizing O(K) compute across batches and O(log K) per request`,
+          `B) Run UCB over all 10M ads per request using distributed computing — modern hardware can handle this at reasonable QPS`,
+          `C) Reduce the problem to a standard A/B test over 10 representative ads, ignoring the full 10M ad catalog`,
+          `D) Pre-sort ads by CTR weekly and serve the top 100 greedily without any UCB computation`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'What is the difference between instance-optimal regret (UCB1) and minimax-optimal regret (MOSS)? When does each matter?',
-        a: 'Instance-optimal regret minimizes E[R_T] for each specific bandit instance (each specific set of arm means). UCB1 achieves Σ_a O(ln T / Δ_a) — good when gaps Δ_a are large, but can be worse than Θ(√(KT)) when all gaps are small (Δ ≈ 1/√T). Minimax-optimal regret minimizes the worst-case E[R_T] over all possible bandit instances with K arms. MOSS achieves O(√(KT)) in the worst case — this is tight because the minimax lower bound is Ω(√(KT)). When to use each: instance-optimal (UCB1, KL-UCB) is preferable when you have prior knowledge that arm gaps are not too small — typical for well-separated ad creative performance or clinical treatments with distinct efficacy profiles. Minimax-optimal (MOSS) is preferable when you have no instance information and need robustness guarantees — competitive analysis or regulatory settings where worst-case performance matters. In practice, Thompson Sampling often outperforms both by adapting implicitly to instance difficulty.',
+        q: `What is the difference between instance-optimal regret (UCB1) and minimax-optimal regret (MOSS)? When does each matter?`,
+        options: [
+          `A) They are equivalent — both achieve O(log T) in all settings`,
+          `B) UCB1 is always superior because instance-optimal means it adapts to each specific bandit problem`,
+          `C) Instance-optimal (UCB1, KL-UCB) minimizes regret per specific arm-gap configuration achieving O(Σ log T / Δ_a) — good when gaps are large. Minimax-optimal (MOSS) minimizes worst-case regret achieving O(√(KT)) — preferable when gaps are unknown or small. In practice Thompson Sampling often outperforms both by adapting implicitly to instance difficulty`,
+          `D) MOSS is always preferred over UCB1 because minimax guarantees are strictly stronger than instance-optimal ones`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `UCB's self-correcting optimism is the key mechanism: if an arm wins the argmax because it was over-estimated, the next observation corrects that estimate and shrinks its UCB — over-optimism generates exactly the exploration needed to correct itself. The 1/Δ_a regret factor matters: near-optimal arms (small gap) require O(log T / Δ_a) pulls to identify as suboptimal, because small distributional differences need many observations to resolve. Arms with large gaps are eliminated quickly; arms close to the best take persistent exploration.`,
@@ -134,16 +220,34 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
     ],
     checkQuestions: [
       {
-        q: 'Walk through one step of Beta-Binomial Thompson Sampling for 3 ads with posteriors Beta(10,90), Beta(5,45), Beta(1,1). What are the likely samples and which arm gets pulled?',
-        a: 'The three arms have empirical means: arm 1 = 10/100 = 0.10, arm 2 = 5/50 = 0.10, arm 3 = 1/2 = 0.50. But the posteriors differ in concentration: arm 1 (100 observations) is very concentrated near 0.10; arm 3 (2 observations) is nearly uniform. Sampling: θ_1 ~ Beta(10,90) ≈ concentrated near 0.10, likely 0.07–0.14. θ_2 ~ Beta(5,45) ≈ concentrated near 0.10, wider, likely 0.05–0.18. θ_3 ~ Beta(1,1) ~ Uniform[0,1], likely anywhere from 0 to 1. P(arm 3 pulled) ≈ P(θ_3 > max(θ_1, θ_2)) — since θ_3 is uniform and arms 1,2 are concentrated near 0.10, arm 3 gets pulled roughly 50% of the time (any θ_3 > ~0.15 wins). This is the right behavior: arm 3 is highly uncertain and could be much better than 0.10 — TS explores it aggressively. After a pull: if r=1, posterior → Beta(2,1); if r=0, posterior → Beta(1,2). Over 50 pulls, Beta(1,1) concentrates near the true mean and exploration decreases proportionally.',
+        q: `Walk through one step of Beta-Binomial Thompson Sampling for 3 ads with posteriors Beta(10,90), Beta(5,45), Beta(1,1). What are the likely samples and which arm gets pulled?`,
+        options: [
+          `A) All three arms have the same empirical mean (0.10), so they are pulled with equal probability`,
+          `B) Arm 1 is pulled most often because it has the most observations and therefore the most reliable estimate`,
+          `C) Arm 2 is pulled because it has an intermediate number of observations, balancing uncertainty and accuracy`,
+          `D) Arm 3 (Beta(1,1) ≈ Uniform[0,1]) is pulled roughly 50% of the time because its wide posterior frequently samples above the concentrated posteriors of arms 1 and 2 (both near 0.10). This is correct — arm 3 is highly uncertain and TS aggressively explores it until its posterior concentrates`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'Your team is running an A/B/C test (3 variants) using Thompson Sampling. After 1000 rounds, the posterior probability that variant B is best is 92%. A PM wants to stop and declare B the winner. What questions do you ask before agreeing?',
-        a: 'Key questions: (1) What stopping criterion was pre-specified? "P(best) > 92%" was likely not pre-specified, raising concerns about optional stopping bias — you may have stopped at the first crossing of an arbitrary threshold. Bayesian optional stopping is valid under proper Bayesian decision theory but requires a pre-registered criterion. (2) What is the practical significance? P(B is best) = 92% does not tell you the expected loss from choosing B. Compute the Expected Regret of Stopping: E[Δ(B)] = P(B not best) · E[μ_best − μ_B | B not best]. If this is < 0.001 CTR, stopping is justified; if > 0.01, wait. (3) Are rewards stationary? TS posteriors reflect the mixture of historical reward distributions. If rewards shifted during the experiment, the posterior conflates different populations. (4) Sample size: 1000 rounds across 3 arms means ~333 per arm. With Bernoulli(0.1) rewards, standard deviation of click estimate is 0.3/√333 ≈ 0.016. Is the effect size detectable? (5) External validity: is the traffic during this experiment representative? Time-of-day, day-of-week effects in 1000 rounds may not average out.',
+        q: `Your team is running an A/B/C test (3 variants) using Thompson Sampling. After 1000 rounds, the posterior probability that variant B is best is 92%. A PM wants to stop and declare B the winner. What questions do you ask before agreeing?`,
+        options: [
+          `A) No questions needed — P(B best) = 92% is a valid Bayesian stopping criterion and you should stop immediately`,
+          `B) Ask whether the stopping criterion was pre-specified, whether practical significance (expected loss from choosing B) is acceptable, whether rewards are stationary, and whether 1000 rounds is representative traffic — all must be satisfied before stopping`,
+          `C) Ask only whether sample size is sufficient — Bayesian methods do not require pre-specified stopping criteria`,
+          `D) The only question is whether the experiment has been running long enough to achieve statistical significance under a frequentist test`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'Explain why Thompson Sampling exploration is proportional to P(arm a is optimal) and why this is more efficient than UCB\'s exploration.',
-        a: 'TS pulls arm a with probability P(θ_a = max_j θ_j | observations) — exactly the probability that arm a is currently believed optimal. In the stochastic setting, the optimal pull allocation for minimizing regret is roughly: spend O(ln T / Δ_a²) pulls on arm a. TS naturally approximates this because: as arm a accumulates observations, its posterior concentrates; the probability that a random sample from its posterior beats all other arms\' samples shrinks (if a is sub-optimal) or grows (if a is optimal). This is called "probability matching" and has the property that it focuses exploration precisely on arms that have meaningful probability of being optimal. UCB in contrast applies a fixed confidence bonus √(2 ln t / N_a) regardless of the arm\'s current probability of being optimal. For an arm with 1000 pulls and empirical mean 0.1 when the best arm has mean 0.9, UCB still gives it exploration credit; TS assigns it near-zero pull probability because no sample from its concentrated posterior will beat 0.9. In practice this makes TS faster to "give up" on clearly inferior arms.',
+        q: `Explain why Thompson Sampling exploration is proportional to P(arm a is optimal) and why this is more efficient than UCB's exploration.`,
+        options: [
+          `A) TS is not more efficient than UCB — both achieve the same Lai-Robbins bound, so efficiency is identical`,
+          `B) TS is more efficient because it uses random sampling rather than deterministic formulas, reducing computation per round`,
+          `C) TS and UCB explore identically at large T; the difference only appears at T < 100`,
+          `D) TS pulls arm a with probability P(θ_a = max_j θ_j | observations), naturally collapsing to near-zero for arms whose posterior concentrates around low values. UCB applies a fixed bonus √(2 ln t / N_a) regardless of P(arm optimal), giving up on inferior arms more slowly. This is why TS empirically outperforms UCB at finite horizons`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `Thompson Sampling exploration is proportional to P(arm a is optimal) — as posteriors concentrate around low values for inferior arms, their pull probability collapses toward zero. UCB applies a fixed confidence bonus regardless of how implausible it is that the arm is optimal, so UCB gives up on inferior arms more slowly. In production, the critical failure mode is prior misspecification: Beta(1,1) on an arm with true CTR 0.001 puts 50% probability above 0.5 and wastes enormous early exploration budget.`,
@@ -159,7 +263,11 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
     keyPoints: [
       `**Contextual bandit formulation: at round t, observe context x_t ∈ R^d, choose arm a_t ∈ {1,...,K}, observe reward r_t = f(x_t, a_t) + noise.** Goal: minimise Σ_t [f(x_t, a*_t) − f(x_t, a_t)] where a*_t = argmax_a f(x_t, a). Every round is potentially different because the context changes — the same arm may be optimal for one user and suboptimal for another.`,
       `**Contextual bandits subsume classical A/B testing.** A standard A/B test has context (user features) but ignores it during allocation — both variants are shown randomly regardless of user. A contextual bandit learns which variant is better for which user, discovering heterogeneous treatment effects while running the experiment. The allocation becomes personalised and the learnt policy is more valuable.`,
-      `**LinUCB: assumes r_t = θ_a^T x_t + ε_t.** Estimates θ_a via ridge regression over (context, reward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) where A_a = X_a^T X_a + λI. The exploration bonus x^T A_a^{-1} x measures how far the current context is from previously observed contexts — large for novel contexts, small for familiar ones. This is the right signal: explore when the context is unfamiliar, exploit when it is not.`,
+      `**LinUCB: assumes
+
+$r_t = θ_a^T x_t + ε_t.** Estimates θ_a via ridge regression over (context, r$
+
+eward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) where A_a = X_a^T X_a + λI. The exploration bonus x^T A_a^{-1} x measures how far the current context is from previously observed contexts — large for novel contexts, small for familiar ones. This is the right signal: explore when the context is unfamiliar, exploit when it is not.`,
       `**LinTS: Gaussian posterior over θ_a with mean θ̂_a and covariance σ²A_a^{-1}.** At each round sample θ̃_a ~ N(θ̂_a, σ²A_a^{-1}) and select argmax_a θ̃_a^T x_t. Same regret bounds as LinUCB but empirically better, especially with informative priors. Prior misspecification matters here: a flat prior is the wrong choice when historical data is available to initialise θ̂_a.`,
       `**Offline policy evaluation (OPE): logged (context, arm, reward) data from a behaviour policy can evaluate new policies without online deployment.** OPE is essential because online deployment is expensive and risky. Key estimators: Direct Method (DM) trains a reward model and evaluates offline — low variance but biased when the reward model is wrong for contexts the behaviour policy did not cover. Importance Sampling (IS) reweights logged rewards by π_e/π_b — unbiased but high variance when policies diverge. Doubly Robust (DR) combines both — consistent if either the reward model or propensities are correct.`,
       `**Greedy supervised learning is the wrong baseline.** Train a reward model on logs and select the highest-predicted-reward arm each round. This fails because arms underrepresented in the logging policy have reward estimates with high uncertainty — and the greedy policy either perpetually avoids them (if their logged reward is low) or over-trusts them (if they happened to have high reward on the few occasions they were logged). No uncertainty bonus means no correction for this.`,
@@ -168,16 +276,34 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
     ],
     checkQuestions: [
       {
-        q: 'How does a contextual bandit differ from a supervised learning model + greedy selection? What goes wrong with the greedy approach?',
-        a: 'A supervised model trained on logged data + greedy selection (direct method / DM) selects the arm with highest predicted reward each round. This fails in several ways: (1) Exploration bias: greedy never explores arms the logging policy undersampled, so the reward model remains uncertain about them forever. If arm A was rarely shown in logs, the model\'s prediction for arm A is poorly calibrated, and greedy may perpetually avoid it or over-trust it. (2) Distributional shift: the deployment distribution differs from the training distribution as the policy changes. Reward model accuracy degrades. (3) No exploration bonus: the greedy policy doesn\'t quantify uncertainty. Arms that were shown only once in logs but happened to have a high reward get high predicted reward with no uncertainty penalty — pure exploitation of noise. A contextual bandit (LinUCB/LinTS) adds uncertainty-based exploration: arms with high uncertainty get an exploration bonus, ensuring the model improves on under-explored regions. The key theoretical difference: DM has no regret guarantee; LinUCB has O(d√T) regret guarantee under realizability.',
+        q: `How does a contextual bandit differ from a supervised learning model + greedy selection? What goes wrong with the greedy approach?`,
+        options: [
+          `A) Contextual bandits add uncertainty-based exploration: the exploration bonus ensures the model improves on under-explored regions, providing O(d√T) regret guarantees. Greedy supervised learning has no exploration, leaves arms undersampled by the logging policy permanently poorly calibrated, and has no regret guarantee`,
+          `B) They are equivalent — a well-trained supervised model with high accuracy behaves like a contextual bandit`,
+          `C) The greedy approach is superior because supervised learning converges faster and does not waste traffic on exploration`,
+          `D) Contextual bandits differ only in using online updates; the greedy approach performs identically if the supervised model is retrained daily`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'You are building a contextual bandit for mobile push notification personalization. Context = 50-dim user features. K=20 notification types. How do you choose between LinUCB (disjoint), LinUCB (hybrid), and NeuralTS?',
-        a: 'Three choices: (1) LinUCB disjoint — separate θ_a ∈ R^d for each arm. Total parameters = K·d = 1000. Arms with few observations have high uncertainty. Good when arms have very different response patterns to the same user features. Problem: no information sharing across arms. (2) LinUCB hybrid — shared + arm-specific parameters: reward = θ_shared^T z_t + θ_a^T x_t. Shared component captures common user-feature relationships; arm-specific captures arm differences. Better sample efficiency when arm responses share structure. (3) NeuralTS — neural feature extractor φ(x), LinTS on linear head. Captures non-linear interactions between user features and notification type. Requires substantial historical data (>>K·d observations) to train a stable neural representation. For 20 arms and 50 features: start with LinUCB hybrid. If you have < 10,000 observations per arm, linear is more reliable. Monitor reward model calibration; switch to NeuralTS with frozen representation when you have >100K total observations and see evidence of non-linear interactions (e.g., cross-validation reward prediction error plateaus for linear model).',
+        q: `You are building a contextual bandit for mobile push notification personalization. Context = 50-dim user features. K=20 notification types. How do you choose between LinUCB (disjoint), LinUCB (hybrid), and NeuralTS?`,
+        options: [
+          `A) Always choose NeuralTS because neural networks have the highest capacity and will outperform linear models`,
+          `B) Choose LinUCB disjoint when arms have very different response patterns and you have sufficient per-arm data; LinUCB hybrid when arms share feature response structure and sample efficiency matters; NeuralTS only when you have >>K·d total observations and cross-validation confirms non-linear interactions that linear models cannot capture`,
+          `C) Start with NeuralTS and fall back to LinUCB only if training is too slow`,
+          `D) LinUCB disjoint is always the best starting point regardless of data volume or feature structure`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Describe a contextual bandit deployment pipeline for news article recommendation. What are the main engineering challenges?',
-        a: 'Pipeline: (1) Context construction: at request time, assemble user features (demographics, history embedding, recency signals), article features (topic, freshness, popularity), cross features (topic-user affinity). Latency budget: < 5ms. (2) Candidate generation: retrieve top-M=100 candidate articles from ANN index. (3) Contextual bandit scoring: for each candidate, compute UCB score = θ̂_a^T x + α√(x^T A^{-1} x). Arm = article, x = concatenated user-article features. (4) Serve: return top-ranked article. (5) Feedback loop: log (context, arm, reward=click) asynchronously. Update A_a and b_a via Sherman-Morrison online update (O(d²) per observation). Engineering challenges: (a) Delayed feedback — user may click 10 seconds later; must queue (context, arm) pairs and match with eventual reward. (b) Covariate shift — user distribution changes over time; periodically retrain or use discounted regression. (c) Matrix inversion — A_a^{-1} must be updated online (Sherman-Morrison) and is d×d; d=50 is manageable, d=500 requires approximations (diagonal approx, low-rank updates). (d) Cold start — new articles have zero arm-specific observations; use shared model only until N_a > d. (e) Evaluation without deployment — use OPE (doubly robust) on held-out logged data before each policy change.',
+        q: `Describe a contextual bandit deployment pipeline for news article recommendation. What are the main engineering challenges?`,
+        options: [
+          `A) The main challenge is choosing the right reward function — once that is done, deployment is straightforward`,
+          `B) The pipeline is: context construction → candidate generation → UCB scoring → serving → async feedback logging → online parameter updates. Main challenges: delayed feedback (click arrives after impression), covariate shift (user distribution changes), O(d²) matrix updates (Sherman-Morrison), cold start for new articles, and OPE-based evaluation before each policy change`,
+          `C) The only significant engineering challenge is latency — all other aspects are handled by standard ML infrastructure`,
+          `D) Contextual bandits cannot be deployed for news recommendation because articles expire too quickly for the model to learn`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Contextual bandits learn which arm is best for which user, not just which arm is best on average — this is the gap between standard A/B testing and personalised allocation. The critical failure mode of greedy supervised learning is exploration bias: arms underrepresented in the logging policy remain poorly estimated forever and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is largest for contexts far from previously observed data — it targets exploration exactly where knowledge is lacking.`,
@@ -193,32 +319,68 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
 
 This gives exact O(d√T) regret guarantees with efficient O(d²) online updates via Sherman-Morrison. The Yahoo! news paper found the theory-suggested α was 25× too large — always tune α empirically, never use the theoretical constant.`,
     keyPoints: [
-      `**Ridge regression for reward: θ̂_a = A_a^{-1} b_a where A_a = Σ x_i x_i^T + λI and b_a = Σ r_i x_i.** The λI regularisation ensures A_a is invertible even with few observations (no data collapse) and acts as an isotropic Gaussian prior θ ~ N(0, I/λ). Without it, early rounds with few observations per arm produce degenerate, numerically unstable solutions.`,
-      `**Confidence ellipsoid: under the linear model r_t = θ_a^T x_t + ε_t with subgaussian noise, the true θ_a lies in the ellipsoid {θ : (θ − θ̂_a)^T A_a (θ − θ̂_a) ≤ β} with high probability.** The UCB for context x is the maximum of θ^T x over this ellipsoid: θ̂_a^T x + α√(x^T A_a^{-1} x). The term x^T A_a^{-1} x is the width of the ellipsoid projected onto direction x — how much the estimated reward could plausibly differ from the predicted value.`,
+      `**Ridge regression for reward:
+
+$θ̂_a = A_a^{-1} b_a where A_a = Σ x_i x_i^T + λI and b_a = Σ r_i x_i.** The λI regularisation ensures A_a is invertib$
+
+le even with few observations (no data collapse) and acts as an isotropic Gaussian prior θ ~ N(0, I/λ). Without it, early rounds with few observations per arm produce degenerate, numerically unstable solutions.`,
+      `**Confidence ellipsoid: under the linear model
+
+$r_t = θ_a^T x_t + ε_t with subgaussian noise, the true θ_a lies in the ellipsoid {θ : (θ − θ̂_a)^T A_a (θ − θ̂_a) ≤ β} with$
+
+high probability.** The UCB for context x is the maximum of θ^T x over this ellipsoid: θ̂_a^T x + α√(x^T A_a^{-1} x). The term x^T A_a^{-1} x is the width of the ellipsoid projected onto direction x — how much the estimated reward could plausibly differ from the predicted value.`,
       `**Geometric intuition for x^T A^{-1} x: A_a = X_a^T X_a + λI accumulates the information from all observed contexts.** Directions in R^d well-covered by historical observations have large eigenvalues in A_a, which correspond to small eigenvalues in A_a^{-1} — the UCB bonus is small there. Directions under-observed have small A_a eigenvalues and large A_a^{-1} eigenvalues — the UCB bonus is large. Exploration is targeted at the directions in context space where you lack data.`,
       `**Confidence parameter α: theory gives α = O(σ√(d ln T)) ≈ 5 for Yahoo! news parameters.** The empirically optimal α was 0.2 — 25× smaller. Theory is conservative: it guarantees coverage for all possible θ and all reward realisations, including adversarial worst cases. Actual estimation error is much smaller. Always tune α on held-out OPE data in the range [0.1, 1.0] rather than using the theoretical value.`,
       `**Disjoint model: separate (A_a, b_a, θ̂_a) per arm, no information sharing across arms.** The exploration bonus is arm-specific — an arm with few observations has high uncertainty for all contexts. Works best when arms have genuinely different response patterns to the same features. Storage: K × d² floats for A_a^{-1}; with K=100, d=50, that's 25M floats — feasible.`,
-      `**Hybrid model: reward = β^T z_t + θ_a^T x_t where z_t are shared features (e.g., user features) and x_t are arm-specific features (e.g., ad content features). β is shared across all arms, enabling information sharing.** More sample-efficient when arms share response patterns to shared features. Harder to implement — requires joint statistics and more complex updates.`,
+      `**Hybrid model:
+
+$reward = β^T z_t + θ_a^T x_t where z_t are shared features ($
+
+e.g., user features) and x_t are arm-specific features (e.g., ad content features). β is shared across all arms, enabling information sharing.** More sample-efficient when arms share response patterns to shared features. Harder to implement — requires joint statistics and more complex updates.`,
       `**Sherman-Morrison online update: after one new observation (x, r), A_a_new = A_a + x x^T.** Naive recomputation of A_a^{-1} costs O(d³). Sherman-Morrison: (A + xx^T)^{-1} = A^{-1} − (A^{-1} x x^T A^{-1}) / (1 + x^T A^{-1} x). Cost: O(d²) — two matrix-vector products. At d=100 and 10,000 QPS, this is 10^8 FLOPs/second — feasible on one core. This enables real-time updates without full matrix inversion.`,
       `**Reward model misspecification: if the true reward is nonlinear (f(x) = sin(x^T θ)) but LinUCB uses a linear model, the confidence ellipsoid no longer contains the true parameter.** The algorithm may be systematically over-confident in directions where the linear approximation is wrong. Detection: monitor reward model residuals on held-out data. Large systematic residuals (not random noise) indicate misspecification — switch to NeuralTS or add polynomial/interaction features.`,
       `**Covariate shift breaks the calibration: A_a was built on historical contexts.** If the current context distribution differs from historical (new user demographics, seasonal shifts), x^T A_a^{-1} x may be small — the new context looks "in-distribution" for old data but is genuinely novel. The UCB is under-calibrated. Fix: periodic reset of A_a with a forgetting factor, or use only recent observations to compute A_a.`,
     ],
     checkQuestions: [
       {
-        q: 'Derive the LinUCB index from first principles. Why is √(x^T A^{-1} x) the right uncertainty measure?',
-        a: 'Start with ridge regression: θ̂ = (X^T X + λI)^{-1} X^T r = A^{-1} b. The ridge estimator has posterior distribution (under Gaussian likelihood and prior θ ~ N(0, I/λ)): θ | data ~ N(θ̂, σ² A^{-1}). The predictive mean for a new context x is θ̂^T x with variance σ² x^T A^{-1} x. The 95th percentile upper confidence bound for the expected reward θ^T x is: UCB(x) = θ̂^T x + α σ √(x^T A^{-1} x). Why √(x^T A^{-1} x)? It is the standard deviation of the predicted reward for context x under the posterior. Geometrically: A = X^T X + λI measures how much information the observed contexts X contain about directions in R^d. A^{-1} has large eigenvalues in directions orthogonal to observed data — high posterior variance there. x^T A^{-1} x projects x onto these high-variance directions; if x aligns with data-sparse directions, the UCB is large (high uncertainty → exploration). If x aligns with data-rich directions, UCB is small (low uncertainty → exploitation). This is exactly the right exploration signal: explore when the current context is novel relative to historical observations.',
+        q: `Derive the LinUCB index from first principles. Why is √(x^T A^{-1} x) the right uncertainty measure?`,
+        options: [
+          `A) √(x^T A^{-1} x) is the posterior standard deviation of predicted reward θ^T x under the ridge regression posterior θ | data ~ N(θ̂, σ² A^{-1}). A = X^T X + λI measures observed context information; large A^{-1} eigenvalues in under-observed directions mean high uncertainty there. The UCB = θ̂^T x + α σ √(x^T A^{-1} x) is the upper confidence bound for reward at x, targeting exploration where the current context is novel relative to historical data`,
+          `B) √(x^T A^{-1} x) is just the norm of x scaled by the inverse covariance; it has no geometric interpretation related to uncertainty`,
+          `C) The LinUCB index is derived from minimax regret theory, not from a Bayesian posterior — √(x^T A^{-1} x) is a worst-case bound`,
+          `D) √(x^T A^{-1} x) measures the distance from x to the nearest observed context, not the posterior variance`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'You\'re implementing LinUCB with d=100 feature dimensions and K=50 arms. The system receives 10,000 requests/second. Describe the computational challenges and how you address them.',
-        a: 'Per-request compute: (1) For each candidate arm a, compute UCB_a = θ̂_a^T x + α√(x^T A_a^{-1} x). x^T A_a^{-1} x requires: compute v = A_a^{-1} x (matrix-vector product, O(d²) = 10,000 ops), then v^T x (dot product, O(d) = 100 ops). For K=50 arms: 50 × 10,100 ≈ 505,000 FLOPs per request. At 10,000 QPS: 5 × 10^9 FLOPs/second — around 5 GFLOPS, feasible on a single modern server core. (2) Memory: store A_a^{-1} (not A_a) directly — d×d float32 per arm = 100×100×4 bytes = 40KB per arm, 2MB total for 50 arms. Fine. Per-observation update: Sherman-Morrison: v = A_a^{-1} x, A_a^{-1}_new = A_a^{-1} − v v^T / (1 + x^T v). Cost: O(d²) = 10,000 ops. b_a update: O(d). At 10,000 QPS with full feedback rate, update load is 10,000 × 10,000 = 10^8 ops/sec — feasible on one core. Practical issues: (a) Concurrent writes to A_a^{-1} require locking or lock-free updates (Hogwild-style, accept slight staleness). (b) Delayed feedback: buffer (x, r) pairs and apply updates asynchronously. (c) Matrix numerical stability: A_a^{-1} can accumulate floating point errors; periodically recompute from scratch via Cholesky factorization.',
+        q: `You're implementing LinUCB with d=100 feature dimensions and K=50 arms. The system receives 10,000 requests/second. Describe the computational challenges and how you address them.`,
+        options: [
+          `A) The main challenge is storage — d×d matrices per arm require terabytes of memory at this scale`,
+          `B) The system is computationally infeasible at 10,000 QPS with d=100; you must reduce to d=10`,
+          `C) Per-request: O(d²) per arm × K arms ≈ 505K FLOPs at 10K QPS = ~5 GFLOPS (feasible on one core). Per-update: O(d²) Sherman-Morrison at 10K QPS = 10^8 ops/sec (feasible). Practical issues: concurrent writes need locking or Hogwild-style updates, delayed feedback requires buffering (context, arm) pairs, and periodic Cholesky recomputation prevents floating-point drift in A^{-1}`,
+          `D) The per-request cost is O(d³) due to matrix inversion, making this infeasible without GPUs`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'In the Yahoo! news experiment, α=0.2 was optimal, far below the theoretically motivated α=O(√(d ln T)). What does this imply about the theory-practice gap in LinUCB?',
-        a: 'Theory sets α = O(σ√(d ln T)) to guarantee that the true θ lies in the confidence ellipsoid with high probability. With d=6, T=36M, σ≈0.5, this gives α ≈ 0.5 × √(6 × 17.4) ≈ 5.1. The optimal empirical α=0.2 is ~25× smaller. What this implies: (1) The theoretical α is extremely conservative — it guarantees coverage over all possible θ and all possible realizations, including worst-case noise sequences. The actual error in θ̂ is much smaller than the theoretical bound suggests. (2) Real reward noise σ may be much smaller than assumed. (3) The feature representation may have low effective dimensionality (most arms are explained by 1-2 features), so the effective d is smaller than 6. (4) Over-exploration is costly: high α means many pulls on uncertain arms that are actually sub-optimal; the empirical optimum trades off the theoretical regret bound (which assumes worst case) for actual finite-T performance. Practical implication: always tune α on held-out OPE data; do not use the theoretical value directly. The theory tells you the right functional form (UCB = mean + α√(x^T A^{-1} x)) but not the constant.',
+        q: `In the Yahoo! news experiment, α=0.2 was optimal, far below the theoretically motivated α=O(√(d ln T)). What does this imply about the theory-practice gap in LinUCB?`,
+        options: [
+          `A) The theory is wrong — LinUCB does not actually achieve O(d√T) regret in practice`,
+          `B) The gap means LinUCB should not be used in production — the theory is too conservative to be useful`,
+          `C) The theoretical α guarantees coverage over all possible θ and worst-case noise sequences — actual estimation error is far smaller (real noise σ may be lower, effective dimensionality may be less than d, and finite-T behavior differs from asymptotic bounds). The gap implies: always tune α on held-out OPE data; theory gives the right functional form (mean + α√(x^T A^{-1} x)) but not the right constant`,
+          `D) The gap occurs only because the Yahoo! news experiment had an unusually small number of arms`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'How does LinUCB handle the cold-start problem for a completely new arm that has never been shown to any user?',
-        a: 'For a new arm a with zero observations: A_a = λI (just the regularization term, no data). θ̂_a = A_a^{-1} b_a = 0 (no prior reward signal, or use informative prior). UCB_a(x) = θ̂_a^T x + α√(x^T (λI)^{-1} x) = α/√λ · ||x||. The confidence bonus is α/√λ · ||x||_2 — proportional to the feature norm of the new context. If features are normalized (||x||=1), every new arm starts with UCB = α/√λ regardless of context. This is higher than established arms unless they have very high empirical means. So LinUCB automatically gives new arms high UCB scores — a natural cold-start exploration bonus. However: the bonus is uniform across contexts for the new arm (since θ̂_a = 0, there\'s no personalization). In practice, you can seed A_a and b_a with a prior θ̂_prior estimated from: (a) content features of the new arm (e.g., topic-level CTR historical average), (b) similar arms\' parameters (content-based warm start), (c) a global θ̂_global trained on all arms. This biases the initial exploration toward contexts where similar arms have performed well.',
+        q: `How does LinUCB handle the cold-start problem for a completely new arm that has never been shown to any user?`,
+        options: [
+          `A) A new arm with zero observations gets UCB = α/√λ · ||x|| (from A_a = λI, θ̂_a = 0), which is automatically higher than established arms unless they have very high empirical means — a natural cold-start bonus. The bonus can be improved by seeding (A_a, b_a) with a prior from content features, similar-arm parameters, or a global θ̂_global`,
+          `B) LinUCB cannot handle cold start — new arms must be pre-warmed with at least d observations before entering the UCB pool`,
+          `C) New arms receive UCB = 0 because θ̂_a = 0 and the exploration bonus is also 0 with no observations`,
+          `D) LinUCB assigns new arms the same UCB as the current best arm to ensure they receive exploration traffic`,
+        ],
+        answer: `A`,
       },
     ],
     takeaway: `x^T A^{-1} x is the central LinUCB quantity: it measures how far the current context is from the span of previously observed data, so the exploration bonus is automatically largest in under-observed directions of context space. The Yahoo! news result — optimal α was 25× smaller than theory predicts — is a reliable reminder that worst-case theoretical constants are not production constants. Always tune α empirically and use Sherman-Morrison O(d²) updates rather than O(d³) full matrix inversions for real-time updates.`,
@@ -234,9 +396,17 @@ This gives exact O(d√T) regret guarantees with efficient O(d²) online updates
     keyPoints: [
       `**Direct method (DM): train a reward model r̂(x, a) on logged data, evaluate as V̂_DM(π_e) = Σ_t Σ_a π_e(a|x_t) · r̂(x_t, a).** Low variance — the reward model is smooth and the estimate is deterministic. Biased whenever r̂ is wrong in contexts where π_e takes actions the behaviour policy rarely took — and those are exactly the interesting contexts where a better policy diverges from the baseline.`,
       `**Importance Sampling (IS): V̂_IS(π_e) = (1/T) Σ_t w_t · r_t where w_t = π_e(a_t | x_t) / π_b(a_t | x_t).** Unbiased — in expectation it equals V(π_e). Variance can be enormous when π_e concentrates on actions π_b rarely took: if π_b assigned probability 0.01 to action a but π_e assigns 0.9, the weight is 90. That single observation contributes reward × 90 to the estimate.`,
-      `**SNIPS (Self-Normalized IS): V̂_SNIPS = Σ_t w_t r_t / Σ_t w_t.** Normalising by the sum of weights substantially reduces variance at the cost of a small bias. Consistent but biased in finite samples. Practically the default when propensities vary significantly across rounds — the effective sample size N_eff = (Σ w_t)² / Σ w_t² is much higher than for raw IS.`,
+      `**SNIPS (Self-Normalized IS):
+
+$V̂_SNIPS = Σ_t w_t r_t / Σ_t w_t.** Normalising by the sum of weig$
+
+hts substantially reduces variance at the cost of a small bias. Consistent but biased in finite samples. Practically the default when propensities vary significantly across rounds — the effective sample size N_eff = (Σ w_t)² / Σ w_t² is much higher than for raw IS.`,
       `**Doubly Robust (DR): V̂_DR = (1/T) Σ_t [r̂(x_t, a_t) + w_t (r_t − r̂(x_t, a_t))].** Consistent if either r̂ is correct (then the IS correction w_t(r_t − r̂) averages to zero and DR reduces to DM) or propensities w_t are correct (then DR reduces to IS). Two chances to be right — that is what "doubly robust" means. The production standard.`,
-      `**Variance explosion from small propensities: monitor the effective sample size N_eff = (Σ w_t)² / Σ w_t².** N_eff tells you how many i.i.d. samples the weighted dataset is worth. If N_eff falls below 5-10% of T, a handful of high-weight observations are dominating the estimate and the OPE is unreliable regardless of sample volume. Propensity clipping (cap weights at W_max = 20) reduces variance at the cost of bias — the right tradeoff when N_eff is dangerously low.`,
+      `**Variance explosion from small propensities: monitor the effective sample size
+
+$N_eff = (Σ w_t)² / Σ w_t².** N_eff tells you how many i.i.d. samp$
+
+les the weighted dataset is worth. If N_eff falls below 5-10% of T, a handful of high-weight observations are dominating the estimate and the OPE is unreliable regardless of sample volume. Propensity clipping (cap weights at W_max = 20) reduces variance at the cost of bias — the right tradeoff when N_eff is dangerously low.`,
       `**Partial feedback is the fundamental constraint: you only observe r(a_t) — the reward for the action actually taken.** You do not observe what would have happened under any other action. Supervised learning has full feedback — labels exist for all classes. OPE must estimate counterfactual rewards from this inherently incomplete information — this is why it is harder than standard evaluation.`,
       `**Propensity logging must happen at serve time.** If you reconstruct propensities later from a logged policy approximation, reconstruction errors propagate through every IS-based estimator. A neural policy that changed between the serve time and the reconstruction will produce wrong propensity estimates. Log the exact probability π_b(a_t | x_t) at the moment of serving — this is an engineering requirement, not an afterthought.`,
       `**Sequential dependencies: if π_b was itself a bandit that adapted over time, the log data is not i.i.d.** The context distribution at time t depends on actions taken at times 1,...,t-1. Standard OPE estimators assume i.i.d. rounds and will produce biased estimates. Marginalised importance sampling (MIS) or temporal holdout strategies are required.`,
@@ -244,19 +414,41 @@ This gives exact O(d√T) regret guarantees with efficient O(d²) online updates
     ],
     checkQuestions: [
       {
-        q: 'You have 1M logged impressions from a random policy (uniform over K=10 arms) and want to evaluate a new deterministic policy that always chooses arm 3. Compute the importance weights and analyze the variance.',
-        a: 'π_b(a|x) = 1/10 = 0.1 for all arms (uniform logging). π_e(a|x) = 1 if a=arm3, else 0 (deterministic). Importance weight for round t: w_t = π_e(a_t|x_t) / π_b(a_t|x_t). If a_t = arm3: w_t = 1/0.1 = 10. If a_t ≠ arm3: w_t = 0/0.1 = 0. IS estimate: V̂_IS = (Σ_t w_t r_t) / T = 10 × (Σ_{t: a_t=arm3} r_t) / T = 10 × (N_3 / T) × r̄_3 where N_3 ≈ T/10 is the number of arm3 pulls and r̄_3 is the mean reward on arm3. So V̂_IS ≈ r̄_3 — the simple empirical mean reward of arm3. Variance analysis: w_t ∈ {0, 10}, Var(w_t r_t) ≤ E[w_t² r_t²] ≤ 100 × E[r_t² 1(a_t=arm3)] = 100 × (1/10) × E[r²|arm3] = 10 × E[r²|arm3]. This is manageable because the propensities don\'t get very small relative to π_e (max weight = 10). The effective sample size N_eff = T × P(a_t=arm3) = T/10 = 100,000 — good. In this case OPE is easy because π_e is deterministic and the logging policy has full support (all arms logged with 1/K propensity).',
+        q: `You have 1M logged impressions from a random policy (uniform over K=10 arms) and want to evaluate a new deterministic policy that always chooses arm 3. Compute the importance weights and analyze the variance.`,
+        options: [
+          `A) IS weights are w_t = 10 when a_t = arm3 and 0 otherwise; effective sample size N_eff = T/10 = 100,000; variance is manageable because max weight is only 10 and all arms were logged with uniform 1/K propensity`,
+          `B) IS weights are w_t = 1 for all rounds because the deterministic policy and uniform policy have equal propensity on arm 3`,
+          `C) IS weights are undefined because you cannot evaluate a deterministic policy with a uniform logging policy`,
+          `D) IS weights are w_t = K = 10 for all rounds, giving variance that grows proportionally with K²`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'Why is the doubly robust estimator called "doubly robust"? Construct a simple example where one model is wrong but DR is still consistent.',
-        a: '"Doubly robust" means the estimator is consistent if either (but not necessarily both) the reward model r̂ or the propensity model π_b is correctly specified. V̂_DR = (1/T) Σ_t [r̂(x_t,a_t) + w_t(r_t − r̂(x_t,a_t))]. Case 1: propensities are correct (w_t = π_e/π_b correctly), reward model r̂ is wrong. The term w_t(r_t − r̂) is an importance-weighted correction for the bias in r̂. In expectation: E[w_t(r_t − r̂)] = V(π_e) − E_{π_b}[w_t r̂(x_t,a_t)] = V(π_e) − V̂_DM(π_e). So DR → DM + (V(π_e) − DM) = V(π_e). Case 2: reward model r̂ is correct (r̂(x,a) = E[r|x,a]), propensity model is wrong. DR = V̂_DM + (1/T)Σ w_t(r_t − r̂). But if r̂ is correct, r_t − r̂(x_t,a_t) is mean-zero noise regardless of w_t, so the IS correction term averages to zero. DR → DM = V(π_e). Example: logged data has 3 rounds. True: V(π_e)=0.5. Scenario: r̂ predicts 0.8 everywhere (wrong). Propensities are correctly 0.5. w_t=1 (propensities match exactly). DR = 0.8 + 1×(r_t−0.8) averaged = r̄ = 0.5. Correct despite wrong r̂.',
+        q: `Why is the doubly robust estimator called "doubly robust"? Construct a simple example where one model is wrong but DR is still consistent.`,
+        options: [
+          `A) DR is doubly robust because it uses two separate datasets — one for the reward model and one for propensity estimation`,
+          `B) DR is doubly robust because it reduces variance by a factor of two compared to pure IS`,
+          `C) DR is consistent if either the reward model r̂ or the propensity model is correctly specified — two independent chances to be right. If r̂ is wrong but propensities are correct, the IS correction w_t(r_t − r̂) has non-zero expectation that cancels r̂'s bias; if r̂ is correct, residuals are mean-zero and the IS correction vanishes regardless of propensity errors`,
+          `D) DR is doubly robust because it applies importance sampling twice — once for context shift and once for action shift`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Spotify wants to evaluate 50 new playlist ranking policies before A/B testing. Describe the full OPE pipeline and the key failure modes you need to monitor.',
-        a: 'Pipeline: (1) Logging: deploy current policy π_b with propensity logging — for each impression, log (user_context x_t, item_ranked_first a_t, propensity π_b(a_t|x_t), click_reward r_t). Log propensities carefully — if π_b is a neural ranker with softmax, propensities are the softmax probabilities. (2) Reward model: train r̂(x, a) on logged (x, a, r) tuples. Use cross-validation to estimate r̂ accuracy; monitor calibration (predicted CTR vs actual CTR per decile). (3) OPE computation: for each of 50 candidate policies π_e, compute V̂_DR(π_e) = mean of [r̂(x_t,a_t) + w_t(r_t − r̂(x_t,a_t))]. Report mean ± standard error (bootstrap). (4) Ranking: sort 50 policies by V̂_DR. Promote top 3-5 to online A/B test. Failure modes to monitor: (a) Propensity degeneracy — check distribution of w_t. If P(w_t > 50) > 1%, clip and flag. Compute N_eff = (Σw)²/(Σw²); if < 5% of T, OPE is unreliable. (b) Reward model underfit — if r̂ RMSE > 0.2 on held-out data, DM component is biased; DR variance will be high because residuals are large. (c) Support violation — if π_e assigns probability to (x,a) pairs that π_b never logged, the IS weight is undefined (0/0). These contexts cannot be evaluated — must either exclude or bound. (d) Temporal correlation — if π_b is itself a bandit that adapted over time, early log entries reflect a different policy than later entries. Use temporal splits carefully. (e) OPE-to-online gap — monitor how well OPE estimates predict actual A/B test outcomes. If the rank correlation OPE vs A/B is < 0.7, investigate propensity or model issues.',
+        q: `Spotify wants to evaluate 50 new playlist ranking policies before A/B testing. Describe the full OPE pipeline and the key failure modes you need to monitor.`,
+        options: [
+          `A) Run all 50 policies in parallel A/B tests — OPE is too inaccurate for music recommendation`,
+          `B) Train a single reward model and apply DM to all 50 policies — the Direct Method is sufficient when the reward model is accurate`,
+          `C) OPE is only valid for evaluating policies similar to the logging policy; all 50 candidates must be within KL divergence < 0.1 of the logging policy`,
+          `D) Pipeline: log (context, arm, propensity, reward) from π_b → train reward model r̂ → compute V̂_DR for each of 50 policies with bootstrap CIs → rank and promote top 3-5 to A/B test. Monitor: propensity degeneracy (N_eff < 5% of T), reward model calibration (RMSE on held-out), support violations (π_e assigns probability to (x,a) pairs π_b never covered), temporal correlation in logged data, and OPE-to-online rank correlation across past experiments`,
+        ],
+        answer: `D`,
       },
     ],
-    takeaway: `The doubly robust estimator is the production standard because it is consistent if either the reward model or the propensities are correct — two independent chances to be right. Log propensities at serve time, not reconstructed later: reconstruction errors from a changed policy break all IS-based estimators. Monitor N_eff = (Σw)²/(Σw²) continuously — if it falls below 5-10% of sample size, a handful of high-weight observations dominate the estimate and the OPE is unreliable regardless of how much data you have.`,
+    takeaway: `The doubly robust estimator is the production standard because it is consistent if either the reward model or the propensities are correct — two independent chances to be right. Log propensities at serve time, not reconstructed later: reconstruction errors from a changed policy break all IS-based estimators. Monitor
+
+$N_eff = (Σw)²/(Σw²) continuously — if it falls below 5-10%$
+
+of sample size, a handful of high-weight observations dominate the estimate and the OPE is unreliable regardless of how much data you have.`,
   },
   {
     id: 'bandits_in_recsys',
@@ -279,16 +471,34 @@ This gives exact O(d√T) regret guarantees with efficient O(d²) online updates
     ],
     checkQuestions: [
       {
-        q: 'A Netflix-scale system has 50M movies. 10,000 new movies are added each month. Describe a cold-start exploration strategy that doesn\'t crater CTR.',
-        a: 'Strategy: (1) Pre-launch content scoring: extract content features (genre, cast, themes, studio) and use a content-based model to predict initial CTR for each new movie based on similar established movies. Initialize UCB prior with this estimate (e.g., Beta(α_0, β_0) where α_0/(α_0+β_0) = content_predicted_CTR). (2) Tiered exploration budget: new movies get a guaranteed 100,000-impression exploration budget over the first 30 days. Allocate impressions via UCB on the content-model-initialized posterior — don\'t waste impressions on new movies for users with no affinity for their genre. (3) Targeted exploration: show new movies primarily to users who: (a) have high engagement with similar established movies (content affinity), (b) explicitly enjoy diverse/new content (high exploration reward from historical behavior), (c) are in high-traffic segments (gives faster feedback). (4) CTR protection: cap exploration traffic at 3% of recommendations per user session. Never show >1 new/exploration item in the top-5 positions. (5) Graduated rollout: after 10K impressions, if CTR > 0.5 × genre average, increase exploration rate. If CTR < 0.1 × genre average, deprioritize (likely niche content). (6) Monitoring: track P(new movie explored within 30 days) and mean impressions-to-first-1000-plays. Alert if new movies take >30 days to get 1000 impressions — indicates cold-start failure.',
+        q: `A Netflix-scale system has 50M movies. 10,000 new movies are added each month. Describe a cold-start exploration strategy that doesn't crater CTR.`,
+        options: [
+          `A) Initialize new movies with content-feature-based CTR priors (from similar established movies), allocate a tiered guaranteed impression budget (e.g., 100K impressions over 30 days) targeted at users with genre affinity, cap exploration at 3% of recommendations per session, and graduate items to the standard pool only after exceeding a CTR threshold — monitoring time-to-first-1000-plays as a health metric`,
+          `B) Show all new movies to random users until they accumulate 1000 impressions, then use their empirical CTR for ranking`,
+          `C) Use a pure UCB algorithm with Beta(1,1) priors for all new movies to ensure unbiased exploration`,
+          `D) Dedicate 50% of traffic to new movies for the first week, then reduce to 5%`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'Your recommendation system updates model parameters once per day (batched bandit). You observe that UCB scores computed at midnight are stale by end of day because popular items have shifted. How do you handle this?',
-        a: 'The core problem: UCB scores = f(A_a^{-1}, b_a) computed at midnight reflect observations up to midnight. During the day, new (context, reward) observations accumulate but the UCB policy doesn\'t update. Solutions: (1) More frequent batches: increase update frequency to hourly instead of daily. Requires efficient incremental model updates (Sherman-Morrison for LinUCB, mini-batch gradient descent for neural rankers). (2) UCB score adjustment: at serve time, adjust the pre-computed UCB_a by a staleness penalty: adjusted_UCB_a = UCB_a − staleness_penalty(t − last_update) × Δ̂_expected_drift. Staleness penalty can be estimated from historical UCB drift rates. (3) Reward model ensembles: maintain an ensemble of models trained on rolling windows (last 1hr, 4hr, 24hr). At serve time, UCB uses the ensemble variance across time windows as the uncertainty signal — captures temporal uncertainty without re-solving the full ridge system. (4) Separate fast and slow signals: UCB exploration for slowly-varying item features (genre CTR, general popularity) can be updated daily. For rapidly-varying signals (trending items, breaking news), maintain a separate fast-update cache updated every 10 minutes, bypassing the batched bandit. Practical recommendation: implement 1-hour batches with Sherman-Morrison incremental updates for LinUCB; switch to direct neural feature extraction + LinTS on last layer to amortize full retraining to daily.',
+        q: `Your recommendation system updates model parameters once per day (batched bandit). You observe that UCB scores computed at midnight are stale by end of day because popular items have shifted. How do you handle this?`,
+        options: [
+          `A) Switch to a purely greedy policy — UCB scores are too expensive to recompute intra-day`,
+          `B) Increase batch size to reduce staleness`,
+          `C) Accept staleness as unavoidable in batched systems — regret degrades only by O(√batch_size)`,
+          `D) Increase update frequency to hourly using Sherman-Morrison incremental updates; apply a staleness penalty to pre-computed UCB scores at serve time; use time-window ensembles (1hr/4hr/24hr) to capture temporal uncertainty; and maintain a fast-update cache for trending items separate from the batched bandit — switching to hourly batches is the primary fix`,
+        ],
+        answer: `D`,
       },
       {
-        q: 'Explain cascade bandits. How does position bias complicate exploration in recommendation ranking?',
-        a: 'Cascade model: the user scans the ranked list from position 1 downward. At each position they "click" (with probability = attractiveness of item) or "skip" (with probability 1 − attractiveness). They stop after the first click. Consequently: (1) Only the clicked item and all skipped items above it are observed — items below the click are not observed (truncated feedback). (2) Position bias: items at position 1 receive far more examination probability than items at position 5. A CTR of 2% at position 5 may be "better" than 5% at position 1 because position 1 has much higher examination. Position bias complicates exploration because: (a) Swapping a new uncertain item from position 10 to position 1 conflates the position boost with the item quality signal — you can\'t tell if the CTR improved because the item is better or because position 1 has more clicks. (b) Exploration slots: to measure true item quality, you must vary positions in a controlled way. E.g., occasionally show item A at position 1 and item B at position 3, then swap — the difference in CTR attributable to the item (not position) is the debiased quality estimate. (c) Inverse propensity weighting for position: reward for item a at position k: r̂ = click / P(examined | position k). P(examined | k) estimated from randomization experiments or eye-tracking. Production solution: two-stage approach — (1) Use position-debiased reward estimates (examination propensity correction) as bandit reward signals. (2) Run exploration by occasionally promoting items from position k>3 to position 1, comparing against standard allocation. Track the debiased CTR lift separately from the position lift.',
+        q: `Explain cascade bandits. How does position bias complicate exploration in recommendation ranking?`,
+        options: [
+          `A) Position bias is not a problem for bandits because UCB scores already account for position effects`,
+          `B) In the cascade model, users scan top-to-bottom and stop after the first click — items below the click are unobserved (truncated feedback). Position 1 receives far more examination than position 5, so raw CTR conflates item quality with position. Exploration by promoting uncertain items to high positions conflates item quality with position boost; requires position-debiased rewards (examination propensity correction) and controlled position-swap experiments`,
+          `C) Cascade bandits solve position bias automatically by distributing exploration across all positions equally`,
+          `D) The cascade model implies items at low positions never need exploration since users rarely reach them`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Pure exploitation creates a filter bubble: items that receive no impressions cannot accumulate data, so they never escape the cold start, so catalog coverage collapses. The operational answer is: dedicate a fixed exploration budget (e.g., 5% of traffic), use content-based priors to warm-start new item posteriors, and use position-debiased reward estimates to avoid conflating cascade position effects with item quality — otherwise exploration slots at high positions look like item quality improvements.`,
@@ -305,8 +515,16 @@ This gives exact O(d√T) regret guarantees with efficient O(d²) online updates
 The algorithm stays frozen on a historically dominant arm long after its true mean has dropped. The failure mode is slow: it takes O(N_a) new observations to substantially move the empirical mean — that is months of data for a heavily exploited arm. The right production strategy combines two mechanisms: CUSUM-based change detection for abrupt shifts (triggers an immediate statistics reset when a change is detected) and sliding window or discounted UCB for gradual drift (continuously forgets stale observations so the mean tracks recent reality). Predictable seasonality is not non-stationarity — weekly cycles belong in contextual features, not in a forgetting mechanism.`,
     keyPoints: [
       `**Standard UCB/TS failure after a change point: UCB1 and standard TS accumulate all historical observations monotonically.** For a previously dominant arm whose reward drops, N_a is large (tight confidence interval), the UCB stays high (empirical mean barely moves), and the algorithm continues exploiting it. The empirical mean only shifts substantially after O(N_a) new observations — for an arm with 50,000 observations, it takes thousands of post-change pulls to notice. Regret grows linearly after the change.`,
-      `**Sliding window UCB (SW-UCB): maintain only the last W observations per arm.** UCB index = μ̂_a(W) + B√(ln t / min(N_a, W)). Old observations expire automatically — after a change, the window fills with new observations in W rounds. Optimal window W ≈ √(T/K) for infrequent abrupt changes; regret = O(√(KT)). The tradeoff: a small W adapts quickly but has high variance; a large W is stable but slow to adapt.`,
-      `**Discounted UCB (D-UCB): weight observations exponentially: μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s) where γ ∈ (0,1).** Effective memory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don't vanish abruptly but fade gradually. Behaves like an exponential moving average of rewards. γ = 0.99 gives effective memory of 100 rounds; γ = 0.999 gives 1000 rounds.`,
+      `**Sliding window UCB (SW-UCB): maintain only the last W observations per arm.** UCB
+
+$index = μ̂_a(W) + B√(ln t / min(N_a, W)). Old observations e$
+
+xpire automatically — after a change, the window fills with new observations in W rounds. Optimal window W ≈ √(T/K) for infrequent abrupt changes; regret = O(√(KT)). The tradeoff: a small W adapts quickly but has high variance; a large W is stable but slow to adapt.`,
+      `**Discounted UCB (D-UCB): weight observations exponentially:
+
+$μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s) where γ ∈ (0,1).** Effective me$
+
+mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don't vanish abruptly but fade gradually. Behaves like an exponential moving average of rewards. γ = 0.99 gives effective memory of 100 rounds; γ = 0.999 gives 1000 rounds.`,
       `**Change-point detection + reset: run CUSUM or Page-Hinkley on each arm's reward stream.** CUSUM maintains a cumulative sum statistic and signals a change when it exceeds a threshold. On detection, reset that arm's statistics (N_a = 0, μ̂_a = flat prior). More principled than windowing — only forgets when change is actually detected, not continuously. Requires tuning the detection threshold: low threshold → fast detection but frequent false alarms; high threshold → fewer false alarms but slow detection.`,
       `**EXP3 (Exponential-weight algorithm for Exploration and Exploitation): the adversarial bandit algorithm.** Maintains weights w_a per arm. Selects arm with probability proportional to w_a plus uniform exploration floor γ/K. Importance-weights the observed reward: x̂_{a,t} = r_t / p_{a_t,t}. Updates: w_{a_t} ← w_{a_t} × exp(γ x̂_{a_t,t} / K). Achieves E[R_T] ≤ O(√(KT ln K)) against any adversarial sequence with no distributional assumptions.`,
       `**EXP3 importance-weighted reward: x̂_{a,t} = r_t / p_{a,t} × 1(a_t = a).** Unbiased: E[x̂_{a,t}] = p_{a,t} × μ_a / p_{a,t} = μ_a. The importance weighting compensates for selection probability — rare arms have their observed rewards scaled up to correct for how rarely they are pulled. Variance is O(K/γ) per arm per round — high, especially with small γ. This is the cost of the adversarial guarantee: no distributional structure means you must pay for all information gathering.`,
@@ -316,20 +534,44 @@ The algorithm stays frozen on a historically dominant arm long after its true me
     ],
     checkQuestions: [
       {
-        q: 'You\'re running UCB on an ad creative rotation with K=5 creatives. Creative A dominated for 3 months, but a competitor launched a similar ad and A\'s CTR dropped from 8% to 2% overnight. How does UCB fail and what algorithm do you switch to?',
-        a: 'UCB failure: creative A has been pulled N_A ≈ 90% of rounds × T_days rounds — maybe N_A = 50,000 observations. Its UCB = 0.08 + √(2 ln t / 50000) ≈ 0.08 + 0.014 = 0.094. After the drop, the empirical mean slowly updates: after 1000 new observations of 2% CTR, μ̂_A = (50000×0.08 + 1000×0.02)/51000 ≈ 0.079 — barely moved. UCB remains the highest and creative A continues to be shown. The algorithm is stuck in a local optimum because N_A is huge. Time to adapt: needs O(N_A) new observations to substantially shift μ̂_A — months. Fixes: (1) Immediate: reset creative A\'s statistics (N_A = 0, μ̂_A = flat prior) when the change is detected. Manually trigger exploration mode. (2) Sliding window UCB with W=7 days: only use the last 7 days of observations. After the drop, within 1 day the window-mean for A drops toward 2%, allowing other creatives to compete. (3) Discounted UCB with γ=0.99: effective memory ≈ 100 rounds, so the old 8% estimates fade within days. (4) CUSUM monitoring: run CUSUM on A\'s reward stream; a 6-point drop from 8% to 2% triggers in O(1/Δ²) ≈ 17 observations. Upon detection, reset A\'s statistics. Best production approach: combine CUSUM detection with SW-UCB (windows correct for gradual drift, CUSUM handles abrupt changes).',
+        q: `You're running UCB on an ad creative rotation with K=5 creatives. Creative A dominated for 3 months, but a competitor launched a similar ad and A's CTR dropped from 8% to 2% overnight. How does UCB fail and what algorithm do you switch to?`,
+        options: [
+          `A) UCB adapts within 10 rounds because the confidence interval always shrinks to include the new true mean`,
+          `B) UCB fails because it does not support more than 3 arms`,
+          `C) UCB fails because N_A ≈ 50,000 observations makes the confidence interval so tight that the empirical mean barely moves — needs O(N_A) post-change pulls to substantially detect the drop. Fix: sliding window UCB (W = 7 days) or discounted UCB (γ = 0.99) for gradual drift, combined with CUSUM monitoring that resets A's statistics on abrupt change detection`,
+          `D) UCB never fails in practice because the confidence bonus grows after a change point`,
+        ],
+        answer: `C`,
       },
       {
-        q: 'Explain the EXP3 importance-weighted reward estimate x̂_{a,t} = r_t / p_{a,t}. Why is it unbiased and what is the variance?',
-        a: 'Unbiasedness: we need E[x̂_{a,t}] = μ_a for all arms a (the true expected reward). EXP3 selects arm a_t with probability p_{a,t}. Define x̂_{a,t} = r_t / p_{a_t,t} × 1(a_t = a). Then: E[x̂_{a,t}] = E[r_t / p_{a,t} × 1(a_t = a)] = p_{a,t} × E[r|a] / p_{a,t} = μ_a. Unbiased. The importance weighting corrects for the arm selection probability — the reward for arm a is divided by the probability of having selected it, making rare arms\' reward estimates have larger magnitude to compensate for their infrequent selection. Variance: Var(x̂_{a,t}) = E[x̂_{a,t}²] − μ_a². E[x̂²] = p_{a,t} × E[r²|a] / p_{a,t}² = E[r²|a] / p_{a,t} ≤ r_max² / p_{a,t}. If p_{a,t} = γ/K (minimum probability for uniform exploration), then Var ≤ K·r_max² / γ. With K=10 arms and γ=0.1, variance ≤ 100 × r_max². This is very high variance — EXP3 can have noisy reward estimates, especially for arms with small selection probability. The γ exploration ensures a minimum probability floor, bounding variance. This variance is the cost of the adversarial guarantee — no distributional structure to exploit means you must pay for information gathering.',
+        q: `Explain the EXP3 importance-weighted reward estimate x̂_{a,t} = r_t / p_{a,t}. Why is it unbiased and what is the variance?`,
+        options: [
+          `A) x̂_{a,t} = r_t / p_{a,t} × 1(a_t = a) is unbiased because E[x̂_{a,t}] = p_{a,t} × μ_a / p_{a,t} = μ_a — the propensity weighting corrects for selection frequency. Variance ≤ r_max² / p_{a,t} ≤ K · r_max² / γ (using the minimum exploration floor γ/K), which is the inherent cost of the adversarial guarantee`,
+          `B) The estimate is biased because dividing by p_{a,t} amplifies noise in low-probability arms`,
+          `C) The estimate is unbiased only when all arms are selected with equal probability`,
+          `D) The variance is O(1) regardless of p_{a,t} because the importance weighting exactly cancels the variance`,
+        ],
+        answer: `A`,
       },
       {
-        q: 'In a content recommendation system with weekly seasonality (weekend vs weekday user preferences differ strongly), is non-stationary bandit the right framing? What would you do differently?',
-        a: 'Seasonal patterns like weekly cycles are not true non-stationarity — the reward distribution is predictably cyclic, not drifting. Non-stationary bandit algorithms (sliding window, discounted UCB) would "solve" the weekend-weekday difference by forgetting weekday observations on weekends, but this throws away useful data. Better approach: (1) Contextual bandit with time features: include day_of_week and hour_of_day as context features. LinUCB or neural contextual bandit will learn that arm reward = f(user, item, time_features). The bandit now correctly models the seasonality as a feature of the context, not as non-stationarity. Observations from all days inform θ̂ via the context features. (2) Hierarchical model: fit a weekend-CTR model and weekday-CTR model separately — shared feature weights but separate bias terms. At serve time, use the appropriate model. (3) Save non-stationary algorithms for: genuine concept drift (user preferences changing over months), abrupt external shocks (competitor launch, news events), item lifecycle decay (article freshness). Seasonality is predictable; concept drift is not. The key diagnostic: does reward correlation P(r_Monday | context) correlate with P(r_Monday_next_week | context)? If yes (stable seasonal pattern), use contextual bandit with time features. If correlation degrades over weeks, use non-stationary tracking.',
+        q: `In a content recommendation system with weekly seasonality (weekend vs weekday user preferences differ strongly), is non-stationary bandit the right framing? What would you do differently?`,
+        options: [
+          `A) Yes — weekly seasonality is a form of non-stationarity and sliding window UCB is the correct algorithm`,
+          `B) Weekly seasonality is predictable and recurring, not genuine concept drift — non-stationary algorithms would discard useful weekday data on weekends. The correct approach is a contextual bandit with day_of_week and hour_of_day as context features, letting the model learn stable seasonal patterns without forgetting. Reserve non-stationary algorithms for genuine concept drift and external shocks`,
+          `C) The recommendation system should be retrained daily to handle weekly seasonality, without any bandit algorithm`,
+          `D) Non-stationary bandits with γ = 0.99 discounting are the right choice because weekly cycles fall within the effective memory window`,
+        ],
+        answer: `B`,
       },
       {
-        q: 'REXP3 achieves O(Υ^{1/3} K^{1/3} T^{2/3}) regret with Υ change points. How does this compare to the lower bound, and what is the cost of not knowing Υ?',
-        a: 'Lower bound for non-stationary bandits with Υ change points: Ω(√(ΥKT)) — any algorithm must incur at least this much regret in the worst case. REXP3\'s bound is O(Υ^{1/3} K^{1/3} T^{2/3}). Comparing exponents: lower bound ∝ (ΥKT)^{1/2}; REXP3 ∝ Υ^{1/3} K^{1/3} T^{2/3}. These match when T^{2/3} ≈ T^{1/2}, i.e., for specific regimes of Υ. The standard result is that the optimal minimax rate for Υ changes is O((ΥKT)^{1/2}); REXP3 does not achieve this — there is a gap. Better algorithms: EXP3-R (EXP3 with restarts triggered by change detection) achieves O(√(ΥKT ln K)) which nearly matches the lower bound. Cost of not knowing Υ: if Υ is known, set epoch length exactly to T/Υ. If unknown, use a doubling trick: run epochs of length 1, 2, 4, 8,... and restart at each epoch end. The doubling adds at most a constant factor to regret (O(log T) epoch ends, each with O(epoch_length × K) exploration cost). Practical implication: the cost of uncertainty about Υ is logarithmic, not polynomial — the doubling trick is essentially free. Most production systems should just use doubling restarts rather than trying to estimate Υ; CUSUM-based change detection is an alternative that avoids wasted exploration during stable periods but requires tuning the detection threshold.',
+        q: `REXP3 achieves O(Υ^{1/3} K^{1/3} T^{2/3}) regret with Υ change points. How does this compare to the lower bound, and what is the cost of not knowing Υ?`,
+        options: [
+          `A) REXP3 matches the lower bound exactly — there is no gap between REXP3 and the minimax optimal rate`,
+          `B) REXP3 has worse than O(T) regret when Υ is large, making it unusable in practice`,
+          `C) The lower bound is O(1) for non-stationary bandits because change points are observable`,
+          `D) The minimax lower bound is Ω(√(ΥKT)); REXP3's O(Υ^{1/3} K^{1/3} T^{2/3}) does not match it — EXP3-R with change detection achieves the near-optimal O(√(ΥKT ln K)). Not knowing Υ costs only a logarithmic factor via the doubling trick (epochs of length 1, 2, 4,...) — the added regret is O(log T), making uncertainty about Υ practically free`,
+        ],
+        answer: `D`,
       },
     ],
     takeaway: `Standard UCB/TS freezes on a historically dominant arm after a change point because N_a is too large for the empirical mean to move quickly — it takes O(N_a) post-change observations to detect the drop. The right production strategy combines CUSUM-based change detection for abrupt shifts (immediate statistics reset) and sliding window or discounted UCB for gradual drift (continuous forgetting). Predictable seasonality is not non-stationarity — recurring patterns belong in contextual features where the model learns them, not in a forgetting mechanism that discards them.`,

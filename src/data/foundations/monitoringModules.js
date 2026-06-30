@@ -17,7 +17,16 @@ export const MONITORING_MODULES = [
       `**Monitoring cadence: infrastructure metrics must be real-time with sub-minute alerting — a serving outage is a P1 incident.** Feature distributions should be computed hourly or daily. Prediction distribution hourly. Label-based performance metrics daily or weekly, depending on label delay. Setting all metrics to the same cadence wastes compute and either produces too many spurious alerts (real-time on slow-moving signals) or too much lag (daily on fast-moving infrastructure signals).`,
     ],
     checkQuestions: [
-      { q: 'Your fraud model is flagging more transactions as fraudulent over time, but actual fraud labels (available after investigation) show no increase in fraud rate. What type of drift is this?', a: 'This is prior probability drift or data drift causing prediction distribution shift — not concept drift (the relationship P(Y|X) has not changed). The model is seeing input feature changes (perhaps a new payment method with different transaction patterns) that push scores higher, but the true fraud rate P(Y) is stable. Check feature distributions — which features have shifted? The model is miscalibrated for the new distribution. Recalibrate with recent data or retrain on recent samples to restore appropriate thresholds.' },
+      {
+        q: 'Your fraud model is flagging more transactions as fraudulent over time, but actual fraud labels (available after investigation) show no increase in fraud rate. What type of drift is this?',
+        options: [
+          'A) Concept drift — P(Y|X) has changed, so the model now incorrectly maps the same features to higher fraud probability',
+          'B) Prior probability drift or data drift causing prediction distribution shift — P(Y) is stable but input feature changes are pushing scores higher',
+          'C) Infrastructure drift — a library update changed how scores are computed, inflating raw model outputs',
+          'D) Model decay from overfitting — the model has memorized training noise and now generalizes poorly to new transactions',
+        ],
+        answer: 'B',
+      },
     ],
   },
   {
@@ -38,7 +47,16 @@ export const MONITORING_MODULES = [
       `**Monitoring infrastructure: compute drift metrics on a rolling window — last 7 days against training, or last 7 days against previous 7 days for detecting sudden shifts.** Alert on sustained drift (3+ consecutive days above threshold) rather than single-day spikes to reduce false positives from seasonal variation. Store raw feature distribution snapshots, not just drift scores, so you can investigate which part of the distribution shifted when an alert fires.`,
     ],
     checkQuestions: [
-      { q: 'You have 1M daily serving requests and are monitoring feature drift. The KS test shows p<0.001 for "age" feature with KS statistic D=0.015. Should you alert?', a: 'With 1M samples, even D=0.015 (a 1.5% maximum CDF difference) is statistically significant. But is it practically significant? A shift of 1.5% in the CDF of age is likely negligible — it could reflect a minor seasonal change in user demographics. Use a practical threshold: alert only when D > 0.05 (5% CDF difference), or use PSI > 0.1 instead. Statistical significance ≠ practical drift. Set thresholds based on what drift magnitude actually degrades model performance, validated by retrospective analysis of past degradation events.' },
+      {
+        q: 'You have 1M daily serving requests and are monitoring feature drift. The KS test shows p<0.001 for "age" feature with KS statistic D=0.015. Should you alert?',
+        options: [
+          'A) Yes — p<0.001 is highly significant, meaning the age distribution has definitively shifted and the model is likely degraded',
+          'B) Yes — any statistically significant drift in a top feature warrants an immediate page to the on-call engineer',
+          'C) No — the KS test is the wrong tool for continuous features; rerun with PSI before making any decision',
+          'D) No — with 1M samples, D=0.015 is statistically significant but not practically significant; use a practical threshold like D > 0.05 or PSI > 0.1 instead',
+        ],
+        answer: 'D',
+      },
     ],
   },
   {
@@ -61,7 +79,16 @@ The model that was 94% accurate on last quarter's data produces 71% accuracy tod
       `**Adaptation strategies: retrain on a sliding window of recent data to give more weight to current patterns (appropriate for gradual drift).** Online learning updates model weights on each new labelled sample (appropriate for fast-moving streams where labels arrive quickly). Time-weighted ensembles combine old and new models with recency weights. For recurring drift (seasonal patterns), time-based models that condition on time features are often better than continuous retraining.`,
     ],
     checkQuestions: [
-      { q: 'Your spam classifier was deployed 6 months ago. Spam recall has dropped from 92% to 71%. What type of drift is this and what is your response?', a: 'This is concept drift — spammers have adapted their techniques, so P(spam=1 | features) has changed. The model trained on old spam patterns cannot identify new patterns. Response: (1) Immediately: lower the classification threshold to recover recall at cost of precision (short-term fix). (2) Within a week: collect recent labelled spam and ham samples, retrain model on a recent window (last 3 months). (3) Long-term: implement continuous retraining on a sliding window; set up weekly performance monitoring with label delay adjusted metrics; build a data flywheel where flagged-spam reports from users feed back into training labels.' },
+      {
+        q: 'Your spam classifier was deployed 6 months ago. Spam recall has dropped from 92% to 71%. What type of drift is this and what is your response?',
+        options: [
+          'A) Concept drift — spammers adapted techniques so P(spam=1|features) changed; lower threshold immediately, retrain on a recent 3-month window, then establish continuous retraining and weekly monitoring',
+          'B) Data drift — new email clients changed the feature distribution; recalibrate with Platt scaling on recent data to restore the 92% recall without full retraining',
+          'C) Prior probability drift — overall spam volume increased, shifting P(spam=1) and miscalibrating the threshold; adjust the decision threshold to match the new base rate',
+          'D) Infrastructure drift — a library or preprocessing change altered how email features are extracted; roll back the pipeline change and recall will recover automatically',
+        ],
+        answer: 'A',
+      },
     ],
   },
   {
@@ -84,7 +111,16 @@ But the model is silently failing because its inputs have shifted in ways that c
       `**Leading vs lagging indicators: prediction distribution monitoring is a leading indicator — it detects that something changed within hours, even if it can't explain what.** Label-based metrics (accuracy, AUC, recall) are lagging — they require labels and provide the definitive answer but only after the lag period. Use leading indicators to trigger investigation; use lagging indicators to confirm the diagnosis and measure severity.`,
     ],
     checkQuestions: [
-      { q: `Your fraud model's average prediction score has drifted from mean=0.12 to mean=0.08 over 2 weeks. Labels are delayed 7 days. What do you do now?`, a: 'Prediction score dropped — model is predicting lower fraud probability on average. This could mean: (1) Actual fraud has decreased (benign), (2) Data drift causing model to underestimate fraud risk (harmful). Actions before labels arrive: (1) Check feature distributions — has anything shifted? Especially high-importance features for fraud scoring. (2) Check prediction distribution more carefully — did the entire distribution shift or just the tail? (3) Query any business intelligence that could confirm/deny actual fraud rate change. (4) If 7-day labels start arriving and confirm precision/recall drop, immediately retrain or lower the classification threshold to recover recall.' },
+      {
+        q: `Your fraud model's average prediction score has drifted from mean=0.12 to mean=0.08 over 2 weeks. Labels are delayed 7 days. What do you do now?`,
+        options: [
+          'A) Wait 7 days for labels to arrive before taking any action — acting on unlabelled signals risks unnecessary retraining that could hurt performance',
+          'B) Immediately retrain the model on the most recent 30 days of data and redeploy — score drift of this magnitude always indicates concept drift requiring full retraining',
+          'C) Check feature distributions and full score distribution now, query business intelligence for fraud rate changes, then act on the diagnosis when 7-day labels confirm precision/recall impact',
+          'D) Raise the classification threshold to compensate for the lower scores — if mean dropped from 0.12 to 0.08, lowering the threshold by 0.04 will restore the original positive rate',
+        ],
+        answer: 'C',
+      },
     ],
   },
   {
@@ -105,7 +141,16 @@ But the model is silently failing because its inputs have shifted in ways that c
       `**Operational cost of SHAP computation: computing full SHAP values for 1M daily predictions is expensive, especially for neural models.** Use TreeSHAP for tree-based models (exact SHAP in O(T×L×d) time, extremely fast). For neural models, compute SHAP on a stratified 1-5% sample rather than all predictions. Approximations are sufficient for monitoring purposes — the goal is detecting large shifts, not precise attribution for individual predictions.`,
     ],
     checkQuestions: [
-      { q: 'SHAP drift analysis shows that "device_type" has gone from importance rank 2 to rank 19 over the past month. What does this mean and what do you investigate?', a: `"device_type" has become much less influential in the model's predictions. Likely causes: (1) Data drift: the distribution of device_type has shifted dramatically (e.g., new device type not seen in training now accounts for 40% of traffic, but model assigns it a near-zero SHAP value because it was rare in training). Check device_type distribution over time. (2) Concept drift: the relationship between device_type and the target has weakened (e.g., mobile vs desktop conversion gap has closed). (3) Feature pipeline issue: device_type parsing broke and now returns null/unknown for many users. Check null rate for device_type. Each scenario has a different remediation: retrain with new device data, feature engineering, or pipeline fix.` },
+      {
+        q: 'SHAP drift analysis shows that "device_type" has gone from importance rank 2 to rank 19 over the past month. What does this mean and what do you investigate?',
+        options: [
+          'A) The model has overfit to device_type during training; the rank drop means production data is restoring the correct lower importance — no investigation needed',
+          'B) device_type became much less influential; investigate data drift (new device types dominating traffic), concept drift (device_type-target relationship weakened), or a feature pipeline issue returning null/unknown for many users',
+          'C) SHAP rank changes are unreliable noise; only permutation importance on labelled data can confirm a real change — wait for weekly permutation importance results before acting',
+          'D) The rank drop confirms concept drift affecting all features equally; the correct response is immediate full retraining on the last 30 days of data',
+        ],
+        answer: 'B',
+      },
     ],
   },
   {
@@ -126,7 +171,16 @@ But the model is silently failing because its inputs have shifted in ways that c
       `**Segment-level calibration: aggregate calibration metrics can look fine while specific user segments are severely miscalibrated.** A loan default model well-calibrated on average may be systematically overconfident for one demographic and underconfident for another. Per-segment reliability diagrams catch this pattern. Segment-level miscalibration is both a fairness concern and an accuracy concern — decisions made on miscalibrated segment scores are systematically wrong for that population.`,
     ],
     checkQuestions: [
-      { q: `A loan default model's ECE has increased from 0.03 (at deployment) to 0.09 (current) over 4 months. Reliability diagram shows the model is now overconfident for predictions > 0.7. What is your response?`, a: 'ECE tripling (0.03→0.09) is significant calibration degradation. Immediate action: (1) Lower the decision threshold from the default calibrated value to compensate for overconfidence — if the model says 0.8, treat it as roughly 0.65 based on the reliability diagram. This is a temporary fix. (2) Recalibrate: fit Platt scaling or temperature scaling on the last 2-3 months of labelled data (loans with resolved default/no-default). This adjusts the output probabilities without retraining the model. (3) Investigate root cause: is there concept drift (economic conditions changed → high-risk profiles now have different default rates)? If so, recalibration alone may be insufficient — full retraining may be needed.' },
+      {
+        q: `A loan default model's ECE has increased from 0.03 (at deployment) to 0.09 (current) over 4 months. Reliability diagram shows the model is now overconfident for predictions > 0.7. What is your response?`,
+        options: [
+          'A) No action needed yet — ECE of 0.09 is still below the commonly cited 0.1 threshold; schedule a review next quarter when data volume is larger',
+          'B) Retrain the full model immediately — calibration degradation always indicates concept drift, and recalibration without retraining only masks the underlying problem',
+          'C) Run a chi-squared test on the prediction distribution to confirm the calibration shift is statistically significant before committing to any remediation',
+          'D) ECE tripling (0.03→0.09) is significant; lower the decision threshold as a temporary fix, recalibrate with Platt or temperature scaling on recent labelled data, then investigate whether concept drift requires full retraining',
+        ],
+        answer: 'D',
+      },
     ],
   },
   {
@@ -149,7 +203,16 @@ A model degrading at 0.3% per day will go 90 days before losing 25% of its perfo
       `**Model age as a leading signal: track time since last retraining on internal dashboards and correlate with downstream business metrics over historical data.** Build an empirical age-vs-degradation curve: at this model's historical drift rate, how much performance is lost per month of staleness? Use that curve to set a retraining SLA — "this model loses 2% AUC per month, so we retrain if it's been more than 6 weeks." Empirical curves are domain-specific and more actionable than generic rules.`,
     ],
     checkQuestions: [
-      { q: 'How would you design a staleness detection system for a recommendation model where engagement labels are available daily but the model is retrained monthly?', a: 'Multi-layer detection: (1) Real-time (no labels needed): track prediction entropy and score distribution daily via PSI. Alert if PSI > 0.15 on output scores. (2) Daily (with 1-day labels): compute click-through rate on top-10 recommendations — compare against rolling 30-day baseline. Alert if CTR drops > 5% for 3+ consecutive days. (3) Weekly (with 7-day engagement labels): compute NDCG@10 on a stratified sample. Compare against post-deployment reference. Alert if NDCG drops > 2%. (4) Monthly: shadow-train a challenger on last 3 months. Compare champion vs challenger NDCG on held-out recent 2 weeks. If challenger wins by > 1%, trigger promotion. This layered approach catches both fast and slow degradation.' },
+      {
+        q: 'How would you design a staleness detection system for a recommendation model where engagement labels are available daily but the model is retrained monthly?',
+        options: [
+          'A) Multi-layer detection: real-time PSI on output scores (alert if PSI > 0.15); daily CTR on top-10 vs rolling 30-day baseline (alert if CTR drops >5% for 3+ days); weekly NDCG@10 vs post-deployment reference; monthly shadow-train challenger and promote if challenger wins NDCG by >1%',
+          'B) Single-layer detection is sufficient: compute NDCG@10 weekly on a held-out sample and alert if it drops more than 3% below the post-deployment baseline — adding more layers increases complexity without improving detection speed',
+          'C) Rely on the monthly retraining schedule alone — for a model retrained monthly, staleness cannot meaningfully accumulate within that window, so additional detection layers add operational overhead without benefit',
+          'D) Monitor only prediction entropy daily — if entropy stays stable, the model is not stale; if entropy rises, trigger an immediate retrain regardless of how long since the last training run',
+        ],
+        answer: 'A',
+      },
     ],
   },
   {
@@ -170,7 +233,16 @@ A model degrading at 0.3% per day will go 90 days before losing 25% of its perfo
       `**Runbook maintenance: a runbook written at deployment becomes stale within months.** The serving environment changes. New upstream systems are added. Feature pipelines are refactored. After every incident, review the runbook: was it accurate? Did it lead to the correct diagnosis? Did it miss a step that the engineer had to figure out manually? Update it immediately after the incident while the context is fresh. Assign quarterly review ownership — runbooks without owners become documentation debt that makes incidents worse instead of better.`,
     ],
     checkQuestions: [
-      { q: 'Your on-call engineer receives 50 alerts per day, most of which turn out to be false positives. How do you fix this?', a: 'Alert fatigue fix: (1) Audit all alerts over last 30 days: classify each as true positive (required action), false positive (no action needed), or ambiguous. (2) For high false-positive alerts: tighten thresholds, add duration requirements (must persist for >1h), or convert to informational (non-paging) alerts. (3) Remove alerts with no true positives in 3 months. (4) For ambiguous alerts: add runbooks with clear decision criteria — "if X, take action Y; else, mark as expected and dismiss." Target: <5 actionable alerts per day. (5) Retrospective: after each incident that was NOT alerted, ask "why did our alerting miss this?" to catch coverage gaps while reducing noise.' },
+      {
+        q: 'Your on-call engineer receives 50 alerts per day, most of which turn out to be false positives. How do you fix this?',
+        options: [
+          'A) Increase the on-call rotation size so each engineer handles fewer alerts per shift — the volume is manageable if distributed across more people',
+          'B) Disable all non-P1 alerts immediately and rebuild the alerting system from scratch with stricter thresholds across the board',
+          'C) Audit alerts over 30 days (classify true/false positive), tighten thresholds and add duration requirements for high-FP alerts, remove alerts with zero true positives in 3 months, target <5 actionable alerts/day, and run retrospectives after any missed incidents',
+          'D) Convert all alerts to informational (non-paging) and require engineers to check dashboards proactively each morning — this eliminates false positive pages without losing signal coverage',
+        ],
+        answer: 'C',
+      },
     ],
   },
 ]

@@ -17,7 +17,16 @@ export const SYSTEM_DESIGN_MODULES = [
       `**Common mistakes: jumping to model selection without clarifying requirements; assuming labels are readily available when they arrive with a 14-day delay; proposing a complex architecture without a baseline; designing serving without a latency budget; shipping without a monitoring plan.** Each of these is a specific failure mode, not a general gap.`,
     ],
     checkQuestions: [
-      { q: 'You are asked to "design a spam filter for email." What are the first 5 clarifying questions you ask?', a: '(1) Scale: how many emails per second must be classified? (100/s vs 1M/s changes architecture fundamentally). (2) Latency: does the result need to be synchronous (block sending) or async (tag after delivery)? (3) Available labels: do we have historical labelled spam/ham? How are they collected? (4) Precision vs recall: is a false positive (blocking legitimate email) or false negative (missing spam) more costly? (5) What defines spam: marketing, phishing, malware? Multiple models or one? These answers constrain every subsequent design decision.' },
+      {
+        q: 'You are asked to "design a spam filter for email." What are the first 5 clarifying questions you ask?',
+        options: [
+          'A) Model architecture, training data size, feature engineering approach, evaluation metric, and deployment environment',
+          'B) Scale/QPS, latency (synchronous block vs async), available labelled spam/ham data, precision vs recall cost tradeoff, and spam definition scope (marketing/phishing/malware — one model or many?)',
+          'C) Team size, project timeline, infrastructure budget, stakeholder requirements, and regulatory compliance constraints',
+          'D) Language distribution of emails, user demographics, email client type, server location, and storage capacity',
+        ],
+        answer: 'B',
+      },
     ],
   },
   {
@@ -40,7 +49,16 @@ This is why every large-scale recommender system uses a staged funnel: retrieval
       `**Cold start: new users have no interaction history, so collaborative filtering cannot personalize.** Strategies include context signals available immediately (device type, location, time of day), content-based features that don't require history, popularity-based fallback (trending items work well for cold-start users), and rapid exploitation of the first few interactions to update the user representation within the same session.`,
     ],
     checkQuestions: [
-      { q: 'TikTok shows you relevant videos even in your first session before any watch history. How?', a: `TikTok handles cold start via: (1) Context signals: device type, language, location, time of day — available immediately. (2) Content-based features: video metadata, hashtags, audio features, visual content — not dependent on user history. (3) Popularity signals: trending and viral content performs well as a fallback for new users. (4) Rapid exploitation of initial signals: the first few videos watched (even seconds of watch time) are used immediately to update the real-time user representation. TikTok's model updates the user embedding after each video, enabling quick adaptation from first session onward.` },
+      {
+        q: 'TikTok shows you relevant videos even in your first session before any watch history. How?',
+        options: [
+          'A) TikTok requires account linking to another social platform to import interest signals before the first session',
+          'B) TikTok delays personalization until the second session, showing only globally popular content on first visit',
+          'C) TikTok trains a per-user model in real time using gradient descent on each watch event within the session',
+          'D) Context signals (device, language, location, time of day), content-based video features (metadata, hashtags, audio), popularity/trending fallback, and rapid exploitation of early watch-time signals to update the real-time user embedding within the session',
+        ],
+        answer: 'D',
+      },
     ],
   },
   {
@@ -61,7 +79,16 @@ This is why every large-scale recommender system uses a staged funnel: retrieval
       `**Latency budget allocation: total budget 100ms.** Candidate generation: under 20ms (parallel ANN lookups across sources). Ranking: under 40ms (batch scoring ~1000 candidates). Re-ranking and mixing: under 20ms. Feature retrieval: under 10ms, overlapped with generation via async fetching. Any stage that blows its budget cascades — feature retrieval running 25ms instead of 10ms leaves only 15ms for ranking, which forces either fewer candidates or a simpler ranker.`,
     ],
     checkQuestions: [
-      { q: 'Your ranking model has a 95ms inference latency for 1000 candidates. Total budget is 100ms. How do you bring latency down to 40ms?', a: '(1) Model compression: quantise from FP32 to INT8 — 2-4× speedup with minimal accuracy loss. Prune low-magnitude weights. (2) Architecture change: replace the neural ranker with a gradient boosted tree model (GBM is much faster for tabular features) — 10-50× speedup. Or use a smaller neural model via knowledge distillation. (3) Batch optimisation: ensure the 1000 candidates are scored in a single batched forward pass, not 1000 individual calls. (4) Hardware: move to GPU serving or a specialised inference accelerator. (5) Reduce candidate count: tighten retrieval to 300-500 candidates (accept slight recall loss to gain latency). (6) Early exit: use a fast two-stage ranker — coarse score all 1000, detailed score only top 100.' },
+      {
+        q: 'Your ranking model has a 95ms inference latency for 1000 candidates. Total budget is 100ms. How do you bring latency down to 40ms?',
+        options: [
+          'A) Model compression (FP32→INT8 quantisation, weight pruning), architecture change to GBM or knowledge-distilled neural model, single batched forward pass, GPU/accelerator serving, reduce candidates to 300-500, and early-exit two-stage scoring (coarse all 1000, detailed top 100)',
+          'B) Increase the candidate pool to 2000 so the model has more context, then apply stricter post-hoc filtering to reduce output to 40 items within budget',
+          'C) Switch from synchronous to asynchronous serving and return cached results from the previous request while the new score computes in the background',
+          'D) Add more ranking model layers to improve quality so fewer candidates need to be re-ranked in a downstream re-ranking stage',
+        ],
+        answer: 'A',
+      },
     ],
   },
   {
@@ -86,7 +113,16 @@ The tradeoff is that the model cannot capture user-item feature interactions —
       `**Limitations vs cross-attention ranking: two-tower misses any feature interaction that requires seeing user and item together.** A user who prefers budget items cannot be matched to a low-price item on that dimension alone — the model doesn't know the user cares about price unless that signal is captured in the user embedding independently. The standard remedy is two-tower for retrieval (fast, approximate) and a cross-attention ranker on the retrieved candidates (slower, precise, sees full interaction).`,
     ],
     checkQuestions: [
-      { q: 'You build a two-tower model and find that the recall@100 is 60% — only 60% of actually-clicked items are in the retrieved 100. How do you improve recall?', a: '(1) Hard negative mining: easy negatives (random items) produce weak gradients. Mine harder negatives — items that score highly for a user but were not clicked. In-batch hardest negatives or offline-mined negatives from recent ANN results. (2) Temperature tuning: the softmax temperature controls how peaked the distribution is. Lower temperature → sharper discrimination. (3) More embedding dimensions: increase d (e.g., 64→256) — more expressive representations. (4) More features: add user and item features that better capture preference (e.g., item category, user historical categories). (5) Dual softmax or temperature-corrected sampling: correct for popularity bias in negatives. (6) Expand ANN retrieved candidates (100→500) and rely on the ranker to filter.' },
+      {
+        q: 'You build a two-tower model and find that the recall@100 is 60% — only 60% of actually-clicked items are in the retrieved 100. How do you improve recall?',
+        options: [
+          'A) Switch from dot-product similarity to L2 distance, which is more numerically stable for high-dimensional embeddings and reduces false misses',
+          'B) Reduce embedding dimensions from 256 to 64 so the ANN index is smaller and more items are reachable within the search budget',
+          'C) Hard negative mining (high-scoring but unclicked items), temperature tuning, larger embedding dimensions (64→256), richer features, popularity-bias correction, and expanding ANN candidates (100→500) with the ranker filtering downstream',
+          'D) Replace contrastive training loss with a pointwise regression loss on explicit ratings to produce more calibrated scores',
+        ],
+        answer: 'C',
+      },
     ],
   },
   {
@@ -107,7 +143,16 @@ The tradeoff is that the model cannot capture user-item feature interactions —
       `**Embedding quantisation: reducing embedding precision trades memory and speed for a small recall loss.** INT8 quantisation (FP32 → INT8) reduces memory 4× with roughly 1% recall drop. PQ reduces to 32 bytes per document with 3-5% recall drop. Quantise the index, not the model — the model must still compute high-precision query embeddings at inference time to get quality results from a quantised index.`,
     ],
     checkQuestions: [
-      { q: 'You need to build a semantic search system for 50M product descriptions with P99 latency < 15ms and recall@10 > 0.95. Choose an architecture.', a: 'Architecture: bi-encoder for retrieval + cross-encoder for re-ranking. For retrieval: use a BERT-based bi-encoder (SBERT or E5) to encode all 50M product descriptions offline. For 50M items with d=256 embeddings: HNSW index (50M × 256 × 4 bytes = 50GB FP32) — fits on a 256GB index server. HNSW with ef_search=100 achieves recall@100 ≈ 0.97 at ~2ms per query. For re-ranking: run a cross-encoder on top-50 retrieved candidates to reorder by P10 precision — adds ~10ms on GPU. Total: ~12ms, within 15ms budget. For recall@10 > 0.95: retrieve top-50 with HNSW (recall@50 > 0.98), rerank to get top-10.' },
+      {
+        q: 'You need to build a semantic search system for 50M product descriptions with P99 latency < 15ms and recall@10 > 0.95. Choose an architecture.',
+        options: [
+          'A) Cross-encoder only over all 50M items in parallel on a large GPU cluster — achieves the highest precision without a retrieval stage',
+          'B) Bi-encoder (SBERT/E5) for offline encoding of all 50M items, HNSW index (ef_search=100, recall@100 ≈ 0.97, ~2ms), cross-encoder re-ranking of top-50 retrieved candidates on GPU (~10ms) — total ~12ms, within 15ms budget, recall@10 > 0.95',
+          'C) BM25 keyword retrieval for speed, with a cross-encoder re-ranker to recover semantic matches missed by the keyword index',
+          'D) Single bi-encoder with exact nearest neighbour search — no ANN approximation ensures recall@10 > 0.95 without a re-ranking stage',
+        ],
+        answer: 'B',
+      },
     ],
   },
   {
@@ -130,7 +175,16 @@ Training pulls point-in-time correct historical features. Serving retrieves the 
       `**Platform vs bespoke: build a shared platform when you have 10+ models across teams.** For 1-2 models, the platform overhead exceeds its value. The break-even point is roughly 5 models with shared features, at which point the deduplication of feature computation, experiment tracking, and serving infrastructure starts saving more time than the platform itself costs to maintain.`,
     ],
     checkQuestions: [
-      { q: 'A startup has 3 data scientists building their first production ML model. Should they build an ML platform?', a: 'Not yet. With 3 data scientists and 1 model, the overhead of building a full ML platform (feature store, model registry, serving infra) is not justified. Start with: (1) A simple experiment tracking setup (MLflow or W&B — both have free tiers, < 1 day to set up). (2) Model serving via a simple FastAPI wrapper + Docker. (3) Feature computation in pandas/SQL, versioned in git. (4) Manual monitoring dashboards in Grafana or a simple Python script. Invest in platform infrastructure when: you have > 3 models in production, > 5 data scientists, or you are spending > 20% of engineering time on tooling rather than modelling.' },
+      {
+        q: 'A startup has 3 data scientists building their first production ML model. Should they build an ML platform?',
+        options: [
+          'A) Yes — a feature store prevents training-serving skew from day one, and it is easier to build the platform before models exist than to retrofit it later',
+          'B) Yes — model registry and serving infrastructure are required for any production deployment regardless of team size',
+          'C) Yes, but only the online feature store component — offline training infrastructure can be deferred until a second model is added',
+          'D) Not yet — start with MLflow/W&B for experiment tracking, FastAPI + Docker for serving, pandas/SQL features versioned in git, and manual dashboards; invest in platform infrastructure when you have > 3 production models, > 5 data scientists, or > 20% of engineering time going to tooling',
+        ],
+        answer: 'D',
+      },
     ],
   },
   {
@@ -151,7 +205,16 @@ Training pulls point-in-time correct historical features. Serving retrieves the 
       `**Online distillation: training a large teacher model offline with expensive features (cross-attention, user full history), then distilling its ranking predictions into a smaller student model for serving.** The student matches the teacher's ranking on held-out data without requiring the expensive features at inference time. The teacher's expensive features drive the label quality without incurring serving latency — allowing the model quality of a slow model with the serving speed of a fast one.`,
     ],
     checkQuestions: [
-      { q: 'Your LTR model is trained on click data but evaluation shows much better precision@1 for bottom-ranked positions than top-ranked ones. What is the cause and fix?', a: 'This is position bias — items shown at top positions get more clicks regardless of relevance (users scan from top). Training on click labels without correcting for position teaches the model that top-positioned items are inherently more relevant — creating a feedback loop. Result: the model learns to score whatever was previously shown at position 1 higher, regardless of actual relevance. Fix: (1) Inverse Propensity Scoring — weight each (query, clicked_item, position) training example by 1/P(click|position) to correct for examination probability. (2) Randomisation experiment: occasionally serve random rankings to collect unbiased click data for training. (3) Trust lower-position clicks more (they represent stronger intent since users had to scroll).' },
+      {
+        q: 'Your LTR model is trained on click data but evaluation shows much better precision@1 for bottom-ranked positions than top-ranked ones. What is the cause and fix?',
+        options: [
+          'A) Position bias — top positions receive more clicks regardless of relevance, so training on raw clicks teaches the model to rank previously-top-positioned items higher (self-reinforcing loop); fix with Inverse Propensity Scoring (weight examples by 1/P(click|position)), randomisation experiments for unbiased data, and trusting lower-position clicks more',
+          'B) Label noise — bottom-ranked items have fewer clicks so their labels are noisier; fix by collecting more human editorial judgements for items shown at lower positions',
+          'C) Overfitting to head queries — the model performs well on rare tail queries at lower positions but overfits to high-frequency head queries shown at top positions; fix with query frequency-weighted sampling',
+          'D) Feature leakage — item popularity features are correlated with historical position, so the model learns a proxy for position rather than relevance; fix by removing popularity features from the training set',
+        ],
+        answer: 'A',
+      },
     ],
   },
   {
@@ -172,7 +235,16 @@ Training pulls point-in-time correct historical features. Serving retrieves the 
       `**Fallback strategy: every real-time ML system must have a documented response to "what happens when the model endpoint is slow or unavailable?" Without a predefined fallback, engineers improvise under pressure during incidents and consistently make it worse.** Define the fallback before deployment: popularity-based response, rule-based scoring, or the previous cached prediction. Circuit breaker pattern: if error rate exceeds a threshold for 30 seconds, route all traffic to the fallback immediately without waiting for individual requests to time out.`,
     ],
     checkQuestions: [
-      { q: 'Your payment fraud model has a 150ms P99 latency but the payment processing SLA requires < 50ms. What is your approach?', a: 'End-to-end latency reduction strategy: (1) Profile: break down the 150ms — feature retrieval: Xms, model inference: Yms, network: Zms. (2) Feature retrieval: ensure all features are served from a co-located Redis (< 2ms), not a remote database. Use async parallel feature fetching. (3) Model: if using a neural model, export to ONNX + TensorRT on GPU, or switch to a GBM (XGBoost/LightGBM — 5ms for 500 trees). Apply INT8 quantisation. (4) Architecture: precompute user risk scores in a streaming pipeline (Flink) updated on every transaction, cache in Redis. Serving becomes a simple cache lookup (< 5ms) + lightweight recency adjustment. (5) If none of the above achieves < 50ms: use async decision — let the transaction proceed, score in parallel, reverse if fraudulent within 30s.' },
+      {
+        q: 'Your payment fraud model has a 150ms P99 latency but the payment processing SLA requires < 50ms. What is your approach?',
+        options: [
+          'A) Increase the model's decision threshold to reduce the number of fraud alerts, which reduces the number of expensive downstream lookups and brings average latency down',
+          'B) Move fraud scoring to a nightly batch job and use the previous day's risk scores at transaction time, accepting staleness in exchange for eliminating real-time inference entirely',
+          'C) Profile to break down the 150ms (feature retrieval, inference, network); co-located Redis for features (<2ms, async parallel fetch); ONNX+TensorRT or GBM (~5ms) with INT8 quantisation; precompute user risk scores via streaming pipeline cached in Redis (serving = cache lookup + lightweight adjustment); if still >50ms, use async decision — let transaction proceed, score in parallel, reverse if fraudulent within 30s',
+          'D) Add a request queue and process fraud checks sequentially to avoid resource contention, which stabilises P99 by eliminating tail latency spikes from concurrent requests',
+        ],
+        answer: 'C',
+      },
     ],
   },
 ]

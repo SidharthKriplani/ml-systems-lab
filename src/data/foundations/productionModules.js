@@ -20,19 +20,43 @@ export const PRODUCTION_MODULES = [
     checkQuestions: [
       {
         q: `Your model predicts churn well in offline evaluation but performs randomly in production. Feature distributions look similar at the aggregate level. What specific mechanisms do you investigate?`,
-        a: `Aggregate distribution similarity can mask skew in tail values, interaction effects, and encoding mismatches. Investigate: (1) Label definition mismatch — is "churn" defined identically in training labels and the production outcome being evaluated? 30-day vs 60-day churn window mismatch causes systematic divergence. (2) Feature ordering or encoding mismatch — categorical features encoded in training using alphabetical ordering (scikit-learn default) vs database insert ordering (production) will have completely misaligned label-encoded values. (3) Missing features — check if high-importance features have higher null rates in production than in training. A feature with 0% nulls in training and 30% nulls in production is effectively a different feature. (4) Prediction horizon mismatch — model trained to predict churn at a specific point relative to the observation window, but serving fires prediction at a different point in the user lifecycle. (5) Model serialisation — reload the model from disk in a clean environment and verify predictions match the original model byte-for-byte.`,
+        options: [
+          `A) Label definition mismatch, feature encoding mismatches, high null rates on key features in production, and prediction horizon differences — aggregate similarity masks skew in tail values and encoding mismatches`,
+          `B) The model's learning rate was too high, causing instability that only shows under production load`,
+          `C) Production servers use a different hardware architecture, changing floating-point precision enough to shift predictions`,
+          `D) The model is overfitting to the validation set, so aggregate feature similarity guarantees it will fail on new data`,
+        ],
+        answer: `A`,
       },
       {
         q: `You find that a "user_7d_purchase_count" feature has PSI=0.35 between training and production. What is the investigation and remediation process?`,
-        a: `PSI=0.35 is a significant shift (>0.2 = action required). Investigation: (1) Check the feature computation code in both training and serving pipelines — are they computing the same aggregation window? A 7-day window in UTC vs local time creates systematic shifts for global products. (2) Check the data source: is the training pipeline reading from a complete historical table while serving reads from a near-real-time replication that may miss recent events? (3) Compare the feature distributions side-by-side: which buckets have the largest PSI contributions? If the shift is concentrated in the zero-purchase bucket, serving may be counting fewer events (missing data) rather than truly fewer purchases. (4) Check feature staleness: is serving using a stale feature that was last updated 48h ago? Then "7d" is effectively "9d". Remediation: once root cause is identified, fix at the source — align code paths, fix the data freshness, or add a shared feature store. Recalibrate the model if the true serving distribution is what it should be.`,
+        options: [
+          `A) PSI=0.35 is within normal range — only values above 1.0 require action, so no investigation is needed`,
+          `B) Immediately retrain the model on production data to match the new distribution, then redeploy`,
+          `C) Check aggregation window alignment, data source completeness, distribution bucket contributions, and feature staleness; once root cause is found, align code paths or fix data freshness, then recalibrate`,
+          `D) Replace the feature with a 30-day window to smooth out the variance causing the PSI spike`,
+        ],
+        answer: `C`,
       },
       {
         q: `A model is trained with a StandardScaler fit on training data. How do you ensure the scaler is applied correctly at serving, and what goes wrong if it is not?`,
-        a: `The StandardScaler must be fitted on training data and its parameters (mean and std per feature) serialised and stored alongside the model weights — typically as part of a sklearn Pipeline, a model artifact bundle, or a saved preprocessing object. At serving, load the same fitted scaler and apply it to incoming features. What goes wrong if you re-fit at serving or use a different scaler: (1) Mean shift: if training mean for "user_age" was 35 and serving dataset mean is 28, a re-fitted scaler normalises differently — the model receives values in a different range than it was trained on, causing systematic prediction errors. (2) Std shift: if std is also different, the scale of normalised values is wrong. (3) Null handling: if scaler defaults nulls to 0 vs training pipeline imputing with median, all null features take a different value in production. The practical fix: wrap model and preprocessor in a single Pipeline object, serialise the entire pipeline as one artifact, deploy the artifact — the scaler's fitted parameters travel with the model and are identical in training and serving.`,
+        options: [
+          `A) Refit the scaler on incoming production batches weekly so it stays current — a stale scaler is the main risk`,
+          `B) Serialize the fitted scaler alongside the model weights; at serving, load the same fitted scaler. Re-fitting or using a different scaler causes mean/std shifts that place feature values outside the range the model trained on`,
+          `C) The scaler only matters during training; once the model learns the normalized weights, the scaler can be discarded at serving`,
+          `D) StandardScaler parameters are invariant to dataset changes, so the serving scaler will produce the same output regardless of where it was fit`,
+        ],
+        answer: `B`,
       },
       {
         q: `A model trained on historical data uses a "days_since_last_login" feature. At training time, this was computed relative to today's date. Explain the skew this creates and how to fix it.`,
-        a: `If "days_since_last_login" in training was computed as (training_run_date - last_login_date), every sample gets a value relative to the training run date — say, December 2024. At serving in June 2025, the same feature is computed as (June_2025 - last_login_date). For a user who last logged in January 2025: training pipeline computed ~1-2 days (relative to recent training samples); serving computes 150 days. The model learned that "2 days since login = not churned", but at serving it sees all active users with large values (many days since login relative to June 2025), creating a systematic shift. The fix: compute "days_since_last_login" relative to the observation event timestamp, not the pipeline run date — always use point-in-time correct computation. In training: JOIN label_timestamp with last_login timestamp and compute the difference. In serving: compute difference from current request time to last_login. Both use the same relative definition, eliminating the skew.`,
+        options: [
+          `A) The skew is negligible because the model learns to adjust for the time offset during training`,
+          `B) The skew causes the feature to be systematically larger in production, but this can be corrected by subtracting the deployment date from serving values`,
+          `C) Training anchors the feature to the pipeline run date, so at serving months later all active users appear to have much larger values than the model trained on; fix by computing relative to the observation event timestamp in both training and serving`,
+          `D) Computing relative to today's date is correct practice — both training and serving use the same reference point, so there is no skew`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Training-serving skew is an infrastructure problem, not a modeling problem. A model cannot compensate for receiving different feature values than it was trained on. Two separately maintained codepaths will always drift. The only reliable fix is a single shared computation function with serialized preprocessing parameters — anything else is relying on discipline that will eventually fail at the worst moment.`,
@@ -62,19 +86,43 @@ The fix requires being explicit about every feature's temporal boundary and enfo
     checkQuestions: [
       {
         q: `You are building a loan default prediction model with a "total_outstanding_loan_balance" feature. Describe the exact implementation for training and serving, including the point-in-time join logic.`,
-        a: `Training: for each loan application in the training set with label_date t, retrieve total_outstanding_loan_balance using a point-in-time join: SELECT SUM(outstanding_balance) FROM loans WHERE customer_id = ? AND loan_opened_date <= t AND (loan_closed_date IS NULL OR loan_closed_date > t). This gives balance as it existed at date t — loans opened after t are excluded, loans paid off before t are excluded. Never use today's balance (customer may have paid off loans since t, creating data leakage). Serving: the same query logic runs against the production database at inference time, using the current timestamp. The query must be identical to the training extraction — a shared function called by both pipelines. Test: run both pipelines on the same entity and same timestamp and assert the outputs match. Monitor: compare the distribution of this feature between training and serving (PSI) weekly.`,
+        options: [
+          `A) For training, use today's balance for all historical examples because it reflects the most accurate current state; for serving, also use current balance — consistency between the two is what matters`,
+          `B) For training, retrieve balance using a temporal join (SUM where loan_opened <= label_date AND not yet closed), excluding future loans; for serving, run the same logic at current time using a shared function; monitor PSI weekly`,
+          `C) For training, use a daily snapshot table averaged over the prior month; for serving, call the same snapshot API — the averaging reduces the impact of point-in-time errors`,
+          `D) Balance features are exempt from point-in-time requirements because financial data is audited and therefore always accurate at query time`,
+        ],
+        answer: `B`,
       },
       {
         q: `Your team is rebuilding a feature pipeline that has a known bug affecting 5% of users. You need to retrain the model with corrected features. What are the risks?`,
-        a: `The core risk is training-serving distribution shift: the original model was trained on features including the bug, so its weights encode the bug's effect. Retraining with corrected features produces a model that expects correct feature values — but if serving still uses the original buggy pipeline, the serving distribution will not match training. Additionally, historical labels were generated by a system that may have been influenced by the buggy feature (if this model drove any decisions). Fix procedure: (1) First deploy the corrected feature pipeline to serving — fix the serving distribution first. (2) Collect serving feature statistics from the corrected pipeline. (3) Backfill training data using the corrected pipeline — verify corrected training features match the new serving distribution. (4) Retrain on corrected features. (5) Shadow-test the retrained model against the live corrected serving pipeline before promotion. The dangerous anti-pattern is retraining on corrected features while still serving buggy features — the model will silently degrade.`,
+        options: [
+          `A) There are no significant risks — fixing a known bug always produces a safer model regardless of the order of operations`,
+          `B) The main risk is that retraining takes too long and the model goes stale while the pipeline is being fixed`,
+          `C) The retrained model expects correct features but serving may still produce buggy features; the dangerous anti-pattern is retraining on corrected features while still serving buggy ones — fix serving first, then backfill, then retrain`,
+          `D) The risk is that corrected features will have a different distribution than what the model expects, so the only safe option is to deploy without retraining`,
+        ],
+        answer: `C`,
       },
       {
         q: `Explain why a 30-day rolling average feature is particularly prone to training-serving skew.`,
-        a: `A 30-day rolling average requires exactly the right 30-day window — any difference in: (1) the reference timestamp (is it the event time, the batch run time, or end of day?), (2) timezone handling (UTC vs local time changes which day boundaries fall on), (3) null handling within the window (are null days treated as 0 or excluded from the denominator?), or (4) event deduplication logic (same event logged twice) will produce different values. At training, this feature is typically computed in a Spark/SQL batch job with one set of choices. At serving, it may be computed in a real-time feature pipeline with different code. Even minor discrepancies compound because the 30-day window accumulates 30 days of potential differences. The fix: implement the 30-day rolling average as a materialised feature in a feature store, computed once by one authoritative pipeline, and served from there for both training (point-in-time historical values) and inference (current value).`,
+        options: [
+          `A) Rolling averages are inherently unstable and should be replaced with simpler cumulative sums to avoid skew`,
+          `B) The 30-day window aggregates enough data to smooth out any skew — rolling averages are actually among the most skew-resistant feature types`,
+          `C) Differences in reference timestamp, timezone handling, null treatment, and deduplication logic compound across 30 days of data; using a centralized feature store with a single authoritative pipeline is the fix`,
+          `D) Rolling averages are prone to skew only when the lookback window exceeds 7 days; 30-day windows are too long for reliable training-serving consistency`,
+        ],
+        answer: `C`,
       },
       {
         q: `A product team wants to add a real-time "user_session_length_so_far" feature to a fraud detection model. Latency SLA is 20ms. How do you evaluate and implement this?`,
-        a: `Evaluation: (1) Is the feature predictive? Check offline correlation between session length and fraud label before building any infrastructure. If it adds <0.2% AUC, do not build it. (2) Can it be computed in <5ms? Session length requires knowing when the session started — if this is in a session tracking service with a low-latency API, feasible; if it requires a database scan, infeasible. Implementation: (1) Maintain a session start time in a Redis hash keyed by session_id — written by the session creation event, read by the fraud prediction endpoint. (2) At serving: compute session_length = now() - session_start_time (Redis GET, 0.5ms). This is the "online feature" pattern. (3) Training: replay session events from the event log with their original timestamps to reconstruct session lengths at the time of each fraud event — this is the critical step to avoid serving skew. (4) Test: verify that training and serving computations match for the same session event using a shadow canary.`,
+        options: [
+          `A) Reject the feature immediately — any real-time feature will violate a 20ms SLA due to the overhead of Redis lookups`,
+          `B) Implement it as a daily batch feature and accept up to 24h staleness — real-time session features are too operationally complex for fraud systems`,
+          `C) First verify offline predictive value; if significant, store session_start_time in Redis (sub-ms lookup), compute session_length = now() - start at serving; for training, replay session events from logs to reconstruct session lengths at fraud event time`,
+          `D) Compute session length from the full event log at inference time — querying historical events is more accurate than maintaining session state in Redis`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Point-in-time correctness is not a nice-to-have. Using feature values from the wrong time leaks future information into training — offline AUC looks great, the model ships, and it fails silently in production on real data. Every feature must have an explicit temporal boundary, and that boundary must be enforced identically in training and serving. The gap between those two worlds is the job.`,
@@ -100,19 +148,43 @@ The fix requires being explicit about every feature's temporal boundary and enfo
     checkQuestions: [
       {
         q: `A data scientist wants to reuse "user_30d_purchase_count" computed by another team. What does the feature store provide to make this safe?`,
-        a: `The feature registry provides: (1) Exact computation definition — SQL or PySpark code showing exactly how the 30d window is computed (UTC or local time? Include or exclude returns? Count distinct orders or line items?). Without this, "reuse" means reimplementing with different assumptions. (2) Data type and expected range — validates assumptions: is this always non-negative integer? Can it be null for new users? (3) Freshness SLA — is this updated hourly or daily? A feature with 24h staleness is not appropriate for a real-time checkout fraud model. (4) Lineage — which upstream data sources does it depend on? If orders table ETL delays, this feature is stale. (5) Current consumers — which models are already using this feature, so the data scientist can compare notes. (6) Owner — who to contact for questions or if the feature breaks. The feature store also handles serving logistics — the data scientist adds the feature to their model's feature list and the store handles retrieval, without any custom serving code.`,
+        options: [
+          `A) The feature store provides a copy of the raw data so each team can recompute the feature with their own logic`,
+          `B) The feature store provides the exact computation definition, data type/range, freshness SLA, upstream lineage, current consumers, and owner — plus handles all serving logistics so no custom retrieval code is needed`,
+          `C) The feature store provides only the serving infrastructure; definition details must still be obtained by asking the owning team`,
+          `D) The feature store guarantees identical values only if both teams use the same model architecture`,
+        ],
+        answer: `B`,
       },
       {
         q: `Your online store (Redis) is serving a feature at 3ms P50 but 800ms P99. What is causing this and how do you fix it?`,
-        a: `P99 spike to 800ms while P50 is 3ms indicates the issue is not systematic — it is intermittent and extreme. Possible causes: (1) Hot key problem: all requests for the most popular entities (top 1% of users) hit the same Redis shard — that shard becomes a bottleneck while others are idle. (2) Redis memory pressure: if the online store is near memory capacity, Redis evicts less-recently-used keys and the cache miss causes a database fallback (expensive). (3) Network: occasional packet loss between feature store client and Redis causes TCP retransmission timeouts. (4) Large value fetching: some entities have very large feature vectors (serialised models, long histories) that take 100ms+ to deserialise. Fixes: (1) Monitor Redis shard key distribution — if hot keys are confirmed, use key hashing with a salt to distribute a single entity's keys across multiple shards. (2) Set memory limits with an LRU eviction policy and monitor hit rate — add cache capacity if hit rate < 95%. (3) Implement client-side circuit breaker: if any single Redis call exceeds 50ms, fall back to default feature values immediately rather than waiting for 800ms.`,
+        options: [
+          `A) P99 spike to 800ms while P50 is 3ms indicates systematic overload — all requests are queued and the P50 measurement is wrong`,
+          `B) The feature value is too large to serialize; compress all feature vectors before storing in Redis`,
+          `C) Likely causes include hot key problem on popular entities, Redis memory pressure causing evictions, network packet loss, or large feature vector deserialization; fixes include key hashing to distribute shards, monitoring hit rate and adding capacity, and implementing a circuit breaker with a 50ms timeout`,
+          `D) Redis P99 spikes are always caused by garbage collection pauses; upgrade to a Redis version with concurrent GC`,
+        ],
+        answer: `C`,
       },
       {
         q: `Describe the materialisation pipeline for a feature "user_last_7d_app_opens" that needs to be available in the online store with <5 minute staleness.`,
-        a: `<5 minute staleness requires streaming materialisation — batch materialisation (hourly/daily Spark jobs) cannot achieve this. Architecture: (1) App open events are published to a Kafka topic (app_open_events) as they occur, with event_timestamp and user_id. (2) A Flink streaming job consumes this topic, maintains a tumbling-window aggregate (count of events per user in the last 7 days), and uses a Flink state store to efficiently maintain the rolling count. (3) At the end of each 5-minute window (or on each new event), Flink writes the updated count to Redis: SET user:{user_id}:7d_app_opens {count} EX 604800 (7-day TTL). (4) At inference time, the serving endpoint reads from Redis (1-3ms). (5) For training: the Flink job also writes to the offline store (e.g., S3 Parquet) with event timestamps for point-in-time join. The TTL ensures old values expire automatically. Cold-start (new users): Redis MISS returns null; serve default value (0) and add a "is_new_user" feature.`,
+        options: [
+          `A) Run a daily Spark batch job that recomputes the 7-day count for all users and writes to Redis; 5-minute staleness is achievable if the job is scheduled frequently enough`,
+          `B) Use streaming materialisation: app open events go to Kafka, a Flink job maintains a rolling 7-day count per user and writes to Redis with a 7-day TTL every 5 minutes; for training, the Flink job also writes to S3 with timestamps for point-in-time joins`,
+          `C) Maintain a running total in the application database and read it directly at serving time; database reads are fast enough to meet the 5-minute SLA`,
+          `D) A 5-minute staleness SLA requires an in-memory compute cluster; Redis alone cannot guarantee sub-5-minute freshness`,
+        ],
+        answer: `B`,
       },
       {
         q: `A feature was deprecated 3 months ago but a model in production still uses it. The feature computation pipeline was shut down. What is the failure mode and how do you prevent it?`,
-        a: `When the computation pipeline shuts down, the online store stops receiving updates. The model continues to request the feature — Redis returns the last computed value (increasingly stale) until the key TTL expires, after which Redis returns null. If the model's serving code imputes nulls as 0 or some default, predictions silently degrade as the null rate for this feature rises from 0% to 100% over days/weeks. The failure is silent — no exception, just gradually wrong predictions. Prevention: (1) Feature registry lineage — before deprecating a feature, query all current consumers from the registry. Do not deprecate until all consumers have been updated. (2) Soft deprecation workflow: mark feature as "deprecated" in the registry, trigger automated alerts to all consuming model owners, require acknowledgment before removing the pipeline. (3) Monitoring: track null rate per feature in the online store — a sudden rise from 0.1% to 50% is the signal that a serving pipeline failed. (4) Canary: when shutting down a pipeline, first stop writes while keeping the TTL alive, and check if any model's predictions change.`,
+        options: [
+          `A) The model will immediately throw a key-not-found exception when the feature is missing, causing a clear and detectable outage`,
+          `B) The pipeline shutdown has no effect on production because feature values are cached in the model weights`,
+          `C) Redis returns the last computed value until the TTL expires, after which it returns null; the model silently imputes null as a default, causing gradual prediction degradation with no exception thrown; prevention requires registry lineage checks before deprecation, soft-deprecation alerts to consumers, and null rate monitoring`,
+          `D) The failure mode only occurs if the model was retrained after the pipeline shutdown; models never read stale feature values from Redis`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `A feature store is not a caching layer. It is the infrastructure that makes training-serving consistency enforceable rather than aspirational — by making it structurally impossible for training and serving to compute the same feature differently. Every team rebuilding features independently accumulates consistency debt. The feature store is how you stop paying that debt in production incidents rather than design decisions.`,
@@ -140,19 +212,43 @@ The model trained on 7-day counts now receives 30-day counts, interprets them as
     checkQuestions: [
       {
         q: `Your recommendation model suddenly degrades in production. Feature distributions look normal on average, but P99 latency for feature retrieval spiked from 5ms to 800ms. What happened and what do you do?`,
-        a: `The online store (Redis/DynamoDB) is experiencing a latency spike — P99 spike while P50 is normal suggests an intermittent issue rather than systematic degradation. Impact chain: slow feature retrieval causes the serving endpoint to either time out (falls back to default/null features) or exceed the total request SLA, resulting in degraded features driving model predictions. Investigation: (1) Check Redis metrics — latency histogram, connection pool saturation, eviction rate, shard key distribution. (2) Check if the serving endpoint has a feature retrieval timeout and what the fallback behaviour is — are null features being imputed? If so, how many requests are hitting the fallback? (3) Check if this correlates with a traffic spike hitting a single Redis shard (hot key). Immediate mitigation: (1) Implement circuit breaker — if feature retrieval exceeds 50ms, immediately serve with default features rather than waiting 800ms. (2) Scale the Redis cluster or add read replicas. Long-term: client-side cache for frequently-requested, slowly-changing features to reduce Redis load.`,
+        options: [
+          `A) A P99 spike while P50 is normal is just statistical noise in the tail; ignore it and monitor the P50 trend instead`,
+          `B) High P99 retrieval latency causes the serving endpoint to timeout or fall back to null/default features; investigate Redis metrics (hot keys, memory eviction, shard distribution), implement a circuit breaker with a 50ms timeout, and scale the Redis cluster`,
+          `C) The model itself is running slowly due to a software regression; P99 feature retrieval latency is always caused by model inference time`,
+          `D) Degrade gracefully by disabling all personalization features until P99 returns to baseline — feature retrieval is non-essential`,
+        ],
+        answer: `B`,
       },
       {
         q: `A new product launches with 10,000 new items. The recommendation model starts showing these items at very low rankings. Why and how do you fix it?`,
-        a: `New items have no interaction history in the feature store — features like "item_click_through_rate", "item_purchase_count", "item_7d_views" are all null or zero. The model interprets these as items with low engagement (0 clicks, 0 purchases) rather than items with unknown engagement. This is the cold-start problem for new items. The model systematically ranks new items lower than old items regardless of their actual quality, creating a feedback loop: low-ranking means fewer impressions, fewer impressions means less data, less data perpetuates cold-start. Fix: (1) Content-based features: use features available from day one — item category, price tier, description embedding, seller reputation. Train a separate cold-start ranker on these features for items with fewer than N interactions. (2) Exploration injection: override ranking for new items at a certain position (e.g., position 5) for a sample of users to collect interaction data rapidly. (3) Warm-start: if the item has similar items (same brand, category, price), initialise its embedding as the average of similar items' embeddings rather than zero. (4) Bayesian smoothing: initialise CTR features with the category-level prior rather than 0.`,
+        options: [
+          `A) New items rank low because the model correctly infers that items with no purchase history are low quality`,
+          `B) New items have null or zero engagement features (clicks, purchases, views), causing the model to rank them as low-engagement items rather than unknown items; fix with content-based features, exploration injection, warm-start from similar items, and Bayesian smoothing`,
+          `C) The recommendation model needs to be retrained on the new items before it can rank them; low rankings are expected until the next training cycle`,
+          `D) New items rank low because of a cold-start problem in the user side, not the item side — the fix is to update user features more frequently`,
+        ],
+        answer: `B`,
       },
       {
         q: `Explain how a feature version change from "purchase_count_7d" to "purchase_count_30d" with the same feature name would manifest in model performance over time.`,
-        a: `Immediately after the version change, the model starts receiving 30-day purchase counts for a feature it was trained to interpret as 7-day counts. For users with stable purchase patterns, 30d count is approximately 4x the 7d count — the model sees inflated purchase counts and predicts all users as heavier purchasers. The calibration shifts: if the model output is a purchase probability, all probabilities move upward. Users who were correctly scored as moderate-purchasers are now scored as heavy-purchasers. The business impact depends on the downstream use: if this is a discount targeting model, you are now offering discounts to customers who would have purchased anyway (wasted spend). Detection: prediction score distribution monitoring would show a sudden upward shift in mean predicted scores on the day of the version change. Feature importance drift would show purchase_count becoming unexpectedly predictive of outcomes that should be driven by other features. Fix: always create new feature versions with new names (purchase_count_30d), never silently update in-place.`,
+        options: [
+          `A) The model would immediately produce errors because the value range has changed, triggering schema validation alerts`,
+          `B) Performance would improve because the 30-day window provides more signal; version changes under the same name are encouraged when the new version is strictly better`,
+          `C) The model would receive values approximately 4x larger than it trained on, causing systematically inflated predictions; prediction score distribution monitoring would show a sudden upward shift; always create new feature versions with new names, never update semantics in-place`,
+          `D) The effect would be negligible because models learn relative patterns rather than absolute feature values`,
+        ],
+        answer: `C`,
       },
       {
         q: `How do you implement a testing strategy for a feature pipeline to catch backfill inconsistencies before they reach training data?`,
-        a: `A backfill inconsistency occurs when recomputed historical features differ from originally-computed features due to code changes, data source updates, or schema migrations. Testing strategy: (1) Regression tests on historical snapshots: for 100 randomly-sampled entities at 10 historical timestamps, store the expected feature values (from the original pipeline run). When the new pipeline is run, assert that recomputed values match stored values within tolerance. (2) Distribution comparison: run both old and new pipelines on the same historical date range, compare per-feature distributions (PSI, mean, std, null rate) — flag any feature with PSI > 0.05 between old and new pipeline. (3) Unit tests for each feature computation function: input to expected output with known edge cases (null inputs, zero events, boundary timestamps). (4) Integration test: run the full backfill for a recent 7-day period and compare against values already materialised in the online store from the original pipeline — these should match. Log any discrepancies and alert before the backfilled data is used for training.`,
+        options: [
+          `A) Run the new pipeline on live data only — backfill testing is unnecessary because historical data is immutable`,
+          `B) Store expected feature values for 100 sampled entities at 10 historical timestamps; on pipeline changes, assert recomputed values match within tolerance; also run PSI comparison between old and new pipeline on the same date range; fail and alert before backfilled data enters training`,
+          `C) Compare the new pipeline's output schema against the old schema; if column names and types match, the backfill is consistent`,
+          `D) Backfill inconsistencies can only be caught after model retraining by comparing offline AUC between old and new models`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Feature store failures are silent — no exception fires when a feature is stale, null, or semantically different from what the model expects. Freshness monitoring, null rate alerts, and version governance are not optional add-ons. They are the only mechanism by which you find out before users do, rather than weeks after.`,
@@ -180,19 +276,43 @@ The model trains on systematically under-labeled data, learns a lower click-thro
     checkQuestions: [
       {
         q: `You are training a click model for mobile ads. Labels are generated 1 hour after impression. You find the model has much lower precision on mobile than desktop. Why?`,
-        a: `Mobile devices frequently go offline and batch-upload events when reconnected — click events on mobile may arrive 2-12 hours after the 1-hour label cutoff, classified as no-click (false negatives). The model trains on a dataset where mobile clicks are systematically under-counted relative to desktop clicks. The model learns that mobile traffic has inherently lower CTR — a spurious pattern driven by data collection latency, not actual user behaviour. Fix: (1) Measure click event lateness distribution by platform — what fraction of mobile clicks arrive within 1h vs 6h vs 24h? (2) Extend label incubation period to 24-48h for mobile labels. (3) Use platform-specific incubation periods: generate mobile labels at t+24h, desktop labels at t+1h. (4) Add device_platform as a feature explicitly so the model can learn true CTR differences rather than confounding lateness with behaviour. (5) Apply label correction weights: downweight training examples with high probability of incomplete labels based on the completeness curve.`,
+        options: [
+          `A) Mobile users inherently have lower CTR than desktop users due to smaller screen size reducing click accuracy`,
+          `B) Mobile devices batch-upload events when reconnected, so clicks arrive 2-12 hours after the 1-hour cutoff and are labeled as no-clicks; the model learns a spuriously low mobile CTR; fix by measuring click lateness by platform and extending mobile label incubation to 24-48h`,
+          `C) The model's features are desktop-optimized; adding mobile-specific features like screen size will equalize precision`,
+          `D) Label generation should never use a fixed cutoff — use an infinite window and retrain when all events have arrived`,
+        ],
+        answer: `B`,
       },
       {
         q: `A Flink streaming job computes "user_session_click_count" in a 30-minute tumbling window with 5-minute allowed lateness. An event arrives 8 minutes late. What happens to the feature?`,
-        a: `The 30-minute tumbling window closes at the watermark time. With 5-minute allowed lateness, the window accepts late events up to 5 minutes past the watermark and triggers a window recomputation with the updated count. The event arriving 8 minutes late falls outside the allowed_lateness window — it is a "late element beyond allowed lateness" and is handled by the late data side output stream (if configured) or silently dropped. The feature "user_session_click_count" for that window therefore underestimates by at least one click. Impact on the downstream ML model: if this click would have pushed the count above a feature threshold (e.g., "active session" if count > 3), the user is incorrectly labeled as inactive for that session. The tradeoff: increasing allowed_lateness from 5 to 15 minutes would capture this event but delays all window outputs by 10 more minutes, affecting feature freshness for all users.`,
+        options: [
+          `A) Flink automatically extends the allowed_lateness to accommodate the late event and recomputes the window`,
+          `B) The event is buffered and incorporated into the next window's computation`,
+          `C) The event falls outside the 5-minute allowed_lateness window and is dropped (or routed to a side output); the session click count underestimates by at least one click; increasing allowed_lateness to 15 minutes would capture it but delay all window outputs`,
+          `D) The window remains open indefinitely until all late events arrive, then closes with the complete count`,
+        ],
+        answer: `C`,
       },
       {
         q: `Your fraud model trains on features at transaction time with labels available 7 days later (when chargebacks are processed). The last 7 days of data in your training set have systematically lower fraud rates than older data. Why?`,
-        a: `This is delayed feedback bias — fraud labels for the most recent 7 days are incomplete at training time. A transaction from 3 days ago that will be chargebacked in 4 days is currently labeled "not fraud" in the training set. As the training pipeline runs today, the last 7 days contain zero chargebacks (they have not been disputed yet), artificially suppressing the positive rate. The model learns that recent transactions are inherently less risky — a temporal artefact, not a real trend. Fix: (1) Label incubation: only use training labels from data older than 7 days (the chargeback resolution time) — current data is excluded from training until sufficient time has passed. (2) Check your training pipeline's data cutoff and explicitly set label_available_date = transaction_date + 7_days as a filter condition. (3) Monitor positive rate by data age in your training set — if recent cohorts have significantly lower positive rate, incubation is insufficient.`,
+        options: [
+          `A) Fraud rates are genuinely lower in recent data because the model's production deployment has reduced fraud`,
+          `B) This is delayed feedback bias — transactions from the last 7 days have not yet received chargebacks, so they show near-zero positive labels; the model learns recent traffic is inherently safe; fix by excluding data newer than the chargeback resolution time from training labels`,
+          `C) Recent data is lower quality because the data pipeline has not had time to process it fully; exclude the last 7 days from all features, not just labels`,
+          `D) The lower fraud rate in recent data is correct — fraudsters adapt and become less detectable over time, which the training set accurately reflects`,
+        ],
+        answer: `B`,
       },
       {
         q: `Design a label generation system for a recommender model where user engagement signals arrive with varying latency (watch completion: 0-2h, like: 0-7d, share: 0-30d).`,
-        a: `The fundamental problem is that using a single label cutoff ignores the different latency distributions of each signal. Design: (1) Define a composite label generation policy with per-signal incubation: watch_completion labels ready at t+4h (P99 of 2h plus buffer), like labels ready at t+10d, share labels ready at t+35d. (2) Multi-stage training label table: generate "immediate engagement" labels at t+4h (completion only), "medium-term engagement" labels at t+10d (completion plus likes), "full engagement" labels at t+35d (all signals). Train separate models or use a multi-task model with each label type as a separate task. (3) For real-time retraining that cannot wait 35 days: use available signals weighted by expected completeness — weight completion events at 1.0 (complete), like events at 0.3 if within 3d (expected completeness 30%), share events at 0 until 7d has elapsed. (4) Monitor label completeness curves quarterly — as user behaviour and app latency changes, incubation periods may need adjustment.`,
+        options: [
+          `A) Wait 30 days for all signals before generating any labels — using incomplete data corrupts the model more than the training delay costs`,
+          `B) Use only watch completion as the label since it arrives quickly and is the most reliable signal; discard likes and shares`,
+          `C) Define per-signal incubation periods (watch at t+4h, like at t+10d, share at t+35d); generate multi-stage labels or use completeness-weighted labels for real-time retraining; monitor completeness curves quarterly`,
+          `D) Use a single 24-hour cutoff for all signals and apply equal weight — this balances recency and completeness`,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Late-arriving data creates two distinct corruption patterns — incomplete streaming aggregations and under-labeled positive examples — and both are invisible without explicit monitoring. The incubation period and watermark settings must be derived from empirical completeness curves for your specific data source. Using defaults or estimates without measurement means the model is trained on systematically wrong labels and you will not know it until performance gaps surface much later.`,
@@ -218,19 +338,43 @@ The model trains on systematically under-labeled data, learns a lower click-thro
     checkQuestions: [
       {
         q: `Your training pipeline runs successfully every day, but model performance has been slowly degrading over 3 weeks with no code changes. How do you diagnose this?`,
-        a: `Three weeks of gradual degradation with no code changes points to data quality or distribution drift, not a bug. Systematic diagnosis: (1) Feature-level PSI over time: compute PSI for each feature, comparing recent 7 days against the training reference. Which features have PSI > 0.1? These are candidates. (2) Feature null rates over time: has any feature's null rate increased? A feature drifting from 0% null to 10% null over 3 weeks would not trigger a single-day spike alert but would cause gradual degradation. (3) Label distribution: has the positive rate in your daily training data shifted? If fraud rate increased but the model wasn't retrained, recall drops. If it decreased, precision appears better but the model is less calibrated. (4) Data volume: is the pipeline receiving the same volume of raw data? A 15% drop in event volume (e.g., mobile tracking changes) would silently reduce feature quality. (5) Upstream schema changes: query the data catalog for any schema changes in source tables over the 3-week period. A 3-week slow degradation without spikes points to gradual distribution drift, not a sudden pipeline failure.`,
+        options: [
+          `A) Three weeks of gradual degradation with no code changes is expected model decay; redeploy the same model to reset the staleness counter`,
+          `B) Check per-feature PSI over time, null rate trends, label distribution shifts, data volume changes, and upstream schema changes over the 3-week period — gradual degradation without spikes points to distribution drift, not a sudden failure`,
+          `C) Rerun the pipeline with verbose logging to capture any silent exceptions that must be causing the degradation`,
+          `D) Gradual degradation is always caused by concept drift; retrain immediately on the most recent 7 days of data`,
+        ],
+        answer: `B`,
       },
       {
         q: `You add a new upstream data source to your feature pipeline. How do you validate data quality before using it in training?`,
-        a: `New data source validation requires both statistical and semantic validation. Workflow: (1) Schema validation: assert expected columns, types, and non-null constraints — fail immediately on any violation. Document the schema as an expectation suite. (2) Volume validation: assert expected row counts by date — a new source with missing days in historical data will create gaps in training features. Plot row count by date and verify continuity. (3) Distribution inspection: compute statistics (mean, std, min, max, nulls, cardinality for categoricals) on a 30-day sample. Compare against domain expectations — if "user_age" has mean=52 but you expected 25-45 for your user base, investigate immediately. (4) Join quality: test the join between this source and your main entity table — what fraction of entities in your label table successfully join? Low join rate (less than 95%) means many entities will have null features. (5) Historical backfill validation: for model retraining, backfill 6+ months of history and verify PSI between backfilled values and any values already available from the original pipeline for overlapping periods.`,
+        options: [
+          `A) If the pipeline runs without exceptions, the data source is valid — schema errors would fail the job`,
+          `B) Validate schema and non-null constraints, verify row counts by date for continuity, inspect distributions against domain expectations, measure join quality with the main entity table, and validate historical backfill PSI against any overlapping period`,
+          `C) Run a sample of 100 rows through the feature pipeline; if output looks reasonable, approve the data source`,
+          `D) Data quality validation is only needed for existing data sources; new sources are assumed clean until proven otherwise`,
+        ],
+        answer: `B`,
       },
       {
         q: `A feature pipeline runs successfully but produces the wrong values — all "user_account_age" values are approximately 365 days regardless of actual account age. How does data validation catch this?`,
-        a: `This is a silent correctness bug, not a schema or null error — the pipeline runs without errors and produces non-null values. Standard schema validation would not catch it. What would catch it: (1) Distribution expectation: expect_column_values_to_be_between(0, 3650) — passes, does not catch the bug. (2) Statistical expectation: expect_column_mean_to_be_between(500, 2000) (expected average ~4-year-old account) — if all values are ~365, mean approximately 365, this triggers the alert. (3) Variance expectation: expect_column_stdev_to_be_between(200, 800) — if all values are 365 plus or minus 2, standard deviation is approximately 2, this alert fires loudly. (4) Quantile expectations: expect p10 > 100 and p90 < 3000 — a bug producing constant 365 would fail the p90 assertion. The lesson: expectation suites must include variance and spread expectations, not just range checks — a constant feature is a red flag even if values are in range.`,
+        options: [
+          `A) Range validation would catch this because 365 is outside the valid range for account age`,
+          `B) Schema validation catches this because the data type changes when values are computed incorrectly`,
+          `C) Variance/standard deviation expectations catch this — a constant or near-constant feature produces a standard deviation near zero, which would fail an expect_column_stdev_to_be_between assertion even though individual values pass range checks`,
+          `D) This bug cannot be caught by automated data validation; it requires manual inspection of sampled records`,
+        ],
+        answer: `C`,
       },
       {
         q: `How do you implement data quality checks that catch issues before they affect model training, without slowing down the pipeline significantly?`,
-        a: `A stratified data quality strategy separates fast checks from thorough ones: (1) Real-time schema validation (less than 1ms per record): validate schema (types, non-null constraints) at ingestion time using the expectation suite — run on every record, fail immediately on violation. Implemented as a streaming filter in Kafka/Flink. (2) Fast statistical checks (less than 5 minutes): compute aggregate statistics (count, null rate, mean, std) on each partition/batch — run after each ingestion batch. Compare against pre-computed training statistics stored in the model artifact. Alert if any feature deviates beyond 3 standard deviations. Implemented as a lightweight Spark job or SQL query. (3) Full distribution checks (15-30 minutes): compute PSI for each feature — run daily on the full training dataset before model training. This is the most thorough check but runs infrequently. (4) Gate: if any check fails, halt the training pipeline and alert — do not train on bad data. The pipeline cost of running quality checks is less than 5% of total runtime; the business cost of training on bad data is orders of magnitude higher.`,
+        options: [
+          `A) Run all data quality checks after model training completes so they don't block the pipeline`,
+          `B) Use a stratified strategy: real-time schema validation at ingestion (<1ms per record), fast statistical checks after each batch (<5 min), and full distribution PSI checks daily before training; gate training on all checks passing — quality check cost is under 5% of pipeline runtime`,
+          `C) Sample 1% of records for quality checks and extrapolate; full dataset validation is too slow for daily pipelines`,
+          `D) Data quality checks should run in a separate pipeline that does not block model training — alerts can be addressed after the model is deployed`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Bad data produces no exceptions — it silently degrades models while every pipeline status check shows green. Data quality assertions that fail the pipeline loudly are not overhead. They are the only reliable signal that distinguishes "pipeline ran" from "pipeline ran on data the model was trained to handle." A pipeline that fails on day one of a schema change is better than one that silently retrains for six weeks on corrupted features.`,
@@ -256,19 +400,43 @@ The model trains on systematically under-labeled data, learns a lower click-thro
     checkQuestions: [
       {
         q: `You are building a content moderation model. Human labelling is too expensive at scale. Walk through a programmatic labelling workflow.`,
-        a: `Workflow: (1) Gather a small gold-labelled set (500-1000 examples) from human annotators — this is used to evaluate LF accuracy, not train the final model. (2) Write labelling functions: regex patterns (profanity keyword lists), topic classifiers (retrain a small BERT on a related open dataset), rule-based heuristics (URL-only posts = spam), existing policy document patterns, user reports as weak labels. (3) Analyse LF quality on gold set: coverage (what fraction does each LF label), accuracy per LF, conflict matrix (which LFs disagree). Discard LFs with accuracy less than 60% on gold set. (4) Train a generative label model (Snorkel) that learns each LF's reliability and produces probabilistic labels for the full unlabelled corpus. (5) Train a discriminative end model (BERT fine-tune) on the probabilistic labels — this end model generalises beyond the LF patterns. (6) Evaluate on held-out gold set and sample 1000 examples from each label bucket for human verification. (7) Iterate: add new LFs for patterns the end model gets wrong.`,
+        options: [
+          `A) Collect 500-1000 gold-labeled examples; write labeling functions (regex, topic classifiers, rule heuristics); analyze coverage and accuracy on gold set; train a Snorkel label model to aggregate functions; train a discriminative end model on probabilistic labels; iterate`,
+          `B) Use a large language model to label all examples in a single pass — LLMs are more accurate than programmatic labeling functions and require no iteration`,
+          `C) Start by training a BERT model on a small labeled set, then use it to pseudo-label the full corpus at a 0.9 confidence threshold`,
+          `D) Programmatic labeling only works for binary classification; for multi-class content moderation, human annotation is required`,
+        ],
+        answer: `A`,
       },
       {
         q: `Your model achieves 92% test accuracy, but manual inspection reveals it is wrong on most examples involving a specific demographic group. What is happening and how do you fix it?`,
-        a: `This is systematic label noise combined with evaluation bias. If the demographic group is underrepresented in the test set (e.g., 3% of examples), the model can have 92% overall accuracy while being 40% accurate on that group without it appearing in the aggregate metric. Additionally, if the labelling process was biased — e.g., annotators consistently applied the positive label differently for this group — the model learned the systematic mislabelling as a feature. Investigation: (1) Compute per-group accuracy, precision, recall — not just aggregate. (2) Measure inter-annotator agreement specifically for examples from this group — if kappa is lower for this group, the annotation process was inconsistent. (3) Sample 200 examples from this group and have unbiased annotators re-label them — how many differ from original labels? Fix: (1) Audit and correct labels for the group using confident learning (CleanLab). (2) Reweight training examples for the underrepresented group (higher weight in the loss). (3) Add stratified evaluation metrics to deployment gates so future models cannot be promoted without meeting per-group performance standards.`,
+        options: [
+          `A) The model is correct — 92% overall accuracy means performance is acceptable across all groups`,
+          `B) The demographic group must be outside the model's training distribution; add more data from that group and retrain`,
+          `C) The group is underrepresented in the test set so its low accuracy is hidden in aggregate metrics; likely also reflects systematic labeling bias; fix by computing per-group metrics, auditing labels with confident learning, reweighting the minority class, and adding per-group gates to deployment criteria`,
+          `D) High aggregate accuracy with demographic disparity is purely a sampling artifact that resolves with a larger test set`,
+        ],
+        answer: `C`,
       },
       {
         q: `You have 10,000 examples labelled by humans with inter-annotator agreement of kappa=0.45. How do you handle this in model training?`,
-        a: `Kappa=0.45 is fair-to-moderate agreement — annotators disagree on roughly 27% of examples. This low agreement indicates genuine label ambiguity in the task definition, not annotator carelessness. Strategy: (1) Diagnose the ambiguity: randomly sample 100 disagreement examples and have a senior annotator adjudicate — are they genuinely ambiguous, or is the guideline unclear? If the task itself is inherently uncertain, the model should output a probability, not a hard label. (2) For training: use label smoothing (epsilon=0.15 for kappa=0.45, higher smoothing for more uncertainty) — this prevents the model from being overconfident on ambiguous examples. (3) Use soft labels: instead of majority vote, compute the mean label across annotators as a probability (if 3 out of 5 annotators said positive, label=0.6) — trains the model to output calibrated probabilities rather than forcing 0/1 on ambiguous cases. (4) Consider multi-annotator training (MaTen): model the annotator-specific noise pattern to infer the true label distribution. (5) Revise annotation guidelines for the ambiguous boundary cases and relabel the 27% disagreement examples.`,
+        options: [
+          `A) kappa=0.45 is acceptable — proceed with majority-vote labels and standard cross-entropy training`,
+          `B) Diagnose whether ambiguity is task-inherent or guideline-unclear; use label smoothing (epsilon ~0.15), soft labels (mean annotator agreement as probability), and consider multi-annotator training; revise guidelines and relabel boundary cases`,
+          `C) Discard the dataset entirely — kappa below 0.6 means the data is unusable for any model training`,
+          `D) Increase the number of annotators per example until kappa exceeds 0.6, then proceed with standard training`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is the failure mode of using a model trained on weak labels to generate more labels for the same dataset, and how do you avoid it?`,
-        a: `This is circular label bootstrapping — the model trained on weak labels contains the same biases and errors as the weak labels; using it to label more examples amplifies those errors rather than correcting them. The failure mode is a feedback loop: the weak-label model assigns confident (wrong) labels to ambiguous examples, those examples are added to training with high confidence, the next model is even more confident in the same wrong labels, and the model becomes both wrong and overconfident. This is confirmation bias at the model level. Avoidance: (1) Never use the model trained on weak labels to label the same examples it was trained on — this is data contamination. (2) If using model predictions for active labelling, apply them only to held-out examples the model has not seen. (3) Use the gold-labelled set (human labels) as the reference for evaluating new labels — never let model predictions override gold labels. (4) Include a "human review" step for any example where the weak-label model is high-confidence (above 0.9) but the original LFs disagree — high model confidence plus LF disagreement is the signal for a potentially mislabelled example that should be reviewed rather than trusted.`,
+        options: [
+          `A) The only failure mode is computational cost — the model takes too long to label the full dataset`,
+          `B) The model trained on weak labels contains the same biases as the weak labels; using it to label the same data it trained on creates a circular feedback loop that amplifies errors and produces overconfident wrong labels; avoid by applying model-generated labels only to held-out data and retaining gold labels as the authoritative reference`,
+          `C) There is no failure mode — a model trained on weak labels will always produce higher-quality labels than the original weak supervision source`,
+          `D) The failure mode is that model-generated labels are too similar to human labels, reducing training diversity`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Systematic label noise teaches the model wrong patterns rather than just adding variance. More labeled data collected from the same biased process amplifies the bias rather than reducing it. The most valuable labeling investment is usually diagnosing and fixing the structure of the noise first — then scaling annotation on the fixed process.`,
@@ -294,19 +462,43 @@ The model trains on systematically under-labeled data, learns a lower click-thro
     checkQuestions: [
       {
         q: `Your daily retraining pipeline fails on day 3 because the upstream data source was unavailable. How do you design the system to handle this gracefully?`,
-        a: `Graceful handling requires four design decisions: (1) Data availability check at start: before any computation, validate all upstream sources have data for the expected date range using a wait_for_data sensor (Airflow ExternalTaskSensor pattern) — if data does not arrive within N hours, fail fast with a clear alert rather than training on partial data. (2) Continue serving: the production model from day 2 continues serving — do not deploy a model trained on incomplete data. The system degrades gracefully (slightly stale model, not broken predictions). (3) Idempotent backfill: once the source recovers, the pipeline must be safely re-runnable for the missed date — upsert semantics ensure re-running does not double-count. (4) Automatic retry with backoff (Airflow retry=3, retry_delay=30min) for transient failures; human alerting for failures that persist beyond 4h, indicating a more serious upstream issue.`,
+        options: [
+          `A) Configure the pipeline to train on whatever data is available and deploy the resulting model — partial data is better than no update`,
+          `B) Use a data availability sensor at pipeline start; if data doesn't arrive within N hours, fail fast and alert; continue serving the last good model; ensure idempotent backfill with upsert semantics once data recovers; use automatic retry with backoff for transient failures`,
+          `C) Increase the pipeline's memory allocation so it can cache the previous day's data as a fallback`,
+          `D) Switch to a streaming pipeline — batch pipelines are inherently fragile to upstream data unavailability`,
+        ],
+        answer: `B`,
       },
       {
         q: `You need to ensure that if a feature computation step fails and is rerun, it does not create duplicate records in your feature store. How do you design this?`,
-        a: `Idempotent writes require two components: (1) Write semantics: use UPSERT (INSERT OR UPDATE) keyed on (entity_id, feature_name, computation_date) rather than INSERT — if the record already exists from a previous partial run, it is updated with the new value rather than duplicated. In Parquet-based offline stores, write to a partitioned path (date=2024-01-01/) and overwrite the partition atomically — re-running writes the same partition path, replacing the previous incomplete data. (2) Idempotent computation: the feature computation itself must produce the same output for the same input data regardless of run count — avoid using non-deterministic functions (random numbers without seeds, current_timestamp for aggregation windows). In Spark: set spark.sql.shuffle.partitions to a fixed value and avoid collect() operations that have non-deterministic ordering. Testing: deliberately run the feature computation step twice in CI and assert that the output dataset is identical after both runs — this test must pass before any pipeline code can be deployed.`,
+        options: [
+          `A) Add a deduplication step after every write using a SELECT DISTINCT query`,
+          `B) Use UPSERT keyed on (entity_id, feature_name, computation_date) rather than INSERT; for Parquet stores, overwrite the partition atomically; use deterministic computation (fixed shuffle seeds, no current_timestamp for windows); verify idempotency in CI by running the step twice and asserting identical output`,
+          `C) Use a distributed lock to prevent concurrent runs — the duplicate problem only occurs when two pipeline runs overlap`,
+          `D) Idempotency is only needed for streaming pipelines; batch pipelines can safely use INSERT because retries are rare`,
+        ],
+        answer: `B`,
       },
       {
         q: `A model is retrained daily. You discover that 4 days ago, a bug was introduced in the feature computation that corrupted 3 features. What is the remediation process?`,
-        a: `Multi-step remediation: (1) Stop ongoing training: immediately halt the training pipeline to prevent additional corrupted models from being promoted to production. (2) Audit models: identify all model versions trained in the past 4 days (since the bug was introduced). Using lineage tracking, find the exact training data versions these models used. (3) Rollback production: if any of the corrupted models were promoted to production, roll back to the last model trained before day 4 (last known good version from the model registry). (4) Fix and backfill: fix the feature computation bug in code, then backfill the 4 corrupted days: re-run the feature computation for those 4 date partitions, validate outputs match expected distributions (PSI comparison against pre-bug values), overwrite corrupted partitions in the feature store. (5) Retrain: re-run training for all 4 days using backfilled features, evaluate all versions, promote the best. (6) Post-mortem: add a data quality test for the specific bug pattern to catch similar issues before they propagate.`,
+        options: [
+          `A) Retrain with the buggy features and deploy immediately — the model will learn to compensate for the corruption`,
+          `B) Halt training; audit all models trained in the past 4 days via lineage; rollback production to the last pre-bug model; fix the bug and backfill the 4 corrupted date partitions; validate backfilled distributions against pre-bug values; retrain and promote; add a regression test for the bug pattern`,
+          `C) Delete the corrupted training data and retrain from scratch on historical data only`,
+          `D) Deploy a hotfix to the serving pipeline to correct the features at inference time; no retraining is needed`,
+        ],
+        answer: `B`,
       },
       {
         q: `What is the difference between a pipeline failure and a pipeline bug, and why does this distinction matter for ML systems?`,
-        a: `A pipeline failure is a transient or infrastructure error — upstream data unavailable, node OOM, network partition — the computation logic is correct, only the execution environment failed. Fix: retry with backoff. A pipeline bug is a logical error — wrong aggregation window, incorrect join key, off-by-one in date range — the computation runs successfully but produces wrong outputs. The critical distinction: failures are detectable (the pipeline throws an error, monitoring catches the gap in output data). Bugs are silent — the pipeline succeeds, produces data, model trains on it, model is deployed, and only downstream business metrics reveal the problem weeks later. This is why data quality validation (asserting on output distributions, not just pipeline success status) is essential. A pipeline that "succeeded" without data quality checks can be more dangerous than a failed pipeline — at least a failure triggers an alert. A silent bug silently corrupts models. Pipeline failures are handled by monitoring and retry; pipeline bugs are prevented by data quality assertions and caught by automated testing on the output data, not just the execution status.`,
+        options: [
+          `A) There is no meaningful distinction — both result in a model that underperforms and should be handled the same way`,
+          `B) A failure is detectable (pipeline throws an error, monitoring catches it, alerts fire); a bug is silent (pipeline succeeds, produces wrong data, model trains and deploys, and degradation surfaces weeks later through business metrics); only data quality assertions on outputs guard against bugs — monitoring success status alone is not sufficient`,
+          `C) A pipeline failure affects only the current training run; a bug affects all future runs until fixed`,
+          `D) Failures are caused by infrastructure issues; bugs are caused by bad data — both require the same response of rolling back to the last good model`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `A pipeline "succeeding" (no errors thrown) tells you nothing about whether it produced correct data. The gap between "ran without errors" and "produced correct outputs" is exactly where silent bugs live. Data quality assertions on pipeline outputs are the only thing that closes it.`,
@@ -336,19 +528,43 @@ But the registry is only as useful as what it enforces: lineage fields that are 
     checkQuestions: [
       {
         q: `Your production model is found to be biased against a demographic group after deployment. How does the model registry help you remediate?`,
-        a: `(1) Immediate rollback: query the registry for the previous production model version (Archived stage). Promote it back to Production — takes less than 5 minutes if the artifact is retained. This minimises exposure time. (2) Audit lineage: the registry provides exact training dataset version and code commit. Reproduce the training run to understand what data produced the bias — was the demographic group underrepresented in training data? Were labels systematically biased for this group? (3) Update deployment gates: add fairness metrics (demographic parity, equalised odds per group) as required gate criteria. Future models cannot be promoted to production without passing these checks. The registry enforces this programmatically. (4) Retrain: fix the underlying data issue, retrain, and promote the new model through the updated gate — the gate will catch any remaining bias before it reaches users. The registry provides the audit trail for each step, which is also critical for regulatory compliance if the bias had legal implications.`,
+        options: [
+          `A) The registry helps by providing the model's source code so the bias can be manually patched without retraining`,
+          `B) Query the registry for the previous production version and promote it back to Production for fast rollback; use lineage to reproduce the training run and identify the data bias; add fairness gates to deployment criteria; retrain with the data issue fixed and verify the new model passes the gates before promotion`,
+          `C) The model registry is only useful for rollback, not for diagnosing bias — a separate bias detection tool is required`,
+          `D) Delete the biased model from the registry to ensure it cannot be accidentally redeployed`,
+        ],
+        answer: `B`,
       },
       {
         q: `Two data scientists train models independently using different hyperparameters. How does experiment tracking in the registry help them collaborate and pick the best model?`,
-        a: `Without experiment tracking, comparing two independently trained models requires asking each other what hyperparameters they used (may not remember), re-running evaluations (non-reproducible if dataset was shuffled differently), and manual coordination. With MLflow or W&B: both scientists log all hyperparameters (learning rate, batch size, model architecture) and metrics (train loss by epoch, val AUC, val F1) to the same experiment. The comparison UI shows a table of all runs sorted by any metric — they can instantly identify the best val AUC, filter by hyperparameter ranges, and reproduce any run exactly from its logged parameters and dataset version. Additional collaboration benefits: they can see if their models learned differently (training curve comparison) before committing to production evaluation, reducing wasted GPU time. The registry also prevents the "which model file is this?" problem — every artifact is versioned and linked to its run.`,
+        options: [
+          `A) Experiment tracking only stores final metrics; comparing training dynamics requires sharing raw log files between data scientists`,
+          `B) Both log all hyperparameters, metrics, and dataset versions to the same experiment; the comparison UI shows all runs sortable by any metric with full reproducibility; training curve comparisons reveal if models learned differently; lineage prevents the "which model file is this?" problem`,
+          `C) Experiment tracking is redundant if both scientists use the same codebase and share hyperparameter configs via version control`,
+          `D) The registry picks the best model automatically based on validation AUC — no collaboration is needed`,
+        ],
+        answer: `B`,
       },
       {
         q: `You need to deploy a model to 3 different environments (dev, staging, prod) with different data schemas in each. How do you design the registry to handle this?`,
-        a: `Environment-aware deployment design: (1) Store environment-specific configuration (feature schema, thresholds, target latency) separately from the model artifact — the model weights are environment-agnostic, but the preprocessing schema is environment-specific. (2) Model plus config bundle: when promoting to an environment, associate the model artifact with the environment-specific config version — registry entry includes (model_version, env, config_version, promotion_timestamp). (3) Schema compatibility tests: add an automated gate that validates the model's expected input schema (stored in the artifact) against the actual schema available in each environment's feature store — fail promotion if incompatible. (4) Promotion policy: dev allows direct promotion from Experiment; staging requires passing dev tests; prod requires passing staging tests AND manual approval. This prevents accidentally promoting a dev model directly to prod. (5) Environment isolation in lineage: queries like "which model is currently in prod?" and "what was live in staging at 2024-01-15?" should be answerable from the registry without ambiguity.`,
+        options: [
+          `A) Maintain three separate model registries, one per environment — sharing a registry across environments creates schema conflicts`,
+          `B) Store environment-specific config (schema, thresholds) separately from model weights; associate (model_version, env, config_version) at promotion; run schema compatibility gates before each environment promotion; enforce dev → staging → prod ordering with manual approval at the prod gate`,
+          `C) Store only one model version per registry entry and let each environment apply its own preprocessing at inference time`,
+          `D) Deploy the same artifact to all three environments and rely on environment variables to handle schema differences at runtime`,
+        ],
+        answer: `B`,
       },
       {
         q: `A model trained 6 months ago is performing better than a newly retrained model on the holdout set. What does this tell you about your data pipeline, and how does the registry help debug it?`,
-        a: `A 6-month-old model outperforming a fresh retrained model is a significant red flag — retraining should generally improve or maintain performance since the fresh model has access to more recent data. Possible causes: (1) Data quality regression: the training pipeline introduced a bug in the past 6 months — recent features are computed incorrectly. (2) Label quality degradation: the labelling process changed and recent labels are noisier or systematically biased. (3) Training data window issue: the recent training pipeline uses a different data window (e.g., only last 90 days) while the 6-month-old model was trained on 2 years of data. Registry debugging: (1) Use lineage to identify the exact dataset versions used by both models. (2) Compare feature distributions between the two training datasets — which features changed most? (3) Compare label distributions — did positive rate shift significantly? (4) Reproduce both training runs and compare validation curves — does the new model's training loss converge correctly? This is exactly the scenario where lineage tracking pays off: without it, you cannot identify which component of the data pipeline changed.`,
+        options: [
+          `A) The older model is better because it was trained on more historical data; always prefer older models for stability`,
+          `B) This signals a data pipeline regression — likely a feature bug, label quality degradation, or training window change introduced in the last 6 months; use lineage to compare exact dataset versions and feature definitions between the two models; compare feature distributions and label rates to identify what changed`,
+          `C) The holdout set has drifted and no longer represents production; discard both models and retrain on the most recent data`,
+          `D) Newly retrained models always underperform older models on holdout sets because they overfit to recent data; this is expected behavior`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `The three questions that matter during a production incident are: what is live, what produced it, and what is the rollback target. Without mandatory lineage and programmatic gates, none of these answers are reliable. A registry where lineage is optional and gates are advisory is a named folder on S3 — the discipline breaks exactly when the stakes are highest.`,
@@ -374,19 +590,43 @@ But the registry is only as useful as what it enforces: lineage fields that are 
     checkQuestions: [
       {
         q: `You run an A/B test with 50/50 split. Analysis shows 52% of unique users are in treatment, 48% in control. What do you do before looking at metrics?`,
-        a: `DO NOT look at the primary metrics — SRM of 52/48 vs expected 50/50 indicates a systematic assignment or logging bug that makes the two groups non-comparable. A statistically significant result in an SRM experiment is uninterpretable. Debugging steps: (1) Check assignment hash function: verify that hash(user_id + experiment_id) mod 100 produces an approximately uniform distribution across the user_id space. Test with the actual user_id distribution from the experiment. (2) Check for bot filtering: if bots are filtered differently in treatment vs control (e.g., bot filtering logic only applied to treatment arm), the filtered-out bots create SRM. (3) Check exposure logging: if treatment logging fires on a different event than control logging, different populations may be counted. (4) Check session vs user assignment: if assignment is per-session but logging is per-user, users with multiple sessions may appear in both groups. After fixing the root cause, restart the experiment — do not attempt to correct for SRM statistically in the existing data.`,
+        options: [
+          `A) Proceed with analysis but apply a statistical correction to adjust for the 2% imbalance`,
+          `B) Do not look at primary metrics — SRM indicates a systematic assignment or logging bug making the groups non-comparable; debug the hash function, bot filtering, session/user assignment mismatch, and logging coverage; restart the experiment after fixing the root cause`,
+          `C) The 52/48 split is within acceptable statistical variance for a 50/50 experiment; proceed with analysis`,
+          `D) Discard the treatment group entirely and rerun with only the control group as a baseline`,
+        ],
+        answer: `B`,
       },
       {
         q: `Your A/B test shows a 5% lift in click-through rate. The experiment ran for 3 days. What validity threats should you consider before claiming the win?`,
-        a: `A 3-day experiment has multiple validity threats: (1) Day-of-week effect: 3 days may not cover a full weekly cycle — if the experiment started on Friday, it over-represents weekend behaviour which may not be representative of weekday users. Minimum duration: 7 days to cover one full weekly cycle. (2) Novelty effect: a 5% lift may reflect users clicking on the new UI element because it is new (novelty curiosity) rather than because it is genuinely better. Novelty effects typically decay over 1-2 weeks. (3) Peeking / early stopping bias: if the experiment was stopped when significance was first reached (common mistake), the p-value is inflated due to multiple testing over time. Check if the experiment ran to its pre-specified sample size. (4) SRM: run the SRM check. (5) Multiple metrics: was the primary metric pre-specified, or was "click-through rate" selected post-hoc from many metrics analysed? If the latter, apply multiple testing correction. Run for 14 days minimum before declaring a win on any metric with likely novelty effects.`,
+        options: [
+          `A) A statistically significant result at 3 days is valid regardless of duration — significance means the result is real`,
+          `B) Day-of-week effects (3 days may miss the weekly cycle), novelty effect (users clicking because it's new, not better), peeking/early stopping bias, SRM, and post-hoc metric selection all threaten validity; run for at least 7-14 days before declaring a win`,
+          `C) The only validity threat is sample size — if the confidence interval is narrow, the result is valid at any duration`,
+          `D) Three-day experiments are only invalid for negative results; positive results are inherently more reliable`,
+        ],
+        answer: `B`,
       },
       {
         q: `How do you design an A/B infrastructure for testing ML model changes when models have different computational costs and serving latency?`,
-        a: `ML model A/B testing has infrastructure considerations beyond standard UI experiments: (1) Latency budgets: if the challenger model is 2x slower, users in the treatment group experience higher latency — this latency difference is a confound (slower response affects engagement independently of model quality). Ensure both models meet latency SLA before experiment launch. (2) Canary first: before full A/B, route 1-5% traffic to the new model (canary) to catch errors, OOM, or unexpected latency spikes before exposing 50% of users. (3) Request routing: route assignment must happen before model execution — the assignment hash determines which model serves each request. Avoid reassigning within a session (model switches mid-session create inconsistent experiences). (4) Logging: log which model version served each request alongside the prediction and downstream outcome — model_version is required for correct experiment analysis. (5) Interaction effects: if the experiment platform and ML serving layer are separate, ensure model assignments and experiment assignments are communicated through the same request context to avoid contamination.`,
+        options: [
+          `A) Test models in separate sequential experiments to avoid latency confounding — never A/B test models with different serving times simultaneously`,
+          `B) Ensure both models meet the latency SLA before launch; run a canary first (1-5% traffic) to catch errors; route assignment before model execution; log model_version with every prediction and outcome; ensure model assignment and experiment assignment share the same request context`,
+          `C) Use the faster model as control and the slower model as treatment — this naturally accounts for any latency differences in the analysis`,
+          `D) Latency differences between models are irrelevant to A/B validity as long as the sample sizes are equal`,
+        ],
+        answer: `B`,
       },
       {
         q: `A marketplace A/B test treats seller-side UI (treated sellers get a new dashboard). Control sellers are unaffected. But analysis shows control buyer behaviour also changed. What is happening?`,
-        a: `This is network interference — the SUTVA (stable unit treatment value assumption) is violated. Treated sellers change their behaviour (post more listings, respond faster, change pricing) because of the new dashboard. This changed seller behaviour directly affects buyer experience on the same marketplace — buyers in the control group see different products and prices because their sellers are in treatment. The treatment is "leaking" from the seller side to the buyer side through real marketplace interactions. Standard A/B analysis assumes treatment and control groups are independent — this assumption is violated here. Remedies: (1) Cluster randomisation: randomise at the seller level for a seller-side test, and measure only seller-side outcomes. Do not measure buyer outcomes in this experiment. (2) Geographic clustering: assign all sellers and buyers in a geographic market to the same arm (treated market vs control market), removing the interference path. (3) Use a switchback design: alternate treatment and control in time periods within a market, measuring the steady-state effect. (4) Bipartite experiment design (specific to marketplaces): randomise sellers and buyers separately, measure the full network effect using a bipartite-aware estimator.`,
+        options: [
+          `A) The control group has been contaminated by a separate unrelated experiment running concurrently`,
+          `B) This is network interference (SUTVA violation) — treated sellers change behavior (pricing, listings, response time) which directly affects buyers interacting with those sellers in the control group; remedies include cluster randomisation by geographic market, switchback designs, or bipartite experiment estimators`,
+          `C) Control buyer behaviour changing is expected and should be factored into the primary metric calculation`,
+          `D) The buyer-side change proves the seller UI treatment is working as intended; this validates the experiment result`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `A/B infrastructure bugs produce valid-looking results that are wrong. A biased assignment generates a p-value, a confidence interval, and a recommendation — every number in the chain is invalid, and no alarm fires. SRM invalidates the experiment regardless of what the metrics say. Check it before looking at results, every time, without exception — there is no statistical fix for a compromised experiment.`,
@@ -415,19 +655,43 @@ A model that worked in offline evaluation and in shadow mode can still fail when
     checkQuestions: [
       {
         q: `Your fraud detection model's precision starts dropping 3 weeks after deployment with no code changes. Feature distributions are stable. What is the most likely cause and what do you do?`,
-        a: `Stable feature distributions with degrading precision points to real concept drift — the relationship P(fraud | features) has changed, not the feature distribution itself. In fraud, this is extremely common: fraudsters adapt their behaviour in response to model signals, developing new attack patterns that the model has not seen. The model's features still look the same (same user demographics, same transaction types) but the patterns that predict fraud have shifted. Investigation: (1) Look at which prediction score buckets have the most false positives — are they clustered in a specific feature subspace that corresponds to a new fraud pattern? (2) Compare the feature values of recent false positives against historical true positives — is there a new cluster? (3) Check if the positive rate in the raw data has changed (more fraud overall) or if the model's calibration has drifted. Remediation: (1) Retrain with recent data, weighted toward the past 7-14 days (higher weight on recent examples where the new patterns appear). (2) Add features that capture the new fraud patterns identified in step 1. (3) Consider a shorter retraining cycle (daily instead of weekly) for fraud models given the adversarial nature of the drift.`,
+        options: [
+          `A) Stable features with dropping precision means the model was undertrained; increase training epochs and redeploy`,
+          `B) This is most likely real concept drift — fraudsters have adapted and the relationship P(fraud|features) has changed; investigate false positive clusters for new fraud patterns, compare recent false positives to historical true positives, retrain with recency-weighted recent data, and shorten the retraining cycle`,
+          `C) Stable feature distributions guarantee stable model performance; the precision drop must be a monitoring artifact`,
+          `D) Precision dropping without feature drift means the positive rate in production has increased; recalibrate the decision threshold to match the new base rate`,
+        ],
+        answer: `B`,
       },
       {
         q: `You are deploying a new recommendation model. Walk through the shadow mode and canary release process.`,
-        a: `Shadow mode (1-2 weeks before canary): (1) Deploy new model alongside production model in shadow mode — all production requests are also sent to the challenger, but only the production model's results are shown to users. (2) Compare predictions: for each request, log both models' top-10 recommendation lists and their score distributions. Measure list overlap (high overlap = similar models, low overlap = risky divergence). (3) Check for edge cases: requests where the new model returns errors, null results, or extremely low scores for all items. (4) Compare offline proxy metrics: if you have real user feedback from shadow traffic (impossible without serving), use historical data to estimate uplift. Canary release: (1) Traffic gate: shift 1% of traffic to new model. Monitor for 30-60 minutes: CTR, revenue per session, null recommendation rate, P99 latency. If all metrics within SLA, proceed. (2) Step to 5%, 10%, 25%, 50%, 100% with metric gates at each step. (3) Automatic rollback condition: if CTR drops > 2% or P99 latency exceeds 200ms at any canary step, automatically revert to 0% traffic on the new model and alert. Full rollout takes 2-4 days with this process.`,
+        options: [
+          `A) Deploy directly to 50% traffic, monitor for 24 hours, then promote to 100% if metrics are stable`,
+          `B) Shadow mode (1-2 weeks): deploy alongside production, log both models' predictions without serving the challenger; check edge cases, errors, and score distributions; canary: step from 1% → 5% → 10% → 25% → 50% → 100% with metric gates at each step and automatic rollback if CTR drops > 2% or P99 latency exceeds SLA`,
+          `C) Shadow mode is only needed for models with significantly different architectures; for same-architecture models, go directly to canary at 10%`,
+          `D) Skip shadow mode and run the canary for 3 days at 50% — a longer canary period is more informative than shadow mode`,
+        ],
+        answer: `B`,
       },
       {
         q: `A streaming recommendation model is trained online (each user interaction updates the model weights immediately). After 2 weeks, you notice the model systematically recommends items from only 3 categories. What has happened?`,
-        a: `This is catastrophic forgetting driven by recency bias in online learning. The most recent user interactions are over-represented in the model's current state — if the last 2 weeks had unusually high interaction with 3 specific categories (e.g., holiday seasonal demand), the online learning process has overwritten the model's knowledge of the other categories. Each SGD update on a new interaction nudges weights in the direction of that interaction; weights for other categories decay if not regularly reinforced. The model is progressively "forgetting" how to recommend less-recently-interacted categories. Fixes: (1) Rehearsal: periodically train on a replay buffer of historical diverse interactions alongside fresh examples — prevents forgetting by keeping historical patterns in the gradient signal. (2) Reduce learning rate: a smaller learning rate means each new interaction has less impact, slowing the drift. (3) Elastic weight consolidation (EWC): penalise large changes to weights that are important for historical examples. (4) Hybrid approach: maintain a "base model" retrained monthly on full history; online learning updates a shallow adapter layer only, which has fewer parameters to overwrite.`,
+        options: [
+          `A) The model has correctly identified the 3 most popular categories and is optimizing for engagement`,
+          `B) Catastrophic forgetting from recency bias — recent 2-week category skew has overwritten knowledge of other categories through repeated SGD updates; fix with rehearsal (replay buffer of diverse historical examples), reduced learning rate, elastic weight consolidation, or limiting online learning to a shallow adapter layer`,
+          `C) Three-category collapse is a common initialization artifact in recommendation models; reinitialize the embedding layer and retrain`,
+          `D) Online learning cannot cause category collapse; the issue is in the feature pipeline producing biased category features`,
+        ],
+        answer: `B`,
       },
       {
         q: `Define covariate shift, label shift, and concept drift precisely. For each, describe whether retraining is required and what other interventions are available.`,
-        a: `Covariate shift: P(X) changes but P(Y|X) is unchanged — the feature distribution shifts (e.g., a new demographic enters the user base) but if those features were seen, the model would predict correctly. Retraining not strictly required: importance weighting (weight training examples by their density ratio P_new(X)/P_train(X)) can correct for covariate shift without retraining. However, if new feature values fall outside the training support (never-seen feature values), retraining with the new distribution is needed. Label shift: P(Y) changes but P(X|Y) is unchanged — the base rate of the label changes (e.g., fraud rate increases from 1% to 3%) while the feature patterns associated with each class remain the same. Retraining often needed if the model is calibrated to the old base rate — at minimum, recalibrate the decision threshold or apply prior correction (multiply predicted probability by P_new(Y)/P_train(Y)). Concept drift: P(Y|X) changes — the actual predictive relationship changes (new fraud patterns, user behaviour change). Retraining required — no amount of weighting or threshold adjustment can correct for a fundamentally different underlying relationship. This is the most serious form and the one that requires the most investment in continuous monitoring and retraining infrastructure.`,
+        options: [
+          `A) All three types of drift require immediate full retraining — distinguishing between them is academic`,
+          `B) Covariate shift (P(X) changes, P(Y|X) stable): importance weighting can correct without retraining if new values are in training support; label shift (P(Y) changes, P(X|Y) stable): threshold recalibration or prior correction may suffice; concept drift (P(Y|X) changes): retraining required, no weighting or threshold fix corrects a changed underlying relationship`,
+          `C) Covariate shift requires retraining; label shift and concept drift can both be fixed with threshold recalibration`,
+          `D) Only concept drift requires intervention; covariate shift and label shift self-correct as the model receives more data`,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Model staleness is not a single problem. Covariate shift, label shift, and real concept drift require different responses — a full retrain is the right answer for one and waste or negligence for the other two. Shadow mode and canary gates are not optional steps for careful teams; they are the difference between catching a regression on 1% of traffic and getting paged at 3am after 100% rollout.`,
