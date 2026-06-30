@@ -19,7 +19,7 @@ export const GRAPH_ML_MODULES = [
     ],
     checkQuestions: [
       {
-        q: 'You have a social network with 50M users and 5B edges. Explain concretely why you cannot use a standard dense adjacency matrix, and what data structure you would use instead.',
+        q: `You have a social network with 50M users and 5B edges. Explain concretely why you cannot use a standard dense adjacency matrix, and what data structure you would use instead.`,
         options: [
           `A) Dense adjacency would work but is slow; use a hash map from node pairs to edge weights for faster lookup`,
           `B) Dense adjacency requires 50M×50M = 2.5×10^15 entries (~312 TB even at 1 bit per entry) — infeasible; use CSR (stores only 5B edges, ~40 GB), which maps naturally to SpMM operations in PyTorch Geometric and supports distributed graph partitioning`,
@@ -29,7 +29,7 @@ export const GRAPH_ML_MODULES = [
         answer: `B`,
       },
       {
-        q: 'Explain what permutation invariance means for a graph neural network, and show why a 2-layer MLP applied to the flattened adjacency matrix is not permutation invariant.',
+        q: `Explain what permutation invariance means for a graph neural network, and show why a 2-layer MLP applied to the flattened adjacency matrix is not permutation invariant.`,
         options: [
           `A) Permutation invariance means the network produces the same output regardless of node feature values; MLP is not invariant because it is sensitive to feature magnitude`,
           `B) Permutation invariance means f(PAP^T, PX) = f(A, X) for any permutation P; an MLP on flattened A is not invariant because two different node orderings of the same graph produce different 1D vectors, giving different outputs from the same model`,
@@ -39,7 +39,7 @@ export const GRAPH_ML_MODULES = [
         answer: `B`,
       },
       {
-        q: 'Your GNN for citation network node classification achieves 85% accuracy with 2 layers, but drops to 60% with 8 layers. What is happening and how do you fix it?',
+        q: `Your GNN for citation network node classification achieves 85% accuracy with 2 layers, but drops to 60% with 8 layers. What is happening and how do you fix it?`,
         options: [
           `A) 8-layer GNNs require larger learning rates to converge; the accuracy drop is a training stability issue, not a structural one`,
           `B) Over-smoothing: each GCN layer applies a low-pass filter, and after 8 layers node embeddings converge to nearly the same vector (weighted average of the full 8-hop neighborhood); fixes include residual connections, JK-Net (concatenate all layer outputs), or limiting depth to 2-4 layers`,
@@ -49,7 +49,7 @@ export const GRAPH_ML_MODULES = [
         answer: `B`,
       },
       {
-        q: 'Why do standard GNNs fail on heterophilic graphs, and name a method that handles them?',
+        q: `Why do standard GNNs fail on heterophilic graphs, and name a method that handles them?`,
         options: [
           `A) Standard GNNs fail on heterophilic graphs because they cannot process graphs with more than 2 node types`,
           `B) Standard GNNs aggregate neighbor features via mean/sum — in heterophilic graphs, neighbors have different labels and their averaged features destroy the ego node's discriminative signal; H2GCN handles this by keeping ego embedding separate from neighbor aggregations and concatenating 1-hop and 2-hop neighborhoods separately`,
@@ -97,7 +97,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'Derive the GCN propagation rule from spectral filtering. Why does Kipf & Welling set K=1 and approximate λ_max=2?',
+        q: `Derive the GCN propagation rule from spectral filtering. Why does Kipf & Welling set K=1 and approximate λ_max=2?`,
         options: [
           `A) K=1 is set to limit the receptive field to 1 hop; λ_max=2 is the exact maximum eigenvalue of any normalized Laplacian`,
           `B) Start from ChebNet K=2, set θ₀=-θ₁=θ, add self-loops (Ã=A+I), normalize with D̃ — this yields H^{l+1} = σ(D̃^{-1/2}ÃD̃^{-1/2} H^l W^l); K=1 reduces parameters and overfitting; λ_max≈2 is an approximation that avoids computing the exact spectral radius per graph`,
@@ -107,7 +107,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'A teammate proposes to train a spectral GCN on a protein-protein interaction network and then apply it to a new PPI network with different proteins. What is the fundamental problem and how do you fix it?',
+        q: `A teammate proposes to train a spectral GCN on a protein-protein interaction network and then apply it to a new PPI network with different proteins. What is the fundamental problem and how do you fix it?`,
         options: [
           `A) The problem is different node feature dimensions between networks; fix by padding features to the same dimension`,
           `B) Spectral GCN filters are defined in the eigenspace of the training graph's Laplacian; the new graph has a different Laplacian with different eigenvectors — the filter literally cannot transfer; fix by switching to a spatial/message-passing GNN (GraphSAGE, GAT) that learns aggregation functions over neighborhoods, not eigenspace`,
@@ -117,7 +117,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'What is over-smoothing in GCNs, and what is its formal spectral interpretation?',
+        q: `What is over-smoothing in GCNs, and what is its formal spectral interpretation?`,
         options: [
           `A) Over-smoothing is when a GCN memorizes training node features; spectral interpretation is that the training loss converges to a degenerate minimum`,
           `B) Over-smoothing: all node embeddings converge to the same vector after many layers; spectral interpretation: each GCN layer applies a low-pass filter with eigenvalues in [0,1]; raising them to the L-th power makes high-frequency components vanish exponentially, leaving only the dominant eigenvector (the random walk stationary distribution) — all nodes look alike`,
@@ -149,7 +149,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'A 3-layer GraphSAGE with neighbor sample sizes [15, 10, 5] is used to embed a batch of 256 target nodes. How many total nodes might be loaded from the feature store in the worst case?',
+        q: `A 3-layer GraphSAGE with neighbor sample sizes [15, 10, 5] is used to embed a batch of 256 target nodes. How many total nodes might be loaded from the feature store in the worst case?`,
         options: [
           `A) 256 × (15 + 10 + 5) = 7,680 nodes`,
           `B) Worst case (no overlap): 256 target + 256×5=1,280 depth-3 + 1,280×10=12,800 depth-2 + 12,800×15=192,000 depth-1 = 206,336 nodes; neighborhood overlap in dense graphs reduces this in practice, which is why sample sizes are kept small (5-25) and depth is limited to 2-3 layers`,
@@ -159,7 +159,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Your GraphSAGE model is trained on a social network. A new user signs up with 3 connections to existing users. How do you compute their embedding without retraining?',
+        q: `Your GraphSAGE model is trained on a social network. A new user signs up with 3 connections to existing users. How do you compute their embedding without retraining?`,
         options: [
           `A) You cannot embed the new user without retraining — new nodes require full graph reconstruction`,
           `B) Run the forward pass inductively: fetch the 3 connected users' features (1-hop), sample their neighbors (2-hop), run K-layer aggregation with trained weights; no retraining required; if the user has 0 connections, fall back to ego-only embedding using content features`,
@@ -169,7 +169,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Why is the LSTM aggregator in GraphSAGE theoretically flawed for graph learning, and under what conditions might it still be empirically useful?',
+        q: `Why is the LSTM aggregator in GraphSAGE theoretically flawed for graph learning, and under what conditions might it still be empirically useful?`,
         options: [
           `A) LSTM is theoretically flawed because it has too many parameters, causing overfitting on graph data`,
           `B) LSTM is not permutation invariant — neighbor ordering affects the output, violating the GNN requirement; empirically it may still work because random orderings during training act as augmentation, consistent node-ID orderings provide a spurious but useful signal, and higher LSTM capacity helps on some tasks — but use max-pooling for theoretical correctness`,
@@ -201,7 +201,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'What is the static attention problem in the original GAT, and how does GATv2 solve it?',
+        q: `What is the static attention problem in the original GAT, and how does GATv2 solve it?`,
         options: [
           `A) Static attention means GAT uses the same attention weights across all layers; GATv2 uses separate weights per layer`,
           `B) Original GAT computes e_{ij} = a^T · LeakyReLU(W₁h_i + W₂h_j), which decomposes into f(i) + g(j) — the neighbor ranking is the same for all source nodes; GATv2 computes e_{ij} = a^T · LeakyReLU(W · CONCAT(h_i, h_j)), placing the nonlinearity after concatenation so source-target interaction happens before the nonlinearity, enabling dynamic per-source neighbor rankings`,
@@ -211,7 +211,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'You are building a fraud detection GNN. The graph has legitimate users with many connections (hubs) and fraudsters with few connections. Why might mean aggregation fail, and how would GAT help?',
+        q: `You are building a fraud detection GNN. The graph has legitimate users with many connections (hubs) and fraudsters with few connections. Why might mean aggregation fail, and how would GAT help?`,
         options: [
           `A) Mean aggregation fails because fraudsters have fewer connections, making their embeddings less accurate; GAT helps by up-weighting low-degree nodes`,
           `B) Mean aggregation dilutes the fraud signal by averaging over hundreds of legitimate neighbors; GAT can learn to assign high attention to the few suspicious neighbors (unusual transaction amounts, rare merchant categories) and downweight the majority of normal neighbors; add edge features (amount, time, merchant type) to make attention transaction-aware`,
@@ -221,7 +221,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Explain why the softmax normalization in GAT can be problematic in graphs with very high-degree nodes, and what you would do about it.',
+        q: `Explain why the softmax normalization in GAT can be problematic in graphs with very high-degree nodes, and what you would do about it.`,
         options: [
           `A) High-degree nodes dominate training because they contribute more gradient updates; fix by down-sampling their neighborhoods`,
           `B) For a hub with 10,000 neighbors, softmax normalizes over all of them — the highest-relevance neighbor's weight is diluted by the large denominator, making aggregation behave like a uniform average; alternatives include top-K attention, sigmoid attention (no normalization), sampling neighbors before applying attention, or degree normalization`,
@@ -254,7 +254,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'Show that a mean-aggregation GNN (GCN) is strictly less expressive than 1-WL. Give a concrete example of two different neighborhood structures that GCN cannot distinguish.',
+        q: `Show that a mean-aggregation GNN (GCN) is strictly less expressive than 1-WL. Give a concrete example of two different neighborhood structures that GCN cannot distinguish.`,
         options: [
           `A) GCN is as expressive as 1-WL; it can distinguish all neighborhood structures that 1-WL can distinguish`,
           `B) Mean aggregation is not injective over multisets — a node with neighbors {1,2,3} (mean=2) and a node with neighbors {1,1,4} (mean=2) produce the same aggregated value; GCN cannot distinguish them; 1-WL hashes the full multiset, which distinguishes {1,2,3} from {1,1,4}; sum-based GIN is strictly more expressive`,
@@ -264,7 +264,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'What is over-squashing in GNNs, and how would you diagnose and fix it in a production model?',
+        q: `What is over-squashing in GNNs, and how would you diagnose and fix it in a production model?`,
         options: [
           `A) Over-squashing is when too many features are compressed into a small embedding dimension; fix by increasing the hidden size`,
           `B) Over-squashing: information from distant nodes is compressed through narrow topological bottlenecks (bridges, articulation points), causing the Jacobian ∂h_v/∂x_u to decay exponentially for distant pairs; diagnose by computing sensitivity for relevant node pairs; fix with graph rewiring (add shortcuts), virtual nodes, or Graph Transformers that bypass topological constraints`,
@@ -274,7 +274,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'GIN achieves maximal 1-WL expressiveness. Why does it still fail to distinguish some pairs of non-isomorphic graphs, and what class of graphs is this?',
+        q: `GIN achieves maximal 1-WL expressiveness. Why does it still fail to distinguish some pairs of non-isomorphic graphs, and what class of graphs is this?`,
         options: [
           `A) GIN fails because it uses sum aggregation, which is less stable than mean for graphs with high-degree nodes`,
           `B) GIN is 1-WL equivalent — it fails on exactly the pairs that 1-WL fails on: k-regular graphs of the same size (all nodes have identical 1-hop structure), and certain chemical graph pairs like Decalin vs bicyclo[2.2.2]octane; fixes require higher-order GNNs, structural features (triangle count), or random positional encodings`,
@@ -284,7 +284,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Explain why graph Transformers are more expressive than MPNNs and what practical tradeoff this introduces at scale.',
+        q: `Explain why graph Transformers are more expressive than MPNNs and what practical tradeoff this introduces at scale.`,
         options: [
           `A) Graph Transformers are more expressive because they use multi-head attention, which MPNNs lack`,
           `B) Graph Transformers apply attention between all pairs of nodes regardless of edges, eliminating over-squashing and exceeding 1-WL expressiveness; the tradeoff is O(|V|²) attention complexity — infeasible for graphs with millions of nodes; practical solutions include top-K sparse attention, GPS (local MPNN + global sampled attention), or restricting to small molecular graphs (≤100 atoms)`,
@@ -316,7 +316,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'You\'re building a friend recommendation system. Should you use Adamic-Adar or a GNN-based approach? What factors decide this?',
+        q: `You\`re building a friend recommendation system. Should you use Adamic-Adar or a GNN-based approach? What factors decide this?`,
         options: [
           `A) Always use a GNN — heuristics are only suitable for academic benchmarks, not production systems`,
           `B) Use Adamic-Adar when the network is highly homophilic, you have no node features, and low latency/interpretability are priorities — it achieves 80-90% of GNN AUC on social networks at O(|E|) cost; use GNN when rich node features, heterogeneous graph structure, inductive requirements, or the remaining 10-20% lift justify the engineering cost`,
@@ -326,7 +326,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Explain why TransE fails for symmetric relations in knowledge graphs and what model you would use instead.',
+        q: `Explain why TransE fails for symmetric relations in knowledge graphs and what model you would use instead.`,
         options: [
           `A) TransE fails for symmetric relations because it uses L2 distance instead of cosine similarity`,
           `B) TransE requires h + r = t; for symmetric r(a,b) and r(b,a): adding both equations forces r=0, collapsing all entities to the same point; RotatE models r as complex rotation — symmetric relations satisfy r² = 1 (r_i = ±1) without forcing r=0, handling symmetric, inverse, and composition patterns`,
@@ -336,7 +336,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Describe exactly how data leakage happens in link prediction and design a correct train/validation/test split for a citation network.',
+        q: `Describe exactly how data leakage happens in link prediction and design a correct train/validation/test split for a citation network.`,
         options: [
           `A) Data leakage in link prediction occurs when node features are not normalized consistently across splits`,
           `B) Leakage: if test edge (A,B) has training edges (A,C) and (C,B), the GNN encodes C in both A's and B's embeddings, making z_A·z_B high from learned structural proximity — not genuine generalization; correct split: remove all test/validation edges from the training adjacency before training; for temporal graphs, always split by time to prevent future knowledge leakage`,
@@ -368,7 +368,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
     ],
     checkQuestions: [
       {
-        q: 'Your GNN is trained with Cluster-GCN but accuracy on the full graph is 5% lower than on the training clusters. Diagnose the problem and propose fixes.',
+        q: `Your GNN is trained with Cluster-GCN but accuracy on the full graph is 5% lower than on the training clusters. Diagnose the problem and propose fixes.`,
         options: [
           `A) The 5% gap is expected — always evaluate on training clusters; full-graph evaluation is not meaningful for cluster-based training`,
           `B) Graph distribution shift: Cluster-GCN ignores cross-cluster edges during training, so the model learns from within-cluster topology only; full-graph inference includes those edges, shifting the input distribution; fix with multi-cluster mini-batching (include inter-cluster edges), switch to GraphSAINT's edge sampler, or always evaluate with full-graph inference even during training`,
@@ -378,7 +378,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Design the architecture for GNN-based fraud detection at a payments company with 100M users, 1B transactions per day, and 0.1% fraud rate. Focus on scalability and handling cold-start.',
+        q: `Design the architecture for GNN-based fraud detection at a payments company with 100M users, 1B transactions per day, and 0.1% fraud rate. Focus on scalability and handling cold-start.`,
         options: [
           `A) Use full-batch GCN on the daily transaction graph; 100M nodes fits on a modern GPU cluster; apply SMOTE for class imbalance`,
           `B) Bipartite user-merchant graph with transaction edge features; SIGN for daily batch embeddings, GraphSAGE mini-batch for near-real-time high-risk transactions; focal loss with 1000× fraud weight; MLP-only for cold-start new users until 5+ transactions; GAT for interpretability (log top attention neighbors for analyst review); time-based evaluation split`,
@@ -388,7 +388,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
         answer: `B`,
       },
       {
-        q: 'Compare GraphSAINT and Cluster-GCN on a large Reddit graph (230K nodes, 11M edges, highly connected). Which would you choose and why?',
+        q: `Compare GraphSAINT and Cluster-GCN on a large Reddit graph (230K nodes, 11M edges, highly connected). Which would you choose and why?`,
         options: [
           `A) Cluster-GCN is better because its METIS partitioning is deterministic and therefore more reproducible than GraphSAINT's random sampling`,
           `B) GraphSAINT with random walk sampling is better for Reddit — the graph lacks strong community structure so METIS would cut through many informative cross-community edges, causing high distribution shift; random walk sampling traverses the graph topology-agnostically and produces representative subgraphs; GraphSAINT achieves 93.0% vs Cluster-GCN's 90.4% on this benchmark`,
@@ -424,7 +424,7 @@ cale.`,
     ],
     checkQuestions: [
       {
-        q: 'You have a heterogeneous e-commerce graph with 10 node types and 25 edge types. RGCN would require 25 separate weight matrices. What problems does this cause and how does HGT address them?',
+        q: `You have a heterogeneous e-commerce graph with 10 node types and 25 edge types. RGCN would require 25 separate weight matrices. What problems does this cause and how does HGT address them?`,
         options: [
           `A) 25 weight matrices are manageable; the main problem is training time, which HGT solves by processing all edge types in parallel`,
           `B) 25 full W_r matrices give 25×d² parameters (1.6M at d=256) — overparameterization and insufficient gradient for rare relation types; HGT uses node-type-specific linear projections plus small relation-specific attention modifiers, reducing parameters from O(|R|×d²) to O(|A|×d²) + O(|R|×d) while learning relation importance end-to-end`,
@@ -434,7 +434,7 @@ cale.`,
         answer: `B`,
       },
       {
-        q: 'Meta-paths in HAN are defined manually. What is wrong with this, and how would you make meta-path selection data-driven?',
+        q: `Meta-paths in HAN are defined manually. What is wrong with this, and how would you make meta-path selection data-driven?`,
         options: [
           `A) Manually defined meta-paths are always correct because domain experts know the graph semantics better than any automated method`,
           `B) Manual meta-paths require domain expertise that doesn't generalize when the graph evolves, have combinatorial explosion with many types, and may miss non-obvious important paths; data-driven alternatives include HGT (learns relation-triplet importance without meta-paths), automatic meta-path discovery with sparsity regularization, or HeCo using contrastive learning on meta-path views`,
@@ -444,7 +444,7 @@ cale.`,
         answer: `B`,
       },
       {
-        q: 'In a knowledge graph with 1M entities and 500 relation types, how would you handle the scalability and rare-relation problems simultaneously?',
+        q: `In a knowledge graph with 1M entities and 500 relation types, how would you handle the scalability and rare-relation problems simultaneously?`,
         options: [
           `A) Filter out all relation types with fewer than 10,000 edges before training — rare relations are too noisy to model`,
           `B) Use RGCN basis decomposition (W_r = Σ_b a_{rb} V_b with B=40 shared bases, reducing parameters ~12×); use mini-batch training with relation-stratified sampling; cluster semantically similar relations and share parameters within clusters; pad rare relations with rule-based synthetic triples`,
@@ -476,7 +476,7 @@ cale.`,
     ],
     checkQuestions: [
       {
-        q: 'You are the ML lead for friend recommendations at a social network with 500M users. Design a GNN system end-to-end, from data pipeline to serving. What are the top 3 engineering challenges?',
+        q: `You are the ML lead for friend recommendations at a social network with 500M users. Design a GNN system end-to-end, from data pipeline to serving. What are the top 3 engineering challenges?`,
         options: [
           `A) Use full-batch spectral GCN on the daily graph snapshot; the top 3 challenges are GPU memory, training time, and label quality`,
           `B) GraphSAGE 2-layer with SIGN precomputed aggregations for offline batch embeddings; FAISS ANN for serving; top 3 challenges are embedding staleness (new users/edges invisible for up to 24h), training-serving distribution shift (active users requesting recommendations differ from average), and feedback loop bias (recommendations affect which edges form, biasing future training data)`,
@@ -486,7 +486,7 @@ cale.`,
         answer: `B`,
       },
       {
-        q: 'PinSage uses random walks to define "neighborhoods" rather than direct graph neighbors. Why? What problem does this solve?',
+        q: `PinSage uses random walks to define "neighborhoods" rather than direct graph neighbors. Why? What problem does this solve?`,
         options: [
           `A) Random walks are used because direct neighbors require graph traversal, which is slower than random walk statistics`,
           `B) Pinterest's bipartite graph has popular boards with 100K+ pins — uniform sampling would over-weight them; random walk visit frequency naturally weights pins by how many distinct short paths connect them to the query pin, down-weighting hub boards and up-weighting niche co-occurrence; also bounds neighborhood size via top-K selection`,
@@ -496,7 +496,7 @@ cale.`,
         answer: `B`,
       },
       {
-        q: 'A fraud detection GNN achieves 99% AUC in offline evaluation but only 70% precision at 10% recall in production. Diagnose at least 3 possible causes.',
+        q: `A fraud detection GNN achieves 99% AUC in offline evaluation but only 70% precision at 10% recall in production. Diagnose at least 3 possible causes.`,
         options: [
           `A) The gap is caused by class imbalance — 99% AUC at 0.1% fraud rate is inflated; the production metric (precision@recall) is the correct one, so retrain with a different loss function`,
           `B) Three causes: (1) temporal leakage in training (random transaction splits let fraud ring members appear in both train and test — fix with time-based splits); (2) adversarial adaptation (fraudsters changed behavior post-detection — retrain monthly with recent data); (3) graph feature leakage (structural features computed on full graph including future edges — use temporal graph construction with features at time T only)`,

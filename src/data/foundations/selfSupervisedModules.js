@@ -21,7 +21,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
     ],
     checkQuestions: [
       {
-        q: 'Explain why a model trained with supervised ImageNet labels (1000-class classification) transfers less well than a CLIP model trained on 400M image-text pairs, even though both see similar amounts of compute.',
+        q: `Explain why a model trained with supervised ImageNet labels (1000-class classification) transfers less well than a CLIP model trained on 400M image-text pairs, even though both see similar amounts of compute.`,
         options: [
           `A) CLIP transfers better primarily because it uses a larger architecture with more parameters`,
           `B) Supervised ImageNet collapses all visual diversity into 1000 class logits and discards irrelevant features; CLIP must align 400M unique text descriptions, forcing encoding of fine-grained attributes, spatial relations, style, and domain diversity (medical, satellite, art) that ImageNet categories ignore`,
@@ -31,7 +31,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'What is a pretext task, and what makes one "good"? Give two examples of good pretext tasks and one bad one.',
+        q: `What is a pretext task, and what makes one "good"? Give two examples of good pretext tasks and one bad one.`,
         options: [
           `A) A pretext task is any task that uses labeled data; good tasks have clear class boundaries; masked language modeling, image rotation prediction, and file size prediction are all good examples`,
           `B) A pretext task constructs supervision automatically from data; a good one requires high-level semantic understanding that low-level shortcuts cannot solve; good: masked language modeling, contrastive augmentation invariance; bad: predicting image file size (correlates with texture, not semantics)`,
@@ -41,7 +41,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'A team trains an SSL model and claims it outperforms the supervised baseline on linear probe accuracy. The manager asks: does that mean SSL is better for the downstream task? What caveats would you raise?',
+        q: `A team trains an SSL model and claims it outperforms the supervised baseline on linear probe accuracy. The manager asks: does that mean SSL is better for the downstream task? What caveats would you raise?`,
         options: [
           `A) Yes — linear probe accuracy is the definitive measure of representation quality; higher linear probe means better downstream performance in all scenarios`,
           `B) Linear probe tests only linear separability, not fine-tuning performance; SSL may use far more compute in pretraining; the probe result on one task may not predict performance on a different downstream task; full fine-tuning often closes the gap`,
@@ -51,7 +51,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'Why does SSL work better on language than on images, and why did it take longer for SSL to dominate vision?',
+        q: `Why does SSL work better on language than on images, and why did it take longer for SSL to dominate vision?`,
         options: [
           `A) Language models are easier to train because text datasets are larger than image datasets`,
           `B) Language has discrete tokens with natural masking boundaries making reconstruction a clean classification problem; vision operates on continuous pixels with high spatial redundancy, allowing models to solve 15% masking by local interpolation rather than semantic understanding — requiring 75% masking, patch-level tokenization, or contrastive design choices to prevent shortcuts`,
@@ -84,7 +84,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
     ],
     checkQuestions: [
       {
-        q: 'SimCLR with a batch size of 256 gives poor results. Increasing to 4096 dramatically improves performance. Explain the mechanism.',
+        q: `SimCLR with a batch size of 256 gives poor results. Increasing to 4096 dramatically improves performance. Explain the mechanism.`,
         options: [
           `A) Larger batches improve gradient stability through better estimates of the mean gradient, which is the main driver of SimCLR improvement`,
           `B) At N=256, each anchor has 510 negatives — the InfoNCE bound is loose and discrimination is easy; at N=4096, each anchor has 8190 negatives, the bound tightens, hard negatives are more likely, and the encoder must learn finer-grained features; MoCo addresses this by decoupling negative count from batch size via a queue`,
@@ -94,7 +94,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'You set temperature τ = 0.01 (very low) and training collapses to NaN loss after 100 steps. What happened?',
+        q: `You set temperature τ = 0.01 (very low) and training collapses to NaN loss after 100 steps. What happened?`,
         options: [
           `A) Very low temperature causes the model to ignore all negatives, making the loss degenerate to zero without learning`,
           `B) At τ=0.01, exp(sim/τ) values overflow (exp(100) ≈ 2.7×10^43), causing NaN in the softmax; gradients concentrate on the single hardest negative, creating explosive updates; fix by increasing τ to ≥ 0.05, using log-sum-exp stabilization, gradient clipping, and learning rate warmup`,
@@ -104,7 +104,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'Explain why debiased contrastive loss is needed and sketch how it corrects for false negatives.',
+        q: `Explain why debiased contrastive loss is needed and sketch how it corrects for false negatives.`,
         options: [
           `A) Debiased contrastive loss is needed because standard NT-Xent treats the anchor itself as a negative, which must be corrected`,
           `B) Standard NT-Xent treats all non-anchor examples as negatives, including same-class examples (false negatives); debiased loss estimates the same-class fraction and corrects the denominator by subtracting the estimated positive contribution, up-weighting true negatives`,
@@ -114,7 +114,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'A colleague claims uniformity is just "spreading embeddings apart" and alignment is "pulling similar things together," so NT-Xent is just doing both simultaneously. What is missing from this picture?',
+        q: `A colleague claims uniformity is just "spreading embeddings apart" and alignment is "pulling similar things together," so NT-Xent is just doing both simultaneously. What is missing from this picture?`,
         options: [
           `A) The colleague is correct — uniformity and alignment fully characterize what NT-Xent optimizes`,
           `B) The tension between the two objectives is missing: maximizing uniformity pushes all pairs apart while maximizing alignment collapses all points together; NT-Xent balances them by requiring positives to be closer than negatives, but the optimal geometry depends on class count, augmentation distribution, and similarity ratios — uniformity and alignment are diagnostic metrics, not the loss itself`,
@@ -146,7 +146,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
     ],
     checkQuestions: [
       {
-        q: 'If you remove the projection head and apply the NT-Xent loss directly to the encoder\'s output, what happens and why?',
+        q: `If you remove the projection head and apply the NT-Xent loss directly to the encoder\`s output, what happens and why?`,
         options: [
           `A) Performance improves because the encoder directly optimizes the contrastive objective without the bottleneck of the head`,
           `B) Linear probe accuracy drops ~10% because the contrastive loss now directly pressures the encoder output to be augmentation-invariant, forcing it to discard useful downstream information (color, texture) that the head would otherwise absorb`,
@@ -156,7 +156,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'A team replicates SimCLR on a proprietary medical image dataset and finds it does not benefit from the color jitter augmentation that is critical for ImageNet. Explain why and what they should do instead.',
+        q: `A team replicates SimCLR on a proprietary medical image dataset and finds it does not benefit from the color jitter augmentation that is critical for ImageNet. Explain why and what they should do instead.`,
         options: [
           `A) Color jitter is always beneficial — the team must have implemented it incorrectly`,
           `B) In medical imaging, color (staining intensity, Hounsfield units) is diagnostically meaningful rather than spurious; forcing color invariance discards useful signal; use domain-appropriate augmentations like elastic deformations, intensity perturbation within clinical ranges, and random region masking instead`,
@@ -166,7 +166,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'Explain the information bottleneck interpretation of the projection head. What information does each layer encode?',
+        q: `Explain the information bottleneck interpretation of the projection head. What information does each layer encode?`,
         options: [
           `A) The encoder encodes augmentation-invariant features; the projection head adds back augmentation-sensitive features for the contrastive loss`,
           `B) The encoder (2048-dim) retains rich spatial, semantic, color, and texture features; the projection head (128-dim) compresses to augmentation-invariant representations, discarding color and exact position; discarding the head at fine-tuning recovers the richer encoder representation that retains augmentation-sensitive information useful downstream`,
@@ -198,7 +198,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
     ],
     checkQuestions: [
       {
-        q: 'Why would using m=0.5 instead of m=0.999 in the momentum encoder hurt MoCo\'s performance?',
+        q: `Why would using m=0.5 instead of m=0.999 in the momentum encoder hurt MoCo\`s performance?`,
         options: [
           `A) m=0.5 causes the momentum encoder to update too slowly, making the queue stale`,
           `B) At m=0.5, the target encoder adapts with a half-life of ~1 step, so keys from 256 steps ago reflect a substantially different encoder state; the queue contains representations from inconsistent encoder states, making the contrastive loss signal noisy; empirically m < 0.99 loses ~5% linear probe accuracy`,
@@ -208,7 +208,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'MoCo uses a queue (FIFO) rather than a circular buffer with random replacement. Why does ordering matter for the consistency guarantee?',
+        q: `MoCo uses a queue (FIFO) rather than a circular buffer with random replacement. Why does ordering matter for the consistency guarantee?`,
         options: [
           `A) FIFO ordering ensures the newest keys are always used for training, which provides the highest quality negatives`,
           `B) FIFO removes the oldest (most stale) keys first, bounding maximum staleness to K/N_batch steps; random replacement could retain very old keys indefinitely — a key from 10,000 steps ago would be encoded by a meaningfully different encoder, injecting inconsistency into the negative distribution`,
@@ -218,7 +218,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'The MoCo v3 paper found training instability when fine-tuning ViTs with contrastive SSL, traced to the patch embedding layer. Describe the problem and the fix.',
+        q: `The MoCo v3 paper found training instability when fine-tuning ViTs with contrastive SSL, traced to the patch embedding layer. Describe the problem and the fix.`,
         options: [
           `A) The patch embedding layer overfits to the pretraining distribution; the fix is to reinitialize it with random weights before fine-tuning`,
           `B) The patch embedding layer receives highly variable gradient signals through the full Transformer stack, causing it to oscillate between configurations and producing incoherent attention patterns and loss spikes; the fix is to freeze the patch embedding layer with a fixed random or sinusoidal projection for stable training`,
@@ -228,7 +228,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
         answer: `B`,
       },
       {
-        q: 'Can you use the MoCo queue during fine-tuning for a downstream classification task? Why or why not?',
+        q: `Can you use the MoCo queue during fine-tuning for a downstream classification task? Why or why not?`,
         options: [
           `A) Yes — the queue provides hard negatives that improve fine-tuning on small labeled datasets`,
           `B) No — the queue and momentum encoder are pretraining mechanisms for the contrastive loss, which is dropped at fine-tuning; only the query encoder backbone weights transfer; the queue, momentum encoder, and projection head are all discarded`,
@@ -264,7 +264,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
     ],
     checkQuestions: [
       {
-        q: 'Remove BatchNorm from BYOL and replace it with LayerNorm throughout. What happens and why?',
+        q: `Remove BatchNorm from BYOL and replace it with LayerNorm throughout. What happens and why?`,
         options: [
           `A) Training is slower but eventually converges to the same performance — LayerNorm is equivalent to BatchNorm for SSL`,
           `B) Training collapses — BYOL's implicit collapse prevention relies on BatchNorm's cross-batch statistics creating implicit cross-sample interactions; LayerNorm normalizes per sample independently, eliminating this signal, so stop-gradient + EMA alone cannot prevent all representations from collapsing to a constant`,
@@ -274,7 +274,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'Barlow Twins pushes the cross-correlation matrix toward identity. What would happen if you only optimise the invariance term (diagonal → 1) without the redundancy reduction term (off-diagonal → 0)?',
+        q: `Barlow Twins pushes the cross-correlation matrix toward identity. What would happen if you only optimise the invariance term (diagonal → 1) without the redundancy reduction term (off-diagonal → 0)?`,
         options: [
           `A) The model would achieve higher linear probe accuracy because it focuses entirely on alignment without the competing redundancy reduction objective`,
           `B) All feature dimensions would collapse to encoding the same scalar function of the input — the invariance term alone makes each dimension correlated across views but allows all dimensions to be identical; the redundancy reduction term is the collapse-prevention mechanism that forces dimensional diversity`,
@@ -284,7 +284,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'A team trains BYOL on a dataset with very large batch size (65536) and finds it suddenly collapses. They had used batch size 512 successfully before. Explain the mechanism.',
+        q: `A team trains BYOL on a dataset with very large batch size (65536) and finds it suddenly collapses. They had used batch size 512 successfully before. Explain the mechanism.`,
         options: [
           `A) Very large batches cause the momentum encoder to update too quickly, destabilizing the target representations`,
           `B) At very large batches, BatchNorm statistics converge to stable population statistics, eliminating the noisy cross-sample interaction that provides BYOL's implicit collapse resistance; each sample is effectively normalized by a constant, removing the gradient signal that prevents collapse; fix with smaller batch, ghost batch norm, or switch to Barlow Twins/VICReg`,
@@ -294,7 +294,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'When would you prefer Barlow Twins over BYOL for a production pretraining run?',
+        q: `When would you prefer Barlow Twins over BYOL for a production pretraining run?`,
         options: [
           `A) Always prefer Barlow Twins — it is strictly superior to BYOL in all settings`,
           `B) Prefer Barlow Twins when using LayerNorm/GroupNorm architectures (BYOL's BatchNorm mechanism fails), when explicit collapse prevention is needed for debugging, when using asymmetric architectures (VICReg handles different branch dimensionalities), or when large batch sizes make BYOL unstable`,
@@ -326,7 +326,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
     ],
     checkQuestions: [
       {
-        q: 'MAE uses 75% masking. If you reduce it to 25%, what happens to the representation quality and why?',
+        q: `MAE uses 75% masking. If you reduce it to 25%, what happens to the representation quality and why?`,
         options: [
           `A) Representation quality improves because the encoder sees more of the image per forward pass`,
           `B) Representation quality degrades because with 25% masking the decoder has abundant neighboring context to reconstruct masked patches by local interpolation, eliminating the need for the encoder to learn global semantic structure; MAE ablations show monotonically increasing quality up to 75% masking`,
@@ -336,7 +336,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'Why is the MAE decoder deliberately made shallow and weak, even though a stronger decoder would produce better reconstruction?',
+        q: `Why is the MAE decoder deliberately made shallow and weak, even though a stronger decoder would produce better reconstruction?`,
         options: [
           `A) A weak decoder reduces training compute, making MAE faster without sacrificing representation quality`,
           `B) A strong decoder would absorb the reconstruction burden through internal inpainting, reducing the requirement for the encoder to produce high-quality semantic representations; the weak decoder ensures reconstruction quality comes primarily from the encoder, forcing it to encode global semantic content`,
@@ -346,7 +346,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'Compare MAE and data2vec on the same ViT backbone. For which downstream task would you prefer MAE, and for which would you prefer data2vec?',
+        q: `Compare MAE and data2vec on the same ViT backbone. For which downstream task would you prefer MAE, and for which would you prefer data2vec?`,
         options: [
           `A) MAE is better for all tasks because pixel-level reconstruction preserves more information than latent prediction`,
           `B) MAE is better for dense prediction (detection, segmentation) because pixel reconstruction preserves fine-grained local spatial detail; data2vec is better for linear probing and classification because predicting semantic EMA teacher latents more directly forces semantic organization; data2vec also generalizes to multi-modal pretraining with the same algorithm`,
@@ -378,7 +378,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
     ],
     checkQuestions: [
       {
-        q: 'Why does CLIP achieve 76% top-1 on ImageNet zero-shot despite never seeing ImageNet labels? What makes this possible?',
+        q: `Why does CLIP achieve 76% top-1 on ImageNet zero-shot despite never seeing ImageNet labels? What makes this possible?`,
         options: [
           `A) CLIP memorizes all common visual concepts during pretraining because 400M pairs is enough to overfit to any benchmark`,
           `B) CLIP's 400M web pairs cover essentially all ImageNet classes through natural image-text co-occurrence; the shared embedding space aligns text templates like "a photo of a golden retriever" with the corresponding visual region; it underperforms supervised training because it serves all text queries simultaneously, trading class-specific precision for breadth`,
@@ -388,7 +388,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'A team uses CLIP to build a visual similarity search system for a medical image archive. After deployment, they find retrieval quality is poor and the system fails to distinguish between benign and malignant radiological findings. Diagnose the problem and propose fixes.',
+        q: `A team uses CLIP to build a visual similarity search system for a medical image archive. After deployment, they find retrieval quality is poor and the system fails to distinguish between benign and malignant radiological findings. Diagnose the problem and propose fixes.`,
         options: [
           `A) CLIP's retrieval is poor because the medical archive images are JPEG-compressed; use lossless PNG format to improve similarity scores`,
           `B) Medical images (CT, MRI, histology) are out-of-distribution for CLIP trained on web photography; the image encoder lacks meaningful medical representations and the text encoder has no semantic structure for radiology terminology; fix by fine-tuning on medical image-text data (BioViL, PMC-OA), using a medical foundation model, or training domain-specific SSL from scratch`,
@@ -398,7 +398,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'CLIP uses a learned temperature τ instead of a fixed one. Why, and what are the risks of letting τ be learned?',
+        q: `CLIP uses a learned temperature τ instead of a fixed one. Why, and what are the risks of letting τ be learned?`,
         options: [
           `A) Learned τ allows the model to set τ=0 for trivial pairs and τ=1 for hard pairs, creating an adaptive curriculum`,
           `B) Learned τ eliminates per-experiment hyperparameter search and allows the model to adapt sharpness as training progresses; risk: τ can collapse toward zero, causing softmax to become extremely peaked and producing gradient explosions when matched pairs are far apart; CLIP clamps τ ≥ 0.01 to prevent this`,
@@ -430,7 +430,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
     ],
     checkQuestions: [
       {
-        q: 'You apply SCARF to a fraud detection dataset with 200 features and find that SSL pretraining does not improve AUC over a baseline XGBoost model trained on the same 5% labeled data. Diagnose possible causes.',
+        q: `You apply SCARF to a fraud detection dataset with 200 features and find that SSL pretraining does not improve AUC over a baseline XGBoost model trained on the same 5% labeled data. Diagnose possible causes.`,
         options: [
           `A) SCARF requires at least 1M rows to be effective; the dataset is too small regardless of how many features it has`,
           `B) Possible causes: heavily engineered features already encode inter-feature correlations that SCARF is trying to learn; marginal corruption may not create useful contrast in the fraud feature space; insufficient unlabeled data advantage; or sequential/temporal fraud patterns not captured by row-level SSL — sequential SSL on transaction sequences would be more appropriate`,
@@ -440,7 +440,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'wav2vec 2.0 uses both a quantizer and a contrastive loss. Why is the quantizer needed? What would happen if you used the continuous representations as targets instead?',
+        q: `wav2vec 2.0 uses both a quantizer and a contrastive loss. Why is the quantizer needed? What would happen if you used the continuous representations as targets instead?`,
         options: [
           `A) The quantizer reduces memory usage by compressing audio representations; without it the model would run out of GPU memory`,
           `B) Without quantization, the contrastive loss would use continuous representations as targets, creating a degenerate solution where query and target networks lock together (collapse) or all representations become constant; the discrete codebook assignments provide stable, symmetry-breaking targets analogous to BERT's token vocabulary, preventing collapse and enabling the model to learn phoneme-like audio categories`,
@@ -450,7 +450,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'Compare GraphCL\'s edge-drop augmentation for molecular graphs vs social network graphs. Why does the same augmentation have different effects across domains?',
+        q: `Compare GraphCL\`s edge-drop augmentation for molecular graphs vs social network graphs. Why does the same augmentation have different effects across domains?`,
         options: [
           `A) Edge-drop works better for molecular graphs because molecules have more edges per node than social networks`,
           `B) In molecular graphs, edges represent chemical bonds that define molecular identity and properties — dropping them changes the molecule to a chemically different structure, training the wrong invariances; in social networks, edges represent partially-observed connections and the same person exists regardless of which specific connections are observed, making edge-drop a valid same-identity augmentation`,
@@ -482,7 +482,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
     ],
     checkQuestions: [
       {
-        q: 'A ViT-B/16 model pretrained with MAE achieves 68% linear probe and 86.9% fine-tuned accuracy on ImageNet. A SimCLR model achieves 70% linear probe but only 82% fine-tuned. Your team has 1000 labeled examples. Which model do you choose for adaptation, and with what strategy?',
+        q: `A ViT-B/16 model pretrained with MAE achieves 68% linear probe and 86.9% fine-tuned accuracy on ImageNet. A SimCLR model achieves 70% linear probe but only 82% fine-tuned. Your team has 1000 labeled examples. Which model do you choose for adaptation, and with what strategy?`,
         options: [
           `A) Always choose the model with higher linear probe accuracy (SimCLR) — it is the definitive predictor of downstream performance`,
           `B) With 1000 examples, full fine-tuning risks catastrophic forgetting for both models; evaluate both with linear probe first; prefer MAE for texture-sensitive tasks (its pixel reconstruction retains local detail); use adapters or LoRA rather than full fine-tuning to preserve pretrained representations; apply LLRD, low LR (5e-6), and early stopping`,
@@ -492,7 +492,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'Explain why early stopping is more critical during fine-tuning than during pretraining, and what metric to monitor.',
+        q: `Explain why early stopping is more critical during fine-tuning than during pretraining, and what metric to monitor.`,
         options: [
           `A) Early stopping is equally important in both; in pretraining it prevents overfitting to pretext task patterns`,
           `B) During pretraining there is no held-out test set and the loss decreases monotonically without memorization; during fine-tuning two failure modes develop simultaneously — overfitting to the small labeled set and catastrophic forgetting of pretrained representations; monitor downstream validation accuracy and optionally pretraining-domain performance to detect forgetting`,
@@ -502,7 +502,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'LoRA and prompt tuning both keep the original model weights frozen. When would you choose one over the other for adapting a large language model to a new domain?',
+        q: `LoRA and prompt tuning both keep the original model weights frozen. When would you choose one over the other for adapting a large language model to a new domain?`,
         options: [
           `A) Always choose LoRA — it has more parameters and therefore always outperforms prompt tuning`,
           `B) Choose LoRA when the task requires internal feature shifts (code generation, new syntactic patterns) and you have 100+ examples; choose prompt tuning when the task is within the pretraining distribution (instruction following), you have very few examples (<50), or you need to serve many tasks from one model without separate weight copies`,
@@ -512,7 +512,7 @@ x between two views' normalized features.** The invariance term (diagonal → 1)
         answer: `B`,
       },
       {
-        q: 'A team uses k-NN accuracy on a validation set as the primary metric for evaluating SSL representation quality before fine-tuning. What does this metric miss that linear probe catches, and vice versa?',
+        q: `A team uses k-NN accuracy on a validation set as the primary metric for evaluating SSL representation quality before fine-tuning. What does this metric miss that linear probe catches, and vice versa?`,
         options: [
           `A) k-NN and linear probe measure exactly the same property — local neighborhood geometry and linear separability are equivalent`,
           `B) k-NN misses global linear structure and whether individual embedding dimensions carry class-discriminative information (relevant to how easily a supervised head can train); linear probe misses non-linearly separable cluster structure and may succeed even when the global embedding geometry is degenerate; together they are complementary — high k-NN + low linear probe suggests non-linear clusters; high linear probe + low k-NN suggests global structure with poor local neighborhoods`,
