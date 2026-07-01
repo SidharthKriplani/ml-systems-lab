@@ -701,7 +701,7 @@ The prior is not just a Bayesian abstraction. Adding $\\log P(θ)$ to the log-li
 
 **NOT this.** Most people think "MLE is just fitting the data." MLE assumes a specific probabilistic model — a particular likelihood function — and finds the parameters that make the observed data most probable under that model. If your model is wrong (fitting a Gaussian to bimodal data), MLE finds the "best" wrong answer with complete confidence. The model is always right in MLE\`s eyes; MLE has no mechanism to doubt the model family. MAP at least has a prior that can pull estimates back from absurdity when data is scarce.
 
-As $n \to \\infty$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.`,
+As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.`,
     interactivePrompt: `Before you touch the controls: if you flip a coin 3 times and get 3 heads, what do you actually believe the true probability of heads is — 1.0, something high like 0.8, or about 0.5?`,
     keyPoints: [
       `**Use MLE when you have enough data that the prior does not matter, and MAP (with regularisation) when data is scarce.** The crossover point depends on the prior strength and the number of parameters. A rule of thumb: if your training set has fewer than ~10 observations per parameter, the prior matters substantially. Cross-validate $λ$ to find the data-implied prior strength.`,

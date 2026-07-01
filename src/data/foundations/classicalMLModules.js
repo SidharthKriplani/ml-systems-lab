@@ -501,7 +501,6 @@ XGBoost improves on vanilla gradient boosting in a key way: it uses a second-ord
       },
     ],
     takeaway: `Gradient boosting is gradient descent in function space: each tree approximates the loss gradient, $η$ is the step size, and early stopping is the convergence criterion — the framing explains every tuning decision.`,
-    interactiveId: 'gradient_boosting_viz',
   },
   {
     id: 'ensembles',

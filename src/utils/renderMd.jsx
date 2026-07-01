@@ -1,5 +1,101 @@
 import React from 'react'
 
+// Convert common LaTeX macros to readable Unicode/text
+function tex(str) {
+  if (!str) return str
+  return str
+    // Greek letters
+    .replace(/\\partial/g, '∂')
+    .replace(/\\nabla/g, '∇')
+    .replace(/\\alpha/g, 'α')
+    .replace(/\\beta/g, 'β')
+    .replace(/\\gamma/g, 'γ')
+    .replace(/\\Gamma/g, 'Γ')
+    .replace(/\\delta/g, 'δ')
+    .replace(/\\Delta/g, 'Δ')
+    .replace(/\\epsilon/g, 'ε')
+    .replace(/\\varepsilon/g, 'ε')
+    .replace(/\\zeta/g, 'ζ')
+    .replace(/\\eta/g, 'η')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\iota/g, 'ι')
+    .replace(/\\kappa/g, 'κ')
+    .replace(/\\lambda/g, 'λ')
+    .replace(/\\Lambda/g, 'Λ')
+    .replace(/\\mu/g, 'μ')
+    .replace(/\\nu/g, 'ν')
+    .replace(/\\xi/g, 'ξ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\rho/g, 'ρ')
+    .replace(/\\sigma/g, 'σ')
+    .replace(/\\Sigma/g, 'Σ')
+    .replace(/\\tau/g, 'τ')
+    .replace(/\\upsilon/g, 'υ')
+    .replace(/\\phi/g, 'φ')
+    .replace(/\\chi/g, 'χ')
+    .replace(/\\psi/g, 'ψ')
+    .replace(/\\omega/g, 'ω')
+    .replace(/\\Omega/g, 'Ω')
+    // Operators & relations
+    .replace(/\\cdot/g, '·')
+    .replace(/\\times/g, '×')
+    .replace(/\\div/g, '÷')
+    .replace(/\\pm/g, '±')
+    .replace(/\\approx/g, '≈')
+    .replace(/\\geq/g, '≥')
+    .replace(/\\leq/g, '≤')
+    .replace(/\\neq/g, '≠')
+    .replace(/\\in/g, '∈')
+    .replace(/\\notin/g, '∉')
+    .replace(/\\subset/g, '⊂')
+    .replace(/\\subseteq/g, '⊆')
+    .replace(/\\propto/g, '∝')
+    .replace(/\\sim/g, '~')
+    .replace(/\\leftarrow/g, '←')
+    .replace(/\\rightarrow/g, '→')
+    .replace(/\\Rightarrow/g, '⇒')
+    .replace(/\\Leftrightarrow/g, '⟺')
+    .replace(/\\infty/g, '∞')
+    .replace(/\\forall/g, '∀')
+    .replace(/\\exists/g, '∃')
+    .replace(/\\neg/g, '¬')
+    .replace(/\\land/g, '∧')
+    .replace(/\\lor/g, '∨')
+    // Functions & operations
+    .replace(/\\arg\\s*max/g, 'argmax')
+    .replace(/\\arg\\s*min/g, 'argmin')
+    .replace(/\\max/g, 'max')
+    .replace(/\\min/g, 'min')
+    .replace(/\\log/g, 'log')
+    .replace(/\\ln/g, 'ln')
+    .replace(/\\exp/g, 'exp')
+    .replace(/\\sin/g, 'sin')
+    .replace(/\\cos/g, 'cos')
+    .replace(/\\tan/g, 'tan')
+    .replace(/\\det/g, 'det')
+    .replace(/\\tr/g, 'tr')
+    .replace(/\\sum/g, 'Σ')
+    .replace(/\\prod/g, 'Π')
+    .replace(/\\int/g, '∫')
+    // Structures — order matters: more specific first
+    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+    .replace(/\\sqrt/g, '√')
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
+    .replace(/\\text\{([^}]*)\}/g, '$1')
+    .replace(/\\mathrm\{([^}]*)\}/g, '$1')
+    .replace(/\\mathbb\{([^}]*)\}/g, '$1')
+    .replace(/\\mathcal\{([^}]*)\}/g, '$1')
+    .replace(/\\boldsymbol\{([^}]*)\}/g, '$1')
+    .replace(/\\hat\{([^}]*)\}/g, '$1̂')
+    .replace(/\\bar\{([^}]*)\}/g, '$1̄')
+    .replace(/\\tilde\{([^}]*)\}/g, '$1̃')
+    .replace(/\\vec\{([^}]*)\}/g, '$1⃗')
+    .replace(/\\overline\{([^}]*)\}/g, '$1̄')
+    .replace(/\\underbrace\{([^}]*)\}_\{[^}]*\}/g, '$1')
+    // Remove remaining braces (convert to parens if they look structural)
+    .replace(/\{/g, '(').replace(/\}/g, ')')
+}
+
 export function renderMd(text, containerStyle = {}, figures = {}) {
   if (!text) return null
   const blocks = text.split(/\n\n+/)
@@ -52,7 +148,7 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
               overflowX: 'auto',
               fontSize: '0.88rem',
             }}>
-              {eqMatch[1].trim()}
+              {tex(eqMatch[1].trim())}
             </div>
           )
         }
@@ -148,7 +244,7 @@ function renderInline(text) {
           background: 'var(--depth)', padding: '0.1em 0.35em',
           borderRadius: '3px', fontSize: '0.88em', whiteSpace: 'nowrap',
         }}>
-          {part.slice(1, -1)}
+          {tex(part.slice(1, -1))}
         </code>
       )
     }
