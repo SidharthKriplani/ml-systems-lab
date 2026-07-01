@@ -5,70 +5,82 @@ export const CLASSICAL_ML_MODULES = [
     title: 'Linear Regression from First Principles',
     subtitle: 'OLS, normal equation, geometric interpretation, assumptions',
     difficulty: 'foundational',
-    estimatedMin: 28,
+    estimatedMin: 22,
     tags: ['regression', 'OLS', 'linear models'],
-    summary: `You have three features — square footage, number of bedrooms, and neighborhood score — and you need to predict house prices. Someone hands you last month\`s sales. What do you do?
+    summary: `You have last month\`s house sales — square footage, number of bedrooms, a neighborhood score, and the price each one sold for. A new house comes on the market. What should it sell for?
 
-The instinct is to draw a line through the data and measure how far off each prediction is. Squaring those errors penalises big misses more than small ones and keeps everything differentiable, so you can find the best line by calculus rather than trial and error. Set the gradient of the squared error to zero and you get a single formula for the best possible weights: $θ̂ = (XᵀX)⁻¹Xᵀy$. That formula is the entire engine of ordinary least squares.
+The simplest honest guess is a weighted sum: price ≈ w₁·(sqft) + w₂·(bedrooms) + w₃·(score). Once you pick the weights, you have a prediction machine. The whole game is choosing good weights.
 
-Now add a wrinkle: square footage and number of bedrooms move together. When one goes up, the other usually does too. The matrix $XᵀX$ starts to lose rank — one direction in the data nearly duplicates another — and its inverse becomes unstable. A tiny change in one sale\`s price can flip the sign of both coefficients simultaneously, even though the predictions themselves barely change. This is collinearity, and it is the most misunderstood failure mode in regression. The coefficients become meaningless; the predictions survive.
+So what makes weights "good"? Run them on the houses you already know the price of, and look at the gap between your prediction and the real price. That gap, for one house, is the **residual**. Good weights make the residuals small across all the houses at once.
 
-Ridge fixes this with a single move: add $λI$ to the diagonal before inverting. This pushes all eigenvalues above $λ$, stabilising the inversion regardless of how correlated the features are. The price is a small amount of bias — the weights are pulled slightly toward zero — but for any $λ > 0$ you get a finite, stable solution.
+Now you need a single number for "small overall." Just adding the residuals fails — positive and negative gaps cancel, so even terrible weights could score near zero. So square each residual first (that kills the sign), then add them up. Squaring has a bonus: missing one house by \\$100k hurts far more than missing four houses by \\$25k each, so the fit works hard to avoid big misses. And squared error is smooth, which means calculus can jump straight to the best weights instead of guessing.
 
-**NOT this.** Most people think "high R² means the model is good." Here is a counterexample you can run right now: fit a linear regression on data that follows a U-shape. You can get R² = 0.95 while your residual plot shows a clear curve — low in the middle, high at the extremes. R² measures how much variance is explained. It says nothing about whether the functional form is right. A systematic residual pattern with R² = 0.95 means the model is badly misspecified and every standard error is wrong.
+That jump is **ordinary least squares (OLS)**. Set the derivative of the total squared error to zero and out pops one formula for the best weights: $θ̂ = (XᵀX)⁻¹Xᵀy$. You don\`t search — you solve. That formula is the entire engine.
 
-The formal statement: OLS is the Best Linear Unbiased Estimator (BLUE) when errors have zero mean, constant variance, and are uncorrelated. That last part — constant variance — is what the residual-vs-fitted plot checks. Violate it and OLS coefficients stay unbiased but all your confidence intervals are garbage. R² will not tell you. Only the residuals will.
+---
+
+**Where it gets interesting: when do the weights stop meaning anything?**
+
+Suppose square footage and bedroom count rise together — bigger houses have more bedrooms. The model can\`t tell whether price comes from the space or the rooms, because they move as a pair. It will split the credit between w₁ and w₂ in any of a thousand ways that all predict about the same. Retrain on a slightly different set of sales and those two coefficients can swing wildly — even flip sign — while the *predictions* barely budge. This is **collinearity**, and it is the most misread failure in regression: the predictions are fine, the individual coefficients are noise. So "this feature\`s coefficient is near zero, let\`s drop it" can quietly wreck the model when that feature was correlated with another.
+
+The standard fix is **Ridge**: add a small penalty that nudges every weight toward zero. You trade a touch of bias for coefficients that stay stable and trustworthy even when the features are tangled together.
+
+---
+
+**One habit that saves you: plot the residuals.**
+
+A high R² feels like proof the model is good. It isn\`t. R² only tells you how much of the price variation you explained — it can\`t tell you the *shape* is wrong. Fit a straight line to data that actually curves and you can still read R² = 0.95 while the residuals, plotted against your predictions, trace a clear U — too low in the middle, too high at the edges. That U is the model telling you the straight-line assumption is broken. R² will never say it; the residual plot always will.
 
 Plot them before you trust anything.`,
     keyPoints: [
-      `**Use it when the relationship is plausibly linear and you need interpretable coefficients or fast inference.**\n\nLinear regression is the right first model for continuous targets with moderate feature counts. Use it when domain knowledge suggests additive effects (e.g., each extra bedroom adds a roughly fixed price increment). Red flags for switching: clear non-linearity in residual plots, interaction terms that matter, or a target with a natural floor/ceiling. At d > 10,000 features, switch from the normal equation to gradient descent or a ridge solver — direct inversion of XᵀX costs O(d³) and breaks numerically before that.`,
-      `**The production trap: correlated features make individual coefficients unstable while predictions stay accurate — and you will not notice unless you check.**\n\nIf square footage and total rooms have correlation 0.95, OLS splits their shared predictive power arbitrarily. A different training sample gives completely different splits. The coefficients lose meaning, but the sum $w_1 \\cdot sqft + w_2 \\cdot rooms$ stays roughly constant — predictions look fine. This is why removing a feature with a "near-zero" OLS coefficient can destroy your model when that feature is correlated with another. Fix: add Ridge ($λ > 0$) before trusting any coefficient ranking.`,
-      `**The diagnostic: plot residuals vs. fitted values before reporting anything.**\n\nA horizontal band of roughly equal scatter = model is correctly specified. A U-shape or funnel = misspecification or heteroscedasticity. A systematic curve with R² = 0.95 is worse than a noisy scatter with R² = 0.60 — it means you are confidently wrong about the functional form. Secondary check: QQ-plot of residuals for the Gaussian assumption. If heavy tails appear, switch to a robust loss (Huber or LAD) or acknowledge that your confidence intervals are invalid.`,
+      `**What OLS actually does, in one sentence: it finds the weights that make the total squared gap between predictions and reality as small as possible.**\n\nReach for linear regression first whenever the target is a number and a weighted sum of the features is a plausible story — each weight then reads in plain English ("one more bedroom adds about \\$X"). It is fast, interpretable, and the honest baseline every fancier model has to beat. Switch away when residual plots curve, when features clearly interact, or when the target has a hard floor or ceiling (like a probability between 0 and 1) that a straight line can\`t respect.`,
+      `**The trap that bites in production: correlated features make individual coefficients unstable while predictions stay accurate — and nothing warns you.**\n\nIf square footage and total rooms correlate at 0.95, OLS divides their shared predictive power arbitrarily, and a different training sample divides it differently. The individual weights become meaningless, but their combined effect ($w_1 \\cdot sqft + w_2 \\cdot rooms$) stays steady — so predictions look healthy. This is why dropping a feature because its coefficient is "near zero" can be dangerous: it may read near zero only because a correlated twin absorbed the credit. Add Ridge ($λ > 0$) before you trust any ranking of coefficients.`,
+      `**The one diagnostic to run every time: plot residuals against fitted values.**\n\nA flat, even band of scatter means the straight-line form fits. A U-shape or curve means the form is wrong — and a curved residual plot with R² = 0.95 is worse than a noisy one with R² = 0.60, because you are confidently wrong about the shape. A widening funnel means the error grows with the prediction (heteroscedasticity): predictions stay unbiased, but every confidence interval you report is off. R² hides all of this; the residual plot shows it.`,
     ],
-    interactivePrompt: `Before you touch the controls: if you add a feature that is perfectly correlated with an existing one, do you expect the model\`s predictions to get worse, stay the same, or get better?`,
+    interactivePrompt: `Before you touch the controls: if you add a feature that is almost a perfect copy of one you already have, do you expect the model\`s predictions to get worse, stay about the same, or get better?`,
     checkQuestions: [
       {
-        q: `Why is it problematic to invert XᵀX numerically, and what is the preferred computational approach?`,
+        q: `In ordinary least squares, why do we square each residual before adding them up, instead of just summing the raw gaps?`,
         options: [
-          `\`A) XᵀX is always rank-deficient when features outnumber samples, so inversion is undefined; the fix is to add a Ridge penalty λI before inverting, which is what sklearn does by default.\``,
-          `\`B) XᵀX requires O(n³) memory to form, making it infeasible for large n; gradient descent avoids forming it entirely and scales to arbitrary dataset sizes.\``,
-          `\`C) Forming XᵀX squares the condition number: if cond(X)=κ, then cond(XᵀX)=κ². For κ=10⁶ (not unusual in real data), cond(XᵀX)=10¹² — near the limit of double precision (~10¹⁶), meaning 4 significant digits are lost. The preferred approach: QR decomposition X=QR gives θ̂=R⁻¹Qᵀy, working with κ(X) directly. For very large systems: SVD-based pseudoinverse (sklearn default) or iterative solvers (conjugate gradient). sklearn's LinearRegression uses SVD and never fails due to exact multicollinearity — it computes the minimum-norm solution automatically.\``,
-          `\`D) Inverting XᵀX requires it to be symmetric positive definite; when features are correlated, symmetry is broken and the inverse does not exist. QR decomposition restores symmetry before inversion.\``,
-        ],
-        answer: `C`,
-      },
-      {
-        q: `Your linear regression model has R²=0.95 but the residuals show a clear U-shape when plotted against fitted values. What does this mean?`,
-        options: [
-          `\`A) A U-shaped residual pattern signals systematic non-linearity — the model is consistently underpredicting at low and high fitted values, and overpredicting in the middle. This violates the linearity assumption, meaning the model is misspecified. High R² does not validate the model — R² measures how much variance is explained but not whether the functional form is correct. Remedies: (1) Add polynomial terms (x², x³) or spline basis. (2) Apply a non-linear transformation to the response (log(y) for count/skewed data). (3) Use a non-parametric model (GAM, tree-based). Recheck residuals after each modification.\``,
-          `\`B) A U-shaped residual pattern indicates heteroscedasticity — the error variance increases then decreases with fitted value. The model is correctly specified but the Gauss-Markov homoscedasticity assumption is violated; use White's robust standard errors and refit.\``,
-          `\`C) The U-shape confirms the model is well-specified: residuals should oscillate around zero across the fitted range. The pattern is within expected sampling variation given R²=0.95, and no action is needed.\``,
-          `\`D) A U-shaped residual pattern means there are outliers at the extremes of the fitted range inflating the apparent error. Winsorise the response variable and refit — R² and residual shape will both improve.\``,
+          `\`A) Three reasons at once: squaring removes the sign so positive and negative gaps can\`t cancel into a misleadingly low score, it punishes a few large misses more than many small ones, and — because the squared-error curve is smooth — it lets calculus solve for the single best set of weights in closed form instead of searching.\``,
+          `\`B) Squaring converts the model from linear to non-linear, which is what lets it fit curved data; without it, linear regression could only ever fit perfectly straight relationships.\``,
+          `\`C) It is purely convention — summing the absolute values of the residuals gives the exact same weights and the same solution, just with more arithmetic.\``,
+          `\`D) Squaring puts the error back into the original units of the target (dollars, not dollars-squared), so the loss is directly interpretable as an average price error.\``,
         ],
         answer: `A`,
       },
       {
-        q: `You have two features with correlation 0.99. What happens to the linear regression coefficients, and how do Ridge and Lasso behave differently on this input?`,
+        q: `You have two features with correlation 0.99. What happens to the OLS coefficients, and how do Ridge and Lasso respond differently?`,
         options: [
-          `\`A) With correlation 0.99, OLS cannot compute a solution at all — XᵀX is singular and the normal equations have no solution. Ridge adds λI to make the matrix invertible; Lasso uses coordinate descent which also handles singularity, and both methods give identical coefficient estimates for highly correlated features.\``,
-          `\`B) OLS coefficients are slightly inflated but otherwise reliable; the 0.99 correlation only matters when correlation reaches exactly 1.0. Ridge and Lasso both shrink the inflated coefficients, but Lasso shrinks them more aggressively because its L1 penalty is stronger than L2 for large coefficients.\``,
-          `\`C) With correlation 0.99, both OLS and Ridge will zero out one of the two correlated features to avoid redundancy. The difference is that Ridge zeros based on lower t-statistic while Lasso zeros based on lower raw coefficient magnitude after shrinkage.\``,
-          `\`D) With correlation 0.99, XᵀX is near-singular. OLS coefficients are extremely unstable — a small change in any training point causes large swings in both coefficients. Ridge regression (XᵀX + λI)⁻¹Xᵀy: adds λ to all eigenvalues, stabilising the inversion; Ridge splits the coefficient weight roughly equally between the two correlated features — both get non-zero, similar-magnitude coefficients. Lasso: arbitrarily picks one of the two correlated features (whichever has slightly larger correlation with the residual) and drives the other to exactly zero — the selected feature can change dramatically across different training sets. Ridge is safer when both correlated features genuinely matter.\``,
+          `\`A) OLS coefficients are only mildly inflated and stay reliable — correlation only causes real trouble at exactly 1.0. Ridge and Lasso both shrink them, with Lasso shrinking more aggressively.\``,
+          `\`B) OLS refuses to run because XᵀX is singular; both Ridge and Lasso repair this and, for correlated features, return identical coefficient estimates.\``,
+          `\`C) OLS can still compute weights, but they become extremely unstable — a small change in the training data swings both coefficients and can flip their signs, while the predictions barely move. Ridge stabilises them by shrinking, and tends to give the two features similar, non-zero weights. Lasso instead keeps one and drives the other to exactly zero — and which one it keeps can change from sample to sample.\``,
+          `\`D) Both OLS and Ridge automatically zero out one of the two features to remove the redundancy; the only difference is the criterion they use to decide which one to drop.\``,
         ],
-        answer: `D`,
+        answer: `C`,
       },
       {
-        q: `Gauss-Markov says OLS is BLUE. What exactly does "Best Linear Unbiased" mean, and what does it NOT guarantee?`,
+        q: `Your model reports R² = 0.95, but the residuals form a clear U-shape when plotted against the fitted values. What does that tell you?`,
         options: [
-          `\`A) "Unbiased" means zero training error. "Linear" means the model is a linear function of features. "Best" means highest R² among all linear models. What GM does NOT guarantee: that OLS generalises well to new data — overfitting can occur when d is large relative to n.\``,
-          `\`B) "Unbiased" means E[θ̂] = θ (correct on average across all possible datasets). "Linear" means the estimator is a linear function of y: θ̂ = Cy for some matrix C. "Best" means minimum variance among all linear unbiased estimators. What GM does NOT guarantee: (1) OLS is not best among non-linear or biased estimators — Ridge (biased) can have lower MSE = Bias² + Variance. (2) OLS does not give minimum prediction error on new data — overfitting can make test MSE much higher. (3) BLUE requires the GM assumptions (no endogeneity, homoscedasticity) — violating them makes OLS non-optimal.\``,
-          `\`C) "Unbiased" means the model has no systematic error on the training set. "Linear" means coefficients are estimated by a linear algorithm. "Best" means lowest mean squared error on test data. What GM does NOT guarantee: that OLS is computationally efficient — it requires O(d³) time regardless of dataset size.\``,
-          `\`D) "Unbiased" means the model predictions are unbiased for any input x. "Linear" means the decision boundary is linear. "Best" means the model has the smallest number of parameters among all unbiased models. What GM does NOT guarantee: that OLS will outperform regularised models in high-dimensional settings.\``,
+          `\`A) It is ordinary sampling noise — with R² this high the residuals are expected to wander a little, and no action is needed.\``,
+          `\`B) The straight-line form is wrong — the model systematically under-predicts at the low and high ends and over-predicts in the middle. High R² doesn\`t rescue this; R² measures variance explained, not whether the shape is right. Fix by adding curvature (polynomial or spline terms), transforming the target (e.g. log), or switching to a model that can bend — then re-check the residuals.\``,
+          `\`C) It signals a handful of outliers at the extremes inflating the error; winsorise the target and both R² and the residual shape will clean up.\``,
+          `\`D) It means the errors are correlated over time (autocorrelation); switch to a time-series model even though the data isn\`t time-ordered.\``,
         ],
         answer: `B`,
       },
+      {
+        q: `For a large or highly correlated dataset, why do libraries like scikit-learn avoid literally computing (XᵀX)⁻¹ to solve for the weights?`,
+        options: [
+          `\`A) Forming XᵀX and inverting it amplifies numerical error when features are correlated — small rounding errors get magnified and the coefficients can come out as garbage. Libraries instead use more stable linear-algebra methods (QR or SVD decompositions) that work with the data matrix directly and still return a sensible answer even when features are perfectly collinear.\``,
+          `\`B) Because inverting XᵀX requires it to be non-symmetric, and correlated features break that symmetry; the decomposition methods restore it before inverting.\``,
+          `\`C) Because (XᵀX)⁻¹ needs O(n³) memory in the number of samples, which is impossible for large n; the decomposition methods need essentially none.\``,
+          `\`D) Because the inverse only exists when there are more samples than features; the decomposition methods remove that requirement entirely.\``,
+        ],
+        answer: `A`,
+      },
     ],
-    takeaway: `OLS finds the minimum squared-error line; collinearity makes individual coefficients meaningless while leaving predictions intact; R² cannot detect misspecification — only the residual plot can.`,
+    takeaway: `OLS picks the weights that minimise the total squared error, and there\`s a formula for them. Correlated features scramble the individual coefficients while leaving predictions intact — so never read coefficients without checking for collinearity. And R² can\`t see a wrong model shape; only the residual plot can.`,
     interactiveId: 'linear_regression_viz',
   },
   {
