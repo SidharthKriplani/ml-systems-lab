@@ -5,51 +5,87 @@ export const CLASSICAL_ML_MODULES = [
     title: 'Linear Regression from First Principles',
     subtitle: 'OLS, normal equation, geometric interpretation, assumptions',
     difficulty: 'foundational',
-    estimatedMin: 22,
+    estimatedMin: 28,
     tags: ['regression', 'OLS', 'linear models'],
-    summary: `You sell houses. For every house that sold last month you jotted down a few facts about it — how big it is, how many bedrooms, how nice the area is — and the price it finally sold for. Now a new house comes up for sale and someone asks you: what should this one go for?
+    summary: `Here is a true story from over two hundred years ago. On the very first night of 1801, an astronomer spotted a faint new dot in the sky — a small world we now call Ceres. He watched it for about forty nights, and then it drifted behind the glare of the Sun and vanished. Everyone wanted it back, but to know where to point a telescope, you had to predict its whole orbit from just a handful of shaky, imperfect measurements. Nobody could do it.
 
-Your first instinct is the right one. A bigger house costs more. More bedrooms cost more. A nicer area costs more. So take each fact about the house, give it a weight for how much it matters, and add them up:
+Then a 24-year-old named Carl Friedrich Gauss tried something new. He took all those messy measurements and found the single orbit that fit them best — not perfectly, because the measurements had errors in them, but best in a way he could actually prove. He told the astronomers where to look. Ceres was right there.
+
+The idea Gauss leaned on is called **least squares**, and it is the beating heart of what we now call **linear regression**. Before it, drawing the best line through noisy data was guesswork — everyone eyeballed it and got a different answer. Least squares turned "fit a line to the dots" from an art into a solved problem with one right answer. Two hundred years later it is still one of the first tools any data scientist reaches for. Let me show you how it works, brick by brick.
+
+---
+
+**The setup.**
+
+Forget planets for a moment and take something homelier. You sell houses. For every house that sold last month you wrote down a few facts — how big it is, how many bedrooms, how nice the area is — and the price it sold for. Now a new house comes up, and you need to guess its price.
+
+Your instinct is the right one. A bigger house costs more. More bedrooms cost more. A nicer area costs more. So take each fact, give it a weight for how much it matters, and add them up:
 
 price ≈ w₁ × size + w₂ × bedrooms + w₃ × area score
 
-That is the whole model. Choose the three weights and you can put a price on any house. So everything now comes down to one question: how do we choose good weights?
+That is the whole model. Pick the three weights and you can price any house. So the entire game comes down to one question: how do we pick good weights?
 
-Think about how you would check a set of weights. You already know what last month's houses actually sold for. So use your weights to predict those same houses, and compare each guess to the real price. How far off you were on one house is called the **residual** — just a fancier word for the miss. Good weights are the ones that keep the misses small across all the houses.
+---
 
-But "small across all the houses" has to become one single number we can try to shrink. The obvious move — add up all the misses — quietly fails. Some guesses are too high and some too low, so the misses have opposite signs and cancel each other out. A bad model could add up to nearly zero just by luck.
+**How wrong are we?**
 
-So we do one small thing first: square each miss before adding. Squaring throws away the plus and minus signs, so nothing cancels anymore. It also does something helpful — a big miss, once squared, becomes very big, so the model tries especially hard to avoid large misses. Add up all these squared misses and you finally have your single number. It has a name: the **loss**. The loss is just one number that says how wrong the current weights are, all together.
+To find good weights, we first have to measure bad ones. You already know what last month's houses actually sold for, so use your weights to predict those same houses and compare each guess to the truth. How far off you were on one house is called the **residual** — a fancier word for the miss.
 
-Now the whole job fits in one sentence: find the weights that make the loss as small as possible.
+One miss is easy. But we want a single score for how wrong the weights are across *all* the houses. The most natural idea is to average the misses. Careful though — some guesses are too high and some too low, so the misses have opposite signs and cancel out. A terrible model could average to nearly zero just by luck.
 
-For a straight line, we get lucky. If you picture the loss drawn against the weights, it makes a smooth bowl — one lowest point and nothing else to get stuck in. And the bottom of a bowl is exactly the spot where the ground goes flat. So instead of hunting weight by weight, we can ask for the point where the slope is flat, and the math hands back a formula that gives the best weights straight away:
+The fix is to throw away the signs. Take the size of each miss, ignore whether it was over or under, and average those. That gives you the **mean absolute error**, or **MAE** — plainly, "on average, how many dollars off are we?" It is honest, easy to read, and a couple of wild houses barely move it.
+
+But when it comes to actually *finding* the best weights, we usually reach for MAE's cousin. Instead of taking the size of each miss, we **square** it, then average. That is the **mean squared error**, or **MSE**, and it does two things MAE does not. First, squaring makes one big miss count for far more than several small ones, so the model works hardest to avoid the embarrassing, way-off guesses. Second — and this is the part that matters most — squaring makes the whole thing smooth, which, as you are about to see, is exactly what lets us solve for the best weights in one clean shot.
+
+Either way, this single number — how wrong the weights are, all together — is called the **loss**. And now the whole job fits in one sentence: find the weights that make the loss as small as possible.
+
+---
+
+**The beautiful part: solving it in one step.**
+
+Here is where least squares earns its fame. Picture the loss as a landscape: the weights are your position, and the loss is the height of the ground under you. Because we squared the misses, that landscape is a smooth bowl — one single lowest point, no other dips to fall into. And the bottom of a bowl is exactly the spot where the ground goes flat.
+
+So we do not have to wander around trying weights and checking the loss. We just ask math for the point where the slope is flat, and it hands back one formula that gives the best weights directly:
 
 $θ̂ = (XᵀX)⁻¹Xᵀy$
 
-You do not need to read the symbols yet. The one thing to take away is what it means: for a straight-line model, we never have to search for the best weights — we can solve for them in a single step. That single-step solution is called **ordinary least squares**, or OLS. That is the entire engine.
+Do not worry about the symbols yet. The thing to feel is the magic: for a straight-line model, we never search — we solve, in a single step, and get the provably best weights every time. That is the same trick that let Gauss find a lost planet. The one-step solution is called **ordinary least squares**, or **OLS**, and that is the entire engine.
 
 ---
 
-**Now a warning about trusting those weights.**
+**A warning about trusting the weights.**
 
-Say two of your facts tend to move together. Bigger houses usually have more bedrooms, so size and bedroom count rise and fall as a pair. Here is the trouble that causes. The model wants to hand out credit for the price — some to size, some to bedrooms. But because the two always move together, it cannot tell which one is really doing the work. It could put most of the weight on size and a little on bedrooms, or the other way round, and both choices predict prices about equally well.
+Now a catch that trips up almost everyone. Suppose two of your facts move together — bigger houses usually have more bedrooms, so size and bedroom count rise and fall as a pair. The model wants to hand out credit for the price, some to size and some to bedrooms. But because the two always move together, it cannot tell which one is really doing the work. It might load most of the weight onto size, or most onto bedrooms, and both choices predict prices about equally well.
 
-So the weights turn shaky. Train on a slightly different batch of houses and those two weights can jump around, even swap from positive to negative — while the actual price predictions barely change. This is called **collinearity**. The predictions are still fine. It is only the individual weights that have gone unreliable.
+So the weights turn shaky. Train on a slightly different batch of houses and those two weights can jump around — one run gives size a positive weight, the next run gives it a negative weight, as if a bigger house should cost *less*. Meanwhile the actual price predictions barely change. This is called **collinearity**. And notice carefully what is and is not moving: the two facts are still exactly as correlated as before — that is a fixed fact about your data and it does not budge. It is the *weights* that have gone unreliable, not the correlation.
 
-Why care? Because people read the weights to decide which fact matters. If you see a weight near zero and think "this one does nothing, drop it," you can be badly wrong — the weight may be small only because its partner grabbed the credit.
-
-The usual fix is called **Ridge**. It adds a small penalty that stops the weights from growing wild and shaky, so you can trust them again. How it does that is its own lesson.
+Why care? Because people read the weights to decide which fact matters. See a weight near zero and think "this one does nothing, drop it," and you can be badly wrong — the weight may be tiny only because its twin grabbed the credit. The usual fix is a method called **Ridge**, which keeps the weights from growing wild and shaky. How it does that is its own lesson.
 
 ---
 
-**One last habit, and it is the most useful one.**
+**How good is the fit, really?**
 
-There is a number called R² that is supposed to tell you how good the model is — closer to 1 is better, people say. It is not that simple. A high R² only means your line explains a lot of the ups and downs in price. It does not mean the line is the right shape.
+Say you have trained the model and its total squared error comes out to some big number. Is that good? On its own it means nothing. Fifty million squared-dollars — compared to what?
 
-Here is the trap. Suppose the real relationship actually curves, but you fit a straight line to it anyway. You can still get an impressive R² of 0.95 and still be wrong. To catch it, do this: take your misses and plot them against your predictions. If the straight line is right, the misses should scatter randomly around zero. But if the truth was a curve, the misses fall into a clear pattern — a U, too low in the middle and too high at the ends. That U is the model quietly telling you the straight line is the wrong shape. R² will never warn you. The residual plot always will.
+You need a yardstick, and the fairest one is the dumbest possible model: the one that ignores every fact about the house and just guesses the same number every time — the average price. Call it the lazy model. How wrong is the lazy model? Take each house's price, subtract the average, square it, and add it all up. That total is simply the spread of prices around their average, and that spread has a famous name: the **variance**. (Take its square root and you are back in real dollars — that is the **standard deviation**. And the average you started from is the **mean**. Mean, then variance, then standard deviation, each one built on the one before.)
 
-So before you trust any straight-line model: plot the misses and look.`,
+Now comes the clever comparison. **R²** just asks: of all the error the lazy mean-model was stuck with, how much did your model clear away?
+
+R² = 1 − (your model's squared error ÷ the lazy model's squared error)
+
+Read it straight off. R² = 0 means you are no better than guessing the average — useless. R² = 1 means you nailed every house. R² = 0.8 means you wiped out 80% of the error the lazy model had. Now the number finally means something, because it is measured against a floor.
+
+R² is the first thing to look at when you judge a linear regression — but it hides one trap. Add a new fact to the model, even one that is pure random noise, and R² never goes down. The model can always use junk to shave a sliver off the training error. So plain R² quietly rewards piling on useless features. The fix is **adjusted R²**, which charges a small fee for every fact you add: if a new fact does not earn its keep, adjusted R² falls. So when you are deciding whether a feature belongs, trust adjusted R², not plain R².
+
+---
+
+**One last habit — the most useful one.**
+
+Even a high R² can fool you, and this final trick catches it. Suppose the real relationship actually curves, but you fit a straight line anyway. You can still score an impressive R² of 0.95 and still be wrong about the shape.
+
+To catch it, take your misses and plot them against your predictions. If the straight line is right, the misses should scatter randomly around zero — no pattern at all. But if the truth was a curve, the misses fall into a clear shape — often a U, too low in the middle and too high at the ends. That U is the model quietly telling you the straight line is the wrong shape. R² will never warn you. The plot of the misses always will.
+
+So before you trust any straight-line model: plot the misses and look. Gauss would have.`,
     keyPoints: [
       `**In one line: OLS finds the weights that make the total squared miss as small as possible.**\n\nUse linear regression first whenever you are predicting a number and "add up the facts, each with its own weight" is a sensible guess. Its big advantage is that you can read the weights straight off — one more bedroom adds about so many dollars. It is fast, it is simple, and it is the baseline every fancier model has to beat. Move to something else when the residual plot curves (the real shape is not a straight line), when facts clearly work together, or when the answer has to stay inside fixed limits — like a probability between 0 and 1, which a straight line cannot respect.`,
       `**The trap that catches people: when two facts move together, their weights stop being trustworthy — but the predictions still look fine, so nothing warns you.**\n\nIf size and total rooms almost always rise together, OLS splits the credit between them however it likes, and a different batch of houses splits it differently. The two weights wobble, but their combined effect stays steady — so the predictions look healthy. That is why "this weight is near zero, let us drop the fact" is dangerous: the weight may be small only because its twin took the credit. Add Ridge (a small penalty) before you trust any list of which facts matter.`,
@@ -88,17 +124,17 @@ So before you trust any straight-line model: plot the misses and look.`,
         answer: `B`,
       },
       {
-        q: `For a big or highly correlated dataset, why do libraries like scikit-learn avoid literally computing (XᵀX)⁻¹ to get the weights?`,
+        q: `You add a brand-new feature to your model — one that is really just random noise. Your R² ticks up a little. Should you keep the feature, and what number should you have looked at instead?`,
         options: [
-          `\`A) Because building and inverting that matrix blows up tiny rounding errors when features are correlated, so the weights can come out as junk. Libraries use steadier methods (QR or SVD) that work on the data directly and stay sensible even with correlated features.\``,
-          `\`B) Because inverting the matrix needs it to be non-symmetric, and correlated features break that symmetry, so the steadier methods rebuild the symmetry before inverting.\``,
-          `\`C) Because the inverse needs memory that grows with the number of samples cubed, which is impossible for large data, while the steadier methods need almost none.\``,
-          `\`D) Because the inverse only exists when there are more samples than features, and the steadier methods remove that requirement completely.\``,
+          `\`A) Yes — any rise in R², however small, means the feature is adding real predictive value, so it has earned its place in the model.\``,
+          `\`B) No — R² almost always creeps up when you add a feature, even a useless one, because the model can fit a little more training noise. Look at adjusted R² instead: it charges a fee per feature, so a noise feature makes it fall. If adjusted R² drops, leave the feature out.\``,
+          `\`C) Yes — extra random features act like a mild regulariser, smoothing the model and helping it generalise to houses it has not seen.\``,
+          `\`D) No — but the real fix is to standardise the noise feature so its scale matches the others, after which R² will correctly drop and tell you to remove it.\``,
         ],
-        answer: `A`,
+        answer: `B`,
       },
     ],
-    takeaway: `OLS just picks the weights that make the total squared miss smallest — and for a straight line, there is a formula that solves for them in one step. When two features move together, the individual weights turn shaky even though the predictions stay fine, so never trust a weight without checking for that. And R² cannot tell you the shape is wrong — only the plot of the misses can.`,
+    takeaway: `Least squares picks the weights that make the total squared miss smallest, and for a straight line one formula solves for them in a single step — the same trick Gauss used to find a lost planet. Judge the fit with R² (how much you beat the lazy "always guess the average" model), and switch to adjusted R² once you start adding features. Never trust a single weight when two facts move together, and always plot the misses — because R² cannot see a wrong shape, but the misses can.`,
     interactiveId: 'linear_regression_viz',
   },
   {
