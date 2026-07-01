@@ -761,6 +761,24 @@ pre { max-width: 100%; overflow-x: auto; }
   }
 }
 
+/* ── Foundation split-pane: master-detail on mobile ──────────────────────────
+   Desktop: module list (280px sidebar) + reading pane side by side.
+   Phones (<=700px): once a module is open the fixed 280px list squeezes the
+   reading pane into a useless sliver — so hide the list, give the reader the
+   full width, and tighten padding. The in-page "← All modules" button returns
+   to the list. !important is required to beat the list's inline width:280px. */
+@media (max-width: 700px) {
+  .foundation-split[data-open="1"] > div:first-child { display: none !important; }
+  .foundation-split[data-open="1"] > div:last-child {
+    padding: 1.25rem 1rem !important;
+  }
+  .foundation-split[data-open="0"] > div:first-child {
+    padding: 1.25rem 1rem !important;
+  }
+  /* wrap long formulas / code spans instead of forcing horizontal scroll */
+  .foundation-split { overflow-wrap: break-word; }
+}
+
 @keyframes orb-pulse {
   0%,100% { opacity: 0.7; transform: scale(1); }
   50%     { opacity: 1;   transform: scale(1.12); }

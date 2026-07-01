@@ -4,7 +4,121 @@ Read this first, every session.
 
 ---
 
-## ✅ LATEST (2026-06-30) — 8 new interactives + voice rewrites complete
+## ✅ LATEST (2026-07-01, later) — Interview-depth gap-fill across 5 foundation content files + mobile fix
+
+**All work is LOCAL and uncommitted. Push commands below — Sidharth runs on Mac.** Owner-directed content-quality pass (enrichment of *existing* foundation modules, not new surfaces).
+
+### What this was
+An external gap analysis (ChatGPT) flagged interview-coverage gaps per module. Every foundation module in five content files got the same treatment: **plain-first prose sections added to the `summary` (divider-paced with `---`), new `keyPoints`, and new `checkQuestions`** — closing the named gaps to a senior-MLE interview bar. Also dropped any remaining "NOT this." walls, fixed render hazards, and corrected factual errors found along the way.
+
+### Files enriched (`src/data/foundations/`)
+- **`classicalMLModules.js`** — 11 modules: linreg (OLS assumptions split prediction-vs-inference, heteroscedasticity, leverage/influence + Cook's, inference layer SE/t/p/CI + Gauss-Markov/BLUE, SVD/QR, RMSE/MAE/MAPE/R²), logreg (imbalance, threshold-as-business-decision, C=1/λ + L1/L2/ElasticNet/saga, OvR vs multinomial, odds-ratio inference, feature-eng boundary), regularization (bias-variance, CV λ, Ridge closed-form, alpha/C/l1_ratio naming, intercept, Lasso p>n, scope), generalization (train/val/test discipline, real PAC ε/δ, VC shattering, decomposition formula, effective capacity, double-descent caveats, OOD), trees (entropy/info-gain, regression split, hyperparameter map + CCP pruning, categorical/missing, imbalance, leaf calibration), random_forest (hyperparameter map, variance-not-bias, OOB caveats, correlated-feature importance, vs boosting, imbalance), gradient_boosting (AdaBoost vs GBM, logit-space classification, XGB objective + Hessians, hyperparameter map, leakage/validation, gain/cover/weight, XGB/LGBM/CatBoost), ensembles (hard/soft voting, blending vs stacking, meta-learner, OOF/time validation, cost, diversity), calibration (**fixed RF direction — pushes AWAY from 0/1, sigmoid curve**; Brier decomposition, ECE caveats, temperature scaling, multiclass, vs thresholding, shift), class_imbalance (precision@K, cost matrix, SMOTE-in-CV, post-resample recalibration, metric menu, extreme protocol), feature_selection (softened SHAP overclaim, permutation/MI/RFECV, PCA distinction, high-dim, stability selection).
+- **`evalModules.js`** — 9 modules (skip ablation): metric vocabulary (specificity/FPR/macro-micro/MCC/balanced-acc) + softened Fβ=√cost claim; ROC/PR (partial AUC, calibration-blindness, crossing curves, AP≠trapezoidal, prevalence formula, multiclass); ranking (recall@K/hit-rate, coverage/diversity, position bias, metric@K, ties/unjudged, surrogate losses); offline/online (causal-vs-observational, guardrails, power/MDE/peeking, IPS caveats, interleaving/bandit); validation_traps (preprocessing leakage, fuller taxonomy, three timestamps, group+time split, negative controls, production discovery); cross_validation (repeated k-fold, stratified-group, rolling vs expanding, nested-CV caveat, fold-uncertainty, regression/multilabel strat); error_analysis (slice-size significance, root-cause taxonomy, FP/FN slicing, monitoring loop, human review, counterfactual, prioritization formula); calibration (Brier decomposition terms, ECE fine print, multiclass, model patterns, shift, vs thresholding); evaluation_in_prod (SRM, power/MDE, CUPED, ramp-up, interference/SUTVA, delayed metrics, experiment layers).
+- **`unsupervisedModules.js`** — 4 modules: PCA (leakage/fit-on-train, whitening, assumptions, interpretability, randomized/TruncatedSVD, viz-vs-modeling, alternatives), autoencoders (loss-per-datatype, reparam trick, VAE loss+posterior collapse, anomaly thresholding, contaminated training, softened rep claim, architectures), anomaly_detection (one-class SVM, novelty-vs-outlier, time-series taxonomy, scaling, method map, label-free eval, alerting layer), topic_modeling (LDA α/β + inference, NMF V≈WH, BERTopic caveats, choosing-K, evaluation, production drift).
+- **`optimizationModules.js`** — 5 modules (clipping/regularization already strong): gradient_descent (batch/SGD/mini-batch, backprop connection, optimizer map, LR schedules, convergence criteria, pathologies), sgd_and_minibatch (epoch/step defs, small-batch nuance, LR-scaling caveats, BatchNorm coupling, SGD-vs-Adam fairness, distributed, imbalance sampling), gradient_flow (Xavier/He init, BatchNorm vs LayerNorm, dead-ReLU fixes, transformer pre/post-norm, diagnostics, clipping limits, symptom map), weight_initialization (formulas + fan-in/out, uniform vs normal, orthogonal, modern-arch caveat, transformer residual-scaling, diagnostics), second_order_methods (line-search/trust-region, indefinite Hessian, Gauss-Newton/Fisher, L-BFGS use-map, Adam-not-diagonal-Newton nuance, decision tree). Also fixed 5 backtick-apostrophes (`Adam\`s` etc.) in the Adam/schedule modules.
+- **`dataModules.js`** — 11 modules: data_quality (MCAR/MAR/MNAR, drift metrics PSI/KS/JS/Wasserstein, label audit, skew/freshness, contracts, severity, sampling coverage), missing_values (softened indicator⇒MNAR, multiple imputation, MNAR handling, categorical, serving-time, tree-native), feature_engineering (encoding map, RFM/window/point-in-time, high-cardinality, text/embeddings, serving parity, ablation), categorical_encoding (smoothing formula, CV-safe protocol, frequency/hashing/embeddings, CatBoost ordered stats, rare/new-category policy), feature_scaling (sparse/with_mean=False, NN scaling, PCA, target scaling, outliers, ColumnTransformer), class_imbalance (metric menu, ROC caveat, resampling-breaks-calibration, rare-event validation, cost formula, sampling alternatives, monitoring, extreme protocol), data_splits (duplicate leakage, target-leakage taxonomy, test-reuse/nested-CV, time-series CV, entity/event, selection leakage/parity), feature_selection (selection leakage, stability, MI/SHAP caveats, tree knobs, PCA distinction, operational cost), distribution_shift (P(X)/P(Y)/P(Y|X) notation, drift-metric menu, BBSE label-shift, adaptation ladder), data_augmentation (**corrected backwards diagnostic — strong aug lowers TRAIN accuracy while VAL rises**; modern menu CutMix/RandAugment/SpecAugment, tabular/text caution, distribution-match, aug-after-split leakage, policy tuning), data_versioning (env/dependency fourth-leg, model registry lifecycle, orchestration, feature-store two-stores, data contracts, experiment tracking, CI/CD, lineage; **fixed a wrong answer key** in the column-rename quiz C→A).
+
+### Cross-cutting fixes applied
+- **Factual corrections:** RF calibration direction (away from 0/1 → sigmoid, per Niculescu-Mizil), the "indicator improves AUC ⇒ MNAR" overclaim, the augmentation loss-curve diagnostic (backwards), softened "denoising AE beats scratch", "Fβ=√cost-ratio", "SHAP most reliable"; one wrong quiz answer key in data_versioning.
+- **Render hazards:** removed raw currency `$` that collides with KaTeX `$…$` math (converted to "N dollars"); fixed backtick-apostrophes (`word\`s` → `word's`) across all touched files including out-of-scope kNN/SVM/GMM/Adam modules in the same files.
+- **Verification:** every file `node --input-type=module` import-parses clean; answer keys spread across A–D; per-module keyPoints ≈5–6, checkQuestions ≈5–7.
+
+### Mobile fix (this session)
+The 17 `src/tabs/foundations/*FoundationTab.jsx` tabs used a two-pane flex layout — selecting a module shrank the list to a fixed **280px sidebar** and squeezed the reading pane into a ~100px sliver on phones. Fix (master-detail pattern, centralised): tagged the identical outer container in all 17 with `className="foundation-split" data-open={selected ? '1' : '0'}`, and added one `@media (max-width: 700px)` block in `src/index.css` that hides the list once a module is open (`> div:first-child { display:none !important }` — `!important` beats the inline width), gives the reader full width with tighter padding, and adds `overflow-wrap: break-word` for long formulas. The existing in-page "← All modules" button handles back-nav. All 17 tabs verified with acorn-jsx (17/17), brace-balanced, string-audit OK; index.css brace-balanced.
+
+### Push commands (run on Mac — 6 files)
+```bash
+cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
+rm -f .git/index.lock .git/HEAD.lock && \
+git add src/data/foundations/classicalMLModules.js \
+        src/data/foundations/evalModules.js \
+        src/data/foundations/unsupervisedModules.js \
+        src/data/foundations/optimizationModules.js \
+        src/data/foundations/dataModules.js && \
+git commit -m "Foundations interview-depth gap-fill: prose+keyPoints+quizzes across 40 modules in 5 files; fixed RF calibration direction, wrong answer keys, currency-\$/backtick render hazards" && \
+git push origin main
+```
+```bash
+cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
+rm -f .git/index.lock .git/HEAD.lock && \
+git add src/index.css src/tabs/foundations/*.jsx && \
+git commit -m "Mobile: foundation tabs use master-detail on phones — hide list when a module is open, full-width reader (17 tabs + index.css media query)" && \
+git push origin main
+```
+
+---
+
+## ✅ PREV (2026-07-01, earlier same day) — S-tier 9.5/10 rewrite: 10 content files + 10 interactives
+
+All work is LOCAL. **Two git pushes pending — Sidharth runs both on Mac.**
+
+### Content rewrites — 4 data files, 10 modules
+
+**`src/data/foundations/classicalMLModules.js`**
+- `generalisation_theory`: VC dim d+1 derivation, generalisation bound ≤ train + √(VC_dim·log(n)/n), double descent at interpolation threshold, minimum-norm solution
+- `gradient_boosting`: 4-house numerical walkthrough (sizes 800/1200/2000/3000, prices 150k/200k/400k/600k, F0=337.5k, residuals [-187.5, -137.5, +62.5, +262.5], depth-1 split at size<1600)
+
+**`src/data/foundations/evalModules.js`**
+- `auc_roc`: Mann-Whitney U paragraph — AUC = P(score_pos > score_neg), 0.91 → 91% of random fraud/legit pairs correctly ranked
+- `cross_validation`: stratified (5% positive rate per fold), group k-fold (50k visits/5k patients — all visits from one patient in same fold), purge gap (train ends day 83, val starts day 91, 7-day window discarded)
+
+**`src/data/foundations/optimizationModules.js`**
+- `gradient_descent`: Newton's method impossibility (n=500k → 2.5×10¹¹ Hessian elements, 1TB storage, O(n³) inversion = impossible), convergence rates (convex O(1/t), strongly convex O(ρᵗ) where ρ=|1-2α|), Lipschitz condition α<2/L, contraction ratio
+
+**`src/data/foundations/deepLearningModules.js`**
+- `backpropagation`: full numerical forward+backward pass (x=2.0, w1=0.5, b1=0.1, w2=0.3, target=1.0 → ∂L/∂w2=-0.164, ∂L/∂w1=-0.0247), exploding gradients, dying ReLU, residual connections add +1 to gradient, memory O(L×B×A), gradient checkpointing O(√L)
+
+### Interactive components — `src/components/interactive/` (all 10 files)
+
+| File | What was added |
+|------|----------------|
+| `BiasVarianceViz.jsx` | TEST_DATA split (15 train / rest test); cyan hollow test points on canvas; Train MSE + Test MSE stats row; "↑ overfit" flag when testMSE > 3×trainMSE |
+| `GradientDescentDemo.jsx` | Alpha slider to 1.49; divergence detection (marks step red, halts); convergence rate panel: ρ=|1-2α|, Lipschitz α<2/L=1.0 for this parabola, steps-to-halve, DIVERGES warning |
+| `ROCCurveViz.jsx` | PR curve toggle (purple, baseline at prevalence); Mann-Whitney U panel — AUC = P(score_pos > score_neg) with live interpretation |
+| `BackpropViz.jsx` | Gradient shrinkage bars in backward mode: shows |∂L/∂z| for output/h1/h2 layers; explains σ'(z)≤0.25, 10 layers → 10⁻⁶, ReLU = 0 or 1 passthrough |
+| `CrossValidationViz.jsx` | 4 CV types (Standard/Stratified/Group/Walk-forward); type selector buttons; sample grid color-codes per type (white border on positives / 6 group colors / opacity gradient); explanation panel |
+| `RandomForestViz.jsx` | OOB derivation panel (P=(1-1/n)ⁿ→e⁻¹≈0.368); variance formula ρσ²+(1-ρ)σ²/T; bootstrap sample viz — 20 numbered squares (gold=in-bag, dim=OOB), ←→ to cycle all 8 trees |
+| `RegularizationViz.jsx` | Bayesian interpretation panel: Ridge=Gaussian prior N(0,1/λ) smooth shrinkage, Lasso=Laplace prior spike at zero → exact sparsity via soft-thresholding |
+| `DecisionTreeViz.jsx` | **Full rewrite** — replaced hardcoded SPLITS_BY_DEPTH with real greedy Gini tree (buildTree→predictTree→collectSplits). 🎲 Reseed button cycles 4 seeds — same depth, different noisy points → completely different splits. Gini panel shows live real computed values. |
+| `LogisticRegressionViz.jsx` | Log-odds panel: log(τ/(1-τ)) = w·x+b live at current threshold; boundary shift direction; gradient cancellation note ∂L/∂z=σ(z)-y |
+| `GradientBoostingViz.jsx` | Gradient-in-function-space panel (∂L/∂F(xᵢ)=-2×residualᵢ, XGBoost gain formula); **train/test MSE SVG chart** — 60-point noise-free test grid (true sin), gold=train/cyan=test, optimal stopping line, OVERFITTING badge at η≥0.8 |
+
+### Push command 1 — content (run on Mac)
+```bash
+cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
+rm -f .git/index.lock .git/HEAD.lock && \
+git add src/data/foundations/classicalMLModules.js \
+        src/data/foundations/evalModules.js \
+        src/data/foundations/optimizationModules.js \
+        src/data/foundations/deepLearningModules.js && \
+git commit -m "S-tier content: 9.5/10 teaching depth — numerical examples + derivations across 10 modules" && \
+git push origin main
+```
+
+### Push command 2 — interactives (run on Mac, after push 1)
+```bash
+cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
+rm -f .git/index.lock .git/HEAD.lock && \
+git add src/components/interactive/BiasVarianceViz.jsx \
+        src/components/interactive/GradientDescentDemo.jsx \
+        src/components/interactive/ROCCurveViz.jsx \
+        src/components/interactive/BackpropViz.jsx \
+        src/components/interactive/CrossValidationViz.jsx \
+        src/components/interactive/RandomForestViz.jsx \
+        src/components/interactive/RegularizationViz.jsx \
+        src/components/interactive/DecisionTreeViz.jsx \
+        src/components/interactive/LogisticRegressionViz.jsx \
+        src/components/interactive/GradientBoostingViz.jsx && \
+git commit -m "S-tier interactives: simulation gaps filled — test/train split, divergence, PR curve, gradient bars, CV types, bootstrap viz, instability demo, log-odds, overfitting chart" && \
+git push origin main
+```
+
+### JSX parse verification
+All 10 interactive files: **10/10 OK** (acorn-jsx, no syntax errors).
+
+---
+
+## ✅ PREV (2026-06-30) — 8 new interactives + voice rewrites complete
 
 **New interactive components** in `src/components/interactive/`:
 - `ContrastiveViz` (contrastive_viz) — 2D embedding space, SimCLR-style attraction/repulsion, temperature slider

@@ -4,18 +4,19 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
-## Where we are (25 Jun 2026)
+## Where we are (1 Jul 2026)
 
 **Vercel:** live at `ml-systems-lab.vercel.app`  
 **Last meaningful push:** v4.130 (TimeSeriesTab fix + stale repo path)  
-**Content freeze:** IN EFFECT — distribution-only until 100 email subs OR 100 weekly returning visitors
+**Content freeze:** IN EFFECT — distribution-only until 100 email subs OR 100 weekly returning visitors  
+**⚠️ Uncommitted local work:** foundations interview-depth gap-fill (5 content files) + mobile master-detail fix (index.css + 17 foundation tabs) + prior S-tier rewrite (10 content files + 10 interactives). **Push commands staged in CLAUDE.md LATEST + PREV — Sidharth runs on Mac.**
 
 ---
 
-## What just shipped (this session, 25 Jun 2026)
+## What just shipped (this session, 1 Jul 2026 — LOCAL, uncommitted)
 
-**Icon system migration — monochrome Instrument design standard.**  
-Full HQ canonical `Icon.jsx` (84 icons + GLYPH_TO_ICON map) deployed to `src/components/`, replacing the prior 15-icon `Icons.jsx` shim. Two new files added: `CompanyLogo.jsx` (Google favicon + initial-badge fallback, CSS vars adapted to MSL tokens `--depth`/`--rim`/`--ink-ghost`) and `companyDomains.js` (319-entry canonical domain resolver). All replaceable emoji in 16 source files converted to monochrome `<Icon name="..." />` components. No version bump — design/infra, not content. Commit pending (approve-first).
+**Foundations interview-depth gap-fill + mobile fix.**  
+Owner-directed content-quality pass driven by an external interview-coverage gap analysis. ~40 foundation modules across 5 `src/data/foundations/` files (classicalML, eval, unsupervised, optimization, data) each got new prose sections in `summary`, new `keyPoints`, and new `checkQuestions` closing senior-MLE interview gaps. Factual fixes: RF calibration direction (away from 0/1 → sigmoid), backwards augmentation diagnostic, softened overclaims, one wrong quiz key. Render fixes: currency-`$`/KaTeX collisions and backtick-apostrophes. **Mobile:** the 17 `foundations/*FoundationTab.jsx` two-pane layouts squeezed the reader to a sliver on phones once a module opened — fixed via a `.foundation-split` master-detail media query in `index.css` + a `className`/`data-open` tag on all 17 (hide list when open, full-width reader). All files parse clean (acorn-jsx 17/17, JS import-parse), brace-balanced, string-audit OK. See CLAUDE.md LATEST for full detail + the two push commands.
 
 ---
 

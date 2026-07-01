@@ -1,7 +1,17 @@
 # Lineage & Ideas
 
 Design history, inspiration, and future directions for ML Systems Lab.
-Last updated: June 2026
+Last updated: July 2026
+
+---
+
+### Foundations interview-depth gap-fill + mobile master-detail (1 Jul 2026)
+
+Owner-directed content-quality pass over the foundation content, driven by an external (ChatGPT) interview-coverage gap analysis. Enrichment of **existing** modules only — no new surfaces, no new tabs. Every module in five `src/data/foundations/` files got plain-first divider-paced prose added to its `summary`, new `keyPoints`, and new `checkQuestions`, closing the named senior-MLE interview gaps: **classicalMLModules.js** (11 mods), **evalModules.js** (9, skip ablation), **unsupervisedModules.js** (4: PCA/autoencoders/anomaly/topic), **optimizationModules.js** (5, clipping/reg already strong), **dataModules.js** (11). ~40 modules total. Factual corrections along the way: RF calibration direction (away from 0/1 → sigmoid, per Niculescu-Mizil), "indicator⇒MNAR" overclaim, augmentation loss-curve diagnostic (was backwards), softened "denoising-AE beats scratch"/"Fβ=√cost"/"SHAP most reliable", and a wrong quiz answer key in data_versioning (C→A). Render hazards fixed: raw currency `$` that collides with KaTeX `$…$` (→ "N dollars"), and `word\`s` backtick-apostrophes → `word's` (incl. out-of-scope kNN/SVM/GMM/Adam modules sharing those files). Every file import-parses clean; keyPoints ≈5–6, checkQuestions ≈5–7 per module; answer keys spread A–D.
+
+**Mobile fix:** the 17 `src/tabs/foundations/*FoundationTab.jsx` tabs used a two-pane flex layout where opening a module shrank the list to a fixed 280px sidebar and squeezed the reading pane into a ~100px sliver on phones. Fixed centrally as a master-detail pattern — tagged the identical outer container in all 17 with `className="foundation-split" data-open={selected ? '1' : '0'}` and added one `@media (max-width: 700px)` block in `src/index.css` (hide list when open via `> div:first-child { display:none !important }`, full-width reader, tighter padding, `overflow-wrap: break-word`). The in-page "← All modules" button already handles back-nav. Verified: acorn-jsx 17/17, brace-balanced, string-audit OK, index.css balanced.
+
+**Files changed:** `src/data/foundations/{classicalMLModules,evalModules,unsupervisedModules,optimizationModules,dataModules}.js`, `src/index.css`, `src/tabs/foundations/*FoundationTab.jsx` (17). **All LOCAL/uncommitted** — two push commands staged in CLAUDE.md (content + mobile), Sidharth runs on Mac.
 
 ---
 

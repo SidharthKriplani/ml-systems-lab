@@ -39,7 +39,7 @@ export function UnsupervisedFoundationTab({ onNavigate }) {
   const selected = MODULES.find(m => m.id === selectedId)
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
+    <div className="foundation-split" data-open={selected ? '1' : '0'} style={{ display: 'flex', height: '100%', overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
 
       {/* LEFT: Module browser */}
       <div style={{
