@@ -603,25 +603,41 @@
 
 /* ─── Responsive nav layout ──────────────────────────────────────────────── */
 
-/* Mobile-first: bottom nav visible, sidebar hidden */
-.desktop-sidebar   { display: none; }
+/* Mobile-first: the sidebar is an off-canvas drawer, opened from the topbar
+   hamburger. It renders (display:flex) but sits off-screen until .open. */
+.desktop-sidebar {
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+}
+.desktop-sidebar.open {
+  transform: translateX(0);
+  box-shadow: var(--shadow-lg);
+}
 .desktop-main-wrapper { display: contents; }
 
-/* Safe-area bottom padding for iPhone home indicator */
-.bottom-nav-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+/* Hamburger — mobile only; opens the drawer */
+.ml-hamburger { display: inline-flex; }
 
-/* Main content clears the bottom nav + safe area */
-.main-content {
-  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+/* Scrim behind the open drawer — mobile only */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 55;
 }
+.sidebar-overlay.show { display: block; }
 
-/* ─── Desktop: sidebar replaces bottom nav ───────────────────────────────── */
+/* ─── Desktop: fixed sidebar, no drawer / no hamburger ───────────────────── */
 @media (min-width: 769px) {
-  /* Show sidebar, hide bottom nav */
-  .desktop-sidebar  { display: flex; flex-direction: column; }
-  .bottom-nav-safe  { display: none; }
+  .desktop-sidebar {
+    transform: none !important;
+    box-shadow: none;
+  }
+  .ml-hamburger    { display: none !important; }
+  .sidebar-overlay { display: none !important; }
 
   /* Main wrapper shifts right to clear the 220px sidebar */
   .desktop-main-wrapper {
@@ -629,7 +645,7 @@
     margin-left: 220px;
   }
 
-  /* Content no longer needs to clear a bottom nav */
+  /* Reading column width on desktop */
   .main-content {
     padding-bottom: 48px;
     max-width: 860px;

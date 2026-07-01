@@ -799,8 +799,10 @@ function SidebarNavItem({ id, label, desc, href, external, indent = false, activ
   )
 }
 
-function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }) {
+function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, open = false, onClose }) {
   const activeSection = getTabSection(activeTabId)
+  // On mobile this sidebar is a drawer — navigating anywhere should close it.
+  const goToClose = (tabId) => { goTo(tabId); if (onClose) onClose() }
   const JUDGE = NAV_SECTIONS.find(s => s.groups)
   const subKey = (sid, label) => sid + ':' + label
   function activeSubKeyFor() {
@@ -827,10 +829,10 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
   function toggleFrame(id) { setOpenFrame(cur => (cur === id ? null : id)) }
   function toggleSub(key)  { setOpenSub(cur => (cur === key ? null : key)) }
 
-  const navProps = { activeTabId, goTo, tabProgress, isUnlocked }
+  const navProps = { activeTabId, goTo: goToClose, tabProgress, isUnlocked }
 
   return (
-    <aside className="desktop-sidebar" style={{
+    <aside className={`desktop-sidebar${open ? ' open' : ''}`} style={{
       position: 'fixed', top: 0, left: 0, bottom: 0, width: '220px',
       background: 'var(--depth)',
       backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
@@ -842,7 +844,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
       {/* Logo (PAL proportions) */}
       <div style={{ padding: '15px 13px 9px', flexShrink: 0 }}>
         <button
-          onClick={() => goTo('home')}
+          onClick={() => goToClose('home')}
           style={{
             display: 'flex', alignItems: 'center', gap: '9px',
             background: 'none', border: 'none', cursor: 'pointer', width: '100%',
@@ -960,79 +962,13 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked }
   )
 }
 
-// ── BottomNav ─────────────────────────────────────────────────────────────────
-
-const BOTTOM_NAV_ITEMS = [
-  { id: 'home',        icon: '◎', label: 'Home',  defaultTab: 'home',                   sections: [] },
-  { id: 'foundations', icon: '▤', label: 'Learn', defaultTab: 'math_stats_foundation',   sections: ['know'] },
-  { id: 'do',          icon: '◳', label: 'Do',    defaultTab: 'mlcoding',                sections: ['do'] },
-  { id: 'build',       icon: '⚒', label: 'Build', defaultTab: 'projectlab',              sections: ['build'] },
-  { id: 'judge',       icon: '◈', label: 'Judge', defaultTab: 'spottheflaw',             sections: ['judge', 'assess', 'extras'] },
-]
-
-function BottomNav({ activeTabId, goTo }) {
-  const activeSection = getTabSection(activeTabId)
-  return (
-    <nav className="bottom-nav-safe" style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'var(--topbar-bg)',
-      backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
-      borderTop: '1px solid var(--rim)',
-      boxShadow: 'inset 0 1px 0 0 var(--prime-glow), 0 -12px 48px rgba(0,0,0,0.55)',
-      zIndex: 100,
-    }}>
-      <div style={{ height: '68px', display: 'flex', alignItems: 'stretch', width: '100%', overflow: 'hidden' }}>
-        {BOTTOM_NAV_ITEMS.map(item => {
-          const isActive = item.id === 'home' ? activeTabId === 'home' : item.sections.includes(activeSection)
-          return (
-            <button key={item.id} onClick={() => goTo(item.defaultTab)}
-              aria-current={isActive ? 'page' : undefined}
-              style={{
-                flex: 1, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '4px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: isActive ? 'var(--prime)' : 'var(--ink-low)',
-                transition: 'color 0.15s', padding: '8px 2px 10px',
-                position: 'relative', minWidth: 0, overflow: 'hidden',
-                WebkitTapHighlightColor: 'transparent',
-              }}>
-              {isActive && (
-                <div style={{
-                  position: 'absolute', top: 0, left: '18%', right: '18%',
-                  height: '3px', background: 'var(--prime)',
-                  borderRadius: '0 0 4px 4px',
-                  boxShadow: '0 0 16px var(--prime), 0 0 4px var(--prime)',
-                }} />
-              )}
-              <div style={{
-                width: '36px', height: '26px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '8px',
-                background: isActive ? 'radial-gradient(ellipse at center, rgba(240,165,0,0.22) 0%, rgba(240,165,0,0.07) 60%, transparent 100%)' : 'transparent',
-                boxShadow: isActive ? '0 0 18px rgba(240,165,0,0.3)' : 'none',
-                transition: 'all 0.20s ease', flexShrink: 0,
-              }}>
-                <span style={{ fontSize: '18px', lineHeight: 1, filter: isActive ? 'drop-shadow(0 0 6px var(--prime))' : 'none', transition: 'filter 0.20s' }}>{item.icon}</span>
-              </div>
-              <span style={{
-                fontSize: '10px', fontFamily: 'var(--font-sans)',
-                fontWeight: isActive ? 700 : 500, lineHeight: 1,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
-              }}>{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    </nav>
-  )
-}
-
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [activeTab, setActiveTab] = useState(() =>
     getTabFromHash() || localStorage.getItem('msl_tab') || 'home'
   )
   const [searchOpen,  setSearchOpen]  = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tabProgress, setTabProgress] = useState(() => readTabProgress())
   const [isUnlocked,  setIsUnlocked]  = useState(() => checkUnlocked())
   const [theme, setTheme] = useState(() => {
@@ -1086,6 +1022,7 @@ export default function App() {
   const goTo = useCallback((tabId) => {
     setActiveTab(tabId)
     setSearchOpen(false)
+    setSidebarOpen(false)
     trackTabSwitch(tabId)
     window.scrollTo(0, 0)
   }, [])
@@ -1256,8 +1193,15 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--void)' }}>
 
-      {/* ── Desktop sidebar (hidden on mobile via CSS) ── */}
-      <DesktopSidebar activeTabId={activeTab} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} />
+      {/* ── Sidebar — fixed rail on desktop, off-canvas drawer on mobile ── */}
+      <DesktopSidebar activeTabId={activeTab} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* ── Scrim behind the open drawer (mobile only, via CSS) ── */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' show' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden="true"
+      />
 
       {/* ── Desktop main wrapper (offset for sidebar on desktop) ── */}
       <div className="desktop-main-wrapper">
@@ -1273,6 +1217,17 @@ export default function App() {
         borderBottom: '1px solid var(--rim)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden', flex: 1 }}>
+          {/* Hamburger — opens the nav drawer (mobile only, hidden on desktop via CSS) */}
+          <button
+            className="ml-hamburger"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+            style={{ alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', marginLeft: '-6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-low)', flexShrink: 0, padding: 0 }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
           {showBackBtn ? (
             <>
               <button
@@ -1361,8 +1316,7 @@ export default function App() {
         {renderContent()}
       </main>
 
-      {/* ── Bottom nav (hidden on desktop via CSS) ── */}
-      <BottomNav activeTabId={activeTab} goTo={goTo} />
+      {/* Bottom nav removed — mobile navigation now uses the drawer (hamburger in topbar). */}
 
       {/* ── Footer ── */}
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>
