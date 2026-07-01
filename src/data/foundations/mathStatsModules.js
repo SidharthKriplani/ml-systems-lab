@@ -63,15 +63,23 @@ This is the mechanism behind every probabilistic ML system. The prior $P(spam) =
     difficulty: 'foundational',
     estimatedMin: 32,
     tags: ['distributions', 'expectation', 'variance'],
-    summary: `Probability theory talks about events. But ML needs numbers — loss values, predicted probabilities, feature measurements. A random variable is the bridge: a function that assigns a real number to each outcome in the sample space. Once you have numbers, you need to summarise their behaviour. The naive approach is to just look at the mean, but the mean alone is catastrophically misleading: a model that predicts 0 for 999 requests and 1000 for one request has the same mean as a model that predicts 1 for all — but wildly different behaviour. Variance is the correction: it measures how far outcomes typically deviate from the mean, which determines how unreliable any single prediction or estimate is. The common distributions are not arbitrary — each one arises from a specific data-generating mechanism. Poisson counts rare events in a fixed window. Exponential measures the waiting time between those events. Normal arises from summing many small independent effects. Log-Normal arises from multiplying many small independent effects, which is why latency and revenue are log-normal but not Gaussian.`,
+    summary: `You are predicting whether a transaction is fraud. The outcome is 0 or 1 — but the transaction amounts are continuous. Two completely different mathematical objects. Without the right vocabulary, you will confuse notation and make probability statements that are incoherent — like asking P(X = 3.14159) for a continuous variable, which is always exactly 0.
+
+Random variables are the bridge between raw data and probability theory. A random variable is a function that assigns a real number to each outcome in a sample space. The type — discrete or continuous — determines which mathematical machinery applies, and mixing them up silently produces wrong answers.
+
+Discrete random variables: P(X = k) is a valid statement. The PMF (probability mass function) sums to 1 over all k. Bernoulli(p) is your fraud indicator — 1 with probability p, 0 otherwise. Binomial(n, p) counts frauds in n transactions. Poisson(λ) counts events in a fixed time window.
+
+Continuous random variables: P(X = 3.14) = 0 exactly — a single point has measure zero in a continuous space. What you can compute is P(a ≤ X ≤ b) = ∫_a^b f(x)dx. The PDF (probability density function) integrates to 1 over the real line. The Gaussian N(μ, σ²) is continuous. The Exponential distribution measures time between events.
+
+Expected value: E[X] = Σ x·P(X=x) for discrete, ∫ x·f(x)dx for continuous. This is the probability-weighted average — the long-run mean if you drew forever. Variance: Var(X) = E[(X - E[X])²] = E[X²] - (E[X])². The standard deviation σ = √Var(X) is in the same units as X — interpretable. The gap E[X²] - (E[X])² is always non-negative, and zero only when X is constant. Never report a model's mean prediction without its variance — the variance is what tells you whether that mean is trustworthy.
+
+**NOT this.** Probability and statistics are not interchangeable terms. Probability reasons forward from a known model to predictions about data. Statistics reasons backward from observed data to inferences about the model. Random variables live in probability. Estimators live in statistics. Confusing the direction leads to conditioning on the wrong thing and drawing the wrong conclusions. Asking P(X = 3.14) for transaction amounts is not a rounding question — it is a category error about the type of the variable.`,
     keyPoints: [
-      `**Expectation E[X] is the probability-weighted average — the long-run mean if you drew forever.** Linearity holds always: E[aX + bY] = aE[X] + bE[Y] regardless of whether X and Y are dependent. You can compute expectations of sums without knowing the joint distribution at all. This is why expected loss decomposes additively across samples.`,
-      `**Variance Var(X) = E[X²] − (E[X])² measures how spread out outcomes are around the mean.** The gap E[X²] − (E[X])² is always non-negative by Jensen's inequality, and zero only when X is constant. Never report a model's mean prediction without its variance — the variance is what tells you whether that mean is trustworthy.`,
-      `**Bernoulli(p) has variance p(1−p), maximised at p = 0.5.** A perfectly balanced binary classification problem has maximum label uncertainty and requires the most data to learn from — variance tells you how much information each label carries.`,
-      `**Poisson(λ) has mean = variance = λ.** If your data's sample variance greatly exceeds the sample mean, the Poisson model is wrong — that is overdispersion, caused by unmodeled heterogeneity or clustering. Use Negative Binomial instead.`,
-      `**Exponential(λ) is the only continuous memoryless distribution: P(X > s+t | X > s) = P(X > t).** The expected remaining wait time is always 1/λ regardless of how long you have already waited. This is why it models hardware failures and server inter-arrival times, but not human lifespan (mortality risk increases with age).`,
-      `**Log-Normal: if log(X) is Normal, then X is always positive with a heavy right tail.** It arises when a quantity is the product of many independent random factors — each multiplicative step adds to the log, and the CLT makes the log Normal. Revenue, file sizes, and web latency are log-normal; fitting a Gaussian to them badly underestimates tail probabilities.`,
+      `**Always verify whether a variable is discrete or continuous before writing a probability statement.** P(X = x) means something for discrete variables and nothing for continuous ones — for continuous X, P(X = x) = 0 for every single x. The mathematical framework (PMF vs PDF) determines what operations are valid. Writing a PMF for a continuous variable is not approximately wrong, it is completely wrong.`,
+      `**Trap: confusing E[f(X)] with f(E[X]).** Jensen's inequality: for a convex function, E[f(X)] ≥ f(E[X]). The expected loss of a model is not the loss at the expected parameter. Concretely: E[X²] ≥ (E[X])², with equality only when X is constant. This matters for Bayesian prediction — the mean of a distribution over predictions is not the prediction at the mean of the distribution.`,
+      `**Diagnostic: if you compute a probability that exceeds 1.0 or is negative, you have misidentified the variable type or mixed PMF and PDF formulas.** Check whether your probability statement requires summing (discrete) or integrating (continuous). A PDF value f(x) can exceed 1 — it is a density, not a probability. Only the integral of f over an interval is a probability.`,
     ],
+    interactivePrompt: `Before you touch the controls: for a continuous random variable like transaction amount, if P(X = any single value) is always 0, what do you think "probability" means for a continuous variable — and how do you think the probability of a range like P(100 < X < 200) can be nonzero?`,
     checkQuestions: [
       {
         q: `A discrete random variable X has PMF P(X=k) = C × (1/2)^k for k=1,2,3,... Find C and compute E[X].`,
@@ -104,7 +112,7 @@ This is the mechanism behind every probabilistic ML system. The prior $P(spam) =
         answer: `D`,
       },
     ],
-    takeaway: `Mean tells you where outcomes center; variance tells you how much you can trust that center. A point prediction without a variance estimate is a guess with a false precision attached. Always ask: what is the spread of this estimate, and how does that change what I should do?`,
+    takeaway: `Discrete and continuous random variables require completely different probability machinery. Misidentifying the type produces probability statements that are not just inaccurate but meaningless — P(X = x) for a continuous variable is always exactly 0, no matter how precisely you specify x.`,
     interactiveId: 'distribution_viz',
   },
   {
@@ -114,14 +122,21 @@ This is the mechanism behind every probabilistic ML system. The prior $P(spam) =
     difficulty: 'foundational',
     estimatedMin: 26,
     tags: ['joint distributions', 'covariance', 'correlation'],
-    summary: `ML models almost always work with multiple variables simultaneously — features, labels, latent states. Looking at each variable in isolation (its marginal distribution) throws away all information about how variables relate to each other. The joint distribution of (X, Y) carries strictly more information than the two marginals whenever X and Y are dependent. Covariance Cov(X, Y) measures how X and Y move together — but it has a critical blind spot: it only detects linear relationships. Two variables can have zero covariance while one is a deterministic function of the other. Correlation ρ standardises covariance to [−1, 1] and tells you the strength of the linear relationship, but ρ = 0 rules out linear dependence only — not all dependence. The covariance matrix of a random vector encodes all pairwise linear relationships and is always symmetric positive semi-definite, which makes it the input to PCA, Gaussian models, and Mahalanobis distance. Any algorithm that passes a non-PSD matrix to these methods will produce nonsensical results.`,
+    summary: `You are building a credit scoring model. Two features: age (continuous) and missed_payments (count, discrete). You want to know P(age > 30, missed_payments ≥ 2). These variables are not independent — older borrowers tend to have longer credit histories and different payment patterns. You cannot multiply P(age > 30) × P(missed_payments ≥ 2) and get the right answer. You need the joint distribution P(age, missed_payments).
+
+Joint distribution P(X, Y): for discrete variables, a 2D table of probabilities summing to 1. For continuous variables, a 2D density f(x, y) integrating to 1. Marginal distribution: integrate or sum out the other variable. P(X = x) = Σ_y P(X = x, Y = y). Conditional distribution: P(Y = y | X = x) = P(X = x, Y = y) / P(X = x). This is the Bayes denominator — the mechanism behind every probabilistic classifier.
+
+Independence: X and Y are independent if and only if P(X, Y) = P(X) × P(Y) for all values. In ML, Naive Bayes assumes all features are conditionally independent given the label. This is almost always false, but the classification decisions can still be correct even when the probability estimates are wrong — independence of errors in different directions can cancel.
+
+Covariance: Cov(X, Y) = E[(X - μ_X)(Y - μ_Y)] = E[XY] - E[X]E[Y]. Positive covariance means the variables tend to move together. Negative means they move oppositely. Zero means no linear relationship — NOT the same as independence. Correlation: ρ = Cov(X, Y) / (σ_X · σ_Y). Bounded in [-1, 1]. For jointly Gaussian variables, zero correlation implies independence. For any other distribution, zero correlation is compatible with strong nonlinear dependence.
+
+**NOT this.** Correlation = 0 does not mean the variables are independent. This is only true for jointly Gaussian random variables. For any other distribution, zero linear correlation is compatible with strong nonlinear dependence. Let X ~ Uniform(-1, 1) and Y = X². Then Cov(X, Y) = 0 by symmetry, but Y is completely determined by X — perfect deterministic dependence. Mutual information captures any dependence; correlation captures only linear dependence.`,
     keyPoints: [
-      `**Joint PDF f(x, y); marginal f_X(x) = ∫ f(x,y) dy; conditional f(x|y) = f(x,y)/f_Y(y).** The chain rule f(x,y) = f(x|y)f(y) says any joint distribution factors into conditionals — autoregressive language models are a direct application of this identity, decomposing P(sentence) into a product of P(next token | all previous tokens).`,
-      `**Zero covariance does not imply independence.** If X ~ N(0,1) and Y = X², then Cov(X, Y) = 0 because X³ has zero expected value by symmetry — yet Y is entirely determined by X. Pearson correlation detects only linear relationships. Use mutual information or rank-based correlation (Spearman) when you actually need to check for general dependence.`,
-      `**Covariance matrix Σ is always symmetric PSD: Σᵢⱼ = Cov(Xᵢ, Xⱼ), with variances on the diagonal.** Any algorithm that requires a valid covariance matrix — Gaussian models, Mahalanobis distance, PCA — will break if you pass a non-PSD matrix. Non-PSD matrices arise from more features than samples, floating point errors, or manually constructed correlation matrices with inconsistent entries.`,
-      `**High correlation between two features (ρ = 0.95) makes XᵀX near-singular in linear regression, causing coefficients to become numerically unstable — small changes in training data produce large swings in estimated weights.** Ridge regression adds λI to make the matrix invertible. The correlation is not the problem; the near-singularity of XᵀX is.`,
-      `**Multivariate Normal is entirely characterised by (μ, Σ).** Conditioning any subset on another subset stays Gaussian with closed-form mean and covariance — which is why Gaussian Processes and Kalman filters are tractable. No other multivariate family has this property.`,
+      `**Always compute the joint distribution (or its sample estimate) before assuming independence.** A quick scatter plot or correlation matrix catches 80% of dependent feature pairs. Ignoring dependence leads to probability estimates that are systematically wrong — the Naive Bayes independence violation is not a theoretical concern, it produces miscalibrated probabilities that cannot be used for risk-sensitive decisions.`,
+      `**Trap: treating conditional probabilities as symmetric.** P(fraud | transaction > $10K) ≠ P(transaction > $10K | fraud). Getting the conditioning direction wrong produces confident wrong answers. The base rate of each event determines which direction of conditioning gives useful information. Draw the causal structure first, then condition.`,
+      `**Diagnostic: if a model's predicted probabilities are miscalibrated — predicted 0.8 but true frequency is 0.4 — check whether correlated features are creating double-counting of information.** This is the Naive Bayes independence violation made explicit. When two features carry the same signal (high correlation), treating them as independent doubles the effective evidence, pushing predictions toward the extremes.`,
     ],
+    interactivePrompt: `Before you touch the controls: if two features have correlation ρ = 0, do you think they could still have a strong relationship — and can you think of what kind of relationship would have zero linear correlation but perfect predictability?`,
     checkQuestions: [
       {
         q: `X and Y have joint PDF f(x,y) = 6x for 0 ≤ x ≤ y ≤ 1. Find the marginal PDFs and check if X and Y are independent.`,
@@ -154,7 +169,7 @@ This is the mechanism behind every probabilistic ML system. The prior $P(spam) =
         answer: `C`,
       },
     ],
-    takeaway: `Zero correlation rules out linear dependence only. Two variables can have ρ = 0 while one is a deterministic function of the other. If you need to check actual independence — not just linear independence — use mutual information or a rank-based test.`,
+    takeaway: `Zero correlation rules out linear dependence only. Two variables can have ρ = 0 while one is a deterministic function of the other. If you need to test actual independence — not just linear independence — use mutual information or a rank-based test.`,
   },
   {
     id: 'information_theory',
@@ -221,14 +236,21 @@ This is where ML enters. Your model produces a predicted distribution $\\hat{y}$
     difficulty: 'foundational',
     estimatedMin: 26,
     tags: ['linear algebra', 'matrices', 'norms'],
-    summary: `Every forward pass in a neural network is a sequence of matrix multiplications and nonlinearities. To understand why networks work, fail, or train slowly, you need to know what those matrix operations are doing geometrically. A matrix represents a linear transformation between vector spaces — it stretches, rotates, and projects. The dot product xᵀy = ‖x‖‖y‖cos(θ) measures directional alignment: it is large when two vectors point in similar directions and zero when they are perpendicular. This is not a numerical coincidence — attention mechanisms use dot products precisely because they measure how similar a query is to each key. Rank measures how many independent directions a matrix spans. A rank-deficient matrix collapses some information irreversibly: if XᵀX is rank-deficient, the normal equation has infinitely many solutions and you cannot uniquely fit a linear model. Norms measure size and encode geometry: L2 norm assumes spherical geometry; L1 norm induces sparsity. The norm your algorithm uses is the geometry it assumes, which determines its regularisation behaviour.`,
+    summary: `You have 10,000 training images, each 64×64 pixels × 3 channels = 12,288 numbers per image. These 10,000 images form a matrix X ∈ ℝ^{10000 × 12288}. Every ML operation on this dataset — normalizing features, computing covariances, running regression, doing PCA, forward passes through a neural network — is a matrix operation. If you do not know what a matrix product computes geometrically, you are manipulating ML pipelines you cannot understand or debug.
+
+Vectors carry direction and magnitude. The dot product a·b = ‖a‖ ‖b‖ cos(θ) measures directional alignment — it is large and positive when two vectors point in similar directions, and zero when they are perpendicular. Orthogonal vectors have dot product zero. This is why cosine similarity works for semantic search: aligned embeddings have high dot products, reflecting similar meaning.
+
+Matrix multiplication AB = C means C[i,j] = row i of A dotted with column j of B. It is not commutative: AB ≠ BA in general. Dimensions must match: A (m×k) times B (k×n) gives C (m×n). A matrix is a linear transformation — it stretches, rotates, and projects vectors. The matrix inverse A⁻¹ satisfies A⁻¹A = I. For linear regression, the normal equations give θ = (X^T X)⁻¹ X^T y — the closed-form solution via the Gram matrix X^T X.
+
+Column space of A: all vectors reachable as Ax for some x. Rank: the dimension of the column space — the number of linearly independent directions A can produce. Rank deficiency means X^T X is singular, meaning the normal equations have no unique solution. You need regularization to fix this.
+
+**NOT this.** Linear algebra is not just matrix arithmetic for solving linear systems. Every gradient descent step in a neural network is a matrix-vector multiplication. Every embedding lookup is a dot product. PCA is eigenvector decomposition of the covariance matrix. Attention is softmax(QK^T / √d)V — three matrix products. The Gram matrix X^T X appears in every regularized linear model. Linear algebra is the operational language of every ML computation, and understanding it geometrically — as transformations of space — is what lets you reason about what information your model is processing.`,
     keyPoints: [
-      `**Dot product xᵀy = 0 when x and y are orthogonal.** Orthogonal weight matrices preserve norms (‖Wx‖ = ‖x‖), preventing vanishing and exploding gradients at initialisation. In attention, a query orthogonal to all keys produces uniform attention weights — the head has learned nothing about the sequence yet.`,
-      `**Matrix rank = number of linearly independent columns = dimensionality of the column space.** If a data matrix X has shape (100, 500), then XᵀX has rank at most 100 despite being 500×500. The normal equation (XᵀX)⁻¹Xᵀy has no unique solution — Ridge regression adds λI to make the matrix invertible, picking the minimum-norm solution.`,
-      `**L1 norm ‖x‖₁ = Σ|xᵢ| creates sparsity.** Its subdifferential at zero allows the subgradient to pull weights exactly to zero, unlike L2 which only shrinks them. Lasso regularisation is L1-penalised MLE — it encodes the prior belief that most features are irrelevant.`,
-      `**L2 norm ‖x‖₂ = √(Σxᵢ²) is Euclidean distance.** Ridge regression, weight decay, and gradient clipping all use L2. Every algorithm that uses L2 distance implicitly assumes spherical geometry where all directions are equally important — a dangerous assumption for unscaled features.`,
-      `**Determinant det(A) is the volume scaling factor of the linear map. det(A) = 0 means the transformation collapses the space: information is destroyed.** A near-zero determinant signals near-singularity and numerical instability in solving Ax = b.`,
+      `**When a matrix operation fails or gives unexpected results, check dimensions first.** Almost all linear algebra bugs are shape mismatches. Write out the expected shape of every tensor before the operation and verify them in code. In numpy, \`.shape\` before every new operation is not paranoia — it is the cheapest debugging step you have.`,
+      `**Trap: computing the matrix inverse to solve Ax = b.** The inverse A⁻¹ is numerically unstable for ill-conditioned matrices and costs O(n³) to compute. Use scipy.linalg.solve(A, b) instead — it uses LU decomposition, is faster, and is more numerically stable. The only reason to compute A⁻¹ explicitly is if you need to multiply by the same inverse many times.`,
+      `**Diagnostic: if X^T X is near-singular (condition number > 1e10), you have multicollinear features or rank-deficient data.** Add L2 regularization to form X^T X + λI, which is always invertible for λ > 0. This is exactly what Ridge regression does — it is not an arbitrary regularizer, it is the minimum-norm solution to the otherwise ill-posed normal equations.`,
     ],
+    interactivePrompt: `Before you touch the controls: if two columns of a matrix are identical, what do you think happens to the rank — and what does that mean for the ability to invert a matrix formed from that data?`,
     checkQuestions: [
       {
         q: `A system Ax=b where A is 3×5 (3 equations, 5 unknowns). What can you say about the solution set? When does a solution exist?`,
@@ -261,7 +283,7 @@ This is where ML enters. Your model produces a predicted distribution $\\hat{y}$
         answer: `B`,
       },
     ],
-    takeaway: `Every ML forward pass is a sequence of matrix multiplications and nonlinearities. Rank tells you where information is irreversibly lost. Norms tell you what geometry and regularisation an algorithm assumes. Both predict failure modes before you run a single experiment.`,
+    takeaway: `Every ML forward pass is matrix multiplication and nonlinearities. Rank tells you where information is irreversibly lost. Norms tell you what geometry an algorithm assumes. Both predict failure modes before you run a single experiment.`,
   },
   {
     id: 'eigendecomposition',
@@ -270,18 +292,21 @@ This is where ML enters. Your model produces a predicted distribution $\\hat{y}$
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['eigenvalues', 'eigenvectors', 'spectral theorem'],
-    summary: `A matrix transformation generally both rotates and stretches every vector it acts on. But some special directions are only stretched, not rotated — the matrix acts on them as pure scaling. Those are the eigenvectors:
+    summary: `You have customer behavioral data with 50 features. Three of them — features 3, 7, and 22 — are all variations of "how much did the user spend." They carry similar information while consuming three times the parameter weight in regularization and three times the compute in every matrix operation. If you could find the single direction that captures the spending signal, you would reduce noise, compute, and overfitting simultaneously. That direction is a principal component — an eigenvector.
 
-$Av = λv, where λ is the scaling factor. This matters for$
+A square matrix A has eigenvalue λ and eigenvector v if Av = λv. The matrix A acts on v by pure scaling — the direction does not change, only the magnitude. For a symmetric positive semidefinite matrix like a covariance matrix, all eigenvalues are ≥ 0 and all eigenvectors are orthogonal. This is what makes PCA geometrically clean: the principal components are mutually perpendicular directions.
 
-ML because the eigenvectors of the covariance matrix are the directions of maximum variance in the data, and their eigenvalues tell you exactly how much variance each direction accounts for. PCA is just finding these directions. The condition number κ = λ_max/λ_min of the Hessian determines how fast gradient descent converges: a high condition number means the loss landscape is a narrow elongated valley, and gradient descent zigzags slowly down it. A condition number of 10⁶ means convergence is 10⁶-fold slower in the worst direction. The Hessian's eigenvalues also determine whether a critical point is a minimum (all positive), maximum (all negative), or saddle (mixed) — and in deep networks, almost all critical points are saddles, not local minima.`,
+The covariance matrix C = X^T X / (n-1). Its eigenvectors are the principal directions of variance in the data. Its eigenvalues tell you how much variance lies along each direction. The first eigenvector, with the largest eigenvalue, is the direction of maximum variance — this is PC1. The second eigenvector, orthogonal to PC1, is PC2. The eigenvalue ratio λ₁ / Σλᵢ tells you the fraction of total variance captured by PC1.
+
+Spectral theorem: any real symmetric matrix A decomposes as A = Q Λ Q^T where Q is orthogonal (columns are eigenvectors) and Λ is diagonal (eigenvalues on diagonal). This decomposition separates the rotating part (Q) from the scaling part (Λ). For PCA, Q gives you the rotation into principal component space, and Λ tells you how much each direction matters.
+
+**NOT this.** Eigenvalues are not a mathematical abstraction with limited practical use. The eigenvalues of a neural network's Hessian determine optimization dynamics — a flat loss landscape has many near-zero eigenvalues, which is why overparameterized networks trained with Adam and good initialization converge faster than vanilla SGD. The eigenvalues of the attention matrix determine how information diffuses through a transformer layer. The eigenvalue spectrum of X^T X tells you the effective dimensionality of your data before you fit any model. Eigenvalues are the fingerprint of every matrix that matters in ML.`,
     keyPoints: [
-      `**Av = λv: eigenvector v is the direction that A only scales, not rotates.** The top eigenvector of the covariance matrix is the direction of maximum variance in the data — that is the first principal component. The eigenvalue λ₁ tells you exactly how much variance that direction accounts for.`,
-      `**Spectral theorem: any real symmetric A = QΛQᵀ where Q is orthogonal and Λ diagonal.** Covariance matrices are always symmetric PSD, so this applies. It guarantees PCA components are orthogonal, eigenvalues are real and non-negative, and the decomposition always exists.`,
-      `**Condition number κ = λ_max/λ_min controls gradient descent convergence speed: rate ≈ ((κ−1)/(κ+1))^t.** With κ = 1000, you need ~1000 steps to converge where 1 Newton step suffices. Features with different scales create poor conditioning — standardising before fitting is not a stylistic choice, it directly fixes the condition number.`,
-      `**Hessian eigenvalues classify critical points: all positive → local minimum, all negative → local maximum, mixed signs → saddle point.** In high-dimensional deep networks, most critical points are saddles. SGD noise helps escape saddles by moving along negative-curvature directions — the noise is not just a computational artifact, it is a necessary escaping mechanism.`,
-      `**Power iteration: repeatedly multiply by A and renormalise.** Converges to the top eigenvector at rate |λ₂/λ₁|. Google's PageRank is power iteration on the web link matrix. Truncated SVD and large-scale PCA both use randomised variants of power iteration rather than diagonalising the full matrix.`,
+      `**When features are correlated, eigendecompose the covariance matrix before modeling.** The eigenvalue spectrum tells you how many truly independent directions of variation exist in your data. If 5 of 50 eigenvalues contain 90% of the variance, you can reduce to 5 components with negligible information loss — the remaining 45 components are dominated by noise and correlations, not signal.`,
+      `**Trap: forgetting to center data before computing the covariance matrix.** If the mean is nonzero, the first eigenvector points toward the mean rather than toward the direction of maximum variance. Always subtract the column means from X before computing X^T X / (n-1). sklearn's PCA does this by default. If you compute the covariance matrix manually, centering is mandatory.`,
+      `**Diagnostic: plot the explained variance ratio (eigenvalue_i / sum of all eigenvalues) as a cumulative curve.** The elbow in the curve tells you how many components to keep. Where the curve flattens, adding more components yields diminishing returns — each additional component explains only noise. A sharp elbow at k components means the data lies approximately on a k-dimensional subspace.`,
     ],
+    interactivePrompt: `Before you touch the controls: if a covariance matrix has one very large eigenvalue and many near-zero eigenvalues, what do you think the data looks like geometrically — and what does that imply about how many dimensions you actually need to describe it?`,
     checkQuestions: [
       {
         q: `What are the eigenvalues and eigenvectors of a rotation matrix R(θ) = [[cos θ, −sin θ], [sin θ, cos θ]]?`,
@@ -314,7 +339,7 @@ ML because the eigenvectors of the covariance matrix are the directions of maxim
         answer: `B`,
       },
     ],
-    takeaway: `A matrix's eigenvalues are its fingerprint: they directly determine gradient descent convergence speed, whether critical points are minima or saddles, and how much variance each direction accounts for. Check the condition number before fitting any linear model — a ratio of 10⁶ means 10⁶-fold slower convergence in the worst direction.`,
+    takeaway: `The eigenvalue spectrum of your covariance matrix is a complete picture of your data's intrinsic dimensionality. Check it before choosing a model — it tells you whether you have 50 independent features or 5 directions of variation dressed up as 50.`,
   },
   {
     id: 'svd',
@@ -438,20 +463,21 @@ Two things make PCA fail. First, scale: a feature measured in dollars has 10,000
     difficulty: 'foundational',
     estimatedMin: 26,
     tags: ['calculus', 'gradients', 'chain rule', 'convexity'],
-    summary: `ML training is an optimisation problem: given a loss function L(θ) measuring how wrong the model is, find the θ that minimises it. If you could afford to evaluate L everywhere, you would just try all values. You cannot, so you need a direction to move.
+    summary: `You are training logistic regression with binary cross-entropy loss: L = -[y log(ŷ) + (1-y) log(1-ŷ)] where ŷ = σ(Wx + b). You want to update W to reduce L. How much does L change when you nudge W₁₁ — the weight from feature 1 to the output — by a tiny ε? This is the partial derivative ∂L/∂W₁₁. Computing all such partial derivatives for all weights gives the gradient ∇L — the direction of steepest ascent in loss space. You step in the opposite direction. This is gradient descent.
 
-The gradient ∇_θL tells you exactly that: for each parameter, how much does the loss increase if you nudge that parameter up? The negative gradient is the direction of steepest descent. Following it iteratively is gradient descent. The chain rule makes this tractable for deep networks: when the loss is a composition of many functions, the gradient of the whole is a product of gradients of each piece along the computational path. That product, computed from output back to input, is backpropagation. The Hessian ∇²L adds second-order information: curvature. It tells you whether a critical point where ∇L = 0 is a minimum (all positive curvature), maximum (all negative), or saddle (mixed). The condition number of the Hessian — ratio of maximum to minimum curvature — directly determines how fast gradient descent converges. A poorly conditioned Hessian is the most common reason training crawls, and it is fixable by standardising features before any architectural change.`,
+The chain rule makes gradient computation tractable for deep networks. For the composition L(ŷ(z(W))), the chain rule gives ∂L/∂W = (∂L/∂ŷ) × (∂ŷ/∂z) × (∂z/∂W) where z = Wx + b. Each arrow in the computation graph corresponds to a derivative. The product of derivatives along a path is the derivative of the composed function. For the sigmoid: ∂σ(z)/∂z = σ(z)(1 - σ(z)) — a closed form that depends only on the output value.
+
+Key derivatives in ML: for MSE loss L = (y - Wx)²/2, the gradient is -(y - Wx)x = -residual × feature. For cross-entropy with sigmoid output, the gradient is (ŷ - y)x — the residual times the feature. These clean gradient formulas are not accidents. They are chosen precisely because the derivative of the cross-entropy loss through the sigmoid produces a numerically stable, interpretable update.
+
+Taylor expansion: f(x + ε) ≈ f(x) + f'(x)ε + f''(x)ε²/2. Gradient descent uses the first-order approximation — it assumes the loss surface is locally linear at each step. Second-order methods (Newton's method) use the quadratic term via the Hessian. They take more accurate steps but require O(n²) memory to store the Hessian — infeasible for large models.
+
+**NOT this.** Calculus in ML is not just gradient descent. Calculus is why certain loss and activation combinations work together and others do not. Using MSE loss with a sigmoid output produces gradient saturation — in the saturated region where σ(z) ≈ 0 or 1, the derivative σ(z)(1-σ(z)) ≈ 0, and the gradient of the MSE loss through this near-zero value nearly vanishes. The network cannot learn from these examples. Cross-entropy with sigmoid was chosen specifically because the saturating term cancels algebraically, leaving a non-saturating gradient. Every loss-activation combination is a calculus decision.`,
     keyPoints: [
-      `**Gradient ∇f = [∂f/∂x₁, ..., ∂f/∂xₙ]ᵀ points in the direction of steepest ascent.** Its magnitude is the rate of increase. The negative gradient is the direction that reduces the function fastest from the current point — but only locally. A large gradient means a steep region where large steps overshoot.`,
-      `**Chain rule: if
-
-$z = f(g(x)), then dz/dx = (∂f/∂g)(∂g/∂x).** For vector-valued functions, this$
-
-is a product of Jacobians. Backpropagation is the chain rule applied to the computational graph in reverse, computing ∂L/∂θ for all parameters simultaneously in one backward pass at the cost of a single forward pass.`,
-      `**Convex function: any local minimum is global.** Hessian H is PSD everywhere iff f is convex. Linear regression, logistic regression, and SVMs are convex — gradient descent on them is guaranteed to find the global optimum. Deep networks are non-convex — but in overparameterised regimes, most local minima have similar loss values, and saddle points dominate over local minima.`,
-      `**Saddle points have mixed Hessian curvature: some directions curve up (positive eigenvalues) and some curve down (negative eigenvalues).** Gradient descent noise from mini-batches causes random perturbations that push the iterate down the negative-curvature directions, escaping the saddle. This is not a side effect of mini-batch training — it is why mini-batch training works better than full-batch in non-convex landscapes.`,
-      `**L-smoothness ‖∇f(x) − ∇f(y)‖ ≤ L‖x−y‖ bounds how fast the gradient changes.** The maximum safe learning rate is η = 1/L — exceeding it means the quadratic approximation underlying gradient descent breaks down and the step overshoots. A loss that diverges on the first step means η > 1/L.`,
+      `**When designing a new loss function or output layer, compute the gradient analytically first.** If the gradient saturates — approaches 0 — in regions of the output space, the model cannot learn from examples that fall there. This is why ReLU replaced sigmoid in hidden layers: ReLU's gradient is 1 for all positive inputs, never saturates. Sigmoid's gradient σ(z)(1-σ(z)) peaks at 0.25 and goes to 0 for large |z|.`,
+      `**Trap: using finite-difference gradient checking as a routine verification step on large models.** Computing (f(x+ε) - f(x-ε)) / 2ε requires 2 forward passes per parameter. For a network with 10 million parameters, that is 20 million forward passes. Use gradient checking only for debugging specific custom layers, not the full network — use automatic differentiation for everything else.`,
+      `**Diagnostic: if a layer's gradient magnitude is near 0 during backpropagation, the gradient is vanishing.** Check the activation function in that layer — if it is sigmoid or tanh, the layer inputs may be in the saturated region. Plot the distribution of pre-activation values for that layer. If they are large in magnitude (|z| > 4), replace the activation with ReLU or use batch normalization to keep activations in the non-saturated range.`,
     ],
+    interactivePrompt: `Before you touch the controls: if you are at a point on the loss surface and the gradient is very large, does that mean you should take a large step in the negative gradient direction — or could a large gradient be a warning sign?`,
     checkQuestions: [
       {
         q: `What is the gradient of f(x) = ‖Ax − b‖₂² with respect to x? Derive it step by step.`,
@@ -484,7 +510,7 @@ is a product of Jacobians. Backpropagation is the chain rule applied to the comp
         answer: `B`,
       },
     ],
-    takeaway: `The gradient tells you direction; the Hessian tells you curvature; the condition number tells you how fast you will get there. A poorly conditioned loss landscape — caused by unscaled features — is the most common reason training crawls, and it is fixable before any architecture change.`,
+    takeaway: `The choice of loss function and activation is a calculus decision, not an aesthetic one. The clean gradient (ŷ - y)x that makes logistic regression easy to train exists because cross-entropy and sigmoid were chosen together precisely to cancel the saturation term.`,
   },
   {
     id: 'matrix_calculus',
@@ -493,20 +519,21 @@ is a product of Jacobians. Backpropagation is the chain rule applied to the comp
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['matrix calculus', 'gradients', 'backpropagation'],
-    summary: `Neural networks have millions of parameters arranged as matrices. To train them you need the gradient of a scalar loss with respect to each weight matrix — ∂L/∂W — which is itself a matrix of the same shape as W. The naive way to compute this is to perturb each weight one at a time and measure the change in loss: finite differences. This is correct but costs one forward pass per parameter — completely infeasible for millions of weights. Matrix calculus gives you the analytical shortcut: derive a closed-form expression for ∂L/∂W that can be evaluated in one pass.
+    summary: `You have linear regression with loss L = ‖Xw - y‖² = (Xw - y)^T(Xw - y). You want ∂L/∂w to take the gradient step. Expanding: L = w^T X^T X w - 2y^T Xw + y^T y. The gradient is ∇_w L = 2X^T Xw - 2X^T y. Setting to zero gives X^T Xw = X^T y — the normal equations. You just derived the closed-form solution to linear regression using matrix calculus. Without it, you would be working element-wise and making sign errors constantly.
 
-The key identity for every linear layer is that ∂L/∂W is the outer product of the upstream gradient and the input activation. This one pattern covers every fully-connected layer in every neural network ever trained. Backpropagation is just this identity applied recursively from output to input via the chain rule. A persistent source of bugs is layout convention: numerator layout vs. denominator layout transpose the Jacobian. Mixing conventions silently produces gradients with the wrong shape, causing training to fail with no obvious error message.`,
+Gradient of a scalar by a vector: ∂f/∂x ∈ ℝⁿ, the same shape as x. Key identities: ∂(x^T a)/∂x = a. ∂(x^T A x)/∂x = (A + A^T)x. For symmetric A: 2Ax. These identities cover almost everything in linear models, regularized regression, and Kalman filters.
+
+Jacobian: the derivative of a vector-valued function. If f: ℝⁿ → ℝᵐ, then J = ∂f/∂x ∈ ℝ^{m×n} where J_{ij} = ∂f_i/∂x_j. The Jacobian of the softmax is (diag(s) - ss^T) where s = softmax(x). This is what the backward pass through softmax must compute — a matrix product, not a scalar multiplication.
+
+Chain rule in matrix form: ∂L/∂X = ∂L/∂Y · ∂Y/∂X. The dimensions must work out: if Y = f(X), the Jacobian ∂Y/∂X has shape (dim Y × dim X). For a neural network linear layer z = Wx + b, the gradient with respect to W is ∂L/∂W = (∂L/∂z) · x^T — the outer product of the upstream gradient and the input. This one identity covers every fully-connected layer.
+
+**NOT this.** You do not need matrix calculus if you use autograd — this is false. Autograd computes gradients correctly, but you need matrix calculus to debug shape errors in custom operations, to verify that backpropagation through a novel layer is correct, and to understand why certain operations are expensive to differentiate. Every custom PyTorch layer that implements a backward() method is matrix calculus. If you cannot derive the gradient manually, you cannot verify that your custom backward pass is correct.`,
     keyPoints: [
-      `**Gradient of scalar f with respect to vector x ∈ ℝⁿ is a vector of the same shape: ∂f/∂x ∈ ℝⁿ.** The gradient always lives in the same space as the parameter. This is what makes weight updates well-defined: θ ← θ − η·∂L/∂θ requires both to have the same shape.`,
-      `**Jacobian of vector f: ℝⁿ→ℝᵐ is J ∈ ℝ^{m×n} where Jᵢⱼ = ∂fᵢ/∂xⱼ.** Computing the full Jacobian costs O(m·n). Backpropagation never computes the full Jacobian — it computes vector-Jacobian products vᵀJ (upstream gradient times Jacobian), which costs O(n) per layer regardless of m. This is why backprop scales to millions of parameters.`,
-      `**Linear layer
-
-$z = Wx + b: ∂L/∂W = (∂L/∂z) · xᵀ — the outer product of the upstream gra$
-
-dient and the input activation. ∂L/∂x = Wᵀ · (∂L/∂z) — the transpose of W times the upstream gradient.** These two identities are all you need to implement backprop for any fully-connected layer from scratch.`,
-      `**Key identity ∂(xᵀAx)/∂x = (A + Aᵀ)x = 2Ax when A is symmetric.** Setting this to zero gives the normal equation for least squares: ∂‖y − Xθ‖²/∂θ = −2Xᵀ(y − Xθ) = 0, which yields θ̂ = (XᵀX)⁻¹Xᵀy.`,
-      `**Layout convention errors are silent bugs.** Numerator layout (standard in ML): ∂y/∂x has shape of y. Denominator layout transposes. Mixing conventions within a derivation produces a gradient with the right values but the wrong shape — the update step applies it in the wrong direction. Finite-difference checks catch magnitude errors but not transposition errors if you check only the norm.`,
+      `**Memorize the identity ∇_w (Aw)^T B(Aw) = 2A^T BA w for symmetric B.** This is the gradient of a quadratic form and appears in every regularized linear model, least-squares problem, and Kalman filter update. Setting it to zero gives the normal equations. Deriving it from scratch each time is error-prone and slow.`,
+      `**Trap: layout convention inconsistency.** Numerator layout and denominator layout conventions differ between textbooks — the Matrix Cookbook (Petersen & Pedersen) uses denominator layout; most ML papers use numerator layout. Mixing conventions within a derivation produces a Jacobian that is transposed relative to what you need, giving a gradient update applied in the wrong direction. Pick one convention and never mix.`,
+      `**Diagnostic: if your manually implemented backward pass does not match autograd's gradient, try transposing the Jacobian.** 80% of manual backward pass bugs are layout convention errors — the gradient has the right values but the wrong shape. The fix is to check whether you need J or J^T in the chain rule expression, which depends on your chosen layout convention.`,
     ],
+    interactivePrompt: `Before you touch the controls: in the normal equations X^T X w = X^T y, why do you think X^T appears on both sides — what is X^T doing geometrically to the residual vector (Xw - y)?`,
     checkQuestions: [
       {
         q: `The Jacobian of a function f: ℝⁿ → ℝᵐ at point x is a matrix J. What are its dimensions and what does each element J_{ij} represent?`,
@@ -539,7 +566,7 @@ dient and the input activation. ∂L/∂x = Wᵀ · (∂L/∂z) — the transpos
         answer: `D`,
       },
     ],
-    takeaway: `The gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation. That one pattern covers every fully-connected layer. Layout convention errors are the most common silent bug in custom backprop — they pass shape checks but produce gradients in the wrong direction.`,
+    takeaway: `The gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation. That one pattern covers every fully-connected layer. Layout convention errors are the most common silent bug in custom backpropagation.`,
   },
   {
     id: 'convex_optimization',
@@ -549,14 +576,21 @@ dient and the input activation. ∂L/∂x = Wᵀ · (∂L/∂z) — the transpos
     difficulty: 'intermediate',
     estimatedMin: 28,
     tags: ['optimisation', 'gradient descent', 'Adam', 'convergence'],
-    summary: `Knowing the gradient direction is necessary but not sufficient to train a model efficiently. You also need to know how large a step to take. Take too large a step and you overshoot the minimum; take too small a step and you converge in geological time. The maximum safe learning rate is determined by the loss landscape's smoothness: η ≤ 1/L where L is the Lipschitz constant of the gradient. A loss that diverges on the first step means you exceeded this bound. For convex smooth losses, gradient descent converges at O(1/t); for strongly convex losses it converges exponentially at rate ρ = (κ−1)/(κ+1) where κ is the condition number. Mini-batch SGD introduces gradient noise that prevents exact convergence with a fixed learning rate but also escapes saddle points and sharp minima. Momentum damps the oscillation perpendicular to the valley that makes vanilla gradient descent zigzag. Adam maintains per-parameter adaptive learning rates, effectively approximating preconditioning, which is why it converges fast on ill-conditioned problems — but its speed comes at the cost of converging to sharper minima that generalise less well.`,
+    summary: `You are training L2-regularized logistic regression. You are minimizing L(w) = Σ log(1 + exp(-y_i w^T x_i)) + λ‖w‖². This function is convex — every local minimum is the global minimum, gradient descent is guaranteed to converge, and convergence rates are provable. Now train a 5-layer neural network instead. L(w) is non-convex, has countless saddle points and local minima of varying quality, and has no convergence guarantee. The mathematical gulf between these two problems is the difference between a well-posed optimization problem and one that works empirically.
+
+A convex set C: for any x, y in C and t ∈ [0,1], the point tx + (1-t)y is also in C. The line segment between any two points stays inside the set. A convex function satisfies f(tx + (1-t)y) ≤ tf(x) + (1-t)f(y) — the function lies below the chord connecting any two points. First-order condition: f is convex if and only if f(y) ≥ f(x) + ∇f(x)^T(y-x) for all x, y. The tangent plane is a global lower bound on the function. This is why gradient information is sufficient for global optimization of convex problems.
+
+What convexity buys: a unique global minimum with no need to worry about local optima, gradient descent convergence guaranteed with appropriate step size, strong duality holding so the dual problem gives the same solution, and theoretical convergence rates — O(1/t) for gradient descent, O(1/t²) for Nesterov acceleration.
+
+SVMs, logistic regression, lasso, ridge — all convex. Neural networks: not convex. But empirically, modern overparameterized networks rarely get trapped in bad local minima. In overparameterized regimes where the number of parameters exceeds the number of training examples, loss surfaces have many saddle points but almost all local minima are approximately globally optimal.
+
+**NOT this.** Non-convex optimization is not practically hopeless. Modern neural network training is non-convex optimization that works reliably in practice because of a structural property of overparameterized loss surfaces: most critical points are saddle points, not local minima, and most local minima have similar loss values to the global minimum. The theory of why gradient descent on non-convex neural networks generalizes well is still being developed — but empirically, the non-convexity is not the obstacle it appears to be in theory.`,
     keyPoints: [
-      `**Maximum safe learning rate is η = 1/L where L is the smoothness constant (Lipschitz constant of the gradient).** Exceeding 1/L means each gradient step overshoots. The loss can then increase monotonically with each step. Reducing η by 10× and retrying is always the first diagnostic for a diverging loss.`,
-      `**Condition number κ = L/μ for strongly convex losses: convergence rate ρ = (κ−1)/(κ+1).** Every step reduces the gap to the optimum by this factor. κ = 1000 means ρ ≈ 0.998 — you need ~2000 steps to reduce the error by 100×. Preconditioning (reducing κ by standardising features or using adaptive optimisers) is the right fix, not just reducing learning rate.`,
-      `**SGD noise prevents exact convergence with a fixed learning rate.** Iterates bounce in a noise ball of radius O(η·σ/μ) around the optimum. Learning rate decay (η_t ∝ 1/√t) shrinks this ball over time and allows eventual convergence. Without decay, SGD never settles — useful for escaping sharp minima, bad for final fine-tuning.`,
-      `**Momentum accumulates velocity v ← βv − η∇f, θ ← θ + v.** It reduces oscillation perpendicular to the loss valley and accelerates progress along it. Convergence rate improves from O(κ) steps to O(√κ) steps. Nesterov momentum evaluates the gradient at the look-ahead position θ + βv — same O(√κ) rate with a smaller constant.`,
-      `**Adam pitfall: Adam converges faster than SGD early in training because adaptive learning rates approximate preconditioning — but it tends to converge to sharper minima.** Sharp minima generalise worse because small perturbations to weights cause large loss increases. Common production pattern: use Adam to reach a good basin quickly, then switch to SGD with small learning rate to settle into a flatter minimum.`,
+      `**Verify whether your objective is convex before choosing an optimizer.** For convex problems, SGD with a decaying learning rate is provably convergent to the global minimum. For non-convex problems, convergence is only guaranteed to a stationary point — a point where the gradient is zero, which could be a saddle point. This determines whether you should trust a single run or require multiple restarts.`,
+      `**Trap: using gradient descent on an ill-conditioned convex problem without checking convergence.** A function can be convex but have a condition number κ = λ_max/λ_min that is extremely large — meaning the loss surface is a narrow, elongated valley. Gradient descent zigzags across the valley rather than descending efficiently. The convergence rate is (κ-1)/(κ+1) per step. Use Adam or L-BFGS for ill-conditioned convex problems, not vanilla gradient descent.`,
+      `**Diagnostic: if optimization is converging slowly on a problem you believe is convex, compute the condition number of the Hessian at your current point.** If κ > 1000, the problem is ill-conditioned — standardize your features or add regularization. For logistic regression, feature scaling directly improves the condition number of the Hessian and can reduce the number of gradient steps needed by an order of magnitude.`,
     ],
+    interactivePrompt: `Before you touch the controls: if a function has a unique global minimum and gradient descent is started from a random point, does convexity guarantee you will reach the global minimum — or are there still ways gradient descent can fail on a convex problem?`,
     checkQuestions: [
       {
         q: `A function f is convex. You find a local minimum. Prove it is a global minimum.`,
@@ -589,7 +623,7 @@ dient and the input activation. ∂L/∂x = Wᵀ · (∂L/∂z) — the transpos
         answer: `C`,
       },
     ],
-    takeaway: `The condition number of the loss landscape — not the learning rate — determines how fast you converge. Standardising features and using adaptive optimisers attack the same underlying problem: reducing the effective condition number. The learning rate is a secondary tuning dial once the landscape is reasonably well-conditioned.`,
+    takeaway: `Convexity guarantees that every local minimum is global — but it does not guarantee fast convergence. The condition number of the loss landscape determines convergence speed, and a highly convex but ill-conditioned problem can be slower to optimize than a well-conditioned non-convex one.`,
   },
   {
     id: 'hypothesis_testing',
@@ -763,18 +797,21 @@ As $n \to \\infty$, the likelihood dominates and MAP converges to MLE — the da
     difficulty: 'advanced',
     estimatedMin: 28,
     tags: ['EM', 'GMM', 'latent variables', 'expectation maximisation'],
-    summary: `Some data-generating processes have hidden structure — which cluster a point belongs to, which topic a document is about, which hidden state a sequence is in. You want to learn a model of the observed data, but the hidden variables make direct maximum likelihood intractable: log P(X|θ) = log Σ_Z P(X,Z|θ) is a log of a sum, which cannot be simplified into a sum of logs. Direct gradient ascent would require computing P(Z|X,θ) at every step, which itself depends on θ — a circular dependency with no closed-form solution. EM breaks this circle by alternating between two tractable steps. The E-step treats the hidden variables as if they were observed: it computes the expected complete-data log-likelihood using the current best guess of θ, filling in the hidden variables with their posterior distribution. The M-step maximises this expected log-likelihood over θ as if the hidden variables were known. EM is guaranteed to monotonically increase the marginal likelihood at every iteration — it cannot degrade — but it converges to a local optimum, not necessarily global. Gaussian Mixture Models are the canonical example: E-step assigns soft cluster responsibilities, M-step updates cluster parameters. EM generalises immediately to any exponential family model with latent variables.`,
+    summary: `You have 1000 customer purchase records but no segment labels. You believe there are K=3 segments: high-value, medium-value, and occasional. To fit a Gaussian Mixture Model, you need to know which segment each customer belongs to in order to compute per-segment means and variances. But you cannot know the segments until you have the parameters. Classic chicken-and-egg: you need labels to fit parameters and parameters to assign labels.
+
+EM breaks the deadlock by replacing hard segment assignments with soft ones — probabilities. The E-step (Expectation): given current parameters θ^(t), compute P(segment k | customer i) for every i and k. These are soft memberships — each customer is distributed across all segments with weights summing to 1. The M-step (Maximization): given soft memberships, update parameters θ^(t+1) using weighted statistics. The mean of segment k is the weighted mean of all customers, with weights equal to P(segment k | customer). Repeat. Each iteration is guaranteed to increase the marginal log-likelihood — EM cannot decrease it, though it can converge to a local maximum.
+
+EM generalizes far beyond Gaussian mixture models. K-means is a hard-assignment EM: the E-step assigns each point to its nearest centroid with probability 1, and the M-step updates centroids as unweighted means. Hidden Markov Models use EM under the name Baum-Welch. Probabilistic PCA uses EM. The unifying pattern: any model where the complete-data likelihood is tractable but the marginal likelihood (summing or integrating over hidden variables) is not — EM is the natural algorithm.
+
+The theoretical guarantee: EM increases the marginal log-likelihood L(θ) = log P(X | θ) at every iteration. This follows from Jensen's inequality applied to the log-sum structure of the marginal likelihood. The E-step constructs a lower bound that is tight at the current θ. The M-step maximizes that lower bound. The next iteration starts from a point where the bound and the true objective coincide — so the objective has not decreased.
+
+**NOT this.** EM is not an algorithm for mixture models. EM is a general framework for maximum likelihood estimation when data has missing or latent variables. The pattern is always: treat the missing data as if it were observed but uncertain (E-step fills in the expected complete data), then maximize the resulting expected complete-data log-likelihood (M-step). K-means, Baum-Welch for HMMs, and probabilistic PCA are all instances of this pattern.`,
     keyPoints: [
-      `**Why direct maximisation fails: log Σ_Z P(X,Z|θ) cannot be decomposed because the log is outside the sum.** Taking the gradient gives an expression involving P(Z|X,θ), which depends on θ in a complex way — no closed-form solution exists for most models. EM avoids this by working with the complete-data log-likelihood log P(X,Z|θ), which does factorise cleanly.`,
-      `**E-step: compute Q(θ|θ_old) = E_{Z|X,θ_old}[log P(X,Z|θ)].** Replace the unknown Z with its posterior distribution under the current θ — this is the "expectation" in Expectation-Maximisation. For exponential family models, the E-step reduces to computing sufficient statistics weighted by the posterior over Z.`,
-      `**M-step:
-
-$θ_new = argmax_θ Q(θ|θ_old).** With Z treated as known (but un$
-
-certain), the complete-data log-likelihood factorises and maximisation has a closed form for exponential family models. The M-step is just weighted maximum likelihood.`,
-      `**EM for GMM: E-step computes soft responsibilities rᵢₖ = P(zᵢ = k | xᵢ, θ) — how much does cluster k explain point i?** M-step updates μₖ, Σₖ, πₖ as responsibility-weighted means and covariances. This is soft k-means: points are not hard-assigned to clusters but distributed across them according to proximity.`,
-      `**EM converges to local optima.** Different initialisations yield different solutions. Standard practice: run EM 10+ times with random restarts, keep the solution with the highest marginal log-likelihood. Singularity problem in GMM: a cluster can collapse to a single data point with Σₖ → 0, giving infinite likelihood — add a minimum variance floor or use a Bayesian GMM with an Inverse-Wishart prior.`,
+      `**Use EM whenever you have latent variables and the complete-data log-likelihood has a closed-form maximizer.** This is the pattern in GMMs, HMMs, probabilistic PCA, and factor models. When the M-step does not have a closed-form solution, replace it with gradient ascent on the expected complete-data log-likelihood — this is called Generalized EM and still monotonically increases the marginal likelihood.`,
+      `**Trap: EM converges to local optima.** Run EM with multiple random initializations — typically 5 to 10 — and take the solution with the highest final log-likelihood. K-means++ initialization (choosing initial centroids with probability proportional to their squared distance from already-chosen centroids) gives better starting points and reduces the number of restarts needed for reliable convergence.`,
+      `**Diagnostic: plot log-likelihood per iteration.** It should monotonically increase. If it ever decreases, there is a bug in the M-step — the expected complete-data log-likelihood is not being maximized correctly. A non-monotone EM log-likelihood is not a convergence issue, it is a correctness issue. The monotonicity guarantee is a theorem, not an approximation.`,
     ],
+    interactivePrompt: `Before you touch the controls: if you have unlabeled data and want to fit a mixture model, what would happen if you started with random cluster assignments and just computed cluster statistics — why would that naive approach fail, and what does EM do differently?`,
     checkQuestions: [
       {
         q: `In the EM algorithm for Gaussian Mixture Models (GMMs), what are the E-step and M-step doing concretely?`,
@@ -807,7 +844,7 @@ certain), the complete-data log-likelihood factorises and maximisation has a clo
         answer: `A`,
       },
     ],
-    takeaway: `EM converts one intractable optimisation — maximising the marginal likelihood when variables are hidden — into a sequence of tractable steps by alternating between filling in the hidden variable distribution and maximising the resulting expected log-likelihood. The moment you have latent variables and a factorising complete-data likelihood, EM is the natural algorithm.`,
+    takeaway: `EM converts one intractable optimization — maximizing the marginal likelihood when variables are hidden — into a sequence of tractable steps by alternating between filling in hidden variable distributions and maximizing the resulting expected log-likelihood. Any model with latent variables and a tractable complete-data likelihood is a candidate for EM.`,
   },
   {
     id: 'concentration_inequalities',
@@ -816,14 +853,21 @@ certain), the complete-data log-likelihood factorises and maximisation has a clo
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['concentration', 'generalisation', 'PAC learning', 'bounds'],
-    summary: `A trained model performs well on the training set. The fundamental question of ML theory is: when can you trust that it also performs well on unseen data? You need to bound the generalisation gap — the difference between training error and true error. The naive concern is that a sufficiently complex model can fit any training set by memorisation, with no guarantee on new data. Concentration inequalities formalise how quickly sample averages converge to their expectations as a function of n. Markov's inequality requires only a finite mean; Chebyshev requires finite variance; Hoeffding requires bounded support but gives exponentially tight bounds — each stronger assumption buys a tighter guarantee. Combining Hoeffding with the union bound over a hypothesis class gives the PAC learning bound: with high probability, every hypothesis in a finite class has generalisation gap at most O(√(log|H|/n)). The VC dimension extends this to infinite hypothesis classes by replacing log|H| with a measure of effective capacity. Modern overparameterised networks have VC dimension far exceeding their training set size yet still generalise — the classical bounds are vacuous for them, and the theory is being rebuilt around implicit regularisation and PAC-Bayes.`,
+    summary: `You need to estimate the mean click-through rate from 100 samples. Your estimate is 0.043. How confident should you be that the true mean is within 0.01 of this estimate? This is a concentration question: how tightly does a sample statistic concentrate around its true value as the sample size grows? Without formal bounds, you are reporting confidence based on intuition rather than proof.
+
+Markov's inequality: P(X ≥ a) ≤ E[X]/a for non-negative X. Weak but requires only a finite mean — it applies even when variance is infinite. Chebyshev's inequality: P(|X - μ| ≥ kσ) ≤ 1/k². Requires both mean and variance to be finite. Better than Markov but still loose — the bound decays only polynomially in k. Hoeffding's inequality: for bounded independent random variables X_i ∈ [a_i, b_i], the sample mean X̄ satisfies P(|X̄ - E[X̄]| ≥ t) ≤ 2 exp(-2n²t² / Σ(b_i - a_i)²). Exponentially tighter than Chebyshev for bounded variables — the bound shrinks double-exponentially as t increases.
+
+Union bound (Bonferroni): P(A₁ ∪ A₂ ∪ ... ∪ A_k) ≤ Σ P(A_i). This is used in ML theory to get uniform convergence bounds — proving that the model holds simultaneously over all test examples, not just on average. Combined with Hoeffding, it gives bounds on the generalization gap of a model class.
+
+VC dimension and generalization: the generalization error is bounded by O(√(d_VC log(n/d_VC) / n)) where d_VC is the VC dimension of the hypothesis class and n is training size. More data always helps. More complex models need more data to generalize. For modern overparameterized networks with VC dimension far exceeding training size, these classical bounds are vacuous — the implicit regularization from gradient descent produces tighter practical guarantees.
+
+**NOT this.** Concentration inequalities are not only relevant in theory. These bounds are exactly why you can trust a sample size calculation. Hoeffding's inequality tells you that for click-through rates bounded in [0,1], you need n ≥ log(2/δ) / (2ε²) samples to guarantee P(|X̄ - μ| ≥ ε) ≤ δ with no distributional assumption. Every power calculation in data science is a concentration inequality with a distributional assumption substituted in. The normal approximation underlying t-tests and z-tests is just a special case with a Gaussian assumption; Hoeffding works without any distributional assumption at all.`,
     keyPoints: [
-      `**Markov inequality: P(X ≥ t) ≤ E[X]/t for non-negative X.** It requires only a finite mean — so it works for heavy-tailed distributions where Chebyshev fails. The cost is looseness: Chebyshev is typically 10× tighter when variance is finite. Markov is the fallback of last resort.`,
-      `**Chebyshev: P(|X − μ| ≥ t) ≤ Var(X)/t².** Requires finite variance, gives polynomial decay in t. This is the mechanism behind the weak law of large numbers: sample variance Var(X)/n → 0 as n → ∞, concentrating the sample mean around μ.`,
-      `**Hoeffding's inequality: for bounded iid Xᵢ ∈ [aᵢ, bᵢ], P(|X̄ − μ| ≥ ε) ≤ 2 exp(−2n²ε²/Σ(bᵢ−aᵢ)²).** Exponential decay — the probability of a large deviation shrinks exponentially fast with n. Requires bounded support; does not apply to unbounded losses (regression with Gaussian noise). For binary classification losses in [0,1], it applies directly.`,
-      `**Union bound + Hoeffding gives the PAC generalisation bound: P(sup_h |R̂(h) − R(h)| ≥ ε) ≤ 2|H|exp(−2nε²).** With probability 1−δ, all hypotheses have generalisation gap ≤ √(log(2|H|/δ)/(2n)). The gap shrinks as O(1/√n) — doubling data improves the bound by √2; squaring the hypothesis class adds only a constant to the log.`,
-      `**Double descent: modern overparameterised networks have VC dimension far exceeding n yet generalise in practice.** Classical bounds are vacuous (gap > 1). The true regularisation comes from gradient descent implicitly finding the minimum-norm interpolating solution — a bias not captured by VC dimension. PAC-Bayes bounds over posteriors on hypotheses give tighter results for networks trained with SGD.`,
+      `**Use Hoeffding's inequality for sample size estimation when your data is bounded.** For click-through rates in [0,1], n ≥ log(2/δ) / (2ε²) samples guarantees P(|X̄ - μ| ≥ ε) ≤ δ. This requires no distributional assumption beyond boundedness — it works whether the true distribution is Bernoulli, Beta, or anything else. For ε = 0.01 and δ = 0.05, that is n ≥ log(40) / 0.0002 ≈ 18,444 samples.`,
+      `**Trap: applying CLT-based confidence intervals when n is small or the distribution is heavy-tailed.** The CLT requires finite variance and sufficiently large n. Hoeffding's bound is distribution-free and valid for any n as long as the variable is bounded. For small-sample A/B tests or metrics with extreme outliers, use Hoeffding or bootstrap confidence intervals instead of assuming normality.`,
+      `**Diagnostic: if your model selection gives inconsistent results across runs with the same data, compute the generalization bound for your model complexity versus training size.** If the bound is loose (greater than 0.5), you do not have enough data to reliably distinguish between models — differences in validation performance are within the noise band of the bound, not real differences in generalization.`,
     ],
+    interactivePrompt: `Before you touch the controls: if Hoeffding's inequality says you need 18,000 samples to estimate a mean within ±0.01 with 95% confidence, what do you think happens to the required sample size if you want ±0.001 instead — does it scale linearly, or much faster?`,
     checkQuestions: [
       {
         q: `You sample 1000 values from a distribution with mean 5 and variance 4. Using Chebyshev's inequality, bound P(|X̄ − 5| ≥ 0.5).`,
@@ -856,7 +900,7 @@ certain), the complete-data log-likelihood factorises and maximisation has a clo
         answer: `B`,
       },
     ],
-    takeaway: `Generalisation gap shrinks as O(√(log(model complexity)/n)). Doubling data shrinks the bound by √2. Halving model class size only subtracts a constant from the log term. More data beats smaller models in almost every practical regime — but for modern overparameterised networks, the classical bounds are vacuous and the real regularisation comes from the implicit bias of gradient descent.`,
+    takeaway: `Concentration inequalities are the mathematical foundation of every sample size calculation and every generalization bound. Hoeffding's inequality gives distribution-free guarantees for bounded variables — understanding it is what separates a rigorous sample size justification from an intuitive one.`,
   },
   {
     id: 'monte_carlo',
@@ -866,18 +910,21 @@ certain), the complete-data log-likelihood factorises and maximisation has a clo
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['Monte Carlo', 'sampling', 'MCMC', 'importance sampling'],
-    summary: `Many quantities in ML require computing integrals: posterior expectations, normalising constants, policy gradients. Numerical quadrature (grids of evaluation points) is exact in low dimensions but requires Nᵈ points in d dimensions — for d = 100, this is astronomically infeasible. Monte Carlo avoids the curse of dimensionality by approximating E_p[f(X)] ≈ (1/N)Σ f(xᵢ) where xᵢ ~ p. The error is σ/√N regardless of dimension — only the variance of f under p matters, not the number of dimensions. This is the fundamental reason Monte Carlo dominates in high-dimensional integration: it trades exponential cost in dimension for 1/√N convergence in sample size. Importance sampling extends this to cases where sampling from p is hard: draw from a proposal q and reweight by p(x)/q(x). The danger is weight explosion — if q has lighter tails than p, some weights become enormous and the estimator becomes high-variance. MCMC constructs a Markov chain whose stationary distribution is the target, enabling sampling from posteriors known only up to a normalising constant by exploiting the cancellation of that constant in acceptance ratios.`,
+    summary: `You need E[f(X)] where X follows some complex distribution and f(X) is the revenue of a pricing model under uncertain market conditions. You cannot compute the integral analytically. But you can do this: sample X₁, X₂, ..., X_n from the distribution, evaluate f(X_i) for each, and average. By the law of large numbers, the average converges to E[f(X)] as n → ∞. This is Monte Carlo integration — replace an intractable integral with a sample average.
+
+Why it works: the law of large numbers guarantees convergence. The CLT tells you the error rate: the standard error of the Monte Carlo estimate is σ/√n where σ² = Var[f(X)]. To halve the error, quadruple the sample size. The convergence rate O(1/√n) is independent of the dimension of X — unlike grid integration, which requires N^d evaluations in d dimensions. This dimension-independence is the entire reason Monte Carlo is the only tractable option for high-dimensional integration.
+
+MCMC (Markov Chain Monte Carlo): when you cannot sample directly from the target distribution but can evaluate the density up to a normalizing constant. Metropolis-Hastings: propose a move from x to x', accept with probability min(1, p(x')/p(x)). The chain's stationary distribution is p(x). The acceptance ratio cancels the intractable normalizing constant — you never need to compute it. MCMC is the standard tool for Bayesian posterior sampling.
+
+Importance sampling: use a proposal distribution q(x) instead of sampling from p. Reweight each sample by p(x)/q(x). The estimator is unbiased. But if q has lighter tails than p, a small number of samples get enormous weights and dominate the estimate — the effective sample size collapses. Always diagnose importance sampling with the effective sample size: ESS = (Σ w_i)² / Σ w_i². If ESS/n < 0.1, the proposal is misspecified.
+
+**NOT this.** Monte Carlo is not only for simulations. Monte Carlo is the default tool for Bayesian posterior inference (MCMC samples from the posterior), for dropout uncertainty estimation (run the model k times with dropout active and average the predictions), for model evaluation confidence intervals (bootstrap resampling is Monte Carlo over the empirical distribution), and for reinforcement learning policy gradient estimation (sample trajectories to estimate E[reward]). Anywhere you see an expectation you cannot compute analytically, Monte Carlo is the practical solution.`,
     keyPoints: [
-      `**Monte Carlo error σ/√N is independent of dimension.** Numerical quadrature in d dimensions needs Nᵈ points for the same accuracy — exponential in d. Monte Carlo needs the same N regardless of d. This dimension-independence is the entire justification for using Monte Carlo in variational inference, policy gradients, and any high-dimensional expectation.`,
-      `**Importance sampling: E_p[f(X)] = E_q[f(X) · p(X)/q(X)].** Draw xᵢ ~ q, compute weighted average with weights w(x) = p(x)/q(x). This allows estimating expectations under p without ever sampling from p. The requirement: q must have support covering wherever f(x)p(x) is large.`,
-      `**IS weight explosion: if q has lighter tails than p, weights p(x)/q(x) become enormous in the tails — producing an unbiased but astronomically high-variance estimator.** Effective sample size
-
-$ESS = (Σwᵢ)²/Σwᵢ² diagnoses this: ESS much smaller than N$
-
-means a few samples dominate the estimate. The fix: use a heavier-tailed proposal, or use self-normalised IS.`,
-      `**MCMC: Metropolis-Hastings proposes θ' from q(θ'|θ), accepts with min(1, p(θ')q(θ|θ')/[p(θ)q(θ'|θ)]).** The ratio p(θ')/p(θ) cancels the normalising constant — you only need to evaluate the unnormalised posterior. This is why MCMC works for Bayesian inference where the posterior is only known up to the intractable marginal likelihood.`,
-      `**Policy gradient in RL uses the log-derivative trick: ∇E[R(τ)] = E[R(τ) ∇log π(τ)].** This converts a gradient through an expectation into an expectation of a gradient — computable by Monte Carlo rollouts. Variance is high because trajectory returns vary enormously. Baseline subtraction E[(R(τ) − b) ∇log π(τ)] is unbiased (E[b ∇log π] = 0) but drastically reduces variance.`,
+      `**Use bootstrap resampling — sampling with replacement from your dataset, repeated 1000 times — for confidence intervals on any statistic.** Bootstrap requires no distributional assumption and works for complex statistics like AUC, NDCG, and precision@K where there is no analytical confidence interval formula. It is the universal fallback when you cannot derive a standard error.`,
+      `**Trap: importance weights that blow up.** If your proposal q(x) has lighter tails than the target p(x), some samples get enormous weights, the variance of the estimator blows up, and the effective sample size is tiny. Always compute ESS = (Σ w_i)² / Σ w_i² after importance sampling. If ESS/n < 0.1, your proposal is misspecified — use a heavier-tailed proposal or switch to MCMC.`,
+      `**Diagnostic: for MCMC, check mixing with trace plots and R-hat statistics.** Trace plots of sampled values over iterations should look like white noise — rapid fluctuations around a stable level. Slow drift or long autocorrelation indicates the chain is not mixing well. R-hat < 1.1 across multiple chains initialized from different starting points indicates convergence to the same stationary distribution.`,
     ],
+    interactivePrompt: `Before you touch the controls: Monte Carlo error is σ/√n regardless of dimension. If you are estimating an expectation in 1000 dimensions, do you think you need more samples than for 1 dimension — and what does dimension-independence actually mean for how you choose sample sizes?`,
     checkQuestions: [
       {
         q: `Estimate ∫₀¹ √x dx using Monte Carlo with n=1000 samples. Describe the algorithm and the expected error.`,
@@ -910,7 +957,7 @@ means a few samples dominate the estimate. The fix: use a heavier-tailed proposa
         answer: `C`,
       },
     ],
-    takeaway: `Monte Carlo error scales as O(1/√N) regardless of dimension. That dimension-independence is the entire reason Monte Carlo dominates variational inference, policy gradients, and any high-dimensional expectation. Variance of the integrand, not dimension, determines how many samples you need.`,
+    takeaway: `Monte Carlo error scales as O(1/√n) regardless of dimension. That dimension-independence is the entire reason Monte Carlo dominates variational inference, policy gradients, and any high-dimensional expectation. Variance of the integrand — not dimension — determines how many samples you need.`,
   },
   {
     id: 'sampling_distributions',
@@ -919,20 +966,21 @@ means a few samples dominate the estimate. The fix: use a heavier-tailed proposa
     difficulty: 'foundational',
     estimatedMin: 24,
     tags: ['CLT', 'confidence intervals', 'bootstrap', 'standard error'],
-    summary: `You collect a sample and compute a statistic — a mean, a proportion, an AUC. That statistic is itself random: a different sample would give a different value. To make valid inferences you need to know how much that statistic varies across samples — its sampling distribution. Without this, you cannot distinguish a real finding from sampling noise. For the sample mean, the Central Limit Theorem (CLT) solves this completely: regardless of the underlying distribution, the sample mean is approximately Normal with mean μ and variance σ²/n, as long as n is large enough and the population variance is finite.
+    summary: `You run an A/B test. Treatment group (n=500) has CTR 4.3%. Control (n=500) has CTR 3.8%. The difference is 0.5 percentage points. Is this a real effect or just sampling noise? To answer, you need to know: if the true CTRs were equal, how variable would a 0.5% difference be purely from random sampling? The sampling distribution of (CTR_treatment - CTR_control) under the null hypothesis answers this exactly.
 
-This is why Normal-theory inference works on almost any dataset — you are usually operating on means, not raw samples, and means are Normal by the CLT. The standard error SE = σ/√n quantifies estimation uncertainty: halving SE requires quadrupling sample size, which is why going from "rough estimate" to "precise estimate" is expensive. The bootstrap replaces analytical CLT calculations with resampling: it works for any statistic with no closed-form sampling theory, and it is the universal fallback when you cannot derive a standard error formula.`,
+The sample mean X̄ of n i.i.d. draws from a population with mean μ and variance σ² has: E[X̄] = μ and Var[X̄] = σ²/n. Standard error = σ/√n. By the Central Limit Theorem, for large n, X̄ ≈ N(μ, σ²/n) regardless of the shape of the original distribution. This is why t-tests and z-tests work asymptotically for any distribution — they operate on means, and means become approximately normal.
+
+The t-distribution: when σ is unknown and estimated from data as the sample standard deviation s, the statistic (X̄ - μ)/(s/√n) follows a t-distribution with n-1 degrees of freedom. The t-distribution has heavier tails than N(0,1) for small n, reflecting the extra uncertainty introduced by estimating σ. At n=30 or more, t(n-1) is nearly indistinguishable from N(0,1) — this is why 30 is often cited as the CLT approximation threshold.
+
+Bootstrap sampling distribution: the empirical alternative to analytical formulas. Draw n samples with replacement from your data, compute the statistic, repeat 10,000 times. The distribution of the statistic across bootstrap samples is the sampling distribution. Works for any statistic — AUC, precision@K, NDCG — with no formula required.
+
+**NOT this.** The CLT applies to any distribution for large n is not unconditionally true. The CLT requires finite mean and finite variance. For heavy-tailed distributions — Pareto with tail index less than 2, some financial return distributions — the variance does not exist and the CLT does not apply. The sample mean does not converge to a Gaussian; it converges to a stable distribution with heavier tails. For web latency, transaction sizes, and other power-law distributed data, checking whether the CLT applies before running a t-test is not paranoia — it is necessary.`,
     keyPoints: [
-      `**CLT: √n(X̄ − μ)/σ →_d N(0,1) as n → ∞.** The result does not depend on the underlying distribution — only that it has finite variance. This is why t-tests and z-tests work broadly: they operate on sample means, not raw data, and sample means are Normal regardless of the raw distribution.`,
-      `**Standard error
-
-$SE = σ/√n.** Halving SE requires 4× the data. This 1/√n convergence rate is slow — going from$
-
-SE = 0.1 to SE = 0.01 requires 100× more data. It is the fundamental cost of precision in statistics and determines why clinical trials and large-scale A/B tests are expensive.`,
-      `**Confidence interval interpretation: a 95% CI does not mean "95% probability the parameter is in this interval." The parameter is fixed; the interval is random.** The correct statement: if you repeated the experiment many times and built a 95% CI each time, 95% of those intervals would contain the true parameter. For a probability statement about the parameter, you need a Bayesian credible interval.`,
-      `**Bootstrap: resample n points with replacement B times (B = 1000 is typical), compute the statistic on each resample, take the 2.5th and 97.5th percentiles as the 95% CI.** Works for any statistic — AUC, median, Spearman correlation, SHAP values — anything without a closed-form SE formula. It fails for statistics sensitive to extremes (max, min) and can be unreliable for heavy-tailed distributions.`,
-      `**CLT convergence speed depends on tail behaviour.** For near-Gaussian data, n ≥ 30 is usually sufficient. For heavy-tailed distributions (Pareto, log-normal), n may need to be 10,000+ before the Normal approximation holds. Always check kurtosis before using CLT-based inference on financial or web data.`,
+      `**Always report the standard error (σ/√n) alongside any point estimate.** An estimate without its standard error is not a scientific claim — it is a number without an indication of how much it would vary across repeated samples. For differences between groups, the standard error of the difference is √(σ₁²/n₁ + σ₂²/n₂), assuming independence between groups.`,
+      `**Trap: using a z-test when n < 30 and the distribution is non-normal.** The z-test uses critical value 1.96, which comes from N(0,1). For small n with unknown σ, the correct critical value comes from the t-distribution: t_{0.025, n-1}. For n=10, that critical value is 2.228 instead of 1.96 — using z inflates Type I error because the interval is too narrow.`,
+      `**Diagnostic: if your A/B test p-value looks suspiciously small (< 0.001) or large (> 0.5), recheck the standard error computation.** Common errors: not accounting for within-user correlation across multiple observations (inflates effective sample size), using population σ instead of sample s, or forgetting that the standard error of a difference requires variance from both groups, not just one.`,
     ],
+    interactivePrompt: `Before you touch the controls: if you double your sample size in an A/B test, by how much do you expect the standard error to shrink — half, one quarter, or something else — and what does that imply for how expensive it is to get precise estimates?`,
     checkQuestions: [
       {
         q: `X₁,...,Xₙ ~ N(μ,σ²). What is the distribution of (n-1)S²/σ² where S² is the sample variance? Why n-1 not n?`,
@@ -965,6 +1013,6 @@ SE = 0.1 to SE = 0.01 requires 100× more data. It is the fundamental cost of pr
         answer: `B`,
       },
     ],
-    takeaway: `The CLT makes sample means approximately Normal regardless of the underlying distribution — that is the entire foundation of classical inference. But the required sample size depends on tail behaviour: n = 30 works for near-Gaussian data, but power-law distributions may need n > 10,000. Always check whether the CLT approximation is valid before trusting the standard error.`,
+    takeaway: `The sampling distribution tells you how much a statistic varies across repeated samples. The CLT makes sample means approximately normal for large n — but large depends on tail behavior. Always verify the CLT assumption holds before running t-tests or z-tests on data with heavy tails.`,
   },
 ]
