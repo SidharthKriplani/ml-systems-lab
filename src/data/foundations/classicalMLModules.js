@@ -7,21 +7,21 @@ export const CLASSICAL_ML_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 22,
     tags: ['regression', 'OLS', 'linear models'],
-    summary: `You have last month\`s house sales — square footage, number of bedrooms, a neighborhood score, and the price each one sold for. A new house comes on the market. What should it sell for?
+    summary: `You have last month's house sales — square footage, number of bedrooms, a neighborhood score, and the price each one sold for. A new house comes on the market. What should it sell for?
 
 The simplest honest guess is a weighted sum: price ≈ w₁·(sqft) + w₂·(bedrooms) + w₃·(score). Once you pick the weights, you have a prediction machine. The whole game is choosing good weights.
 
 So what makes weights "good"? Run them on the houses you already know the price of, and look at the gap between your prediction and the real price. That gap, for one house, is the **residual**. Good weights make the residuals small across all the houses at once.
 
-Now you need a single number for "small overall." Just adding the residuals fails — positive and negative gaps cancel, so even terrible weights could score near zero. So square each residual first (that kills the sign), then add them up. Squaring has a bonus: missing one house by \\$100k hurts far more than missing four houses by \\$25k each, so the fit works hard to avoid big misses. And squared error is smooth, which means calculus can jump straight to the best weights instead of guessing.
+Now you need a single number for "small overall." Just adding the residuals fails — positive and negative gaps cancel, so even terrible weights could score near zero. So square each residual first (that kills the sign), then add them up. Squaring has a bonus: missing one house by a full 100k hurts far more than missing four houses by 25k each, so the fit works hard to avoid big misses. And squared error is smooth, which means calculus can jump straight to the best weights instead of guessing.
 
-That jump is **ordinary least squares (OLS)**. Set the derivative of the total squared error to zero and out pops one formula for the best weights: $θ̂ = (XᵀX)⁻¹Xᵀy$. You don\`t search — you solve. That formula is the entire engine.
+That jump is **ordinary least squares (OLS)**. Set the derivative of the total squared error to zero and out pops one formula for the best weights: $θ̂ = (XᵀX)⁻¹Xᵀy$. You don't search — you solve. That formula is the entire engine.
 
 ---
 
 **Where it gets interesting: when do the weights stop meaning anything?**
 
-Suppose square footage and bedroom count rise together — bigger houses have more bedrooms. The model can\`t tell whether price comes from the space or the rooms, because they move as a pair. It will split the credit between w₁ and w₂ in any of a thousand ways that all predict about the same. Retrain on a slightly different set of sales and those two coefficients can swing wildly — even flip sign — while the *predictions* barely budge. This is **collinearity**, and it is the most misread failure in regression: the predictions are fine, the individual coefficients are noise. So "this feature\`s coefficient is near zero, let\`s drop it" can quietly wreck the model when that feature was correlated with another.
+Suppose square footage and bedroom count rise together — bigger houses have more bedrooms. The model can't tell whether price comes from the space or the rooms, because they move as a pair. It will split the credit between w₁ and w₂ in any of a thousand ways that all predict about the same. Retrain on a slightly different set of sales and those two coefficients can swing wildly — even flip sign — while the *predictions* barely budge. This is **collinearity**, and it is the most misread failure in regression: the predictions are fine, the individual coefficients are noise. So "this feature's coefficient is near zero, let's drop it" can quietly wreck the model when that feature was correlated with another.
 
 The standard fix is **Ridge**: add a small penalty that nudges every weight toward zero. You trade a touch of bias for coefficients that stay stable and trustworthy even when the features are tangled together.
 
@@ -29,20 +29,20 @@ The standard fix is **Ridge**: add a small penalty that nudges every weight towa
 
 **One habit that saves you: plot the residuals.**
 
-A high R² feels like proof the model is good. It isn\`t. R² only tells you how much of the price variation you explained — it can\`t tell you the *shape* is wrong. Fit a straight line to data that actually curves and you can still read R² = 0.95 while the residuals, plotted against your predictions, trace a clear U — too low in the middle, too high at the edges. That U is the model telling you the straight-line assumption is broken. R² will never say it; the residual plot always will.
+A high R² feels like proof the model is good. It isn't. R² only tells you how much of the price variation you explained — it can't tell you the *shape* is wrong. Fit a straight line to data that actually curves and you can still read R² = 0.95 while the residuals, plotted against your predictions, trace a clear U — too low in the middle, too high at the edges. That U is the model telling you the straight-line assumption is broken. R² will never say it; the residual plot always will.
 
 Plot them before you trust anything.`,
     keyPoints: [
-      `**What OLS actually does, in one sentence: it finds the weights that make the total squared gap between predictions and reality as small as possible.**\n\nReach for linear regression first whenever the target is a number and a weighted sum of the features is a plausible story — each weight then reads in plain English ("one more bedroom adds about \\$X"). It is fast, interpretable, and the honest baseline every fancier model has to beat. Switch away when residual plots curve, when features clearly interact, or when the target has a hard floor or ceiling (like a probability between 0 and 1) that a straight line can\`t respect.`,
+      `**What OLS actually does, in one sentence: it finds the weights that make the total squared gap between predictions and reality as small as possible.**\n\nReach for linear regression first whenever the target is a number and a weighted sum of the features is a plausible story — each weight then reads in plain English ("one more bedroom adds about the same amount each time"). It is fast, interpretable, and the honest baseline every fancier model has to beat. Switch away when residual plots curve, when features clearly interact, or when the target has a hard floor or ceiling (like a probability between 0 and 1) that a straight line can't respect.`,
       `**The trap that bites in production: correlated features make individual coefficients unstable while predictions stay accurate — and nothing warns you.**\n\nIf square footage and total rooms correlate at 0.95, OLS divides their shared predictive power arbitrarily, and a different training sample divides it differently. The individual weights become meaningless, but their combined effect ($w_1 \\cdot sqft + w_2 \\cdot rooms$) stays steady — so predictions look healthy. This is why dropping a feature because its coefficient is "near zero" can be dangerous: it may read near zero only because a correlated twin absorbed the credit. Add Ridge ($λ > 0$) before you trust any ranking of coefficients.`,
       `**The one diagnostic to run every time: plot residuals against fitted values.**\n\nA flat, even band of scatter means the straight-line form fits. A U-shape or curve means the form is wrong — and a curved residual plot with R² = 0.95 is worse than a noisy one with R² = 0.60, because you are confidently wrong about the shape. A widening funnel means the error grows with the prediction (heteroscedasticity): predictions stay unbiased, but every confidence interval you report is off. R² hides all of this; the residual plot shows it.`,
     ],
-    interactivePrompt: `Before you touch the controls: if you add a feature that is almost a perfect copy of one you already have, do you expect the model\`s predictions to get worse, stay about the same, or get better?`,
+    interactivePrompt: `Before you touch the controls: if you add a feature that is almost a perfect copy of one you already have, do you expect the model's predictions to get worse, stay about the same, or get better?`,
     checkQuestions: [
       {
         q: `In ordinary least squares, why do we square each residual before adding them up, instead of just summing the raw gaps?`,
         options: [
-          `\`A) Three reasons at once: squaring removes the sign so positive and negative gaps can\`t cancel into a misleadingly low score, it punishes a few large misses more than many small ones, and — because the squared-error curve is smooth — it lets calculus solve for the single best set of weights in closed form instead of searching.\``,
+          `\`A) Three reasons at once: squaring removes the sign so positive and negative gaps can't cancel into a misleadingly low score, it punishes a few large misses more than many small ones, and — because the squared-error curve is smooth — it lets calculus solve for the single best set of weights in closed form instead of searching.\``,
           `\`B) Squaring converts the model from linear to non-linear, which is what lets it fit curved data; without it, linear regression could only ever fit perfectly straight relationships.\``,
           `\`C) It is purely convention — summing the absolute values of the residuals gives the exact same weights and the same solution, just with more arithmetic.\``,
           `\`D) Squaring puts the error back into the original units of the target (dollars, not dollars-squared), so the loss is directly interpretable as an average price error.\``,
@@ -63,9 +63,9 @@ Plot them before you trust anything.`,
         q: `Your model reports R² = 0.95, but the residuals form a clear U-shape when plotted against the fitted values. What does that tell you?`,
         options: [
           `\`A) It is ordinary sampling noise — with R² this high the residuals are expected to wander a little, and no action is needed.\``,
-          `\`B) The straight-line form is wrong — the model systematically under-predicts at the low and high ends and over-predicts in the middle. High R² doesn\`t rescue this; R² measures variance explained, not whether the shape is right. Fix by adding curvature (polynomial or spline terms), transforming the target (e.g. log), or switching to a model that can bend — then re-check the residuals.\``,
+          `\`B) The straight-line form is wrong — the model systematically under-predicts at the low and high ends and over-predicts in the middle. High R² doesn't rescue this; R² measures variance explained, not whether the shape is right. Fix by adding curvature (polynomial or spline terms), transforming the target (e.g. log), or switching to a model that can bend — then re-check the residuals.\``,
           `\`C) It signals a handful of outliers at the extremes inflating the error; winsorise the target and both R² and the residual shape will clean up.\``,
-          `\`D) It means the errors are correlated over time (autocorrelation); switch to a time-series model even though the data isn\`t time-ordered.\``,
+          `\`D) It means the errors are correlated over time (autocorrelation); switch to a time-series model even though the data isn't time-ordered.\``,
         ],
         answer: `B`,
       },
@@ -80,7 +80,7 @@ Plot them before you trust anything.`,
         answer: `A`,
       },
     ],
-    takeaway: `OLS picks the weights that minimise the total squared error, and there\`s a formula for them. Correlated features scramble the individual coefficients while leaving predictions intact — so never read coefficients without checking for collinearity. And R² can\`t see a wrong model shape; only the residual plot can.`,
+    takeaway: `OLS picks the weights that minimise the total squared error, and there's a formula for them. Correlated features scramble the individual coefficients while leaving predictions intact — so never read coefficients without checking for collinearity. And R² can't see a wrong model shape; only the residual plot can.`,
     interactiveId: 'linear_regression_viz',
   },
   {
@@ -89,76 +89,92 @@ Plot them before you trust anything.`,
     title: 'Logistic Regression',
     subtitle: 'Sigmoid, cross-entropy loss, decision boundary, calibration',
     difficulty: 'foundational',
-    estimatedMin: 28,
+    estimatedMin: 24,
     tags: ['classification', 'logistic regression', 'calibration'],
-    summary: `A bank wants to predict whether a loan applicant will default. The target is binary — default or not — and the model needs to output a probability, not just a label. You try the obvious move: fit a linear regression and threshold at 0.5. Within a week, the model outputs predicted probabilities of 1.4 and -0.3. The outputs are meaningless as probabilities, and clamping them to [0, 1] would break gradient descent.
+    summary: `A bank needs to decide whether a loan applicant will default. That is a **classification** problem — the answer is one of two classes, default or not — but a bare yes/no is not enough. The bank wants a *probability*: this applicant has a 12% chance of defaulting. So we need a model whose output is a number between 0 and 1.
 
-The real fix is to model the right quantity. Instead of predicting the probability directly, model the log-odds: $\\log[P(\\text{default})/P(\\text{no default})] = w^Tx + b$. The log-odds can be any real number, which linear models handle naturally. Invert through the sigmoid $\\sigma(z) = 1/(1 + e^{-z})$ to get a probability strictly between 0 and 1 for any input. The decision boundary — where P(default) = 0.5 — is the hyperplane $w^Tx + b = 0$. In two dimensions this is a line; in d dimensions it is a d-1 dimensional hyperplane. Logistic regression is inherently a linear classifier. To model non-linear boundaries, you must add polynomial or interaction features. Feature scaling is not optional: with L2 regularisation, a feature in the range [0, 1,000,000] gets a proportionally smaller effective penalty than a feature in [0, 1], because the regulariser penalises weight magnitude not feature contribution. Standardise all features before fitting.
+Start with what we already know how to build: a linear equation, w·x + b. Feed in the applicant's features, out comes a number. But that number lives on the whole real line — it could be −4, or 3000. A linear equation will happily output 1.4 or −0.3, which are nonsense as probabilities. So the question that *defines* logistic regression is this: how do we bend the real-line output of a linear equation into the (0, 1) range of a probability?
 
-Why is cross-entropy the right loss? Because logistic regression is maximum likelihood estimation of a Bernoulli outcome. The likelihood of one example is $\\sigma(z)^y (1 - \\sigma(z))^{1-y}$. The log-likelihood is $y \\log \\sigma(z) + (1-y) \\log(1 - \\sigma(z))$. Negating and summing over all examples gives the cross-entropy loss. Minimising cross-entropy = maximising the probability of observing the actual labels. This is why the loss is principled: it is asking the model to assign high probability to what actually happened.
+The bridge is a chain of transformations, and the key is a pair of inverse functions. You already know one pair: $e^x$ and its inverse, the natural log. $e^x$ takes any real number and returns a positive one — its output lives in (0, ∞). The natural log does the reverse: it takes a positive number and hands back any real number. From that pair we build a second pair — the **logit** and the **sigmoid** — which are also inverses of each other. The logit takes a probability in (0, 1) and stretches it out across the whole real line. The sigmoid, $σ(z) = 1/(1 + e^{-z})$, takes any real number and squeezes it back into (0, 1). That squeeze is exactly the bend we needed.
 
-Now let us see why cross-entropy gradient never vanishes while MSE does. The cross-entropy loss for one example is $L = -[y \\log \\sigma(z) + (1-y) \\log(1-\\sigma(z))]$. Differentiating with respect to $z$ (the logit), using $\\sigma'(z) = \\sigma(z)(1-\\sigma(z))$: $\\partial L/\\partial z = -y \\cdot (1/\\sigma(z)) \\cdot \\sigma(z)(1-\\sigma(z)) + (1-y) \\cdot (1/(1-\\sigma(z))) \\cdot \\sigma(z)(1-\\sigma(z))$. The $\\sigma(z)$ in the numerator cancels with $\\sigma(z)$ in the denominator: $= -y(1-\\sigma(z)) + (1-y)\\sigma(z) = \\sigma(z) - y = \\hat{y} - y$. The $\\sigma'(z)$ factor — the term that shrinks to near zero when the model is saturated — cancels completely. You always get a gradient proportional to prediction error, even when the model is most confidently wrong. MSE does not have this property: its gradient is $(\\hat{y} - y) \\cdot \\sigma'(z)$, which goes to zero when the model is confidently wrong.
+Here is the move that makes it click. A linear equation outputs a real number. A logit is also a real number. So instead of forcing the linear equation to output a probability directly, we let it output the **logit**, then run that through the sigmoid — the logit's inverse — to land back on a clean probability. The linear part does what it is good at (real-valued output); the sigmoid handles the bounding.
 
-The log-odds framing makes coefficients directly interpretable with numbers. Suppose a trained model has $w_{\\text{income}} = 0.00002$ for annual income in dollars and $w_{\\text{savings}} = -0.00003$ for savings. An applicant earning 80k has a log-odds contribution from income of $0.00002 \\times 80000 = 1.6$, which multiplies their default odds by $e^{1.6} \\approx 5.0$. If the same applicant has 50k in savings, the savings contribution is $-0.00003 \\times 50000 = -1.5$, multiplying odds by $e^{-1.5} \\approx 0.22$ — a strong protective factor. Coefficients with opposite signs work against each other in the log-odds space.
+But what *is* the logit, in plain terms? It is the log of the **odds**. Odds compare the two classes: the probability of default divided by the probability of no default. If default is 75% likely, the odds are 0.75 / 0.25 = 3 — "three to one." Odds are more natural than probability for this job, but they carry an ugly asymmetry. A probability of 0.99 gives odds of 99; a probability of 0.01 gives odds of 0.01. The same distance from certainty produces numbers on wildly different scales (99 versus 0.01), so you cannot lay them on one comparable line. Wrapping the odds in a log fixes it: log(99) ≈ 4.6 and log(0.01) ≈ −4.6, now symmetric around zero. **That log-of-odds is the logit** — and it is precisely the quantity our linear equation is predicting.
 
-For K-class classification, logistic regression extends to softmax regression: $P(y=k|x) = \\exp(w_k^T x) / \\sum_j \\exp(w_j^T x)$. The loss is categorical cross-entropy. The gradient has the same clean form: $\\hat{y}_k - \\mathbf{1}[y=k]$ for each class k. Numerically stable implementation subtracts the maximum logit before exponentiating to prevent overflow.
+So the full pipeline is: linear equation → logit (log-odds) → sigmoid → probability. And this hands us coefficients with a crisp meaning. If feature x₁ rises by one unit (everything else held fixed), the logit rises by exactly w₁ — a clean additive step. But because the logit is log-odds, the *odds* get multiplied by $e^{w_1}$, and the *probability* moves non-linearly — a lot in the middle of the range, barely anything near 0 or 1. One weight, three ways to read it.
 
-One failure mode survives all the above. When the two classes are perfectly linearly separable in the training data, the maximum likelihood is approached as $\\|w\\| \\to \\infty$: increasing $\\|w\\|$ makes the sigmoid sharper, pushing all predictions toward 0 or 1, increasing the log-likelihood without bound. There is no finite maximum-likelihood solution; gradient descent diverges. L2 regularisation adds $\\lambda \\|w\\|^2$ to the loss, creating a finite optimal $\\|w\\|^*$ for any $\\lambda > 0$. Watch for NaN loss or exploding weights after a few epochs as the diagnostic.
+---
 
-Logistic regression trained with MLE is approximately calibrated by construction: a predicted probability of 0.7 corresponds to roughly 70% of those cases actually being positive. This follows directly from the MLE objective — the model is trained to assign high probability to what actually happened, which forces alignment between predicted and empirical frequencies. SVMs, gradient boosting, and random forests are not calibrated by default and require post-hoc calibration (Platt scaling, isotonic regression) to use as reliable probability estimators.
+**Now the second half: what loss do we train it with?**
 
-**NOT this.** Most people think logistic regression "adds a sigmoid to linear regression" — the sigmoid is the essential change, and the loss can be MSE. This is wrong in a consequential way. The sigmoid is a detail; the loss function choice is what determines whether the model learns. Replace cross-entropy with MSE and the model freezes whenever it is most confidently wrong — the exact examples it most needs to correct. The sigmoid and cross-entropy were designed together as a unit: sigmoid maps logits to probabilities, cross-entropy uses those probabilities to recover a clean gradient. The sigmoid alone is not enough.
+Reach for the obvious loss — mean squared error, the one linear regression uses — and watch it fail. Take one applicant who truly defaulted (target = 1). If the model predicts 0.9, the squared error is (0.9 − 1)² = 0.01 — tiny, and rightly so; the model was basically right. Now suppose the model predicts 0.0001. It is insisting this person will *not* default, about someone who did — confidently, catastrophically wrong. Yet the squared error is (0.0001 − 1)² ≈ 1. Just 1. The penalty barely moved.
 
-Formally: logistic regression is MLE of a Bernoulli likelihood with a linear logit. The cross-entropy loss is the negative log-likelihood. The gradient is always $\\hat{y} - y$.`,
+That is the whole problem. A loss is the *cost we attach to being wrong* — it is how we tell the model how badly it messed up. MSE tells the model that a confident disaster (0.0001 when the truth is 1) costs about the same as a mild miss. So the model has no reason to fix its worst mistakes: the loss never screams. The signal is too flat to be useful.
+
+**Log loss** (cross-entropy) fixes this by making the cost blow up as a confident prediction turns out wrong:
+
+$L = -[\\,y\\log(\\hat{y}) + (1-y)\\log(1-\\hat{y})\\,]$
+
+Because y is 0 or 1, only one term is ever active. For our defaulter (y = 1) the loss is $-\\log(\\hat{y})$: predict 0.9 and the cost is a gentle 0.10; predict 0.0001 and the cost is $-\\log(0.0001) ≈ 9.2$ — nearly a hundred times larger. Log loss punishes confident wrongness without limit, which is exactly the message the model needs to hear. That is why classification is trained with log loss, not MSE.
+
+---
+
+**Under the hood (the deeper why):**
+
+There is a cleaner reason log loss wins, visible in the gradient. Differentiate log loss with respect to the logit z and the messy sigmoid-derivative term cancels perfectly, leaving just $\\partial L/\\partial z = \\hat{y} - y$ — the raw prediction error. MSE-with-a-sigmoid instead leaves an extra $σ(z)(1-σ(z))$ factor that collapses to near zero exactly when the model is saturated and most wrong, so it barely learns. Log loss keeps a full-strength gradient no matter how wrong the model is.
+
+Two failure modes are worth knowing. First, **perfect separation**: if some feature splits the two classes cleanly in the training data, the model can keep enlarging its weights to push every prediction toward a hard 0 or 1, and the weights run off toward infinity — training never settles (watch for exploding weights or NaN loss). A small L2 penalty caps the weights and restores a finite answer. Second, logistic regression comes out **calibrated by construction**: because it is trained to assign high probability to what actually happened, a predicted 0.7 really does tend to mean about 70% in reality — a property that trees, SVMs, and boosting do not share without extra post-hoc calibration.
+
+And it generalises past two classes: swap the sigmoid for the **softmax**, which turns a vector of logits into probabilities that sum to 1, and train with the same cross-entropy idea. The boundary stays linear — logistic regression draws a straight line (a hyperplane in higher dimensions), and to bend it you must add polynomial or interaction features. One practical note: because L2 regularisation penalises weight size, standardise your features first, or a feature measured in the millions gets penalised differently from one measured in single digits.`,
     keyPoints: [
-      `**Use it when you need calibrated probabilities for a binary outcome and interpretability matters. It is the only common classifier that is calibrated by construction.**\n\nLogistic regression coefficients are log-odds ratios: each unit increase in feature j multiplies the default odds by $e^{w_j}$. With $w_{\\text{income}} = 0.00002$ (income in dollars), each $10k increase in income multiplies default odds by $e^{0.2} \\approx 1.22$. A negative coefficient is a protective factor. Use LR as your first baseline before any ensemble — it is fast, interpretable, approximately calibrated, and its failure modes (linearity, perfect separation) are informative diagnostics. Standardise features before fitting: L2 regularisation is scale-sensitive.`,
-      `**The production trap: using MSE loss with a sigmoid output, or forgetting that perfect separation causes divergence.**\n\nMSE + sigmoid produces vanishing gradients for confident wrong predictions — the model freezes before it corrects its worst errors. Always use cross-entropy. On real loan datasets, a feature like "number of previous defaults" can perfectly separate the classes in the training set, causing weights to diverge toward infinity during training. Watch for exploding weights or NaN loss after a few epochs — this is the perfect separation failure. Fix: L2 regularization (sklearn\`s default, controlled by C). Set C < 1 to increase the regularisation strength.`,
-      `**The diagnostic: check the reliability diagram — does P̂ = 0.7 actually correspond to a 70% default rate in that bin?**\n\nLogistic regression is theoretically well-calibrated on the training distribution, but regularization shrinks logits and pushes probabilities away from the extremes. In production, check calibration with a reliability diagram on a held-out set. If the curve bows below the diagonal (outputs 0.8 where the true rate is 0.55), apply Platt scaling or isotonic regression on a separate calibration set. Never calibrate on the training set.`,
+      `**What logistic regression really is: a linear equation that predicts the log-odds, and a sigmoid that turns that into a probability.**\n\nUse it as your first model for any yes/no question where you want a probability you can trust, not just a label — fraud, churn, default, click-through. Its coefficients read cleanly: a one-unit bump in a feature adds its weight to the log-odds and multiplies the odds by $e^{weight}$. It is fast, interpretable, and — uniquely among the common classifiers — calibrated out of the box. Reach for something heavier only when the boundary is clearly non-linear or the features interact in ways a straight line cannot capture.`,
+      `**The trap that stops the model learning: training with MSE instead of log loss.**\n\nMSE caps the penalty for a confident wrong answer at around 1, so the model shrugs off its worst mistakes — and worse, its gradient shrinks to near zero exactly when the prediction is most confidently wrong, so it barely updates. Log loss (cross-entropy) makes the cost climb toward infinity as a confident prediction turns out wrong, and its gradient stays full-strength. Always train classification with cross-entropy. Watch too for perfect separation: a feature that splits the classes cleanly drives the weights toward infinity — a little L2 (in scikit-learn, a lower C) reins them back in.`,
+      `**The diagnostic: read the reliability diagram — when the model says 0.7, is the real rate about 70%?**\n\nLogistic regression starts well-calibrated, but strong regularisation shrinks the logits and pulls probabilities toward the middle, and class imbalance can distort them. On a held-out set, bucket the predictions and compare each bucket's predicted probability against its actual positive rate. If the model says 0.8 where the truth is 0.55, it is overconfident — fix it with Platt scaling or isotonic regression fit on a *separate* calibration set, never the training set. And standardise features before fitting, since L2 is scale-sensitive.`,
     ],
     interactivePrompt: `Before you touch the controls: if you replaced cross-entropy loss with MSE while keeping the sigmoid output, what do you expect happens to training when the model makes a very confident wrong prediction?`,
     checkQuestions: [
       {
-        q: `Why does logistic regression fail when classes are perfectly linearly separable, and how does L2 regularisation fix it?`,
+        q: `A linear equation w·x + b can output any real number. Why can't we use that number directly as the probability for a yes/no classification, and what does logistic regression do about it?`,
         options: [
-          `\`A) When data is linearly separable, there exists a hyperplane wᵀx + b = 0 that correctly classifies all training points. The MLE maximises Σ log σ(yᵢ(wᵀxᵢ+b)). For correctly classified points, yᵢ(wᵀxᵢ+b) > 0 and σ → 1 as the product grows. The log-likelihood increases indefinitely as ‖w‖→∞ — there is no maximum, just a supremum at infinity. Gradient descent will diverge. L2 regularisation adds λ‖w‖² to the loss, creating a finite optimal ‖w‖*: the benefit of further increasing ‖w‖ is outweighed by the L2 penalty. The solution exists and is unique for any λ > 0.\``,
-          `\`B) When data is linearly separable, gradient descent oscillates because there are infinitely many separating hyperplanes with the same training loss. L2 regularisation breaks the tie by selecting the minimum-norm solution among all perfect separators, which is why it prevents divergence.\``,
-          `\`C) Logistic regression fails on linearly separable data because the sigmoid saturates at exactly 0.5 for all points on the decision boundary, making the gradient zero everywhere and stopping learning. L2 regularisation shifts the boundary away from the support vectors so the sigmoid operates in its non-saturated region.\``,
-          `\`D) When classes are separable, the cross-entropy loss reaches its minimum of 0 exactly, but this minimum is a saddle point not a local minimum, causing gradient descent to diverge. L2 regularisation converts the saddle point to a strict local minimum by making the Hessian positive definite.\``,
+          `\`A) A linear output is not bounded — it can land at 1.4 or −0.3, which are meaningless as probabilities. Logistic regression lets the linear equation predict the log-odds instead (which legitimately spans the whole real line), then passes that through the sigmoid — the log-odds' inverse — to squeeze it back into a valid (0, 1) probability.\``,
+          `\`B) A linear output is always positive, so it can exceed 1 but never fall below 0; logistic regression divides by the largest output seen so far to normalise everything into (0, 1).\``,
+          `\`C) A linear equation cannot represent interactions between features, so its output is too simple to be a probability; the sigmoid adds the missing interaction terms between features.\``,
+          `\`D) The only issue is the sign — linear outputs can be negative; logistic regression takes the absolute value of the output and caps it at 1.\``,
         ],
         answer: `A`,
       },
       {
-        q: `Your logistic regression model predicts P(y=1) = 0.8 for a sample. A reliability diagram shows that samples with predicted probability 0.8 are actually positive only 55% of the time. What is wrong and how do you fix it?`,
+        q: `In a trained logistic regression, feature x₁ has weight w₁ = 0.7. If x₁ increases by one unit while everything else is held fixed, what happens?`,
         options: [
-          `\`A) The model has a threshold miscalibration: the default 0.5 decision threshold is too low given the class imbalance. Raise the classification threshold to 0.8 to ensure predictions of P(y=1)=0.8 are only flagged as positive when warranted by the actual base rate.\``,
-          `\`B) The model is underfitting — low regularisation is causing it to ignore informative features, making it predict moderate values near 0.8 for most samples. Reduce C (increase regularisation) to force the model to commit to higher- or lower-confidence predictions.\``,
-          `\`C) The model is overconfident — it outputs 0.8 but the empirical frequency is only 0.55. This can happen when the model is regularised too strongly (logits are shrunk below their optimal values), when the training data is imbalanced, or when the model is misspecified. Fix: apply Platt scaling — fit a logistic regression on a separate calibration set: P(y=1|f) = σ(af+b) where f is the original model's logit output. Or use isotonic regression for more flexible non-parametric recalibration. Both require a separate calibration set — never the training set. Validate on a held-out test set using ECE after calibration.\``,
-          `\`D) The model is correctly calibrated — a reliability diagram showing predicted 0.8 against empirical 0.55 is within acceptable deviation because calibration bins always have high variance. Report ECE and only recalibrate if ECE > 0.10.\``,
-        ],
-        answer: `C`,
-      },
-      {
-        q: `How does the gradient of binary cross-entropy with sigmoid differ from MSE with linear output? What is the significance of this difference?`,
-        options: [
-          `\`A) MSE + linear produces larger gradients than cross-entropy + sigmoid everywhere, which is why cross-entropy training converges faster. The significance: the steeper gradient of MSE would cause gradient explosion in deep networks, while cross-entropy's bounded gradient provides stable training.\``,
-          `\`B) MSE + linear: ∂L/∂z = (ŷ−y) where ŷ = z (no saturation). Cross-entropy + sigmoid: ∂L/∂z = σ(z)−y = ŷ−y (same form). The significance: if we used MSE with sigmoid, we would get ∂L/∂z = (σ(z)−y)·σ(z)(1−σ(z)) — the σ(z)(1−σ(z)) term nearly vanishes when the model is confidently wrong (e.g., σ(z)≈0 when y=1), causing vanishing gradients. Cross-entropy eliminates this: the σ'(z) in the chain rule cancels with the 1/σ(z) in the log-likelihood gradient, giving the clean prediction-error gradient. This is why cross-entropy, not MSE, is the correct loss for classification with sigmoid/softmax outputs.\``,
-          `\`C) The gradients are identical in form — both equal (ŷ−y) — because sigmoid and softmax are designed so their derivatives exactly match the MSE derivative. The only practical difference is that cross-entropy penalises confident wrong predictions more heavily due to the log, making it more numerically stable.\``,
-          `\`D) MSE + sigmoid has gradient ŷ(1−ŷ)(ŷ−y) while cross-entropy + sigmoid has gradient ŷ−y. The significance is computational speed: cross-entropy avoids the ŷ(1−ŷ) multiplication, making each gradient step slightly faster in practice.\``,
+          `\`A) The predicted probability increases by exactly 0.7, the same additive step regardless of where the starting probability was.\``,
+          `\`B) The log-odds increases by 0.7, so the odds get multiplied by e^0.7 ≈ 2.0, and the probability moves non-linearly — a lot near the middle of the range, very little near 0 or 1.\``,
+          `\`C) The odds increase by 0.7 and the probability increases by e^0.7, both changing linearly with the feature.\``,
+          `\`D) Nothing interpretable — unlike linear regression, logistic regression weights carry no meaning in terms of any individual feature.\``,
         ],
         answer: `B`,
       },
       {
-        q: `You train logistic regression with C=1 (sklearn default, where C=1/λ). Your model underfits. What does C control and what value would you try next?`,
+        q: `For a sample whose true label is 1, the model predicts 0.0001 — confidently wrong. Why is log loss (cross-entropy) a better training signal than MSE in this case?`,
         options: [
-          `\`A) C controls the learning rate in sklearn's logistic regression solver. C=1 uses a moderate step size; underfitting means the solver has not converged. Try C=0.01 (smaller steps for more careful convergence) and increase max_iter to ensure the solver runs long enough to find the optimum.\``,
-          `\`B) C controls the number of cross-validation folds used internally. C=1 is equivalent to leave-one-out CV, which is too noisy with small datasets. Try C=5 or C=10 to use standard k-fold CV, which gives a more stable model.\``,
-          `\`C) C controls the minimum confidence threshold for classification. Underfitting with C=1 means the model is refusing to classify borderline examples; try C=0.5 to lower the threshold and allow more positive predictions.\``,
-          `\`D) In sklearn, C = 1/λ is the inverse of regularisation strength. C=1 means λ=1 — moderate regularisation. Underfitting (high training error, high test error) means the model is too regularised: the L2 penalty is too strong and is pulling weights toward zero, preventing the model from fitting the training data. To reduce regularisation: increase C (e.g., try C=10, C=100). This allows larger weight magnitudes and a more complex decision boundary. Also check: are the features well-scaled? Logistic regression with L2 is scale-sensitive — standardise features first. Is the problem actually non-linear? If so, add polynomial features or switch to a non-linear model.\``,
+          `\`A) MSE and log loss give the same penalty here; the only real reason to prefer cross-entropy is that it is faster to compute.\``,
+          `\`B) MSE actually gives a larger penalty than log loss for this case, but log loss is still preferred because it produces a smoother loss surface.\``,
+          `\`C) With MSE the squared error is only about 1 even though the prediction is a disaster, so the penalty barely reflects how wrong the model is — and its gradient nearly vanishes just when the model is most confidently wrong. Log loss instead sends the cost climbing toward infinity (−log(0.0001) ≈ 9.2) and keeps a full-strength gradient, so the model is forced to correct its worst mistakes.\``,
+          `\`D) MSE cannot be used with a sigmoid output at all because the two are mathematically incompatible; log loss is the only loss a sigmoid can be trained with.\``,
         ],
-        answer: `D`,
+        answer: `C`,
+      },
+      {
+        q: `While training on real loan data, the weights keep growing and the loss eventually becomes NaN. It turns out one feature separates defaulters from non-defaulters perfectly in the training set. What is happening, and what is the fix?`,
+        options: [
+          `\`A) The features simply are not scaled, so gradient descent overshoots; a smaller learning rate on its own removes the divergence.\``,
+          `\`B) Because the classes are perfectly separable, the model can always lower the loss by making its weights larger (sharpening the sigmoid toward hard 0/1), so there is no finite best set of weights and they run off toward infinity. A small L2 penalty (a lower C in scikit-learn) caps the weight size and restores a finite, stable solution.\``,
+          `\`C) A NaN loss means the label column has missing values on the separating feature; imputing those missing labels removes the divergence.\``,
+          `\`D) Perfect separation means the model has already solved the problem, so the NaN is just a harmless display artifact you can ignore.\``,
+        ],
+        answer: `B`,
       },
     ],
-    takeaway: `Logistic regression is MLE of a Bernoulli likelihood — cross-entropy's gradient $\\hat{y} - y$ is clean because the log cancels sigmoid's vanishing derivative; the decision boundary is a hyperplane; and the model is calibrated by construction, unlike trees or SVMs.`,
+    takeaway: `Logistic regression lets a linear equation predict the log-odds, then a sigmoid turns that into a probability — so one weight reads three ways: it adds to the log-odds, multiplies the odds by e^w, and moves the probability non-linearly. Train it with log loss, not MSE: log loss makes a confident wrong answer cost enormously and keeps the gradient alive, while MSE goes flat exactly when the model most needs to learn.`,
     interactiveId: 'logistic_regression_viz',
   },
   {
