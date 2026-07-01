@@ -29,6 +29,8 @@ function generateData() {
 }
 
 const DATA = generateData();
+const TRAIN_DATA = DATA.slice(0, 15);
+const TEST_DATA  = DATA.slice(15);
 
 // ---- linear algebra ----
 function matMul(A, B) {
@@ -118,7 +120,7 @@ function toCanvasCoords(x, y, W, H) {
   return [cx, cy];
 }
 
-function drawScene(canvas, degree, coeffs) {
+function drawScene(canvas, degree, coeffs, testData) {
   const ctx = canvas.getContext('2d');
   const W = canvas.clientWidth;
   const H = canvas.clientHeight;
@@ -175,8 +177,8 @@ function drawScene(canvas, degree, coeffs) {
     ctx.stroke();
   }
 
-  // Data points
-  for (const [x, y] of DATA) {
+  // Train data points — gray filled
+  for (const [x, y] of TRAIN_DATA) {
     const [cx, cy] = toCanvasCoords(x, y, W, H);
     ctx.beginPath();
     ctx.arc(cx, cy, 4, 0, Math.PI * 2);
@@ -185,6 +187,17 @@ function drawScene(canvas, degree, coeffs) {
     ctx.strokeStyle = 'rgba(0,0,0,0.4)';
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+  // Test data points — cyan hollow (unseen during fitting)
+  if (testData) {
+    for (const [x, y] of testData) {
+      const [cx, cy] = toCanvasCoords(x, y, W, H);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
   }
 
   // Legend
@@ -207,6 +220,14 @@ function drawScene(canvas, degree, coeffs) {
   ctx.fillStyle = prime;
   ctx.fillText(`Fitted degree-${degree} poly`, 38, 34);
 
+  // Train/test legend
+  ctx.beginPath(); ctx.arc(22, 48, 4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(160,160,170,0.85)'; ctx.fill();
+  ctx.fillStyle = inkLow; ctx.fillText('Train (15)', 38, 52);
+  ctx.beginPath(); ctx.arc(22, 64, 5, 0, Math.PI * 2);
+  ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#22d3ee'; ctx.fillText('Test (5)', 38, 68);
+
   // Y-axis labels
   ctx.fillStyle = inkLow;
   ctx.font = `9px var(--font-mono, monospace)`;
@@ -227,19 +248,21 @@ export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
 
-  const coeffs = fitPoly(DATA, degree);
-  const mse = coeffs ? computeMSE(DATA, coeffs) : null;
+  const coeffs = fitPoly(TRAIN_DATA, degree);
+  const mse = coeffs ? computeMSE(TRAIN_DATA, coeffs) : null;
+  const testMse = coeffs ? computeMSE(TEST_DATA, coeffs) : null;
 
   const regime =
     degree <= 2 ? 'under' :
     degree <= 5 ? 'good'  : 'over';
 
+  const gapRatio = (testMse != null && mse != null && mse > 1e-6) ? testMse / mse : 1;
   const regimeNote =
     degree <= 2
-      ? 'Underfitting — high bias, model too simple to capture the curve'
+      ? `Underfitting — both train and test MSE high. Model too simple (high bias). Increasing degree will help.`
       : degree <= 5
-      ? 'Good fit — reasonable balance of bias and variance'
-      : 'Overfitting — low bias but high variance, wiggles to hit every training point';
+      ? `Good fit — train and test MSE are close. Low bias, manageable variance.`
+      : `Overfitting — train MSE is low but test MSE is ${gapRatio.toFixed(1)}× larger. Model memorizes noise (high variance).`;
 
   const noteColor =
     regime === 'good' ? '#22c55e' : '#ef4444';
@@ -254,7 +277,7 @@ export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
       canvas.height = rect.height * dpr;
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
-      drawScene(canvas, degree, coeffs);
+      drawScene(canvas, degree, coeffs, TEST_DATA);
     });
     ro.observe(canvas);
     return () => ro.disconnect();
@@ -363,16 +386,23 @@ export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
         flexWrap: 'wrap',
       }}>
         <div>
-          <span style={{ color: 'var(--ink-low, #555)' }}>Training MSE: </span>
+          <span style={{ color: 'var(--ink-low, #555)' }}>Degree: </span>
+          <span style={{ color: 'var(--prime, #F0A500)', fontWeight: 600 }}>{degree}</span>
+        </div>
+        <div>
+          <span style={{ color: 'var(--ink-low, #555)' }}>Train MSE: </span>
           <span style={{ color: 'var(--ink-hi, #e5e5e5)', fontWeight: 600 }}>
-            {mse !== null ? mse.toFixed(5) : 'N/A'}
+            {mse !== null ? mse.toFixed(4) : 'N/A'}
           </span>
         </div>
         <div>
-          <span style={{ color: 'var(--ink-low, #555)' }}>Degree: </span>
-          <span style={{ color: 'var(--prime, #F0A500)', fontWeight: 600 }}>
-            {degree}
+          <span style={{ color: 'var(--ink-low, #555)' }}>Test MSE: </span>
+          <span style={{ color: testMse !== null && mse !== null && testMse > mse * 3 ? '#ef4444' : '#22d3ee', fontWeight: 600 }}>
+            {testMse !== null ? testMse.toFixed(4) : 'N/A'}
           </span>
+          {testMse !== null && mse !== null && testMse > mse * 3 && (
+            <span style={{ color: '#ef4444', marginLeft: 8, fontSize: 11 }}>↑ overfit</span>
+          )}
         </div>
       </div>
 
@@ -396,7 +426,7 @@ export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
         borderTop: '1px solid var(--rim, #2a2a2a)',
         paddingTop: '10px',
       }}>
-        {`20 points from y = sin(πx) + noise (σ=0.25). Fit via normal equations: β = (XᵀX)⁻¹Xᵀy. MSE is measured on the training set only — validation loss would tell the full story.`}
+        {`15 train points (gray) + 5 held-out test points (cyan circles) from y = sin(πx) + noise. Model fits on train only. At low degree: both MSEs high = underfitting (high bias). At degree 5-6: test MSE minimized = sweet spot. At high degree: train MSE → 0 but test MSE explodes = overfitting (high variance). The train/test gap IS the bias-variance tradeoff made visible.`}
       </p>
     </div>
   );

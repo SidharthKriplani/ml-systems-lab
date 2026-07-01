@@ -105,6 +105,28 @@ function computeAccuracy(depth) {
 
 const ACCURACIES = { 1: computeAccuracy(1), 2: computeAccuracy(2), 3: computeAccuracy(3), 4: computeAccuracy(4) };
 
+// ── Gini impurity ─────────────────────────────────────────────────────────────
+function gini(points) {
+  if (points.length === 0) return 0;
+  const n0 = points.filter(p => p.cls === 0).length;
+  const n1 = points.length - n0;
+  const p0 = n0 / points.length, p1 = n1 / points.length;
+  return 1 - p0 * p0 - p1 * p1;
+}
+
+// For depth d, compute Gini split info for the ROOT split (first split in SPLITS_BY_DEPTH)
+function getRootGini(depth) {
+  const s = SPLITS_BY_DEPTH[depth][0];
+  const left  = POINTS.filter(p => s.axis === 'x' ? p.x <  s.threshold : p.y <  s.threshold);
+  const right = POINTS.filter(p => s.axis === 'x' ? p.x >= s.threshold : p.y >= s.threshold);
+  const gParent = gini(POINTS);
+  const gLeft   = gini(left);
+  const gRight  = gini(right);
+  const weightedGini = (left.length * gLeft + right.length * gRight) / POINTS.length;
+  const gain = gParent - weightedGini;
+  return { axis: s.axis, threshold: s.threshold, left, right, gParent, gLeft, gRight, weightedGini, gain };
+}
+
 export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -286,6 +308,48 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
         <span style={{ color: "#5080DC" }}>&#9679; Class 0</span>
         <span style={{ color: "#ff4444" }}>&#10005; Misclassified</span>
       </div>
+
+      {/* Gini impurity panel */}
+      {(() => {
+        const g = getRootGini(depth);
+        return (
+          <div style={{
+            marginTop: 10,
+            background: 'var(--depth,#111)', border: '1px solid var(--rim,#333)',
+            borderRadius: 6, padding: '10px 14px', fontSize: 12,
+            fontFamily: 'var(--font-mono, monospace)', lineHeight: 1.7,
+          }}>
+            <div style={{ color: 'var(--prime,#F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              Gini Impurity — Root Split ({g.axis} {'<'} {g.threshold.toFixed(2)})
+            </div>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', color: 'var(--ink-mid,#aaa)' }}>
+              <div>
+                <div style={{ color: 'var(--ink-low,#666)', fontSize: 11 }}>Parent (before split)</div>
+                <div>G = 1 − p₀² − p₁² = <span style={{ color: 'var(--prime)' }}>{g.gParent.toFixed(3)}</span></div>
+                <div style={{ color: 'var(--ink-low)', fontSize: 11 }}>{POINTS.length} samples</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--ink-low,#666)', fontSize: 11 }}>Left leaf ({g.axis} {'<'} {g.threshold.toFixed(2)})</div>
+                <div>G = <span style={{ color: g.gLeft < g.gParent ? '#4ade80' : '#ef4444' }}>{g.gLeft.toFixed(3)}</span></div>
+                <div style={{ color: 'var(--ink-low)', fontSize: 11 }}>{g.left.length} samples</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--ink-low,#666)', fontSize: 11 }}>Right leaf ({g.axis} ≥ {g.threshold.toFixed(2)})</div>
+                <div>G = <span style={{ color: g.gRight < g.gParent ? '#4ade80' : '#ef4444' }}>{g.gRight.toFixed(3)}</span></div>
+                <div style={{ color: 'var(--ink-low)', fontSize: 11 }}>{g.right.length} samples</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--ink-low,#666)', fontSize: 11 }}>Information gain</div>
+                <div>ΔG = <span style={{ color: '#4ade80', fontWeight: 700 }}>{g.gain.toFixed(3)}</span></div>
+                <div style={{ color: 'var(--ink-low)', fontSize: 11 }}>parent − weighted avg</div>
+              </div>
+            </div>
+            <div style={{ color: 'var(--ink-low,#666)', fontSize: 11, marginTop: 6 }}>
+              Gini = 1 − Σₖ pₖ² ranges from 0 (pure: all one class) to 0.5 (50/50 split). Tree greedily picks the split maximizing ΔG at each node.
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 })

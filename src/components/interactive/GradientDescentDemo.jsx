@@ -150,6 +150,7 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
   const [trajectory, setTrajectory] = useState([{ w: 0 }]);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+  const [diverged, setDiverged] = useState(false);
 
   const loss = LOSS(w);
   const grad = GRAD(w);
@@ -170,10 +171,12 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
     const newLoss = LOSS(newW);
     const newStep = prevStep + 1;
     const newTrajectory = [...prevTrajectory, { w: newW }];
-    const isDone = newLoss < 0.0001 || newStep >= 120;
+    const isDiverted = !isFinite(newW) || Math.abs(newW) > 200 || newLoss > 10000;
+    const isDone = newLoss < 0.0001 || newStep >= 120 || isDiverted;
     setW(newW);
     setTrajectory(newTrajectory);
     setStep(newStep);
+    if (isDiverted) setDiverged(true);
     if (isDone) {
       setRunning(false);
       setDone(true);
@@ -234,7 +237,9 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
       setW(newW);
       setTrajectory(newTraj);
       setStep(newStep);
-      if (newLoss < 0.0001 || newStep >= 120) {
+      const isDiverted = !isFinite(newW) || Math.abs(newW) > 200 || LOSS(newW) > 10000;
+      if (isDiverted) setDiverged(true);
+      if (newLoss < 0.0001 || newStep >= 120 || isDiverted) {
         setRunning(false);
         setDone(true);
         clearInterval(intervalRef.current);
@@ -247,6 +252,7 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
     clearInterval(intervalRef.current);
     setRunning(false);
     setDone(false);
+    setDiverged(false);
     setStep(0);
     setW(0);
     setTrajectory([{ w: 0 }]);
@@ -428,13 +434,15 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
           <input
             type="range"
             min={0.01}
-            max={0.49}
+            max={1.49}
             step={0.01}
             value={alpha}
-            onChange={(e) => setAlpha(parseFloat(e.target.value))}
+            onChange={(e) => { setAlpha(parseFloat(e.target.value)); handleReset(); }}
             style={styles.slider}
           />
-          <span style={styles.mono}>{alpha.toFixed(2)}</span>
+          <span style={{ ...styles.mono, color: alpha >= 1.0 ? '#ef4444' : 'var(--prime, #F0A500)' }}>
+            {alpha.toFixed(2)}
+          </span>
         </label>
 
         <button
@@ -457,10 +465,11 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
           Reset
         </button>
 
-        {done && (
-          <span style={{ fontSize: 12, color: '#4ade80' }}>
-            {`✓ converged`}
-          </span>
+        {done && !diverged && (
+          <span style={{ fontSize: 12, color: '#4ade80' }}>✓ converged</span>
+        )}
+        {diverged && (
+          <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 700 }}>✗ DIVERGED (α ≥ 1/L)</span>
         )}
       </div>
 
@@ -523,6 +532,47 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
           </div>
         </div>
       </div>
+
+      {/* Convergence rate panel */}
+      {(() => {
+        // For L(w)=(w-3)^2, L=2 (Lipschitz constant of gradient), optimum lr = 1/L = 0.5
+        // Contraction ratio per step: |1 - 2α| (distance to optimum shrinks by this factor)
+        const rho = Math.abs(1 - 2 * alpha);
+        const converges = alpha < 1.0;
+        const stepsToHalve = converges && rho > 0 ? Math.ceil(Math.log(0.5) / Math.log(rho)) : null;
+        return (
+          <div style={{ ...styles.stepPanel, marginTop: 10, borderColor: converges ? 'var(--rim,#333)' : '#ef4444' }}>
+            <div style={styles.stepTitle}>Convergence Analysis</div>
+            <div style={{ ...styles.mathRow, gap: 6 }}>
+              <div>
+                <span style={{ color: 'var(--ink-low)' }}>Condition: α {'<'} 2/L = 2/(2) = </span>
+                <span style={styles.highlight}>1.0</span>
+                <span style={{ color: 'var(--ink-low)' }}> for this parabola (L=2)</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--ink-low)' }}>Contraction ratio: ρ = |1 − 2α| = |1 − {(2*alpha).toFixed(2)}| = </span>
+                <span style={{ color: converges ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{rho.toFixed(3)}</span>
+                <span style={{ color: 'var(--ink-low)' }}> {converges ? '< 1 → converges' : '≥ 1 → DIVERGES'}</span>
+              </div>
+              {converges && stepsToHalve !== null && (
+                <div>
+                  <span style={{ color: 'var(--ink-low)' }}>Steps to halve error: ≈ </span>
+                  <span style={styles.highlight}>{stepsToHalve}</span>
+                  <span style={{ color: 'var(--ink-low)' }}> (strongly convex: O(ρᵗ) = geometric decay)</span>
+                </div>
+              )}
+              {!converges && (
+                <div style={{ color: '#ef4444' }}>
+                  α ≥ 1/L: gradient step overshoots the minimum. Each step moves further away. Try α ≤ 0.5 for this loss.
+                </div>
+              )}
+              <div style={{ ...styles.note, marginTop: 4 }}>
+                Optimal α = 1/L = 0.5 (fastest convergence). α → 0 = slow but safe. α ≥ 2/L = diverges.
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 })

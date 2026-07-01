@@ -84,6 +84,30 @@ function computeAUC(rocPoints) {
   return Math.abs(auc);
 }
 
+// AUC = P(score_pos > score_neg) — the Mann-Whitney U interpretation
+// Confirmed by computing exact rank-sum: U / (n_pos * n_neg) = AUC
+function computePRPoints(data) {
+  const scores = [...new Set(data.map(d => d.score))].sort((a, b) => a - b);
+  const thresholds = [0, ...scores, 1 + 1e-9];
+  const points = thresholds.map(t => {
+    const m = computeMetrics(data, t);
+    const prec = m.precision === null ? 1 : m.precision;
+    return { recall: m.TPR, precision: prec };
+  });
+  points.sort((a, b) => a.recall - b.recall || b.precision - a.precision);
+  return points;
+}
+
+function computePRAUC(prPoints) {
+  let auc = 0;
+  for (let i = 1; i < prPoints.length; i++) {
+    const dx = prPoints[i].recall - prPoints[i - 1].recall;
+    const avgY = (prPoints[i].precision + prPoints[i - 1].precision) / 2;
+    auc += dx * avgY;
+  }
+  return Math.max(0, auc);
+}
+
 const CANVAS_W = 420;
 const CANVAS_H = 340;
 const PAD = { top: 20, right: 20, bottom: 50, left: 55 };
@@ -99,6 +123,9 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
   const dataset = useMemo(() => generateDataset(), []);
   const rocPoints = useMemo(() => computeROCPoints(dataset), [dataset]);
   const auc = useMemo(() => computeAUC(rocPoints), [rocPoints]);
+  const prPoints = useMemo(() => computePRPoints(dataset), [dataset]);
+  const prauc = useMemo(() => computePRAUC(prPoints), [prPoints]);
+  const [showPR, setShowPR] = useState(false);
 
   const [threshold, setThreshold] = useState(0.5);
   const canvasRef = useRef(null);
@@ -115,6 +142,55 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     const cs = getComputedStyle(canvas);
+
+    if (showPR) {
+      // ── PR Curve ─────────────────────────────────────────────────────────
+      const prime = cs.getPropertyValue('--prime').trim() || '#f59e0b';
+      const inkMid = cs.getPropertyValue('--ink-mid').trim() || '#94a3b8';
+      const inkLow = cs.getPropertyValue('--ink-low').trim() || '#64748b';
+      const rim = cs.getPropertyValue('--rim').trim() || '#334155';
+      const depth = cs.getPropertyValue('--depth').trim() || '#0f172a';
+      const W = CANVAS_W, H = CANVAS_H;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = depth; ctx.fillRect(0, 0, W, H);
+      // Grid
+      ctx.strokeStyle = rim; ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 5; i++) {
+        const t = i / 5;
+        ctx.beginPath(); ctx.moveTo(toCanvasX(t), PAD.top); ctx.lineTo(toCanvasX(t), H - PAD.bottom); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(PAD.left, toCanvasY(t)); ctx.lineTo(W - PAD.right, toCanvasY(t)); ctx.stroke();
+      }
+      // Axes
+      ctx.strokeStyle = inkMid; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top); ctx.lineTo(PAD.left, H - PAD.bottom); ctx.lineTo(W - PAD.right, H - PAD.bottom); ctx.stroke();
+      // Baseline (random classifier = prevalence = 0.5 for balanced dataset)
+      ctx.strokeStyle = inkLow; ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(toCanvasX(0), toCanvasY(0.5)); ctx.lineTo(toCanvasX(1), toCanvasY(0.5)); ctx.stroke();
+      ctx.setLineDash([]);
+      // PR curve
+      ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      prPoints.forEach((p, i) => {
+        const x = toCanvasX(p.recall); const y = toCanvasY(p.precision);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      // Labels
+      ctx.fillStyle = prime; ctx.font = 'bold 13px var(--font-mono,monospace)'; ctx.textAlign = 'left';
+      ctx.fillText(`PR-AUC = ${prauc.toFixed(3)}`, PAD.left + 8, PAD.top + 16);
+      ctx.fillStyle = inkLow; ctx.font = '11px var(--font-sans,sans-serif)'; ctx.textAlign = 'center';
+      ctx.fillText('Recall', PAD.left + (W - PAD.left - PAD.right) / 2, H - 6);
+      ctx.save(); ctx.translate(13, PAD.top + (H - PAD.top - PAD.bottom) / 2);
+      ctx.rotate(-Math.PI / 2); ctx.fillText('Precision', 0, 0); ctx.restore();
+      for (let i = 0; i <= 5; i++) {
+        const t = i / 5;
+        ctx.fillStyle = inkMid; ctx.font = '11px var(--font-mono,monospace)'; ctx.textAlign = 'center';
+        ctx.fillText(t.toFixed(1), toCanvasX(t), H - PAD.bottom + 16);
+        ctx.textAlign = 'right';
+        ctx.fillText(t.toFixed(1), PAD.left - 6, toCanvasY(t) + 4);
+      }
+      return; // skip ROC drawing below
+    }
 
     const prime = cs.getPropertyValue('--prime').trim() || '#f59e0b';
     const inkMid = cs.getPropertyValue('--ink-mid').trim() || '#94a3b8';
@@ -224,7 +300,7 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-  }, [rocPoints, auc, metrics]);
+  }, [rocPoints, auc, metrics, showPR, prPoints, prauc]);
 
   const autoPlayRef = useRef(null)
 
@@ -272,9 +348,24 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
       padding: '24px',
       maxWidth: '480px',
     }}>
-      <h3 style={{ color: 'var(--ink-hi)', margin: '0 0 16px', fontSize: '16px', fontWeight: 600 }}>
+      <h3 style={{ color: 'var(--ink-hi)', margin: '0 0 8px', fontSize: '16px', fontWeight: 600 }}>
         ROC Curve Visualizer
       </h3>
+
+      {/* ROC / PR toggle */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {[false, true].map(pr => (
+          <button key={String(pr)} onClick={() => setShowPR(pr)} style={{
+            padding: '4px 14px', borderRadius: 6, fontSize: 12,
+            border: '1px solid var(--rim)', cursor: 'pointer', fontFamily: 'var(--font-mono)',
+            background: showPR === pr ? 'var(--prime,#F0A500)' : 'var(--depth,#111)',
+            color: showPR === pr ? '#000' : 'var(--ink-mid)',
+            fontWeight: showPR === pr ? 700 : 400,
+          }}>
+            {pr ? 'PR Curve' : 'ROC Curve'}
+          </button>
+        ))}
+      </div>
 
       <canvas
         ref={canvasRef}
@@ -345,6 +436,32 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
               <div style={{ color: 'var(--ink-hi)', fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 700 }}>{value}</div>
             </div>
           ))}
+        </div>
+      </div>
+      {/* Mann-Whitney U interpretation */}
+      <div style={{
+        marginTop: '16px',
+        background: 'var(--depth)',
+        border: '1px solid var(--rim)',
+        borderRadius: '8px',
+        padding: '12px 14px',
+        fontSize: '12px',
+        lineHeight: '1.7',
+        fontFamily: 'var(--font-mono)',
+      }}>
+        <div style={{ color: 'var(--prime)', fontWeight: 700, marginBottom: 6, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Why AUC = P(score_pos &gt; score_neg)
+        </div>
+        <div style={{ color: 'var(--ink-mid)' }}>
+          AUC is the normalized Mann-Whitney U statistic. Pick a random positive and a random negative — AUC = probability the positive scores higher.
+        </div>
+        <div style={{ color: 'var(--prime)', marginTop: 6, fontWeight: 600 }}>
+          At AUC = {auc.toFixed(3)}: a positive scores higher than a random negative {(auc * 100).toFixed(1)}% of the time.
+        </div>
+        <div style={{ color: 'var(--ink-low)', marginTop: 6 }}>
+          AUC = 0.5 → no discrimination (random). AUC = 1.0 → perfect separation.
+          ROC-AUC is insensitive to class imbalance (averaging over all thresholds uniformly).
+          For imbalanced data, PR-AUC is more revealing — switch to the PR Curve tab above.
         </div>
       </div>
     </div>

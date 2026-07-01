@@ -493,6 +493,27 @@ export const RandomForestViz = forwardRef(function RandomForestViz(props, ref) {
       <p style={S.title}>Random Forest — Ensemble Construction</p>
       <p style={S.subtitle}>{'Bagging + feature randomness → variance reduction via diversity'}</p>
 
+      {/* OOB / Bootstrap derivation panel */}
+      <div style={{
+        background: 'var(--depth,#111)', border: '1px solid var(--rim,#333)',
+        borderRadius: 8, padding: '10px 14px', marginBottom: 8,
+        fontSize: 12, fontFamily: 'var(--font-mono,monospace)', lineHeight: 1.7,
+      }}>
+        <span style={{ color: 'var(--prime,#F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          OOB Error — Why 36.8% of samples are out-of-bag per tree
+        </span>
+        <div style={{ color: 'var(--ink-mid,#aaa)', marginTop: 4 }}>
+          Each tree draws n samples WITH replacement from n total. P(one sample NOT chosen) = (1 − 1/n).
+          Over n draws: P(never chosen) = (1 − 1/n)ⁿ → e⁻¹ ≈ 0.368 as n → ∞.
+        </div>
+        <div style={{ color: 'var(--prime,#F0A500)', fontWeight: 600, marginTop: 4 }}>
+          ∴ ~36.8% of samples are OOB per tree → free validation set, no train/val split needed.
+        </div>
+        <div style={{ color: 'var(--ink-low,#666)', marginTop: 4, fontSize: 11 }}>
+          Ensemble variance = ρσ² + (1−ρ)σ²/T. Feature subsetting reduces ρ (inter-tree correlation) at the cost of slightly higher σ² per tree. The ensemble wins when ρ is small — hence √p features per split.
+        </div>
+      </div>
+
       <div style={S.panels}>
         {/* ── Left: Forest grid + accuracy curve ──────────────────────────── */}
         <div style={S.panelLeft}>

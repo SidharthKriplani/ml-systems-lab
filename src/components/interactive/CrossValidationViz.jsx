@@ -2,6 +2,13 @@ import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, for
 
 const N_SAMPLES = 30;
 
+// For stratified CV: assign class labels (5% positive rate = 1/20 chance → ~2 positives in 30)
+// Use a fixed pattern: indices 4, 14, 24 are class 1, rest class 0 (10% positive for visibility)
+const SAMPLE_CLASSES = Array.from({ length: N_SAMPLES }, (_, i) => (i % 10 === 4 ? 1 : 0));
+// For group CV: assign group IDs (6 groups of 5 samples each)
+const SAMPLE_GROUPS = Array.from({ length: N_SAMPLES }, (_, i) => Math.floor(i / 5));
+const N_GROUPS = 6;
+
 // Hardcoded simulated validation accuracies per k value
 const FOLD_ACCURACIES = {
   3: [0.82, 0.79, 0.85],
@@ -38,12 +45,61 @@ const K_INFO = {
   10: { label: 'k=10', note: 'Expensive but low-variance estimate' },
 };
 
+// Stratified fold indices: ensure class distribution preserved in each fold
+function getStratifiedFoldIndices(k, foldIdx) {
+  const class0 = Array.from({ length: N_SAMPLES }, (_, i) => i).filter(i => SAMPLE_CLASSES[i] === 0);
+  const class1 = Array.from({ length: N_SAMPLES }, (_, i) => i).filter(i => SAMPLE_CLASSES[i] === 1);
+  const valSet = new Set();
+  // Each class split independently across folds
+  [class0, class1].forEach(indices => {
+    const fSize = Math.floor(indices.length / k);
+    const start = foldIdx * fSize;
+    indices.slice(start, start + fSize).forEach(i => valSet.add(i));
+  });
+  return valSet;
+}
+
+// Group fold indices: entire groups go into one fold
+function getGroupFoldIndices(k, foldIdx) {
+  // Assign groups to folds: 6 groups into k folds
+  const groupsPerFold = Math.ceil(N_GROUPS / k);
+  const valGroups = new Set();
+  for (let g = foldIdx * groupsPerFold; g < Math.min((foldIdx + 1) * groupsPerFold, N_GROUPS); g++) {
+    valGroups.add(g);
+  }
+  return new Set(Array.from({ length: N_SAMPLES }, (_, i) => i).filter(i => valGroups.has(SAMPLE_GROUPS[i])));
+}
+
+// Walk-forward: training is always historical, validation is always future
+function getWalkForwardIndices(k, foldIdx) {
+  // Train on [0..splitPt-1], validate on [splitPt..splitPt+foldSize-1]
+  const foldSize = Math.floor(N_SAMPLES / (k + 1));
+  const splitPt = (foldIdx + 1) * foldSize;
+  const valEnd = Math.min(splitPt + foldSize, N_SAMPLES);
+  return new Set(Array.from({ length: valEnd - splitPt }, (_, i) => splitPt + i));
+}
+
+const CV_TYPES = ['Standard', 'Stratified', 'Group', 'Walk-forward'];
+
+const CV_INFO = {
+  'Standard': 'Samples assigned to folds in order. Does not account for class distribution or entity grouping.',
+  'Stratified': 'Each fold preserves the class ratio (~10% positive). Critical for imbalanced datasets — prevents a fold from having no positives.',
+  'Group': '5 samples share a group (e.g., visits from the same patient). All group members stay together. Prevents data leakage from memorizing patient history.',
+  'Walk-forward': 'Time-series CV: train on past, validate on future. No data from the future leaks into training.',
+};
+
 export const CrossValidationViz = forwardRef(function CrossValidationViz(props, ref) {
   const [k, setK] = useState(5);
   const [foldIdx, setFoldIdx] = useState(0); // 0-based
+  const [cvType, setCvType] = useState('Standard');
   const animRef = useRef(null);
 
-  const valSet = useMemo(() => getFoldIndices(k, foldIdx), [k, foldIdx]);
+  const valSet = useMemo(() => {
+    if (cvType === 'Stratified') return getStratifiedFoldIndices(k, foldIdx);
+    if (cvType === 'Group') return getGroupFoldIndices(k, foldIdx);
+    if (cvType === 'Walk-forward') return getWalkForwardIndices(k, foldIdx);
+    return getFoldIndices(k, foldIdx);
+  }, [k, foldIdx, cvType]);
   const accs = FOLD_ACCURACIES[k];
   const cvMean = mean(accs);
   const cvStd = std(accs);
@@ -102,6 +158,35 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
       flexDirection: 'column',
       gap: '14px',
     }}>
+      {/* CV type selector */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {CV_TYPES.map(ct => (
+          <button
+            key={ct}
+            onClick={() => { setCvType(ct); setFoldIdx(0); }}
+            style={{
+              padding: '4px 11px', borderRadius: '6px',
+              border: '1px solid var(--rim, #2a2a2a)',
+              background: cvType === ct ? 'var(--prime, #F0A500)' : 'var(--depth, #111)',
+              color: cvType === ct ? '#000' : 'var(--ink-mid, #888)',
+              fontFamily: 'var(--font-mono, monospace)', fontSize: '11px',
+              fontWeight: cvType === ct ? 700 : 400, cursor: 'pointer',
+            }}
+          >
+            {ct}
+          </button>
+        ))}
+      </div>
+
+      {/* CV type explanation */}
+      <div style={{
+        fontSize: '11px', color: 'var(--ink-mid, #888)', lineHeight: 1.6,
+        background: 'var(--depth, #111)', border: '1px solid var(--rim)', borderRadius: 6,
+        padding: '8px 12px',
+      }}>
+        {CV_INFO[cvType]}
+      </div>
+
       {/* k selector */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <span style={{ fontSize: '13px', color: 'var(--ink-mid, #888)', fontFamily: 'var(--font-mono, monospace)' }}>
@@ -142,19 +227,26 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
           <div key={ri} style={{ display: 'flex', gap: '4px' }}>
             {row.map(idx => {
               const isVal = valSet.has(idx);
+              const isPos = SAMPLE_CLASSES[idx] === 1;
+              const groupColors = ['#60a5fa','#a78bfa','#34d399','#fb923c','#f87171','#22d3ee'];
+              const groupColor = groupColors[SAMPLE_GROUPS[idx]];
+              // Walk-forward: show whether sample is in any future training zone
+              const wfTrainOnly = cvType === 'Walk-forward' && !isVal;
               return (
                 <div
                   key={idx}
-                  title={`Sample ${idx + 1}${isVal ? ' — validation' : ' — training'}`}
+                  title={`Sample ${idx + 1} | class:${SAMPLE_CLASSES[idx]} | group:${SAMPLE_GROUPS[idx]}${isVal ? ' — VALIDATION' : ' — training'}`}
                   style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '3px',
-                    background: isVal ? '#ef4444' : 'var(--prime, #F0A500)',
-                    opacity: isVal ? 1 : 0.7,
-                    border: isVal ? '1px solid #ff6b6b' : '1px solid rgba(240,165,0,0.4)',
-                    transition: 'background 0.2s',
-                    flexShrink: 0,
+                    width: '16px', height: '16px', borderRadius: '3px', flexShrink: 0,
+                    background: isVal ? '#ef4444'
+                      : cvType === 'Group' ? groupColor
+                      : 'var(--prime, #F0A500)',
+                    opacity: isVal ? 1 : cvType === 'Walk-forward' ? (idx < (foldIdx + 1) * Math.floor(N_SAMPLES / (k + 1)) ? 0.8 : 0.25) : 0.7,
+                    border: isVal ? '2px solid #ff6b6b'
+                      : cvType === 'Stratified' && isPos ? '2px solid #fff'
+                      : '1px solid rgba(240,165,0,0.3)',
+                    transition: 'all 0.15s',
+                    position: 'relative',
                   }}
                 />
               );
@@ -163,15 +255,24 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
         ))}
 
         {/* Legend */}
-        <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '14px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: 'var(--prime, #F0A500)', opacity: 0.7 }} />
             <span style={{ fontSize: '11px', color: 'var(--ink-mid, #888)' }}>Training</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#ef4444' }} />
             <span style={{ fontSize: '11px', color: 'var(--ink-mid, #888)' }}>Validation</span>
           </div>
+          {cvType === 'Stratified' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: 'var(--prime)', border: '2px solid #fff' }} />
+              <span style={{ fontSize: '11px', color: 'var(--ink-mid, #888)' }}>Positive class</span>
+            </div>
+          )}
+          {cvType === 'Group' && (
+            <span style={{ fontSize: '11px', color: 'var(--ink-mid, #888)' }}>Colors = groups (e.g., patients)</span>
+          )}
         </div>
       </div>
 

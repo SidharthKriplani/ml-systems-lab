@@ -313,8 +313,48 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
       </div>
 
       <p style={{ marginTop: 14, fontSize: 12, color: 'var(--ink-low)', lineHeight: 1.6, borderTop: '1px solid var(--rim)', paddingTop: 12 }}>
-        Backprop applies the chain rule layer by layer. Each gradient = local derivative &times; upstream gradient. Dead ReLU neurons (z &lt; 0) stop gradient flow &mdash; gradient is 0.
+        Backprop applies the chain rule layer by layer. Each gradient = local derivative &times; upstream gradient. Dead ReLU neurons (z &lt; 0) stop gradient flow — gradient is 0.
       </p>
+
+      {/* Gradient shrinkage panel — shown in backward mode */}
+      {mode === 'backward' && (
+        <div style={{
+          marginTop: 12, background: 'var(--depth)', border: '1px solid var(--rim)',
+          borderRadius: 8, padding: '12px 14px',
+        }}>
+          <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--prime)', fontWeight: 700, marginBottom: 8 }}>
+            Gradient magnitude per layer (vanishing gradient check)
+          </div>
+          {(() => {
+            const layers = [
+              { name: 'Output layer', grad: Math.abs(bwd.dLoss_dz2), note: `σ'(z₂) = ${(sigmoid(fwd.z2) * (1 - sigmoid(fwd.z2))).toFixed(3)} ≤ 0.25` },
+              { name: 'Hidden h₁ (ReLU)', grad: Math.abs(bwd.dLoss_dz1[0]), note: fwd.z1[0] > 0 ? "ReLU active → gradient passes through" : "ReLU dead → gradient = 0" },
+              { name: 'Hidden h₂ (ReLU)', grad: Math.abs(bwd.dLoss_dz1[1]), note: fwd.z1[1] > 0 ? "ReLU active → gradient passes through" : "ReLU dead → gradient = 0" },
+            ];
+            const maxG = Math.max(...layers.map(l => l.grad), 0.0001);
+            return layers.map((l, i) => (
+              <div key={i} style={{ marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>
+                  <span>{l.name}</span>
+                  <span style={{ color: l.grad < 0.001 ? '#ef4444' : 'var(--prime)' }}>|∂L/∂z| = {l.grad.toFixed(4)}</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 4, background: 'var(--rim)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 4,
+                    width: `${Math.max(2, (l.grad / maxG) * 100)}%`,
+                    background: l.grad < 0.001 ? '#ef4444' : 'var(--prime)',
+                    transition: 'width 0.2s',
+                  }} />
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{l.note}</div>
+              </div>
+            ));
+          })()}
+          <div style={{ marginTop: 8, fontSize: 11, color: 'var(--ink-low)', lineHeight: 1.6, borderTop: '1px solid var(--rim)', paddingTop: 8 }}>
+            Sigmoid derivative σ'(z) ≤ 0.25 always. With 10 sigmoid layers: (0.25)¹⁰ ≈ 10⁻⁶ — vanished. ReLU derivative is either 0 (dead) or 1 (full pass-through), so gradients don't shrink per layer. This is why deep nets use ReLU.
+          </div>
+        </div>
+      )}
     </div>
   );
 })

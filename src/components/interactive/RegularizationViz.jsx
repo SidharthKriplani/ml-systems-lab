@@ -473,6 +473,51 @@ export const RegularizationViz = forwardRef(function RegularizationViz(props, re
           ? `L1 drives small coefficients to exactly zero — automatic feature selection. In the path chart, lines hit zero and stay there. Use Lasso when you suspect only a few features are truly relevant.`
           : `L2 keeps all features but makes them small — coefficients shrink toward zero but never reach it. Ridge works well when you believe all features contribute. The path chart shows smooth asymptotic decay.`}
       </p>
+
+      {/* Bayesian interpretation panel */}
+      <div style={{
+        marginTop: 10,
+        background: 'var(--depth, #111)',
+        border: '1px solid var(--rim, #2a2a2a)',
+        borderRadius: 6,
+        padding: '10px 14px',
+        fontSize: 12,
+        fontFamily: 'var(--font-mono, monospace)',
+        lineHeight: 1.7,
+      }}>
+        <div style={{ color: 'var(--prime, #F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+          Bayesian interpretation
+        </div>
+        {mode === 'L2' ? (
+          <>
+            <div style={{ color: 'var(--ink-mid, #aaa)' }}>
+              Ridge = MAP estimation with a <span style={{ color: 'var(--prime)' }}>Gaussian prior</span> N(0, 1/λ) on each βⱼ.
+            </div>
+            <div style={{ color: 'var(--ink-low, #666)', marginTop: 4 }}>
+              Gaussian prior is bell-shaped with tails that go to zero smoothly.
+              It pushes all weights toward zero proportionally — no weight exactly zeroed.
+              The stronger the prior (larger λ), the tighter the shrinkage.
+            </div>
+            <div style={{ color: 'var(--ink-mid, #aaa)', marginTop: 4 }}>
+              Posterior ∝ likelihood × prior → minimize MSE + λ||β||₂² = Ridge objective.
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ color: 'var(--ink-mid, #aaa)' }}>
+              Lasso = MAP estimation with a <span style={{ color: 'var(--prime)' }}>Laplace prior</span> Laplace(0, 1/λ) on each βⱼ.
+            </div>
+            <div style={{ color: 'var(--ink-low, #666)', marginTop: 4 }}>
+              Laplace prior has a sharp spike at zero and heavier tails than Gaussian.
+              The spike creates a kink in the objective at βⱼ=0, which is why soft-thresholding
+              drives small coefficients to EXACTLY zero — sparse solutions emerge naturally.
+            </div>
+            <div style={{ color: 'var(--ink-mid, #aaa)', marginTop: 4 }}>
+              Posterior ∝ likelihood × prior → minimize MSE + λ||β||₁ = Lasso objective.
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 })

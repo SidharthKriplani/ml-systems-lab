@@ -563,6 +563,44 @@ export const GradientBoostingViz = forwardRef(function GradientBoostingViz(props
         </span>
       </div>
 
+      {/* Gradient descent in function space — core insight */}
+      {round > 0 && (() => {
+        const residuals = stumpsRef.current.length >= round ? stumpsRef.current[round - 1].residuals : null;
+        const mse = residuals ? residuals.reduce((s, r) => s + r * r, 0) / N_POINTS : null;
+        return (
+          <div style={{
+            background: 'var(--depth,#111)', border: '1px solid var(--rim,#2a2a2a)',
+            borderRadius: 6, padding: '10px 14px', fontSize: 12,
+            fontFamily: 'var(--font-mono,monospace)', lineHeight: 1.7,
+          }}>
+            <div style={{ color: 'var(--prime,#F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+              Why residuals = gradient descent in function space
+            </div>
+            <div style={{ color: 'var(--ink-mid,#aaa)' }}>
+              Loss: L = Σᵢ (yᵢ − F(xᵢ))². Gradient w.r.t. the prediction F(xᵢ):
+            </div>
+            <div style={{ color: 'var(--prime)', marginTop: 2 }}>
+              ∂L/∂F(xᵢ) = −2(yᵢ − F(xᵢ)) = −2 × residualᵢ
+            </div>
+            <div style={{ color: 'var(--ink-mid,#aaa)', marginTop: 4 }}>
+              Fitting the next tree to residuals is one step of gradient descent in the space of functions — not in weight space. Each tree corrects where the ensemble is currently wrong.
+            </div>
+            {mse !== null && (
+              <div style={{ color: 'var(--ink-low,#666)', marginTop: 4 }}>
+                Round {round}: residual MSE = <span style={{ color: 'var(--prime)' }}>{mse.toFixed(4)}</span>
+                {round > 1 && stumpsRef.current.length >= round - 1 ? (() => {
+                  const prevMse = stumpsRef.current[round - 2].residuals.reduce((s, r) => s + r * r, 0) / N_POINTS;
+                  return <span style={{ color: '#4ade80', marginLeft: 8 }}>({((1 - mse / prevMse) * 100).toFixed(1)}% reduction)</span>;
+                })() : null}
+              </div>
+            )}
+            <div style={{ color: 'var(--ink-low,#666)', marginTop: 4, fontSize: 11 }}>
+              XGBoost gain formula per split: Gain = G_L²/(H_L+λ) + G_R²/(H_R+λ) − G_J²/(H_J+λ) − γ. Where G = Σ gradients, H = Σ hessians per node. λ regularizes leaf weights, γ penalizes splits.
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Legend */}
 
       <div style={{

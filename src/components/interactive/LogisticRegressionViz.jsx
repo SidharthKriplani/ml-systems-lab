@@ -377,6 +377,44 @@ export const LogisticRegressionViz = forwardRef(function LogisticRegressionViz(p
       }}>
         {`The decision boundary shifts as you move the threshold — trading off precision vs recall. At threshold = 0.5, the boundary sits at equal probability. Moving it left (lower threshold) increases recall but reduces precision.`}
       </p>
+
+      {/* Log-odds panel */}
+      <div style={{
+        marginTop: 10,
+        background: 'var(--depth, #111)',
+        border: '1px solid var(--rim, #2a2a2a)',
+        borderRadius: 6,
+        padding: '10px 14px',
+        fontSize: 12,
+        fontFamily: 'var(--font-mono, monospace)',
+        lineHeight: 1.7,
+      }}>
+        <div style={{ color: 'var(--prime, #F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+          Log-odds interpretation
+        </div>
+        <div style={{ color: 'var(--ink-mid, #aaa)' }}>
+          Logistic regression models the log-odds linearly:
+        </div>
+        <div style={{ color: 'var(--prime)', marginTop: 2 }}>
+          log(p / (1−p)) = w·x + b
+        </div>
+        <div style={{ color: 'var(--ink-mid, #aaa)', marginTop: 4 }}>
+          At threshold τ = {threshold.toFixed(2)}, the decision boundary is where:
+        </div>
+        <div style={{ color: 'var(--prime)', marginTop: 2 }}>
+          log(τ / (1−τ)) = {Math.log(threshold / (1 - threshold)).toFixed(3)} = w·x + b
+        </div>
+        <div style={{ color: 'var(--ink-low, #666)', marginTop: 4 }}>
+          {threshold === 0.5
+            ? 'At τ=0.5: log-odds=0, so the boundary is exactly where w·x+b=0 — equal probability for both classes.'
+            : threshold < 0.5
+            ? `τ < 0.5: log-odds = ${Math.log(threshold / (1 - threshold)).toFixed(3)} < 0 → boundary shifts to favor classifying as positive (higher recall, lower precision).`
+            : `τ > 0.5: log-odds = ${Math.log(threshold / (1 - threshold)).toFixed(3)} > 0 → boundary shifts to require stronger evidence before calling positive (lower recall, higher precision).`}
+        </div>
+        <div style={{ color: 'var(--ink-low, #666)', marginTop: 4, fontSize: 11 }}>
+          Key insight: gradient ∂L/∂z = σ(z) − y. The σ'(z) term cancels completely — no vanishing gradient at the output layer of logistic regression. This is why cross-entropy + sigmoid is the standard pairing.
+        </div>
+      </div>
     </div>
   );
 })
