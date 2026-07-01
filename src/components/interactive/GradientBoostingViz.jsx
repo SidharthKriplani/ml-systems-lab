@@ -86,6 +86,35 @@ function buildAllStumps(eta) {
   return stumps;
 }
 
+// ─── Test set: true function, no noise (for overfitting demo) ────────────────
+const N_TEST = 60;
+const TEST_X = Array.from({ length: N_TEST }, (_, i) => i / (N_TEST - 1));
+const TEST_Y_TRUE = TEST_X.map(x => Math.sin(2 * Math.PI * x));
+
+function computeTrainMSEAtRound(r, stumps, eta) {
+  return DATASET.reduce((sum, p) => {
+    let pred = Y_MEAN;
+    for (let k = 0; k < r; k++) pred += eta * applyStump(stumps[k].stump, p.x);
+    return sum + (p.y - pred) ** 2;
+  }, 0) / N_POINTS;
+}
+
+function computeTestMSEAtRound(r, stumps, eta) {
+  return TEST_X.reduce((sum, x, i) => {
+    let pred = Y_MEAN;
+    for (let k = 0; k < r; k++) pred += eta * applyStump(stumps[k].stump, x);
+    return sum + (TEST_Y_TRUE[i] - pred) ** 2;
+  }, 0) / N_TEST;
+}
+
+function computeAllMSEs(stumps, eta) {
+  return Array.from({ length: 9 }, (_, r) => ({
+    round: r,
+    trainMSE: computeTrainMSEAtRound(r, stumps, eta),
+    testMSE:  computeTestMSEAtRound(r, stumps, eta),
+  }));
+}
+
 // ─── Smooth ensemble prediction line ─────────────────────────────────────────
 const N_CURVE = 200;
 const X_CURVE = Array.from({ length: N_CURVE }, (_, i) => i / (N_CURVE - 1));
@@ -370,10 +399,17 @@ export const GradientBoostingViz = forwardRef(function GradientBoostingViz(props
 
   const [round, setRound] = useState(0);
   const [eta, setEta] = useState(0.5);
+  const [allMSEs, setAllMSEs] = useState(() => {
+    const s = buildAllStumps(0.5);
+    stumpsRef.current = s;
+    return computeAllMSEs(s, 0.5);
+  });
 
   // Recompute stumps whenever eta changes
   useEffect(() => {
-    stumpsRef.current = buildAllStumps(eta);
+    const s = buildAllStumps(eta);
+    stumpsRef.current = s;
+    setAllMSEs(computeAllMSEs(s, eta));
   }, [eta]);
 
   // Keep stateRef in sync
@@ -450,7 +486,9 @@ export const GradientBoostingViz = forwardRef(function GradientBoostingViz(props
 
   const handleEtaChange = useCallback((e) => {
     const newEta = parseFloat(e.target.value);
-    stumpsRef.current = buildAllStumps(newEta);
+    const newStumps = buildAllStumps(newEta);
+    stumpsRef.current = newStumps;
+    setAllMSEs(computeAllMSEs(newStumps, newEta));
     setEta(newEta);
     setRound(0);
   }, []);
@@ -596,6 +634,81 @@ export const GradientBoostingViz = forwardRef(function GradientBoostingViz(props
             )}
             <div style={{ color: 'var(--ink-low,#666)', marginTop: 4, fontSize: 11 }}>
               XGBoost gain formula per split: Gain = G_L²/(H_L+λ) + G_R²/(H_R+λ) − G_J²/(H_J+λ) − γ. Where G = Σ gradients, H = Σ hessians per node. λ regularizes leaf weights, γ penalizes splits.
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Train vs Test MSE — Overfitting demo */}
+      {allMSEs.length > 0 && (() => {
+        const maxMSE = Math.max(...allMSEs.map(d => Math.max(d.trainMSE, d.testMSE)), 0.1);
+        const VW = 340, VH = 110;
+        const pL = 38, pR = 8, pT = 18, pB = 26;
+        const plotW = VW - pL - pR, plotH = VH - pT - pB;
+        const toX = (r) => pL + (r / 8) * plotW;
+        const toY = (v) => pT + plotH - Math.min(v / maxMSE, 1) * plotH;
+        const trainPts = allMSEs.map(d => `${toX(d.round)},${toY(d.trainMSE)}`).join(' ');
+        const testPts  = allMSEs.map(d => `${toX(d.round)},${toY(d.testMSE)}`).join(' ');
+        // Find where test MSE bottoms out (optimal stopping)
+        let optRound = 0;
+        let minTestMSE = allMSEs[0].testMSE;
+        for (let i = 1; i < allMSEs.length; i++) {
+          if (allMSEs[i].testMSE < minTestMSE) { minTestMSE = allMSEs[i].testMSE; optRound = i; }
+        }
+        const isOverfitting = eta >= 0.8 && allMSEs[allMSEs.length - 1].testMSE > minTestMSE * 1.3;
+        const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({v: t * maxMSE, y: toY(t * maxMSE)}));
+        return (
+          <div style={{
+            background: 'var(--depth,#111)', border: `1px solid ${isOverfitting ? 'rgba(239,68,68,0.4)' : 'var(--rim,#2a2a2a)'}`,
+            borderRadius: 6, padding: '10px 14px', fontSize: 12,
+          }}>
+            <div style={{ color: 'var(--prime,#F0A500)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+              Train vs. Test MSE — Overfitting Demo
+              {isOverfitting && <span style={{ color: '#ef4444', marginLeft: 8 }}>⚡ OVERFITTING (η={eta.toFixed(1)})</span>}
+            </div>
+            <svg viewBox={`0 0 ${VW} ${VH}`} style={{ width: '100%', height: VH, display: 'block' }}>
+              {/* Axes */}
+              <line x1={pL} y1={pT} x2={pL} y2={pT+plotH} stroke="rgba(80,80,80,0.5)" strokeWidth="0.8"/>
+              <line x1={pL} y1={pT+plotH} x2={pL+plotW} y2={pT+plotH} stroke="rgba(80,80,80,0.5)" strokeWidth="0.8"/>
+              {/* Y ticks */}
+              {yTicks.filter((_, i) => i < 4).map(({ v, y }) => (
+                <text key={v} x={pL-3} y={y+3} textAnchor="end" fontSize="7" fill="rgba(100,100,100,0.8)">{v.toFixed(2)}</text>
+              ))}
+              {/* X ticks */}
+              {[0,2,4,6,8].map(r => (
+                <text key={r} x={toX(r)} y={VH-4} textAnchor="middle" fontSize="7" fill="rgba(100,100,100,0.8)">{r}</text>
+              ))}
+              {/* Optimal stopping line */}
+              {optRound > 0 && (
+                <line x1={toX(optRound)} y1={pT} x2={toX(optRound)} y2={pT+plotH} stroke="rgba(74,222,128,0.4)" strokeWidth="1.2" strokeDasharray="3,3"/>
+              )}
+              {/* Current round marker */}
+              <line x1={toX(round)} y1={pT} x2={toX(round)} y2={pT+plotH} stroke="rgba(240,165,0,0.35)" strokeWidth="2"/>
+              {/* Test MSE (cyan) */}
+              <polyline points={testPts} fill="none" stroke="#22d3ee" strokeWidth="2"/>
+              {allMSEs.map((d, i) => (
+                <circle key={`te${i}`} cx={toX(d.round)} cy={toY(d.testMSE)} r={i === round ? 3.5 : 2} fill="#22d3ee" opacity={i === round ? 1 : 0.55}/>
+              ))}
+              {/* Train MSE (gold) */}
+              <polyline points={trainPts} fill="none" stroke="#F0A500" strokeWidth="2"/>
+              {allMSEs.map((d, i) => (
+                <circle key={`tr${i}`} cx={toX(d.round)} cy={toY(d.trainMSE)} r={i === round ? 3.5 : 2} fill="#F0A500" opacity={i === round ? 1 : 0.55}/>
+              ))}
+              {/* Legend */}
+              <line x1={pL+4} y1={pT+5} x2={pL+18} y2={pT+5} stroke="#F0A500" strokeWidth="2"/>
+              <text x={pL+21} y={pT+8} fontSize="8" fill="rgba(200,200,200,0.8)">Train MSE</text>
+              <line x1={pL+4} y1={pT+16} x2={pL+18} y2={pT+16} stroke="#22d3ee" strokeWidth="2"/>
+              <text x={pL+21} y={pT+19} fontSize="8" fill="rgba(200,200,200,0.8)">Test MSE (true sin — no noise)</text>
+              {optRound > 0 && (
+                <text x={toX(optRound)+3} y={pT+8} fontSize="7" fill="rgba(74,222,128,0.8)">opt</text>
+              )}
+            </svg>
+            <div style={{ fontSize: 11, color: 'var(--ink-low,#666)', lineHeight: 1.5, marginTop: 4 }}>
+              {isOverfitting
+                ? `η=${eta.toFixed(1)}: train MSE → 0 fast but test MSE rises past round ${optRound}. Each step overshoots the true function — the ensemble memorizes noise rather than the signal.`
+                : eta >= 0.6
+                ? `η=${eta.toFixed(1)}: aggressive steps. Set η=1.0 to see test MSE diverge from train after round ${optRound}.`
+                : `η=${eta.toFixed(1)}: controlled convergence. Both curves fall together. Increase η toward 1.0 to see overfitting emerge.`}
             </div>
           </div>
         );

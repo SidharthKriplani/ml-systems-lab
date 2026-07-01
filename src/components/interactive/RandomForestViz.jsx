@@ -25,6 +25,14 @@ function generateForest(featureRatio) {
   return { baseErrors: BASE_ERRORS, ensembleErrors, correlation };
 }
 
+// ─── Bootstrap sample (shows which of N samples are in-bag vs OOB per tree) ──
+function generateBootstrapSample(treeIdx, n) {
+  const rng = mulberry32(treeIdx * 997 + 42);
+  const inBag = new Set();
+  for (let i = 0; i < n; i++) inBag.add(Math.floor(rng() * n));
+  return inBag;
+}
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const S = {
   root: {
@@ -429,6 +437,10 @@ function drawCorrHeatmap(canvas, featureRatio) {
 export const RandomForestViz = forwardRef(function RandomForestViz(props, ref) {
   const [nActive, setNActive] = useState(0);
   const [featureRatio, setFeatureRatio] = useState(0.5);
+  const [bsTreeIdx, setBsTreeIdx] = useState(0);
+
+  const bootstrapInBag = React.useMemo(() => generateBootstrapSample(bsTreeIdx, 20), [bsTreeIdx]);
+  const inBagCount = bootstrapInBag.size;
 
   const forestCanvasRef = useRef(null);
   const errorCanvasRef = useRef(null);
@@ -578,6 +590,52 @@ export const RandomForestViz = forwardRef(function RandomForestViz(props, ref) {
             <div style={{ color: 'var(--ink-low, #888)', marginTop: 6, fontSize: 11, lineHeight: 1.6 }}>
               High feature ratio → trees see same features → high ρ → ensemble barely beats one tree.
               Low ratio → diverse trees → low ρ → errors cancel → strong ensemble.
+            </div>
+          </div>
+
+          {/* Bootstrap sample visualization */}
+          <div style={{
+            marginTop: 12, background: 'rgba(240,165,0,0.04)',
+            border: '1px solid rgba(240,165,0,0.15)', borderRadius: 6, padding: '10px 12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.05em', color: 'var(--prime,#F0A500)',
+              }}>
+                Bootstrap Sample — T{bsTreeIdx + 1}
+              </span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => setBsTreeIdx(i => (i + 7) % 8)} style={{ ...S.btn, padding: '2px 7px', fontSize: 11 }}>←</button>
+                <button onClick={() => setBsTreeIdx(i => (i + 1) % 8)} style={{ ...S.btn, padding: '2px 7px', fontSize: 11 }}>→</button>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              {Array.from({ length: 20 }, (_, i) => {
+                const inBag = bootstrapInBag.has(i);
+                return (
+                  <div
+                    key={i}
+                    title={`Sample ${i + 1}: ${inBag ? 'in-bag (drawn)' : 'OOB (not drawn)'}`}
+                    style={{
+                      width: 22, height: 22, borderRadius: 3, fontSize: 8,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: inBag ? 'rgba(240,165,0,0.22)' : 'rgba(60,60,60,0.35)',
+                      color: inBag ? '#F0A500' : 'rgba(100,100,100,0.65)',
+                      border: inBag ? '1px solid rgba(240,165,0,0.5)' : '1px solid rgba(70,70,70,0.4)',
+                      fontFamily: 'var(--font-mono)', fontWeight: inBag ? 700 : 400,
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 6, fontSize: 10, color: 'var(--ink-mid,#aaa)', fontFamily: 'var(--font-mono)', lineHeight: 1.5 }}>
+              In-bag: {inBagCount}/20 ({(inBagCount / 20 * 100).toFixed(0)}%) · OOB: {20 - inBagCount}/20 ({((20 - inBagCount) / 20 * 100).toFixed(0)}%)
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--ink-low,#666)', lineHeight: 1.4, marginTop: 2 }}>
+              Theory: (1−1/n)ⁿ → 36.8% OOB as n→∞ · click ←→ to see each tree's different sample
             </div>
           </div>
         </div>
