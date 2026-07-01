@@ -1,12 +1,40 @@
 import React from 'react'
 
-export function renderMd(text, containerStyle = {}) {
+export function renderMd(text, containerStyle = {}, figures = {}) {
   if (!text) return null
   const blocks = text.split(/\n\n+/)
   return (
     <div style={containerStyle}>
       {blocks.map((block, i) => {
         const trimmed = block.trim()
+
+        // ── [FIGURE: figureId] inline figure
+        const figMatch = trimmed.match(/^\[FIGURE:\s*(\S+)\]/)
+        if (figMatch) {
+          const figId = figMatch[1]
+          const svgStr = figures[figId]
+          if (svgStr) {
+            return (
+              <div key={i} style={{
+                margin: '1.5rem 0',
+                display: 'flex',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                borderRadius: '8px',
+              }} dangerouslySetInnerHTML={{ __html: svgStr }} />
+            )
+          }
+          return (
+            <div key={i} style={{
+              margin: '1.5rem 0', padding: '1rem',
+              background: 'var(--depth)', borderRadius: '8px',
+              border: '1px dashed var(--rim)', textAlign: 'center',
+              color: 'var(--ink-low)', fontSize: '0.8rem',
+            }}>
+              [figure: {figId}]
+            </div>
+          )
+        }
 
         // ── Standalone equation block: entire paragraph is $...$
         const eqMatch = trimmed.match(/^\$(.+)\$$/s)

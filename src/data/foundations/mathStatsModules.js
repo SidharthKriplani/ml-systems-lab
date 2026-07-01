@@ -402,6 +402,7 @@ The Eckart-Young theorem proves that keeping only the top-$k$ singular vectors g
   },
   {
     id: 'pca_theory',
+    interactiveId: 'pca_viz',
     title: 'PCA from First Principles',
     subtitle: 'Covariance matrix, explained variance, when PCA fails',
     difficulty: 'intermediate',

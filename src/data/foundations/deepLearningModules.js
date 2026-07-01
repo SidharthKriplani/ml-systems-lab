@@ -1,6 +1,7 @@
 export const DEEP_LEARNING_MODULES = [
   {
     id: 'neural_nets',
+    interactiveId: 'backprop_viz',
     title: 'Neural Network Fundamentals',
     subtitle: 'Perceptron, universal approximation, depth vs width, XOR',
     difficulty: 'foundational',
@@ -223,6 +224,7 @@ There is a side effect worth understanding. The batch statistics μ_B and σ²_B
   },
   {
     id: 'optimizers',
+    interactiveId: 'gradient_descent',
     title: 'Deep Learning Optimisers',
     subtitle: 'SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules',
     difficulty: 'intermediate',
@@ -395,6 +397,8 @@ Attention was the direct fix (Bahdanau et al., 2015): let the decoder, at each d
 
 Self-attention generalises this to allow every position to attend to every other position within the same sequence. The mechanism formalises into three learned projections of the input: Q (query — what am I looking for?), K (key — what do I have?), V (value — what do I return?). The attention score between position i and position j is computed as qᵢ·kⱼ / √d_k, then softmax-normalised across all positions to produce weights, then applied to values: Attention(Q,K,V) = softmax(QKᵀ / √d_k) V. The √d_k scaling prevents dot products from growing so large (variance scales with d_k) that softmax saturates to near-one-hot and gradients vanish. Multi-head attention runs this operation h times with different Q, K, V projections, concatenates the results, and projects back to model dimension. Each head can specialise in a different relationship type — syntactic, semantic, positional — that a single head would have to trade off between.
 
+[FIGURE: attention_heatmap]
+
 **NOT this.** Most people describe attention as "just a learned weighted average." The Q, K, V projection matrices are what make attention generalisable. Without them — computing raw dot products between input embeddings directly — the attention weights would depend only on the similarity of the raw embedding vectors. With the projections, the model can learn any relationship that can be expressed as a linear transformation of the inputs: coreference, syntax, long-range dependency. The projections are the mechanism. The weighted average is the output format.`,
     interactivePrompt: `Before you touch the controls: in multi-head attention with 8 heads and d_model=512, each head operates on dimension 64 — can a single head with d_model=512 represent everything 8 heads with d=64 can, and what would be lost?`,
     keyPoints: [
@@ -436,6 +440,79 @@ Self-attention generalises this to allow every position to attend to every other
       },
     ],
     interactiveId: 'attention_viz',
+    figures: {
+      attention_heatmap: `<svg viewBox="0 0 340 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;font-family:var(--font-sans,sans-serif)">
+  <!-- tokens -->
+  <g font-size="10" fill="var(--ink-mid)">
+    <!-- row labels (queries) left -->
+    <text x="36" y="103" text-anchor="end">The</text>
+    <text x="36" y="133" text-anchor="end">cat</text>
+    <text x="36" y="163" text-anchor="end">sat</text>
+    <text x="36" y="193" text-anchor="end">on</text>
+    <text x="36" y="223" text-anchor="end">mat</text>
+    <!-- col labels (keys) top -->
+    <text x="62" y="82" text-anchor="middle">The</text>
+    <text x="102" y="82" text-anchor="middle">cat</text>
+    <text x="142" y="82" text-anchor="middle">sat</text>
+    <text x="182" y="82" text-anchor="middle">on</text>
+    <text x="222" y="82" text-anchor="middle">mat</text>
+  </g>
+  <!-- axis labels -->
+  <text x="140" y="270" text-anchor="middle" font-size="11" fill="var(--ink-low)">Key</text>
+  <text x="12" y="165" text-anchor="middle" font-size="11" fill="var(--ink-low)" transform="rotate(-90,12,165)">Query</text>
+  <!-- heatmap cells: each cell 40x30, starting at (42,87) -->
+  <!-- row 0 (The): low attention everywhere -->
+  <rect x="42" y="87" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
+  <rect x="82" y="87" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
+  <rect x="122" y="87" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <rect x="162" y="87" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
+  <rect x="202" y="87" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <!-- row 1 (cat): high on sat -->
+  <rect x="42" y="117" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <rect x="82" y="117" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
+  <rect x="122" y="117" width="40" height="30" fill="var(--prime)" opacity="0.6"/>
+  <rect x="162" y="117" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
+  <rect x="202" y="117" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <!-- row 2 (sat): high on cat -->
+  <rect x="42" y="147" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
+  <rect x="82" y="147" width="40" height="30" fill="var(--prime)" opacity="0.5"/>
+  <rect x="122" y="147" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
+  <rect x="162" y="147" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
+  <rect x="202" y="147" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <!-- row 3 (on): medium on mat -->
+  <rect x="42" y="177" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
+  <rect x="82" y="177" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <rect x="122" y="177" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
+  <rect x="162" y="177" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
+  <rect x="202" y="177" width="40" height="30" fill="var(--prime)" opacity="0.35"/>
+  <!-- row 4 (mat): high on on -->
+  <rect x="42" y="207" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
+  <rect x="82" y="207" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <rect x="122" y="207" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
+  <rect x="162" y="207" width="40" height="30" fill="var(--prime)" opacity="0.4"/>
+  <rect x="202" y="207" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
+  <!-- cell borders -->
+  <rect x="42" y="87" width="200" height="150" fill="none" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="82" y1="87" x2="82" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="122" y1="87" x2="122" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="162" y1="87" x2="162" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="202" y1="87" x2="202" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="42" y1="117" x2="242" y2="117" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="42" y1="147" x2="242" y2="147" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="42" y1="177" x2="242" y2="177" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="42" y1="207" x2="242" y2="207" stroke="var(--rim)" stroke-width="0.5"/>
+  <!-- color bar -->
+  <defs>
+    <linearGradient id="cb" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="var(--depth)"/>
+      <stop offset="100%" stop-color="var(--prime)"/>
+    </linearGradient>
+  </defs>
+  <rect x="260" y="87" width="14" height="150" fill="url(#cb)" rx="2"/>
+  <text x="276" y="92" font-size="9" fill="var(--ink-low)">1.0</text>
+  <text x="276" y="237" font-size="9" fill="var(--ink-low)">0.0</text>
+</svg>`,
+    },
   },
   {
     id: 'transformers',

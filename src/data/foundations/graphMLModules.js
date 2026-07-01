@@ -1,6 +1,7 @@
 export const GRAPH_ML_MODULES = [
   {
     id: 'graph_representations',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Graphs as ML Data Structures',
     subtitle: 'Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive',
     difficulty: 'foundational',
@@ -72,6 +73,7 @@ Beyond data structures, graph tasks split into three types. Node-level tasks (fr
   },
   {
     id: 'spectral_gcn',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Spectral Graph Convolution',
     subtitle: 'Graph Laplacian, ChebNet, Kipf & Welling GCN, renormalization trick, transductive limitation',
     difficulty: 'intermediate',
@@ -195,6 +197,7 @@ The aggregation function choice matters. Mean aggregation treats all neighbors e
   },
   {
     id: 'graph_attention',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Graph Attention Networks',
     subtitle: 'Attention coefficients, multi-head GAT, GATv2 dynamic attention, edge features, when attention wins',
     difficulty: 'intermediate',
@@ -324,6 +327,7 @@ GCN, GAT, and GraphSAGE look different architecturally, but they are all instanc
   },
   {
     id: 'link_prediction',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Link Prediction',
     subtitle: 'Heuristics, embedding decoders, knowledge graph completion, negative sampling, evaluation pitfalls',
     difficulty: 'intermediate',

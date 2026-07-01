@@ -84,6 +84,8 @@ The ROC curve is the answer to this problem. For every possible threshold from 0
 
 A model that randomly guesses produces a diagonal line — TPR equals FPR at every threshold, so AUC = 0.5. A perfect model hugs the upper-left corner — TPR = 1 at FPR = 0, so AUC = 1.0. For fraud detection, AUC = 0.85 is reasonable. Now you have a clean probabilistic reading: AUC is the probability that the model scores a randomly drawn positive higher than a randomly drawn negative.
 
+[FIGURE: roc_curve]
+
 This sounds ideal. But here is where it goes wrong on imbalanced data. FPR is calculated as FP / (FP + TN). In fraud detection, TN is enormous — you have 9,900 legitimate transactions for every 100 fraudulent ones. Even if you make 500 false alarms, FPR = 500 / 10,400 ≈ 0.05. That looks fine on the ROC curve. The curve sits comfortably in the upper-left. AUC = 0.91. Everyone is happy. But your precision is 100 / (100 + 500) = 0.17. Your fraud team is drowning in false alarms. Six out of seven alerts are wrong.
 
 **NOT this.** "AUC above 0.7 is good." AUC is problem-dependent. More dangerously: on imbalanced datasets, ROC-AUC is structurally optimistic because the denominator of FPR is swollen with true negatives. The PR curve removes TN entirely — it plots precision against recall directly. When your positive class is rare, the PR curve is the honest one. If you have 1% fraud and vastly more legitimate transactions, use PR-AUC, not ROC-AUC. The difference is not cosmetic — it is the difference between a model that looks production-ready and one that will flood your operations team from day one.
@@ -139,6 +141,36 @@ One more thing: AUC is a threshold-independent summary, which means it tells you
     ],
     takeaway: `ROC-AUC denominates FPR with true negatives, so on imbalanced datasets it is structurally optimistic — switch to PR-AUC when your positive class is rare, and always set a concrete operating threshold from your cost matrix before shipping.`,
     interactiveId: 'roc_curve_viz',
+    figures: {
+      roc_curve: `<svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
+  <!-- axes -->
+  <line x1="50" y1="240" x2="290" y2="240" stroke="var(--ink-low)" stroke-width="1.5"/>
+  <line x1="50" y1="240" x2="50" y2="20" stroke="var(--ink-low)" stroke-width="1.5"/>
+  <!-- axis labels -->
+  <text x="170" y="265" text-anchor="middle" fill="var(--ink-low)" font-size="11">FPR</text>
+  <text x="14" y="135" text-anchor="middle" fill="var(--ink-low)" font-size="11" transform="rotate(-90,14,135)">TPR</text>
+  <!-- tick marks -->
+  <text x="50" y="252" text-anchor="middle" fill="var(--ink-low)" font-size="9">0</text>
+  <text x="170" y="252" text-anchor="middle" fill="var(--ink-low)" font-size="9">0.5</text>
+  <text x="290" y="252" text-anchor="middle" fill="var(--ink-low)" font-size="9">1</text>
+  <text x="40" y="244" text-anchor="end" fill="var(--ink-low)" font-size="9">0</text>
+  <text x="40" y="134" text-anchor="end" fill="var(--ink-low)" font-size="9">0.5</text>
+  <text x="40" y="24" text-anchor="end" fill="var(--ink-low)" font-size="9">1</text>
+  <!-- random classifier diagonal -->
+  <line x1="50" y1="240" x2="290" y2="20" stroke="var(--ink-low)" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="175" y="148" fill="var(--ink-low)" font-size="9" transform="rotate(-40,175,148)">Random</text>
+  <!-- shade under good model -->
+  <path d="M50,240 Q80,180 110,130 Q140,90 170,65 Q200,45 230,32 Q260,24 290,22 L290,240 Z" fill="var(--prime)" opacity="0.08"/>
+  <!-- good model curve -->
+  <path d="M50,240 Q80,180 110,130 Q140,90 170,65 Q200,45 230,32 Q260,24 290,22" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+  <text x="120" y="105" fill="var(--prime)" font-size="9" font-weight="700">Good model</text>
+  <text x="120" y="116" fill="var(--prime)" font-size="9">AUC ≈ 0.87</text>
+  <!-- perfect classifier -->
+  <path d="M50,240 L50,22 L290,22" fill="none" stroke="var(--amber)" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="55" y="35" fill="var(--amber)" font-size="9" font-weight="700">Perfect</text>
+  <text x="55" y="46" fill="var(--amber)" font-size="9">AUC = 1.0</text>
+</svg>`,
+    },
   },
   {
     id: 'ranking_metrics',
@@ -363,6 +395,8 @@ A single split is a single sample of the possible ways to divide your data. You 
 
 K-fold CV runs k different splits and averages the results. With k=5 and 5,000 examples: split into 5 groups of 1,000. Train on 4,000, evaluate on 1,000. Rotate — use a different group as the held-out set each time. Average the 5 scores. You now have a much more stable estimate of generalization performance, because each example appears in the held-out set exactly once. Standard practice: k=5 or k=10. k=5 uses 80% of data per fold. k=10 uses 90% but is slower. Leave-one-out (k=n) is theoretically appealing but expensive and has high variance.
 
+[FIGURE: cv_folds]
+
 But here is the part most people skip: standard k-fold is only valid when your observations are independent and identically distributed. The moment you have temporal structure, entity groups, or autocorrelated features, naive k-fold produces an overoptimistic estimate because information leaks across folds in ways that will not exist at deployment.
 
 On time-series data, standard k-fold is wrong — not a rough approximation, actually wrong. It lets the model train on month 10 data to predict month 3 events. That is the definition of cheating. The correct approach is walk-forward validation: train on $[t_0, t_1]$, validate on $[t_1, t_2]$. Then expand: train on $[t_0, t_2]$, validate on $[t_2, t_3]$. Each validation window sees only data from the future relative to its training window. The temporal order is preserved.
@@ -408,6 +442,60 @@ On time-series data, standard k-fold is wrong — not a rough approximation, act
     ],
     takeaway: `Every CV strategy embeds an assumption about deployment — pick the wrong one and you are evaluating a scenario that does not exist, which is why walk-forward is mandatory for time-series and group k-fold is mandatory whenever new entities appear at inference time.`,
     interactiveId: 'cross_validation_viz',
+    figures: {
+      cv_folds: `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
+  <!-- title -->
+  <text x="200" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">5-Fold Cross-Validation</text>
+  <!-- grid: 5 folds x 5 chunks, each cell 56x28 -->
+  <!-- fold labels on left -->
+  <text x="38" y="52" text-anchor="end" fill="var(--ink-mid)" font-size="10">Fold 1</text>
+  <text x="38" y="80" text-anchor="end" fill="var(--ink-mid)" font-size="10">Fold 2</text>
+  <text x="38" y="108" text-anchor="end" fill="var(--ink-mid)" font-size="10">Fold 3</text>
+  <text x="38" y="136" text-anchor="end" fill="var(--ink-mid)" font-size="10">Fold 4</text>
+  <text x="38" y="164" text-anchor="end" fill="var(--ink-mid)" font-size="10">Fold 5</text>
+  <!-- fold 1: chunk1=val, chunks2-5=train -->
+  <rect x="42" y="30" width="56" height="28" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <rect x="98" y="30" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="154" y="30" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="210" y="30" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="266" y="30" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <!-- fold 2 -->
+  <rect x="42" y="58" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="98" y="58" width="56" height="28" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <rect x="154" y="58" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="210" y="58" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="266" y="58" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <!-- fold 3 -->
+  <rect x="42" y="86" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="98" y="86" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="154" y="86" width="56" height="28" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <rect x="210" y="86" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="266" y="86" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <!-- fold 4 -->
+  <rect x="42" y="114" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="98" y="114" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="154" y="114" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="210" y="114" width="56" height="28" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <rect x="266" y="114" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <!-- fold 5 -->
+  <rect x="42" y="142" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="98" y="142" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="154" y="142" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="210" y="142" width="56" height="28" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <rect x="266" y="142" width="56" height="28" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <!-- cell text labels (just for fold 1) -->
+  <text x="70" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Val</text>
+  <text x="126" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="9">Train</text>
+  <text x="182" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="9">Train</text>
+  <text x="238" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="9">Train</text>
+  <text x="294" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="9">Train</text>
+  <!-- legend -->
+  <rect x="42" y="185" width="16" height="12" fill="var(--amber)" opacity="0.7" rx="2"/>
+  <text x="62" y="196" fill="var(--ink-mid)" font-size="10">Validation</text>
+  <rect x="130" y="185" width="16" height="12" fill="var(--prime)" opacity="0.5" rx="2"/>
+  <text x="150" y="196" fill="var(--ink-mid)" font-size="10">Training</text>
+</svg>`,
+    },
   },
   {
     id: 'error_analysis',

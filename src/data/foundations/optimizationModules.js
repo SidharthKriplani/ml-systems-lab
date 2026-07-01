@@ -87,6 +87,8 @@ At any point in parameter space, the gradient $∇L(θ)$ tells you the direction
 
 The learning rate $α$ is where everything gets interesting. Set it too large and each step overshoots the valley floor, bouncing from wall to wall — loss oscillates or diverges entirely. Set it too small and convergence is technically correct but glacially slow; 500,000 parameters, millions of steps, days of compute. The intuition for "just right" comes from the landscape shape. In a narrow ravine, the curvature across the ravine is high (steep walls) and the curvature along the floor is low (gentle slope). A step size safe for the steep direction is far too small for the flat direction. This mismatch — one learning rate, two very different curvatures — is not a tuning failure. It is a structural problem called the condition number problem, and it is why every improvement after vanilla gradient descent (momentum, Adam, learning rate schedules) exists.
 
+[FIGURE: gd_convergence]
+
 **NOT this.** Most people think gradient descent is slow because each step is computationally expensive. Actually, the fundamental bottleneck is the mismatch between a single fixed learning rate and a landscape with wildly varying curvature. You can throw more compute at more steps, but if the condition number is 1000:1, your single $α$ will always be 1000x too small in the flat direction or 1000x too large in the steep one.
 
 A critical thing gradient descent does not know: it recomputes the gradient after every step not because of programming convention, but because the landscape is curved. At position $θ_t$, the gradient says "go right." After stepping right, the landscape has rotated — now the gradient says "go slightly up-right." Following the initial gradient all the way would walk you off the edge. The gradient is local information, valid only at the current point.
@@ -142,9 +144,59 @@ The formal picture: $θ_{t+1} = θ_t - α∇L(θ_t)$ guaranteed to decrease loss
         answer: `D`,
       },
     ],
+    figures: {
+      gd_convergence: `<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;font-family:var(--font-sans,sans-serif)">
+  <!-- parabola f(x)=x^2, x from -3.5 to 3.5, mapped to svg coords -->
+  <!-- x: 0..420 maps to param -4..4; y: 10..210 maps to loss 16..0 -->
+  <!-- parabola path: for x in -3.5..3.5 step 0.1, y=x^2 -->
+  <path d="M20,183 Q210,10 400,183" fill="none" stroke="var(--ink-low)" stroke-width="2"/>
+  <!-- axes -->
+  <line x1="15" y1="195" x2="410" y2="195" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="415" y="198" fill="var(--ink-low)" font-size="10">param</text>
+  <text x="18" y="10" fill="var(--ink-low)" font-size="10">loss</text>
+  <!-- minimum marker -->
+  <circle cx="210" cy="10" r="3" fill="var(--ink-low)"/>
+  <!-- too small lr: many small steps from x=3 (right side) -->
+  <g stroke="var(--ink-low)" stroke-width="1.2" fill="var(--ink-low)" opacity="0.8">
+    <circle cx="378" cy="145" r="3"/>
+    <circle cx="362" cy="120" r="3"/>
+    <circle cx="348" cy="98" r="3"/>
+    <circle cx="335" cy="79" r="3"/>
+    <circle cx="323" cy="62" r="3"/>
+    <circle cx="312" cy="48" r="3"/>
+    <circle cx="302" cy="36" r="3"/>
+    <line x1="378" y1="145" x2="362" y2="120"/><line x1="362" y1="120" x2="348" y2="98"/>
+    <line x1="348" y1="98" x2="335" y2="79"/><line x1="335" y1="79" x2="323" y2="62"/>
+    <line x1="323" y1="62" x2="312" y2="48"/><line x1="312" y1="48" x2="302" y2="36"/>
+  </g>
+  <text x="385" y="142" fill="var(--ink-low)" font-size="9">too small</text>
+  <!-- just right: 5 steps converging, starting from left x=-3 -->
+  <g stroke="var(--prime)" stroke-width="1.5" fill="var(--prime)">
+    <circle cx="42" cy="145" r="3.5"/>
+    <circle cx="100" cy="58" r="3.5"/>
+    <circle cx="175" cy="16" r="3.5"/>
+    <circle cx="210" cy="10" r="3.5"/>
+    <line x1="42" y1="145" x2="100" y2="58"/><line x1="100" y1="58" x2="175" y2="16"/>
+    <line x1="175" y1="16" x2="210" y2="10"/>
+  </g>
+  <text x="15" y="142" fill="var(--prime)" font-size="9">just right</text>
+  <!-- too large lr: overshoots, diverges from x=-2.5 -->
+  <g stroke="var(--amber)" stroke-width="1.5" fill="var(--amber)">
+    <circle cx="83" cy="100" r="3.5"/>
+    <circle cx="337" cy="100" r="3.5"/>
+    <circle cx="42" cy="145" r="3.5"/>
+    <circle cx="378" cy="145" r="3.5"/>
+    <line x1="83" y1="100" x2="337" y2="100"/>
+    <line x1="337" y1="100" x2="42" y2="145"/>
+    <line x1="42" y1="145" x2="378" y2="145"/>
+  </g>
+  <text x="150" y="94" fill="var(--amber)" font-size="9">too large (diverges)</text>
+</svg>`,
+    },
   },
   {
     id: 'sgd_and_minibatch',
+    interactiveId: 'gradient_descent',
     title: 'SGD and Mini-Batch Training',
     subtitle: 'Why noisy gradients help, batch size effects, and the implicit regularization of SGD.',
     difficulty: 'foundational',

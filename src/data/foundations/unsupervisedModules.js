@@ -75,6 +75,8 @@ NOT-this: "Clustering finds the true segments in your data." Clustering finds se
     tags: ['k-means', 'clustering', `Lloyd's algorithm`],
     summary: `You have 100,000 user embeddings and want 5 segments. K-means: randomly initialize 5 centroids. Step 1 (assignment) — assign each user to the nearest centroid by Euclidean distance. Step 2 (update) — move each centroid to the mean of all users assigned to it. Repeat until assignments stop changing. This is Lloyd's algorithm. It is guaranteed to converge. It is not guaranteed to find the global optimum.
 
+[FIGURE: kmeans_steps]
+
 K-means minimizes the within-cluster sum of squared distances (inertia): Σₖ Σᵢ ∈ cluster k ‖xᵢ - μₖ‖². This is NP-hard in general — K-means finds a local minimum. The result depends on initialization. K-means++ fixes this: choose the first centroid uniformly at random, then each subsequent centroid with probability proportional to distance from the nearest existing centroid. This produces better local optima with fewer restarts. sklearn uses it by default with n_init=10.
 
 Elbow method: plot inertia vs K. Inertia always decreases as K increases — more clusters always fit tighter. Look for the elbow where marginal gain of adding a cluster drops off. This is approximate and often there is no clear elbow in real data.
@@ -142,6 +144,78 @@ NOT-this: "K-means finds the natural clusters." K-means partitions space into Vo
     interactivePrompt: `Before you touch the controls: if you ran K-means twice on the same data with different random seeds and got different clusters, what does that tell you and what would you do?`,
     takeaway: `K-means converges every time — the dangerous part is that it converges just as confidently when clusters are non-spherical, unequal in size, or initialization was poor as when everything is perfect.`,
     interactiveId: 'kmeans_viz',
+    figures: {
+      kmeans_steps: `<svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
+  <!-- Panel 1: Init -->
+  <g transform="translate(10,30)">
+    <text x="70" y="-12" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">1. Init</text>
+    <!-- scattered points (3 natural clusters roughly) -->
+    <g fill="var(--ink-low)" opacity="0.8">
+      <circle cx="30" cy="40" r="4"/><circle cx="45" cy="55" r="4"/><circle cx="20" cy="60" r="4"/>
+      <circle cx="80" cy="30" r="4"/><circle cx="95" cy="45" r="4"/><circle cx="110" cy="35" r="4"/>
+      <circle cx="55" cy="110" r="4"/><circle cx="70" cy="125" r="4"/><circle cx="40" cy="120" r="4"/>
+    </g>
+    <!-- 3 centroids (stars = larger circles) at random positions -->
+    <circle cx="50" cy="30" r="7" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+    <circle cx="90" cy="90" r="7" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
+    <circle cx="110" cy="110" r="7" fill="none" stroke="var(--ink-mid)" stroke-width="2.5"/>
+    <text x="52" y="20" fill="var(--prime)" font-size="8">★</text>
+    <text x="92" y="80" fill="var(--amber)" font-size="8">★</text>
+    <text x="112" y="100" fill="var(--ink-mid)" font-size="8">★</text>
+  </g>
+  <!-- divider -->
+  <line x1="155" y1="15" x2="155" y2="185" stroke="var(--rim)" stroke-width="1"/>
+  <!-- Panel 2: Assign -->
+  <g transform="translate(165,30)">
+    <text x="70" y="-12" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">2. Assign</text>
+    <g>
+      <circle cx="30" cy="40" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="45" cy="55" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="20" cy="60" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="80" cy="30" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="95" cy="45" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="110" cy="35" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="55" cy="110" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+      <circle cx="70" cy="125" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+      <circle cx="40" cy="120" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+    </g>
+    <!-- centroids same as before -->
+    <circle cx="50" cy="30" r="7" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+    <circle cx="90" cy="90" r="7" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
+    <circle cx="110" cy="110" r="7" fill="none" stroke="var(--ink-mid)" stroke-width="2.5"/>
+  </g>
+  <!-- divider -->
+  <line x1="315" y1="15" x2="315" y2="185" stroke="var(--rim)" stroke-width="1"/>
+  <!-- Panel 3: Update -->
+  <g transform="translate(325,30)">
+    <text x="70" y="-12" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">3. Update</text>
+    <g>
+      <circle cx="30" cy="40" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="45" cy="55" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="20" cy="60" r="4" fill="var(--prime)" opacity="0.8"/>
+      <circle cx="80" cy="30" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="95" cy="45" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="110" cy="35" r="4" fill="var(--amber)" opacity="0.8"/>
+      <circle cx="55" cy="110" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+      <circle cx="70" cy="125" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+      <circle cx="40" cy="120" r="4" fill="var(--ink-mid)" opacity="0.8"/>
+    </g>
+    <!-- new centroids at cluster means -->
+    <circle cx="32" cy="52" r="7" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+    <circle cx="95" cy="37" r="7" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
+    <circle cx="55" cy="118" r="7" fill="none" stroke="var(--ink-mid)" stroke-width="2.5"/>
+    <!-- arrows showing movement -->
+    <line x1="50" y1="30" x2="34" y2="50" stroke="var(--prime)" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrowK1)"/>
+    <line x1="90" y1="90" x2="95" y2="44" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrowK2)"/>
+    <line x1="110" y1="110" x2="58" y2="120" stroke="var(--ink-mid)" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrowK3)"/>
+    <defs>
+      <marker id="arrowK1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="var(--prime)"/></marker>
+      <marker id="arrowK2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="var(--amber)"/></marker>
+      <marker id="arrowK3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="var(--ink-mid)"/></marker>
+    </defs>
+  </g>
+</svg>`,
+    },
   },
   {
     id: 'hierarchical',
@@ -292,6 +366,8 @@ NOT-this: "DBSCAN does not require K, so it is always better than K-means." DBSC
 
 The covariance matrix C = XᵀX / (n-1) captures how features vary together. Its eigenvectors are the principal components — directions of maximum variance. Its eigenvalues λᵢ quantify variance captured: explained variance ratio = λᵢ / Σ λⱼ.
 
+[FIGURE: pca_variance]
+
 Projection: the k-component projection is X_pca = X Wₖ where Wₖ ∈ ℝᵈˣᵏ has the top-k eigenvectors as columns. This is the optimal linear projection minimizing reconstruction error (Eckart-Young theorem). Reconstruction: X_reconstructed = X_pca Wₖᵀ — you can go back to the original space approximately.
 
 Computing PCA: SVD is more numerically stable than eigendecomposing XᵀX. X = UΣVᵀ. The principal components are the columns of V; the scores are UΣ.
@@ -347,6 +423,61 @@ NOT-this: "PCA removes noise." PCA keeps the highest-variance directions. High v
     interactivePrompt: `Before you touch the controls: why does PCA fail to remove noise, and under what condition does high explained variance in the first component become a problem rather than an asset?`,
     takeaway: `PCA keeps the highest-variance directions — but the task-discriminative signal might live in a low-variance direction that PCA throws out, so explained variance ratio is not a reliable proxy for information preserved for downstream tasks.`,
     interactiveId: 'pca_viz',
+    figures: {
+      pca_variance: `<svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
+  <!-- scatter points (elongated ellipse cloud) -->
+  <g fill="var(--ink-hi)" opacity="0.7">
+    <circle cx="160" cy="130" r="3"/>
+    <circle cx="175" cy="118" r="3"/>
+    <circle cx="190" cy="108" r="3"/>
+    <circle cx="205" cy="98" r="3"/>
+    <circle cx="220" cy="90" r="3"/>
+    <circle cx="145" cy="142" r="3"/>
+    <circle cx="130" cy="152" r="3"/>
+    <circle cx="115" cy="162" r="3"/>
+    <circle cx="100" cy="172" r="3"/>
+    <circle cx="85" cy="182" r="3"/>
+    <circle cx="168" cy="122" r="3"/>
+    <circle cx="183" cy="114" r="3"/>
+    <circle cx="198" cy="104" r="3"/>
+    <circle cx="152" cy="136" r="3"/>
+    <circle cx="137" cy="147" r="3"/>
+    <circle cx="122" cy="158" r="3"/>
+    <circle cx="107" cy="167" r="3"/>
+    <circle cx="176" cy="126" r="3"/>
+    <circle cx="142" cy="139" r="3"/>
+    <circle cx="213" cy="95" r="3"/>
+  </g>
+  <!-- centroid -->
+  <circle cx="160" cy="130" r="4" fill="var(--ink-low)" opacity="0.8"/>
+  <!-- PC1 arrow (major axis, ~-40 degrees) -->
+  <line x1="160" y1="130" x2="240" y2="78" stroke="var(--prime)" stroke-width="2.5" marker-end="url(#arrowP)"/>
+  <text x="248" y="74" fill="var(--prime)" font-size="10" font-weight="700">PC1</text>
+  <text x="248" y="85" fill="var(--prime)" font-size="9">(max var)</text>
+  <!-- PC2 arrow (minor axis, ~50 degrees) -->
+  <line x1="160" y1="130" x2="190" y2="90" stroke="var(--ink-mid)" stroke-width="1.5" marker-end="url(#arrowM)"/>
+  <text x="194" y="88" fill="var(--ink-mid)" font-size="9">PC2</text>
+  <!-- projection dotted lines for a few points onto PC1 -->
+  <line x1="220" y1="90" x2="214" y2="97" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.7"/>
+  <line x1="205" y1="98" x2="200" y2="104" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.7"/>
+  <line x1="100" y1="172" x2="104" y2="167" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.7"/>
+  <!-- projection points on PC1 line -->
+  <circle cx="214" cy="97" r="2.5" fill="var(--prime)" opacity="0.7"/>
+  <circle cx="200" cy="104" r="2.5" fill="var(--prime)" opacity="0.7"/>
+  <circle cx="104" cy="167" r="2.5" fill="var(--prime)" opacity="0.7"/>
+  <!-- arrowhead markers -->
+  <defs>
+    <marker id="arrowP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="var(--prime)"/>
+    </marker>
+    <marker id="arrowM" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-mid)"/>
+    </marker>
+  </defs>
+  <!-- title -->
+  <text x="160" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">PCA: eigenvectors point to max variance</text>
+</svg>`,
+    },
   },
   {
     id: 'tsne_umap',

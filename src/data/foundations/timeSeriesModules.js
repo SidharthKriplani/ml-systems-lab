@@ -445,6 +445,7 @@ The Temporal Fusion Transformer (TFT) is competitive despite using attention bec
 
   {
     id: 'ts_anomaly_detection',
+    interactiveId: 'anomaly_detection_viz',
     title: 'Time Series Anomaly Detection',
     subtitle: 'Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds',
     difficulty: 'advanced',

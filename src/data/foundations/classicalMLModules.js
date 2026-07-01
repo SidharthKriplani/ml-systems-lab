@@ -157,6 +157,8 @@ The first question is what kind of penalty. Penalise the squared magnitude of ea
 
 Now swap the sphere for a diamond — the L1 constraint. The L1 ball in two dimensions is a diamond with four corners, one on each axis. Expand the loss ellipses outward from the OLS solution. They hit the diamond\`s corner first, almost always. At a corner, one weight is exactly zero. That is Lasso, and that geometric corner is why it performs feature selection while Ridge cannot.
 
+[FIGURE: l1_l2_geometry]
+
 **NOT this.** Most people think "regularisation just reduces overfitting by making the model simpler." This is imprecise enough to be misleading. Lasso zeros weights not because "simpler is better" — it zeros them because the L1 ball\`s geometry has corners on the coordinate axes and the loss ellipses hit those corners. L2\`s sphere has no corners, so it never zeros anything. The sparsity is a consequence of geometry, not philosophy. You can choose L1 vs L2 based on the geometry of your problem: sparse true signal → L1; dense or correlated signal → L2; want both → elastic net.
 
 The formal statement: Ridge solves $\\hat{θ}_{ridge} = (X^TX + λ I)^{-1}X^Ty$. Adding $λ I$ pushes all eigenvalues of $X^TX$ above $λ$, making the inversion numerically stable even for perfectly correlated features. Lasso has no closed form — L1 is not differentiable at zero — so it uses coordinate descent with a soft-thresholding operator that creates a dead zone at the origin, setting weights to exactly zero when the gradient is too small to overcome the penalty.
@@ -202,9 +204,58 @@ For the house price problem with 100 correlated features: if you believe only a 
     ],
     takeaway: `Ridge shrinks all weights smoothly; Lasso zeroes some exactly — the difference is geometry: L2\`s sphere has no corners, L1\`s diamond does, and loss ellipses hit corners first.`,
     interactiveId: 'regularization_viz',
+    figures: {
+      l1_l2_geometry: `<svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
+  <!-- L1 panel -->
+  <g transform="translate(20,20)">
+    <text x="100" y="14" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">L1 (lasso)</text>
+    <!-- axes -->
+    <line x1="100" y1="195" x2="100" y2="25" stroke="var(--ink-low)" stroke-width="1"/>
+    <line x1="10" y1="110" x2="190" y2="110" stroke="var(--ink-low)" stroke-width="1"/>
+    <text x="194" y="114" fill="var(--ink-low)" font-size="10">w₁</text>
+    <text x="103" y="22" fill="var(--ink-low)" font-size="10">w₂</text>
+    <!-- L1 diamond -->
+    <polygon points="100,45 165,110 100,175 35,110" fill="none" stroke="var(--prime)" stroke-width="2"/>
+    <!-- loss ellipses -->
+    <ellipse cx="150" cy="70" rx="70" ry="45" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>
+    <ellipse cx="150" cy="70" rx="95" ry="65" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.75"/>
+    <!-- OLS solution star -->
+    <circle cx="150" cy="70" r="4" fill="var(--amber)" opacity="0.9"/>
+    <text x="155" y="67" fill="var(--amber)" font-size="9">θ̂ols</text>
+    <!-- contact point at corner -->
+    <circle cx="165" cy="110" r="5" fill="var(--prime)" stroke="var(--ink-hi)" stroke-width="1.5"/>
+    <text x="168" y="108" fill="var(--prime)" font-size="9" font-weight="700">sparse!</text>
+    <!-- zero label -->
+    <text x="97" y="182" fill="var(--ink-low)" font-size="9" text-anchor="middle">w₂=0</text>
+  </g>
+  <!-- divider -->
+  <line x1="240" y1="10" x2="240" y2="230" stroke="var(--rim)" stroke-width="1"/>
+  <!-- L2 panel -->
+  <g transform="translate(250,20)">
+    <text x="100" y="14" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">L2 (ridge)</text>
+    <!-- axes -->
+    <line x1="100" y1="195" x2="100" y2="25" stroke="var(--ink-low)" stroke-width="1"/>
+    <line x1="10" y1="110" x2="190" y2="110" stroke="var(--ink-low)" stroke-width="1"/>
+    <text x="194" y="114" fill="var(--ink-low)" font-size="10">w₁</text>
+    <text x="103" y="22" fill="var(--ink-low)" font-size="10">w₂</text>
+    <!-- L2 circle -->
+    <circle cx="100" cy="110" r="65" fill="none" stroke="var(--prime)" stroke-width="2"/>
+    <!-- loss ellipses -->
+    <ellipse cx="150" cy="70" rx="70" ry="45" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>
+    <ellipse cx="150" cy="70" rx="100" ry="68" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.75"/>
+    <!-- OLS solution star -->
+    <circle cx="150" cy="70" r="4" fill="var(--amber)" opacity="0.9"/>
+    <text x="155" y="67" fill="var(--amber)" font-size="9">θ̂ols</text>
+    <!-- contact point on smooth curve -->
+    <circle cx="155" cy="58" r="5" fill="var(--prime)" stroke="var(--ink-hi)" stroke-width="1.5"/>
+    <text x="159" y="56" fill="var(--prime)" font-size="9" font-weight="700">w₁≠0, w₂≠0</text>
+  </g>
+</svg>`,
+    },
   },
   {
     id: 'generalization',
+    interactiveId: 'bias_variance_viz',
     title: 'Generalisation Theory',
     subtitle: 'Bias-variance, VC dimension, PAC learning, double descent',
     difficulty: 'advanced',
@@ -524,6 +575,8 @@ The formal statement for the ensemble variance floor: Var(ensemble) = ρσ² + (
 
 SVMs say: the one that is furthest from all training points. If you draw the two parallel boundary lines that touch the nearest points from each class, the space between them is the margin. A wider margin means more room for error — new test points that fall near the boundary are more likely to land on the correct side. Maximize the margin and you minimize the worst-case generalization error. This is the structural risk minimization principle.
 
+[FIGURE: svm_margin]
+
 Only a subset of training points define the boundary. The points that sit exactly on the margin edges — the closest points to the boundary — are the support vectors. Move any other training point and the boundary does not change at all. This sparsity is a structural property of the solution: the entire decision boundary is determined by a small minority of training examples.
 
 Real data is not linearly separable. The soft-margin extension introduces slack variables $ξ_i \\geq 0$: allow some points to violate the margin, but penalise each violation with cost $C$. Large $C$: tight margin, few violations, the model tries to classify everything correctly, prone to overfitting. Small $C$: wide margin, allows more violations, smoother boundary, better generalisation. C is the bias-variance dial.
@@ -573,6 +626,40 @@ The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_
     ],
     takeaway: `SVMs maximise the margin — the gap between classes — and only the points on the margin edge (support vectors) determine the boundary; the kernel trick substitutes dot products with kernel evaluations to get non-linear boundaries without computing the feature map.`,
     interactiveId: 'svm_viz',
+    figures: {
+      svm_margin: `<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
+  <!-- decision boundary -->
+  <line x1="60" y1="220" x2="340" y2="40" stroke="var(--ink-hi)" stroke-width="2"/>
+  <!-- margin lines -->
+  <line x1="30" y1="210" x2="310" y2="30" stroke="var(--ink-mid)" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <line x1="90" y1="230" x2="370" y2="50" stroke="var(--ink-mid)" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <!-- margin label -->
+  <text x="50" y="135" fill="var(--ink-low)" font-size="10" transform="rotate(-38,50,135)">margin = 2/‖w‖</text>
+  <!-- class + circles (upper right) -->
+  <circle cx="280" cy="60" r="7" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="310" cy="90" r="7" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="340" cy="70" r="7" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="300" cy="110" r="7" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="260" cy="80" r="7" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <!-- class - crosses (lower left) -->
+  <g stroke="var(--amber)" stroke-width="2">
+    <line x1="70" y1="165" x2="84" y2="179"/><line x1="84" y1="165" x2="70" y2="179"/>
+    <line x1="100" y1="190" x2="114" y2="204"/><line x1="114" y1="190" x2="100" y2="204"/>
+    <line x1="50" y1="195" x2="64" y2="209"/><line x1="64" y1="195" x2="50" y2="209"/>
+    <line x1="120" y1="175" x2="134" y2="189"/><line x1="134" y1="175" x2="120" y2="189"/>
+    <line x1="80" y1="210" x2="94" y2="224"/><line x1="94" y1="210" x2="80" y2="224"/>
+  </g>
+  <!-- support vectors with rings -->
+  <circle cx="260" cy="80" r="12" fill="none" stroke="var(--prime)" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="70" cy="172" r="12" fill="none" stroke="var(--amber)" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="120" cy="182" r="12" fill="none" stroke="var(--amber)" stroke-width="1.5" opacity="0.6"/>
+  <!-- labels -->
+  <text x="330" y="55" fill="var(--prime)" font-size="10" font-weight="700">+1</text>
+  <text x="55" y="240" fill="var(--amber)" font-size="10" font-weight="700">−1</text>
+  <text x="175" y="25" fill="var(--ink-hi)" font-size="10" text-anchor="middle">decision boundary</text>
+  <line x1="175" y1="28" x2="195" y2="45" stroke="var(--ink-low)" stroke-width="0.8"/>
+</svg>`,
+    },
   },
   {
     id: 'knn',
@@ -638,6 +725,7 @@ The formal statement: exact kNN is O(nd) per query where n is the number of inde
   },
   {
     id: 'naive_bayes',
+    interactiveId: 'bayes_calculator',
     title: 'Naïve Bayes',
     subtitle: 'Independence assumption, Gaussian NB, Laplace smoothing',
     difficulty: 'foundational',

@@ -145,7 +145,7 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
               letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Concept</div>
-            {renderMd(selected.summary, { fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 })}
+            {renderMd(selected.summary, { fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }, selected.figures || {})}
           </div>
 
           {selected.takeaway && (
