@@ -16,7 +16,7 @@ From these four cells, two ratios emerge that measure different failure modes. P
 
 Notice these two ratios pull in opposite directions. Make your model more conservative — raise the decision threshold — and precision goes up (fewer false alarms) but recall drops (more missed fraud). Lower the threshold and recall goes up but precision falls. This tension is not a flaw in the metrics. It is a real business tension, and the right resolution depends on your cost matrix.
 
-**NOT this.** Most people hear "imbalanced dataset" and immediately reach for F1. F1 is the harmonic mean of precision and recall: $F1 = 2 \cdot P \cdot R / (P + R)$. The harmonic mean is used specifically because it penalizes extreme imbalances — F1(P=0.9, R=0.1) = 0.18, not 0.5. But F1 weights precision and recall equally. If missed fraud (FN) costs 10x more than a false alarm (FP), you should be weighting recall more. F_beta with $\beta > 1$ does this: $F_\beta = (1 + \beta^2) \cdot P \cdot R / (\beta^2 \cdot P + R)$. The right metric requires knowing the cost matrix for your specific problem.
+**NOT this.** Most people hear "imbalanced dataset" and immediately reach for F1. F1 is the harmonic mean of precision and recall: $F1 = 2 \\cdot P \\cdot R / (P + R)$. The harmonic mean is used specifically because it penalizes extreme imbalances — F1(P=0.9, R=0.1) = 0.18, not 0.5. But F1 weights precision and recall equally. If missed fraud (FN) costs 10x more than a false alarm (FP), you should be weighting recall more. F_beta with $β > 1$ does this: $F_β = (1 + β^2) \\cdot P \\cdot R / (β^2 \\cdot P + R)$. The right metric requires knowing the cost matrix for your specific problem.
 
 In fraud detection, FN — missed fraud — is typically far more expensive than FP — a false alarm. So you optimize for recall. In spam filtering, the calculus flips: a legitimate email landing in spam (FP) destroys user trust, so you optimize for precision. In medical screening, missed cancer (FN) is catastrophic, so recall dominates. Before picking a metric, translate TP, FP, FN, TN into business costs. Everything else follows from that.`,
     keyPoints: [
@@ -72,6 +72,7 @@ In fraud detection, FN — missed fraud — is typically far more expensive than
   },
   {
     id: 'auc_roc',
+    interactiveId: 'roc_curve_viz',
     title: 'ROC Curve & AUC',
     subtitle: 'FPR/TPR, what area means, PR-AUC for imbalanced classes',
     difficulty: 'intermediate',
@@ -464,6 +465,7 @@ The key output of good error analysis is a prioritized intervention list: "fix X
   },
   {
     id: 'calibration',
+    interactiveId: 'calibration_curve_viz',
     title: 'Calibration & Brier Score',
     subtitle: 'Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition',
     difficulty: 'intermediate',

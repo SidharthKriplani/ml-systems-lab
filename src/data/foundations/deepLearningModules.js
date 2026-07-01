@@ -111,6 +111,7 @@ Now add 10 layers of sigmoid. At each layer, the chain rule multiplies by the lo
   },
   {
     id: 'activations',
+    interactiveId: 'activation_functions',
     title: 'Activation Functions',
     subtitle: 'Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons',
     difficulty: 'foundational',
@@ -330,6 +331,7 @@ ent magnitude is preserved regardless of what F does. With residuals, 150+ layer
   },
   {
     id: 'rnns_lstms',
+    interactiveId: 'rnn_viz',
     title: 'RNNs & LSTMs',
     subtitle: 'Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them',
     difficulty: 'intermediate',

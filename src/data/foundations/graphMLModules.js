@@ -131,6 +131,7 @@ eter filter to a single parameter per feature. Adding self-loops (Ã = A + I) be
   },
   {
     id: 'spatial_gcn',
+    interactiveId: 'gnn_message_passing_viz',
     title: 'Spatial & Message-Passing GCNs',
     subtitle: 'GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability',
     difficulty: 'intermediate',

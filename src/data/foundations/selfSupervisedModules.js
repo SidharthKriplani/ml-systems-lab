@@ -128,6 +128,7 @@ Because the supervision signal is automatic, SSL can absorb internet-scale data 
   },
   {
     id: 'simclr',
+    interactiveId: 'contrastive_viz',
     title: 'SimCLR',
     subtitle: 'Data augmentation, projection head, large-batch contrastive learning, SimCLRv2',
     difficulty: 'intermediate',

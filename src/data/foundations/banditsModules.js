@@ -71,6 +71,7 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
   },
   {
     id: 'epsilon_greedy',
+    interactiveId: 'exploration_exploitation_viz',
     title: 'Epsilon-Greedy Exploration',
     subtitle: 'Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards',
     difficulty: 'foundational',
@@ -126,6 +127,7 @@ In practice, epsilon-greedy survives in production because its simplicity makes 
   },
   {
     id: 'ucb_algorithms',
+    interactiveId: 'thompson_sampling_viz',
     title: 'Upper Confidence Bound Algorithms',
     subtitle: 'UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction',
     difficulty: 'intermediate',

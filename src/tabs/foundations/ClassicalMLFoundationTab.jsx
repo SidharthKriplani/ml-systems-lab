@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { renderMd } from '../../utils/renderMd'
 import { CLASSICAL_ML_MODULES } from '../../data/foundations/classicalMLModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/classicalMLFoundationProgress.js'
@@ -144,17 +145,33 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
               letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Concept</div>
-            <p style={{ fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }}>
-              {selected.summary}
-            </p>
+            {renderMd(selected.summary, { fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 })}
           </div>
 
           {selected.takeaway && (
             <div style={{ background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Key Insight</div>
-              <p style={{ fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{selected.takeaway}</p>
+              {renderMd(selected.takeaway, { fontSize: '0.925rem', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0, fontWeight: 500 })}
             </div>
           )}
+          {selected.interactivePrompt && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.5)',
+              borderRadius: '10px',
+              padding: '1.1rem 1.25rem',
+              marginBottom: '1.25rem',
+            }}>
+              <div style={{
+                fontSize: '0.68rem', fontWeight: 700, color: '#b45309',
+                textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem',
+              }}>Before you touch the controls</div>
+              {renderMd(selected.interactivePrompt, {
+                fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.6, margin: 0, fontStyle: 'italic',
+              })}
+            </div>
+          )}
+
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
 
           {/* Key points */}
@@ -166,7 +183,7 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
               {selected.keyPoints?.map((pt, i) => (
                 <li key={i} style={{ fontSize: '0.88rem', color: 'var(--ink-mid)', lineHeight: 1.6, marginBottom: '0.5rem',
                   paddingLeft: '0.75rem', borderLeft: '2px solid var(--prime)', display: 'flex', alignItems: 'flex-start' }}>
-                  <span style={{ paddingLeft: 0 }}>{pt}</span>
+                  <span style={{ paddingLeft: 0 }}>{renderMd(pt)}</span>
                 </li>
               ))}
             </ul>
@@ -179,7 +196,7 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
                 letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Check Questions</div>
               {selected.checkQuestions.map((cq, i) => (
-                <CheckQuestion key={i} q={cq.q} a={cq.a} />
+                <CheckQuestion key={i} q={cq.q} options={cq.options} answer={cq.answer} />
               ))}
             </div>
           )}
@@ -192,22 +209,51 @@ export function ClassicalMLFoundationTab({ onNavigate }) {
   )
 }
 
-function CheckQuestion({ q, a }) {
-  const [revealed, setRevealed] = useState(false)
+function CheckQuestion({ q, options, answer }) {
+  const [selected, setSelected] = useState(null)
+  const letters = ['A', 'B', 'C', 'D']
   return (
-    <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--rim)' }}>
-      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '0.5rem' }}>{q}</div>
-      {!revealed ? (
-        <button onClick={() => setRevealed(true)}
-          style={{ fontSize: '0.78rem', color: 'var(--prime)', background: 'none', border: '1px solid var(--prime)',
-            borderRadius: '6px', padding: '0.35rem 0.75rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-          Show answer
+    <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--rim)' }}>
+      {renderMd(q, { fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '0.65rem', lineHeight: 1.5 })}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {options?.map((opt, i) => {
+          const letter = letters[i]
+          const isCorrect = letter === answer
+          const isChosen = selected === letter
+          let bg = 'transparent'
+          let border = '1px solid var(--rim)'
+          let color = 'var(--ink-mid)'
+          if (selected) {
+            if (isChosen && isCorrect)  { bg = 'rgba(34,197,94,0.12)'; border = '1px solid rgba(34,197,94,0.5)'; color = 'var(--ink-hi)' }
+            if (isChosen && !isCorrect) { bg = 'rgba(239,68,68,0.1)';  border = '1px solid rgba(239,68,68,0.4)';  color = 'var(--ink-hi)' }
+            if (!isChosen && isCorrect) { bg = 'rgba(34,197,94,0.08)'; border = '1px solid rgba(34,197,94,0.35)'; color = 'var(--ink-mid)' }
+          }
+          return (
+            <div
+              key={letter}
+              onClick={() => { if (!selected) setSelected(letter) }}
+              style={{
+                padding: '0.5rem 0.75rem', borderRadius: '7px', cursor: selected ? 'default' : 'pointer',
+                background: bg, border, color, fontSize: '0.85rem', lineHeight: 1.5, transition: 'all 0.15s',
+                display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
+              }}
+              onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--surface)' }}
+              onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'transparent' }}
+            >
+              <span style={{ fontWeight: 700, flexShrink: 0, opacity: 0.7 }}>{letter}</span>
+              {renderMd(opt.replace(/^`?[ABCD]\)\s*/, '').replace(/`$/, ''), {})}
+            </div>
+          )
+        })}
+      </div>
+      {selected && (
+        <button
+          onClick={() => setSelected(null)}
+          style={{ marginTop: '0.6rem', fontSize: '0.72rem', color: 'var(--ink-low)', background: 'none',
+            border: '1px solid var(--rim)', borderRadius: '5px', padding: '0.25rem 0.6rem',
+            cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+          Try again
         </button>
-      ) : (
-        <div style={{ fontSize: '0.875rem', color: 'var(--ink-mid)', lineHeight: 1.6,
-          background: 'var(--prime-faint)', borderRadius: '6px', padding: '0.6rem 0.875rem', marginTop: '0.35rem' }}>
-          {a}
-        </div>
       )}
     </div>
   )
