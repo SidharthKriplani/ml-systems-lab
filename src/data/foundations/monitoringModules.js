@@ -6,13 +6,27 @@ export const MONITORING_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 35,
     tags: ['monitoring', 'drift', 'model decay', 'MLOps'],
-    summary: `Your production fraud model is suddenly catching 30% fewer frauds. Something changed. You have four possible causes sitting in front of you: the \`income\` feature distribution shifted and the model is seeing a different population than it was trained on; fraud patterns changed so that the same transaction profile now has a different fraud probability; the overall fraud rate in the population increased but the model's per-transaction accuracy is unchanged; or the feature pipeline is broken and sending null values downstream. Each of these requires a completely different response. Without a taxonomy you are debugging blind.
+    summary: `Your fraud model is suddenly catching 30% fewer frauds. Something changed — but what? Four very different causes could produce this exact drop. The \`income\` feature distribution shifted, so the model is seeing a different population than it trained on. Or fraud tactics evolved, so the same transaction profile now carries a different fraud probability. Or the overall fraud rate went up while the model's per-transaction accuracy is unchanged. Or the feature pipeline broke and is quietly sending nulls downstream. Each demands a completely different fix. Without a way to tell them apart, you are debugging blind.
 
-The four types map onto four distinct questions. Data drift asks: has P(X) changed? The input feature distributions have shifted — your population of transactions now has a different income distribution than your training set. Detection uses statistical tests (PSI, KS, chi-squared) on feature distributions. Response: investigate the root cause; data drift may or may not affect model performance depending on whether P(Y|X) also changed. Concept drift asks: has P(Y|X) changed? The relationship between features and outcome changed. The same transaction profile that was 3% fraud probability is now 15% fraud probability because fraud tactics evolved. Detection requires labels — you measure performance degradation over time. Response: retraining on recent data is necessary. Prior shift asks: has P(Y) changed while P(X|Y) stayed stable? Overall fraud rate increased from 1% to 3% — more frauds exist, not different frauds. Response: threshold adjustment may be sufficient; sometimes retraining. Infrastructure drift asks: is the pipeline itself broken? Schema changed, pipeline latency increased, a dependency service degraded. Response: engineering fix, not a model fix.
+---
 
-The diagnostic power of this taxonomy is that it shortcircuits the response. A broken feature pipeline and a genuine concept drift can produce identical drops in recall. But fixing concept drift with an engineering patch does nothing, and fixing a broken pipeline by retraining wastes a week and leaves you exactly where you started. The taxonomy is not academic — it is the difference between a 30-minute fix and a week of wasted retraining work.
+**Four causes, four precise questions.**
 
-**NOT this.** "Monitor the model's output score distribution and you're covered." Output monitoring tells you the model's behavior changed — not why. Input monitoring on feature distributions tells you what changed in the data. Infrastructure monitoring tells you if the cause is not in the data at all. You need all four layers to distinguish a concept drift that requires retraining from a feature pipeline bug that requires a 30-minute engineering fix. Collapsing all degradation into "model problem" is the most expensive mistake in production ML operations.`,
+*Data drift* asks: has **P(X)** changed? The inputs shifted — your transactions now have a different income distribution than training. You detect it with statistical tests (PSI, KS, chi-squared) on feature distributions. It may or may not hurt performance, depending on whether the input-output relationship also moved.
+
+*Concept drift* asks: has **P(Y|X)** changed? The relationship itself moved — a profile that was 3% fraud is now 15% because tactics evolved. You can only confirm it with labels, by watching performance degrade. This one genuinely needs retraining on recent data.
+
+*Prior shift* asks: has **P(Y)** changed while P(X|Y) held? The base rate went from 1% to 3% — more fraud, not different fraud. Often a threshold adjustment is enough.
+
+*Infrastructure drift* asks: is the pipeline broken? Schema changed, latency spiked, a dependency degraded. That's an engineering fix, not a model fix.
+
+---
+
+**Why the taxonomy earns its keep.**
+
+A broken pipeline and real concept drift can produce the *identical* drop in recall. But patch concept drift with an engineering fix and nothing improves; "fix" a broken pipeline by retraining and you burn a week to land exactly where you started. This is the difference between a 30-minute fix and a wasted week.
+
+And that's why "just watch the output score distribution" isn't enough. Output monitoring tells you behavior changed, not *why.* Feature monitoring tells you what moved in the data. Infrastructure monitoring tells you if the cause isn't in the data at all. You need all four layers to separate a drift that needs retraining from a pipeline bug that needs a half-hour patch — and collapsing everything into "model problem" is the single most expensive habit in production ML.`,
     keyPoints: [
       `**Build four monitoring layers in order: infrastructure → data → predictions → performance.** Infrastructure (latency, error rate) and prediction monitoring give you real-time signals. Data drift and performance monitoring give you explanatory power. The order matters — a 5% endpoint error rate is infrastructure, not drift. Mixing up the layer diagnosis means applying the wrong remedy.`,
       `**Trap: conflating data drift with model performance degradation.** A feature can drift significantly without affecting model performance (if the model is robust to that variation) or affect it minimally (if that feature's importance is low). Always measure whether performance actually degraded before triggering retraining. Reflexive retraining on every drift alert wastes pipeline compute and can introduce regressions on stable segments of the population.`,
@@ -41,19 +55,41 @@ The diagnostic power of this taxonomy is that it shortcircuits the response. A b
     estimatedMin: 20,
     tags: ['data drift', 'PSI', 'KS test', 'distribution monitoring'],
     interactivePrompt: `Before you touch the controls: a loan model has been running since January with no errors, but it's now July — what signal would tell you the model is silently wrong before any labels arrive?`,
-    summary: `A loan approval model deployed in January. By March, a new population of applicants has appeared — recent graduates entering the workforce, a new geographic market that opened up. Their median income has shifted from $55K to $70K. The model still runs without errors. It produces predictions at the same latency. No alert has fired. But it is making systematically worse decisions because it was calibrated to a population that no longer exists at the same frequency. By the time a business stakeholder notices the approval rate or default rate has drifted, it is July. The root cause is six months old. This is silent model decay — and it is the default outcome when monitoring is absent.
+    summary: `A loan model goes live in January. By March a new kind of applicant is showing up — recent graduates, a newly opened geographic market — and their median income has moved from about 55K to 70K dollars. The model still runs, still returns predictions at the same speed, still fires no alerts. But it is quietly making worse decisions, because it was tuned for a population that no longer shows up at the same rate. By the time a stakeholder notices the approval or default rate has drifted, it's July — and the root cause is six months old. This is silent model decay, and it is the *default* outcome when nobody is monitoring.
 
-Data drift detection is the early-warning system. Instead of waiting for labels to arrive and confirm that performance has degraded, you compare the current distribution of each input feature against the training distribution and quantify the divergence. The question becomes: how much has the income distribution changed, and is that change large enough to matter?
+---
 
-The loan industry developed Population Stability Index (PSI) specifically for this problem. $PSI = \\sum (p_{train} - p_{new}) \ln(p_{train}/p_{new})$ summed across bins of the feature distribution. PSI < 0.1 means the population is stable. Between 0.1 and 0.2 means mild drift worth investigating. Above 0.2 means significant drift requiring action. For the income feature with a median shift from $55K to $70K, PSI will likely exceed 0.2 — an actionable signal months before any performance label confirms the damage.
+**The idea: watch the inputs, don't wait for the labels.**
 
-For continuous features, the Kolmogorov-Smirnov test measures the maximum difference between two CDFs: $D = \max|F_{train}(x) - F_{new}(x)|$. It is distribution-free and sensitive to shifts in any part of the distribution, not just the mean. The critical failure mode: with 1M daily requests, D = 0.015 will be statistically significant (p < 0.001) but operationally meaningless. Always pair the KS statistic with a practical threshold — D > 0.05 is a reasonable bar — rather than acting on p-values alone. For categorical features, chi-squared tests whether observed category frequencies match training frequencies. For any continuous feature where you want a single bounded number that works across features with very different natural variability, Jensen-Shannon divergence is symmetric, bounded in [0, 1], and easier to threshold uniformly than KS.
+Instead of waiting for outcomes to confirm the damage, you compare each input feature's *current* distribution against its *training* distribution and measure how far apart they've moved. The question becomes concrete: how much has the income distribution shifted, and is that shift big enough to matter?
 
-**NOT this.** Drift detection is not just statistical testing on feature distributions — and a drift alert does not mean retrain immediately. Statistical significance does not equal business significance. A drift alert should trigger investigation: does this drift actually affect model performance? Sometimes features drift substantially but the model remains accurate in the new regime — the learned relationship still holds even if the inputs have shifted. Other times, a subtle drift in one high-importance feature destroys accuracy while 49 other features show no change. You need both drift detection (early warning that something changed) AND performance monitoring with delayed labels (confirmation that the change matters). The alert says "look here." The labels tell you if it is a real problem.`,
+---
+
+**PSI: the metric the lending world built for exactly this.**
+
+Population Stability Index sums, across bins of a feature, how much probability mass moved:
+
+$PSI = \\sum (p_{train} - p_{new}) \ln(p_{train}/p_{new})$
+
+Below 0.1 the population is stable; 0.1–0.2 is mild drift worth a look; above 0.2 is real drift that needs action. For income moving from 55K to 70K, PSI will likely clear 0.2 — an actionable signal *months* before any label confirms the harm.
+
+---
+
+**Other tests for other shapes of data.**
+
+For continuous features, the Kolmogorov-Smirnov test takes the largest gap between two cumulative distributions:
+
+$D = \max|F_{train}(x) - F_{new}(x)|$
+
+It's distribution-free and notices shifts anywhere, not just in the mean. The trap: with a million daily requests, D = 0.015 will be "statistically significant" (p < 0.001) yet operationally meaningless — so pair it with a *practical* floor like D > 0.05. For categorical features, chi-squared checks whether category frequencies still match training. And when you want one bounded, uniformly-thresholdable number across very different features, Jensen-Shannon divergence sits neatly in [0, 1].
+
+---
+
+**One caution on what an alert means.** Statistical significance is not business significance. A drift alert means *investigate,* not *retrain.* Sometimes a feature moves a lot and the model stays accurate because the learned relationship still holds; other times a subtle shift in one important feature wrecks accuracy while 49 others look fine. So you run both: drift detection as the early warning that *something* changed, and performance monitoring on delayed labels as the confirmation that it *matters.* The alert says "look here." The labels tell you if it's a real problem.`,
     keyPoints: [
-      `**Use PSI for binned continuous and ordinal features as your default drift metric.** Build 10 equal-frequency bins from the training distribution — not equal-width, because skewed distributions put all the signal in a few dense center buckets with equal-width binning. Add boundary bins for values falling outside the training range. Apply the rule: PSI < 0.1 is stable, 0.1–0.2 is investigate, > 0.2 is act. The loan income example with a median shift from $55K to $70K will produce PSI well above 0.2. These thresholds are stable enough to apply without per-feature recalibration, which is why the financial industry standardized on them.`,
+      `**Use PSI for binned continuous and ordinal features as your default drift metric.** Build 10 equal-frequency bins from the training distribution — not equal-width, because skewed distributions put all the signal in a few dense center buckets with equal-width binning. Add boundary bins for values falling outside the training range. Apply the rule: PSI < 0.1 is stable, 0.1–0.2 is investigate, > 0.2 is act. The loan income example with a median shift from 55K to 70K dollars will produce PSI well above 0.2. These thresholds are stable enough to apply without per-feature recalibration, which is why the financial industry standardized on them.`,
       `**The most common production trap is acting on statistical significance rather than practical significance.** With 1M daily serving requests, the KS test will flag D = 0.015 as p < 0.001. That is a shift of 1.5 percentage points in the CDF — real, but almost certainly not affecting model performance. Engineers who fire a retraining pipeline on every statistically significant drift alert spend all their time on retraining overhead and still miss the actual incidents, because the threshold is too sensitive. Set D > 0.05 as your practical floor. For PSI, trust the 0.1/0.2 boundaries — they were empirically calibrated over decades of financial model deployment, not derived from theory.`,
-      `**The diagnostic: monitor prediction score distribution first, then feature distributions.** The prediction score distribution changes before any feature drift alerts fire and before any labels arrive. A loan model\`s score distribution shifting from mean 0.35 to mean 0.28 over two months is the earliest signal — the model is scoring the new population differently. Once you see score drift, run PSI on each feature ordered by training-time importance. The first high-PSI, high-importance feature is your root cause. This narrows a 50-feature investigation to a 1-feature investigation within minutes.`,
+      `**The diagnostic: monitor prediction score distribution first, then feature distributions.** The prediction score distribution changes before any feature drift alerts fire and before any labels arrive. A loan model's score distribution shifting from mean 0.35 to mean 0.28 over two months is the earliest signal — the model is scoring the new population differently. Once you see score drift, run PSI on each feature ordered by training-time importance. The first high-PSI, high-importance feature is your root cause. This narrows a 50-feature investigation to a 1-feature investigation within minutes.`,
     ],
     takeaway: `Drift detection provides the early warning that silent model decay is accumulating. PSI above 0.2 on a high-importance feature is actionable even before labels arrive. But a drift alert triggers investigation, not automatic retraining — the question that matters is whether the drift actually degrades performance, which only labels can confirm.`,
     checkQuestions: [
@@ -76,13 +112,27 @@ For continuous features, the Kolmogorov-Smirnov test measures the maximum differ
     difficulty: 'advanced',
     estimatedMin: 20,
     tags: ['concept drift', 'ADWIN', 'DDM', 'online learning'],
-    summary: `A credit scoring model trained in 2019 and deployed through 2020. The global pandemic hits in March 2020. Employment patterns, spending behavior, and default rates shift overnight. The model's features — employment status, recent spending, credit utilization — were trained on pre-pandemic relationships. Post-pandemic, the same feature values predict default probability completely differently. Someone who is employed with stable recent spending is a much worse risk than the pre-pandemic data would suggest, because the macro environment changed everything. The model's PSI on individual features is 0.35 — severe. But even before PSI fires, the model's error rate on the post-March cohort is already compounding. This is sudden concept drift — the worst kind, because it doesn't announce itself gradually.
+    summary: `A credit model trained in 2019 is running through 2020 when the pandemic hits in March. Overnight, employment, spending, and default rates all shift. The model's features — employment status, recent spending, credit utilization — encode *pre-pandemic* relationships. After March, the same feature values mean something completely different: someone employed with steady spending is now a far worse risk than the old data would suggest, because the whole macro backdrop changed. Feature PSI reads 0.35 — severe. But even before PSI trips, the model's error rate on the post-March cohort is already compounding. This is **sudden concept drift** — the nastiest kind, because it doesn't build up gently enough to notice.
 
-Concept drift has three temporal patterns that require different detection approaches. Sudden drift is an abrupt regime change triggered by a specific event: COVID, a regulatory change, a major competitor launch. It happens at a specific point in time. Detection uses Page-Hinkley test — a cumulative sum of errors exceeds a threshold — or ADWIN (Adaptive WINdowing), which compares a recent window against a historical window and shrinks the window size when drift is detected. With sudden drift, the ADWIN window collapse is visible within days. Gradual drift is a slow behavioral shift: user base aging, seasonal trends evolving, category preferences shifting over months. Each day's change is imperceptible. Detection uses exponential moving average of error rate, alerting when it exceeds a control limit over a sustained window. No single day looks alarming; the trend over 90 days does. Recurrent drift follows a pattern that comes back: holiday shopping fraud patterns, annual economic cycles, weekend vs. weekday user behavior. Detection uses time-series decomposition of error rate. The response to recurrent drift is not retraining — it is maintaining seasonal models and switching between them on schedule.
+---
 
-The detection lag is the central constraint. Concept drift is fundamentally defined against labels — you can only confirm it by observing actual outcomes. For a credit model with 30-day label delay, drift can run undetected for a month. For a fraud model with 7-day chargeback delay, the lag is a week. PSI on features and prediction score distribution provide earlier proxy signals, but these fire based on distribution shift, not confirmed outcome shift. Use them as leading indicators that trigger investigation, not as confirmations of drift.
+**Three shapes of concept drift, three ways to catch them.**
 
-**NOT this.** "Concept drift always requires full model retraining." Sudden drift almost always requires retraining on recent data — the pre-drift patterns are no longer valid. Gradual drift can sometimes be corrected with online weight updates or recalibration. Recurrent drift is best handled by maintaining seasonal models and switching between them. Retraining from scratch is the most expensive option. Exhaust cheaper recalibration and threshold adjustment first, then retrain only when cheaper interventions fail to close the performance gap.`,
+*Sudden* drift is an abrupt regime change from a specific event — COVID, a new regulation, a competitor launch. It happens at a point in time. Catch it with the Page-Hinkley test (a running sum of errors crossing a threshold) or ADWIN, which compares a recent window to a historical one and collapses the window when they diverge — visible within days.
+
+*Gradual* drift is a slow slide: an aging user base, evolving seasons, shifting preferences over months. No single day looks wrong. Catch it with an exponential moving average of the error rate that alerts when it stays above a control limit — the 90-day trend is alarming even though no day is.
+
+*Recurrent* drift is a pattern that returns: holiday fraud, annual cycles, weekday-vs-weekend behavior. Catch it with time-series decomposition of the error rate. The right response isn't retraining — it's keeping seasonal models and switching between them on schedule.
+
+---
+
+**The hard constraint: detection lag.**
+
+Concept drift is defined against *labels* — you can only truly confirm it once real outcomes arrive. A credit model with a 30-day label delay can drift undetected for a month; a fraud model with 7-day chargebacks, for a week. Feature PSI and score-distribution shifts are useful *leading* signals, but they fire on distribution change, not confirmed outcome change — treat them as prompts to investigate, not proof of drift.
+
+---
+
+**And don't reflexively retrain from scratch.** Sudden drift usually does need retraining on recent data — the old patterns are dead. But gradual drift can sometimes be handled with online updates or recalibration, and recurrent drift with seasonal model-switching. Full retraining is the most expensive lever, so exhaust cheaper recalibration and threshold adjustment first, and pull it only when they fail to close the gap.`,
     keyPoints: [
       `**Set up an automated concept drift detection pipeline that monitors prediction accuracy on delayed labels — this is the ground truth signal.** PSI and KS on features are early warning indicators that something may have changed. Model performance on actual labels is the definitive measure of whether that change matters. Run both: features give you the 7-day early warning, labels give you the confirmation that warrants retraining.`,
       `**Trap: retraining on only the most recent data after sudden drift.** If pre-drift patterns still apply to a large portion of your user base — customers who were not affected by the regime change — a model trained only on post-drift data will regress on those users. Use a sliding window that includes enough pre-drift history to maintain performance across the full distribution. Validate on both pre-drift and post-drift held-out data before deploying.`,
@@ -110,15 +160,29 @@ The detection lag is the central constraint. Concept drift is fundamentally defi
     difficulty: 'intermediate',
     estimatedMin: 35,
     tags: ['prediction monitoring', 'score distribution', 'output drift'],
-    summary: `Fraud model deployed. No labels for 7 days — chargebacks take 7 days to confirm. Infrastructure metrics show normal latency and 0% error rate. You have no way to measure accuracy until next week. But you can see predictions right now, and three signals are already telling you something changed.
+    summary: `Your fraud model is live. Labels won't arrive for 7 days — chargebacks take that long to confirm. Infrastructure looks perfect: normal latency, 0% errors. So you cannot measure accuracy until next week. And yet you can see the *predictions* right now, and three of them are already whispering that something moved.
 
-The mean predicted fraud probability was 3.1% last month. This month it is 2.7%. A 0.4 percentage point drop in mean score is the model scoring this week's transactions as less risky than last month's. Whether that is correct or not, it is a signal worth investigating. The fraction of predictions above 0.8 confidence dropped from 12% to 4%. The model is becoming uncertain about cases it used to decide confidently. Last month's score histogram was bimodal — clear fraud at the high end, clear non-fraud at the low end, with a trough in the middle. This month it is unimodal near 0.5. The model has lost its discriminative ability.
+---
 
-Each of these signals has a specific interpretation. Score distribution drops indicate either that fewer high-risk events are occurring (possible ground truth) or that a feature shifted negative (pipeline issue). High-confidence rate dropping indicates that the input distribution moved out of the model's training distribution — the model is seeing data it has not been trained on at the current scale. Histogram flattening indicates that a key discriminative feature is missing or corrupted — without it, the model cannot separate the two classes.
+**Three signals you have before any label.**
 
-Statistical tests for prediction monitoring use the same machinery as feature drift monitoring. PSI on the score distribution gives the same 0.1/0.2 thresholds. Jensen-Shannon divergence between current and reference score histogram is bounded in [0, 1] and easy to threshold. Z-test on mean score shift catches systematic upward or downward movement.
+*The mean score fell.* Last month the average predicted fraud probability was 3.1%; this month, 2.7%. The model is scoring this week's transactions as less risky. Right or wrong, that's worth a look.
 
-**NOT this.** "Prediction monitoring tells you if the model is wrong." Prediction monitoring tells you if the model's behavior changed. You do not know if the change is correct — perhaps genuine fraud rates decreased and the lower scores are accurate — or wrong, because a feature pipeline broke. Prediction monitoring is your earliest warning system. It fires days before delayed labels arrive. When it fires, the correct response is to investigate inputs, not to assume the model is broken and retrain immediately.`,
+*Confidence collapsed.* The share of predictions above 0.8 confidence dropped from 12% to 4%. The model is now hesitant about cases it used to call decisively.
+
+*The histogram flattened.* Last month's scores were bimodal — clear fraud piled high, clear non-fraud piled low, a trough between. This month it's a single lump near 0.5. The model has lost its ability to separate the two classes.
+
+---
+
+**What each one tends to mean.**
+
+A falling score distribution means either fewer genuinely risky events (could be real) or a feature that shifted the wrong way (pipeline). A dropping high-confidence rate means the inputs have moved outside the model's training range — it's seeing unfamiliar data. A flattening histogram means a key discriminative feature is missing or corrupted, leaving the model unable to tell the classes apart.
+
+You measure all of this with the same tools as feature drift: PSI on the score distribution (same 0.1/0.2 bands), Jensen-Shannon divergence between current and reference histograms (bounded in [0, 1]), and a z-test on the mean-score shift.
+
+---
+
+**What prediction monitoring is — and isn't.** It tells you the model's *behavior* changed, not that the model is *wrong.* Maybe fraud genuinely dropped and the lower scores are correct; maybe a feature pipeline broke. That's exactly why it's your earliest warning system — it fires days ahead of the delayed labels — and exactly why the right first move when it fires is to *investigate the inputs,* not to assume the model is broken and retrain on reflex.`,
     keyPoints: [
       `**Set reference baselines for score distribution, high-confidence rate, and histogram shape from the first 4 weeks of deployment — these are your "healthy" benchmarks.** Alert when current statistics deviate more than 2σ from baseline. The 4-week window captures natural weekly variation so that normal Monday-vs-Friday patterns do not generate spurious alerts.`,
       `**Trap: setting alert thresholds too tight.** If your score distribution naturally varies ±15% week-over-week due to business seasonality, a 2σ threshold generates constant alerts. Calibrate thresholds based on observed natural variation from the first month of production traffic, not on theoretical distributions. A threshold that produces more than one alert per week during normal operation needs to be widened.`,
@@ -146,15 +210,25 @@ Statistical tests for prediction monitoring use the same machinery as feature dr
     difficulty: 'advanced',
     estimatedMin: 20,
     tags: ['feature importance', 'SHAP drift', 'model interpretation', 'monitoring'],
-    summary: `Fraud detection model deployed six months ago. Feature importances at deployment: \`transaction_velocity\` (0.32), \`device_age\` (0.21), \`ip_reputation\` (0.18). Six months later, the importances have inverted: \`ip_reputation\` (0.38), \`transaction_velocity\` (0.12), \`device_age\` (0.09). \`ip_reputation\` has taken over as the dominant signal.
+    summary: `A fraud model went live six months ago. On day one its top features were \`transaction_velocity\` (0.32), \`device_age\` (0.21), \`ip_reputation\` (0.18). Six months later the order has flipped: \`ip_reputation\` (0.38), \`transaction_velocity\` (0.12), \`device_age\` (0.09). IP reputation has quietly become the model's dominant signal. Why?
 
-The investigation reveals why. The fraud team had been aggressively blocking high-risk IPs over the past six months. As a result, the fraud transactions that survived the IP block now come from IP addresses that had never been flagged — IP reputation in the residual fraud population is concentrated in the low-risk range. The model learned that low-reputation IPs are now the reliable signal, because that is what the surviving fraud looks like. The model is now dramatically more vulnerable to IP spoofing attacks, because it is relying on a signal that its own upstream actions have made gameable.
+---
 
-This is the fundamental reason feature importance drift is worth monitoring. It is not just a measure of what the model is doing — it is a diagnostic for how the world has changed relative to the model's assumptions. Four mechanisms drive importance drift. A feature's distribution shifts, reducing its variance and therefore its discriminative power. The target population shifts due to the model's own actions or external factors, changing which examples remain in the distribution. Feature quality degrades due to pipeline issues, making a feature noisy or partially null. New correlations emerge — a feature uncorrelated with the target becomes correlated due to behavioral changes.
+**The cause is the model's own side of the world.**
 
-Monitoring approach: compute SHAP values or permutation importance on a rolling sample of 1,000 production predictions per week. Track top-K feature importances over time. Alert when a feature's importance rank changes by more than 3 positions or its absolute importance changes by more than 20%.
+The fraud team spent those six months aggressively blocking high-risk IPs. So the fraud that *survived* now comes from addresses that were never flagged — the leftover fraud has low-risk IP reputation. The model dutifully learned that "low-reputation IP" is now the reliable tell, because that's what surviving fraud looks like. The catch: it's now leaning on a signal that its own upstream actions made gameable, which makes it far more exposed to IP spoofing. The model adapted to a world that its own team reshaped.
 
-**NOT this.** "Feature importance is a fixed property of the model." Feature importance is a joint property of the model AND the input distribution. The same model weights produce different importances when the input distribution shifts. If you want to know whether your feature pipeline is degrading, monitoring importance drift is more sensitive than monitoring accuracy — it changes before accuracy drops. A feature pipeline bug that corrupts one feature shows up in importance drift within days, before it has accumulated enough label evidence to move the accuracy metric.`,
+---
+
+**Why this is worth monitoring at all.**
+
+Feature importance drift isn't just "what the model is doing" — it's a read on *how the world moved relative to the model's assumptions.* Four things drive it: a feature's distribution narrows, shrinking its discriminative power; the target population shifts (from the model's own actions or outside forces), changing which examples remain; a feature's quality degrades from a pipeline bug, going noisy or partly null; or a brand-new correlation appears as behavior changes.
+
+To watch it, compute SHAP or permutation importance on a rolling sample of ~1,000 production predictions per week, track the top-K over time, and alert when a feature's rank moves more than 3 places or its importance changes by more than 20%.
+
+---
+
+**The mental correction:** importance is *not* a fixed property of the model. It's a joint property of the model **and** the input distribution — the same weights yield different importances when the inputs shift. That's what makes it such a sensitive probe: a pipeline bug that corrupts one feature shows up in importance drift within days, well before it has piled up enough label evidence to move the accuracy metric.`,
     keyPoints: [
       `**Monitor SHAP-based feature importance weekly on a rolling production sample — it catches feature pipeline degradation and concept drift earlier than any accuracy-based metric.** A feature that drops from rank 2 to rank 15 in one week has either lost its signal (distribution collapsed) or its pipeline broke. Either way, you know where to look before accuracy confirms the damage.`,
       `**Trap: using training-time feature importance as the production reference.** Training importance reflects the training distribution. Compute production importance from actual production traffic and compare to your deployment-day baseline, not training-day baseline. The deployment-day baseline is your "healthy production" reference — it captures the live feature distribution, not the historical training distribution.`,
@@ -182,15 +256,31 @@ Monitoring approach: compute SHAP values or permutation importance on a rolling 
     difficulty: 'intermediate',
     estimatedMin: 35,
     tags: ['calibration', 'ECE', 'reliability', 'production monitoring'],
-    summary: `Insurance pricing model outputs a claim probability. At deployment, a prediction of 0.15 corresponds to a 15% actual claim rate — well-calibrated, exactly on the reliability diagram diagonal. Three months later, predictions of 0.15 correspond to a 22% actual claim rate. The model is now underestimating risk by 7 percentage points for this bucket. The pricing team is using the model's output directly for premium calculation. The mispricing has been accumulating for 3 months, silently undercharging high-risk customers. No alert fired. AUC is stable at 0.82.
+    summary: `An insurance pricing model outputs a claim probability. On launch day it's beautifully calibrated: a prediction of 0.15 really does mean a 15% claim rate — dead on the reliability diagram's diagonal. Three months later, the same 0.15 predictions are actually claiming at 22%. The model is now *underestimating* risk by 7 points in that bucket. And the pricing team feeds its output straight into premiums, so for three months it has been silently undercharging exactly the high-risk customers. No alert fired. AUC is a steady 0.82.
 
-This is calibration drift, and AUC will not catch it. AUC measures ranking quality — does the model score high-risk customers above low-risk ones? Calibration measures probability accuracy — does a score of 0.15 mean 15% probability? A model can have perfect AUC and terrible calibration simultaneously. It correctly ranks every customer by risk while being wrong about every customer's absolute risk level. For any application where the model's output is used as a probability — pricing, risk scoring, expected value calculations — both must be monitored independently.
+---
 
-The drift mechanism: as the input distribution shifts, the model's probability estimates no longer match the actual conditional probabilities in the new distribution. This happens even when discrimination stays stable. The model still knows who is riskier than whom; it just does not know by how much. Expected Calibration Error (ECE) = Σ (n_bin/n) × |mean_confidence_in_bin − accuracy_in_bin|, summed across prediction buckets. An ECE tripling from 0.03 at deployment to 0.09 after three months is actionable — it is not a monitoring footnote, it is mispricing at scale.
+**AUC will never catch this, because AUC measures a different thing.**
 
-Recalibration does not require retraining the base model. Platt scaling fits a logistic regression on top of model outputs using recent labelled data — a few hours of work using 1,000 recent examples. Temperature scaling uses a single scalar T: new_prob = σ(logit / T). Both are fast and leave the base model unchanged. Trigger recalibration when ECE exceeds the deployment baseline by 0.03 for three consecutive days.
+AUC measures *ranking* — does the model put riskier customers above safer ones? Calibration measures *probability accuracy* — does 0.15 actually mean 15%? These are independent. A model can rank every customer perfectly (great AUC) while being wrong about every customer's *absolute* risk (terrible calibration). Anywhere the output is used as a real probability — pricing, risk scoring, expected-value math — you must monitor both, separately.
 
-**NOT this.** "If AUC stays stable, calibration is fine." AUC and calibration measure orthogonal properties. A model can have AUC of 0.90 and ECE of 0.15 — it ranks everyone correctly but its probability estimates are off by 15 percentage points. For a fraud model making threshold decisions, miscalibration means your chosen threshold no longer corresponds to the precision-recall tradeoff you designed for. For an insurance pricing model, it means systematic mispricing. Monitor both, independently, on every batch of arriving labels.`,
+---
+
+**Why calibration drifts even when ranking holds.**
+
+As the input distribution shifts, the model's probability estimates stop matching the true rates in the new population — even though it still knows *who* is riskier than whom. It just no longer knows *by how much.* You quantify this with Expected Calibration Error:
+
+$ECE = \\sum_{bins} (n_{bin}/n)\\,|\\,\\text{confidence}_{bin} - \\text{accuracy}_{bin}\\,|$
+
+An ECE tripling from 0.03 at launch to 0.09 in three months isn't a footnote — it's mispricing at scale.
+
+---
+
+**Fixing it rarely means retraining.**
+
+*Platt scaling* fits a small logistic regression on top of the model's outputs using recent labeled data — a few hours with ~1,000 examples. *Temperature scaling* uses a single scalar T: new_prob = σ(logit / T). Both are fast and leave the base model untouched. Trigger recalibration when ECE runs 0.03 above baseline for three days straight.
+
+And kill the assumption that "stable AUC means calibration is fine." A model can post AUC 0.90 with ECE 0.15 — ranking everyone right while its probabilities are off by 15 points. For a fraud model, that means your chosen threshold no longer buys the precision-recall tradeoff you designed. For pricing, it means systematic mispricing. Monitor both, independently, on every batch of labels that arrives.`,
     keyPoints: [
       `**Monitor ECE on every batch of ground truth labels that arrives — calibration drift is silent and systematic, exactly the kind of error that causes financial mispricing or risk misallocation to compound undetected.** Plot the reliability diagram alongside the ECE scalar: ECE tells you the magnitude, the diagram tells you which buckets are miscalibrated and in which direction.`,
       `**Trap: applying temperature scaling fit on stale data.** If you recalibrate using labels from 6 months ago, you are correcting for past calibration drift, not current. Fit recalibration only on recent labels from the last 30–60 days. A recalibration model trained on stale data can shift the current calibration in the wrong direction, making ECE worse instead of better.`,
@@ -218,15 +308,27 @@ Recalibration does not require retraining the base model. Platt scaling fits a l
     difficulty: 'advanced',
     estimatedMin: 20,
     tags: ['model staleness', 'silent failure', 'monitoring', 'model decay'],
-    summary: `You took a 2-week vacation. No alerts fired. No pages. The model is "running fine." You come back and check the business metric the model drives. It has drifted 8% in the wrong direction over the last 10 days. No monitoring caught it because: feature drift was below the alert threshold on every individual feature, prediction distribution shifted slowly enough that no z-test alert fired, and the model is still responding with low latency and 0% error rate. The model is technically functioning and empirically wrong. This is silent model staleness.
+    summary: `You take a two-week vacation. No alerts, no pages — the model is "running fine." You come back, check the business metric the model drives, and it has slid 8% in the wrong direction over the last ten days. Nothing caught it, because each individual signal stayed under its threshold: no single feature's drift crossed the line, the prediction distribution moved too slowly to trip a z-test, and the model kept answering at low latency with zero errors. Technically functioning, empirically wrong. This is **silent model staleness.**
 
-Silent staleness is the default state of any production model without active monitoring. It does not require a failure event. It does not announce itself. It accumulates as the world changes while the model does not. User behavior, fraud patterns, economic conditions, and product features change constantly. The model keeps applying the patterns it learned 6 months ago to a distribution that no longer matches. The gap between what the model learned and what the world looks like now is the staleness — and it grows every day.
+---
 
-Detection requires multiple overlapping signals because no single signal is sufficient. Feature drift: PSI greater than 0.2 on any tier-1 feature. Prediction distribution drift: score mean or variance outside 3σ of deployment baseline. Business metric divergence: the KPI the model influences trends in the wrong direction for more than 5 consecutive days. Delayed label accuracy: when labels arrive, rolling accuracy on last 30 days is below deployment accuracy by more than 3 percentage points. Each of these can fail silently on its own — a 0.19 PSI that never crosses 0.2, a business metric decline that stays within noise. But when two or three fire simultaneously in the same direction, the combination is the staleness signal.
+**It's not a rare failure — it's the default.**
 
-The most robust defense is time-based retraining SLAs independent of alert state. A model retrained monthly cannot go more than 4 weeks stale regardless of what monitoring missed. Shadow retraining — continuously training a challenger on recent data and comparing to the champion weekly — provides a staleness signal without requiring ground truth metrics to visibly degrade.
+Staleness needs no failure event and makes no announcement. It just accumulates as the world moves and the model doesn't. User behavior, fraud tactics, the economy, your own product — all changing constantly, while the model keeps applying patterns it learned six months ago. The growing gap between what it learned and what the world now looks like *is* the staleness, and it widens every single day.
 
-**NOT this.** "If the model is running, it's working." A model can process every request at normal latency with zero infrastructure errors and be empirically wrong on every prediction. Operational health and prediction quality are orthogonal. Correctness must be actively maintained and verified — it does not self-certify through uptime. Silent staleness is not a rare edge case. It is the expected outcome of any deployed model that is not actively monitored with overlapping leading indicators.`,
+---
+
+**No one signal catches it — you need several, overlapping.**
+
+*Feature drift:* PSI over 0.2 on any tier-1 feature. *Prediction drift:* score mean or variance outside 3σ of the launch baseline. *Business divergence:* the KPI the model influences trending the wrong way for 5+ straight days. *Delayed accuracy:* once labels land, rolling 30-day accuracy more than 3 points below launch. Any one of these can stay silent on its own — a 0.19 PSI that never quite hits 0.2, a KPI dip that hides in the noise. The staleness signal is when *two or three fire together, in the same direction.*
+
+---
+
+**The strongest defense doesn't depend on alerts at all.**
+
+Set a time-based retraining SLA: a model retrained monthly simply cannot go more than four weeks stale, no matter what monitoring missed. Pair it with shadow retraining — continuously train a challenger on recent data and compare it to the champion weekly — which surfaces staleness before the live metrics visibly sag.
+
+And retire the belief that "if it's running, it's working." A model can serve every request at normal latency with zero infrastructure errors and be wrong on every prediction. Operational health and prediction quality are unrelated; correctness has to be actively maintained and verified — uptime does not certify it.`,
     keyPoints: [
       `**Deploy a composite health score for every production model — a single number that aggregates feature drift, prediction drift, and delayed accuracy into one signal.** Alert when it crosses a threshold. This creates a single pane of glass instead of 15 separate alerts that each stay below their individual threshold while collectively signaling degradation.`,
       `**Trap: relying only on label-based monitoring.** Labels can take days or weeks to arrive. By the time label-based accuracy confirms degradation, the model has been wrong for the entire label delay period. You need leading indicators — prediction distribution, feature drift — that fire days before labels confirm the diagnosis.`,
@@ -254,15 +356,27 @@ The most robust defense is time-based retraining SLAs independent of alert state
     difficulty: 'intermediate',
     estimatedMin: 35,
     tags: ['alerting', 'runbooks', 'incident response', 'on-call'],
-    summary: `The monitoring system fires 47 alerts in a week. The team acknowledges all of them. Fixes zero. The alerts have become background noise. Everyone has learned to ignore them. Two months later, a critical model failure goes undetected for 3 days because the alert fired — and no one acted on it. Alert fatigue has turned the monitoring system into a false sense of security.
+    summary: `The monitoring system fires 47 alerts in a week. The team acknowledges every one and fixes none. The alerts have become wallpaper — everyone has learned to tune them out. Two months later a real model failure runs undetected for three days, because the alert *did* fire and nobody acted. Alert fatigue has quietly converted the whole monitoring system into a false sense of safety.
 
-Alert fatigue is not a personnel problem. It is a calibration problem. When false positive rate is high, the rational response is to deprioritize alerts. Engineers are not lazy; they are doing expected value calculations. An alert with a 20% action rate trains engineers to assume it is a false positive 4 times out of 5. The first genuine P1 that gets ignored during that calculation is where alert fatigue causes direct business damage.
+---
 
-A runbook is a documented procedure attached to an alert type: what triggered it (exact condition), what it means (business interpretation), severity (P0/P1/P2 classification), immediate action (page on-call? auto-rollback?), investigation steps (ordered list of what to check), and resolution options with a decision tree (if X then Y, if not then Z). Without a runbook, each alert requires the on-call engineer to re-derive the investigation procedure from first principles at 3am. The runbook converts expertise into a repeatable process that any engineer on the rotation can execute.
+**Fatigue is a calibration problem, not a people problem.**
 
-Alert design has four rules that reduce false positive rate. First, alerts must be actionable — if there is no clear action to take when it fires, it is a metric to monitor, not an alert to page on. Second, alerts must have a low false positive rate — above 20% and engineers start ignoring them. Third, severity routing separates P0 (model down, financial risk: page immediately) from P1 (significant drift, degrading: ticket for next business day) from P2 (early warning: weekly review queue). Fourth, alert deduplication groups related alerts and surfaces one with a root cause hypothesis instead of 15 cascading alerts from a single upstream failure.
+When the false-positive rate is high, ignoring alerts is the *rational* response — engineers are running expected-value math, not being lazy. An alert that's actionable only 20% of the time trains everyone to assume it's noise 4 times out of 5. The first genuine P1 that gets waved off during that mental shortcut is where fatigue turns into real business damage.
 
-**NOT this.** "More alerts = better monitoring." More alerts equals more noise equals ignored alerts equals worse monitoring than having fewer alerts. The goal is zero false positives, every alert actionable, every alert with a runbook. Start with 5 high-signal alerts and expand only when each new alert has a written runbook and a measured false positive rate below 20%. Never enable an alert you have not written a runbook for.`,
+---
+
+**The fix starts with runbooks.**
+
+A runbook is the procedure stapled to an alert type: what triggered it (the exact condition), what it means (the business interpretation), its severity, the immediate action (page? auto-rollback?), the ordered investigation steps, and the resolution decision tree (if X then Y, else Z). Without one, every alert forces the on-call engineer to re-derive the whole investigation from scratch at 3am. A runbook turns one person's expertise into a process anyone on the rotation can run.
+
+---
+
+**Four rules that keep false positives down.**
+
+*Actionable* — if there's no clear action when it fires, it's a metric to watch, not an alert to page on. *Low false-positive rate* — past ~20%, people start ignoring it. *Severity routing* — P0 (model down / financial risk: page now), P1 (significant drift: ticket for tomorrow), P2 (early warning: weekly queue). *Deduplication* — collapse 15 cascading alerts from one upstream failure into a single alert with a root-cause hypothesis.
+
+And the myth to bury: "more alerts = better monitoring." More alerts means more noise means ignored alerts means *worse* monitoring than having fewer. The target is zero false positives, every alert actionable, every alert backed by a runbook. Start with five high-signal alerts and add another only when it has a written runbook and a measured false-positive rate under 20%. Never enable an alert you haven't written the runbook for.`,
     keyPoints: [
       `**Write the runbook before enabling the alert — if you cannot write the runbook, you do not understand the alert well enough to act on it.** A runbook takes 30 minutes to write and saves hours per incident. The writing process itself forces you to answer the question: if this fires at 3am, what exactly does the on-call engineer do? If you cannot answer that, the alert is not ready to ship.`,
       `**Trap: setting uniform alert thresholds across all models and features.** A PSI threshold of 0.2 appropriate for a stable user behavior feature will fire constantly for a feature that naturally varies with seasonality. Calibrate thresholds per feature based on observed historical variation from the first 30 days of production traffic. A threshold calibrated to the feature's natural variation generates one-tenth the false positive rate of a uniform threshold.`,
